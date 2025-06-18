@@ -27,7 +27,7 @@ export type {
   DataState,
   DefaultContext,
   ErrorLike,
-  FormattedExecutionResultWithDataState,
+  NormalizedExecutionResult,
   GetDataState,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,

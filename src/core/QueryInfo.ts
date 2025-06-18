@@ -18,7 +18,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
-  FormattedExecutionResultWithDataState,
+  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MutationUpdaterFunction,
   OnQueryUpdated,
@@ -330,7 +330,7 @@ export class QueryInfo<
       awaitRefetchQueries?: boolean;
       refetchQueries?:
         | ((
-            result: FormattedExecutionResultWithDataState<Unmasked<TData>>
+            result: NormalizedExecutionResult<Unmasked<TData>>
           ) => InternalRefetchQueriesInclude)
         | InternalRefetchQueriesInclude;
       removeOptimistic?: string;
@@ -371,7 +371,7 @@ export class QueryInfo<
       ({
         ...result,
         dataState: this.hasNext ? "streaming" : "complete",
-      }) as FormattedExecutionResultWithDataState<Unmasked<TData>>;
+      }) as NormalizedExecutionResult<Unmasked<TData>>;
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       cacheWrites.push({

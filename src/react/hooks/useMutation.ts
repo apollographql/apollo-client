@@ -9,7 +9,7 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  FormattedExecutionResultWithDataState,
+  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MaybeMasked,
   MutateResult,
@@ -60,7 +60,7 @@ export declare namespace useMutation {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
     refetchQueries?:
       | ((
-          result: FormattedExecutionResultWithDataState<Unmasked<TData>>
+          result: NormalizedExecutionResult<Unmasked<TData>>
         ) => InternalRefetchQueriesInclude)
       | InternalRefetchQueriesInclude;
 

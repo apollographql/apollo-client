@@ -272,7 +272,12 @@ export type GetDataState<
   TState extends DataState<TData>["dataState"],
 > = Extract<DataState<TData>, { dataState: TState }>;
 
-export type FormattedExecutionResultWithDataState<
+/**
+ * Represents a result that might be complete or still streaming and
+ * has been normalized into a plain GraphQL result. When the result is
+ * still `streaming`, some fields might not yet be available.
+ */
+export type NormalizedExecutionResult<
   TData = Record<string, unknown>,
   TExtensions = Record<string, unknown>,
 > = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> &
@@ -293,7 +298,7 @@ export type FormattedExecutionResultWithDataState<
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FormattedExecutionResultWithDataState<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }

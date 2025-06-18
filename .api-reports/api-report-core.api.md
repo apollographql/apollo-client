@@ -342,15 +342,6 @@ export { FieldPolicy }
 
 export { FieldReadFunction }
 
-// @public (undocumented)
-export type FormattedExecutionResultWithDataState<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data?: TData | null;
-    dataState: "complete";
-} | {
-    data?: Streaming<TData> | null;
-    dataState: "streaming";
-});
-
 export { FragmentType }
 
 export { from }
@@ -472,7 +463,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
-    refetchQueries?: ((result: FormattedExecutionResultWithDataState<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
     update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
@@ -485,7 +476,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: FormattedExecutionResultWithDataState<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -544,6 +535,15 @@ export { NextLink }
 export { NormalizedCache }
 
 export { NormalizedCacheObject }
+
+// @public
+export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
+    data?: TData | null;
+    dataState: "complete";
+} | {
+    data?: Streaming<TData> | null;
+    dataState: "streaming";
+});
 
 export { Observable }
 

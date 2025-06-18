@@ -26,7 +26,6 @@ import type { FetchMoreQueryOptions as FetchMoreQueryOptions_2 } from '@apollo/c
 import type { FetchPolicy as FetchPolicy_2 } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FormattedExecutionResultWithDataState as FormattedExecutionResultWithDataState_2 } from '@apollo/client';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState as GetDataState_2 } from '@apollo/client';
@@ -49,6 +48,7 @@ import type { MutationUpdaterFunction as MutationUpdaterFunction_2 } from '@apol
 import { NetworkStatus as NetworkStatus_2 } from '@apollo/client';
 import type { NextNotification } from 'rxjs';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
+import type { NormalizedExecutionResult as NormalizedExecutionResult_2 } from '@apollo/client';
 import { Observable } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { ObservableQuery as ObservableQuery_2 } from '@apollo/client';
@@ -301,15 +301,6 @@ interface FetchMoreQueryOptions<TVariables, TData = unknown> {
 type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
 // @public (undocumented)
-type FormattedExecutionResultWithDataState<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data?: TData | null;
-    dataState: "complete";
-} | {
-    data?: Streaming<TData> | null;
-    dataState: "streaming";
-});
-
-// @public (undocumented)
 type From<TData> = StoreObject_2 | Reference_2 | FragmentType<NoInfer_2<TData>> | string | null;
 
 // @public (undocumented)
@@ -436,7 +427,7 @@ type MutationOptions<TData = unknown, TVariables extends OperationVariables_2 = 
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
-    refetchQueries?: ((result: FormattedExecutionResultWithDataState<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
     update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
@@ -449,7 +440,7 @@ type MutationOptions<TData = unknown, TVariables extends OperationVariables_2 = 
 
 // @public (undocumented)
 type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: FormattedExecutionResultWithDataState<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -508,6 +499,15 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables_2>
     // (undocumented)
     reason: "after-fetch" | "variables-changed";
 }
+
+// @public
+type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
+    data?: TData | null;
+    dataState: "complete";
+} | {
+    data?: Streaming<TData> | null;
+    dataState: "streaming";
+});
 
 // @public (undocumented)
 interface ObservableAndInfo<TData> {
@@ -1342,7 +1342,7 @@ export namespace useMutation {
         optimisticResponse?: Unmasked_2<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
         }) => Unmasked_2<NoInfer_2<TData>> | IgnoreModifier);
-        refetchQueries?: ((result: FormattedExecutionResultWithDataState_2<Unmasked_2<TData>>) => InternalRefetchQueriesInclude_2) | InternalRefetchQueriesInclude_2;
+        refetchQueries?: ((result: NormalizedExecutionResult_2<Unmasked_2<TData>>) => InternalRefetchQueriesInclude_2) | InternalRefetchQueriesInclude_2;
         update?: MutationUpdaterFunction_2<TData, TVariables, TCache>;
         updateQueries?: MutationQueryReducersMap_2<TData>;
         variables?: TConfiguredVariables;
@@ -1644,14 +1644,14 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:232:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:234:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:251:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:299:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:236:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:255:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:308:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:3 - (ae-forgotten-export) The symbol "FormattedExecutionResultWithDataState" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:272:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:282:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:285:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:288:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts

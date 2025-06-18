@@ -14,7 +14,7 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
-  FormattedExecutionResultWithDataState,
+  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
@@ -271,7 +271,7 @@ export type MutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
     | ((
-        result: FormattedExecutionResultWithDataState<Unmasked<TData>>
+        result: NormalizedExecutionResult<Unmasked<TData>>
       ) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 

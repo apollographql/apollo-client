@@ -1148,6 +1148,9 @@ test("calls `disable` with GraphQL errors when parsed from non-2xx response", as
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
     },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
   });
 });
 
@@ -1495,6 +1498,9 @@ test("calls `retry` with GraphQL errors when parsed from non-2xx response", asyn
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
     },
   });
 });

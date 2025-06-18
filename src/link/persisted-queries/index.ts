@@ -35,6 +35,7 @@ type CallbackOptions = {
   error: ErrorLike;
   operation: Operation;
   meta: ErrorMeta;
+  result?: FormattedExecutionResult;
 };
 
 type ErrorMeta = {
@@ -230,18 +231,19 @@ export const createPersistedQueryLink = (
         }
 
         const handler: Observer<FetchResult> = {
-          next: (response) => {
-            if (!isFormattedExecutionResult(response) || !response.errors) {
-              return observer.next(response);
+          next: (result) => {
+            if (!isFormattedExecutionResult(result) || !result.errors) {
+              return observer.next(result);
             }
 
             handleRetry(
               {
                 operation,
-                error: new CombinedGraphQLErrors(response),
-                meta: processErrors(response.errors),
+                error: new CombinedGraphQLErrors(result),
+                meta: processErrors(result.errors),
+                result,
               },
-              () => observer.next(response)
+              () => observer.next(result)
             );
           },
           error: (error) => {

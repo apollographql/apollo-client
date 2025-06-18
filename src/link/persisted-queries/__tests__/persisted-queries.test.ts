@@ -1097,6 +1097,9 @@ test("calls `disable` with GraphQL errors when returned in response", async () =
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
     },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
   });
 });
 
@@ -1441,6 +1444,9 @@ test("calls `retry` with GraphQL errors when returned in response", async () => 
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
     },
   });
 });

@@ -1292,7 +1292,7 @@ export class QueryManager {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq) => {
-        if (oq.options.fetchPolicy === "cache-only") {
+        if (include === "active" && oq.options.fetchPolicy === "cache-only") {
           return;
         }
 

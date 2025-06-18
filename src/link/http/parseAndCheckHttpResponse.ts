@@ -40,7 +40,7 @@ async function* consumeMultipartBody(
         ([^"'].*?)                 # a string that doesn't start with ' or ", parsed non-greedily
         )                          # end of the group
       \s*                          # optional whitespace
-      (?;;|$)                        # match a semicolon or end of string
+      (?:;|$)                        # match a semicolon or end of string
     */
     /;\s*boundary=(?:'([^']+)'|"([^"]+)"|([^"'].+?))\s*(?:;|$)/i
   );

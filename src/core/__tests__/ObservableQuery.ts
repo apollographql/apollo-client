@@ -30,7 +30,6 @@ import {
 import type { DeepPartial } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
-import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("ObservableQuery", () => {
   // Standard data for all these tests

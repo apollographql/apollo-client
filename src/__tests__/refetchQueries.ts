@@ -11,7 +11,6 @@ import {
   ObservableQuery,
 } from "@apollo/client";
 import { ObservableStream } from "@apollo/client/testing/internal";
-import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {

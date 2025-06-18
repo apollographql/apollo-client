@@ -12,7 +12,6 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type { ApolloQueryResult } from "../types.js";
 import type {

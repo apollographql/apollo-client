@@ -5200,7 +5200,7 @@ describe("ObservableQuery", () => {
 
           await lastValueFrom(subject, { defaultValue: undefined });
           subject = new Subject();
-          void observableQuery.refetch();
+          void observableQuery.refetch().catch(() => {});
           await check(resultAfterRefetchCall, "resultAfterRefetchCall");
 
           cache.writeQuery({ query, data: cacheValues.update3 });

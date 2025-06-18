@@ -272,7 +272,7 @@ export const createPersistedQueryLink = (
                 operation,
                 meta: processErrors(graphQLErrors),
               },
-              () => observer.error(networkError)
+              () => observer.error(error)
             );
           },
           complete: observer.complete.bind(observer),

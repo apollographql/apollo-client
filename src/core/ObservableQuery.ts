@@ -735,13 +735,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) => Unmasked<TData>;
     }
   ): Promise<QueryResult<TFetchData>> {
-    const { fetchPolicy } = this.options;
+    if (this.options.fetchPolicy === "cache-only") {
+      const error = newInvariantError(
+        "Cannot execute `fetchMore` for a 'cache-only' query. Please use a different fetch policy."
+      );
 
-    invariant(
-      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
-      "Cannot execute `fetchMore` for a '%s' query. Please use a different fetch policy.",
-      fetchPolicy
-    );
+      this.setError(error);
+      return Promise.reject(error);
+    }
 
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
@@ -1709,6 +1710,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       query: this.query,
       variables: this.variables,
       meta: { ...additionalMeta },
+    });
+  }
+
+  private setError(error: ErrorLike) {
+    this.setResult({
+      ...this.getCurrentResult(),
+      error,
+      loading: false,
+      networkStatus: NetworkStatus.error,
     });
   }
 

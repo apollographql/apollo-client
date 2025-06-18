@@ -1247,11 +1247,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return;
     }
 
-    invariant(
-      pollInterval,
-      "Attempted to start a polling query without a polling interval."
-    );
-
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;
 

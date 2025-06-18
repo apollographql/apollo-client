@@ -23,10 +23,7 @@ import {
   preventUnhandledRejection,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
@@ -34,7 +31,6 @@ import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
-  ErrorLike,
   OperationVariables,
   QueryNotification,
   QueryResult,

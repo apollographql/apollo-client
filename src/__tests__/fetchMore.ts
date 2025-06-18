@@ -2458,7 +2458,7 @@ test("does not allow fetchMore on a cache-only query", async () => {
   });
 
   const expectedError = new InvariantError(
-    "Cannot execute `fetchMore` for a 'cache-only' query. Please use a different fetch policy."
+    "Cannot execute `fetchMore` for 'cache-only' query 'Comment'. Please use a different fetch policy."
   );
 
   await expect(

@@ -620,7 +620,7 @@ describe("cache-only", () => {
     });
 
     const query = gql`
-      query {
+      query CountQuery {
         count
       }
     `;
@@ -651,7 +651,7 @@ describe("cache-only", () => {
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
     const expectedError = new InvariantError(
-      "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+      "Cannot execute `refetch` for 'cache-only' query 'CountQuery'. Please use a different fetch policy."
     );
 
     await expect(observable.refetch()).rejects.toEqual(expectedError);

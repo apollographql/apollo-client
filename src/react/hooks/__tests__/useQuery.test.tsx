@@ -5307,7 +5307,7 @@ describe("useQuery Hook", () => {
       });
 
       const expectedError = new InvariantError(
-        "Cannot execute `fetchMore` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `fetchMore` for 'cache-only' query 'letters'. Please use a different fetch policy."
       );
 
       await expect(
@@ -6787,7 +6787,7 @@ describe("useQuery Hook", () => {
 
     it("does not allow refetch on a cache-only query", async () => {
       const query = gql`
-        {
+        query Greeting {
           hello
         }
       `;
@@ -6823,7 +6823,7 @@ describe("useQuery Hook", () => {
       });
 
       const expectedError = new InvariantError(
-        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `refetch` for 'cache-only' query 'Greeting'. Please use a different fetch policy."
       );
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(

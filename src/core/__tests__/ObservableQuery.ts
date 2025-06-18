@@ -457,7 +457,7 @@ describe("ObservableQuery", () => {
       it("warns and does not start polling on a cache-only query when using reobserve to change poll interval", async () => {
         using _ = spyOnConsole("warn");
         const query = gql`
-          query {
+          query CountQuery {
             count
           }
         `;
@@ -487,7 +487,8 @@ describe("ObservableQuery", () => {
 
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
-          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+          "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+          "CountQuery"
         );
 
         await expect(stream).not.toEmitAnything();
@@ -496,7 +497,7 @@ describe("ObservableQuery", () => {
       it("warns and does not start polling on a cache-only query when initializing with poll interval", async () => {
         using _ = spyOnConsole("warn");
         const query = gql`
-          query {
+          query CountQuery {
             count
           }
         `;
@@ -515,7 +516,8 @@ describe("ObservableQuery", () => {
 
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
-          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+          "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+          "CountQuery"
         );
 
         await expect(stream).toEmitTypedValue({
@@ -532,7 +534,7 @@ describe("ObservableQuery", () => {
       it("warns and does not start polling on a cache-only query when calling startPolling", async () => {
         using _ = spyOnConsole("warn");
         const query = gql`
-          query {
+          query CountQuery {
             count
           }
         `;
@@ -560,7 +562,8 @@ describe("ObservableQuery", () => {
 
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
-          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+          "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+          "CountQuery"
         );
 
         await expect(stream).not.toEmitAnything();
@@ -569,7 +572,7 @@ describe("ObservableQuery", () => {
       it("cancels polling when changing to a cache-only fetchPolicy", async () => {
         using _ = spyOnConsole("warn");
         const query = gql`
-          query {
+          query CountQuery {
             count
           }
         `;
@@ -628,7 +631,8 @@ describe("ObservableQuery", () => {
 
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
-          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+          "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+          "CountQuery"
         );
 
         await expect(stream).not.toEmitAnything();
@@ -2159,7 +2163,7 @@ describe("ObservableQuery", () => {
       });
 
       const expectedError = new InvariantError(
-        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `refetch` for 'cache-only' query 'query'. Please use a different fetch policy."
       );
 
       await expect(observable.refetch()).rejects.toEqual(expectedError);
@@ -4853,7 +4857,7 @@ describe("ObservableQuery", () => {
                 loading: false,
                 networkStatus: NetworkStatus.error,
                 error: new InvariantError(
-                  "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+                  "Cannot execute `refetch` for 'cache-only' query '(anonymous)'. Please use a different fetch policy."
                 ),
                 data: cacheValues.update2,
                 dataState: "complete",
@@ -4922,7 +4926,7 @@ describe("ObservableQuery", () => {
                 loading: false,
                 networkStatus: NetworkStatus.error,
                 error: new InvariantError(
-                  "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+                  "Cannot execute `refetch` for 'cache-only' query '(anonymous)'. Please use a different fetch policy."
                 ),
                 data: cacheValues.update2,
                 dataState: "complete",

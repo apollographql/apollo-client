@@ -713,7 +713,7 @@ describe("client.refetchQueries", () => {
       })
     ).rejects.toEqual(
       new InvariantError(
-        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `refetch` for 'cache-only' query 'C'. Please use a different fetch policy."
       )
     );
 
@@ -734,7 +734,7 @@ describe("client.refetchQueries", () => {
       data: { c: "C" },
       dataState: "complete",
       error: new InvariantError(
-        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `refetch` for 'cache-only' query 'C'. Please use a different fetch policy."
       ),
       loading: false,
       networkStatus: NetworkStatus.error,

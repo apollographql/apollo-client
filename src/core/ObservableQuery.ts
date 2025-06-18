@@ -18,6 +18,7 @@ import {
   compact,
   filterMap,
   getOperationDefinition,
+  getOperationName,
   getQueryDefinition,
   preventUnhandledRejection,
   toQueryResult,
@@ -657,7 +658,8 @@ export class ObservableQuery<
 
     if (fetchPolicy === "cache-only") {
       const error = newInvariantError(
-        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `refetch` for 'cache-only' query '%s'. Please use a different fetch policy.",
+        getOperationName(this.query, "(anonymous)")
       );
 
       this.setError(error);
@@ -729,7 +731,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): Promise<QueryResult<TFetchData>> {
     if (this.options.fetchPolicy === "cache-only") {
       const error = newInvariantError(
-        "Cannot execute `fetchMore` for a 'cache-only' query. Please use a different fetch policy."
+        "Cannot execute `fetchMore` for 'cache-only' query '%s'. Please use a different fetch policy.",
+        getOperationName(this.query, "(anonymous)")
       );
 
       this.setError(error);
@@ -1241,7 +1244,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (!pollInterval || !this.hasObservers() || fetchPolicy === "cache-only") {
       if (pollInterval && fetchPolicy === "cache-only") {
         invariant.warn(
-          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+          "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+          getOperationName(this.query, "(anonymous)")
         );
       }
 

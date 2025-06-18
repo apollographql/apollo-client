@@ -718,8 +718,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     updateQuery?: (
       previousQueryResult: Unmasked<TData>,
       options: {
-        fetchMoreResult: Unmasked<TData>;
-        variables: NoInfer<TVariables>;
+        fetchMoreResult: Unmasked<TFetchData>;
+        variables: TFetchVars;
       }
     ) => Unmasked<TData>;
   }): Promise<QueryResult<TFetchData>> {

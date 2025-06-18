@@ -21,7 +21,6 @@ import type {
   OnQueryUpdated,
   OperationVariables,
 } from "./types.js";
-import { Watch } from "typescript";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:

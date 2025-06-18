@@ -2141,10 +2141,12 @@ describe("ObservableQuery", () => {
       expect(observable.options.fetchPolicy).toBe("no-cache");
     });
 
-    it("does not allow refetch on cache-only query", async () => {
+    it("allows refetch on cache-only query", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
+        link: new MockLink([
+          { request: { query, variables }, result: { data: dataOne } },
+        ]),
       });
       const observable = client.watchQuery({
         query,
@@ -2162,18 +2164,24 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      const expectedError = new InvariantError(
-        "Cannot execute `refetch` for 'cache-only' query 'query'. Please use a different fetch policy."
-      );
-
-      await expect(observable.refetch()).rejects.toEqual(expectedError);
+      await expect(observable.refetch()).resolves.toStrictEqualTyped({
+        data: dataOne,
+      });
 
       await expect(stream).toEmitSimilarValue({
         expected: (previous) => ({
           ...previous,
-          error: expectedError,
-          networkStatus: NetworkStatus.error,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
         }),
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();

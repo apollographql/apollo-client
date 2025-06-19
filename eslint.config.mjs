@@ -146,6 +146,7 @@ export default [
           "./config/tsconfig.json",
           "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/data-masking/tsconfig.json",
+          "./scripts/codemods/ac3-to-ac4/tsconfig.json",
         ],
       },
     },

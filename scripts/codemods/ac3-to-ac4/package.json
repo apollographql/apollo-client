@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "devDependencies": {
+    "jscodeshift": "17.3.0",
+    "@types/jscodeshift": "17.3.0"
+  }
+}

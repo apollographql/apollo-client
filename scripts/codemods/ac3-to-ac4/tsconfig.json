@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "lib": ["ES2023", "esnext.asynciterable"],
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["./imports.ts"]
+}

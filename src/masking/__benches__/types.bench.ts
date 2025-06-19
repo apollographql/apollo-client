@@ -1,11 +1,12 @@
-import type { MaybeMasked, Unmasked } from "../index.js";
 import { attest, bench } from "@ark/attest";
-import { expectTypeOf } from "expect-type";
-import type { DeepPartial } from "../../utilities/index.js";
-
 import { setup } from "@ark/attest";
+import { expectTypeOf } from "expect-type";
+
+import type { TypedDocumentNode } from "@apollo/client";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
+
 import type { ContainsFragmentsRefs } from "../internal/types.js";
-import type { TypedDocumentNode } from "../../index.js";
 
 setup({
   updateSnapshots: !process.env.CI,
@@ -61,7 +62,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -116,7 +117,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -184,7 +185,7 @@ test("unmasks deeply nested nullable fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -232,7 +233,7 @@ test("unmasks DeepPartial types", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -248,7 +249,7 @@ test("unmasks DeepPartial types", (prefix) => {
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
-  }).types([111, "instantiations"]);
+  }).types([112, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
@@ -256,7 +257,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
-  }).types([115, "instantiations"]);
+  }).types([116, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
@@ -266,7 +267,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, Unmasked<unknown>>();
-  }).types([47, "instantiations"]);
+  }).types([48, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<Unmasked<unknown>>().toBeUnknown();
@@ -274,7 +275,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "any instantiations", () => {
     attest<any, Unmasked<any>>();
-  }).types([48, "instantiations"]);
+  }).types([49, "instantiations"]);
 
   bench(prefix + "any functionality", () => {
     expectTypeOf<Unmasked<any>>().toBeAny();
@@ -369,7 +370,7 @@ test("deals with overlapping array from parent fragment", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as Unmasked<Source>;
@@ -431,7 +432,7 @@ test("base type, multiple fragments on sub-types", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as Unmasked<Source>;
@@ -491,7 +492,7 @@ test("leaves tuples alone", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as Unmasked<Source>;
@@ -647,7 +648,7 @@ test("Unmasked handles branded primitive types", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([5, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as Unmasked<Source>;

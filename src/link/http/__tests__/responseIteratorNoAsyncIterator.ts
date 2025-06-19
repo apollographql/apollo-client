@@ -1,24 +1,13 @@
-import gql from "graphql-tag";
-import { execute } from "../../core/execute";
-import { HttpLink } from "../HttpLink";
-import { TextEncoder, TextDecoder } from "util";
+import { TextDecoder, TextEncoder } from "util";
+
+import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
-import { Readable } from "stream";
-import { ObservableStream } from "../../../testing/internal";
 
-// As of Jest 26 there is no way to mock/unmock a module that is used indirectly
-// via a single test file.
-// These tests duplicate __tests__/responseIterator.ts while mocking
-// `isAsyncIterableIterator = false` in order to test the integration of the
-// implementations inside /iterators via src/link/http/responseIterator.ts
-// which do not execute when isAsyncIterableIterator is true
-// See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
-
-jest.mock("../../../utilities/index.js", () => ({
-  __esModule: true,
-  ...jest.requireActual("../../../utilities/index.js"),
-  canUseAsyncIteratorSymbol: false,
-}));
+import { HttpLink } from "@apollo/client/link/http";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
@@ -187,7 +176,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -228,14 +217,14 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
   });
 
   it("can handle node stream bodies (strings) with default boundary", async () => {
-    const stream = Readable.from(
+    const stream = ReadableStream.from(
       bodyDefaultBoundary.split("\r\n").map((line) => line + "\r\n")
     );
 
@@ -255,72 +244,14 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (strings) with arbitrary splits", async () => {
-    let chunks: Array<string> = [];
-    let chunkSize = 15;
-    for (let i = 0; i < bodyCustomBoundary.length; i += chunkSize) {
-      chunks.push(bodyCustomBoundary.slice(i, i + chunkSize));
-    }
-    const stream = Readable.from(chunks);
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (array buffers)", async () => {
-    const stream = Readable.from(
-      bodyDefaultBoundary
-        .split("\r\n")
-        .map((line) => new TextEncoder().encode(line + "\r\n"))
-    );
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      // if no boundary is specified, default to -
-      headers: new Headers({
-        "content-type": `multipart/mixed`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
   });
 
   it("can handle node stream bodies (array buffers) with batched results", async () => {
-    const stream = Readable.from(
+    const stream = ReadableStream.from(
       bodyBatchedResults
         .split("\r\n")
         .map((line) => new TextEncoder().encode(line + "\r\n"))
@@ -342,8 +273,12 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of batchedResults) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
+
+    await expect(observableStream).toEmitTypedValue({
+      hasNext: false,
+    });
 
     await expect(observableStream).toComplete();
   });

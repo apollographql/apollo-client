@@ -16,13 +16,32 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ">=23.6.0"
+
+      - name: Check if any files in codegen/ changed
+        id: changed-files-codegen
+        uses: karpikpl/list-changed-files-action@1.1.4
+        with:
+          file-filter: "codegen/**"
 
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 
+      - name: Build AC
+        run: npm run build
+
+      - run: echo changed files ${{steps.changed-files-codegen.outputs.changed_files}}
+
+      - name: Build Codegen
+        if: steps.changed-files-codegen.outputs.changed_files != ''
+        run: npm run build
+        working-directory: "./codegen"
+
       - name: Build and publish to pkg.pr.new
-        run: npm run pkg-pr-new-publish
+        env:
+          PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.changed_files != '' && './codegen' || '' }}
+        # skipping --compact for a moment as there is an unreleased package
+        run: npx pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN

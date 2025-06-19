@@ -1,9 +1,11 @@
-import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+
+import type { OperationVariables } from "@apollo/client";
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, Reference } from "@apollo/client/utilities";
 
 import type { MissingFieldError } from "./common.js";
-import type { Reference } from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {
@@ -69,8 +71,6 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-    canonizeResults?: boolean;
   }
 
   export interface ReadFragmentOptions<TData, TVariables>
@@ -86,8 +86,6 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-    canonizeResults?: boolean;
   }
 
   export interface WriteOptions<TData> {
@@ -128,12 +126,19 @@ export namespace DataProxy {
       "data"
     > {}
 
-  export type DiffResult<T> = {
-    result?: T;
-    complete?: boolean;
-    missing?: MissingFieldError[];
-    fromOptimisticTransaction?: boolean;
-  };
+  export type DiffResult<TData> =
+    | {
+        result: TData;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DeepPartial<TData> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+      };
 }
 
 /**
@@ -146,25 +151,25 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType, TVariables = any>(
-    options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
+  readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.ReadQueryOptions<TData, TVariables>,
     optimistic?: boolean
-  ): Unmasked<QueryType> | null;
+  ): Unmasked<TData> | null;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there is more than
    * one fragment in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
+  readFragment<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.ReadFragmentOptions<TData, TVariables>,
     optimistic?: boolean
-  ): Unmasked<FragmentType> | null;
+  ): Unmasked<TData> | null;
 
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery<TData = any, TVariables = any>(
+  writeQuery<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>
   ): Reference | undefined;
 
@@ -173,7 +178,7 @@ export interface DataProxy {
    * one fragment in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment<TData = any, TVariables = any>(
+  writeFragment<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>
   ): Reference | undefined;
 }

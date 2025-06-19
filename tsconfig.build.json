@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "noEmit": false,
+    "types": [
+      // we don't want to include our types for `jest`, our custom matchers etc.
+      // if one of those is referenced in our production code, we want a
+      // build error, so we can fix it
+      // we also explicitly do not include `node` here as we don't want our build
+      // artefact to rely on those types (for now, at least)
+    ]
+  },
+  "extends": "./tsconfig.json",
+  "files": [
+    // during the `compileTs` build step, this will momentarily be populated
+    // with all entry points specified in the `package.json` file
+    // this way we don't bundle up any files that cannot be reached by an
+    // `import` statement
+  ],
+  "include": [],
+  "exclude": []
+}

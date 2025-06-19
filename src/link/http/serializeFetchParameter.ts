@@ -1,5 +1,5 @@
-import { newInvariantError } from "../../utilities/globals/index.js";
-import type { InvariantError } from "../../utilities/globals/index.js";
+import type { InvariantError } from "@apollo/client/utilities/invariant";
+import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 export type ClientParseError = InvariantError & {
   parseError: Error;

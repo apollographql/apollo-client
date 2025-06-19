@@ -66,9 +66,10 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   concatPagination,
+  getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
-import { compact, getMainDefinition } from "@apollo/client/utilities/internal";
+import { compact } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type {

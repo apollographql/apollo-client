@@ -61,9 +61,9 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   concatPagination,
+  getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
-import { getMainDefinition } from "@apollo/client/utilities/internal";
 
 import type {
   RefetchWritePolicy,

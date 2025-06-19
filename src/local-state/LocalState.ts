@@ -25,7 +25,7 @@ import type {
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalStateError, toErrorLike } from "@apollo/client/errors";
-import { stripTypename } from "@apollo/client/utilities";
+import { getMainDefinition, stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   FragmentMap,
@@ -37,7 +37,6 @@ import {
   createFragmentMap,
   dealias,
   getFragmentDefinitions,
-  getMainDefinition,
   hasDirectives,
   mergeDeep,
   mergeDeepArray,

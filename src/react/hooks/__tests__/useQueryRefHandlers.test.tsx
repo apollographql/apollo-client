@@ -33,8 +33,7 @@ import {
   setupPaginatedCase,
   setupSimpleCase,
 } from "@apollo/client/testing/internal";
-import { concatPagination } from "@apollo/client/utilities";
-import { getMainDefinition } from "@apollo/client/utilities/internal";
+import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
 
 import type {
   SubscribeToMoreFunction,

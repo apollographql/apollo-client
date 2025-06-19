@@ -10,12 +10,12 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
+import { getMainDefinition } from "@apollo/client/utilities";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
   getFragmentDefinitions,
   getFragmentFromSelection,
-  getMainDefinition,
   isField,
   resultKeyNameFromField,
   shouldInclude,

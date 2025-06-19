@@ -6,6 +6,7 @@ import { wrap } from "optimism";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
+  getMainDefinition,
   cacheSizes,
   canonicalStringify,
   isReference,
@@ -19,7 +20,6 @@ import {
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
-  getMainDefinition,
   getQueryDefinition,
   isArray,
   isField,

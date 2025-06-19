@@ -13,10 +13,13 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
-import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
+import {
+  addTypenameToDocument,
+  getMainDefinition,
+  isReference,
+} from "@apollo/client/utilities";
 import {
   cloneDeep,
-  getMainDefinition,
   makeReference,
   storeKeyNameFromField,
 } from "@apollo/client/utilities/internal";

@@ -16,22 +16,22 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/react/internal"
   );
 
-  renameTypeSpecifierUsingNamespace(
+  renameTypeSpecifierToNamespace(
     "ApolloConsumerProps",
     "ApolloConsumer.Props",
     "@apollo/client"
   );
-  renameTypeSpecifierUsingNamespace(
+  renameTypeSpecifierToNamespace(
     "ApolloConsumerProps",
     "ApolloConsumer.Props",
     "@apollo/client/react"
   );
-  renameTypeSpecifierUsingNamespace(
+  renameTypeSpecifierToNamespace(
     "ApolloProviderProps",
     "ApolloProvider.Props",
     "@apollo/client"
   );
-  renameTypeSpecifierUsingNamespace(
+  renameTypeSpecifierToNamespace(
     "ApolloProviderProps",
     "ApolloProvider.Props",
     "@apollo/client/react"
@@ -131,7 +131,7 @@ const transform: Transform = function transform(file, api) {
     }
   }
 
-  function renameTypeSpecifierUsingNamespace(
+  function renameTypeSpecifierToNamespace(
     from: string,
     namespace: `${string}.${string}`,
     sourceEntrypoint: string

@@ -49,14 +49,6 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/testing"
   );
 
-  // Move `gql` to `@apollo/client/react` if its the only one left
-  if (
-    isOnlySpecifier("gql", "@apollo/client") &&
-    hasImport("@apollo/client/react")
-  ) {
-    moveSpecifierToEntrypoint("gql", "@apollo/client", "@apollo/client/react");
-  }
-
   return source.toSource();
 
   function isOnlySpecifier(
@@ -73,10 +65,6 @@ const transform: Transform = function transform(file, api) {
         .find(j.ImportSpecifier)
         .size() === 1
     );
-  }
-
-  function hasImport(moduleName: string, importKind: ImportKind = "value") {
-    return getImportWithKind(moduleName, importKind).size() > 0;
   }
 
   function renameSpecifier(from: string, to: string, sourceEntrypoint: string) {

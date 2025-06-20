@@ -23,8 +23,10 @@ const transform: Transform = function transform(file, api) {
     "useSuspenseQuery",
     "useReactiveVar",
     "useReadQuery",
+  ].forEach((name) => moveValueSpecifierToEntrypoint(name, "/", "/react"));
 
-    // Types
+  // Types
+  [
     "ApolloContextValue",
     "BackgroundQueryHookFetchPolicy",
     "BackgroundQueryHookOptions",
@@ -63,11 +65,14 @@ const transform: Transform = function transform(file, api) {
     "UseSuspenseFragmentOptions",
     "UseSuspenseFragmentResult",
     "UseSuspenseQueryResult",
-  ].forEach((name) => moveSpecifierToEntrypoint(name, "/", "/react"));
+  ].forEach((name) => {
+    moveTypeSpecifierToEntrypoint(name, "/", "/react");
+    moveValueSpecifierToEntrypoint(name, "/", "/react");
+  });
 
   // Move `gql` to `@apollo/client/react` if its the only one left
   if (isOnlySpecifier("gql", "/") && hasImport(getEntrypoint("/react"))) {
-    moveSpecifierToEntrypoint("gql", "/", "/react");
+    moveValueSpecifierToEntrypoint("gql", "/", "/react");
   }
 
   removeImportIfEmpty("@apollo/client");
@@ -88,8 +93,25 @@ const transform: Transform = function transform(file, api) {
     return getImport(moduleName).size() > 0;
   }
 
-  function moveSpecifierToEntrypoint(
+  function moveValueSpecifierToEntrypoint(
     name: string,
+    sourcePath: string,
+    targetPath: string
+  ) {
+    moveSpecifier(name, "value", sourcePath, targetPath);
+  }
+
+  function moveTypeSpecifierToEntrypoint(
+    name: string,
+    sourcePath: string,
+    targetPath: string
+  ) {
+    moveSpecifier(name, "type", sourcePath, targetPath);
+  }
+
+  function moveSpecifier(
+    name: string,
+    importKind: "type" | "value",
     sourcePath: string,
     targetPath: string
   ) {
@@ -100,7 +122,6 @@ const transform: Transform = function transform(file, api) {
       return;
     }
 
-    const importKind = getImport(source).get("importKind").value;
     const specifier = getImportSpecifier(name, source);
     let targetImports = getImportWithKind(target, importKind);
 

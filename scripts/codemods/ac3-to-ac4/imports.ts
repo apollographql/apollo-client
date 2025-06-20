@@ -117,7 +117,7 @@ const transform: Transform = function transform(file, api) {
       return;
     }
 
-    const specifier = getSpecifierFrom(name, sourceEntrypoint, importKind);
+    const specifier = getSpecifier(name, sourceEntrypoint, importKind);
     let targetImports = getImportWithKind(targetEntrypoint, importKind);
 
     if (!targetImports.size()) {
@@ -147,7 +147,7 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  function getSpecifierFrom(
+  function getSpecifier(
     name: string,
     moduleName: string,
     importKind: ImportKind
@@ -165,7 +165,7 @@ const transform: Transform = function transform(file, api) {
     moduleName: string,
     importKind: ImportKind
   ) {
-    return !!getSpecifierFrom(name, moduleName, importKind).size();
+    return !!getSpecifier(name, moduleName, importKind).size();
   }
 
   function removeImportIfEmpty(moduleName: string) {

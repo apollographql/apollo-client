@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
@@ -11,8 +12,6 @@ import {
   graphQLResultHasError,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import type { IgnoreModifier } from "../cache/core/types/common.js";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";

@@ -76,9 +76,31 @@ const transform: Transform = function transform(file, api) {
     sourceEntrypoint: string,
     targetEntrypoint: string
   ) {
-    specifiers.forEach((name) =>
-      moveSpecifierToEntrypoint(name, sourceEntrypoint, targetEntrypoint)
-    );
+    if (
+      areAllSpecifiersFrom(
+        specifiers.concat(specifiers === REACT_IMPORTS_FROM_ROOT ? "gql" : []),
+        sourceEntrypoint
+      ) &&
+      !isOnlySpecifier("gql", sourceEntrypoint)
+    ) {
+      renameImport(sourceEntrypoint, targetEntrypoint);
+    } else {
+      specifiers.forEach((name) =>
+        moveSpecifierToEntrypoint(name, sourceEntrypoint, targetEntrypoint)
+      );
+    }
+  }
+
+  function areAllSpecifiersFrom(specifiers: string[], moduleName: string) {
+    return getImport(moduleName)
+      .find(j.ImportSpecifier)
+      .every((specifier) => {
+        return specifiers.includes(specifier.value.imported.name.toString());
+      });
+  }
+
+  function renameImport(from: string, to: string) {
+    getImport(from).find(j.Literal).replaceWith(j.literal(to));
   }
 
   function moveSpecifierToEntrypoint(

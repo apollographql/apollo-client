@@ -27,7 +27,13 @@ const transform: Transform = function transform(file, api) {
     "useSuspenseQuery",
     "useReactiveVar",
     "useReadQuery",
-  ].forEach((name) => moveValueSpecifierToEntrypoint(name, "/", "/react"));
+  ].forEach((name) =>
+    moveValueSpecifierToEntrypoint(
+      name,
+      "@apollo/client",
+      "@apollo/client/react"
+    )
+  );
 
   // Types
   [
@@ -70,31 +76,52 @@ const transform: Transform = function transform(file, api) {
     "UseSuspenseFragmentResult",
     "UseSuspenseQueryResult",
   ].forEach((name) => {
-    moveTypeSpecifierToEntrypoint(name, "/", "/react");
-    moveValueSpecifierToEntrypoint(name, "/", "/react");
+    moveTypeSpecifierToEntrypoint(
+      name,
+      "@apollo/client",
+      "@apollo/client/react"
+    );
+    moveValueSpecifierToEntrypoint(
+      name,
+      "@apollo/client",
+      "@apollo/client/react"
+    );
   });
 
   // Move `gql` to `@apollo/client/react` if its the only one left
-  if (isOnlySpecifier("gql", "/") && hasImport(getEntrypoint("/react"))) {
-    moveValueSpecifierToEntrypoint("gql", "/", "/react");
+  if (
+    isOnlySpecifier("gql", "@apollo/client") &&
+    hasImport("@apollo/client/react")
+  ) {
+    moveValueSpecifierToEntrypoint(
+      "gql",
+      "@apollo/client",
+      "@apollo/client/react"
+    );
   }
 
   removeImportIfEmpty("@apollo/client");
 
   return source.toSource();
 
-  function isOnlySpecifier(name: string, path: string) {
-    const entrypoint = getEntrypoint(path);
-
-    if (!hasSpecifier(name, entrypoint)) {
+  function isOnlySpecifier(
+    name: string,
+    entrypoint: string,
+    importKind: ImportKind = "value"
+  ) {
+    if (!hasSpecifier(name, entrypoint, importKind)) {
       return false;
     }
 
-    return getImport(entrypoint).find(j.ImportSpecifier).size() === 1;
+    return (
+      getImportWithKind(entrypoint, importKind)
+        .find(j.ImportSpecifier)
+        .size() === 1
+    );
   }
 
-  function hasImport(moduleName: string) {
-    return getImport(moduleName).size() > 0;
+  function hasImport(moduleName: string, importKind: ImportKind = "value") {
+    return getImportWithKind(moduleName, importKind).size() > 0;
   }
 
   function moveValueSpecifierToEntrypoint(
@@ -116,12 +143,9 @@ const transform: Transform = function transform(file, api) {
   function moveSpecifier(
     name: string,
     importKind: ImportKind,
-    sourcePath: string,
-    targetPath: string
+    sourceEntrypoint: string,
+    targetEntrypoint: string
   ) {
-    const sourceEntrypoint = getEntrypoint(sourcePath);
-    const targetEntrypoint = getEntrypoint(targetPath);
-
     combineImports(sourceEntrypoint);
     combineImports(targetEntrypoint);
 
@@ -181,14 +205,6 @@ const transform: Transform = function transform(file, api) {
     importKind: ImportKind
   ) {
     return !!getSpecifierFrom(name, moduleName, importKind).size();
-  }
-
-  function createSpecifier(name: string, local?: string) {
-    return j.importSpecifier(j.identifier(name), j.identifier(local ?? name));
-  }
-
-  function getEntrypoint(path: string) {
-    return "@apollo/client" + (path === "/" ? "" : path);
   }
 
   function removeImportIfEmpty(moduleName: string) {

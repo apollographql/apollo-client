@@ -8,6 +8,14 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
+  renameSpecifier("QueryReference", "QueryRef", "@apollo/client");
+  renameSpecifier("QueryReference", "QueryRef", "@apollo/client/react");
+  renameSpecifier(
+    "QueryReference",
+    "QueryRef",
+    "@apollo/client/react/internal"
+  );
+
   moveSpecifiersToEntrypoint(
     REACT_IMPORTS_FROM_ROOT,
     "@apollo/client",
@@ -69,6 +77,24 @@ const transform: Transform = function transform(file, api) {
 
   function hasImport(moduleName: string, importKind: ImportKind = "value") {
     return getImportWithKind(moduleName, importKind).size() > 0;
+  }
+
+  function renameSpecifier(from: string, to: string, sourceEntrypoint: string) {
+    const specifier = getImport(sourceEntrypoint).find(j.ImportSpecifier, {
+      imported: { name: from },
+    });
+
+    if (!specifier.size()) {
+      return;
+    }
+
+    const alias = specifier.get("local", "name").value;
+
+    specifier.find(j.Identifier, { name: from }).replaceWith(j.identifier(to));
+
+    if (alias === from) {
+      source.find(j.Identifier, { name: from }).replaceWith(j.identifier(to));
+    }
   }
 
   function moveSpecifiersToEntrypoint(

@@ -23,9 +23,24 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("useReadQuery", "/", "/react");
   moveSpecifierToEntrypoint("skipToken", "/", "/react");
 
+  // Move `gql` to `@apollo/client/react` if its the only one left
+  if (hasOnlySpecifier("gql", "/")) {
+    moveSpecifierToEntrypoint("gql", "/", "/react");
+  }
+
   removeImportIfEmpty("@apollo/client");
 
   return source.toSource();
+
+  function hasOnlySpecifier(name: string, path: string) {
+    const entrypoint = getEntrypoint(path);
+
+    if (!hasSpecifier(name, entrypoint)) {
+      return false;
+    }
+
+    return getImport(entrypoint).find(j.ImportSpecifier).size() === 1;
+  }
 
   function moveSpecifierToEntrypoint(
     name: string,

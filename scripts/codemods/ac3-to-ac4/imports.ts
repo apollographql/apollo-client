@@ -8,25 +8,25 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  REACT_IMPORTS_FROM_ROOT.forEach((name) => {
-    moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
-  });
-
-  UTILITIES_INTERNAL_IMPORTS.forEach((name) => {
-    moveSpecifiertoEntrypoint(
-      name,
-      "@apollo/client/utilities",
-      "@apollo/client/utilities/internal"
-    );
-  });
-
-  moveSpecifiertoEntrypoint(
-    "MockedProvider",
-    "@apollo/client/testing",
-    "@apollo/client/testing/react"
+  moveSpecifiersToEntrypoint(
+    REACT_IMPORTS_FROM_ROOT,
+    "@apollo/client",
+    "@apollo/client/react"
   );
-  moveSpecifiertoEntrypoint(
-    "MockedProviderProps",
+  moveSpecifiersToEntrypoint(
+    REACT_CONTEXT_IMPORTS,
+    "@apollo/client/react/context",
+    "@apollo/client/react"
+  );
+
+  moveSpecifiersToEntrypoint(
+    UTILITIES_INTERNAL_IMPORTS,
+    "@apollo/client/utilities",
+    "@apollo/client/utilities/internal"
+  );
+
+  moveSpecifiersToEntrypoint(
+    ["MockedProvider", "MockedProviderProps"],
     "@apollo/client/testing",
     "@apollo/client/testing/react"
   );
@@ -46,7 +46,7 @@ const transform: Transform = function transform(file, api) {
     isOnlySpecifier("gql", "@apollo/client") &&
     hasImport("@apollo/client/react")
   ) {
-    moveSpecifiertoEntrypoint("gql", "@apollo/client", "@apollo/client/react");
+    moveSpecifierToEntrypoint("gql", "@apollo/client", "@apollo/client/react");
   }
 
   removeImportIfEmpty("@apollo/client");
@@ -74,7 +74,17 @@ const transform: Transform = function transform(file, api) {
     return getImportWithKind(moduleName, importKind).size() > 0;
   }
 
-  function moveSpecifiertoEntrypoint(
+  function moveSpecifiersToEntrypoint(
+    specifiers: string[],
+    sourceEntrypoint: string,
+    targetEntrypoint: string
+  ) {
+    specifiers.forEach((name) =>
+      moveSpecifierToEntrypoint(name, sourceEntrypoint, targetEntrypoint)
+    );
+  }
+
+  function moveSpecifierToEntrypoint(
     name: string,
     sourceEntrypoint: string,
     targetEntrypoint: string
@@ -277,6 +287,19 @@ const REACT_IMPORTS_FROM_ROOT = [
   "UseSuspenseFragmentOptions",
   "UseSuspenseFragmentResult",
   "UseSuspenseQueryResult",
+];
+
+const REACT_CONTEXT_IMPORTS = [
+  "ApolloConsumer",
+  "getApolloContext",
+  "ApolloProvider",
+
+  // Types
+  // TODO: Rename to ApolloConsumer.Props
+  // "ApolloConsumerProps",
+  "ApolloContextValue",
+  // TODO: Rename to ApolloProvider.Props
+  // "ApolloProviderProps",
 ];
 
 const UTILITIES_INTERNAL_IMPORTS = [

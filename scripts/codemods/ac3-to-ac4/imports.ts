@@ -36,7 +36,16 @@ const transform: Transform = function transform(file, api) {
     "ApolloProvider.Props",
     "@apollo/client/react"
   );
-
+  renameTypeSpecifierToNamespace(
+    "ErrorResponse",
+    "ErrorLink.ErrorHandlerOptions",
+    "@apollo/client/link/error"
+  );
+  renameTypeSpecifierToNamespace(
+    "ErrorResponse",
+    "PersistedQueryLink.DisableFunctionOptions",
+    "@apollo/client/link/persisted-queries"
+  );
   moveSpecifiersToEntrypoint(
     REACT_IMPORTS_FROM_ROOT,
     "@apollo/client",

@@ -13137,6 +13137,123 @@ test("rerenders if refetch returns same result for different variables with noti
   await expect(renderStream).not.toRerender();
 });
 
+test("rerenders if changing variables returns same result for different variables with notifyOnNetworkStatusChange: false", async () => {
+  type Data = typeof data;
+  type Vars = { first: number };
+  const query: TypedDocumentNode<Data, Vars> = gql`
+    query people($first: Int!) {
+      allPeople(first: $first) {
+        people {
+          name
+          friends(id: $first) {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const variables1: Vars = { first: 1 };
+  const variables2: Vars = { first: 2 };
+  const data = {
+    allPeople: {
+      __typename: "AllPeople",
+      people: [
+        {
+          __typename: "Person",
+          name: "Luke Skywalker",
+          friends: [{ __typename: "Person", name: "r2d2" }],
+        },
+      ],
+    },
+  };
+
+  const link = new MockLink([
+    {
+      request: { query, variables: variables1 },
+      result: { data },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
+    {
+      request: { query, variables: variables2 },
+      result: { data },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
+  ]);
+
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ variables }) =>
+      useQuery(query, { variables, notifyOnNetworkStatusChange: false }),
+    {
+      initialProps: { variables: variables1 },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: variables1,
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data,
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: variables1,
+  });
+
+  await rerender({ variables: variables2 });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    previousData: data,
+    variables: variables2,
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data,
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: data,
+    variables: variables2,
+  });
+
+  await expect(
+    getCurrentSnapshot().refetch(variables1)
+  ).resolves.toStrictEqualTyped({ data });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data,
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: data,
+    variables: variables1,
+  });
+
+  await expect(renderStream).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {
     const { query } = setupSimpleCase();

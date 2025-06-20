@@ -24,7 +24,7 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("skipToken", "/", "/react");
 
   // Move `gql` to `@apollo/client/react` if its the only one left
-  if (isOnlySpecifier("gql", "/")) {
+  if (isOnlySpecifier("gql", "/") && hasImport(getEntrypoint("/react"))) {
     moveSpecifierToEntrypoint("gql", "/", "/react");
   }
 
@@ -40,6 +40,10 @@ const transform: Transform = function transform(file, api) {
     }
 
     return getImport(entrypoint).find(j.ImportSpecifier).size() === 1;
+  }
+
+  function hasImport(moduleName: string) {
+    return getImport(moduleName).size() > 0;
   }
 
   function moveSpecifierToEntrypoint(

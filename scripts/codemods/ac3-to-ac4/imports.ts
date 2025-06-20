@@ -16,6 +16,27 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/react/internal"
   );
 
+  renameTypeSpecifierUsingNamespace(
+    "ApolloConsumerProps",
+    "ApolloConsumer.Props",
+    "@apollo/client"
+  );
+  renameTypeSpecifierUsingNamespace(
+    "ApolloConsumerProps",
+    "ApolloConsumer.Props",
+    "@apollo/client/react"
+  );
+  renameTypeSpecifierUsingNamespace(
+    "ApolloProviderProps",
+    "ApolloProvider.Props",
+    "@apollo/client"
+  );
+  renameTypeSpecifierUsingNamespace(
+    "ApolloProviderProps",
+    "ApolloProvider.Props",
+    "@apollo/client/react"
+  );
+
   moveSpecifiersToEntrypoint(
     REACT_IMPORTS_FROM_ROOT,
     "@apollo/client",
@@ -108,6 +129,41 @@ const transform: Transform = function transform(file, api) {
         })
         .replaceWith(newIdentifier);
     }
+  }
+
+  function renameTypeSpecifierUsingNamespace(
+    from: string,
+    namespace: `${string}.${string}`,
+    sourceEntrypoint: string
+  ) {
+    const [to] = namespace.split(".");
+    const sourceImports = getImport(sourceEntrypoint);
+
+    if (!hasSpecifier(from, sourceEntrypoint)) {
+      return;
+    }
+
+    if (!hasSpecifier(to, sourceEntrypoint)) {
+      sourceImports.insertAfter(
+        j.importDeclaration(
+          [j.importSpecifier(j.identifier(to))],
+          j.literal(sourceEntrypoint),
+          "type"
+        )
+      );
+    }
+
+    source
+      .find(j.Identifier, { name: from })
+      .filter(({ parentPath }) => {
+        return (
+          j.TSTypeReference.check(parentPath.value) ||
+          j.TSTypeAnnotation.check(parentPath.value)
+        );
+      })
+      .replaceWith(j.identifier(namespace));
+
+    getSpecifier(from, sourceEntrypoint).remove();
   }
 
   function moveSpecifiersToEntrypoint(
@@ -364,11 +420,7 @@ const REACT_CONTEXT_IMPORTS = [
   "ApolloProvider",
 
   // Types
-  // TODO: Rename to ApolloConsumer.Props
-  // "ApolloConsumerProps",
   "ApolloContextValue",
-  // TODO: Rename to ApolloProvider.Props
-  // "ApolloProviderProps",
 ];
 
 const UTILITIES_INTERNAL_IMPORTS = [

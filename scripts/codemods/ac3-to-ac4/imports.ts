@@ -15,7 +15,6 @@ const transform: Transform = function transform(file, api) {
       "@apollo/client/react"
     )
   );
-
   REACT_TYPE_IMPORTS.forEach((name) => {
     moveTypeSpecifierToEntrypoint(
       name,
@@ -26,6 +25,26 @@ const transform: Transform = function transform(file, api) {
       name,
       "@apollo/client",
       "@apollo/client/react"
+    );
+  });
+  UTILITIES_INTERNAL_IMPORTS.forEach((name) => {
+    moveValueSpecifierToEntrypoint(
+      name,
+      "@apollo/client/utilities",
+      "@apollo/client/utilities/internal"
+    );
+  });
+
+  UTILITIES_INTERNAL_TYPES_IMPORTS.forEach((name) => {
+    moveValueSpecifierToEntrypoint(
+      name,
+      "@apollo/client/utilities",
+      "@apollo/client/utilities/internal"
+    );
+    moveTypeSpecifierToEntrypoint(
+      name,
+      "@apollo/client/utilities",
+      "@apollo/client/utilities/internal"
     );
   });
 
@@ -253,6 +272,76 @@ const REACT_TYPE_IMPORTS = [
   "UseSuspenseFragmentOptions",
   "UseSuspenseFragmentResult",
   "UseSuspenseQueryResult",
+];
+
+const UTILITIES_INTERNAL_IMPORTS = [
+  "AutoCleanedStrongCache",
+  "AutoCleanedWeakCache",
+  "argumentsObjectFromField",
+  "canUseDOM",
+  "checkDocument",
+  "cloneDeep",
+  "compact",
+  "createFragmentMap",
+  "createFulfilledPromise",
+  "createRejectedPromise",
+  "dealias",
+  "decoratePromise",
+  "DeepMerger",
+  "getDefaultValues",
+  "getFragmentFromSelection",
+  "getFragmentQueryDocument",
+  "getFragmentDefinition",
+  "getFragmentDefinitions",
+  "getGraphQLErrorsFromResult",
+  "getOperationDefinition",
+  "getOperationName",
+  "getQueryDefinition",
+  "getStoreKeyName",
+  "graphQLResultHasError",
+  "hasDirectives",
+  "hasForcedResolvers",
+  "isArray",
+  "isDocumentNode",
+  "isField",
+  "isNonEmptyArray",
+  "isNonNullObject",
+  "isPlainObject",
+  "makeReference",
+  "makeUniqueId",
+  "maybeDeepFreeze",
+  "mergeDeep",
+  "mergeDeepArray",
+  "mergeOptions",
+  "omitDeep",
+  "preventUnhandledRejection",
+  "removeDirectivesFromDocument",
+  "resultKeyNameFromField",
+  "shouldInclude",
+  "storeKeyNameFromField",
+  "stringifyForDisplay",
+  "toQueryResult",
+  "filterMap",
+  "getApolloCacheMemoryInternals",
+  "getApolloClientMemoryInternals",
+  "getInMemoryCacheMemoryInternals",
+  "registerGlobalCache",
+];
+
+const UTILITIES_INTERNAL_TYPES_IMPORTS = [
+  "DecoratedPromise",
+  "DeepOmit",
+  "FragmentMap",
+  "FragmentMapFunction",
+  "FulfilledPromise",
+  "IsAny",
+  "NoInfer",
+  "PendingPromise",
+  "Prettify",
+  "Primitive",
+  "RejectedPromise",
+  "RemoveIndexSignature",
+  "VariablesOption",
 ];
 
 export default transform;

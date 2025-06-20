@@ -152,12 +152,9 @@ const transform: Transform = function transform(file, api) {
     moduleName: string,
     importKind: ImportKind
   ) {
-    return source
-      .find(j.ImportDeclaration, {
-        importKind,
-        source: { value: moduleName },
-      })
-      .find(j.ImportSpecifier, { imported: { type: "Identifier", name } });
+    return getImportWithKind(moduleName, importKind).find(j.ImportSpecifier, {
+      imported: { type: "Identifier", name },
+    });
   }
 
   function hasSpecifier(

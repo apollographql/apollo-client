@@ -4,24 +4,66 @@ const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
 
-  moveSpecifierToEntrypoint("ApolloConsumer", "/", "/react");
-  moveSpecifierToEntrypoint("ApolloProvider", "/", "/react");
-  moveSpecifierToEntrypoint("createQueryPreloader", "/", "/react");
-  moveSpecifierToEntrypoint("getApolloContext", "/", "/react");
-  moveSpecifierToEntrypoint("skipToken", "/", "/react");
-  moveSpecifierToEntrypoint("useApolloClient", "/", "/react");
-  moveSpecifierToEntrypoint("useBackgroundQuery", "/", "/react");
-  moveSpecifierToEntrypoint("useFragment", "/", "/react");
-  moveSpecifierToEntrypoint("useLazyQuery", "/", "/react");
-  moveSpecifierToEntrypoint("useLoadableQuery", "/", "/react");
-  moveSpecifierToEntrypoint("useMutation", "/", "/react");
-  moveSpecifierToEntrypoint("useQuery", "/", "/react");
-  moveSpecifierToEntrypoint("useQueryRefHandlers", "/", "/react");
-  moveSpecifierToEntrypoint("useSubscription", "/", "/react");
-  moveSpecifierToEntrypoint("useSuspenseFragment", "/", "/react");
-  moveSpecifierToEntrypoint("useSuspenseQuery", "/", "/react");
-  moveSpecifierToEntrypoint("useReactiveVar", "/", "/react");
-  moveSpecifierToEntrypoint("useReadQuery", "/", "/react");
+  [
+    "ApolloConsumer",
+    "ApolloProvider",
+    "createQueryPreloader",
+    "getApolloContext",
+    "skipToken",
+    "useApolloClient",
+    "useBackgroundQuery",
+    "useFragment",
+    "useLazyQuery",
+    "useLoadableQuery",
+    "useMutation",
+    "useQuery",
+    "useQueryRefHandlers",
+    "useSubscription",
+    "useSuspenseFragment",
+    "useSuspenseQuery",
+    "useReactiveVar",
+    "useReadQuery",
+
+    // Types
+    "ApolloContextValue",
+    "BackgroundQueryHookFetchPolicy",
+    "BackgroundQueryHookOptions",
+    "LazyQueryExecFunction",
+    "LazyQueryHookExecOptions",
+    "LazyQueryHookOptions",
+    "LazyQueryResult",
+    "LazyQueryResultTuple",
+    "LoadableQueryFetchPolicy",
+    "LoadableQueryHookOptions",
+    "LoadQueryFunction",
+    "MutationFunctionOptions",
+    "MutationHookOptions",
+    "MutationResult",
+    "MutationTuple",
+    "OnDataOptions",
+    "OnSubscriptionDataOptions",
+    "PreloadedQueryRef",
+    "PreloadQueryFetchPolicy",
+    "PreloadQueryFunction",
+    "PreloadQueryOptions",
+    "QueryHookOptions",
+    "QueryRef",
+    "QueryResult",
+    "SkipToken",
+    "SubscriptionHookOptions",
+    "SubscriptionResult",
+    "SuspenseQueryHookFetchPolicy",
+    "SuspenseQueryHookOptions",
+    "UseBackgroundQueryResult",
+    "UseFragmentOptions",
+    "UseFragmentResult",
+    "UseLoadableQueryResult",
+    "UseQueryRefHandlersResult",
+    "UseReadQueryResult",
+    "UseSuspenseFragmentOptions",
+    "UseSuspenseFragmentResult",
+    "UseSuspenseQueryResult",
+  ].forEach((name) => moveSpecifierToEntrypoint(name, "/", "/react"));
 
   // Move `gql` to `@apollo/client/react` if its the only one left
   if (isOnlySpecifier("gql", "/") && hasImport(getEntrypoint("/react"))) {

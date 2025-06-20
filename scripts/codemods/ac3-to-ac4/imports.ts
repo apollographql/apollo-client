@@ -8,26 +8,7 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  [
-    "ApolloConsumer",
-    "ApolloProvider",
-    "createQueryPreloader",
-    "getApolloContext",
-    "skipToken",
-    "useApolloClient",
-    "useBackgroundQuery",
-    "useFragment",
-    "useLazyQuery",
-    "useLoadableQuery",
-    "useMutation",
-    "useQuery",
-    "useQueryRefHandlers",
-    "useSubscription",
-    "useSuspenseFragment",
-    "useSuspenseQuery",
-    "useReactiveVar",
-    "useReadQuery",
-  ].forEach((name) =>
+  REACT_VALUE_IMPORTS.forEach((name) =>
     moveValueSpecifierToEntrypoint(
       name,
       "@apollo/client",
@@ -35,47 +16,7 @@ const transform: Transform = function transform(file, api) {
     )
   );
 
-  // Types
-  [
-    "ApolloContextValue",
-    "BackgroundQueryHookFetchPolicy",
-    "BackgroundQueryHookOptions",
-    "LazyQueryExecFunction",
-    "LazyQueryHookExecOptions",
-    "LazyQueryHookOptions",
-    "LazyQueryResult",
-    "LazyQueryResultTuple",
-    "LoadableQueryFetchPolicy",
-    "LoadableQueryHookOptions",
-    "LoadQueryFunction",
-    "MutationFunctionOptions",
-    "MutationHookOptions",
-    "MutationResult",
-    "MutationTuple",
-    "OnDataOptions",
-    "OnSubscriptionDataOptions",
-    "PreloadedQueryRef",
-    "PreloadQueryFetchPolicy",
-    "PreloadQueryFunction",
-    "PreloadQueryOptions",
-    "QueryHookOptions",
-    "QueryRef",
-    "QueryResult",
-    "SkipToken",
-    "SubscriptionHookOptions",
-    "SubscriptionResult",
-    "SuspenseQueryHookFetchPolicy",
-    "SuspenseQueryHookOptions",
-    "UseBackgroundQueryResult",
-    "UseFragmentOptions",
-    "UseFragmentResult",
-    "UseLoadableQueryResult",
-    "UseQueryRefHandlersResult",
-    "UseReadQueryResult",
-    "UseSuspenseFragmentOptions",
-    "UseSuspenseFragmentResult",
-    "UseSuspenseQueryResult",
-  ].forEach((name) => {
+  REACT_TYPE_IMPORTS.forEach((name) => {
     moveTypeSpecifierToEntrypoint(
       name,
       "@apollo/client",
@@ -251,5 +192,67 @@ const transform: Transform = function transform(file, api) {
     });
   }
 };
+
+const REACT_VALUE_IMPORTS = [
+  "ApolloConsumer",
+  "ApolloProvider",
+  "createQueryPreloader",
+  "getApolloContext",
+  "skipToken",
+  "useApolloClient",
+  "useBackgroundQuery",
+  "useFragment",
+  "useLazyQuery",
+  "useLoadableQuery",
+  "useMutation",
+  "useQuery",
+  "useQueryRefHandlers",
+  "useSubscription",
+  "useSuspenseFragment",
+  "useSuspenseQuery",
+  "useReactiveVar",
+  "useReadQuery",
+];
+
+const REACT_TYPE_IMPORTS = [
+  "ApolloContextValue",
+  "BackgroundQueryHookFetchPolicy",
+  "BackgroundQueryHookOptions",
+  "LazyQueryExecFunction",
+  "LazyQueryHookExecOptions",
+  "LazyQueryHookOptions",
+  "LazyQueryResult",
+  "LazyQueryResultTuple",
+  "LoadableQueryFetchPolicy",
+  "LoadableQueryHookOptions",
+  "LoadQueryFunction",
+  "MutationFunctionOptions",
+  "MutationHookOptions",
+  "MutationResult",
+  "MutationTuple",
+  "OnDataOptions",
+  "OnSubscriptionDataOptions",
+  "PreloadedQueryRef",
+  "PreloadQueryFetchPolicy",
+  "PreloadQueryFunction",
+  "PreloadQueryOptions",
+  "QueryHookOptions",
+  "QueryRef",
+  "QueryResult",
+  "SkipToken",
+  "SubscriptionHookOptions",
+  "SubscriptionResult",
+  "SuspenseQueryHookFetchPolicy",
+  "SuspenseQueryHookOptions",
+  "UseBackgroundQueryResult",
+  "UseFragmentOptions",
+  "UseFragmentResult",
+  "UseLoadableQueryResult",
+  "UseQueryRefHandlersResult",
+  "UseReadQueryResult",
+  "UseSuspenseFragmentOptions",
+  "UseSuspenseFragmentResult",
+  "UseSuspenseQueryResult",
+];
 
 export default transform;

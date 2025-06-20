@@ -48,6 +48,12 @@ const transform: Transform = function transform(file, api) {
     );
   });
 
+  moveAllSpecifiersToEntrypoint("@apollo/client/core", "@apollo/client");
+  moveAllSpecifiersToEntrypoint(
+    "@apollo/client/link/core",
+    "@apollo/client/link"
+  );
+
   // Move `gql` to `@apollo/client/react` if its the only one left
   if (
     isOnlySpecifier("gql", "@apollo/client") &&
@@ -206,6 +212,32 @@ const transform: Transform = function transform(file, api) {
       });
 
       j(astPath).remove();
+    });
+  }
+
+  function moveAllSpecifiersToEntrypoint(
+    sourceEntrypoint: string,
+    targetEntrypoint: string
+  ) {
+    (["value", "type"] as const).forEach((importKind) => {
+      const imports = getImportWithKind(sourceEntrypoint, importKind);
+
+      if (!imports.size()) {
+        return;
+      }
+
+      imports
+        .get("specifiers")
+        .value.forEach((specifier: namedTypes.ImportSpecifier) => {
+          moveSpecifier(
+            specifier.imported.name.toString(),
+            importKind,
+            sourceEntrypoint,
+            targetEntrypoint
+          );
+        });
+
+      imports.remove();
     });
   }
 };

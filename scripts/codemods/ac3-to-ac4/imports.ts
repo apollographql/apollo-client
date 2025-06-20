@@ -168,7 +168,7 @@ const transform: Transform = function transform(file, api) {
       return;
     }
 
-    const specifier = getSpecifier(name, sourceEntrypoint, importKind);
+    const specifier = getSpecifierWithKind(name, sourceEntrypoint, importKind);
     let targetImports = getImportWithKind(targetEntrypoint, importKind);
 
     if (!targetImports.size()) {
@@ -198,7 +198,7 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  function getSpecifier(
+  function getSpecifierWithKind(
     name: string,
     moduleName: string,
     importKind: ImportKind
@@ -208,10 +208,14 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  function hasSpecifier(name: string, moduleName: string) {
-    return !!getImport(moduleName).find(j.ImportSpecifier, {
+  function getSpecifier(name: string, moduleName: string) {
+    return getImport(moduleName).find(j.ImportSpecifier, {
       imported: { type: "Identifier", name },
     });
+  }
+
+  function hasSpecifier(name: string, moduleName: string) {
+    return !!getSpecifier(name, moduleName).size();
   }
 
   function hasSpecifierWithKind(
@@ -219,7 +223,7 @@ const transform: Transform = function transform(file, api) {
     moduleName: string,
     importKind: ImportKind
   ) {
-    return !!getSpecifier(name, moduleName, importKind).size();
+    return !!getSpecifierWithKind(name, moduleName, importKind).size();
   }
 
   function removeImportIfEmpty(moduleName: string) {

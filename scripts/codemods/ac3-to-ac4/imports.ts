@@ -132,19 +132,20 @@ const transform: Transform = function transform(file, api) {
       return;
     }
 
-    const specifier = getImportSpecifier(name, source);
-    let targetImports = getImportWithKind(target, importKind);
+    const specifier = getSpecifierFrom(name, sourceEntrypoint, importKind);
+    let targetImports = getImportWithKind(targetEntrypoint, importKind);
 
     if (!targetImports.size()) {
-      const newModule = j.importDeclaration([], j.literal(target), importKind);
-      getImport(source).insertAfter(newModule);
+      const newModule = j.importDeclaration(
+        [],
+        j.literal(targetEntrypoint),
+        importKind
+      );
+      getImportWithKind(sourceEntrypoint, importKind).insertAfter(newModule);
       targetImports = j(newModule);
     }
 
-    targetImports
-      .get("specifiers")
-      .push(createSpecifier(name, specifier.get("local", "name").value));
-
+    targetImports.get("specifiers").push(specifier.paths()[0].value);
     specifier.remove();
   }
 
@@ -154,25 +155,32 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  function getImportWithKind(moduleName: string, importKind: "type" | "value") {
+  function getImportWithKind(moduleName: string, importKind: ImportKind) {
     return source.find(j.ImportDeclaration, {
       importKind,
       source: { value: moduleName },
     });
   }
 
-  function getImportSpecifier(name: string, moduleName: string) {
-    const imports = getImport(moduleName);
-
-    return imports.find(j.ImportSpecifier, {
-      imported: { type: "Identifier", name },
-    });
+  function getSpecifierFrom(
+    name: string,
+    moduleName: string,
+    importKind: ImportKind
+  ) {
+    return source
+      .find(j.ImportDeclaration, {
+        importKind,
+        source: { value: moduleName },
+      })
+      .find(j.ImportSpecifier, { imported: { type: "Identifier", name } });
   }
 
-  function hasSpecifier(name: string, moduleName: string) {
-    return !!getImport(moduleName)
-      .find(j.ImportSpecifier, { imported: { type: "Identifier", name } })
-      .size();
+  function hasSpecifier(
+    name: string,
+    moduleName: string,
+    importKind: ImportKind
+  ) {
+    return !!getSpecifierFrom(name, moduleName, importKind).size();
   }
 
   function createSpecifier(name: string, local?: string) {
@@ -186,8 +194,12 @@ const transform: Transform = function transform(file, api) {
   function removeImportIfEmpty(moduleName: string) {
     const imports = getImport(moduleName);
 
-    if (imports.size() && !imports.get("specifiers", "length").value) {
-      imports.remove();
+    if (imports.size()) {
+      imports.forEach((astPath) => {
+        if (!astPath.value.specifiers?.length) {
+          j(astPath).remove();
+        }
+      });
     }
   }
 

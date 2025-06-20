@@ -1,8 +1,12 @@
-import type { Transform } from "jscodeshift";
+import type { namedTypes } from "ast-types";
+import type { ASTPath, Transform } from "jscodeshift";
+
+type ImportKind = "type" | "value";
 
 const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
+  const combined: Record<string, boolean> = {};
 
   [
     "ApolloConsumer",
@@ -111,14 +115,20 @@ const transform: Transform = function transform(file, api) {
 
   function moveSpecifier(
     name: string,
-    importKind: "type" | "value",
+    importKind: ImportKind,
     sourcePath: string,
     targetPath: string
   ) {
-    const source = getEntrypoint(sourcePath);
-    const target = getEntrypoint(targetPath);
+    const sourceEntrypoint = getEntrypoint(sourcePath);
+    const targetEntrypoint = getEntrypoint(targetPath);
 
-    if (hasSpecifier(name, target) || !hasSpecifier(name, source)) {
+    combineImports(sourceEntrypoint);
+    combineImports(targetEntrypoint);
+
+    if (
+      hasSpecifier(name, targetEntrypoint, importKind) ||
+      !hasSpecifier(name, sourceEntrypoint, importKind)
+    ) {
       return;
     }
 
@@ -179,6 +189,38 @@ const transform: Transform = function transform(file, api) {
     if (imports.size() && !imports.get("specifiers", "length").value) {
       imports.remove();
     }
+  }
+
+  function combineImports(moduleName: string) {
+    if (combined[moduleName]) {
+      return;
+    }
+
+    combined[moduleName] = true;
+
+    const cache: Partial<
+      Record<ImportKind, ASTPath<namedTypes.ImportDeclaration>>
+    > = {};
+
+    getImport(moduleName).forEach((astPath) => {
+      const { importKind } = astPath.value;
+
+      if (importKind !== "type" && importKind !== "value") {
+        return;
+      }
+
+      const imports = (cache[importKind] ||= astPath);
+
+      if (imports === astPath) {
+        return;
+      }
+
+      astPath.value.specifiers?.forEach((specifier) => {
+        imports.get("specifiers").push(specifier);
+      });
+
+      j(astPath).remove();
+    });
   }
 };
 

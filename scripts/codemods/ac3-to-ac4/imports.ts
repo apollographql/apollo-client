@@ -48,10 +48,30 @@ const transform: Transform = function transform(file, api) {
     );
   });
 
+  moveValueSpecifierToEntrypoint(
+    "MockedProvider",
+    "@apollo/client/testing",
+    "@apollo/client/testing/react"
+  );
+  moveValueSpecifierToEntrypoint(
+    "MockedProviderProps",
+    "@apollo/client/testing",
+    "@apollo/client/testing/react"
+  );
+  moveTypeSpecifierToEntrypoint(
+    "MockedProviderProps",
+    "@apollo/client/testing",
+    "@apollo/client/testing/react"
+  );
+
   moveAllSpecifiersToEntrypoint("@apollo/client/core", "@apollo/client");
   moveAllSpecifiersToEntrypoint(
     "@apollo/client/link/core",
     "@apollo/client/link"
+  );
+  moveAllSpecifiersToEntrypoint(
+    "@apollo/client/testing/core",
+    "@apollo/client/testing"
   );
 
   // Move `gql` to `@apollo/client/react` if its the only one left

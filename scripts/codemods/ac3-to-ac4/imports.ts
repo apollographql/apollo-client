@@ -39,6 +39,10 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/testing/react"
   );
 
+  moveAllSpecifiersToEntrypoint(
+    "@apollo/client/react/hooks",
+    "@apollo/client/react"
+  );
   moveAllSpecifiersToEntrypoint("@apollo/client/core", "@apollo/client");
   moveAllSpecifiersToEntrypoint(
     "@apollo/client/link/core",

@@ -8,27 +8,14 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  REACT_VALUE_IMPORTS.forEach((name) =>
-    moveValueSpecifierToEntrypoint(
-      name,
-      "@apollo/client",
-      "@apollo/client/react"
-    )
-  );
+  REACT_VALUE_IMPORTS.forEach((name) => {
+    moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
+  });
   REACT_TYPE_IMPORTS.forEach((name) => {
-    moveTypeSpecifierToEntrypoint(
-      name,
-      "@apollo/client",
-      "@apollo/client/react"
-    );
-    moveValueSpecifierToEntrypoint(
-      name,
-      "@apollo/client",
-      "@apollo/client/react"
-    );
+    moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
   });
   UTILITIES_INTERNAL_IMPORTS.forEach((name) => {
-    moveValueSpecifierToEntrypoint(
+    moveSpecifiertoEntrypoint(
       name,
       "@apollo/client/utilities",
       "@apollo/client/utilities/internal"
@@ -36,29 +23,19 @@ const transform: Transform = function transform(file, api) {
   });
 
   UTILITIES_INTERNAL_TYPES_IMPORTS.forEach((name) => {
-    moveValueSpecifierToEntrypoint(
-      name,
-      "@apollo/client/utilities",
-      "@apollo/client/utilities/internal"
-    );
-    moveTypeSpecifierToEntrypoint(
+    moveSpecifiertoEntrypoint(
       name,
       "@apollo/client/utilities",
       "@apollo/client/utilities/internal"
     );
   });
 
-  moveValueSpecifierToEntrypoint(
+  moveSpecifiertoEntrypoint(
     "MockedProvider",
     "@apollo/client/testing",
     "@apollo/client/testing/react"
   );
-  moveValueSpecifierToEntrypoint(
-    "MockedProviderProps",
-    "@apollo/client/testing",
-    "@apollo/client/testing/react"
-  );
-  moveTypeSpecifierToEntrypoint(
+  moveSpecifiertoEntrypoint(
     "MockedProviderProps",
     "@apollo/client/testing",
     "@apollo/client/testing/react"
@@ -79,11 +56,7 @@ const transform: Transform = function transform(file, api) {
     isOnlySpecifier("gql", "@apollo/client") &&
     hasImport("@apollo/client/react")
   ) {
-    moveValueSpecifierToEntrypoint(
-      "gql",
-      "@apollo/client",
-      "@apollo/client/react"
-    );
+    moveSpecifiertoEntrypoint("gql", "@apollo/client", "@apollo/client/react");
   }
 
   removeImportIfEmpty("@apollo/client");
@@ -111,20 +84,13 @@ const transform: Transform = function transform(file, api) {
     return getImportWithKind(moduleName, importKind).size() > 0;
   }
 
-  function moveValueSpecifierToEntrypoint(
+  function moveSpecifiertoEntrypoint(
     name: string,
-    sourcePath: string,
-    targetPath: string
+    sourceEntrypoint: string,
+    targetEntrypoint: string
   ) {
-    moveSpecifier(name, "value", sourcePath, targetPath);
-  }
-
-  function moveTypeSpecifierToEntrypoint(
-    name: string,
-    sourcePath: string,
-    targetPath: string
-  ) {
-    moveSpecifier(name, "type", sourcePath, targetPath);
+    moveSpecifier(name, "value", sourceEntrypoint, targetEntrypoint);
+    moveSpecifier(name, "type", sourceEntrypoint, targetEntrypoint);
   }
 
   function moveSpecifier(

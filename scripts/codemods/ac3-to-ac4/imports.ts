@@ -23,6 +23,8 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("useReadQuery", "/", "/react");
   moveSpecifierToEntrypoint("skipToken", "/", "/react");
 
+  removeImportIfEmpty("@apollo/client");
+
   return source.toSource();
 
   function moveSpecifierToEntrypoint(
@@ -89,6 +91,14 @@ const transform: Transform = function transform(file, api) {
 
   function getEntrypoint(path: string) {
     return "@apollo/client" + (path === "/" ? "" : path);
+  }
+
+  function removeImportIfEmpty(moduleName: string) {
+    const imports = getImport(moduleName);
+
+    if (!imports.get("specifiers", "length").value) {
+      imports.remove();
+    }
   }
 };
 

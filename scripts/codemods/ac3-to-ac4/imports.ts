@@ -8,6 +8,7 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("ApolloProvider", "/", "/react");
   moveSpecifierToEntrypoint("createQueryPreloader", "/", "/react");
   moveSpecifierToEntrypoint("getApolloContext", "/", "/react");
+  moveSpecifierToEntrypoint("skipToken", "/", "/react");
   moveSpecifierToEntrypoint("useApolloClient", "/", "/react");
   moveSpecifierToEntrypoint("useBackgroundQuery", "/", "/react");
   moveSpecifierToEntrypoint("useFragment", "/", "/react");
@@ -21,7 +22,6 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("useSuspenseQuery", "/", "/react");
   moveSpecifierToEntrypoint("useReactiveVar", "/", "/react");
   moveSpecifierToEntrypoint("useReadQuery", "/", "/react");
-  moveSpecifierToEntrypoint("skipToken", "/", "/react");
 
   // Move `gql` to `@apollo/client/react` if its the only one left
   if (isOnlySpecifier("gql", "/") && hasImport(getEntrypoint("/react"))) {

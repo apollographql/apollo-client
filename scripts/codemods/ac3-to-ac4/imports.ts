@@ -163,7 +163,7 @@ const transform: Transform = function transform(file, api) {
       })
       .replaceWith(j.identifier(namespace));
 
-    getSpecifier(from, sourceEntrypoint).remove();
+    removeSpecifierIfUnused(from, sourceEntrypoint);
   }
 
   function moveSpecifiersToEntrypoint(
@@ -239,6 +239,25 @@ const transform: Transform = function transform(file, api) {
 
     targetImports.get("specifiers").push(specifier.paths()[0].value);
     specifier.remove();
+  }
+
+  function removeSpecifierIfUnused(name: string, moduleName: string) {
+    const specifier = getSpecifier(name, moduleName);
+
+    if (!specifier.size()) {
+      return;
+    }
+
+    const isUsed = !!source
+      .find(j.Identifier, { name })
+      .filter((path) => {
+        return path.parent.value !== specifier.get().value;
+      })
+      .size();
+
+    if (!isUsed) {
+      specifier.remove();
+    }
   }
 
   function getImport(moduleName: string) {

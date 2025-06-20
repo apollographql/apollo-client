@@ -55,8 +55,15 @@ const transform: Transform = function transform(file, api) {
     }
 
     const specifier = getImportSpecifier(name, source);
+    let targetImports = getImport(target);
 
-    findOrCreateModuleImport(target, { after: source })
+    if (!targetImports.size()) {
+      const newModule = j.importDeclaration([], j.literal(target));
+      getImport(source).insertAfter(newModule);
+      targetImports = j(newModule);
+    }
+
+    targetImports
       .get("specifiers")
       .push(createSpecifier(name, specifier.get("local", "name").value));
 
@@ -67,23 +74,6 @@ const transform: Transform = function transform(file, api) {
     return source.find(j.ImportDeclaration, {
       source: { value: moduleName },
     });
-  }
-
-  function findOrCreateModuleImport(
-    moduleName: string,
-    { after }: { after: string }
-  ) {
-    const mod = getImport(moduleName);
-
-    if (mod.size()) {
-      return mod;
-    }
-
-    const newModule = j.importDeclaration([], j.literal(moduleName));
-
-    getImport(after).insertAfter(newModule);
-
-    return j(newModule);
   }
 
   function getImportSpecifier(name: string, moduleName: string) {

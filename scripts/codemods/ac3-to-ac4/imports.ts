@@ -24,7 +24,7 @@ const transform: Transform = function transform(file, api) {
   moveSpecifierToEntrypoint("skipToken", "/", "/react");
 
   // Move `gql` to `@apollo/client/react` if its the only one left
-  if (hasOnlySpecifier("gql", "/")) {
+  if (isOnlySpecifier("gql", "/")) {
     moveSpecifierToEntrypoint("gql", "/", "/react");
   }
 
@@ -32,7 +32,7 @@ const transform: Transform = function transform(file, api) {
 
   return source.toSource();
 
-  function hasOnlySpecifier(name: string, path: string) {
+  function isOnlySpecifier(name: string, path: string) {
     const entrypoint = getEntrypoint(path);
 
     if (!hasSpecifier(name, entrypoint)) {

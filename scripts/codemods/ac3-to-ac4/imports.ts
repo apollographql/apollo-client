@@ -49,9 +49,6 @@ const transform: Transform = function transform(file, api) {
     moveSpecifierToEntrypoint("gql", "@apollo/client", "@apollo/client/react");
   }
 
-  removeImportIfEmpty("@apollo/client");
-  removeImportIfEmpty("@apollo/client/utilities");
-
   return source.toSource();
 
   function isOnlySpecifier(
@@ -91,6 +88,7 @@ const transform: Transform = function transform(file, api) {
   ) {
     moveSpecifier(name, "value", sourceEntrypoint, targetEntrypoint);
     moveSpecifier(name, "type", sourceEntrypoint, targetEntrypoint);
+    removeImportIfEmpty(sourceEntrypoint);
   }
 
   function moveSpecifier(

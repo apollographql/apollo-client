@@ -86,7 +86,7 @@ const transform: Transform = function transform(file, api) {
 
   function hasSpecifier(name: string, moduleName: string) {
     return !!getImport(moduleName)
-      .find(j.ImportSpecifier, { imported: { name } })
+      .find(j.ImportSpecifier, { imported: { type: "Identifier", name } })
       .size();
   }
 
@@ -101,7 +101,7 @@ const transform: Transform = function transform(file, api) {
   function removeImportIfEmpty(moduleName: string) {
     const imports = getImport(moduleName);
 
-    if (!imports.get("specifiers", "length").value) {
+    if (imports.size() && !imports.get("specifiers", "length").value) {
       imports.remove();
     }
   }

@@ -174,6 +174,11 @@ interface InternalResult<TData> {
   // okay/normal for them to be initially undefined.
   current: ApolloQueryResult<TData>;
   previousData?: undefined | MaybeMasked<TData>;
+
+  // Track current variables separately in case a call to e.g. `refetch(newVars)`
+  // causes an emit that is deeply equal to the current result. This lets us
+  // compare if we should force rerender due to changed variables
+  variables: OperationVariables;
 }
 
 interface InternalState<TData, TVariables extends OperationVariables> {
@@ -311,6 +316,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current.data as TData,
+        variables: observable.variables,
       },
     };
   }
@@ -405,13 +411,22 @@ function useResult<TData, TVariables extends OperationVariables>(
           .pipe(observeOn(asapScheduler))
           .subscribe((result) => {
             const previous = resultData.current;
-            // Make sure we're not attempting to re-render similar results
-            if (equal(previous, result)) {
+
+            if (
+              // Avoid rerendering if the result is the same
+              equal(previous, result) &&
+              // Force rerender if the value was emitted because variables
+              // changed, such as when calling `refetch(newVars)` which returns
+              // the same data when `notifyOnNetworkStatusChange` is `false`.
+              equal(resultData.variables, observable.variables)
+            ) {
               return;
             }
 
+            // eslint-disable-next-line react-compiler/react-compiler
+            resultData.variables = observable.variables;
+
             if (previous.data && !equal(previous.data, result.data)) {
-              // eslint-disable-next-line react-compiler/react-compiler
               resultData.previousData = previous.data as TData;
             }
 
@@ -476,6 +491,7 @@ function useResubscribeIfNecessary<
         (resultData.previousData as TData)) as TData;
     }
     resultData.current = result;
+    resultData.variables = observable.variables;
   }
   observable[lastWatchOptions] = watchQueryOptions;
 }

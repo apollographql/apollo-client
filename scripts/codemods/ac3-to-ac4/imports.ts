@@ -26,13 +26,21 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/react/context",
     "@apollo/client/react"
   );
-
   moveSpecifiersToEntrypoint(
     UTILITIES_INTERNAL_IMPORTS,
     "@apollo/client/utilities",
     "@apollo/client/utilities/internal"
   );
-
+  moveSpecifierToEntrypoint(
+    "__DEV__",
+    "@apollo/client/utilities/global",
+    "@apollo/client/utilities/environment"
+  );
+  moveSpecifiersToEntrypoint(
+    ["invariant", "newInvariantError", "InvariantError"],
+    "@apollo/client/utilities/global",
+    "@apollo/client/utilities/invariant"
+  );
   moveSpecifiersToEntrypoint(
     ["MockedProvider", "MockedProviderProps"],
     "@apollo/client/testing",

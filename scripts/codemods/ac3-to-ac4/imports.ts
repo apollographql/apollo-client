@@ -8,7 +8,7 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  REACT_IMPORTS.forEach((name) => {
+  REACT_IMPORTS_FROM_ROOT.forEach((name) => {
     moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
   });
 
@@ -218,7 +218,7 @@ const transform: Transform = function transform(file, api) {
   }
 };
 
-const REACT_IMPORTS = [
+const REACT_IMPORTS_FROM_ROOT = [
   "ApolloConsumer",
   "ApolloProvider",
   "createQueryPreloader",

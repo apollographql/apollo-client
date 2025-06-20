@@ -61,6 +61,7 @@ const transform: Transform = function transform(file, api) {
   }
 
   removeImportIfEmpty("@apollo/client");
+  removeImportIfEmpty("@apollo/client/utilities");
 
   return source.toSource();
 

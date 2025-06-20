@@ -8,21 +8,11 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  REACT_VALUE_IMPORTS.forEach((name) => {
+  REACT_IMPORTS.forEach((name) => {
     moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
-  });
-  REACT_TYPE_IMPORTS.forEach((name) => {
-    moveSpecifiertoEntrypoint(name, "@apollo/client", "@apollo/client/react");
-  });
-  UTILITIES_INTERNAL_IMPORTS.forEach((name) => {
-    moveSpecifiertoEntrypoint(
-      name,
-      "@apollo/client/utilities",
-      "@apollo/client/utilities/internal"
-    );
   });
 
-  UTILITIES_INTERNAL_TYPES_IMPORTS.forEach((name) => {
+  UTILITIES_INTERNAL_IMPORTS.forEach((name) => {
     moveSpecifiertoEntrypoint(
       name,
       "@apollo/client/utilities",
@@ -228,7 +218,7 @@ const transform: Transform = function transform(file, api) {
   }
 };
 
-const REACT_VALUE_IMPORTS = [
+const REACT_IMPORTS = [
   "ApolloConsumer",
   "ApolloProvider",
   "createQueryPreloader",
@@ -247,9 +237,8 @@ const REACT_VALUE_IMPORTS = [
   "useSuspenseQuery",
   "useReactiveVar",
   "useReadQuery",
-];
 
-const REACT_TYPE_IMPORTS = [
+  // Types
   "ApolloContextValue",
   "BackgroundQueryHookFetchPolicy",
   "BackgroundQueryHookOptions",
@@ -342,9 +331,8 @@ const UTILITIES_INTERNAL_IMPORTS = [
   "getApolloClientMemoryInternals",
   "getInMemoryCacheMemoryInternals",
   "registerGlobalCache",
-];
 
-const UTILITIES_INTERNAL_TYPES_IMPORTS = [
+  // Types
   "DecoratedPromise",
   "DeepOmit",
   "FragmentMap",

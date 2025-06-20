@@ -8,9 +8,9 @@ const transform: Transform = function transform(file, api) {
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
 
-  renameSpecifier("QueryReference", "QueryRef", "@apollo/client");
-  renameSpecifier("QueryReference", "QueryRef", "@apollo/client/react");
-  renameSpecifier(
+  renameTypeSpecifier("QueryReference", "QueryRef", "@apollo/client");
+  renameTypeSpecifier("QueryReference", "QueryRef", "@apollo/client/react");
+  renameTypeSpecifier(
     "QueryReference",
     "QueryRef",
     "@apollo/client/react/internal"
@@ -67,7 +67,11 @@ const transform: Transform = function transform(file, api) {
     );
   }
 
-  function renameSpecifier(from: string, to: string, sourceEntrypoint: string) {
+  function renameTypeSpecifier(
+    from: string,
+    to: string,
+    sourceEntrypoint: string
+  ) {
     const specifier = getImport(sourceEntrypoint).find(j.ImportSpecifier, {
       imported: { name: from },
     });
@@ -77,11 +81,20 @@ const transform: Transform = function transform(file, api) {
     }
 
     const alias = specifier.get("local", "name").value;
+    const newIdentifier = j.identifier(to);
 
-    specifier.find(j.Identifier, { name: from }).replaceWith(j.identifier(to));
+    specifier.find(j.Identifier, { name: from }).replaceWith(newIdentifier);
 
     if (alias === from) {
-      source.find(j.Identifier, { name: from }).replaceWith(j.identifier(to));
+      source
+        .find(j.Identifier, { name: from })
+        .filter(({ parentPath }) => {
+          return (
+            j.TSTypeAnnotation.check(parentPath.value) ||
+            j.TSTypeReference.check(parentPath.value)
+          );
+        })
+        .replaceWith(newIdentifier);
     }
   }
 

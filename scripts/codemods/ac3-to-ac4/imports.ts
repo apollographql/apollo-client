@@ -58,11 +58,12 @@ const transform: Transform = function transform(file, api) {
       return;
     }
 
+    const importKind = getImport(source).get("importKind").value;
     const specifier = getImportSpecifier(name, source);
-    let targetImports = getImport(target);
+    let targetImports = getImportWithKind(target, importKind);
 
     if (!targetImports.size()) {
-      const newModule = j.importDeclaration([], j.literal(target));
+      const newModule = j.importDeclaration([], j.literal(target), importKind);
       getImport(source).insertAfter(newModule);
       targetImports = j(newModule);
     }
@@ -76,6 +77,13 @@ const transform: Transform = function transform(file, api) {
 
   function getImport(moduleName: string) {
     return source.find(j.ImportDeclaration, {
+      source: { value: moduleName },
+    });
+  }
+
+  function getImportWithKind(moduleName: string, importKind: "type" | "value") {
+    return source.find(j.ImportDeclaration, {
+      importKind,
       source: { value: moduleName },
     });
   }

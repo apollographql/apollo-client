@@ -68,7 +68,7 @@ const transform: Transform = function transform(file, api) {
     entrypoint: string,
     importKind: ImportKind = "value"
   ) {
-    if (!hasSpecifier(name, entrypoint, importKind)) {
+    if (!hasSpecifierWithKind(name, entrypoint, importKind)) {
       return false;
     }
 
@@ -162,8 +162,8 @@ const transform: Transform = function transform(file, api) {
     combineImports(targetEntrypoint);
 
     if (
-      hasSpecifier(name, targetEntrypoint, importKind) ||
-      !hasSpecifier(name, sourceEntrypoint, importKind)
+      hasSpecifierWithKind(name, targetEntrypoint, importKind) ||
+      !hasSpecifierWithKind(name, sourceEntrypoint, importKind)
     ) {
       return;
     }
@@ -208,7 +208,13 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  function hasSpecifier(
+  function hasSpecifier(name: string, moduleName: string) {
+    return !!getImport(moduleName).find(j.ImportSpecifier, {
+      imported: { type: "Identifier", name },
+    });
+  }
+
+  function hasSpecifierWithKind(
     name: string,
     moduleName: string,
     importKind: ImportKind

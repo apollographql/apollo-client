@@ -31,6 +31,7 @@ export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 export { getGraphQLErrorsFromResult } from "./getGraphQLErrorsFromResult.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
+export { getMainDefinition } from "./getMainDefinition.js";
 export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
 export { graphQLResultHasError } from "./graphQLResultHasError.js";

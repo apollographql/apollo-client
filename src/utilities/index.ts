@@ -23,7 +23,14 @@ export {
   isQueryOperation,
   isSubscriptionOperation,
 } from "./graphql/operations.js";
-export { getMainDefinition } from "./getMainDefinition.js";
+export {
+  /**
+   * @deprecated Please use `isSubscriptionOperation`, `isQueryOperation`, or
+   * `isSubscriptionOperation` instead. If using `getMainDefinition` inside of
+   * `ApolloLink`, get the operation type with `operation.operationType` instead.
+   */
+  getMainDefinition,
+} from "@apollo/client/utilities/internal";
 
 export {
   concatPagination,

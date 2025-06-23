@@ -13,10 +13,11 @@ const $empty = Symbol.for("react.memo_cache_sentinel");
 // Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
 // < 19.
 export const c =
-  // @ts-ignore
-  typeof React.__COMPILER_RUNTIME?.c === "function" ?
-    // @ts-ignore
-    React.__COMPILER_RUNTIME.c
+  (
+    "__COMPILER_RUNTIME" in React &&
+    typeof Object(React).__COMPILER_RUNTIME?.c === "function"
+  ) ?
+    Object(React).__COMPILER_RUNTIME.c
   : function c(size: number) {
       return React.useMemo<Array<unknown>>(() => {
         const $ = new Array(size);

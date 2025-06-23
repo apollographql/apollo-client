@@ -57,6 +57,7 @@
       "default": "./src/react/index.ts"
     },
     "./react/internal": "./src/react/internal/index.ts",
+    "./react/internal/compiler-runtime": "./src/react/internal/compiler-runtime/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",
     "./testing": "./src/testing/index.ts",
     "./testing/react": "./src/testing/react/index.ts",

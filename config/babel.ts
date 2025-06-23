@@ -39,6 +39,17 @@ export const babelTransform: BuildStep = async (options) => {
                     target: "17",
                   },
                 ],
+                {
+                  visitor: {
+                    ImportDeclaration(path) {
+                      // Remove import declarations that are not used in the file
+                      if (path.node.source.value === "react-compiler-runtime") {
+                        path.node.source.value =
+                          "@apollo/client/react/internal/compiler-runtime";
+                      }
+                    },
+                  },
+                },
               ]
               //For now, the compiler doesn't seem to work in CJS files
               /*

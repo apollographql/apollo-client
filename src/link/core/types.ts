@@ -1,4 +1,8 @@
-import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import type {
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+  OperationTypeNode,
+} from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
@@ -20,6 +24,7 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
   variables?: TVariables;
   operationName?: string;
+  operationType?: OperationTypeNode;
   context?: DefaultContext;
   extensions?: Record<string, any>;
 }

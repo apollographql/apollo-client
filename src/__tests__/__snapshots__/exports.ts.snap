@@ -438,6 +438,7 @@ Array [
   "getFragmentQueryDocument",
   "getGraphQLErrorsFromResult",
   "getInMemoryCacheMemoryInternals",
+  "getMainDefinition",
   "getOperationDefinition",
   "getOperationName",
   "getQueryDefinition",

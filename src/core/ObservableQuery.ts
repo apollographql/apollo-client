@@ -13,6 +13,7 @@ import { BehaviorSubject, Observable, share, Subject, tap } from "rxjs";
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
@@ -1021,7 +1022,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { result, complete } = this.getCacheDiff({ optimistic: false });
 
     const newResult = mapFn(
-      result! as Unmasked<TData>,
+      result! as DeepPartial<Unmasked<TData>>,
       {
         variables: this.variables,
         complete: !!complete,

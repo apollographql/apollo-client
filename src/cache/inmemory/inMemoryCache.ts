@@ -111,11 +111,7 @@ export class InMemoryCache extends ApolloCache {
     // so it's simpler to update this.storeWriter as well.
     this.storeWriter = new StoreWriter(
       this,
-      (this.storeReader = new StoreReader({
-        cache: this,
-        resultCacheMaxSize: this.config.resultCacheMaxSize,
-        fragments,
-      })),
+      (this.storeReader = new StoreReader({ cache: this, fragments })),
       fragments
     );
 
@@ -125,7 +121,6 @@ export class InMemoryCache extends ApolloCache {
       },
       {
         max:
-          this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||
           defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
         makeCacheKey: (c: Cache.WatchOptions) => {

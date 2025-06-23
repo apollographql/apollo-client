@@ -141,8 +141,6 @@ describe("optimistic mutation results", () => {
           return null;
         },
       }),
-      // Enable client.queryManager.mutationStore tracking.
-      connectToDevTools: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -1120,8 +1118,6 @@ describe("optimistic mutation results", () => {
             return null;
           },
         }),
-        // Enable client.queryManager.mutationStore tracking.
-        connectToDevTools: true,
       });
 
       const stream = new ObservableStream(

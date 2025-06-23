@@ -573,7 +573,7 @@ test("throws error when query does not contain client fields", async () => {
   );
 });
 
-test("warns when a resolver is missing for an `@client` field", async () => {
+test("does not warn when a resolver is missing for an `@client` field", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -598,14 +598,10 @@ test("warns when a resolver is missing for an `@client` field", async () => {
     })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "Query.foo"
-  );
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("warns for client child fields of a server field", async () => {
+test("does not warn for client child fields of a server field", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -634,11 +630,7 @@ test("warns for client child fields of a server field", async () => {
     data: { foo: { __typename: "Foo", bar: null } },
   });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "Foo.bar"
-  );
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("warns when a resolver returns undefined and sets value to null", async () => {

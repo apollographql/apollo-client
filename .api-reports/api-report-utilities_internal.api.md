@@ -233,6 +233,9 @@ export const getInMemoryCacheMemoryInternals: (() => {
     };
 }) | undefined;
 
+// @internal @deprecated
+export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNode | FragmentDefinitionNode;
+
 // @internal @deprecated (undocumented)
 export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode | undefined;
 

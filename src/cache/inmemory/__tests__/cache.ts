@@ -2104,25 +2104,13 @@ describe("Cache", () => {
 });
 
 describe("resultCacheMaxSize", () => {
-  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+  it("uses default max size on caches", () => {
     const cache = new InMemoryCache();
     expect(cache["maybeBroadcastWatch"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
     expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.executeSelectionSet"]
-    );
-    expect(cache["getFragmentDoc"].options.max).toBe(
-      defaultCacheSizes["cache.fragmentQueryDocuments"]
-    );
-  });
-
-  it("configures max size on caches when resultCacheMaxSize is set", () => {
-    const resultCacheMaxSize = 12345;
-    const cache = new InMemoryCache({ resultCacheMaxSize });
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(resultCacheMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
-      resultCacheMaxSize
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
       defaultCacheSizes["cache.fragmentQueryDocuments"]

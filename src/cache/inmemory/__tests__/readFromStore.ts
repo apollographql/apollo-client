@@ -22,17 +22,11 @@ import {
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
 
-  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+  it("uses default max size on caches", () => {
     const reader = new StoreReader({ cache });
     expect(reader["executeSelectionSet"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.executeSelectionSet"]
     );
-  });
-
-  it("configures max size on caches when resultCacheMaxSize is set", () => {
-    const resultCacheMaxSize = 12345;
-    const reader = new StoreReader({ cache, resultCacheMaxSize });
-    expect(reader["executeSelectionSet"].options.max).toBe(resultCacheMaxSize);
   });
 });
 

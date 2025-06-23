@@ -633,8 +633,6 @@ describe("Cache manipulation", () => {
     });
 
     expect(read).toHaveBeenCalledTimes(1);
-    // TODO: Is `null` an ok value here? This is the result of running the
-    // default resolver which returns `null`.
     expect(read).toHaveBeenCalledWith(null, expect.anything());
     expect(console.warn).not.toHaveBeenCalled();
   });

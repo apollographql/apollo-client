@@ -615,13 +615,6 @@ export class LocalState<
           }
 
           if (!returnPartialData) {
-            if (__DEV__) {
-              invariant.warn(
-                "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-                resolverName
-              );
-            }
-
             return null;
           }
         }

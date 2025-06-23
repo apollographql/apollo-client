@@ -4,8 +4,9 @@ import type {
   OperationDefinitionNode,
 } from "graphql";
 
-import { checkDocument } from "@apollo/client/utilities/internal";
 import { newInvariantError } from "@apollo/client/utilities/invariant";
+
+import { checkDocument } from "./checkDocument.js";
 
 /**
  * Returns the first operation definition found in this document.

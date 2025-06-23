@@ -31,7 +31,6 @@ export interface MockedProviderProps {
     childProps?: object;
     // (undocumented)
     children?: any;
-    connectToDevTools?: boolean;
     // (undocumented)
     defaultOptions?: DefaultOptions;
     // (undocumented)

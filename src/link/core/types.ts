@@ -33,6 +33,7 @@ export interface Operation {
   query: DocumentNode;
   variables: Record<string, any>;
   operationName: string;
+  operationType: OperationTypeNode | undefined;
   extensions: Record<string, any>;
   setContext: {
     (context: Partial<OperationContext>): void;

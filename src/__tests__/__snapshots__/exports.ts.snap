@@ -336,6 +336,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/react/internal/compiler-runtime 1`] = `
+Array [
+  "c",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
   "getDataFromTree",

@@ -42,7 +42,8 @@ export const babelTransform: BuildStep = async (options) => {
                 {
                   visitor: {
                     ImportDeclaration(path) {
-                      // Remove import declarations that are not used in the file
+                      // Rewrite imports for the React Compiler Runtime to our own copy
+                      // until the upstream package is stable
                       if (path.node.source.value === "react-compiler-runtime") {
                         path.node.source.value =
                           "@apollo/client/react/internal/compiler-runtime";

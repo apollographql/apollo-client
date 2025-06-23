@@ -27,21 +27,31 @@ jobs:
         with:
           file-filter: "codegen/**"
 
+      - name: Check if any files in scripts/codemods/ac3-to-ac4/ changed
+        id: changed-files-codemod
+        uses: karpikpl/list-changed-files-action@1.1.4
+        with:
+          file-filter: "scripts/codemods/ac3-to-ac4/**"
+
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 
       - name: Build AC
         run: npm run build
 
-      - run: echo changed files ${{steps.changed-files-codegen.outputs.changed_files}}
-
       - name: Build Codegen
         if: steps.changed-files-codegen.outputs.changed_files != ''
         run: npm run build
         working-directory: "./codegen"
 
+      - name: Build Codemod
+        if: steps.changed-files-codemod.outputs.changed_files != ''
+        run: npm run build
+        working-directory: "./scripts/codemods/ac3-to-ac4"
+
       - name: Build and publish to pkg.pr.new
         env:
           PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.changed_files != '' && './codegen' || '' }}
+          PACKAGE_CODEMOD: ${{ steps.changed-files-codemod.outputs.changed_files != '' && './scripts/codemods/ac3-to-ac4' || '' }}
         # skipping --compact for a moment as there is an unreleased package
-        run: npx pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN
+        run: npx pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN $PACKAGE_CODEMOD

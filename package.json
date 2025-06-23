@@ -271,6 +271,7 @@
   },
   "workspaces": [
     ".",
-    "codegen"
+    "codegen",
+    "scripts/codemods/ac3-to-ac4"
   ]
 }

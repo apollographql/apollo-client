@@ -1,7 +1,45 @@
 {
-  "private": true,
+  "name": "@apollo/client-codemod-migrate-3-to-4",
+  "version": "1.0.0-rc.0",
+  "description": "Apollo Client Codemod to migrate from version 3 to version 4",
+  "keywords": [
+    "apollo",
+    "client",
+    "graphql",
+    "codemod"
+  ],
+  "author": "packages@apollographql.com",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-client.git",
+    "directory": "codegen"
+  },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://www.apollographql.com/docs/react/",
+  "exports": {
+    ".": "./dist/index.js",
+    "./imports": "./dist/imports.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "prepack": "npm run build",
+    "publint": "publint run --strict ."
+  },
+  "dependencies": {
+    "jscodeshift": "17.3.0"
+  },
   "devDependencies": {
-    "jscodeshift": "17.3.0",
-    "@types/jscodeshift": "17.3.0"
+    "@types/jscodeshift": "17.3.0",
+    "typescript": "^5.8.3"
   }
 }

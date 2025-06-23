@@ -2,14 +2,13 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
+import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
-
-import type { IgnoreModifier } from "../cache/core/types/common.js";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {

@@ -8,7 +8,9 @@
       "ES2022"
     ],
     "paths": {},
-    "types": [],
+    "types": [
+      "node"
+    ],
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,

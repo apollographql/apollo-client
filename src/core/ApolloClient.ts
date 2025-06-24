@@ -349,6 +349,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           "Apollo Client 4.0 will no longer support the `name` or `version` options. To use client awareness features, please use the `clientAwareness.name` and `clientAwareness.version` options instead."
         );
       }
+
+      if (fragmentMatcher) {
+        invariant.warn(
+          "Apollo Client 4.0 will no longer support custom fragment matchers."
+        );
+      }
     }
 
     let { link } = options;

@@ -124,6 +124,8 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
     __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
     // Warning: (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // Warning: (ae-forgotten-export) The symbol "ApolloCache" needs to be exported by the entry point index.d.ts
     //
@@ -138,7 +140,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     //
     // (undocumented)
     readonly devtoolsConfig: DevtoolsOptions;
-    // (undocumented)
+    // @deprecated (undocumented)
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
@@ -146,17 +148,24 @@ class ApolloClient<TCacheShape> implements DataProxy {
     getMemoryInternals?: typeof getApolloClientMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
+    // @deprecated
     getResolvers(): Resolvers;
     // Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     link: ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    localState: LocalState<TCacheShape>;
     // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MutationOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
     mutate<TData = any, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
+    get prioritizeCacheValues(): boolean;
+    set prioritizeCacheValues(value: boolean);
     // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
@@ -173,7 +182,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     restore(serializedState: TCacheShape): ApolloCache<TCacheShape>;
     setLink(newLink: ApolloLink): void;
     // Warning: (ae-forgotten-export) The symbol "FragmentMatcher" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated
     setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
+    // @deprecated
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
@@ -196,9 +208,14 @@ class ApolloClient<TCacheShape> implements DataProxy {
 interface ApolloClientOptions<TCacheShape> {
     assumeImmutableResults?: boolean;
     cache: ApolloCache<TCacheShape>;
+    // (undocumented)
+    clientAwareness?: {
+        name?: string;
+        version?: string;
+    };
     // @deprecated
     connectToDevTools?: boolean;
-    // (undocumented)
+    // @deprecated (undocumented)
     credentials?: string;
     dataMasking?: boolean;
     // (undocumented)
@@ -207,20 +224,25 @@ interface ApolloClientOptions<TCacheShape> {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
-    // (undocumented)
+    // @deprecated (undocumented)
     fragmentMatcher?: FragmentMatcher;
+    // @deprecated
     headers?: Record<string, string>;
     link?: ApolloLink;
+    // @deprecated
     name?: string;
     queryDeduplication?: boolean;
-    // (undocumented)
+    // @deprecated (undocumented)
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    // (undocumented)
+    // @deprecated (undocumented)
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
     // Warning: (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated
     uri?: string | UriFunction;
+    // @deprecated
     version?: string;
 }
 
@@ -2241,8 +2263,6 @@ class QueryManager<TStore> {
     //
     // (undocumented)
     getDocumentInfo(document: DocumentNode): TransformCacheEntry;
-    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     getLocalState(): LocalState<TStore>;
     // (undocumented)

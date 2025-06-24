@@ -57,6 +57,11 @@ const transform: Transform = function transform(file, api) {
     "@apollo/client/react"
   );
   moveSpecifiersToEntrypoint(
+    ["QueryRef", "PreloadedQueryRef"],
+    "@apollo/client/react/internal",
+    "@apollo/client/react"
+  );
+  moveSpecifiersToEntrypoint(
     UTILITIES_INTERNAL_IMPORTS,
     "@apollo/client/utilities",
     "@apollo/client/utilities/internal"

@@ -1,10 +1,13 @@
 /* eslint-disable import/order */
 
 import type { QueryReference, ApolloConsumerProps } from "@apollo/client";
+const queryRef: QueryReference = {} as any;
 
 import type { ApolloProviderProps } from "@apollo/client/react";
+const providerProps: ApolloProviderProps = {} as any;
 
-import { ErrorResponse } from "@apollo/client/link/error";
+import type { ErrorResponse } from "@apollo/client/link/error";
+const response: ErrorResponse = {} as any;
 
 import { useQuery, ApolloProvider } from "@apollo/client";
 

@@ -1,5 +1,5 @@
 import type { namedTypes } from "ast-types";
-import type { ASTPath, Transform } from "jscodeshift";
+import type { ASTPath, Collection, Transform } from "jscodeshift";
 
 type ImportKind = "type" | "value";
 
@@ -153,7 +153,9 @@ const transform: Transform = function transform(file, api) {
     const [to] = namespace.split(".");
     const sourceImports = getImport(sourceEntrypoint);
 
-    if (!hasSpecifier(from, sourceEntrypoint)) {
+    const specifier = getSpecifier(from, sourceEntrypoint);
+
+    if (!specifier.length) {
       return;
     }
 
@@ -177,7 +179,7 @@ const transform: Transform = function transform(file, api) {
       })
       .replaceWith(j.identifier(namespace));
 
-    removeSpecifierIfUnused(from, sourceEntrypoint);
+    removeSpecifierIfUnused(specifier);
   }
 
   function moveSpecifiersToEntrypoint(
@@ -255,13 +257,14 @@ const transform: Transform = function transform(file, api) {
     specifier.remove();
   }
 
-  function removeSpecifierIfUnused(name: string, moduleName: string) {
-    const specifier = getSpecifier(name, moduleName);
-
+  function removeSpecifierIfUnused(
+    specifier: Collection<namedTypes.ImportSpecifier>
+  ) {
     if (!specifier.size()) {
       return;
     }
 
+    const name = specifier.get("imported", "name").value;
     const isUsed = !!source
       .find(j.Identifier, { name })
       .filter((path) => {
@@ -270,7 +273,11 @@ const transform: Transform = function transform(file, api) {
       .size();
 
     if (!isUsed) {
+      const importDeclaration = specifier.closest(j.ImportDeclaration);
       specifier.remove();
+      if (importDeclaration.find(j.ImportSpecifier).size() === 0) {
+        importDeclaration.remove();
+      }
     }
   }
 

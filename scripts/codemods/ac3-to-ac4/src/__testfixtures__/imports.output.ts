@@ -4,11 +4,9 @@ import type { QueryRef } from "@apollo/client/react";
 import type { ApolloConsumer } from "@apollo/client/react";
 const queryRef: QueryRef = {} as any;
 
-import type "@apollo/client/react";
 import type { ApolloProvider } from "@apollo/client/react";
 const providerProps: ApolloProvider.Props = {} as any;
 
-import type "@apollo/client/link/error";
 import type { ErrorLink } from "@apollo/client/link/error";
 const response: ErrorLink.ErrorHandlerOptions = {} as any;
 

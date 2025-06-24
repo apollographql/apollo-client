@@ -271,7 +271,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
       if (!options.link) {
         invariant.warn(
-          "Apollo Client 4.0 requires a `link` option and will not create a default link when not provided. Please provide a `link` option."
+          "Apollo Client 4.0 will require a `link` option and will not create a default link when not provided. Please provide a `link` option."
         );
       }
 
@@ -281,7 +281,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         "headers" in options
       ) {
         invariant.warn(
-          "Apollo Client 4.0 no longer supports the `uri`, `credentials` or `headers` options. Please instantiate an instance of `HttpLink` with these options instead."
+          "Apollo Client 4.0 will no longer support the `uri`, `credentials` or `headers` options. Please instantiate an instance of `HttpLink` with these options instead."
         );
       }
     }

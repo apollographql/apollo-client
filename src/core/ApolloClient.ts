@@ -225,6 +225,11 @@ export { mergeOptions };
 export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache<TCacheShape>;
+
+  /**
+   * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`
+   * in Apollo Client 4.0. Please use `client.prioritizeCacheValues` instead.
+   */
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -237,6 +242,21 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private localState: LocalState<TCacheShape>;
+
+  /**
+   * Whether to prioritize cache values over network results when `query` or `watchQuery` is called.
+   * This will essentially turn a `"network-only"` or `"cache-and-network"` fetchPolicy into a `"cache-first"` fetchPolicy,
+   * but without influencing the `fetchPolicy` of the created `ObservableQuery` long-term.
+   *
+   * This can e.g. be used to prioritize the cache during the first render after SSR.
+   */
+  public get prioritizeCacheValues() {
+    return this.disableNetworkFetches;
+  }
+
+  public set prioritizeCacheValues(value: boolean) {
+    this.disableNetworkFetches = value;
+  }
 
   /**
    * Constructs an instance of `ApolloClient`.

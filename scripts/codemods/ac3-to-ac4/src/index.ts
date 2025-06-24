@@ -19,22 +19,16 @@ export default async function transform(
   let all_skipped = true;
 
   for (const codemod of run) {
-    console.log(`Running codemod: ${codemod} on ${file.path}`);
-
     if (codemod in codemods) {
       const ret = await codemods[codemod as keyof typeof codemods](
         file,
         api,
         options
       );
+
       if (typeof ret === "string" && ret !== file.source) {
         file.source = ret;
         all_skipped = false;
-      } else if (typeof ret === "string" && ret === file.source) {
-        console.warn(
-          `Codemod "${codemod}" on file ${file.path} was unsuccessful.`
-        );
-        process.exitCode = 1;
       }
     } else {
       console.warn(`Codemod "${codemod}" not found, skipping.`);

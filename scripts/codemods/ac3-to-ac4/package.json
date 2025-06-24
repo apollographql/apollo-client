@@ -27,14 +27,13 @@
   },
   "files": [
     "dist",
-    "README.md",
-    ".codemodrc.json"
+    "README.md"
   ],
   "bin": {
     "apollo-client-codemod-migrate-3-to-4": "./dist/cli.js"
   },
   "scripts": {
-    "prebuild": "npm run clean; jq '.version=inputs.version' .codemodrc.json package.json > .codemodrc.json_; mv .codemodrc.json_ .codemodrc.json",
+    "prebuild": "npm run clean",
     "clean": "rimraf dist",
     "build": "tsc -p tsconfig.build.json",
     "prepack": "npm run build",
@@ -46,7 +45,6 @@
     "jscodeshift": "17.3.0"
   },
   "devDependencies": {
-    "@codemod.com/codemod-utils": "*",
     "@types/jscodeshift": "^17.3.0",
     "@types/node": "20.9.0",
     "typescript": "^5.2.2",

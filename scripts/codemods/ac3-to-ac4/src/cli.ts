@@ -1,24 +1,18 @@
-import { join } from "node:path";
-import { codemods } from "./index.js";
-import { parseArgs } from "node:util";
+#!/usr/bin/env node
+
 import { createRequire } from "node:module";
-
-const { values: args } = parseArgs({
-  options: {
-    codemod: {
-      type: "string",
-      default: Object.keys(codemods),
-      multiple: true,
-    },
-  },
-  allowPositionals: true,
-  strict: false,
-});
-
-process.env.JSCODESHIFT_TRANSFORM = args.codemod!.join(",");
+import { dirname, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // @ts-ignore
-process.argv.push("--transform", join(import.meta.dirname, "index.js"));
-// @ts-ignore
-const require = createRequire(import.meta.url);
+const url = import.meta.url;
+const fullName = fileURLToPath(url);
+
+process.argv.splice(
+  2,
+  0,
+  "--transform",
+  join(dirname(fullName), `index${extname(fullName)}`)
+);
+const require = createRequire(url);
 require("jscodeshift/bin/jscodeshift.js");

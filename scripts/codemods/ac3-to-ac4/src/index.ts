@@ -31,7 +31,9 @@ export default async function transform(
         file.source = ret;
         all_skipped = false;
       } else if (typeof ret === "string" && ret === file.source) {
-        console.warn(`Codemod "${codemod}" was unsuccessful.`);
+        console.warn(
+          `Codemod "${codemod}" on file ${file.path} was unsuccessful.`
+        );
         process.exitCode = 1;
       }
     } else {

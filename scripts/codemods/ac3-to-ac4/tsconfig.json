@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "noEmit": false,
+    "noEmit": true,
     "target": "ESNext",
     "module": "nodenext",
     "moduleResolution": "nodenext",
@@ -9,8 +9,6 @@
     ],
     "paths": {},
     "types": [],
-    "rootDir": "./src",
-    "outDir": "./dist",
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,

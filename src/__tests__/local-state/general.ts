@@ -577,6 +577,65 @@ describe("Cache manipulation", () => {
 
     await expect(stream).not.toEmitAnything();
   });
+
+  test("runs read functions for nested @client fields without resolver warnings", async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query {
+        color {
+          hex
+          saved @client
+        }
+      }
+    `;
+
+    const link = new ApolloLink(() => {
+      return of({ data: { color: { __typename: "Color", hex: "#000" } } }).pipe(
+        delay(20)
+      );
+    });
+
+    const read = jest.fn(() => false);
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Color: {
+          keyFields: ["hex"],
+          fields: {
+            saved: { read },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache,
+      localState: new LocalState(),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { color: { __typename: "Color", hex: "#000", saved: false } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledWith(null, expect.anything());
+    expect(console.warn).not.toHaveBeenCalled();
+  });
 });
 
 describe("Sample apps", () => {

@@ -104,13 +104,6 @@ export interface ApolloClientOptions {
    */
   ssrMode?: boolean;
   /**
-   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
-   *
-   * The default value is `false` in production and `true` in development (if there is a `window` object).
-   * @deprecated Please use the `devtools.enabled` option.
-   */
-  connectToDevTools?: boolean;
-  /**
    * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
    *
    * @defaultValue `true`
@@ -243,10 +236,6 @@ export class ApolloClient implements DataProxy {
       documentTransform,
       ssrMode = false,
       ssrForceFetchDelay = 0,
-      // Expose the client instance as window.__APOLLO_CLIENT__ and call
-      // onBroadcast in queryManager.broadcastQueries to enable browser
-      // devtools, but disable them by default in production.
-      connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
       defaultContext,
@@ -264,12 +253,8 @@ export class ApolloClient implements DataProxy {
     this.defaultOptions = defaultOptions || {};
     this.devtoolsConfig = {
       ...devtools,
-      enabled: devtools?.enabled ?? connectToDevTools,
+      enabled: devtools?.enabled ?? __DEV__,
     };
-
-    if (this.devtoolsConfig.enabled === undefined) {
-      this.devtoolsConfig.enabled = __DEV__;
-    }
 
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);

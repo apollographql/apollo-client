@@ -3488,7 +3488,9 @@ describe("ApolloClient", () => {
 
       observableQuery.updateQuery(
         (_previousData, { complete, previousData }) => {
-          expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(_previousData).toEqualTypeOf<
+            DeepPartial<UnmaskedQuery>
+          >();
 
           if (complete) {
             expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
@@ -3503,7 +3505,7 @@ describe("ApolloClient", () => {
       observableQuery.subscribeToMore({
         document: subscription,
         updateQuery(queryData, { subscriptionData, complete, previousData }) {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(queryData).toEqualTypeOf<DeepPartial<UnmaskedQuery>>();
 
           if (complete) {
             expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();

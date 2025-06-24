@@ -14681,7 +14681,9 @@ describe("useSuspenseQuery", () => {
         subscribeToMore({
           document: subscription,
           updateQuery: (queryData, { subscriptionData }) => {
-            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(queryData).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData>
+            >();
 
             expectTypeOf(
               subscriptionData.data
@@ -14719,7 +14721,9 @@ describe("useSuspenseQuery", () => {
             queryData,
             { subscriptionData, complete, previousData }
           ) => {
-            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(queryData).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData>
+            >();
 
             expectTypeOf(complete).toEqualTypeOf<boolean>();
             expectTypeOf(previousData).toEqualTypeOf<

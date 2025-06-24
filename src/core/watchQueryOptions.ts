@@ -161,10 +161,10 @@ export interface UpdateQueryMapFn<
   (
     /**
      * @deprecated This value is not type-safe and may contain partial data. This
-     * argument will be removed in the next major version of Apollo Client. Use
-     * `options.previousData` instead for a more type-safe value.
+     * argument will be removed in Apollo Client v5. Use `options.previousData`
+     * instead for a more type-safe value.
      */
-    unsafePreviousData: Unmasked<TData>,
+    unsafePreviousData: DeepPartial<Unmasked<TData>>,
     options: UpdateQueryOptions<TData, TVariables>
   ): Unmasked<TData> | void;
 }
@@ -177,10 +177,10 @@ export type SubscribeToMoreUpdateQueryFn<
   (
     /**
      * @deprecated This value is not type-safe and may contain partial data. This
-     * argument will be removed in the next major version of Apollo Client. Use
-     * `options.previousData` instead for a more type-safe value.
+     * argument will be removed in Apollo Client v5. Use `options.previousData`
+     * instead for a more type-safe value.
      */
-    unsafePreviousData: Unmasked<TData>,
+    unsafePreviousData: DeepPartial<Unmasked<TData>>,
     options: UpdateQueryOptions<TData, TVariables> & {
       subscriptionData: { data: Unmasked<TSubscriptionData> };
     }

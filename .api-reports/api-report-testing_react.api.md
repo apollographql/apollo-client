@@ -6,6 +6,7 @@
 
 import type { ApolloCache } from '@apollo/client/cache';
 import { ApolloClient } from '@apollo/client';
+import type { ApolloClientOptions } from '@apollo/client';
 import type { ApolloLink } from '@apollo/client/link';
 import type { DefaultOptions } from '@apollo/client';
 import type { LocalState } from '@apollo/client/local-state';
@@ -31,9 +32,10 @@ export interface MockedProviderProps {
     childProps?: object;
     // (undocumented)
     children?: any;
-    connectToDevTools?: boolean;
     // (undocumented)
     defaultOptions?: DefaultOptions;
+    // (undocumented)
+    devtools?: ApolloClientOptions["devtools"];
     // (undocumented)
     link?: ApolloLink;
     // (undocumented)

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { DefaultOptions } from "@apollo/client";
+import type { ApolloClientOptions, DefaultOptions } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
@@ -19,11 +19,7 @@ export interface MockedProviderProps {
   link?: ApolloLink;
   showWarnings?: boolean;
   mockLinkDefaultOptions?: MockLink.DefaultOptions;
-  /**
-   * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
-   * Defaults to false.
-   */
-  connectToDevTools?: boolean;
+  devtools?: ApolloClientOptions["devtools"];
 }
 
 interface MockedProviderState {
@@ -45,12 +41,11 @@ export class MockedProvider extends React.Component<
       link,
       showWarnings,
       mockLinkDefaultOptions,
-      connectToDevTools = false,
+      devtools,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache(),
       defaultOptions,
-      connectToDevTools,
       link:
         link ||
         new MockLink(mocks || [], {
@@ -58,6 +53,7 @@ export class MockedProvider extends React.Component<
           defaultOptions: mockLinkDefaultOptions,
         }),
       localState,
+      devtools,
     });
 
     this.state = {

@@ -5,7 +5,6 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "lib": [
-      "DOM",
       "ES2022"
     ],
     "paths": {},

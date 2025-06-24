@@ -394,6 +394,7 @@ Array [
   "cacheSizes",
   "canonicalStringify",
   "concatPagination",
+  "getMainDefinition",
   "isFormattedExecutionResult",
   "isMutationOperation",
   "isQueryOperation",

@@ -5,6 +5,7 @@ export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
   const OPERATION_FIELDS = [
     "query",
     "operationName",
+    "operationType",
     "variables",
     "extensions",
     "context",

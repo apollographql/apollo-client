@@ -355,6 +355,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           "Apollo Client 4.0 will no longer support custom fragment matchers."
         );
       }
+
+      if (typeDefs) {
+        invariant.warn(
+          "Apollo Client 4.0 will no longer support `typeDefs`. Please remove this option."
+        );
+      }
     }
 
     let { link } = options;

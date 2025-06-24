@@ -140,7 +140,9 @@ export interface ApolloClientOptions<TCacheShape> {
   assumeImmutableResults?: boolean;
 
   /**
-   * @deprecated `resolvers` has been
+   * @deprecated `resolvers` has been changed in Apollo Client 4.0 and will no
+   * longer be provided as an option directly to `ApolloClient`. `resolvers`
+   * should continue to be used until upgrading to 4.0.
    */
   resolvers?: Resolvers | Resolvers[];
 

@@ -1,5 +1,52 @@
 # @apollo/client
 
+## 4.0.0-rc.1
+
+### Major Changes
+
+- [#12735](https://github.com/apollographql/apollo-client/pull/12735) [`5159880`](https://github.com/apollographql/apollo-client/commit/51598808851e16af722baaefbd1f90534332e07a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `resultCacheMaxSize` option from `InMemoryCache` options.
+
+- [#12735](https://github.com/apollographql/apollo-client/pull/12735) [`5159880`](https://github.com/apollographql/apollo-client/commit/51598808851e16af722baaefbd1f90534332e07a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `connectToDevtools` option from `ApolloClientOptions`. Use `devtools.enabled` instead.
+
+### Minor Changes
+
+- [#12725](https://github.com/apollographql/apollo-client/pull/12725) [`89ac725`](https://github.com/apollographql/apollo-client/commit/89ac7256a34b3b04fe2cf83937b5494b375ce36d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `operationType` to `operation` in `ApolloLink`. This means that determining whether a `query` is a specific operation type can now be compared with this property instead of using `getMainDefinition`.
+
+  ```diff
+  - import { getMainDefinition } from "@apollo/client/utilities";
+  + import { OperationTypeNode } from "graphql";
+
+  ApolloLink.split(
+  - ({ query }) => {
+  -   const definition = getMainDefinition(query);
+  -   return (
+  -     definition.kind === 'OperationDefinition' &&
+  -     definition.operation === 'subscription'
+  -   );
+  -   return
+  - },
+  + ({ operationType }) => {
+  +   return operationType === OperationTypeNode.SUBSCRIPTION;
+  + },
+    conditionTrueLink,
+    conditionFalseLink,
+  );
+  ```
+
+### Patch Changes
+
+- [#12728](https://github.com/apollographql/apollo-client/pull/12728) [`07a0c8c`](https://github.com/apollographql/apollo-client/commit/07a0c8c52774793b254ecc91e5d4632bfdf48093) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export the `IgnoreModifier` type from `@apollo/client/cache`.
+
+- [#12735](https://github.com/apollographql/apollo-client/pull/12735) [`5159880`](https://github.com/apollographql/apollo-client/commit/51598808851e16af722baaefbd1f90534332e07a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Change the `unsafePreviousData` argument on `UpdateQueryMapFn` and `SubscribeToMoreQueryFn` to a `DeepPartial` since the result may contain partial data.
+
+- [#12734](https://github.com/apollographql/apollo-client/pull/12734) [`037979d`](https://github.com/apollographql/apollo-client/commit/037979dc47ffb7125429707471d901a08db49283) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't warn about a missing resolver if a `@client` does not have a configured resolver. It is possible the cache contains a `read` function for the field and the warning added confusion.
+
+  Note that `read` functions without a defined resolver will receive the `existing` argument as `null` instead of `undefined` even when data hasn't been written to the cache. This is because `LocalState` sets a default value of `null` when a resolver is not defined to ensure that the field contains a value in case a `read` function is not defined rather than omitting the field entirely.
+
+- [#12725](https://github.com/apollographql/apollo-client/pull/12725) [`89ac725`](https://github.com/apollographql/apollo-client/commit/89ac7256a34b3b04fe2cf83937b5494b375ce36d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export `getMainDefinition` from `@apollo/client/utilities`.
+
+- [#12729](https://github.com/apollographql/apollo-client/pull/12729) [`699c830`](https://github.com/apollographql/apollo-client/commit/699c8305639ff69bab36fd2214defbe1ac6f0b18) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `useQuery` rerenders when `notifyOnNetworkStatusChange` is `false` and a `refetch` that changes variables returns a result deeply equal to previous variables.
+
 ## 4.0.0-rc.0
 
 ### Major Changes

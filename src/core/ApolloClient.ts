@@ -65,13 +65,26 @@ export interface ApolloClientOptions<TCacheShape> {
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+   *
+   * @deprecated `uri` will be removed in Apollo Client 4.0. Please instantiate
+   * an instance of `HttpLink` and provide `uri` as an option instead.
    */
   uri?: string | UriFunction;
+
+  /**
+   * @deprecated `credentials` will be removed in Apollo Client 4.0. Please
+   * instantiate an instance of `HttpLink` and provide `credentials` as an
+   * option instead.
+   */
   credentials?: string;
   /**
    * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
    *
    * This value will be ignored when using the `link` option.
+   *
+   * @deprecated `headers` will be removed in Apollo Client 4.0. Please
+   * instantiate an instance of `HttpLink` and provide `headers` as an
+   * option instead.
    */
   headers?: Record<string, string>;
   /**

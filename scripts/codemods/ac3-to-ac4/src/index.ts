@@ -38,6 +38,7 @@ export default async function transform(
       console.warn(`Codemod "${codemod}" not found, skipping.`);
       process.exitCode = 1;
     }
-    return all_skipped ? undefined : file.source;
   }
+
+  return all_skipped ? undefined : file.source;
 }

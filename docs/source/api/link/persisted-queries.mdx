@@ -81,6 +81,10 @@ You can optionally create a configuration file in the root of your project to ov
 
 To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
 
+<Tip>
+If you see a difference in the `id` generated in the manifest and the one your client is sending at runtime, read the options available in the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package to ensure the configuration matches your usage of Apollo Client.
+</Tip>
+
 ## 2. Publish manifests to a PQL
 
 <PublishPQMs />

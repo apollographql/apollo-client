@@ -1,5 +1,31 @@
 # @apollo/client
 
+## 3.13.8
+
+### Patch Changes
+
+- [#12567](https://github.com/apollographql/apollo-client/pull/12567) [`c19d415`](https://github.com/apollographql/apollo-client/commit/c19d41513cac0cc143aa7358f26c89c9408da102) Thanks [@thearchitector](https://github.com/thearchitector)! - Fix in-flight multipart urql subscription cancellation
+
+## 3.13.7
+
+### Patch Changes
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactor: Move notification scheduling logic from `QueryInfo` to `ObservableQuery`
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactored cache emit logic for ObservableQuery. This should be an invisible change.
+
+## 3.13.6
+
+### Patch Changes
+
+- [#12285](https://github.com/apollographql/apollo-client/pull/12285) [`cdc55ff`](https://github.com/apollographql/apollo-client/commit/cdc55ff54bf4c83ec8571508ec4bf8156af1bc97) Thanks [@phryneas](https://github.com/phryneas)! - keep ObservableQuery created by useQuery non-active before it is first subscribed
+
+## 3.13.5
+
+### Patch Changes
+
+- [#12461](https://github.com/apollographql/apollo-client/pull/12461) [`12c8d06`](https://github.com/apollographql/apollo-client/commit/12c8d06f1ef7cfbece8e3a63b7ad09d91334f663) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a `cache-first` query would return the result for previous variables when a cache update is issued after simultaneously changing variables and skipping the query.
+
 ## 3.13.4
 
 ### Patch Changes

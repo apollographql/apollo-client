@@ -35,7 +35,9 @@ export function createFetchMultipartSubscription(
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
       const observerNext = observer.next.bind(observer);
 
-      currentFetch!(uri, options)
+      const abortController = new AbortController();
+
+      currentFetch!(uri, { ...options, signal: abortController.signal })
         .then((response) => {
           const ctype = response.headers?.get("content-type");
 
@@ -51,6 +53,10 @@ export function createFetchMultipartSubscription(
         .catch((err: any) => {
           handleError(err, observer);
         });
+
+      return () => {
+        abortController.abort();
+      };
     });
   };
 }

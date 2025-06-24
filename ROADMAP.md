@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-03-12**
+**Last updated: 2025-06-11**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,13 +17,13 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### 3.14.0 - TBD
-_Release candidate - TBD
+#### 3.14.0 - July 3rd, 2025
+_Release candidate - June 27th, 2025_
 
 - 4.0 compatibility release/deprecations
 
-#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - TBD
-_Release candidate - Mid April 2025_
+#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - July 31st, 2025
+_Release candidate - June 18th 2025_
 
 ### GraphQL Testing Library
 
@@ -49,9 +49,9 @@ _These changes will take longer than anticipated due to prioritization on Apollo
 ### Apollo Client React Framework Integrations
 
 - New/more robust documentation
-- Support for `@defer` with `PreloadQuery` (merged)
-- Support for Apollo Client Streaming in TanStack Router (merged)
-- Support for Apollo Client Streaming in React Router 7 (merged)
-- Remove `experimental` label from Next.js integration (merged)
 
-Try out the [alpha](https://github.com/apollographql/apollo-client-nextjs/blob/next/README.md) today and give us feedback!
+**TanStack Start**
+- Support for Apollo Client Streaming in TanStack Router - will stay alpha
+
+**React Router**
+- Support for Apollo Client Streaming in React Router 7 - will stay alpha

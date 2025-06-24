@@ -23,23 +23,20 @@ import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 
+import { mergeOptions } from "../../utilities/index.js";
+import { getApolloContext } from "../context/index.js";
+import { ApolloError } from "../../errors/index.js";
 import type {
   ApolloClient,
   DefaultOptions,
   OperationVariables,
   WatchQueryFetchPolicy,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
-import { getApolloContext } from "../context/index.js";
-import { ApolloError } from "../../errors/index.js";
-import type {
   ApolloQueryResult,
-  ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../core/index.js";
-import { NetworkStatus } from "../../core/index.js";
+import { ObservableQuery, NetworkStatus } from "../../core/index.js";
 import type {
   QueryHookOptions,
   QueryResult,
@@ -190,8 +187,10 @@ function useInternalState<
         // to fetch the result set. This is used during SSR.
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
-        client.watchQuery(
-          getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
+        ObservableQuery["inactiveOnCreation"].withValue(!renderPromises, () =>
+          client.watchQuery(
+            getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
+          )
         ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide

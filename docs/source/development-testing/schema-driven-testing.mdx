@@ -4,6 +4,14 @@ description: Using createTestSchema and associated APIs
 minVersion: 3.10.0
 ---
 
+<Caution>
+  The testing utilities described in this document are deprecated and will be
+  removed in [Apollo Client
+  v4](https://community.apollographql.com/t/apollo-client-v4-alpha-releases-are-here/8719)
+  in June 2025. Please use [GraphQL Testing
+  Library](https://github.com/apollographql/graphql-testing-library) instead.
+</Caution>
+
 This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. These testing tools allow developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
 
 ## Guiding principles

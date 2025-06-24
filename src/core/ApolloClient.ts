@@ -241,7 +241,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState<TCacheShape>;
+  public localState: LocalState<TCacheShape>;
 
   /**
    * Whether to prioritize cache values over network results when `query` or `watchQuery` is called.

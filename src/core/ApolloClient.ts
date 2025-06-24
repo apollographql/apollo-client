@@ -138,8 +138,23 @@ export interface ApolloClientOptions<TCacheShape> {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
+
+  /**
+   * @deprecated `resolvers` has been
+   */
   resolvers?: Resolvers | Resolvers[];
+
+  /**
+   * @deprecated `typeDefs` will be removed in Apollo Client 4.0. Please remove
+   * this option.
+   */
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
+
+  /**
+   * @deprecated Custom fragment matchers will no longer be supported in Apollo
+   * Client 4.0 and has been replaced by `cache.fragmentMatches`. You may
+   * continue to use this until upgrading to 4.0.
+   */
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.

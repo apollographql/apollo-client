@@ -341,6 +341,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           "Apollo Client 4.0 will no longer support the `uri`, `credentials` or `headers` options. Please instantiate an instance of `HttpLink` with these options instead."
         );
       }
+
+      if ("name" in options || "version" in options) {
+        invariant.warn(
+          "Apollo Client 4.0 will no longer support the `name` or `version` options. To use client awareness features, please use the `clientAwareness.name` and `clientAwareness.version` options instead."
+        );
+      }
     }
 
     let { link } = options;

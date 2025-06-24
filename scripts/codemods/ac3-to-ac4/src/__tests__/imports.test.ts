@@ -6,7 +6,6 @@ function ts(code: TemplateStringsArray): string {
   return code[0];
 }
 
-console.log(imports);
 defineInlineTest(
   imports,
   {},

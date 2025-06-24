@@ -141,6 +141,8 @@ describe("optimistic mutation results", () => {
           return null;
         },
       }),
+      // Enable client.queryManager.mutationStore tracking.
+      devtools: { enabled: true },
     });
 
     const obsHandle = client.watchQuery({

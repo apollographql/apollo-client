@@ -12,5 +12,6 @@
       ["@apollo/client", "<", "4.0.0"]
     ],
     "to": [["@apollo/client", ">=", "4.0.0"]]
-  }
+  },
+  "entry": "./dist/index.js"
 }

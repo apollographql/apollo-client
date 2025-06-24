@@ -115,7 +115,8 @@ export interface ApolloClientOptions<TCacheShape> {
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
    *
    * The default value is `false` in production and `true` in development (if there is a `window` object).
-   * @deprecated Please use the `devtools.enabled` option.
+   * @deprecated `connectToDevTools` will be removed in Apollo Client 4.0.
+   * Please use the `devtools.enabled` option.
    */
   connectToDevTools?: boolean;
   /**

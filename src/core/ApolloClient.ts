@@ -255,6 +255,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
         );
       }
+
+      if (!options.link) {
+        invariant.warn(
+          "Apollo Client 4.0 requires a `link` option and will not create a default link when not provided. Please provide a `link` option."
+        );
+      }
     }
 
     let { link } = options;

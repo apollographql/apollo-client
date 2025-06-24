@@ -158,14 +158,34 @@ export interface ApolloClientOptions<TCacheShape> {
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+   *
+   * @deprecated `name` has been moved to `clientAwareness.name` in Apollo Client 4.0.
+   * Please use `clientAwareness.name` instead.
    */
   name?: string;
   /**
    * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    *
    * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
+   *
+   * @deprecated `version` has been moved to `clientAwareness.version` in Apollo Client 4.0.
+   * Please use `clientAwareness.version` instead.
    */
   version?: string;
+
+  clientAwareness?: {
+    /**
+     * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+     */
+    name?: string;
+    /**
+     * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+     *
+     * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
+     */
+    version?: string;
+  };
+
   documentTransform?: DocumentTransform;
 
   /**
@@ -272,6 +292,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       resolvers,
       typeDefs,
       fragmentMatcher,
+      clientAwareness,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
@@ -357,8 +378,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       ssrMode,
       dataMasking: !!dataMasking,
       clientAwareness: {
-        name: clientAwarenessName!,
-        version: clientAwarenessVersion!,
+        name: clientAwareness?.name ?? clientAwarenessName!,
+        version: clientAwareness?.version ?? clientAwarenessVersion!,
       },
       localState: this.localState,
       assumeImmutableResults,

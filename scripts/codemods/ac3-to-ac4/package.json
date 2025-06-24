@@ -30,6 +30,9 @@
     "README.md",
     ".codemodrc.json"
   ],
+  "bin": {
+    "apollo-client-codemod-migrate-3-to-4": "./dist/cli.js"
+  },
   "scripts": {
     "prebuild": "npm run clean; jq '.version=inputs.version' .codemodrc.json package.json > .codemodrc.json_; mv .codemodrc.json_ .codemodrc.json",
     "clean": "rimraf dist",

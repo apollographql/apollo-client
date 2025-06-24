@@ -1125,6 +1125,8 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     operationName?: string;
     // (undocumented)
+    operationType?: OperationTypeNode;
+    // (undocumented)
     query: DocumentNode;
     // (undocumented)
     variables?: TVariables;
@@ -1948,6 +1950,8 @@ export interface Operation {
     getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
+    // (undocumented)
+    operationType: OperationTypeNode | undefined;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)

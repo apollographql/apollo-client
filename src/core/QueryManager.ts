@@ -894,6 +894,7 @@ export class QueryManager {
           query: serverQuery,
           variables,
           operationName,
+          operationType,
           context: {
             ...this.defaultContext,
             ...context,

@@ -11,6 +11,7 @@ import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
 import type { FormattedExecutionResult } from 'graphql';
+import { getMainDefinition } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { Primitive } from '@apollo/client/utilities/internal';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
@@ -119,6 +120,8 @@ interface DocumentTransformOptions {
     cache?: boolean;
     getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
 }
+
+export { getMainDefinition }
 
 // @beta
 export interface HKT {

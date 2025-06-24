@@ -24,19 +24,13 @@ export function getMainDefinition(
 
   for (let definition of queryDoc.definitions) {
     if (definition.kind === "OperationDefinition") {
-      const operation = (definition as OperationDefinitionNode).operation;
-      if (
-        operation === "query" ||
-        operation === "mutation" ||
-        operation === "subscription"
-      ) {
-        return definition as OperationDefinitionNode;
-      }
+      return definition;
     }
+
     if (definition.kind === "FragmentDefinition" && !fragmentDefinition) {
       // we do this because we want to allow multiple fragment definitions
       // to precede an operation definition.
-      fragmentDefinition = definition as FragmentDefinitionNode;
+      fragmentDefinition = definition;
     }
   }
 

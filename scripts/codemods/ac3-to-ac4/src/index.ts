@@ -1,6 +1,11 @@
-import type { Transform } from "jscodeshift";
+import type { API, FileInfo, Options } from "jscodeshift";
+
 import imports from "./imports.js";
-const ac3ToAc4: Transform = async (file, api, options) => {
+
+export default async function transform(
+  file: FileInfo,
+  api: API,
+  options: Options
+): Promise<void> {
   await imports(file, api, options);
-};
-export default ac3ToAc4;
+}

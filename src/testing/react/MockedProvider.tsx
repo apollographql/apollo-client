@@ -55,7 +55,9 @@ export class MockedProvider extends React.Component<
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
-      connectToDevTools,
+      devtools: {
+        enabled: connectToDevTools,
+      },
       link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
       resolvers,
     });

@@ -6,5 +6,11 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/__tests__", "src/__testfixtures__"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/__tests__",
+    "src/__testfixtures__",
+    "src/@types"
+  ]
 }

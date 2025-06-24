@@ -19,7 +19,7 @@ export default async function transform(
   let all_skipped = true;
 
   for (const codemod of run) {
-    console.log(`Running codemod: ${codemod}`);
+    console.log(`Running codemod: ${codemod} on ${file.path}`);
 
     if (codemod in codemods) {
       const ret = await codemods[codemod as keyof typeof codemods](

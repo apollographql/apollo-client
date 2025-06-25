@@ -38,9 +38,9 @@ export class SetContextLink extends ApolloLink {
           .then((req) => setter(req, operation.getContext()))
           .then(operation.setContext)
           .then(() => {
-            // if the observer is already closed, no need to subscribe.
-            if (closed) return;
-            forward(operation).subscribe(observer);
+            if (!closed) {
+              forward(operation).subscribe(observer);
+            }
           })
           .catch(observer.error.bind(observer));
 

@@ -69,6 +69,7 @@ export class MockedProvider extends React.Component<
       resolvers,
       link,
       showWarnings,
+      devtools,
       connectToDevTools = false,
     } = this.props;
     if (__DEV__) {
@@ -82,7 +83,7 @@ export class MockedProvider extends React.Component<
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
-      devtools: {
+      devtools: devtools ?? {
         enabled: connectToDevTools,
       },
       link: link || new MockLink(mocks || [], addTypename, { showWarnings }),

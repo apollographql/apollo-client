@@ -9,6 +9,7 @@ import { MockLink } from "../core/index.js";
 import type { ApolloLink } from "../../link/core/index.js";
 import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
+import type { DevtoolsOptions } from "../../core/ApolloClient.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
@@ -23,8 +24,24 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   /**
    * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
    * Defaults to false.
+   *
+   * @deprecated `connectToDevTools` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Use the `devtools.enabled` option instead.
+   *
+   * ```ts
+   * <MockedProvider devtools={{ enabled: true }} />
    */
   connectToDevTools?: boolean;
+
+  /**
+   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+   *
+   * @since 3.14.0
+   */
+  devtools?: DevtoolsOptions;
 }
 
 export interface MockedProviderState {

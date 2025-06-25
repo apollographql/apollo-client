@@ -204,7 +204,7 @@ export interface ApolloClientOptions<TCacheShape> {
 
   /**
    * @deprecated Custom fragment matchers will no longer be supported in Apollo
-   * Client 4.0 and has been replaced by `cache.fragmentMatches. It is safe to
+   * Client 4.0 and has been replaced by `cache.fragmentMatches`. It is safe to
    * continue using this in Apollo Client 3.x.
    *
    * **Recommended now**
@@ -1061,7 +1061,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * Set a custom local state fragment matcher.
    *
    * @deprecated Custom fragment matchers will no longer be supported in Apollo
-   * Client 4.0 and has been replaced by `cache.fragmentMatches. It is safe to
+   * Client 4.0 and has been replaced by `cache.fragmentMatches`. It is safe to
    * continue using `setLocalStateFragmentMatcher` in Apollo Client 3.x.
    *
    * **Recommended now**

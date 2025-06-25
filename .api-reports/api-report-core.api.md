@@ -903,7 +903,7 @@ export interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables 
     // (undocumented)
     document: DocumentNode_2 | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     // (undocumented)
-    onError?: (error: Error) => void;
+    onError?: (error: ErrorLike) => void;
     // (undocumented)
     updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
     // (undocumented)

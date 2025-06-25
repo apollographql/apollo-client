@@ -5,18 +5,23 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { GraphQLRequest } from '@apollo/client/link';
+import type { Operation } from '@apollo/client/link';
 import type { OperationContext } from '@apollo/client/link';
 
-// @public (undocumented)
-export type ContextSetter = (operation: GraphQLRequest, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
-
 // @public @deprecated (undocumented)
-export function setContext(setter: ContextSetter): SetContextLink;
+export function setContext(setter: SetContextLink.ContextSetter): SetContextLink;
+
+// @public (undocumented)
+export namespace SetContextLink {
+    // (undocumented)
+    export type ContextSetter = (operation: SetContextOperation, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    // (undocumented)
+    export type SetContextOperation = Omit<Operation, "getContext" | "setContext">;
+}
 
 // @public (undocumented)
 export class SetContextLink extends ApolloLink {
-    constructor(setter: ContextSetter);
+    constructor(setter: SetContextLink.ContextSetter);
 }
 
 // (No @packageDocumentation comment for this package)

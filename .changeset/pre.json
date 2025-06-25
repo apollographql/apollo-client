@@ -3,6 +3,7 @@
   "tag": "rc",
   "initialVersions": {
     "@apollo/client": "3.12.2",
+    "@apollo/client-codemod-migrate-3-to-4": "0.0.0",
     "@apollo/client-graphql-codegen": "0.0.0"
   },
   "changesets": [

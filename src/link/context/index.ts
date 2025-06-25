@@ -34,7 +34,7 @@ export class SetContextLink extends ApolloLink {
       });
 
       return new Observable((observer) => {
-        let handle: Subscription;
+        let handle: Subscription | undefined;
         let closed = false;
         Promise.resolve(request)
           .then((req) => setter(req, operation.getContext()))
@@ -52,7 +52,7 @@ export class SetContextLink extends ApolloLink {
 
         return () => {
           closed = true;
-          if (handle) handle.unsubscribe();
+          handle?.unsubscribe();
         };
       });
     });

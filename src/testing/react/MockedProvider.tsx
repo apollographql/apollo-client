@@ -10,6 +10,7 @@ import type { ApolloLink } from "../../link/core/index.js";
 import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 import type { DevtoolsOptions } from "../../core/ApolloClient.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
@@ -69,6 +70,14 @@ export class MockedProvider extends React.Component<
       showWarnings,
       connectToDevTools = false,
     } = this.props;
+    if (__DEV__) {
+      if ("connectToDevTools" in this.props) {
+        invariant.warn(
+          "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
+        );
+      }
+    }
+
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,

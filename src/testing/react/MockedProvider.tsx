@@ -34,6 +34,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
    *
    * ```ts
    * <MockedProvider devtools={{ enabled: true }} />
+   * ```
    */
   connectToDevTools?: boolean;
 

@@ -4,20 +4,22 @@ import { Observable } from "rxjs";
 import type { GraphQLRequest, OperationContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export type ContextSetter = (
-  operation: GraphQLRequest,
-  prevContext: OperationContext
-) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+export declare namespace SetContextLink {
+  export type ContextSetter = (
+    operation: GraphQLRequest,
+    prevContext: OperationContext
+  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+}
 
 /**
  * @deprecated
  * Use `SetContextLink` from `@apollo/client/link/context` instead.
  */
-export function setContext(setter: ContextSetter) {
+export function setContext(setter: SetContextLink.ContextSetter) {
   return new SetContextLink(setter);
 }
 export class SetContextLink extends ApolloLink {
-  constructor(setter: ContextSetter) {
+  constructor(setter: SetContextLink.ContextSetter) {
     super((operation, forward) => {
       const { ...request } = operation;
 

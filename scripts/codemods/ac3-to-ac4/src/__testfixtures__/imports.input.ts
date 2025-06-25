@@ -16,3 +16,6 @@ import type { LoadQueryFunction } from "@apollo/client";
 import { getApolloContext } from "@apollo/client/react/context";
 
 import { omitDeep } from "@apollo/client/utilities";
+
+import type { ContextSetter } from "@apollo/client/link/context";
+const contextSetter: ContextSetter = (() => {}) as any;

@@ -1004,8 +1004,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Add additional local resolvers.
    *
-   * @deprecated `addResolvers` will be removed in Apollo Client 4.0. Please use
-   * `client.localState.addResolvers(resolvers)` instead.
+   * @deprecated `addResolvers` will been removed in Apollo Client 4.0. It is
+   * safe to continue using this method in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * Use `client.localState.addResolvers(resolvers)`. Alternatively, store
+   * the `LocalState` instance in a separate variable and call `addResolvers` on
+   * that.
    */
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.localState.addResolvers(resolvers);
@@ -1014,7 +1024,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Set (override existing) local resolvers.
    *
-   * @deprecated `setResolvers` will be removed in Apollo Client 4.0.
+   * @deprecated `setResolvers` will been removed in Apollo Client 4.0. It is
+   * safe to continue using this method in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * If possible, stop using the `setResolvers` method.
+   *
+   * **When upgrading**
+   *
+   * Remove the use of `setResolvers`.
    */
   public setResolvers(resolvers: Resolvers | Resolvers[]) {
     this.localState.setResolvers(resolvers);
@@ -1023,7 +1042,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Get all registered local resolvers.
    *
-   * @deprecated `getResolvers` will be removed in Apollo Client 4.0.
+   * @deprecated `getResolvers` will be removed in Apollo Client 4.0. It is
+   * safe to continue using this method in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * If possible, stop using the `getResolvers` method.
+   *
+   * **When upgrading**
+   *
+   * Remove the use of `getResolvers`.
    */
   public getResolvers() {
     return this.localState.getResolvers();
@@ -1032,9 +1060,20 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Set a custom local state fragment matcher.
    *
-   * @deprecated `setLocalStateFragmentMatcher` will be removed in Apollo Client 4.0.
-   * Custom fragment matchers will no longer be supported and will need to be
-   * removed before migrating to 4.0.
+   * @deprecated Custom fragment matchers will no longer be supported in Apollo
+   * Client 4.0 and has been replaced by `cache.fragmentMatches. It is safe to
+   * continue using `setLocalStateFragmentMatcher` in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * Leverage `possibleTypes` with `InMemoryCache` to ensure fragments match
+   * correctly. Ensure `possibleTypes` include local types if needed. If working
+   * with a 3rd party cache implementation, ensure the 3rd party cache implements
+   * the `cache.fragmentMatches` method. This function should no longer be used.
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
     this.localState.setFragmentMatcher(fragmentMatcher);

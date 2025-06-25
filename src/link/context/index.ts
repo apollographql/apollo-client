@@ -1,4 +1,3 @@
-import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
 import type { Operation, OperationContext } from "@apollo/client/link";
@@ -34,7 +33,6 @@ export class SetContextLink extends ApolloLink {
       });
 
       return new Observable((observer) => {
-        let handle: Subscription | undefined;
         let closed = false;
         Promise.resolve(request)
           .then((req) => setter(req, operation.getContext()))
@@ -42,13 +40,12 @@ export class SetContextLink extends ApolloLink {
           .then(() => {
             // if the observer is already closed, no need to subscribe.
             if (closed) return;
-            handle = forward(operation).subscribe(observer);
+            forward(operation).subscribe(observer);
           })
           .catch(observer.error.bind(observer));
 
         return () => {
           closed = true;
-          handle?.unsubscribe();
         };
       });
     });

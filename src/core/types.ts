@@ -50,102 +50,103 @@ namespace OverridableTypes {
   }
 }
 
-/**
- * Returns a representation of `TData` in it's "complete" state.
- *
- * @defaultValue `TData` if no overrides are provided.
- *
- * @example
- * You can override this type globally - this example shows how to override it
- * with `DeepPartial<TData>`:
- *
- * ```ts
- * import { HKT, DeepPartial } from "@apollo/client/utilities";
- *
- * type CompleteOverride<TData> = TData extends { _complete?: infer _Complete } ? _Complete : TData;
- *
- * interface CompleteOverrideHKT extends HKT {
- *   return: CompleteOverride<this["arg1"]>;
- * }
- *
- * declare module "@apollo/client" {
- *   export interface TypeOverrides {
- *     Complete: CompleteOverrideHKT;
- *   }
- * }
- * ```
- */
-export type Complete<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Complete",
-  OverridableTypes.Defaults,
-  TData
->;
+export declare namespace TData {
+  /**
+   * Returns a representation of `TData` in it's "complete" state.
+   *
+   * @defaultValue `TData` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type CompleteOverride<TData> = TData extends { _complete?: infer _Complete } ? _Complete : TData;
+   *
+   * interface CompleteOverrideHKT extends HKT {
+   *   return: CompleteOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Complete: CompleteOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Complete<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Complete",
+    OverridableTypes.Defaults,
+    TData
+  >;
 
-/**
- * Returns a representation of `TData` while it is streaming.
- *
- * @defaultValue `TData` if no overrides are provided.
- *
- * @example
- * You can override this type globally - this example shows how to override it
- * with `DeepPartial<TData>`:
- *
- * ```ts
- * import { HKT, DeepPartial } from "@apollo/client/utilities";
- *
- * type StreamingOverride<TData> = DeepPartial<TData>;
- *
- * interface StreamingOverrideHKT extends HKT {
- *   return: StreamingOverride<this["arg1"]>;
- * }
- *
- * declare module "@apollo/client" {
- *   export interface TypeOverrides {
- *     Streaming: StreamingOverrideHKT;
- *   }
- * }
- * ```
- */
-export type Streaming<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Streaming",
-  OverridableTypes.Defaults,
-  TData
->;
+  /**
+   * Returns a representation of `TData` while it is streaming.
+   *
+   * @defaultValue `TData` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type StreamingOverride<TData> = DeepPartial<TData>;
+   *
+   * interface StreamingOverrideHKT extends HKT {
+   *   return: StreamingOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Streaming: StreamingOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Streaming<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Streaming",
+    OverridableTypes.Defaults,
+    TData
+  >;
 
-/**
- * Returns a representation of `TData` while it is partial.
- *
- * @defaultValue `DeepPartial<TData>` if no overrides are provided.
- *
- * @example
- * You can override this type globally - this example shows how to override it
- * with `DeepPartial<TData>`:
- *
- * ```ts
- * import { HKT, DeepPartial } from "@apollo/client/utilities";
- *
- * type PartialOverride<TData> = DeepPartial<Complete<TData>>;
- *
- * interface PartialOverrideHKT extends HKT {
- *   return: PartialOverride<this["arg1"]>;
- * }
- *
- * declare module "@apollo/client" {
- *   export interface TypeOverrides {
- *     Partial: PartialOverrideHKT;
- *   }
- * }
- * ```
- */
-export type PartialData<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Partial",
-  OverridableTypes.Defaults,
-  TData
->;
-
+  /**
+   * Returns a representation of `TData` while it is partial.
+   *
+   * @defaultValue `DeepPartial<TData>` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type PartialOverride<TData> = DeepPartial<Complete<TData>>;
+   *
+   * interface PartialOverrideHKT extends HKT {
+   *   return: PartialOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Partial: PartialOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Partial<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Partial",
+    OverridableTypes.Defaults,
+    TData
+  >;
+}
 export interface DefaultContext extends Record<string, any> {
   /**
    * Indicates whether `queryDeduplication` was enabled for the request.
@@ -323,17 +324,17 @@ export type ApolloQueryResult<
 
 export type DataState<TData> =
   | {
-      data: Complete<TData>;
+      data: TData.Complete<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "complete";
     }
   | {
-      data: Streaming<TData>;
+      data: TData.Streaming<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "streaming";
     }
   | {
-      data: PartialData<TData>;
+      data: TData.Partial<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "partial";
     }

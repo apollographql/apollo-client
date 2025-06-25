@@ -20,8 +20,8 @@ import type {
   ErrorPolicy,
   OperationVariables,
   RefetchWritePolicy,
-  Streaming,
   SubscribeToMoreOptions,
+  TData,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -5188,7 +5188,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5197,7 +5197,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
 
@@ -5219,7 +5219,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5228,7 +5228,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
   });
@@ -5253,7 +5253,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData> | undefined
+        VariablesCaseData | TData.Streaming<VariablesCaseData> | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "empty"
@@ -5264,7 +5264,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "empty") {
@@ -5290,7 +5290,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData> | undefined
+        VariablesCaseData | TData.Streaming<VariablesCaseData> | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "empty"
@@ -5301,7 +5301,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "empty") {
@@ -5330,7 +5330,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData> | undefined
+        VariablesCaseData | TData.Streaming<VariablesCaseData> | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "empty"
@@ -5341,7 +5341,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "empty") {
@@ -5367,7 +5367,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData> | undefined
+        VariablesCaseData | TData.Streaming<VariablesCaseData> | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "empty"
@@ -5378,7 +5378,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "empty") {
@@ -5407,7 +5407,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5416,7 +5416,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
 
@@ -5431,7 +5431,7 @@ describe.skip("type tests", () => {
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
     }
   });
@@ -5458,7 +5458,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5469,7 +5469,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5497,7 +5497,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5508,7 +5508,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5537,7 +5537,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5546,7 +5546,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
 
@@ -5568,7 +5568,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5577,7 +5577,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
   });
@@ -5602,7 +5602,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5611,7 +5611,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
 
@@ -5633,7 +5633,7 @@ describe.skip("type tests", () => {
         >
       >;
       expectTypeOf(data).toEqualTypeOf<
-        VariablesCaseData | Streaming<VariablesCaseData>
+        VariablesCaseData | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
@@ -5642,7 +5642,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
     }
   });
@@ -5670,7 +5670,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
         | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
@@ -5682,7 +5682,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5714,7 +5714,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
         | undefined
       >();
       expectTypeOf(dataState).toEqualTypeOf<
@@ -5726,7 +5726,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5758,7 +5758,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5769,7 +5769,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5797,7 +5797,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5808,7 +5808,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5841,7 +5841,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5852,7 +5852,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {
@@ -5884,7 +5884,7 @@ describe.skip("type tests", () => {
       expectTypeOf(data).toEqualTypeOf<
         | VariablesCaseData
         | DeepPartial<VariablesCaseData>
-        | Streaming<VariablesCaseData>
+        | TData.Streaming<VariablesCaseData>
       >();
       expectTypeOf(dataState).toEqualTypeOf<
         "complete" | "streaming" | "partial"
@@ -5895,7 +5895,7 @@ describe.skip("type tests", () => {
       }
 
       if (dataState === "streaming") {
-        expectTypeOf(data).toEqualTypeOf<Streaming<VariablesCaseData>>();
+        expectTypeOf(data).toEqualTypeOf<TData.Streaming<VariablesCaseData>>();
       }
 
       if (dataState === "partial") {

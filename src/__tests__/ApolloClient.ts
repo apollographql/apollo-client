@@ -10,7 +10,7 @@ import type {
   MutateResult,
   ObservableQuery,
   QueryOptions,
-  Streaming,
+  TData,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
@@ -3437,7 +3437,9 @@ describe("ApolloClient", () => {
           }
 
           if (result.dataState === "streaming") {
-            expectTypeOf(result.data).toEqualTypeOf<Streaming<Masked<Query>>>();
+            expectTypeOf(result.data).toEqualTypeOf<
+              TData.Streaming<Masked<Query>>
+            >();
           }
 
           if (result.dataState === "empty") {

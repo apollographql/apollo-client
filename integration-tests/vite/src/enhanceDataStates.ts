@@ -1,12 +1,6 @@
 import { DeepPartial, HKT } from "@apollo/client/utilities";
 import { ApplyHKT } from "@apollo/client/utilities/internal";
-import {
-  gql,
-  TypedDocumentNode,
-  Complete,
-  Streaming,
-  PartialData,
-} from "@apollo/client";
+import { gql, TypedDocumentNode, TData } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { expectTypeOf } from "expect-type";
 import { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
@@ -98,9 +92,11 @@ if (1 > 2 /* skip running this */) {
   type TData =
     typeof query extends DocumentTypeDecoration<infer TData, any> ? TData
     : never;
-  expectTypeOf<Complete<TData>>().toEqualTypeOf<CompleteData>();
-  expectTypeOf<Streaming<TData>>().toEqualTypeOf<StreamingData>();
-  expectTypeOf<PartialData<TData>>().toEqualTypeOf<DeepPartial<CompleteData>>();
+  expectTypeOf<TData.Complete<TData>>().toEqualTypeOf<CompleteData>();
+  expectTypeOf<TData.Streaming<TData>>().toEqualTypeOf<StreamingData>();
+  expectTypeOf<TData.PartialData<TData>>().toEqualTypeOf<
+    DeepPartial<CompleteData>
+  >();
 
   const result = useQuery(query, {
     variables: { id: "123" },

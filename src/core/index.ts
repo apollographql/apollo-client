@@ -23,7 +23,6 @@ export type {
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
   ApolloQueryResult,
-  Complete,
   DataState,
   DefaultContext,
   ErrorLike,
@@ -41,16 +40,15 @@ export type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  PartialData,
   QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
-  Streaming,
   SubscribeResult,
   SubscriptionObservable,
+  TData,
   TypedDocumentNode,
   TypeOverrides,
 } from "./types.js";

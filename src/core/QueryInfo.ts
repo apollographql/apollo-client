@@ -16,6 +16,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
+  Complete,
   DefaultContext,
   InternalRefetchQueriesInclude,
   MutationQueryReducer,
@@ -111,7 +112,7 @@ export class QueryInfo<
   private readonly observableQuery?: ObservableQuery<any, any>;
   private incremental?: Incremental.IncrementalRequest<
     Record<string, unknown>,
-    TData | Streaming<TData>
+    Complete<TData> | Streaming<TData>
   >;
 
   constructor(
@@ -178,7 +179,7 @@ export class QueryInfo<
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: FetchResult<TData>,
     query: DocumentNode
-  ): FormattedExecutionResult<TData | Streaming<TData>> {
+  ): FormattedExecutionResult<Complete<TData> | Streaming<TData>> {
     const { incrementalHandler } = this.queryManager;
 
     if (incrementalHandler.isIncrementalResult(incoming)) {
@@ -188,7 +189,7 @@ export class QueryInfo<
         query,
       }) as Incremental.IncrementalRequest<
         Record<string, unknown>,
-        TData | Streaming<TData>
+        Complete<TData> | Streaming<TData>
       >;
 
       return this.incremental.handle(cacheData, incoming);
@@ -204,7 +205,7 @@ export class QueryInfo<
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ): FormattedExecutionResult<TData | Streaming<TData>> {
+  ): FormattedExecutionResult<Complete<TData> | Streaming<TData>> {
     const diffOptions = {
       query,
       variables,
@@ -343,7 +344,7 @@ export class QueryInfo<
       keepRootFields?: boolean;
     },
     cache = this.cache
-  ): Promise<FormattedExecutionResult<TData | Streaming<TData>>> {
+  ): Promise<FormattedExecutionResult<Complete<TData> | Streaming<TData>>> {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 

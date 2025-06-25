@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { setContext, SetContextLink } from "@apollo/client/link/context";
 import {
@@ -249,4 +250,25 @@ it("does not start the next link subscription if the upstream subscription is al
   expect(promiseResolved).toBe(true);
   expect(mockLinkCalled).toBe(false);
   expect(subscriptionReturnedData).toBe(false);
+});
+
+test("can access the client from operation argument", async () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const withContext = new SetContextLink((operation) => {
+    return { client: operation.client };
+  });
+
+  const mockLink = new ApolloLink((operation) => {
+    return of({ data: operation.getContext() });
+  });
+
+  const link = withContext.concat(mockLink);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  const { data } = await stream.takeNext();
+  expect(data!.client).toBe(client);
 });

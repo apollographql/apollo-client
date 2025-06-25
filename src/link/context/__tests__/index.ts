@@ -10,7 +10,6 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`
   query Test {
     foo {
@@ -69,7 +68,7 @@ it("can be used to set the context with a function returning a promise", async (
 
 it("can be used to set the context with a function returning a promise that is delayed", async () => {
   const withContext = new SetContextLink(() =>
-    sleep(25).then(() => ({ dynamicallySet: true }))
+    wait(25).then(() => ({ dynamicallySet: true }))
   );
 
   const mockLink = new ApolloLink((operation) => {
@@ -85,7 +84,7 @@ it("can be used to set the context with a function returning a promise that is d
 
 it("handles errors in the lookup correclty", async () => {
   const withContext = new SetContextLink(() =>
-    sleep(5).then(() => {
+    wait(5).then(() => {
       throw new Error("dang");
     })
   );
@@ -119,7 +118,7 @@ it("handles errors in the lookup correctly with a normal function", async () => 
 it("has access to the request information", async () => {
   const withContext = new SetContextLink(
     ({ operationName, query, variables }) =>
-      sleep(1).then(() =>
+      wait(1).then(() =>
         Promise.resolve({
           variables: variables ? true : false,
           operation: query ? true : false,
@@ -146,7 +145,7 @@ it("has access to the request information", async () => {
 
 it("has access to the context at execution time", async () => {
   const withContext = new SetContextLink((_, { count }) =>
-    sleep(1).then(() => ({ count: count + 1 }))
+    wait(1).then(() => ({ count: count + 1 }))
   );
 
   const mockLink = new ApolloLink((operation) => {
@@ -165,7 +164,7 @@ it("has access to the context at execution time", async () => {
 
 it("unsubscribes correctly", async () => {
   const withContext = new SetContextLink((_, { count }) =>
-    sleep(1).then(() => ({ count: count + 1 }))
+    wait(1).then(() => ({ count: count + 1 }))
   );
 
   const mockLink = new ApolloLink((operation) => {
@@ -191,7 +190,7 @@ it("unsubscribes without throwing before data", async () => {
   let called!: boolean;
   const withContext = new SetContextLink((_, { count }) => {
     called = true;
-    return sleep(1).then(() => ({ count: count + 1 }));
+    return wait(1).then(() => ({ count: count + 1 }));
   });
 
   const mockLink = new ApolloLink((operation) => {
@@ -223,7 +222,7 @@ it("unsubscribes without throwing before data", async () => {
 it("does not start the next link subscription if the upstream subscription is already closed", async () => {
   let promiseResolved = false;
   const withContext = new SetContextLink(() =>
-    sleep(5).then(() => {
+    wait(5).then(() => {
       promiseResolved = true;
       return { dynamicallySet: true };
     })

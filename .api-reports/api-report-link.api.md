@@ -10,6 +10,7 @@ import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { Observable } from 'rxjs';
+import type { OperationTypeNode } from 'graphql';
 
 // @public (undocumented)
 export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
@@ -82,6 +83,8 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     operationName?: string;
     // (undocumented)
+    operationType?: OperationTypeNode;
+    // (undocumented)
     query: DocumentNode;
     // (undocumented)
     variables?: TVariables;
@@ -100,6 +103,8 @@ export interface Operation {
     getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
+    // (undocumented)
+    operationType: OperationTypeNode | undefined;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)

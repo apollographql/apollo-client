@@ -155,8 +155,6 @@ export interface ApolloClientOptions {
     //
     // (undocumented)
     clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-    // @deprecated
-    connectToDevTools?: boolean;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -1127,6 +1125,8 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     operationName?: string;
     // (undocumented)
+    operationType?: OperationTypeNode;
+    // (undocumented)
     query: DocumentNode;
     // (undocumented)
     variables?: TVariables;
@@ -1342,8 +1342,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
     fragments?: FragmentRegistryAPI;
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // @deprecated (undocumented)
-    resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;
     // (undocumented)
@@ -1953,6 +1951,8 @@ export interface Operation {
     // (undocumented)
     operationName: string;
     // (undocumented)
+    operationType: OperationTypeNode | undefined;
+    // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
@@ -2475,7 +2475,7 @@ export interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables 
 // @public (undocumented)
 export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
             data: Unmasked<TSubscriptionData>;
         };
@@ -2582,7 +2582,7 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 export interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables> {
     // (undocumented)
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -2691,10 +2691,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:304:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:253:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:252:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

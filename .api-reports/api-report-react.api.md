@@ -33,6 +33,7 @@ import { gql } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link';
 import type { HKT } from '@apollo/client/utilities';
 import type { HookWrappers } from '@apollo/client/react/internal';
+import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
@@ -159,8 +160,6 @@ interface ApolloClientOptions {
     cache: ApolloCache;
     // (undocumented)
     clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-    // @deprecated
-    connectToDevTools?: boolean;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -316,15 +315,6 @@ type GetDataState<TData, TState extends DataState<TData>["dataState"]> = Extract
 }>;
 
 export { gql }
-
-// @public (undocumented)
-interface IgnoreModifier {
-    // (undocumented)
-    [_ignoreModifier]: true;
-}
-
-// @public (undocumented)
-const _ignoreModifier: unique symbol;
 
 // Warning: (ae-forgotten-export) The symbol "InternalRefetchQueryDescriptor" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
@@ -925,7 +915,7 @@ interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables extends
 // @public (undocumented)
 type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2, TSubscriptionData = TData> = {
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
             data: Unmasked<TSubscriptionData>;
         };
@@ -988,7 +978,7 @@ interface TransformCacheEntry {
 interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables_2> {
     // (undocumented)
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -1629,22 +1619,21 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:64:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:156:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:304:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:65:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:157:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:236:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:255:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:308:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:178:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:253:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:264:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:274:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:286:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:177:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:260:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:263:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:273:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:276:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:285:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:70:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:75:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 

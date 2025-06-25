@@ -85,7 +85,6 @@ type ExecSubSelectedArrayOptions = {
 
 interface StoreReaderConfig {
   cache: InMemoryCache;
-  resultCacheMaxSize?: number;
   fragments?: InMemoryCacheConfig["fragments"];
 }
 
@@ -119,7 +118,6 @@ export class StoreReader {
 
   private config: {
     cache: InMemoryCache;
-    resultCacheMaxSize?: number;
     fragments?: InMemoryCacheConfig["fragments"];
   };
 
@@ -155,7 +153,6 @@ export class StoreReader {
       },
       {
         max:
-          this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSelectionSet"] ||
           defaultCacheSizes["inMemoryCache.executeSelectionSet"],
         keyArgs: execSelectionSetKeyArgs,
@@ -183,7 +180,6 @@ export class StoreReader {
       },
       {
         max:
-          this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSubSelectedArray"] ||
           defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {

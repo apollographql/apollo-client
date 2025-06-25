@@ -23,6 +23,7 @@ export {
   isQueryOperation,
   isSubscriptionOperation,
 } from "./graphql/operations.js";
+export { getMainDefinition } from "@apollo/client/utilities/internal";
 
 export {
   concatPagination,

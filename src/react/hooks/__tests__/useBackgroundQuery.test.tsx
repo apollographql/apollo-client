@@ -9649,7 +9649,9 @@ describe.skip("type tests", () => {
           queryData,
           { subscriptionData, variables, complete, previousData }
         ) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+          expectTypeOf(queryData).toEqualTypeOf<
+            DeepPartial<UnmaskedVariablesCaseData>
+          >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
           expectTypeOf(previousData).toEqualTypeOf<
             | UnmaskedVariablesCaseData
@@ -9709,7 +9711,9 @@ describe.skip("type tests", () => {
           queryData,
           { subscriptionData, variables, complete, previousData }
         ) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+          expectTypeOf(queryData).toEqualTypeOf<
+            DeepPartial<UnmaskedVariablesCaseData>
+          >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(previousData).toEqualTypeOf<
@@ -9741,7 +9745,7 @@ describe.skip("type tests", () => {
             VariablesCaseVariables | undefined
           >();
 
-          return queryData;
+          return queryData as UnmaskedVariablesCaseData;
         },
       });
     }

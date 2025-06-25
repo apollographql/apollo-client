@@ -49,6 +49,7 @@ import type { HKT } from '@apollo/client/utilities';
 import { HttpLink } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
+import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
@@ -172,8 +173,6 @@ export interface ApolloClientOptions {
     cache: ApolloCache;
     // (undocumented)
     clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-    // @deprecated
-    connectToDevTools?: boolean;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -347,15 +346,6 @@ export { HttpLink }
 export { IdGetter }
 
 export { IdGetterObj }
-
-// @public (undocumented)
-interface IgnoreModifier {
-    // (undocumented)
-    [_ignoreModifier]: true;
-}
-
-// @public (undocumented)
-const _ignoreModifier: unique symbol;
 
 export { InMemoryCache }
 
@@ -923,7 +913,7 @@ export interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables 
 // @public (undocumented)
 export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
             data: Unmasked<TSubscriptionData>;
         };
@@ -990,7 +980,7 @@ export { Unmasked }
 export interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables> {
     // (undocumented)
     (
-    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -1031,10 +1021,9 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:304:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:253:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

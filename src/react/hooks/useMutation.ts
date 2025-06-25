@@ -9,7 +9,6 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MaybeMasked,
   MutateResult,
@@ -17,14 +16,14 @@ import type {
   MutationOptions,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
+  NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
   Unmasked,
 } from "@apollo/client";
+import type { IgnoreModifier } from "@apollo/client/cache";
 import type { NoInfer, Prettify } from "@apollo/client/utilities/internal";
 import { mergeOptions } from "@apollo/client/utilities/internal";
-
-import type { IgnoreModifier } from "../../cache/core/types/common.js";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";

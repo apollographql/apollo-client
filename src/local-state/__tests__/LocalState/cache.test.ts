@@ -338,7 +338,7 @@ test("handles read functions for root object field from cache if resolver is not
   });
 });
 
-test("warns if resolver is not defined if cache does not have value", async () => {
+test("does not warn if resolver is not defined if cache does not have value", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -363,11 +363,7 @@ test("warns if resolver is not defined if cache does not have value", async () =
     })
   ).resolves.toStrictEqualTyped({ data: { count: null } });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "Query.count"
-  );
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("reads from the cache on a nested scalar field by default if a resolver is not defined", async () => {
@@ -713,11 +709,7 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "User.count"
-  );
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("does not confuse field missing resolver with root field of same name on a non-normalized record", async () => {
@@ -769,11 +761,7 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "User.count"
-  );
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("warns on undefined value if partial data is written to the cache for an object client field", async () => {

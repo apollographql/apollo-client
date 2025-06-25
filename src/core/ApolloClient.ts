@@ -66,15 +66,36 @@ export interface ApolloClientOptions<TCacheShape> {
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    *
-   * @deprecated `uri` will be removed in Apollo Client 4.0. Please instantiate
-   * an instance of `HttpLink` and provide `uri` as an option instead.
+   * @deprecated `uri` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Instantiate an instance of `HttpClient` and pass `uri` as an option.
+   *
+   * ```js
+   * import { HttpLink } from "@apollo/client";
+   *
+   * new ApolloClient({
+   *   link: new HttpLink({ uri })
+   * });
+   * ```
    */
   uri?: string | UriFunction;
 
   /**
-   * @deprecated `credentials` will be removed in Apollo Client 4.0. Please
-   * instantiate an instance of `HttpLink` and provide `credentials` as an
-   * option instead.
+   * @deprecated `credentials` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Instantiate an instance of `HttpClient` and pass `credentials` as an option.
+   *
+   * ```js
+   * import { HttpLink } from "@apollo/client";
+   *
+   * new ApolloClient({
+   *   link: new HttpLink({ credentials })
+   * });
+   * ```
    */
   credentials?: string;
   /**
@@ -82,9 +103,19 @@ export interface ApolloClientOptions<TCacheShape> {
    *
    * This value will be ignored when using the `link` option.
    *
-   * @deprecated `headers` will be removed in Apollo Client 4.0. Please
-   * instantiate an instance of `HttpLink` and provide `headers` as an
-   * option instead.
+   * @deprecated `headers` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Instantiate an instance of `HttpClient` and pass `headers` as an option.
+   *
+   * ```js
+   * import { HttpLink } from "@apollo/client";
+   *
+   * new ApolloClient({
+   *   link: new HttpLink({ headers })
+   * });
+   * ```
    */
   headers?: Record<string, string>;
   /**
@@ -115,8 +146,18 @@ export interface ApolloClientOptions<TCacheShape> {
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
    *
    * The default value is `false` in production and `true` in development (if there is a `window` object).
+   *
    * @deprecated `connectToDevTools` will be removed in Apollo Client 4.0.
-   * Please use the `devtools.enabled` option.
+   *
+   * **Recommended now**
+   *
+   * Use the `devtools.enabled` option instead.
+   *
+   * ```ts
+   * new ApolloClient({
+   *   devtools: { enabled: true }
+   * });
+   * ```
    */
   connectToDevTools?: boolean;
   /**
@@ -140,29 +181,57 @@ export interface ApolloClientOptions<TCacheShape> {
   assumeImmutableResults?: boolean;
 
   /**
-   * @deprecated `resolvers` has been changed in Apollo Client 4.0 and will no
-   * longer be provided as an option directly to `ApolloClient`. `resolvers`
-   * should continue to be used until upgrading to 4.0.
+   * @deprecated `resolvers` has been moved in Apollo Client 4.0. This option is
+   * safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `resolvers` will need to be passed as the `resolvers` option to an instance
+   * of `LocalState`. That `LocalState` instance should be provided as the
+   * `localState` option to the `ApolloClient` constructor.
    */
   resolvers?: Resolvers | Resolvers[];
 
   /**
-   * @deprecated `typeDefs` will be removed in Apollo Client 4.0. Please remove
-   * this option.
+   * @deprecated `typeDefs` will be removed in Apollo Client 4.0. It is safe to
+   * stop using this option in Apollo Client 3.x.
    */
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
 
   /**
    * @deprecated Custom fragment matchers will no longer be supported in Apollo
-   * Client 4.0 and has been replaced by `cache.fragmentMatches`. You may
-   * continue to use this until upgrading to 4.0.
+   * Client 4.0 and has been replaced by `cache.fragmentMatches. It is safe to
+   * continue using this in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * Leverage `possibleTypes` with `InMemoryCache` to ensure fragments match
+   * correctly. Ensure `possibleTypes` include local types if needed. This
+   * option should then be removed. If working with a 3rd party cache
+   * implementation, ensure the 3rd party cache implements the
+   * `cache.fragmentMatches` method.
    */
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    *
    * @deprecated `name` has been moved to `clientAwareness.name` in Apollo Client 4.0.
-   * Please use `clientAwareness.name` instead.
+   *
+   * **Recommended now**
+   *
+   * Use `clientAwareness.name` to set the client awareness name.
+   *
+   * ```ts
+   * new ApolloClient({ clientAwareness: { name } });
+   * ```
    */
   name?: string;
   /**
@@ -170,8 +239,15 @@ export interface ApolloClientOptions<TCacheShape> {
    *
    * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
    *
-   * @deprecated `version` has been moved to `clientAwareness.version` in Apollo Client 4.0.
-   * Please use `clientAwareness.version` instead.
+   * @deprecated `name` has been moved to `clientAwareness.version` in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Use `clientAwareness.version` to set the client awareness version.
+   *
+   * ```ts
+   * new ApolloClient({ clientAwareness: { version } });
+   * ```
    */
   version?: string;
 
@@ -230,7 +306,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`
-   * in Apollo Client 4.0. Please use `client.prioritizeCacheValues` instead.
+   * in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Access `client.prioritizeCacheValues` instead.
    */
   public disableNetworkFetches: boolean;
   public version: string;

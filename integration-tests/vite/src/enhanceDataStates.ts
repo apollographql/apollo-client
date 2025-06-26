@@ -3,7 +3,6 @@ import { ApplyHKT } from "@apollo/client/utilities/internal";
 import { gql, DataValue, TypedDocumentNode } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { expectTypeOf } from "expect-type";
-import { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
 
 declare const complete: unique symbol;
 declare const streaming: unique symbol;
@@ -93,7 +92,7 @@ const query: ExtendedTypedDocumentNode<
 
 if (1 > 2 /* skip running this */) {
   type TData =
-    typeof query extends DocumentTypeDecoration<infer TData, any> ? TData
+    typeof query extends TypedDocumentNode<infer TData, any> ? TData
     : never;
   expectTypeOf<DataValue.Complete<TData>>().toEqualTypeOf<CompleteData>();
   expectTypeOf<DataValue.Streaming<TData>>().toEqualTypeOf<StreamingData>();

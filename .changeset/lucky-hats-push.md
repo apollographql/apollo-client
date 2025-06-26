@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - useLazyQuery
 ---
 
 The execute function returned from `useLazyQuery` now only supports the `context` and `variables` options. This means that passing options supported by the hook no longer override the hook value.

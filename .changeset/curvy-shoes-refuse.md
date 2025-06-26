@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - defer
 ---
 
 More strictly adhere to the [GraphQL over HTTP spec](https://graphql.github.io/graphql-over-http/draft/). This change adds support for the `application/graphql-response+json` media type and modifies the behavior of the `application/json` media type.

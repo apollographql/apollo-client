@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - bundling
 ---
 
 Apollo Client is no longer using `ts-invariant`, but ships with a modified variant of it.

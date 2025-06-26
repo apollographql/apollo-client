@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - queries
 ---
 
 When passing a `variables` key with the value `undefined`, the value will be replaced by the default value in the query, if it is provided, rather than leave it as `undefined`.

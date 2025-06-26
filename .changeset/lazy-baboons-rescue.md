@@ -1,5 +1,7 @@
 ---
 "@apollo/client": patch
+_tags:
+  - defer
 ---
 
 Slightly rework multipart response parsing.

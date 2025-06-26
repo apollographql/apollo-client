@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - removals
 ---
 
 Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`. `__typename` is now always added to the outgoing query document when using `InMemoryCache` and cannot be disabled.

@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - ssr
 ---
 
 `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been reworked:

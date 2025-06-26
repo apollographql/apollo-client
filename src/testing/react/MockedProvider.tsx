@@ -11,6 +11,10 @@ import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 import type { DevtoolsOptions } from "../../core/ApolloClient.js";
 import { invariant } from "../../utilities/globals/index.js";
+import {
+  warnRemovedOption,
+  silenceDeprecations,
+} from "../../utilities/deprecation/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
@@ -80,29 +84,34 @@ export class MockedProvider extends React.Component<
     } = this.props;
     if (__DEV__) {
       if (showWarnings) {
-        if ("connectToDevTools" in this.props) {
+        warnRemovedOption(this.props, "connectToDevTools", () => {
           invariant.warn(
             "[MockedProvider]: `connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
           );
-        }
+        });
 
-        if ("addTypename" in this.props) {
+        warnRemovedOption(this.props, "addTypename", () => {
           invariant.warn(
             "[MockedProvider]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` prop. For best results, ensure the provided `mocks` return a `__typename` for all objects to ensure the cache behaves the same as the runtime app."
           );
-        }
+        });
       }
     }
 
-    const client = new ApolloClient({
-      cache: cache || new Cache({ addTypename }),
-      defaultOptions,
-      devtools: devtools ?? {
-        enabled: connectToDevTools,
-      },
-      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
-      resolvers,
-    });
+    const client = silenceDeprecations(
+      ["connectToDevTools", "addTypename"],
+      () =>
+        new ApolloClient({
+          cache: cache || new Cache({ addTypename }),
+          defaultOptions,
+          devtools: devtools ?? {
+            enabled: connectToDevTools,
+          },
+          link:
+            link || new MockLink(mocks || [], addTypename, { showWarnings }),
+          resolvers,
+        })
+    );
 
     this.state = {
       client,

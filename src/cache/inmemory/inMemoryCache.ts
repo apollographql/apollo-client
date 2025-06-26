@@ -34,6 +34,7 @@ import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import { __esDecorate } from "tslib";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -76,6 +77,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       if ("addTypename" in config) {
         invariant.warn(
           "`addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option."
+        );
+      }
+
+      if ("canonizeResults" in config) {
+        invariant.warn(
+          "`canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove the `canonizeResults` option."
         );
       }
     }
@@ -191,6 +198,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
+    if (__DEV__) {
+      if ("canonizeResults" in options) {
+        invariant.warn(
+          "`canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
+      }
+    }
+
     const {
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the

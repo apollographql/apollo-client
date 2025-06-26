@@ -35,6 +35,7 @@ import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 import { __esDecorate } from "tslib";
+import { warnRemovedOption } from "../../utilities/deprecation/index.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -74,17 +75,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     super();
 
     if (__DEV__) {
-      if ("addTypename" in config) {
+      warnRemovedOption(config, "addTypename", () => {
         invariant.warn(
           "[InMemoryCache]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option when instantiating `InMemoryCache`."
         );
-      }
-
-      if ("canonizeResults" in config) {
+      });
+      warnRemovedOption(config, "canonizeResults", () => {
         invariant.warn(
           "[InMemoryCache]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove the `canonizeResults` option when instantiating `InMemoryCache`."
         );
-      }
+      });
     }
 
     this.config = normalizeConfig(config);

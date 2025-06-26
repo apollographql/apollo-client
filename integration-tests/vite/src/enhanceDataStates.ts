@@ -92,8 +92,7 @@ const query: ExtendedTypedDocumentNode<
 
 if (1 > 2 /* skip running this */) {
   type TData =
-    typeof query extends TypedDocumentNode<infer TData, any> ? TData
-    : never;
+    typeof query extends TypedDocumentNode<infer TData, any> ? TData : never;
   expectTypeOf<DataValue.Complete<TData>>().toEqualTypeOf<CompleteData>();
   expectTypeOf<DataValue.Streaming<TData>>().toEqualTypeOf<StreamingData>();
   expectTypeOf<DataValue.Partial<TData>>().toEqualTypeOf<

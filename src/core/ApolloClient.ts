@@ -439,12 +439,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         "ApolloClient",
         "Please use the `clientAwareness.version` option instead."
       );
-      warnRemovedOption(
-        options,
-        "version",
-        "ApolloClient",
-        "Please use the `clientAwareness.version` option instead."
-      );
       warnRemovedOption(options, "typeDefs", "ApolloClient");
 
       if (!options.link) {

@@ -51,9 +51,10 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
-import { wrapHook } from "./internal/index.js";
+import { useWarnRemovedOption, wrapHook } from "./internal/index.js";
 import type { RenderPromises } from "../ssr/RenderPromises.js";
 import type { MaybeMasked } from "../../masking/index.js";
+import { silenceDeprecations } from "../../utilities/deprecation/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -158,6 +159,8 @@ function useQuery_<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
+  useWarnRemovedOption(options, "canonizeResults", "useQuery");
+
   const { result, obsQueryFields } = useQueryInternals(query, options);
   return React.useMemo(
     () => ({ ...result, ...obsQueryFields }),
@@ -188,9 +191,16 @@ function useInternalState<
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         ObservableQuery["inactiveOnCreation"].withValue(!renderPromises, () =>
-          client.watchQuery(
-            getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
-          )
+          silenceDeprecations("canonizeResults", () => {
+            return client.watchQuery(
+              getObsQueryOptions(
+                void 0,
+                client,
+                options,
+                makeWatchQueryOptions()
+              )
+            );
+          })
         ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide

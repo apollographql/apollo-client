@@ -1,5 +1,5 @@
-import { cp } from "node:fs/promises";
-import { join } from "node:path";
+import { cp, mkdir } from "node:fs/promises";
+import { format, join, parse } from "node:path";
 
 import { transformFromAstAsync } from "@babel/core";
 import { visit } from "recast";
@@ -101,5 +101,39 @@ export const reactCompiler: BuildStep = async (options) => {
       ...pkg.exports["./react"].default,
     };
     pkg.exports["./react/compiled"] = "./react/index.compiled.js";
+  });
+
+  // add `react/compiled/index.js` entry point for `node10` resolution
+  await mkdir(join(options.targetDir, "react", "compiled"));
+  await applyRecast({
+    glob: "index.{js,d.ts}",
+    cwd: join(options.targetDir, "react"),
+    transformStep({ ast, sourceName }) {
+      const originalFileName = parse(sourceName);
+      const targetFileName = format({
+        ...originalFileName,
+        dir: join(originalFileName.dir, "compiled"),
+      });
+      return {
+        targetFileName,
+        copy: true,
+        ast: {
+          type: "File",
+          program: {
+            type: "Program",
+            sourceType: "module",
+            body: [
+              {
+                type: "ExportAllDeclaration",
+                source: {
+                  type: "StringLiteral",
+                  value: "../index.compiled.js",
+                },
+              },
+            ],
+          },
+        },
+      };
+    },
   });
 };

@@ -371,24 +371,25 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic
   ): Unmasked<FragmentType> | null {
     if (__DEV__) {
-      if (
-        "canonizeResults" in options &&
-        !this.deprecationWarnings.readFragment
-      ) {
-        invariant.warn(
-          "[cache.readFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      }
+      warnRemovedOption(options, "canonizeResults", () => {
+        if (!this.deprecationWarnings.readFragment) {
+          invariant.warn(
+            "[cache.readFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+          );
+        }
 
-      this.deprecationWarnings.readFragment = true;
+        this.deprecationWarnings.readFragment = true;
+      });
     }
 
-    return this.read({
-      ...options,
-      query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      rootId: options.id,
-      optimistic,
-    });
+    return silenceDeprecations("canonizeResults", () =>
+      this.read({
+        ...options,
+        query: this.getFragmentDoc(options.fragment, options.fragmentName),
+        rootId: options.id,
+        optimistic,
+      })
+    );
   }
 
   public writeQuery<TData = any, TVariables = any>({

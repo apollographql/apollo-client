@@ -1,4 +1,4 @@
-import { cp, readFile, writeFile } from "node:fs/promises";
+import { cp } from "node:fs/promises";
 import { join } from "node:path";
 
 import { transformFromAstAsync } from "@babel/core";
@@ -52,6 +52,13 @@ export const reactCompiler: BuildStep = async (options) => {
       return { ast: result.ast!, map: result.map };
     },
   });
+
+  const compilerVersion = (
+    await import("babel-plugin-react-compiler/package.json", {
+      with: { type: "json" },
+    })
+  ).default.version;
+
   await applyRecast({
     glob: "index.{js,d.ts}",
     cwd: join(options.targetDir, "react"),
@@ -61,12 +68,26 @@ export const reactCompiler: BuildStep = async (options) => {
         copy: true,
         ast: visit(ast, {
           visitExportNamedDeclaration(path) {
-            const source = path.node.source.value?.toString();
-            if (source.startsWith("./hooks/")) {
-              path.node.source.value = source.replace(
-                "./hooks/",
-                "./hooks-compiled/"
-              );
+            if (path.node.source) {
+              const source = path.node.source.value.toString();
+              if (source.startsWith("./hooks/")) {
+                path.node.source.value = source.replace(
+                  "./hooks/",
+                  "./hooks-compiled/"
+                );
+              }
+            }
+            this.traverse(path);
+          },
+          visitVariableDeclarator(path) {
+            if (
+              path.node.id.type === "Identifier" &&
+              path.node.id.name === "reactCompilerVersion"
+            ) {
+              path.node.init = {
+                type: "StringLiteral",
+                value: compilerVersion,
+              };
             }
             this.traverse(path);
           },
@@ -79,5 +100,6 @@ export const reactCompiler: BuildStep = async (options) => {
       "react-compiler": "./react/index.compiled.js",
       ...pkg.exports["./react"].default,
     };
+    pkg.exports["./react/compiled"] = "./react/index.compiled.js";
   });
 };

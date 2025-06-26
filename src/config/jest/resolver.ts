@@ -9,6 +9,9 @@ export function sync(path: string, options: ResolverOptions): string {
   const resolver = options.defaultResolver;
 
   if (process.env.TEST_ENV === "ci" && path.startsWith("@apollo/client")) {
+    if (path === "@apollo/client/react") {
+      path = "@apollo/client/react/compiled";
+    }
     let result = import.meta.resolve(
       path,
       pathToFileURL(join(options.rootDir!, "../dist/index.js"))
@@ -20,9 +23,6 @@ export function sync(path: string, options: ResolverOptions): string {
     }
     if (!result.includes("dist")) {
       throw new Error("Did not resolve to build artifact!");
-    }
-    if (path === "@apollo/client/react") {
-      result = result.replace("react/index.js", "react/index.compiled.js");
     }
     return fileURLToPath(result);
   }

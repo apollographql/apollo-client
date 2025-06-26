@@ -230,18 +230,26 @@ export { DataProxy }
 
 // @public (undocumented)
 export type DataState<TData> = {
-    data: TData;
+    data: DataValue.Complete<TData>;
     dataState: "complete";
 } | {
-    data: Streaming<TData>;
+    data: DataValue.Streaming<TData>;
     dataState: "streaming";
 } | {
-    data: DeepPartial<TData>;
+    data: DataValue.Partial<TData>;
     dataState: "partial";
 } | {
     data: undefined;
     dataState: "empty";
 };
+
+// @public (undocumented)
+export namespace DataValue {
+    // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+    export type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
+    export type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
+    export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
+}
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
@@ -512,13 +520,7 @@ export { NormalizedCache }
 export { NormalizedCacheObject }
 
 // @public
-export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data: TData;
-    dataState: "complete";
-} | {
-    data: Streaming<TData>;
-    dataState: "streaming";
-});
+export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
 
 export { Observable }
 
@@ -624,11 +626,33 @@ export { OptimisticStoreItem }
 // @public (undocumented)
 namespace OverridableTypes {
     // (undocumented)
+    interface Complete extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+    // (undocumented)
     interface Defaults {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        Complete: Complete;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Partial: Partial;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Partial extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: DeepPartial<this["arg1"]>;
     }
     // (undocumented)
     interface Streaming extends HKT {
@@ -877,11 +901,6 @@ export { split }
 export { StoreObject }
 
 export { StoreValue }
-
-// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
-//
-// @public
-export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
 
 // @public (undocumented)
 export interface SubscribeResult<TData = unknown> {

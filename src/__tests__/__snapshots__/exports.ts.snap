@@ -284,6 +284,7 @@ Array [
   "createQueryPreloader",
   "getApolloContext",
   "gql",
+  "reactCompilerVersion",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",

@@ -76,13 +76,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (__DEV__) {
       if ("addTypename" in config) {
         invariant.warn(
-          "`addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option."
+          "[InMemoryCache]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option when instantiating `InMemoryCache`."
         );
       }
 
       if ("canonizeResults" in config) {
         invariant.warn(
-          "`canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove the `canonizeResults` option."
+          "[InMemoryCache]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove the `canonizeResults` option when instantiating `InMemoryCache`."
         );
       }
     }

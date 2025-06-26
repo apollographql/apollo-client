@@ -292,6 +292,7 @@ import type {
   WatchFragmentResult,
 } from "../cache/core/cache.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { warnRemovedOption } from "../utilities/deprecation/index.js";
 export { mergeOptions };
 
 /**
@@ -402,11 +403,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     } = options;
 
     if (__DEV__) {
-      if ("connectToDevTools" in options) {
+      warnRemovedOption(options, "connectToDevTools", () => {
         invariant.warn(
           "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
         );
-      }
+      });
 
       if (!options.link) {
         invariant.warn(

@@ -106,10 +106,6 @@ export type WatchFragmentResult<TData> =
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
 
-  // Remove with Apollo Client 4.0. Used to track which deprecation warnings
-  // we've issued to prevent them from showing up multiple times.
-  protected deprecationWarnings: Record<string, boolean> = {};
-
   // required to implement
   // core API
   public abstract read<TData = any, TVariables = any>(
@@ -249,13 +245,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): Unmasked<QueryType> | null {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.readQuery) {
-          invariant.warn(
-            "[cache.readQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-        }
-
-        this.deprecationWarnings.readQuery = true;
+        invariant.warn(
+          "[cache.readQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 
@@ -372,13 +364,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): Unmasked<FragmentType> | null {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.readFragment) {
-          invariant.warn(
-            "[cache.readFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-        }
-
-        this.deprecationWarnings.readFragment = true;
+        invariant.warn(
+          "[cache.readFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 
@@ -427,13 +415,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): Unmasked<TData> | null {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.updateQuery) {
-          invariant.warn(
-            "[cache.updateQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-
-          this.deprecationWarnings.updateQuery = true;
-        }
+        invariant.warn(
+          "[cache.updateQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 
@@ -456,13 +440,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): Unmasked<TData> | null {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.updateFragment) {
-          invariant.warn(
-            "[cache.updateFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-
-          this.deprecationWarnings.updateFragment = true;
-        }
+        invariant.warn(
+          "[cache.updateFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 

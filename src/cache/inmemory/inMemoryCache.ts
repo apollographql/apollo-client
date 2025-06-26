@@ -203,12 +203,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public read<T>(options: Cache.ReadOptions): T | null {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.read) {
-          invariant.warn(
-            "[cache.read] `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-          this.deprecationWarnings.read = true;
-        }
+        invariant.warn(
+          "[cache.read] `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 
@@ -291,13 +288,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   ): Cache.DiffResult<TData> {
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", () => {
-        if (!this.deprecationWarnings.diff) {
-          invariant.warn(
-            "[cache.diff]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-          );
-        }
-
-        this.deprecationWarnings.diff = true;
+        invariant.warn(
+          "[cache.diff]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+        );
       });
     }
 

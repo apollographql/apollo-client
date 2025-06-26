@@ -54,16 +54,12 @@ export class MockedProvider extends React.Component<
   MockedProviderProps,
   MockedProviderState
 > {
-  public static defaultProps: MockedProviderProps = {
-    addTypename: true,
-  };
-
   constructor(props: MockedProviderProps) {
     super(props);
 
     const {
       mocks,
-      addTypename,
+      addTypename = true,
       defaultOptions,
       cache,
       resolvers,

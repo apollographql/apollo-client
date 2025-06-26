@@ -17,6 +17,10 @@ import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer, VariablesOption } from "../index.js";
 import { wrapHook } from "../hooks/internal/index.js";
+import {
+  silenceDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,
@@ -169,15 +173,21 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
     options: PreloadQueryOptions<NoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
   ): PreloadedQueryRef<TData, TVariables> {
-    const queryRef = new InternalQueryReference(
-      client.watchQuery({
-        ...options,
-        query,
-      } as WatchQueryOptions<any, any>),
-      {
-        autoDisposeTimeoutMs:
-          client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
-      }
+    warnRemovedOption(options, "canonizeResults", "preloadQuery");
+
+    const queryRef = silenceDeprecations(
+      "canonizeResults",
+      () =>
+        new InternalQueryReference(
+          client.watchQuery({
+            ...options,
+            query,
+          } as WatchQueryOptions<any, any>),
+          {
+            autoDisposeTimeoutMs:
+              client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
+          }
+        )
     );
 
     return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;

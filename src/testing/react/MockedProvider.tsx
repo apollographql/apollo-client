@@ -91,7 +91,7 @@ export class MockedProvider extends React.Component<
 
       warnRemovedOption(this.props, "addTypename", () => {
         invariant.warn(
-          "[MockedProvider]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` prop. For best results, ensure the provided `mocks` return a `__typename` for all objects to ensure the cache behaves the same as the runtime app."
+          "[MockedProvider]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` prop. For best results, ensure the provided `mocks` include a `__typename` property on all mock objects to ensure the cache more closely behaves like production."
         );
       });
     }

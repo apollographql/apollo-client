@@ -36,6 +36,10 @@ import type {
   MaybeMasked,
   Unmasked,
 } from "../../masking/index.js";
+import {
+  silenceDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -244,20 +248,24 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic
   ): Unmasked<QueryType> | null {
     if (__DEV__) {
-      if ("canonizeResults" in options && !this.deprecationWarnings.readQuery) {
-        invariant.warn(
-          "[cache.readQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      }
+      warnRemovedOption(options, "canonizeResults", () => {
+        if (!this.deprecationWarnings.readQuery) {
+          invariant.warn(
+            "[cache.readQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+          );
+        }
 
-      this.deprecationWarnings.readQuery = true;
+        this.deprecationWarnings.readQuery = true;
+      });
     }
 
-    return this.read({
-      ...options,
-      rootId: options.id || "ROOT_QUERY",
-      optimistic,
-    });
+    return silenceDeprecations("canonizeResults", () =>
+      this.read({
+        ...options,
+        rootId: options.id || "ROOT_QUERY",
+        optimistic,
+      })
+    );
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */

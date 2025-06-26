@@ -78,16 +78,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     super();
 
     if (__DEV__) {
-      warnRemovedOption(config, "addTypename", () => {
-        invariant.warn(
-          "[InMemoryCache]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option when instantiating `InMemoryCache`."
-        );
-      });
-      warnRemovedOption(config, "canonizeResults", () => {
-        invariant.warn(
-          "[InMemoryCache]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove the `canonizeResults` option when instantiating `InMemoryCache`."
-        );
-      });
+      warnRemovedOption(
+        config,
+        "addTypename",
+        "InMemoryCache",
+        "Please remove the `addTypename` option when initializing `InMemoryCache`."
+      );
+      warnRemovedOption(
+        config,
+        "canonizeResults",
+        "InMemoryCache",
+        "Please remove the `canonizeResults` option when initializing `InMemoryCache`."
+      );
     }
 
     this.config = normalizeConfig(config);
@@ -202,11 +204,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public read<T>(options: Cache.ReadOptions): T | null {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.read] `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.read");
     }
 
     const {
@@ -287,11 +285,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options: Cache.DiffOptions<TData, TVariables>
   ): Cache.DiffResult<TData> {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.diff]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.diff");
     }
 
     return this.storeReader.diffQueryAgainstStore({

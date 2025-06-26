@@ -244,11 +244,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic
   ): Unmasked<QueryType> | null {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.readQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.readQuery");
     }
 
     return silenceDeprecations("canonizeResults", () =>
@@ -363,11 +359,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic
   ): Unmasked<FragmentType> | null {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.readFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.readFragment");
     }
 
     return silenceDeprecations("canonizeResults", () =>
@@ -414,11 +406,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.updateQuery]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.updateQuery");
     }
 
     return this.batch({
@@ -439,11 +427,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
     if (__DEV__) {
-      warnRemovedOption(options, "canonizeResults", () => {
-        invariant.warn(
-          "[cache.updateFragment]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(options, "canonizeResults", "cache.updateFragment");
     }
 
     return this.batch({

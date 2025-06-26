@@ -403,41 +403,49 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     } = options;
 
     if (__DEV__) {
-      warnRemovedOption(options, "connectToDevTools", () => {
-        invariant.warn(
-          "[ApolloClient]: `connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
-        );
-      });
-      warnRemovedOption(options, "uri", () => {
-        invariant.warn(
-          "[ApolloClient]: `uri` is deprecated and will be removed in Apollo Client 4.0. Please initialize an instance of `HttpLink` with `uri` instead."
-        );
-      });
-      warnRemovedOption(options, "credentials", () => {
-        invariant.warn(
-          "[ApolloClient]: `credentials` is deprecated and will be removed in Apollo Client 4.0. Please initialize an instance of `HttpLink` with `credentials` instead."
-        );
-      });
-      warnRemovedOption(options, "headers", () => {
-        invariant.warn(
-          "[ApolloClient]: `headers` is deprecated and will be removed in Apollo Client 4.0. Please initialize an instance of `HttpLink` with `headers` instead."
-        );
-      });
-      warnRemovedOption(options, "name", () => {
-        invariant.warn(
-          "[ApolloClient]: `name` is deprecated and will be removed in Apollo Client 4.0. Please use the `clientAwareness.name` option instead."
-        );
-      });
-      warnRemovedOption(options, "version", () => {
-        invariant.warn(
-          "[ApolloClient]: `version` is deprecated and will be removed in Apollo Client 4.0. Please use the `clientAwareness.version` option instead."
-        );
-      });
-      warnRemovedOption(options, "typeDefs", () => {
-        invariant.warn(
-          "[ApolloClient]: `typeDefs` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      });
+      warnRemovedOption(
+        options,
+        "connectToDevTools",
+        "ApolloClient",
+        "Please use `devtools.enabled` instead."
+      );
+      warnRemovedOption(
+        options,
+        "uri",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `uri` instead."
+      );
+      warnRemovedOption(
+        options,
+        "credentials",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `credentials` instead."
+      );
+      warnRemovedOption(
+        options,
+        "headers",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `headers` instead."
+      );
+      warnRemovedOption(
+        options,
+        "name",
+        "ApolloClient",
+        "Please use the `clientAwareness.name` option instead."
+      );
+      warnRemovedOption(
+        options,
+        "version",
+        "ApolloClient",
+        "Please use the `clientAwareness.version` option instead."
+      );
+      warnRemovedOption(
+        options,
+        "version",
+        "ApolloClient",
+        "Please use the `clientAwareness.version` option instead."
+      );
+      warnRemovedOption(options, "typeDefs", "ApolloClient");
 
       if (!options.link) {
         invariant.warn(

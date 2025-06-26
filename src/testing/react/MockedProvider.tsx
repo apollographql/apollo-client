@@ -10,7 +10,6 @@ import type { ApolloLink } from "../../link/core/index.js";
 import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 import type { DevtoolsOptions } from "../../core/ApolloClient.js";
-import { invariant } from "../../utilities/globals/index.js";
 import {
   warnRemovedOption,
   silenceDeprecations,
@@ -83,17 +82,18 @@ export class MockedProvider extends React.Component<
       connectToDevTools = false,
     } = this.props;
     if (__DEV__) {
-      warnRemovedOption(this.props, "connectToDevTools", () => {
-        invariant.warn(
-          "[MockedProvider]: `connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
-        );
-      });
-
-      warnRemovedOption(this.props, "addTypename", () => {
-        invariant.warn(
-          "[MockedProvider]: `addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` prop. For best results, ensure the provided `mocks` include a `__typename` property on all mock objects to ensure the cache more closely behaves like production."
-        );
-      });
+      warnRemovedOption(
+        this.props,
+        "connectToDevTools",
+        "MockedProvider",
+        "Please use `devtools.enabled` instead."
+      );
+      warnRemovedOption(
+        this.props,
+        "addTypename",
+        "MockedProvider",
+        "Please remove the `addTypename` prop. For best results, ensure the provided `mocks` include a `__typename` property on all mock objects to ensure the cache more closely behaves like production."
+      );
     }
 
     const client = silenceDeprecations(

@@ -45,6 +45,7 @@ const config = {
     "config/schema.package.json.ts",
     "src/config/jest/resolver.ts",
     "config/listImports.ts",
+    "scripts/codemods/**/__testfixtures__/**/*",
   ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [

@@ -13,6 +13,7 @@ import type {
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
+  ErrorLike,
   InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
@@ -202,7 +203,7 @@ export interface SubscribeToMoreOptions<
     TVariables,
     TSubscriptionData
   >;
-  onError?: (error: Error) => void;
+  onError?: (error: ErrorLike) => void;
   context?: DefaultContext;
 }
 

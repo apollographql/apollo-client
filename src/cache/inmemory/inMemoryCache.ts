@@ -35,7 +35,10 @@ import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 import { __esDecorate } from "tslib";
-import { warnRemovedOption } from "../../utilities/deprecation/index.js";
+import {
+  silenceDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -199,12 +202,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public read<T>(options: Cache.ReadOptions): T | null {
     if (__DEV__) {
-      if ("canonizeResults" in options && !this.deprecationWarnings.read) {
-        invariant.warn(
-          "[cache.read] `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-        this.deprecationWarnings.read = true;
-      }
+      warnRemovedOption(options, "canonizeResults", () => {
+        if (!this.deprecationWarnings.read) {
+          invariant.warn(
+            "[cache.read] `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+          );
+          this.deprecationWarnings.read = true;
+        }
+      });
     }
 
     const {
@@ -285,13 +290,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options: Cache.DiffOptions<TData, TVariables>
   ): Cache.DiffResult<TData> {
     if (__DEV__) {
-      if ("canonizeResults" in options && !this.deprecationWarnings.diff) {
-        invariant.warn(
-          "[cache.diff]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
-        );
-      }
+      warnRemovedOption(options, "canonizeResults", () => {
+        if (!this.deprecationWarnings.diff) {
+          invariant.warn(
+            "[cache.diff]: `canonizeResults` is deprecated and will be removed in Apollo Client 4.0. Please remove this option."
+          );
+        }
 
-      this.deprecationWarnings.diff = true;
+        this.deprecationWarnings.diff = true;
+      });
     }
 
     return this.storeReader.diffQueryAgainstStore({

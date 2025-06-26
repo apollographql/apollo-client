@@ -1,7 +1,7 @@
 ---
 "@apollo/client": patch
 _tags:
-  - imports
+  - ignore
 ---
 
 Export `getMainDefinition` from `@apollo/client/utilities`.

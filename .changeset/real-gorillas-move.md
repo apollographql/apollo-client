@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - bundling
+  - debugging
 ---
 
 Apollo Client now defaults to production mode, not development mode, if the

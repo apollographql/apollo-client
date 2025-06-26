@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - types
 ---
 
 Move `MockLink` types to `MockLink` namespace. This affects the `MockedResponse`, `MockLinkOptions`, and `ResultFunction` types. These types are still exported but are deprecated in favor of the namespace. To migrate, use the types on the `MockLink` namespace instead.

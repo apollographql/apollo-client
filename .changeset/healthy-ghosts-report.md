@@ -2,6 +2,7 @@
 "@apollo/client": minor
 _tags:
   - types
+  - dataState
 ---
 
 The callback function that can be passed to the `ApolloClient.mutate`

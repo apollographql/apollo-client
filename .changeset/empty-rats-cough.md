@@ -1,7 +1,7 @@
 ---
 "@apollo/client": major
 _tags:
-  - breaking
+  - queries
 ---
 
 Aliasing any other field to `__typename` is now forbidden.

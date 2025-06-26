@@ -2,6 +2,7 @@
 "@apollo/client": minor
 _tags:
   - removals
+  - dependencies
 ---
 
 Drop `rehackt` dependency.

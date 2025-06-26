@@ -2,6 +2,7 @@
 "@apollo/client": major
 _tags:
   - ObservableQuery
+  - removals
 ---
 
 `ObservableQuery` no longer has a `queryId` property.

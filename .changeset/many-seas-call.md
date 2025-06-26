@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - useQuery
 ---
 
 Changing most options when rerendering `useQuery` will no longer trigger a `reobserve` which may cause network fetches. Instead, the changed options will be applied to the next cache update or fetch.

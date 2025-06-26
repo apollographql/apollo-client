@@ -2,6 +2,8 @@
 "@apollo/client": major
 _tags:
   - ssr
+  - ApolloClient
+  - fetch_policy
 ---
 
 `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been reworked:

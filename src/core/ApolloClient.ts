@@ -644,6 +644,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: "cache-first" };
     }
 
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "client.watchQuery");
+    }
+
     return this.queryManager.watchQuery<T, TVariables>(options);
   }
 
@@ -676,6 +680,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (this.disableNetworkFetches && options.fetchPolicy === "network-only") {
       options = { ...options, fetchPolicy: "cache-first" };
+    }
+
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "client.query");
     }
 
     return this.queryManager.query<T, TVariables>(options);

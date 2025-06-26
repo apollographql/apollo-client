@@ -149,12 +149,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
    * Please use `cacheSizes` instead.
    */
   resultCacheMaxSize?: number;
-  /**
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
 }

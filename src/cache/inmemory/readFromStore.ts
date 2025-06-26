@@ -60,6 +60,7 @@ export type VariableMap = { [name: string]: any };
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults: boolean;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
@@ -88,6 +89,7 @@ export interface StoreReaderConfig {
   cache: InMemoryCache;
   addTypename?: boolean;
   resultCacheMaxSize?: number;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
   canon?: ObjectCanon;
   fragments?: InMemoryCacheConfig["fragments"];

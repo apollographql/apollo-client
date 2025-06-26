@@ -619,7 +619,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // object, and without having to enumerate the relevant properties (query,
     // variables, etc.) explicitly. There will be some additional properties
     // (lastDiff, callback, etc.), but cache.diff ignores them.
-    const diff = this.diff<any>(c);
+    const diff = silenceDeprecations("canonizeResults", () =>
+      this.diff<any>(c)
+    );
 
     if (options) {
       if (c.optimistic && typeof options.optimistic === "string") {

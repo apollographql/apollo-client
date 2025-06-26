@@ -14,6 +14,16 @@ import { invariant } from "../../utilities/globals/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
+  /**
+   * @deprecated `addTypename` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please set `addTypename` to `true` or remove the prop entirely to use the
+   * default. It is recommended to add `__typename` to your mock objects if it is
+   * not already defined. This ensures the cache more closely resembles the
+   * production environment.
+   */
   addTypename?: boolean;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache<TSerializedCache>;

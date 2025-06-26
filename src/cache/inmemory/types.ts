@@ -137,6 +137,16 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
+  /**
+   * @defaultValue true
+   *
+   * @deprecated `addTypename` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please set `addTypename` to `true` or remove the option entirely to use the
+   * default.
+   */
   addTypename?: boolean;
 };
 

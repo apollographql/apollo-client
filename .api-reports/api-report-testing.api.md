@@ -381,7 +381,7 @@ namespace Cache_2 {
     }
     // (undocumented)
     interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // @deprecated (undocumented)
+        // @deprecated
         canonizeResults?: boolean;
         // (undocumented)
         optimistic: boolean;
@@ -1080,14 +1080,12 @@ export class MockedProvider extends React_2.Component<MockedProviderProps, Mocke
     // (undocumented)
     componentWillUnmount(): void;
     // (undocumented)
-    static defaultProps: MockedProviderProps;
-    // (undocumented)
     render(): React_2.JSX.Element | null;
 }
 
 // @public (undocumented)
 export interface MockedProviderProps<TSerializedCache = {}> {
-    // (undocumented)
+    // @deprecated (undocumented)
     addTypename?: boolean;
     // (undocumented)
     cache?: ApolloCache<TSerializedCache>;
@@ -2021,8 +2019,8 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:160:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:415:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:172:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts

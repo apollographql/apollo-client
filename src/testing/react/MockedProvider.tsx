@@ -79,10 +79,18 @@ export class MockedProvider extends React.Component<
       connectToDevTools = false,
     } = this.props;
     if (__DEV__) {
-      if ("connectToDevTools" in this.props) {
-        invariant.warn(
-          "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
-        );
+      if (showWarnings) {
+        if ("connectToDevTools" in this.props) {
+          invariant.warn(
+            "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
+          );
+        }
+
+        if ("addTypename" in this.props) {
+          invariant.warn(
+            "`addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` prop."
+          );
+        }
       }
     }
 

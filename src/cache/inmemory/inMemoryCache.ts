@@ -71,6 +71,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
+
+    if (__DEV__) {
+      if ("addTypename" in config) {
+        invariant.warn(
+          "`addTypename` is deprecated and will be removed in Apollo Client 4.0. Please remove the `addTypename` option."
+        );
+      }
+    }
+
     this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
 

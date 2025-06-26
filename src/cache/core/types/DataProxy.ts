@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
-import type { OperationVariables, TData } from "@apollo/client";
+import type { OperationVariables, DataValue } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 import type { Reference } from "@apollo/client/utilities";
 
@@ -128,13 +128,13 @@ export namespace DataProxy {
 
   export type DiffResult<TData> =
     | {
-        result: TData.Complete<TData>;
+        result: DataValue.Complete<TData>;
         complete: true;
         missing?: never;
         fromOptimisticTransaction?: boolean;
       }
     | {
-        result: TData.Partial<TData> | null;
+        result: DataValue.Partial<TData> | null;
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;

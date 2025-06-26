@@ -15,7 +15,7 @@ import type {
   ErrorPolicy,
   QueryResult,
   RefetchWritePolicy,
-  TData,
+  DataValue,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
@@ -6182,7 +6182,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<TData.Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -6215,7 +6215,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<TData.Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -6287,7 +6287,7 @@ describe.skip("Type Tests", () => {
     ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<
-      Masked<Query> | TData.Streaming<Masked<Query>> | undefined
+      Masked<Query> | DataValue.Streaming<Masked<Query>> | undefined
     >();
     expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
 
@@ -6400,7 +6400,7 @@ describe.skip("Type Tests", () => {
     ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<
-      Query | TData.Streaming<Query> | undefined
+      Query | DataValue.Streaming<Query> | undefined
     >();
     expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
 

@@ -57,7 +57,7 @@ function Main() {
 
   return data ?
       <ul>
-        {data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}
+        {data?.products?.map(({ id, title } = {}) => <li key={id}>{title}</li>)}
       </ul>
     : <>loading</>;
 }

@@ -1,15 +1,18 @@
 import { DeepPartial, HKT } from "@apollo/client/utilities";
 import { ApplyHKT } from "@apollo/client/utilities/internal";
-import { gql, TypedDocumentNode, TData } from "@apollo/client";
+import { gql, DataValue, TypedDocumentNode } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { expectTypeOf } from "expect-type";
 import { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
 
+declare const complete: unique symbol;
+declare const streaming: unique symbol;
+
 type ExtendedTypedDocumentNode<TCompleteData, TVariables, TStreaming> =
   TypedDocumentNode<
     TCompleteData & {
-      _complete?: TCompleteData;
-      _streaming?: TStreaming;
+      [complete]?: TCompleteData;
+      [streaming]?: TStreaming;
     },
     TVariables
   >;
@@ -17,12 +20,12 @@ type ExtendedTypedDocumentNode<TCompleteData, TVariables, TStreaming> =
 declare namespace MyImplementation {
   interface Complete extends HKT {
     arg1: unknown; // TData
-    return: this["arg1"] extends { _complete?: infer TComplete } ? TComplete
+    return: this["arg1"] extends { [complete]?: infer TComplete } ? TComplete
     : this["arg1"];
   }
   interface Streaming extends HKT {
     arg1: unknown; // TData
-    return: this["arg1"] extends { _streaming?: infer TStreaming } ? TStreaming
+    return: this["arg1"] extends { [streaming]?: infer TStreaming } ? TStreaming
     : DeepPartial<this["arg1"]>;
   }
   interface Partial extends HKT {
@@ -92,9 +95,9 @@ if (1 > 2 /* skip running this */) {
   type TData =
     typeof query extends DocumentTypeDecoration<infer TData, any> ? TData
     : never;
-  expectTypeOf<TData.Complete<TData>>().toEqualTypeOf<CompleteData>();
-  expectTypeOf<TData.Streaming<TData>>().toEqualTypeOf<StreamingData>();
-  expectTypeOf<TData.PartialData<TData>>().toEqualTypeOf<
+  expectTypeOf<DataValue.Complete<TData>>().toEqualTypeOf<CompleteData>();
+  expectTypeOf<DataValue.Streaming<TData>>().toEqualTypeOf<StreamingData>();
+  expectTypeOf<DataValue.Partial<TData>>().toEqualTypeOf<
     DeepPartial<CompleteData>
   >();
 

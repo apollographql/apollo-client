@@ -50,7 +50,7 @@ namespace OverridableTypes {
   }
 }
 
-export declare namespace TData {
+export declare namespace DataValue {
   /**
    * Returns a representation of `TData` in it's "complete" state.
    *
@@ -324,17 +324,17 @@ export type ApolloQueryResult<
 
 export type DataState<TData> =
   | {
-      data: TData.Complete<TData>;
+      data: DataValue.Complete<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "complete";
     }
   | {
-      data: TData.Streaming<TData>;
+      data: DataValue.Streaming<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "streaming";
     }
   | {
-      data: TData.Partial<TData>;
+      data: DataValue.Partial<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "partial";
     }

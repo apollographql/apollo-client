@@ -295,7 +295,10 @@ import type {
   WatchFragmentResult,
 } from "../cache/core/cache.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
-import { warnRemovedOption } from "../utilities/deprecation/index.js";
+import {
+  warnDeprecated,
+  warnRemovedOption,
+} from "../utilities/deprecation/index.js";
 export { mergeOptions };
 
 /**
@@ -682,6 +685,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.query");
+
+      if (options.fetchPolicy === "standby") {
+        invariant.warn(
+          "[client.query]: Apollo Client 4.0 will no longer support the `standby` fetch policy with `client.query`. Please use a different fetch policy."
+        );
+      }
     }
 
     return this.queryManager.query<T, TVariables>(options);

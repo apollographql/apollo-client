@@ -63,7 +63,7 @@ export function operationName(type: DocumentType) {
 export function parser(document: DocumentNode): IDocumentDefinition {
   warnDeprecated("parser", () => {
     invariant.warn(
-      "[parser]: `parser` is deprecated and will be removed in Apollo Client 4.0. This is an internal function and should not be used directly. Please remove all usages of `parser`."
+      "[parser]: `parser` is deprecated and will be removed in Apollo Client 4.0. Please remove all usages of `parser`."
     );
   });
   if (!cache) {

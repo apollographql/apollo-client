@@ -15,13 +15,7 @@ export namespace Cache {
     previousResult?: any;
     optimistic: boolean;
     returnPartialData?: boolean;
-    /**
-     * @deprecated
-     * Using `canonizeResults` can result in memory leaks so we generally do not
-     * recommend using this option anymore.
-     * A future version of Apollo Client will contain a similar feature without
-     * the risk of memory leaks.
-     */
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
     canonizeResults?: boolean;
   }
 

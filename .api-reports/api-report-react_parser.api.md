@@ -31,7 +31,7 @@ export interface IDocumentDefinition {
 // @public (undocumented)
 export function operationName(type: DocumentType_2): string;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function parser(document: DocumentNode): IDocumentDefinition;
 
 // @public (undocumented)

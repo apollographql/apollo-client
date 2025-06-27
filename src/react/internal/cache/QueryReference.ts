@@ -113,6 +113,14 @@ export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
    * }
    * ```
    *
+   * @deprecated `toPromise` has been changed in Apollo Client 4.0 and is no
+   * longer available on the returned `queryRef`.
+   *
+   * **Recommended now**
+   *
+   * `preloadQuery` provides a `.toPromise` method in 3.14.0. Use
+   * `preloadQuery.toPromise(queryRef)` instead.
+   *
    * @since 3.9.0
    */
   toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;

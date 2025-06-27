@@ -20,7 +20,11 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
-import { __use, useRenderGuard } from "./internal/index.js";
+import {
+  __use,
+  useRenderGuard,
+  useWarnRemovedOption,
+} from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -29,6 +33,7 @@ import type {
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import { invariant } from "../../utilities/globals/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in
@@ -170,6 +175,11 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: LoadableQueryHookOptions = Object.create(null)
 ): UseLoadableQueryResult<TData, TVariables> {
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(options, "canonizeResults", "useLoadableQuery");
+  }
+
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
@@ -242,11 +252,13 @@ export function useLoadableQuery<
         ...([] as any[]).concat(queryKey),
       ];
 
-      const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-        client.watchQuery({
-          ...watchQueryOptions,
-          variables,
-        } as WatchQueryOptions<any, any>)
+      const queryRef = muteDeprecations("canonizeResults", () =>
+        suspenseCache.getQueryRef(cacheKey, () =>
+          client.watchQuery({
+            ...watchQueryOptions,
+            variables,
+          } as WatchQueryOptions<any, any>)
+        )
       );
 
       setQueryRef(wrapQueryRef(queryRef));

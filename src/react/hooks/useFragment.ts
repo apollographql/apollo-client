@@ -12,9 +12,14 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
+import {
+  useDeepMemo,
+  useWarnRemovedOption,
+  wrapHook,
+} from "./internal/index.js";
 import equal from "@wry/equality";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -65,6 +70,10 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 function useFragment_<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(options, "canonizeResults", "useFragment");
+  }
   const client = useApolloClient(options.client);
   const { cache } = client;
   const { from, ...rest } = options;
@@ -98,13 +107,15 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     }
 
     const { cache } = client;
-    const diff = cache.diff<TData>({
-      ...stableOptions,
-      returnPartialData: true,
-      id: from,
-      query: cache["getFragmentDoc"](fragment, fragmentName),
-      optimistic,
-    });
+    const diff = muteDeprecations("canonizeResults", () =>
+      cache.diff<TData>({
+        ...stableOptions,
+        returnPartialData: true,
+        id: from,
+        query: cache["getFragmentDoc"](fragment, fragmentName),
+        optimistic,
+      })
+    );
 
     return {
       result: diffToResult({
@@ -126,7 +137,7 @@ function useFragment_<TData = any, TVars = OperationVariables>(
       (forceUpdate) => {
         let lastTimeout = 0;
 
-        const subscription =
+        const subscription = muteDeprecations("canonizeResults", () =>
           stableOptions.from === null ?
             null
           : client.watchFragment(stableOptions).subscribe({
@@ -144,7 +155,8 @@ function useFragment_<TData = any, TVars = OperationVariables>(
                 clearTimeout(lastTimeout);
                 lastTimeout = setTimeout(forceUpdate) as any;
               },
-            });
+            })
+        );
         return () => {
           subscription?.unsubscribe();
           clearTimeout(lastTimeout);

@@ -17,6 +17,10 @@ import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer, VariablesOption } from "../index.js";
 import { wrapHook } from "../hooks/internal/index.js";
+import {
+  muteDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,
@@ -130,6 +134,10 @@ export interface PreloadQueryFunction {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
   ): PreloadedQueryRef<TData, TVariables>;
+
+  toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+    queryRef: TQueryRef
+  ): Promise<TQueryRef>;
 }
 
 /**
@@ -161,7 +169,7 @@ export function createQueryPreloader(
 }
 
 const _createQueryPreloader: typeof createQueryPreloader = (client) => {
-  return function preloadQuery<
+  function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -169,17 +177,31 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
     options: PreloadQueryOptions<NoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
   ): PreloadedQueryRef<TData, TVariables> {
-    const queryRef = new InternalQueryReference(
-      client.watchQuery({
-        ...options,
-        query,
-      } as WatchQueryOptions<any, any>),
-      {
-        autoDisposeTimeoutMs:
-          client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
-      }
+    warnRemovedOption(options, "canonizeResults", "preloadQuery");
+
+    const queryRef = muteDeprecations(
+      "canonizeResults",
+      () =>
+        new InternalQueryReference(
+          client.watchQuery({
+            ...options,
+            query,
+          } as WatchQueryOptions<any, any>),
+          {
+            autoDisposeTimeoutMs:
+              client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
+          }
+        )
     );
 
     return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
-  };
+  }
+
+  return Object.assign(preloadQuery, {
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+      queryRef: TQueryRef
+    ): Promise<TQueryRef> {
+      return queryRef.toPromise() as Promise<TQueryRef>;
+    },
+  });
 };

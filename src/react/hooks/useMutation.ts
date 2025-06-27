@@ -21,6 +21,7 @@ import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
 
 /**
  *
@@ -83,6 +84,16 @@ export function useMutation<
     TCache
   >
 ): MutationTuple<TData, TVariables, TContext, TCache> {
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(
+      options || {},
+      "ignoreResults",
+      "useMutation",
+      "If you don't want to synchronize component state with the mutation, please use the `useApolloClient` hook to get the client instance and call `client.mutate` directly."
+    );
+  }
+
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<Omit<MutationResult, "reset">>({
@@ -237,7 +248,7 @@ export function useMutation<
 
   React.useEffect(() => {
     const current = ref.current;
-    // eslint-disable-next-line react-compiler/react-compiler
+
     current.isMounted = true;
 
     return () => {

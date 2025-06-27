@@ -1089,6 +1089,14 @@ type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Promise<A
 // @public (undocumented)
 type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptions;
 
+// Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
+//
+// @public @deprecated (undocumented)
+interface InteropQueryResult<TData, TVariables extends OperationVariables> extends QueryResult<TData, TVariables> {
+    // @deprecated
+    called: boolean;
+}
+
 // @public (undocumented)
 interface InvalidateModifier {
     // (undocumented)
@@ -1458,7 +1466,7 @@ interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
         }) => Unmasked<TData>;
     }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
     refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     startPolling: (pollInterval: number) => void;
     stopPolling: () => void;
@@ -1517,6 +1525,7 @@ interface PendingPromise<TValue> extends Promise<TValue> {
 
 // @public
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+    // @deprecated
     toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
@@ -1539,6 +1548,8 @@ interface PreloadQueryFunction {
         returnPartialData: true;
     }): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer_2<TVariables>>): PreloadedQueryRef<TData, TVariables>;
+    // (undocumented)
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
 }
 
 // Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
@@ -2332,10 +2343,10 @@ type UseFragmentResult<TData> = {
     missing?: MissingTree;
 };
 
-// Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "InteropQueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public
-function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): QueryResult<TData, TVariables>;
+function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): InteropQueryResult<TData, TVariables>;
 
 // Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
 //

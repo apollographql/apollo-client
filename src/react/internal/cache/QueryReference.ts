@@ -61,6 +61,7 @@ interface WrappedQueryRef<TData = unknown, TVariables = unknown>
 
 /**
  * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+ * `QueryReference` will be removed in Apollo Client 4.0.
  *
  * {@inheritDoc @apollo/client!QueryRef:interface}
  */

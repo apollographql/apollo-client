@@ -19,7 +19,7 @@
 
 ### Minor Changes
 
-- [#12201](https://github.com/apollographql/apollo-client/pull/12201) [`1c6e03c`](https://github.com/apollographql/apollo-client/commit/1c6e03c9c74a9fad2a1c2e1c3ae61a9560038238) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Overridable types for `dataState: "complete"`, `dataState: "streaming"` and
+- [#12740](https://github.com/apollographql/apollo-client/pull/12740) [`1c6e03c`](https://github.com/apollographql/apollo-client/commit/1c6e03c9c74a9fad2a1c2e1c3ae61a9560038238) Thanks [@phryneas](https://github.com/phryneas)! - Overridable types for `dataState: "complete"`, `dataState: "streaming"` and
   `dataState: "partial"` responses.
 
   This adds the `DataValue` namespace exported from Apollo Client with the three

@@ -168,6 +168,26 @@ export interface QueryResult<
   called: boolean;
 }
 
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions to add deprecations. Use `QueryResult` instead.
+ */
+export interface InteropQueryResult<
+  TData,
+  TVariables extends OperationVariables,
+> extends QueryResult<TData, TVariables> {
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
+   *
+   * @deprecated `called` will be removed from the `useQuery` result in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please remove the use of the `called` property.
+   */
+  called: boolean;
+}
+
 export interface QueryDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

@@ -42,6 +42,7 @@ import type {
   QueryResult,
   ObservableQueryFields,
   NoInfer,
+  InteropQueryResult,
 } from "../types/types.js";
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
@@ -143,18 +144,7 @@ export function useQuery<
     NoInfer<TData>,
     NoInfer<TVariables>
   > = Object.create(null)
-): QueryResult<TData, TVariables> & {
-  /**
-   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
-   *
-   * @deprecated `called` will be removed from the `useQuery` result in Apollo Client 4.0.
-   *
-   * **Recommended now**
-   *
-   * Please remove the use of the `called` property.
-   */
-  called: boolean;
-} {
+): InteropQueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler

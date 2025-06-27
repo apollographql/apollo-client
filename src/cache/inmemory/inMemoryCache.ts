@@ -336,8 +336,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // If resetResultCache is true, this.storeReader.canon will be preserved by
     // default, but can also be discarded by passing resetResultIdentities:true.
     // Defaults to false.
+    /**
+     * @deprecated `resetResultIdentities` is removed in Apollo Client 4.0.
+     *
+     * **Recommended now**
+     *
+     * Ensure all usages of `canonizeResults` are removed. Once
+     * `canonizeResults` is no longer used, remove this option.
+     */
     resetResultIdentities?: boolean;
   }) {
+    if (__DEV__) {
+      warnRemovedOption(
+        options || {},
+        "resetResultIdentities",
+        "cache.gc",
+        "First ensure all usages of `canonizeResults` are removed, then remove this option."
+      );
+    }
+
     canonicalStringify.reset();
     print.reset();
     const ids = this.optimisticData.gc();

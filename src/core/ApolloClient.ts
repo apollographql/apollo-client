@@ -874,7 +874,7 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
+  public resetStore(): Promise<InteropApolloQueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({

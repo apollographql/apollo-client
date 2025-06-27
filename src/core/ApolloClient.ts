@@ -958,7 +958,7 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
-    TResult = Promise<ApolloQueryResult<any>>,
+    TResult = Promise<InteropApolloQueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {

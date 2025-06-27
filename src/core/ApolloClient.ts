@@ -941,7 +941,7 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
    */
   public reFetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<ApolloQueryResult<any>[]> {
+  ): Promise<InteropApolloQueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 

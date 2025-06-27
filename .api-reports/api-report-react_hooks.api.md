@@ -986,8 +986,6 @@ interface InteropLazyQueryExecResult<TData, TVariables extends OperationVariable
     called: boolean;
     // @deprecated
     client: ApolloClient<any>;
-    data: MaybeMasked<TData> | undefined;
-    error?: ApolloError;
     // @deprecated (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // @deprecated

@@ -13,10 +13,14 @@ type DeprecationName =
   | "addTypename"
   | "canonizeResults"
   | "connectToDevTools"
+  | "graphql"
   | "parser"
   | "withQuery"
   | "withMutation"
-  | "withSubscription";
+  | "withSubscription"
+  | "<Query />"
+  | "<Mutation />"
+  | "<Subscription />";
 
 function isMuted(name: string) {
   return (slot.getValue() || []).includes(name as string);

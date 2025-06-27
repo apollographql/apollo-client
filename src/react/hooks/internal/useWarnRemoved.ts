@@ -6,7 +6,9 @@ export function useWarnRemoved(name: string, cb: () => void) {
   const didWarn = React.useRef(false);
 
   if (__DEV__) {
-    warnDeprecated(name, cb);
+    if (!didWarn.current) {
+      warnDeprecated(name, cb);
+    }
 
     // eslint-disable-next-line react-compiler/react-compiler
     didWarn.current = true;

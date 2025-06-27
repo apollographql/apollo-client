@@ -264,8 +264,8 @@ export function useLazyQuery<
               "useLazyQuery.execute",
               "Please pass the option to the `useLazyQuery` hook instead."
             );
+            warnRef.current.add(name);
           }
-          warnRef.current.add(name);
         }
       }
 

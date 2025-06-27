@@ -1,5 +1,18 @@
 export type ServerError = Error & {
   response: Response;
+  /**
+   * @deprecated `result` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When migrating**
+   *
+   * `result` has been replaced by `bodyText` which is the raw string body
+   * returned in the result. Use `JSON.parse` on the `bodyText` property to get
+   * the same value as `result`.
+   */
   result: Record<string, any> | string;
   statusCode: number;
 };

@@ -47,4 +47,11 @@ export function getApolloContext(): ReactTypes.Context<ApolloContextValue> {
  * and will be removed in the next major version of Apollo Client.
  * If you want to get the Apollo Context, use `getApolloContext` instead.
  */
-export const resetApolloContext = getApolloContext;
+export const resetApolloContext = () => {
+  if (__DEV__) {
+    invariant.warn(
+      "[resetApolloContext]: `resetApolloContext` is deprecated and will be removed in Apollo Client 4.0. Please use `getApolloContext` instead."
+    );
+  }
+  return getApolloContext();
+};

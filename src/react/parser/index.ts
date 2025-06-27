@@ -12,7 +12,10 @@ import {
   defaultCacheSizes,
 } from "../../utilities/index.js";
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
-import { warnDeprecated } from "../../utilities/deprecation/index.js";
+import {
+  muteDeprecations,
+  warnDeprecated,
+} from "../../utilities/deprecation/index.js";
 
 export enum DocumentType {
   Query,
@@ -171,7 +174,7 @@ if (__DEV__) {
 }
 
 export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
-  const operation = parser(document);
+  const operation = muteDeprecations("parser", parser, [document]);
   const requiredOperationName = operationName(type);
   const usedOperationName = operationName(operation.type);
   invariant(

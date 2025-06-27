@@ -15,7 +15,6 @@ import { QueryManager } from "./QueryManager.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 
 import type {
-  ApolloQueryResult,
   DefaultContext,
   OperationVariables,
   Resolvers,

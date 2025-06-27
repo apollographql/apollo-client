@@ -25,6 +25,7 @@ import type {
   RefetchQueriesInclude,
   InteropApolloQueryResult,
   InteropMutateResult,
+  InteropSubscribeResult,
 } from "./types.js";
 
 import type {
@@ -718,7 +719,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, T>
-  ): Observable<FetchResult<MaybeMasked<T>>> {
+  ): Observable<InteropSubscribeResult<MaybeMasked<T>>> {
     const id = this.queryManager.generateQueryId();
 
     return this.queryManager

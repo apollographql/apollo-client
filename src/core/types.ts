@@ -210,7 +210,7 @@ export interface InteropApolloQueryResult<T> {
  * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
  * bridge between versions for deprecations.
  */
-interface InteropMutationSingleExecutionResult<
+interface InteropSingleExecutionResult<
   TData = Record<string, any>,
   TContext = DefaultContext,
   TExtensions = Record<string, any>,
@@ -320,7 +320,7 @@ export interface InteropMutationExecutionPatchIncrementalResult<
  * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
  * bridge between versions for deprecations.
  */
-export type InteropMutationExecutionPatchResult<
+export type InteropExecutionPatchResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
 > =
@@ -336,8 +336,20 @@ export type InteropMutateResult<
   TContext = DefaultContext,
   TExtensions = Record<string, any>,
 > =
-  | InteropMutationSingleExecutionResult<TData, TContext, TExtensions>
-  | InteropMutationExecutionPatchResult<TData, TExtensions>;
+  | InteropSingleExecutionResult<TData, TContext, TExtensions>
+  | InteropExecutionPatchResult<TData, TExtensions>;
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export type InteropSubscribeResult<
+  TData = Record<string, any>,
+  TContext = DefaultContext,
+  TExtensions = Record<string, any>,
+> =
+  | InteropSingleExecutionResult<TData, TContext, TExtensions>
+  | InteropExecutionPatchResult<TData, TExtensions>;
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

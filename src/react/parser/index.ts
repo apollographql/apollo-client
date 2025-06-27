@@ -53,7 +53,6 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to safety check incoming documents.
 /**
  * @internal
  *

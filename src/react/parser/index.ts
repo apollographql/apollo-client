@@ -53,6 +53,13 @@ export function operationName(type: DocumentType) {
 }
 
 // This parser is mostly used to safety check incoming documents.
+/**
+ * @deprecated `parser` will be removed in Apollo Client 4.0.
+ *
+ * **Recommended now**
+ *
+ * Remove all usages of `parser` as it is an internal implementation detail.
+ */
 export function parser(document: DocumentNode): IDocumentDefinition {
   if (!cache) {
     cache = new AutoCleanedWeakCache(

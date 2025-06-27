@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import type { BuildStep } from "./build.ts";
 import { entryPoints } from "./entryPoints.ts";
+import { updatePackageJson } from "./helpers.ts";
 
 type ConditionRoot = {
   import?: string;
@@ -14,34 +15,33 @@ type ConditionRoot = {
 };
 
 export const addExports: BuildStep = async (options) => {
-  const pkgFileName = join(options.packageRoot, "package.json");
-  const pkg = JSON.parse(await readFile(pkgFileName, "utf-8"));
-  // normal entry points a la `@apollo/client` and `@apollo/client/core`.
-  // these entry points will be used in most cases and point to the right file depending
-  // on how the user is consuming the package.
-  for (const entryPoint of entryPoints) {
-    if (typeof entryPoint.value === "string") {
-      pkg.exports[entryPoint.key] = processEntryPoint(
-        entryPoint.value,
-        pkg.exports[entryPoint.key]
-      );
-    } else {
-      for (const [key, value] of Object.entries(entryPoint.value)) {
-        if (!pkg.exports[entryPoint.key]) {
-          pkg.exports[entryPoint.key] = {};
+  await updatePackageJson(options.packageRoot, (pkg) => {
+    // normal entry points a la `@apollo/client` and `@apollo/client/core`.
+    // these entry points will be used in most cases and point to the right file depending
+    // on how the user is consuming the package.
+    for (const entryPoint of entryPoints) {
+      if (typeof entryPoint.value === "string") {
+        pkg.exports[entryPoint.key] = processEntryPoint(
+          entryPoint.value,
+          pkg.exports[entryPoint.key]
+        );
+      } else {
+        for (const [key, value] of Object.entries(entryPoint.value)) {
+          if (!pkg.exports[entryPoint.key]) {
+            pkg.exports[entryPoint.key] = {};
+          }
+          assert(
+            typeof value === "string",
+            "nesting of this complexity is not supported yet"
+          );
+          pkg.exports[entryPoint.key][key] = processEntryPoint(
+            value,
+            pkg.exports[entryPoint.key][key]
+          );
         }
-        assert(
-          typeof value === "string",
-          "nesting of this complexity is not supported yet"
-        );
-        pkg.exports[entryPoint.key][key] = processEntryPoint(
-          value,
-          pkg.exports[entryPoint.key][key]
-        );
       }
     }
-  }
-  await writeFile(pkgFileName, JSON.stringify(pkg, null, 2));
+  });
 
   // add legacy-style exports for `@apollo/client/index.js`, `@apollo/client/core/index.js`,
   // `@apollo/client/main.cjs`, `@apollo/client/core/core.cjs`, etc.
@@ -84,6 +84,7 @@ export const addExports: BuildStep = async (options) => {
     return JSON.parse(
       JSON.stringify(existing, [
         // ensure the order of keys is consistent
+        "react-compiler",
         "module",
         "module-sync",
         "require",

@@ -284,6 +284,7 @@ Array [
   "createQueryPreloader",
   "getApolloContext",
   "gql",
+  "reactCompilerVersion",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -333,6 +334,12 @@ Array [
   "updateWrappedQueryRef",
   "wrapQueryRef",
   "wrapperSymbol",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/internal/compiler-runtime 1`] = `
+Array [
+  "c",
 ]
 `;
 

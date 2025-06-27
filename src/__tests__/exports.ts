@@ -33,6 +33,7 @@ import * as localState from "@apollo/client/local-state";
 import * as masking from "@apollo/client/masking";
 import * as react from "@apollo/client/react";
 import * as reactInternal from "@apollo/client/react/internal";
+import * as compilerRuntime from "@apollo/client/react/internal/compiler-runtime";
 import * as reactSSR from "@apollo/client/react/ssr";
 import * as testing from "@apollo/client/testing";
 import * as testingInternal from "@apollo/client/testing/internal";
@@ -94,6 +95,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/masking", masking);
   check("@apollo/client/react", react);
   check("@apollo/client/react/internal", reactInternal);
+  check("@apollo/client/react/internal/compiler-runtime", compilerRuntime);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/testing/internal", testingInternal);

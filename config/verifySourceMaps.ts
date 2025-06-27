@@ -29,6 +29,10 @@ export const verifySourceMaps: BuildStep = async (options) => {
     const parsed = new SourceMapConsumer(sourceMap);
 
     const originalFileName = sourceMap.sources[0];
+    if (!originalFileName) {
+      // a generated file
+      continue;
+    }
     const originalFilePath = join(file.parentPath, originalFileName);
     const originalFileContents = await readFile(originalFilePath, "utf-8");
     const parsedContents = parsed.sourceContentFor(originalFileName, true);

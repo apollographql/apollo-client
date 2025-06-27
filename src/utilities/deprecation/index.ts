@@ -14,6 +14,7 @@ type DeprecationName =
   | "canonizeResults"
   | "connectToDevTools"
   | "graphql"
+  | "observableQuery.result"
   | "parser"
   | "withQuery"
   | "withMutation"

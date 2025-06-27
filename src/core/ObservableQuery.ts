@@ -42,7 +42,11 @@ import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
 import { Slot } from "optimism";
-import { warnRemovedOption } from "../utilities/deprecation/index.js";
+import {
+  muteDeprecations,
+  warnDeprecated,
+  warnRemovedOption,
+} from "../utilities/deprecation/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -218,6 +222,12 @@ export class ObservableQuery<
   }
 
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    warnDeprecated("observableQuery.result", () => {
+      invariant.warn(
+        "[observableQuery.result]: `result` is deprecated and will be removed with Apollo Client 4.0."
+      );
+    });
+
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
@@ -731,7 +741,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.observers.size ? this.result() : Promise.resolve();
+      return this.observers.size ?
+          muteDeprecations("observableQuery.result", () => this.result())
+        : Promise.resolve();
     }
 
     this.options.variables = variables;

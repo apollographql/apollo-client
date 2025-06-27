@@ -21,3 +21,6 @@ import type { ApolloConsumer } from "@apollo/client/react";
 import { getApolloContext } from "@apollo/client/react";
 
 import { omitDeep } from "@apollo/client/utilities/internal";
+
+import type { SetContextLink } from "@apollo/client/link/context";
+const contextSetter: SetContextLink.LegacyContextSetter = (() => {}) as any;

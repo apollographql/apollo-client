@@ -14,7 +14,7 @@ export function useWarnRemovedOption<TOptions extends Record<string, any>>(
   if (__DEV__) {
     if (name in options && !didWarn.current) {
       invariant.warn(
-        "[%s]: `%s` is deprecated and will be removed in Apollo Client 4.0. %s",
+        "[%s]: `%s` is a deprecated hook option and will be removed in Apollo Client 4.0. %s",
         callSite,
         name,
         recommendation

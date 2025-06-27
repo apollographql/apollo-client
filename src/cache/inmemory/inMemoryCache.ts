@@ -34,7 +34,6 @@ import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
-import { __esDecorate } from "tslib";
 import {
   muteDeprecations,
   warnRemovedOption,

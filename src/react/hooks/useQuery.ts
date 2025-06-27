@@ -163,6 +163,12 @@ function useQuery_<
   useWarnRemovedOption(options, "partialRefetch", "useQuery");
   useWarnRemovedOption(
     options,
+    "defaultOptions",
+    "useQuery",
+    "Pass the options directly to the hook instead."
+  );
+  useWarnRemovedOption(
+    options,
     "onCompleted",
     "useQuery",
     "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."

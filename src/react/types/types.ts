@@ -199,14 +199,14 @@ export interface LazyQueryHookOptions<
   /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * @deprecated This option will be removed in Apollo Client 4.0.
    * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
    */
   onCompleted?: (data: MaybeMasked<TData>) => void;
   /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * @deprecated This option will be removed in Apollo Client 4.0.
    * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
    */
   onError?: (error: ApolloError) => void;

@@ -169,6 +169,9 @@ importers:
       '@apollo/client':
         specifier: 3.13.0
         version: 3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      expect-type:
+        specifier: ^1.2.1
+        version: 1.2.1
       graphql:
         specifier: ^16.8.1
         version: 16.10.0
@@ -3655,6 +3658,10 @@ packages:
   exit@0.1.2:
     resolution: {integrity: sha512-Zk/eNKV2zbjpKzrsQ+n1G6poVbErQxJ0LBOJXaKZ1EViLzH+hrLu9cdXI4zw9dBQJslwBEpbQ2P1oS7nDxs6jQ==}
     engines: {node: '>= 0.8.0'}
+
+  expect-type@1.2.1:
+    resolution: {integrity: sha512-/kP8CAwxzLVEeFrMm4kMmy4CCDlpipyA7MYLVrdJIkV0fYF0UaigQHRsxHiuY/GEea+bh4KSv3TIlgr+2UL6bw==}
+    engines: {node: '>=12.0.0'}
 
   expect@27.5.1:
     resolution: {integrity: sha512-E1q5hSUG2AmYQwQJ041nvgpkODHQvB+RKlB4IYdru6uJsyFTRyZAP463M+1lINorwbqAmUggi6+WwkD8lCS/Dw==}
@@ -11314,6 +11321,8 @@ snapshots:
       strip-final-newline: 2.0.0
 
   exit@0.1.2: {}
+
+  expect-type@1.2.1: {}
 
   expect@27.5.1:
     dependencies:

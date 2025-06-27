@@ -491,12 +491,12 @@ export interface DataMasking {
 export namespace DataProxy {
     // (undocumented)
     export type DiffResult<TData> = {
-        result: TData;
+        result: DataValue.Complete<TData>;
         complete: true;
         missing?: never;
         fromOptimisticTransaction?: boolean;
     } | {
-        result: DeepPartial<TData> | null;
+        result: DataValue.Partial<TData> | null;
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
@@ -554,18 +554,27 @@ export interface DataProxy {
 
 // @public (undocumented)
 export type DataState<TData> = {
-    data: TData;
+    data: DataValue.Complete<TData>;
     dataState: "complete";
 } | {
-    data: Streaming<TData>;
+    data: DataValue.Streaming<TData>;
     dataState: "streaming";
 } | {
-    data: DeepPartial<TData>;
+    data: DataValue.Partial<TData>;
     dataState: "partial";
 } | {
     data: undefined;
     dataState: "empty";
 };
+
+// @public (undocumented)
+export namespace DataValue {
+    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+    export type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
+    export type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
+    export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
+}
 
 // Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
@@ -577,6 +586,8 @@ export type DataState<TData> = {
 // @public
 type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
 
+// Warning: (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
 
@@ -947,7 +958,6 @@ interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DefaultImplementation" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -1840,13 +1850,7 @@ export interface NormalizedCacheObject {
 }
 
 // @public
-export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data: TData;
-    dataState: "complete";
-} | {
-    data: Streaming<TData>;
-    dataState: "streaming";
-});
+export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
 
 export { Observable }
 
@@ -1980,11 +1984,33 @@ export type OptimisticStoreItem = {
 // @public (undocumented)
 namespace OverridableTypes {
     // (undocumented)
+    interface Complete extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+    // (undocumented)
     interface Defaults {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        Complete: Complete;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Partial: Partial;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Partial extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: DeepPartial<this["arg1"]>;
     }
     // (undocumented)
     interface Streaming extends HKT {
@@ -2431,11 +2457,6 @@ Item
 // @public
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
-// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
-//
-// @public
-export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
-
 // @public (undocumented)
 class Stump extends Layer {
     constructor(root: EntityStore.Root);
@@ -2686,7 +2707,6 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:97:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

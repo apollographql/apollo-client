@@ -529,6 +529,12 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   // tests, but probably shouldn’t be added to the result.
   /**
    * @internal
+   *
+   * @deprecated `variables` will be removed from the returned value in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please remove any use of `variables` returned from `useSubscription`.
    */
   variables?: TVariables;
 }

@@ -49,6 +49,12 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
+  /**
+   * @deprecated `newData` will be removed in Apollo Client 4.0. Please use the
+   * `result` option with a callback function instead and provide a
+   * `maxUsageCount` of `Number.POSITIVE_INFINITY` to get the same behavior.
+   * ```
+   */
   newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }
 
@@ -163,7 +169,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         mockedResponses.splice(responseIndex, 1);
       }
       const { newData } = response;
+
       if (newData) {
+        if (__DEV__) {
+          invariant.warn(
+            "[MockLink]: `newData` is deprecated and will be removed in Apollo Client 4.0. Please use the `result` option with a callback function and set the `maxUsageCount` option to `Number.POSITIVE_INFINITY`.\n\nFound `newData` on response:\n%o",
+            response
+          );
+        }
         response.result = newData(operation.variables);
         mockedResponses.push(response);
       }

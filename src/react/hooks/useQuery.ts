@@ -160,6 +160,19 @@ function useQuery_<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   useWarnRemovedOption(options, "canonizeResults", "useQuery");
+  useWarnRemovedOption(options, "partialRefetch", "useQuery");
+  useWarnRemovedOption(
+    options,
+    "onCompleted",
+    "useQuery",
+    "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
+  );
+  useWarnRemovedOption(
+    options,
+    "onError",
+    "useQuery",
+    "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
+  );
 
   const { result, obsQueryFields } = useQueryInternals(query, options);
   return React.useMemo(

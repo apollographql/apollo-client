@@ -354,12 +354,174 @@ export type QueryTuple<
   TVariables extends OperationVariables,
 > = LazyQueryResultTuple<TData, TVariables>;
 
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions.0. Do not use directly.
+ */
+export interface InteropLazyQueryExecResult<
+  TData,
+  TVariables extends OperationVariables,
+> extends QueryResult<TData, TVariables> {
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#client:member}
+   *
+   * @deprecated `client` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `client` property returned
+   * from the hook instead.
+   */
+  client: ApolloClient<any>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member}
+   *
+   * @deprecated `observable` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `observable` property returned
+   * from the hook instead.
+   */
+  observable: ObservableQuery<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: MaybeMasked<TData> | undefined;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member}
+   *
+   * @deprecated `previousData` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `previousData` property returned
+   * from the hook instead.
+   */
+  previousData?: MaybeMasked<TData>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#error:member}
+   */
+  error?: ApolloError;
+  /**
+   * @deprecated `errors` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property resolved from `execute` instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member}
+   *
+   * @deprecated `loading` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `loading` property returned
+   * from the hook instead.
+   */
+  loading: boolean;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member}
+   *
+   * @deprecated `networkStatus` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `networkStatus` property returned
+   * from the hook instead.
+   */
+  networkStatus: NetworkStatus;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
+   *
+   * @deprecated `called` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `called` property returned
+   * from the hook instead.
+   */
+  called: boolean;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member}
+   *
+   * @deprecated `variables` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `variables` property returned
+   * from the hook instead.
+   */
+  variables: TVariables | undefined;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member}
+   *
+   * @deprecated `startPolling` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `startPolling` function returned
+   * from the hook instead.
+   */
+  startPolling: (pollInterval: number) => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member}
+   *
+   * @deprecated `stopPolling` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `stopPolling` function returned
+   * from the hook instead.
+   */
+  stopPolling: () => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member}
+   *
+   * @deprecated `subscribeToMore` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `subscribeToMore` function returned
+   * from the hook instead.
+   */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member}
+   *
+   * @deprecated `updateQuery` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `updateQuery` function returned
+   * from the hook instead.
+   */
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member}
+   *
+   * @deprecated `refetch` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `refetch` function returned
+   * from the hook instead.
+   */
+  refetch: (
+    variables?: Partial<TVariables>
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /**
+   * @internal
+   *
+   * @deprecated `reobserve` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. To change options, rerender the hook with
+   * new options.
+   */
+  reobserve: (
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member}
+   *
+   * @deprecated `fetchMore` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `fetchMore` function returned
+   * from the hook instead.
+   */
+  fetchMore: <
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+      updateQuery?: (
+        previousQueryResult: Unmasked<TData>,
+        options: {
+          fetchMoreResult: Unmasked<TFetchData>;
+          variables: TFetchVars;
+        }
+      ) => Unmasked<TData>;
+    }
+  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+}
+
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
   options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
-) => Promise<QueryResult<TData, TVariables>>;
+) => Promise<InteropLazyQueryExecResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<
   TData,

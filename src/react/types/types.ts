@@ -51,6 +51,14 @@ export type CommonOptions<TOptions> = TOptions & {
 
 /* Query types */
 
+/**
+ * @deprecated `BaseQueryOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
@@ -63,6 +71,14 @@ export interface BaseQueryOptions<
   context?: DefaultContext;
 }
 
+/**
+ * @deprecated `QueryFunctionOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface QueryFunctionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -93,6 +109,14 @@ export interface QueryFunctionOptions<
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
+/**
+ * @deprecated `ObservableQueryFields` will be removed in Apollo Client 4.0.
+ * Types have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface ObservableQueryFields<
   TData,
   TVariables extends OperationVariables,
@@ -562,6 +586,14 @@ export type RefetchQueriesFunction = (
   ...args: any[]
 ) => InternalRefetchQueriesInclude;
 
+/**
+ * @deprecated `BaseMutationOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseMutationOptions<
   TData = any,
   TVariables = OperationVariables,
@@ -666,6 +698,14 @@ export interface OnSubscriptionDataOptions<TData = any> {
   subscriptionData: SubscriptionResult<TData>;
 }
 
+/**
+ * @deprecated `BaseSubscriptionOptions` will be removed in Apollo Client 4.0.
+ * Types have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

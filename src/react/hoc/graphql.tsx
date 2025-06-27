@@ -7,6 +7,7 @@ import { withMutation } from "./mutation-hoc.js";
 import { withSubscription } from "./subscription-hoc.js";
 import type { OperationOption, DataProps, MutateProps } from "./types.js";
 import type { OperationVariables } from "../../core/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /**
  * @deprecated
@@ -30,6 +31,12 @@ export function graphql<
 ): (
   WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
 ) => ReactTypes.ComponentClass<TProps> {
+  if (__DEV__) {
+    invariant.warn(
+      "[graphql]: The `graphql` higher order component will be removed in Apollo Client 4.0. Please switch to an available React hook such as `useQuery`, `useMutation`, or `useSubscription`."
+    );
+  }
+
   switch (parser(document).type) {
     case DocumentType.Mutation:
       return withMutation(document, operationOptions);

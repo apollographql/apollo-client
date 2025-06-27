@@ -117,7 +117,7 @@ it("handles errors in the lookup correctly with a normal function", async () => 
 
 it("has access to the request information", async () => {
   const withContext = new SetContextLink(
-    ({ operationName, query, variables }) =>
+    (_, { operationName, query, variables }) =>
       wait(1).then(() =>
         Promise.resolve({
           variables: variables ? true : false,
@@ -144,7 +144,7 @@ it("has access to the request information", async () => {
 });
 
 it("has access to the context at execution time", async () => {
-  const withContext = new SetContextLink((_, { count }) =>
+  const withContext = new SetContextLink(({ count }) =>
     wait(1).then(() => ({ count: count + 1 }))
   );
 
@@ -163,7 +163,7 @@ it("has access to the context at execution time", async () => {
 });
 
 it("unsubscribes correctly", async () => {
-  const withContext = new SetContextLink((_, { count }) =>
+  const withContext = new SetContextLink(({ count }) =>
     wait(1).then(() => ({ count: count + 1 }))
   );
 
@@ -188,7 +188,7 @@ it("unsubscribes correctly", async () => {
 
 it("unsubscribes without throwing before data", async () => {
   let called!: boolean;
-  const withContext = new SetContextLink((_, { count }) => {
+  const withContext = new SetContextLink(({ count }) => {
     called = true;
     return wait(1).then(() => ({ count: count + 1 }));
   });
@@ -257,7 +257,7 @@ test("can access the client from operation argument", async () => {
     link: ApolloLink.empty(),
   });
 
-  const withContext = new SetContextLink((operation) => {
+  const withContext = new SetContextLink((_, operation) => {
     return { client: operation.client };
   });
 

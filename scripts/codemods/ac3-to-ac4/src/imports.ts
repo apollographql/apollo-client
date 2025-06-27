@@ -48,7 +48,7 @@ const transform: Transform = function transform(file, api) {
   );
   renameTypeSpecifierToNamespace(
     "ContextSetter",
-    "SetContextLink.ContextSetter",
+    "SetContextLink.LegacyContextSetter",
     "@apollo/client/link/context"
   );
   moveSpecifiersToEntrypoint(

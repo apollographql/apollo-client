@@ -5,6 +5,11 @@ import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace SetContextLink {
   export type ContextSetter = (
+    prevContext: OperationContext,
+    operation: SetContextOperation
+  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+
+  export type LegacyContextSetter = (
     operation: SetContextOperation,
     prevContext: OperationContext
   ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
@@ -19,8 +24,10 @@ export declare namespace SetContextLink {
  * @deprecated
  * Use `SetContextLink` from `@apollo/client/link/context` instead.
  */
-export function setContext(setter: SetContextLink.ContextSetter) {
-  return new SetContextLink(setter);
+export function setContext(setter: SetContextLink.LegacyContextSetter) {
+  return new SetContextLink((prevContext, operation) =>
+    setter(operation, prevContext)
+  );
 }
 export class SetContextLink extends ApolloLink {
   constructor(setter: SetContextLink.ContextSetter) {
@@ -35,7 +42,7 @@ export class SetContextLink extends ApolloLink {
       return new Observable((observer) => {
         let closed = false;
         Promise.resolve(request)
-          .then((req) => setter(req, operation.getContext()))
+          .then((req) => setter(operation.getContext(), req))
           .then(operation.setContext)
           .then(() => {
             if (!closed) {

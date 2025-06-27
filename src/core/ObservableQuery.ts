@@ -221,6 +221,22 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
+  /**
+   * @deprecated `result` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * If you continue to need this functionality, subscribe to `ObservableQuery`
+   * to get the first value emitted from the observable, then immediately unsubscribe.
+   *
+   * **When upgrading**
+   *
+   * Use RxJS's [`firstResultFrom`](https://rxjs.dev/api/index/function/firstValueFrom) function to mimic this functionality.
+   *
+   * ```ts
+   * const result = await firstValueFrom(from(observableQuery));
+   * ```
+   */
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     if (__DEV__) {
       warnDeprecated("observableQuery.result", () => {

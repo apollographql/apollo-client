@@ -159,6 +159,53 @@ export interface ApolloQueryResult<T> {
   partial?: boolean;
 }
 
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export interface InteropApolloQueryResult<T> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: T;
+  /**
+   * @deprecated `errors` is no longer available on the result in Apollo Client 4.0.
+   * This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property on the resolved value instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
+   * This will contain both a NetworkError field and any GraphQLErrors.
+   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
+   */
+  error?: ApolloError;
+  /**
+   * @deprecated `loading` is no longer available on the result in Apollo Client 4.0.
+   * This value is always true when the resolved and can safely ignored.
+   */
+  loading: boolean;
+  /**
+   * @deprecated `loading` is no longer available on the result in Apollo Client 4.0.
+   * This value is always `NetworkStatus.ready` or `NetworkStatus.error`. To
+   * determine if the result contains an error, read from the `error` or `errors`
+   * property instead.
+   */
+  networkStatus: NetworkStatus;
+  /**
+   * @deprecated `partial` is no longer available on the result in Apollo Client 4.0.
+   * This value is always `false` if there is a data value since the result
+   * never contains partial cache data.
+   */
+  partial?: boolean;
+}
+
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,

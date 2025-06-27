@@ -9,8 +9,10 @@ type WithValueArgs<TResult, TArgs extends any[], TThis> = [
   thisArg?: TThis | undefined,
 ];
 
+type DeprecationName = "addTypename" | "canonizeResults" | "connectToDevTools";
+
 export function silenceDeprecations<TResult, TArgs extends any[], TThis = any>(
-  name: string | string[],
+  name: DeprecationName | DeprecationName[],
   ...args: WithValueArgs<TResult, TArgs, TThis>
 ) {
   const keys = Array.isArray(name) ? name : [name];

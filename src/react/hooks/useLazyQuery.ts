@@ -30,6 +30,7 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
 import { invariant } from "../../utilities/globals/invariantWrappers.js";
 import { warnRemovedOption } from "../../utilities/deprecation/index.js";
+import { useRenderGuard } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -221,11 +222,18 @@ export function useLazyQuery<
     [useQueryResult, eagerMethods, called]
   );
 
+  const calledDuringRender = useRenderGuard();
   const warnRef = React.useRef(new Set<keyof LazyQueryHookExecOptions>());
 
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
       if (__DEV__) {
+        if (calledDuringRender()) {
+          invariant.warn(
+            "[useLazyQuery]: Calling `execute` in render will throw in Apollo Client 4.0. Either switch to `useQuery` to run the query during render or move the `execute` call inside of `useEffect`."
+          );
+        }
+
         for (const name of REMOVED_EXECUTE_OPTIONS) {
           if (!warnRef.current.has(name)) {
             warnRemovedOption(
@@ -281,6 +289,7 @@ export function useLazyQuery<
       return promise;
     },
     [
+      calledDuringRender,
       client,
       document,
       eagerMethods,

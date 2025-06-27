@@ -82,7 +82,7 @@ it("can be used to set the context with a function returning a promise that is d
   await expect(stream).toEmitTypedValue({ data });
 });
 
-it("handles errors in the lookup correclty", async () => {
+it("handles errors in the lookup correctly", async () => {
   const withContext = new SetContextLink(() =>
     wait(5).then(() => {
       throw new Error("dang");

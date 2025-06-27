@@ -138,6 +138,7 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export interface ApolloQueryResult<T> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: T;
   /**
    * A list of any errors that occurred during server-side execution of a GraphQL operation.

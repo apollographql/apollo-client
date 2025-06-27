@@ -438,7 +438,17 @@ export class ObservableQuery<
     this.isTornDown = false;
   }
 
+  /**
+   * @deprecated `resetQueryStoreErrors` will be removed in Apollo Client 4.0.
+   * Please discontinue using this method.
+   */
   public resetQueryStoreErrors() {
+    if (__DEV__) {
+      invariant.warn(
+        "[observableQuery.resetQueryStoreErrors]: `resetQueryStoreErrors` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using this method."
+      );
+    }
+
     this.queryManager.resetErrors(this.queryId);
   }
 

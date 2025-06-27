@@ -70,7 +70,10 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 function useFragment_<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
-  useWarnRemovedOption(options, "canonizeResults", "useFragment");
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(options, "canonizeResults", "useFragment");
+  }
   const client = useApolloClient(options.client);
   const { cache } = client;
   const { from, ...rest } = options;

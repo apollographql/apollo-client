@@ -9,7 +9,22 @@ type WithValueArgs<TResult, TArgs extends any[], TThis> = [
   thisArg?: TThis | undefined,
 ];
 
-type DeprecationName = "addTypename" | "canonizeResults" | "connectToDevTools";
+type DeprecationName =
+  | "addTypename"
+  | "canonizeResults"
+  | "connectToDevTools"
+  | "graphql"
+  | "parser"
+  | "withQuery"
+  | "withMutation"
+  | "withSubscription"
+  | "<Query />"
+  | "<Mutation />"
+  | "<Subscription />";
+
+function isMuted(name: string) {
+  return (slot.getValue() || []).includes(name as string);
+}
 
 export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(
   name: DeprecationName | DeprecationName[],
@@ -24,14 +39,20 @@ export function warnRemovedOption<TOptions extends Record<string, any>>(
   callSite: string,
   recommendation: string = "Please remove this option."
 ) {
-  const silenced = (slot.getValue() || []).includes(name as string);
+  warnDeprecated(name as string, () => {
+    if (name in options) {
+      invariant.warn(
+        "[%s]: `%s` is deprecated and will be removed in Apollo Client 4.0. %s",
+        callSite,
+        name,
+        recommendation
+      );
+    }
+  });
+}
 
-  if (name in options && !silenced) {
-    invariant.warn(
-      "[%s]: `%s` is deprecated and will be removed in Apollo Client 4.0. %s",
-      callSite,
-      name,
-      recommendation
-    );
+export function warnDeprecated(name: string, cb: () => void) {
+  if (!isMuted(name)) {
+    cb();
   }
 }

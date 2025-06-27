@@ -11,16 +11,13 @@ export function useWarnRemovedOption<TOptions extends Record<string, any>>(
   "use no memo";
   const didWarn = React.useRef(false);
 
-  if (__DEV__) {
-    if (name in options && !didWarn.current) {
-      invariant.warn(
-        "[%s]: `%s` is deprecated and will be removed in Apollo Client 4.0. %s",
-        callSite,
-        name,
-        recommendation
-      );
-    }
-
+  if (name in options && !didWarn.current) {
+    invariant.warn(
+      "[%s]: `%s` is a deprecated hook option and will be removed in Apollo Client 4.0. %s",
+      callSite,
+      name,
+      recommendation
+    );
     // eslint-disable-next-line react-compiler/react-compiler
     didWarn.current = true;
   }

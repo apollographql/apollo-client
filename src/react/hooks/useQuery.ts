@@ -42,6 +42,7 @@ import type {
   QueryResult,
   ObservableQueryFields,
   NoInfer,
+  InteropQueryResult,
 } from "../types/types.js";
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
@@ -143,10 +144,9 @@ export function useQuery<
     NoInfer<TData>,
     NoInfer<TVariables>
   > = Object.create(null)
-): QueryResult<TData, TVariables> {
+): InteropQueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
@@ -159,7 +159,30 @@ function useQuery_<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  useWarnRemovedOption(options, "canonizeResults", "useQuery");
+  if (__DEV__) {
+    /* eslint-disable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+    useWarnRemovedOption(options, "canonizeResults", "useQuery");
+    useWarnRemovedOption(options, "partialRefetch", "useQuery");
+    useWarnRemovedOption(
+      options,
+      "defaultOptions",
+      "useQuery",
+      "Pass the options directly to the hook instead."
+    );
+    useWarnRemovedOption(
+      options,
+      "onCompleted",
+      "useQuery",
+      "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
+    );
+    useWarnRemovedOption(
+      options,
+      "onError",
+      "useQuery",
+      "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
+    );
+    /* eslint-enable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+  }
 
   const { result, obsQueryFields } = useQueryInternals(query, options);
   return React.useMemo(
@@ -355,7 +378,6 @@ function useObservableSubscriptionResult<
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-    // eslint-disable-next-line react-compiler/react-compiler
     callbackRef.current = callbacks;
   });
 
@@ -838,7 +860,14 @@ function bindObservableMethods<TData, TVariables extends OperationVariables>(
 ): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
   return {
     refetch: observable.refetch.bind(observable),
-    reobserve: observable.reobserve.bind(observable),
+    reobserve: function (...args) {
+      if (__DEV__) {
+        invariant.warn(
+          "[useQuery]: `reobserve` is deprecated and will removed in Apollo Client 4.0. Please change options by rerendering `useQuery` with new options."
+        );
+      }
+      return observable.reobserve(...args);
+    },
     fetchMore: observable.fetchMore.bind(observable),
     updateQuery: observable.updateQuery.bind(observable),
     startPolling: observable.startPolling.bind(observable),

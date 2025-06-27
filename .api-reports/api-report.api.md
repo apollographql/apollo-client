@@ -1397,6 +1397,51 @@ export type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Pr
 // @public (undocumented)
 export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptions;
 
+// @public @deprecated (undocumented)
+export interface InteropLazyQueryExecResult<TData, TVariables extends OperationVariables> extends QueryResult<TData, TVariables> {
+    // @deprecated
+    called: boolean;
+    // @deprecated
+    client: ApolloClient<any>;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // @deprecated
+    fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+            fetchMoreResult: Unmasked<TFetchData>;
+            variables: TFetchVars;
+        }) => Unmasked<TData>;
+    }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+    // @deprecated
+    loading: boolean;
+    // @deprecated
+    networkStatus: NetworkStatus;
+    // @deprecated
+    observable: ObservableQuery<TData, TVariables>;
+    // @deprecated
+    previousData?: MaybeMasked<TData>;
+    // @deprecated
+    refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    // @internal @deprecated (undocumented)
+    reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    // @deprecated
+    startPolling: (pollInterval: number) => void;
+    // @deprecated
+    stopPolling: () => void;
+    // @deprecated
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    // @deprecated
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+    // @deprecated
+    variables: TVariables | undefined;
+}
+
+// @public @deprecated (undocumented)
+export interface InteropQueryResult<TData, TVariables extends OperationVariables> extends QueryResult<TData, TVariables> {
+    // @deprecated
+    called: boolean;
+}
+
 // @public (undocumented)
 interface InvalidateModifier {
     // (undocumented)
@@ -1472,7 +1517,7 @@ class Layer extends EntityStore {
 }
 
 // @public (undocumented)
-export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>) => Promise<QueryResult<TData, TVariables>>;
+export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>) => Promise<InteropLazyQueryExecResult<TData, TVariables>>;
 
 // @public (undocumented)
 export interface LazyQueryHookExecOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends LazyQueryHookOptions<TData, TVariables> {
@@ -1482,8 +1527,12 @@ export interface LazyQueryHookExecOptions<TData = any, TVariables extends Operat
 
 // @public (undocumented)
 export interface LazyQueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
-    // @internal (undocumented)
+    // @deprecated
+    context?: DefaultContext;
+    // @internal @deprecated (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+    // @deprecated
+    initialFetchPolicy?: WatchQueryFetchPolicy;
     // @deprecated
     onCompleted?: (data: MaybeMasked<TData>) => void;
     // @deprecated
@@ -1984,7 +2033,7 @@ export interface ObservableQueryFields<TData, TVariables extends OperationVariab
         }) => Unmasked<TData>;
     }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
     refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     startPolling: (pollInterval: number) => void;
     stopPolling: () => void;
@@ -2059,7 +2108,7 @@ type OptionsUnion<TData, TVariables extends OperationVariables, TContext> = Watc
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function parser(document: DocumentNode): IDocumentDefinition;
 
 // @public (undocumented)
@@ -2120,6 +2169,7 @@ export type PossibleTypesMap = {
 
 // @public
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+    // @deprecated
     toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
@@ -2141,6 +2191,8 @@ export interface PreloadQueryFunction {
         returnPartialData: true;
     }): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer_2<TVariables>>): PreloadedQueryRef<TData, TVariables>;
+    // (undocumented)
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
 }
 
 // @public (undocumented)
@@ -2815,7 +2867,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
     data?: MaybeMasked<TData>;
     error?: ApolloError;
     loading: boolean;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     variables?: TVariables;
 }
 
@@ -3091,7 +3143,7 @@ handlers: {
 export function useMutation<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(mutation: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: MutationHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>, TContext, TCache>): MutationTuple<TData, TVariables, TContext, TCache>;
 
 // @public
-export function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): QueryResult<TData, TVariables>;
+export function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): InteropQueryResult<TData, TVariables>;
 
 // @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;

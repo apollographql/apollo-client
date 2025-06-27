@@ -376,7 +376,7 @@ export type QueryTuple<
 
 /**
  * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
- * bridge between versions.0. Do not use directly.
+ * bridge between versions to add deprecations. Use `QueryResult` instead.
  */
 export interface InteropLazyQueryExecResult<
   TData,

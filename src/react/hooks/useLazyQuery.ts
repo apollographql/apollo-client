@@ -125,6 +125,12 @@ export function useLazyQuery<
   );
   useWarnRemovedOption(
     warnOpts,
+    "context",
+    "useLazyQuery",
+    "Pass `context` to the returned `execute` function instead."
+  );
+  useWarnRemovedOption(
+    warnOpts,
     "onCompleted",
     "useLazyQuery",
     "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."

@@ -29,6 +29,7 @@ import {
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
 import { invariant } from "../../utilities/globals/invariantWrappers.js";
+import { warnRemovedOption } from "../../utilities/deprecation/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -41,6 +42,34 @@ const EAGER_METHODS = [
   "stopPolling",
   "subscribeToMore",
 ] as const;
+
+const REMOVED_EXECUTE_OPTIONS = [
+  "initialFetchPolicy",
+  "onCompleted",
+  "onError",
+  "defaultOptions",
+  "partialRefetch",
+  "canonizeResults",
+] as const satisfies Array<keyof LazyQueryHookExecOptions>;
+
+const DEPRECATED_EXECUTE_OPTIONS = [
+  "query",
+  "ssr",
+  "client",
+  "fetchPolicy",
+  "nextFetchPolicy",
+  "refetchWritePolicy",
+  "errorPolicy",
+  "pollInterval",
+  "notifyOnNetworkStatusChange",
+  "returnPartialData",
+  "skipPollAttempt",
+] as const satisfies Array<
+  Exclude<
+    keyof LazyQueryHookExecOptions,
+    (typeof REMOVED_EXECUTE_OPTIONS)[number]
+  >
+>;
 
 /**
  * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
@@ -192,8 +221,35 @@ export function useLazyQuery<
     [useQueryResult, eagerMethods, called]
   );
 
+  const warnRef = React.useRef(new Set<keyof LazyQueryHookExecOptions>());
+
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
+      if (__DEV__) {
+        for (const name of REMOVED_EXECUTE_OPTIONS) {
+          if (!warnRef.current.has(name)) {
+            warnRemovedOption(
+              executeOptions || {},
+              name,
+              "useLazyQuery.execute"
+            );
+            warnRef.current.add(name);
+          }
+        }
+
+        for (const name of DEPRECATED_EXECUTE_OPTIONS) {
+          if (!warnRef.current.has(name)) {
+            warnRemovedOption(
+              executeOptions || {},
+              name,
+              "useLazyQuery.execute",
+              "Please pass the option to the `useLazyQuery` hook instead."
+            );
+          }
+          warnRef.current.add(name);
+        }
+      }
+
       execOptionsRef.current =
         executeOptions ?
           {

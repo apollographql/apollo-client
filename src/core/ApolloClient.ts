@@ -681,6 +681,12 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.query");
+      warnRemovedOption(
+        options,
+        "notifyOnNetworkStatusChange",
+        "client.query",
+        "This option does not affect `client.query` and can be safely removed."
+      );
 
       if (options.fetchPolicy === "standby") {
         invariant.warn(

@@ -27,6 +27,7 @@ import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { muteDeprecations } from "../../utilities/deprecation";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -1771,9 +1772,11 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
-          link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+        const client = muteDeprecations("addTypename", () => {
+          return new ApolloClient({
+            cache: new InMemoryCache({ addTypename: false }),
+            link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+          });
         });
         const observableWithoutVariables = client.watchQuery({
           query: queryWithoutVariables,
@@ -1857,9 +1860,11 @@ describe("ObservableQuery", () => {
 
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
-        const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
-          link: new MockLink(mocks, true, { showWarnings: false }),
+        const client = muteDeprecations("addTypename", () => {
+          return new ApolloClient({
+            cache: new InMemoryCache({ addTypename: false }),
+            link: new MockLink(mocks, true, { showWarnings: false }),
+          });
         });
 
         const observableWithVarsVar = client.watchQuery({
@@ -1952,9 +1957,11 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
-          link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+        const client = muteDeprecations("addTypename", () => {
+          return new ApolloClient({
+            cache: new InMemoryCache({ addTypename: false }),
+            link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+          });
         });
 
         const observableWithVariablesVar = client.watchQuery({

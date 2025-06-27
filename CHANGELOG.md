@@ -1,5 +1,25 @@
 # @apollo/client
 
+## 3.14.0-alpha.0
+
+### Minor Changes
+
+- [#12746](https://github.com/apollographql/apollo-client/pull/12746) [`0bcd2f4`](https://github.com/apollographql/apollo-client/commit/0bcd2f4ead372eb5928bbd5c00b0bd48e497a5e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add warnings and deprecations for options and methods for all React APIs.
+
+- [#12746](https://github.com/apollographql/apollo-client/pull/12746) [`0bcd2f4`](https://github.com/apollographql/apollo-client/commit/0bcd2f4ead372eb5928bbd5c00b0bd48e497a5e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `preloadQuery.toPromise(queryRef)` as a replacement for `queryRef.toPromise()`. `queryRef.toPromise()` has been removed in Apollo Client 4.0 in favor of `preloadQuery.toPromise` and is now considered deprecated.
+
+- [#12736](https://github.com/apollographql/apollo-client/pull/12736) [`ea89440`](https://github.com/apollographql/apollo-client/commit/ea8944013278060ef87dfa4de6663a21b5204880) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and deprecation warnings for `ApolloClient` options and methods.
+
+- [#12459](https://github.com/apollographql/apollo-client/pull/12459) [`1c5a031`](https://github.com/apollographql/apollo-client/commit/1c5a0313d388945aeda93b2c1992ad77f4416fa1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reset `addTypenameTransform` and `fragments` caches when calling `cache.gc()` only when `resetResultCache` is `true`.
+
+- [#12743](https://github.com/apollographql/apollo-client/pull/12743) [`92ad409`](https://github.com/apollographql/apollo-client/commit/92ad4097e5c83e0a780ede20db34e9e63fb98e8b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings for `addTypename` in `InMemoryCache` and `MockedProvider`.
+
+- [#12743](https://github.com/apollographql/apollo-client/pull/12743) [`92ad409`](https://github.com/apollographql/apollo-client/commit/92ad4097e5c83e0a780ede20db34e9e63fb98e8b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings for `canonizeResults`.
+
+### Patch Changes
+
+- [#12750](https://github.com/apollographql/apollo-client/pull/12750) [`ecf3de1`](https://github.com/apollographql/apollo-client/commit/ecf3de1cc9a2cf3aaeba0c945909324b9e4b478a) Thanks [@phryneas](https://github.com/phryneas)! - Prevent field policies from overwriting/merging into supertype field policies.
+
 ## 3.13.8
 
 ### Patch Changes

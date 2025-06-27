@@ -41,6 +41,7 @@ import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
 import { Slot } from "optimism";
+import { warnRemovedOption } from "../utilities/deprecation/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -690,6 +691,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    if (__DEV__) {
+      warnRemovedOption(newOptions, "canonizeResults", "setOptions");
+    }
+
     return this.reobserve(newOptions);
   }
 

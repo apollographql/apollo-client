@@ -1997,6 +1997,26 @@ test("does not mask results by default", async () => {
   }
 });
 
+// Remove in 4.0 in favor of its tests
+test("can use preloadQuery.toPromise", async () => {
+  const { query } = setupSimpleCase();
+
+  const mocks: MockedResponse[] = [
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      maxUsageCount: Infinity,
+    },
+  ];
+
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query);
+
+  await expect(preloadQuery.toPromise(queryRef)).resolves.toBe(queryRef);
+});
+
 describe.skip("type tests", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),

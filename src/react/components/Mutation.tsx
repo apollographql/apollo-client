@@ -4,6 +4,8 @@ import type * as ReactTypes from "react";
 import type { OperationVariables } from "../../core/index.js";
 import type { MutationComponentOptions } from "./types.js";
 import { useMutation } from "../hooks/index.js";
+import { useWarnRemoved } from "../hooks/internal/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /**
  * @deprecated
@@ -14,6 +16,11 @@ import { useMutation } from "../hooks/index.js";
 export function Mutation<TData = any, TVariables = OperationVariables>(
   props: MutationComponentOptions<TData, TVariables>
 ): ReactTypes.JSX.Element | null {
+  useWarnRemoved("<Mutation />", () => {
+    invariant.warn(
+      "[Mutation]: The `<Mutation />` component is deprecated and will be removed in Apollo Client 4.0. Please use the `useMutation` React hook instead."
+    );
+  });
   const [runMutation, result] = useMutation(props.mutation, props);
   return props.children ? props.children(runMutation, result) : null;
 }

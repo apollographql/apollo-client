@@ -123,9 +123,8 @@ export interface QueryOptionsDocumentation {
    *
    * @deprecated
    * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
+   * recommend using this option. `canonizeResults` will be removed in
+   * Apollo Client 4.0.
    */
   canonizeResults: unknown;
 

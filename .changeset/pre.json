@@ -1,0 +1,16 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.13.4"
+  },
+  "changesets": [
+    "chilled-cameras-scream",
+    "great-suns-cover",
+    "perfect-donuts-roll",
+    "popular-waves-drop",
+    "shy-dragons-tease",
+    "smooth-countries-cough",
+    "spotty-walls-repair"
+  ]
+}

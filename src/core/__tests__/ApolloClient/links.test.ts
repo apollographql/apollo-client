@@ -1,4 +1,4 @@
-import type { FormattedExecutionResult } from "graphql";
+import { type FormattedExecutionResult, OperationTypeNode } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
@@ -394,5 +394,51 @@ describe("Link interactions", () => {
     await client.query({ query });
 
     expect(result.current!.query).toMatchDocument(expectedQuery);
+  });
+
+  it("passes all expected properties into links", async () => {
+    let operation!: Operation;
+    const link = new ApolloLink((op) => {
+      operation = op;
+      return of({ data: { hello: "world" } });
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const query = gql`
+      query HelloWorld {
+        hello
+      }
+    `;
+    await client
+      .query({
+        query,
+      })
+      .catch(() => {});
+    expect(operation).toStrictEqualTyped({
+      variables: {},
+      extensions: {},
+      operationName: "HelloWorld",
+      operationType: OperationTypeNode.QUERY,
+      query,
+    });
+    expect(Object.keys(operation)).toEqual([
+      "variables",
+      "extensions",
+      "operationName",
+      "operationType",
+      "query",
+    ]);
+    expect(Object.getOwnPropertyNames(operation)).toEqual([
+      "variables",
+      "extensions",
+      "operationName",
+      "operationType",
+      "query",
+      "setContext",
+      "getContext",
+      "client",
+    ]);
   });
 });

@@ -6,6 +6,7 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
     variables: operation.variables || {},
     extensions: operation.extensions || {},
     operationName: operation.operationName,
+    operationType: operation.operationType,
     query: operation.query,
   };
 

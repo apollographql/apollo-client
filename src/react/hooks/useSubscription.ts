@@ -129,7 +129,7 @@ export function useSubscription<
       invariant.warn(
         options.onData ?
           "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
+        : "[useSubscription]: `onSubscriptionData` is deprecated and will be removed in Apollo Client 4.0. Please use the 'onData' option instead."
       );
     }
 
@@ -137,7 +137,7 @@ export function useSubscription<
       invariant.warn(
         options.onComplete ?
           "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
+        : "[useSubscription]: `onSubscriptionComplete` is deprecated and will be removed in Apollo Client 4.0. Please use the 'onComplete' option instead."
       );
     }
   }

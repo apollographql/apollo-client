@@ -54,8 +54,6 @@ export function operationName(type: DocumentType) {
 }
 
 /**
- * @internal
- *
  * @deprecated `parser` will be removed in Apollo Client 4.0.
  *
  * **Recommended now**

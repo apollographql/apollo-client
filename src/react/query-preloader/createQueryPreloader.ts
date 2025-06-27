@@ -134,6 +134,10 @@ export interface PreloadQueryFunction {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
   ): PreloadedQueryRef<TData, TVariables>;
+
+  toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+    queryRef: TQueryRef
+  ): Promise<TQueryRef>;
 }
 
 /**
@@ -165,7 +169,7 @@ export function createQueryPreloader(
 }
 
 const _createQueryPreloader: typeof createQueryPreloader = (client) => {
-  return function preloadQuery<
+  function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -191,5 +195,13 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
     );
 
     return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
-  };
+  }
+
+  return Object.assign(preloadQuery, {
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+      queryRef: TQueryRef
+    ): Promise<TQueryRef> {
+      return queryRef.toPromise() as Promise<TQueryRef>;
+    },
+  });
 };

@@ -117,6 +117,7 @@ export function useLazyQuery<
     "useLazyQuery",
     "Use the `fetchPolicy` option instead."
   );
+  useWarnRemovedOption(warnOpts, "partialRefetch", "useLazyQuery");
 
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>(void 0);

@@ -423,16 +423,28 @@ export class ObservableQuery<
     }
   }
 
+  /**
+   * @deprecated `getLastResult` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public getLastResult(
     variablesMustMatch?: boolean
   ): ApolloQueryResult<TData> | undefined {
     return this.getLast("result", variablesMustMatch);
   }
 
+  /**
+   * @deprecated `getLastError` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
     return this.getLast("error", variablesMustMatch);
   }
 
+  /**
+   * @deprecated `resetLastResults` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public resetLastResults(): void {
     delete this.last;
     this.isTornDown = false;

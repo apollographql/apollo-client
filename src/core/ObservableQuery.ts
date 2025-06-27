@@ -288,7 +288,9 @@ export class ObservableQuery<
     saveAsLastResult = true
   ): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
-    const lastResult = this.getLastResult(true);
+    const lastResult = muteDeprecations("getLastResult", () =>
+      this.getLastResult(true)
+    );
 
     const networkStatus =
       this.queryInfo.networkStatus ||
@@ -430,6 +432,13 @@ export class ObservableQuery<
   public getLastResult(
     variablesMustMatch?: boolean
   ): ApolloQueryResult<TData> | undefined {
+    if (__DEV__) {
+      warnDeprecated("getLastResult", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     return this.getLast("result", variablesMustMatch);
   }
 
@@ -438,6 +447,13 @@ export class ObservableQuery<
    * discontinue using this method.
    */
   public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+    if (__DEV__) {
+      warnDeprecated("getLastError", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     return this.getLast("error", variablesMustMatch);
   }
 
@@ -446,6 +462,13 @@ export class ObservableQuery<
    * discontinue using this method.
    */
   public resetLastResults(): void {
+    if (__DEV__) {
+      warnDeprecated("resetLastResults", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     delete this.last;
     this.isTornDown = false;
   }
@@ -993,7 +1016,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newResult: ApolloQueryResult<TData>,
     variables = this.variables
   ) {
-    let error: ApolloError | undefined = this.getLastError();
+    let error: ApolloError | undefined = muteDeprecations("getLastError", () =>
+      this.getLastError()
+    );
     // Preserve this.last.error unless the variables have changed.
     if (error && this.last && !equal(variables, this.last.variables)) {
       error = void 0;
@@ -1147,7 +1172,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // the subscription, and restore the last value afterwards so that the
     // subscription has a chance to stay open.
     const last = this.last;
-    this.resetLastResults();
+    muteDeprecations("resetLastResults", () => this.resetLastResults());
 
     const subscription = this.subscribe(...args);
     this.last = last;
@@ -1172,7 +1197,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined
   ) {
-    const lastError = this.getLastError();
+    const lastError = muteDeprecations("getLastError", () =>
+      this.getLastError()
+    );
     const isDifferent = this.isDifferentFromLastResult(result, variables);
     // Update the last result even when isDifferentFromLastResult returns false,
     // because the query may be using the @nonreactive directive, and we want to
@@ -1190,7 +1217,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult = {
-      ...this.getLastResult(),
+      ...muteDeprecations("getLastResult", () => this.getLastResult()),
       error,
       errors: error.graphQLErrors,
       networkStatus: NetworkStatus.error,

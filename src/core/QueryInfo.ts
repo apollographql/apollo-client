@@ -208,7 +208,14 @@ export class QueryInfo {
     //
     // See https://github.com/apollographql/apollo-client/issues/11400 for more
     // information on this issue.
-    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
+    if (
+      diff &&
+      !diff.complete &&
+      muteDeprecations(
+        "getLastError",
+        () => this.observableQuery?.getLastError()
+      )
+    ) {
       return;
     }
 

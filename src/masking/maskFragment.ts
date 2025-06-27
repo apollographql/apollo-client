@@ -1,38 +1,28 @@
-import { Kind } from "graphql";
+import equal from "@wry/equality";
 import type { FragmentDefinitionNode } from "graphql";
+import { Kind } from "graphql";
+
 import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
-} from "../core/index.js";
-import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
-import { invariant } from "../utilities/globals/index.js";
-import equal from "@wry/equality";
-import { maskDefinition } from "./maskDefinition.js";
+} from "@apollo/client";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   createFragmentMap,
   getFragmentDefinitions,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { maskDefinition } from "./maskDefinition.js";
 
 /** @internal */
 export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
-  cache: ApolloCache<unknown>,
+  cache: ApolloCache,
   fragmentName?: string
 ): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
   const fragments = document.definitions.filter(
     (node): node is FragmentDefinitionNode =>
       node.kind === Kind.FRAGMENT_DEFINITION
@@ -74,7 +64,7 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
+    mutableTargets: new WeakMap(),
+    knownChanged: new WeakSet(),
   });
 }

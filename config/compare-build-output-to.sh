@@ -53,7 +53,7 @@ EOF
 git worktree add --force --detach --checkout "$comparison" "$upstream" || { cd "$comparison" && git checkout "$upstream"; } || exit 1
 
 cd "$comparison" || { echo "checkout failed"; exit 1; }
-cp -r "$root/node_modules" .
+[ -d node_modules ] || cp -r "$root/node_modules" .
 npm i >&2
 git status >&2
 npm run build >&2
@@ -66,6 +66,7 @@ set +e
 patterndiff "*.js"
 patterndiff "*.cjs"
 patterndiff "*.d.ts"
+patterndiff "*.d.cts"
 
 cat <<EOF
 
@@ -75,13 +76,13 @@ cat <<EOF
 <details>
   <summary>
 
-### $(diff -qr "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -w | wc -l) files with differences
+### $(diff -qr "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -x "*.d.cts" -w | wc -l) files with differences
 
   </summary>
 
 \`\`\`diff
 
-$(diff -r "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -w)
+$(diff -r "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -x "*.d.cts" -w)
 
 \`\`\`
 

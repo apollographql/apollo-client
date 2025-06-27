@@ -1,7 +1,9 @@
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "../../../core";
-import { getFragmentDefinitions, Observable } from "../../../utilities";
-import { InMemoryCache, createFragmentRegistry } from "../../index";
-import { ObservableStream } from "../../../testing/internal";
+import { Observable } from "rxjs";
+
+import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
+import { ObservableStream } from "@apollo/client/testing/internal";
+import { getFragmentDefinitions } from "@apollo/client/utilities/internal";
 
 describe("FragmentRegistry", () => {
   it("can be passed to InMemoryCache", () => {
@@ -62,13 +64,16 @@ describe("FragmentRegistry", () => {
               "SourceFragment",
             ]);
 
-            observer.next({
-              data: {
-                source: "link",
-              },
-            });
+            // Emit value async so we can observe the loading state
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  source: "link",
+                },
+              });
 
-            observer.complete();
+              observer.complete();
+            });
           })
       ),
     });
@@ -90,22 +95,26 @@ describe("FragmentRegistry", () => {
       client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {
         __typename: "Query",
         source: "local",
       },
+      dataState: "complete",
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         __typename: "Query",
         source: "link",
       },
+      dataState: "complete",
+      partial: false,
     });
 
     expect(cache.readQuery({ query })).toEqual({

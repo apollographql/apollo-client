@@ -6,26 +6,29 @@ import {
   InMemoryCache,
   from,
   ApolloLink,
-  Observable,
+  CombinedGraphQLErrors,
 } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 import merge from "deepmerge";
 import isEqual from "lodash/isEqual";
 import type { GetServerSidePropsResult } from "next";
+import { Observable } from "rxjs";
 import { schemaLink } from "./schemaLink.ts";
 
 export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";
 
-let apolloClient: ApolloClient<NormalizedCacheObject>;
+let apolloClient: ApolloClient;
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors)
-    graphQLErrors.forEach(({ message, locations, path }) =>
+const errorLink = onError(({ error }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     );
-  if (networkError) console.log(`[Network error]: ${networkError}`);
+  } else {
+    console.log(`[Network error]: ${error}`);
+  }
 });
 
 const delayLink = new ApolloLink((operation, forward) => {
@@ -64,7 +67,7 @@ export function initializeApollo(
   //  the initial state gets hydrated here
   if (initialState) {
     // Get existing cache, loaded during client side data fetching
-    const existingCache = _apolloClient.extract();
+    const existingCache = _apolloClient.extract() as NormalizedCacheObject;
 
     // Merge the initialState from getStaticProps/getServerSideProps
     // in the existing cache
@@ -92,20 +95,21 @@ interface ApolloProps {
 }
 
 export function addApolloState(
-  client: ApolloClient<NormalizedCacheObject>,
+  client: ApolloClient,
   pageProps: GetServerSidePropsResult<Partial<ApolloProps>> & {
     props: Partial<ApolloProps>;
   }
 ) {
   if (pageProps?.props) {
-    pageProps.props[APOLLO_STATE_PROP_NAME] = client.cache.extract();
+    pageProps.props[APOLLO_STATE_PROP_NAME] =
+      client.cache.extract() as NormalizedCacheObject;
   }
   return pageProps;
 }
 
 export function useApollo(pageProps?: ApolloProps) {
   const state = pageProps?.[APOLLO_STATE_PROP_NAME];
-  const storeRef = React.useRef<ApolloClient<NormalizedCacheObject>>();
+  const storeRef = React.useRef<ApolloClient>();
   if (!storeRef.current) {
     storeRef.current = initializeApollo(state);
   }

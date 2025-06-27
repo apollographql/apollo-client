@@ -22,6 +22,7 @@ import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  InteropApolloQueryResult,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -422,7 +423,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -479,7 +480,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       ) => Unmasked<TData>;
     }
-  ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TFetchData>>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -690,7 +691,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     if (__DEV__) {
       warnRemovedOption(newOptions, "canonizeResults", "setOptions");
     }
@@ -725,7 +726,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>> | void> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -1059,7 +1060,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     return preventUnhandledRejection(
       this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
         this.maskResult as TODO

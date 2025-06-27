@@ -146,16 +146,16 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
     localState: LocalState<TCacheShape>;
     // Warning: (ae-forgotten-export) The symbol "MutationOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
-    mutate<TData = any, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = Context, TCache extends ApolloCache<any> = ApolloCache<any>>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
+    // Warning: (ae-forgotten-export) The symbol "InteropMutateResult" needs to be exported by the entry point index.d.ts
+    mutate<TData = any, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = Context, TCache extends ApolloCache<any> = ApolloCache<any>>(options: MutationOptions<TData, TVariables, TContext>): Promise<InteropMutateResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
     get prioritizeCacheValues(): boolean;
     set prioritizeCacheValues(value: boolean);
     // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "InteropApolloQueryResult" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
-    query<T = any, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<MaybeMasked<T>>>;
+    query<T = any, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, T>): Promise<InteropApolloQueryResult<MaybeMasked<T>>>;
     // (undocumented)
     queryDeduplication: boolean;
     readFragment<T = any, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
@@ -164,6 +164,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesResult" needs to be exported by the entry point index.d.ts
     refetchQueries<TCache extends ApolloCache<any> = ApolloCache<TCacheShape>, TResult = Promise<ApolloQueryResult<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
+    // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
     resetStore(): Promise<ApolloQueryResult<any>[] | null>;
     restore(serializedState: TCacheShape): ApolloCache<TCacheShape>;
     setLink(newLink: ApolloLink): void;
@@ -175,7 +176,8 @@ class ApolloClient<TCacheShape> implements DataProxy {
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
-    subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<MaybeMasked<T>>>;
+    // Warning: (ae-forgotten-export) The symbol "InteropSubscribeResult" needs to be exported by the entry point index.d.ts
+    subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, T>): Observable<InteropSubscribeResult<MaybeMasked<T>>>;
     // Warning: (ae-forgotten-export) The symbol "ApolloClientOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -307,6 +309,8 @@ class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
     // Warning: (ae-forgotten-export) The symbol "RequestHandler" needs to be exported by the entry point index.d.ts
@@ -350,7 +354,6 @@ interface ApolloProviderProps<TCache> {
 
 // @public (undocumented)
 interface ApolloQueryResult<T> {
-    // (undocumented)
     data: T;
     // Warning: (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
     error?: ApolloError;
@@ -1037,6 +1040,26 @@ type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Promise<A
 type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptions;
 
 // @public @deprecated (undocumented)
+interface InteropApolloQueryResult<T> {
+    data: T;
+    error?: ApolloError;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // @deprecated (undocumented)
+    loading: boolean;
+    // @deprecated (undocumented)
+    networkStatus: NetworkStatus;
+    // @deprecated (undocumented)
+    partial?: boolean;
+}
+
+// Warning: (ae-forgotten-export) The symbol "InteropMutationExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "InteropMutationExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
+//
+// @public @deprecated (undocumented)
+type InteropExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = InteropMutationExecutionPatchInitialResult<TData, TExtensions> | InteropMutationExecutionPatchIncrementalResult<TData, TExtensions>;
+
+// @public @deprecated (undocumented)
 export interface InteropLazyQueryExecResult<TData, TVariables extends OperationVariables> extends QueryResult<TData, TVariables> {
     // @deprecated
     called: boolean;
@@ -1079,11 +1102,60 @@ export interface InteropLazyQueryExecResult<TData, TVariables extends OperationV
     variables: TVariables | undefined;
 }
 
+// Warning: (ae-forgotten-export) The symbol "InteropSingleExecutionResult" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "InteropExecutionPatchResult" needs to be exported by the entry point index.d.ts
+//
+// @public @deprecated (undocumented)
+type InteropMutateResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> = InteropSingleExecutionResult<TData, TContext, TExtensions> | InteropExecutionPatchResult<TData, TExtensions>;
+
+// @public @deprecated (undocumented)
+interface InteropMutationExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
+    // (undocumented)
+    data?: never;
+    // @deprecated (undocumented)
+    errors?: never;
+    // (undocumented)
+    extensions?: never;
+    // @deprecated (undocumented)
+    hasNext?: boolean;
+    // @deprecated (undocumented)
+    incremental?: IncrementalPayload<TData, TExtensions>[];
+}
+
+// @public @deprecated (undocumented)
+interface InteropMutationExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
+    // (undocumented)
+    data: TData | null | undefined;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
+    // @deprecated (undocumented)
+    hasNext?: boolean;
+    // @deprecated (undocumented)
+    incremental?: never;
+}
+
 // @public @deprecated (undocumented)
 export interface InteropQueryResult<TData, TVariables extends OperationVariables> extends QueryResult<TData, TVariables> {
     // @deprecated
     called: boolean;
 }
+
+// @public @deprecated (undocumented)
+interface InteropSingleExecutionResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> {
+    // @deprecated (undocumented)
+    context?: TContext;
+    // (undocumented)
+    data?: TData | null;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
+}
+
+// @public @deprecated (undocumented)
+type InteropSubscribeResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> = InteropSingleExecutionResult<TData, TContext, TExtensions> | InteropExecutionPatchResult<TData, TExtensions>;
 
 // @public (undocumented)
 interface InvalidateModifier {
@@ -1465,7 +1537,7 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
             fetchMoreResult: Unmasked<TFetchData>;
             variables: TFetchVars;
         }) => Unmasked<TData>;
-    }): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+    }): Promise<InteropApolloQueryResult<MaybeMasked<TFetchData>>>;
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
@@ -1486,9 +1558,9 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    refetch(variables?: Partial<TVariables>): Promise<InteropApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)
-    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<InteropApolloQueryResult<MaybeMasked<TData>>>;
     // Warning: (ae-forgotten-export) The symbol "Concast" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1510,8 +1582,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // @internal (undocumented)
     protected scheduleNotify(): void;
     // (undocumented)
-    setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>> | void>;
+    setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<InteropApolloQueryResult<MaybeMasked<TData>>>;
+    setVariables(variables: TVariables): Promise<InteropApolloQueryResult<MaybeMasked<TData>> | void>;
     // (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
     startPolling(pollInterval: number): void;
@@ -2658,12 +2730,12 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:131:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:160:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:415:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:172:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:396:2 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:396:2 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:52:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:76:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts

@@ -112,7 +112,7 @@ export interface QueryOptionsDocumentation {
    * The default value is `false`.
    *
    * @deprecated
-   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It might be removed in a future release.
+   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It will be removed in Apollo Client 4.0.
    */
   partialRefetch: unknown;
 

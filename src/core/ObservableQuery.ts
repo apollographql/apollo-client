@@ -222,11 +222,13 @@ export class ObservableQuery<
   }
 
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    warnDeprecated("observableQuery.result", () => {
-      invariant.warn(
-        "[observableQuery.result]: `result` is deprecated and will be removed with Apollo Client 4.0."
-      );
-    });
+    if (__DEV__) {
+      warnDeprecated("observableQuery.result", () => {
+        invariant.warn(
+          "[observableQuery.result]: `result` is deprecated and will be removed with Apollo Client 4.0."
+        );
+      });
+    }
 
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer

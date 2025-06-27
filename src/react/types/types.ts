@@ -209,7 +209,7 @@ export interface LazyQueryHookOptions<
   /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member}
    *
-   * @deprecated `initialFetchPolicy` will be removed in Apoll Client 4.0.
+   * @deprecated `initialFetchPolicy` will be removed in Apollo Client 4.0.
    *
    * **Recommended now**
    *

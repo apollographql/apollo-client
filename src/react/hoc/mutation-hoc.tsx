@@ -16,6 +16,8 @@ import {
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, MutateProps } from "./types.js";
 import type { ApolloCache } from "../../core/index.js";
+import { warnDeprecated } from "../../utilities/deprecation/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /**
  * @deprecated
@@ -38,6 +40,13 @@ export function withMutation<
     TChildProps
   > = {}
 ) {
+  if (__DEV__) {
+    warnDeprecated("withMutation", () => {
+      invariant.warn(
+        "[withMutation]: The `withMutation` higher order component is deprecated and will be removed in Apollo Client 4.0. Please switch to an available React hook such as `useQuery`."
+      );
+    });
+  }
   // this is memoized so if coming from `graphql` there is nearly no extra cost
   const operation = parser(document);
   // extract options

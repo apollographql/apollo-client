@@ -14,6 +14,8 @@ import {
   defaultMapPropsToSkip,
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
+import { warnDeprecated } from "../../utilities/deprecation/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /**
  * @deprecated
@@ -34,6 +36,13 @@ export function withSubscription<
     TChildProps
   > = {}
 ) {
+  if (__DEV__) {
+    warnDeprecated("withSubscription", () => {
+      invariant.warn(
+        "[withSubscription]: The `withSubscription` higher order component is deprecated and will be removed in Apollo Client 4.0. Please switch to an available React hook such as `useSubscription`."
+      );
+    });
+  }
   // this is memoized so if coming from `graphql` there is nearly no extra cost
   const operation = parser(document);
   // extract options

@@ -114,46 +114,51 @@ export function useLazyQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const warnOpts = options || {};
+  if (__DEV__) {
+    /* eslint-disable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+    const warnOpts = options || {};
 
-  useWarnRemovedOption(warnOpts, "canonizeResults", "useLazyQuery");
-  useWarnRemovedOption(
-    warnOpts,
-    "variables",
-    "useLazyQuery",
-    "Pass all `variables` to the returned `execute` function instead."
-  );
-  useWarnRemovedOption(
-    warnOpts,
-    "context",
-    "useLazyQuery",
-    "Pass `context` to the returned `execute` function instead."
-  );
-  useWarnRemovedOption(
-    warnOpts,
-    "onCompleted",
-    "useLazyQuery",
-    "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
-  );
-  useWarnRemovedOption(
-    warnOpts,
-    "onError",
-    "useLazyQuery",
-    "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
-  );
-  useWarnRemovedOption(
-    warnOpts,
-    "defaultOptions",
-    "useLazyQuery",
-    "Pass the options directly to the hook instead."
-  );
-  useWarnRemovedOption(
-    warnOpts,
-    "initialFetchPolicy",
-    "useLazyQuery",
-    "Use the `fetchPolicy` option instead."
-  );
-  useWarnRemovedOption(warnOpts, "partialRefetch", "useLazyQuery");
+    useWarnRemovedOption(warnOpts, "canonizeResults", "useLazyQuery");
+    useWarnRemovedOption(
+      warnOpts,
+      "variables",
+      "useLazyQuery",
+      "Pass all `variables` to the returned `execute` function instead."
+    );
+    useWarnRemovedOption(
+      warnOpts,
+      "context",
+      "useLazyQuery",
+      "Pass `context` to the returned `execute` function instead."
+    );
+    useWarnRemovedOption(
+      warnOpts,
+      "onCompleted",
+      "useLazyQuery",
+      "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
+    );
+    useWarnRemovedOption(
+      warnOpts,
+      "onError",
+      "useLazyQuery",
+      "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
+    );
+    useWarnRemovedOption(
+      warnOpts,
+      "defaultOptions",
+      "useLazyQuery",
+      "Pass the options directly to the hook instead."
+    );
+    useWarnRemovedOption(
+      warnOpts,
+      "initialFetchPolicy",
+      "useLazyQuery",
+      "Use the `fetchPolicy` option instead."
+    );
+
+    useWarnRemovedOption(warnOpts, "partialRefetch", "useLazyQuery");
+    /* eslint-enable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+  }
 
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>(void 0);

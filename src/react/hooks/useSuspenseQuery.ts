@@ -195,11 +195,14 @@ function useSuspenseQuery_<
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables>
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
-  useWarnRemovedOption(
-    typeof options === "symbol" ? {} : options,
-    "canonizeResults",
-    "useSuspenseQuery"
-  );
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(
+      typeof options === "symbol" ? {} : options,
+      "canonizeResults",
+      "useSuspenseQuery"
+    );
+  }
 
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
@@ -229,7 +232,6 @@ function useSuspenseQuery_<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
-    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }

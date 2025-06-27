@@ -207,11 +207,15 @@ function useBackgroundQuery_<
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
-  useWarnRemovedOption(
-    typeof options === "symbol" ? {} : options,
-    "canonizeResults",
-    "useBackgroundQuery"
-  );
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useWarnRemovedOption(
+      typeof options === "symbol" ? {} : options,
+      "canonizeResults",
+      "useBackgroundQuery"
+    );
+  }
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });

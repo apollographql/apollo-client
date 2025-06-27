@@ -147,7 +147,6 @@ export function useQuery<
 ): InteropQueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
@@ -160,26 +159,30 @@ function useQuery_<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  useWarnRemovedOption(options, "canonizeResults", "useQuery");
-  useWarnRemovedOption(options, "partialRefetch", "useQuery");
-  useWarnRemovedOption(
-    options,
-    "defaultOptions",
-    "useQuery",
-    "Pass the options directly to the hook instead."
-  );
-  useWarnRemovedOption(
-    options,
-    "onCompleted",
-    "useQuery",
-    "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
-  );
-  useWarnRemovedOption(
-    options,
-    "onError",
-    "useQuery",
-    "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
-  );
+  if (__DEV__) {
+    /* eslint-disable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+    useWarnRemovedOption(options, "canonizeResults", "useQuery");
+    useWarnRemovedOption(options, "partialRefetch", "useQuery");
+    useWarnRemovedOption(
+      options,
+      "defaultOptions",
+      "useQuery",
+      "Pass the options directly to the hook instead."
+    );
+    useWarnRemovedOption(
+      options,
+      "onCompleted",
+      "useQuery",
+      "If your `onCompleted` callback sets local state, switch to use derived state using `data` returned from the hook instead. Use `useEffect` to perform side-effects as a result of updates to `data`."
+    );
+    useWarnRemovedOption(
+      options,
+      "onError",
+      "useQuery",
+      "If your `onError` callback sets local state, switch to use derived state using `data`, `error` or `errors` returned from the hook instead. Use `useEffect` if you need to perform side-effects as a result of updates to `data`, `error` or `errors`."
+    );
+    /* eslint-enable react-hooks/rules-of-hooks, react-compiler/react-compiler */
+  }
 
   const { result, obsQueryFields } = useQueryInternals(query, options);
   return React.useMemo(
@@ -375,7 +378,6 @@ function useObservableSubscriptionResult<
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-    // eslint-disable-next-line react-compiler/react-compiler
     callbackRef.current = callbacks;
   });
 

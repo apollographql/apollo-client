@@ -175,7 +175,10 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: LoadableQueryHookOptions = Object.create(null)
 ): UseLoadableQueryResult<TData, TVariables> {
-  useWarnRemovedOption(options, "canonizeResults", "useLoadableQuery");
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(options, "canonizeResults", "useLoadableQuery");
+  }
 
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

@@ -84,12 +84,15 @@ export function useMutation<
     TCache
   >
 ): MutationTuple<TData, TVariables, TContext, TCache> {
-  useWarnRemovedOption(
-    options || {},
-    "ignoreResults",
-    "useMutation",
-    "If you don't want to synchronize component state with the mutation, please use the `useApolloClient` hook to get the client instance and call `client.mutate` directly."
-  );
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
+    useWarnRemovedOption(
+      options || {},
+      "ignoreResults",
+      "useMutation",
+      "If you don't want to synchronize component state with the mutation, please use the `useApolloClient` hook to get the client instance and call `client.mutate` directly."
+    );
+  }
 
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
@@ -245,7 +248,7 @@ export function useMutation<
 
   React.useEffect(() => {
     const current = ref.current;
-    // eslint-disable-next-line react-compiler/react-compiler
+
     current.isMounted = true;
 
     return () => {

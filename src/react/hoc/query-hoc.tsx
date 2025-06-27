@@ -15,7 +15,10 @@ import {
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
 import invariant from "ts-invariant";
-import { warnDeprecated } from "../../utilities/deprecation/index.js";
+import {
+  muteDeprecations,
+  warnDeprecated,
+} from "../../utilities/deprecation/index.js";
 
 /**
  * @deprecated
@@ -44,7 +47,7 @@ export function withQuery<
     });
   }
   // this is memoized so if coming from `graphql` there is nearly no extra cost
-  const operation = parser(document);
+  const operation = muteDeprecations("parser", parser, [document]);
   // extract options
   const {
     options = defaultMapPropsToOptions,

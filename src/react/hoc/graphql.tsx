@@ -38,7 +38,7 @@ export function graphql<
     );
   }
 
-  switch (parser(document).type) {
+  switch (muteDeprecations("parser", () => parser(document).type)) {
     case DocumentType.Mutation:
       return muteDeprecations("withMutation", () =>
         withMutation(document, operationOptions)

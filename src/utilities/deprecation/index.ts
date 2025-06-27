@@ -13,6 +13,7 @@ type DeprecationName =
   | "addTypename"
   | "canonizeResults"
   | "connectToDevTools"
+  | "parser"
   | "withQuery"
   | "withMutation"
   | "withSubscription";

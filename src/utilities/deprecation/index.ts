@@ -15,9 +15,7 @@ export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(
   name: DeprecationName | DeprecationName[],
   ...args: WithValueArgs<TResult, TArgs, TThis>
 ) {
-  const keys = Array.isArray(name) ? name : [name];
-
-  return slot.withValue(keys, ...args);
+  return slot.withValue(Array.isArray(name) ? name : [name], ...args);
 }
 
 export function warnRemovedOption<TOptions extends Record<string, any>>(

@@ -643,6 +643,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.watchQuery");
+      warnRemovedOption(options, "partialRefetch", "client.watchQuery");
     }
 
     return this.queryManager.watchQuery<T, TVariables>(options);

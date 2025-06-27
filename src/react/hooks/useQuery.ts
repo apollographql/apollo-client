@@ -143,7 +143,18 @@ export function useQuery<
     NoInfer<TData>,
     NoInfer<TVariables>
   > = Object.create(null)
-): QueryResult<TData, TVariables> {
+): QueryResult<TData, TVariables> & {
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
+   *
+   * @deprecated `called` will be removed from the `useQuery` result in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please remove the use of the `called` property.
+   */
+  called: boolean;
+} {
   return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler

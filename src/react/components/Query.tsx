@@ -4,6 +4,8 @@ import type * as ReactTypes from "react";
 import type { OperationVariables } from "../../core/index.js";
 import type { QueryComponentOptions } from "./types.js";
 import { useQuery } from "../hooks/index.js";
+import { invariant } from "../../utilities/globals/index.js";
+import { useWarnRemoved } from "../hooks/internal/index.js";
 
 /**
  * @deprecated
@@ -17,6 +19,11 @@ export function Query<
 >(
   props: QueryComponentOptions<TData, TVariables>
 ): ReactTypes.JSX.Element | null {
+  useWarnRemoved("<Query />", () => {
+    invariant.warn(
+      "[Query]: The `<Query />` component is deprecated and will be removed in Apollo Client 4.0. Please use an available React hook such as `useQuery` instead."
+    );
+  });
   const { children, query, ...options } = props;
   const result = useQuery(query, options);
   return result ? children(result as any) : null;

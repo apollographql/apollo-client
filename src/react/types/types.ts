@@ -395,8 +395,10 @@ export interface BaseMutationOptions<
   /**
    * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
+   * @deprecated This option will be removed in Apollo Client 4.0. If you don't
+   * want to synchronize your component state with the mutation, please use
+   * `useApolloClient` to get your ApolloClient instance and call `client.mutate`
+   * directly.
    */
   ignoreResults?: boolean;
 }

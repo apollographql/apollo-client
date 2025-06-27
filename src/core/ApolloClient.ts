@@ -24,6 +24,7 @@ import type {
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
   InteropApolloQueryResult,
+  InteropMutateResult,
 } from "./types.js";
 
 import type {
@@ -699,7 +700,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<MaybeMasked<TData>>> {
+  ): Promise<InteropMutateResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }

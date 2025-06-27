@@ -1,7 +1,7 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
-import type { FetchResult } from "../link/core/index.js";
+import type { FetchResult, IncrementalPayload } from "../link/core/index.js";
 import type { ApolloError } from "../errors/index.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { Resolver } from "./LocalState.js";
@@ -205,6 +205,139 @@ export interface InteropApolloQueryResult<T> {
    */
   partial?: boolean;
 }
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+interface InteropMutationSingleExecutionResult<
+  TData = Record<string, any>,
+  TContext = DefaultContext,
+  TExtensions = Record<string, any>,
+> {
+  data?: TData | null;
+  /**
+   * @deprecated `context` will no longer available on the result in Apollo Client 4.0.
+   */
+  context?: TContext;
+  /**
+   * @deprecated `errors` is no longer available on the result in Apollo Client 4.0.
+   * This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property on the resolved value instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  extensions?: TExtensions;
+}
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export interface InteropMutationExecutionPatchInitialResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>,
+> {
+  /**
+   * @deprecated `hasNext` will no longer available on the result in Apollo Client 4.0.
+   */
+  hasNext?: boolean;
+  // if data is present, incremental is not
+  data: TData | null | undefined;
+  /**
+   * @deprecated `incremental` will no longer available on the result in Apollo Client 4.0.
+   */
+  incremental?: never;
+  /**
+   * @deprecated `errors` is no longer available on the result in Apollo Client 4.0.
+   * This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property on the resolved value instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  extensions?: TExtensions;
+}
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export interface InteropMutationExecutionPatchIncrementalResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>,
+> {
+  /**
+   * @deprecated `hasNext` will no longer available on the result in Apollo Client 4.0.
+   * This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property on the resolved value instead.
+   */
+  hasNext?: boolean;
+  /**
+   * @deprecated `incremental` will no longer available on the result in Apollo Client 4.0.
+   */
+  incremental?: IncrementalPayload<TData, TExtensions>[];
+  data?: never;
+  /**
+   * @deprecated `errors` is no longer available on the result in Apollo Client 4.0.
+   * This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property on the resolved value instead.
+   */
+  errors?: never;
+  extensions?: never;
+}
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export type InteropMutationExecutionPatchResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>,
+> =
+  | InteropMutationExecutionPatchInitialResult<TData, TExtensions>
+  | InteropMutationExecutionPatchIncrementalResult<TData, TExtensions>;
+
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions for deprecations.
+ */
+export type InteropMutateResult<
+  TData = Record<string, any>,
+  TContext = DefaultContext,
+  TExtensions = Record<string, any>,
+> =
+  | InteropMutationSingleExecutionResult<TData, TContext, TExtensions>
+  | InteropMutationExecutionPatchResult<TData, TExtensions>;
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

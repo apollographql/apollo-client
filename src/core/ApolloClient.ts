@@ -2,7 +2,7 @@ import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
+import type { GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
 import type { DocumentTransform } from "../utilities/index.js";

@@ -22,7 +22,15 @@ export declare namespace SetContextLink {
 
 /**
  * @deprecated
- * Use `SetContextLink` from `@apollo/client/link/context` instead.
+ * Use `SetContextLink` from `@apollo/client/link/context` instead. Note you
+ * will need to flip the arguments when using `SetContextLink` as `prevContext`
+ * is the first argument.
+ *
+ * ```ts
+ * new SetContextLink((prevContext, operation) => {
+ *   // ...
+ * })
+ * ```
  */
 export function setContext(setter: SetContextLink.LegacyContextSetter) {
   return new SetContextLink((prevContext, operation) =>

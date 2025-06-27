@@ -701,11 +701,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
   }
 
+  /**
+   * @deprecated `setOptions` will be removed in Apollo Client 4.0. Please use
+   * `observableQuery.reobserve(newOptions)` instead.
+   */
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     if (__DEV__) {
       warnRemovedOption(newOptions, "canonizeResults", "setOptions");
+      warnDeprecated("setOptions", () => {
+        invariant.warn(
+          "[observableQuery.setOptions] `setOptions` is deprecated and will be removed in Apollo Client 4.0. Please use `observableQuery.reobserve(newOptions)` instead."
+        );
+      });
     }
 
     return this.reobserve(newOptions);

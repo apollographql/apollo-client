@@ -28,6 +28,7 @@ import {
 } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
+import { invariant } from "../../utilities/globals/invariantWrappers.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -159,6 +160,14 @@ export function useLazyQuery<
     for (const key of EAGER_METHODS) {
       const method = obsQueryFields[key];
       eagerMethods[key] = function () {
+        if (__DEV__) {
+          if (key === "reobserve") {
+            invariant.warn(
+              "[useLazyQuery]: `reobserve` is deprecated and will removed in Apollo Client 4.0. Please change options by rerendering `useLazyQuery` with new options."
+            );
+          }
+        }
+
         if (!execOptionsRef.current) {
           execOptionsRef.current = Object.create(null);
           // Only the first time populating execOptionsRef.current matters here.

@@ -109,7 +109,15 @@ export interface ObservableQueryFields<
   refetch: (
     variables?: Partial<TVariables>
   ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** @internal */
+  /**
+   * @internal
+   *
+   * @deprecated `reobserve` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Change options by rerendering the hook with new options.
+   */
   reobserve: (
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus

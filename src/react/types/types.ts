@@ -187,6 +187,16 @@ export interface LazyQueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
   /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member}
+   *
+   * @deprecated `initialFetchPolicy` will be removed in Apoll Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please use `fetchPolicy` instead.
+   */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+  /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
    *
    * @deprecated This option will be removed in the next major version of Apollo Client.
@@ -201,7 +211,15 @@ export interface LazyQueryHookOptions<
    */
   onError?: (error: ApolloError) => void;
 
-  /** @internal */
+  /**
+   * @internal
+   *
+   * @deprecated `defaultOptions` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please pass options directly to `useLazyQuery` instead.
+   */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 export interface LazyQueryHookExecOptions<

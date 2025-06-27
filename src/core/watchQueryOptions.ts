@@ -343,6 +343,15 @@ export interface MutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
+
+/**
+ * @deprecated `MutationSharedOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface MutationSharedOptions<
   TData = any,
   TVariables = OperationVariables,

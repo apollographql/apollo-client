@@ -16,7 +16,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
-import { silenceDeprecations } from "../utilities/deprecation/index.js";
+import { muteDeprecations } from "../utilities/deprecation/index.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -161,7 +161,7 @@ export class QueryInfo {
       return { complete: false };
     }
 
-    const diff = silenceDeprecations("canonizeResults", () =>
+    const diff = muteDeprecations("canonizeResults", () =>
       this.cache.diff(options)
     );
     this.updateLastDiff(diff, options);
@@ -397,7 +397,7 @@ export class QueryInfo {
           }
 
           const diffOptions = this.getDiffOptions(options.variables);
-          const diff = silenceDeprecations("canonizeResults", () =>
+          const diff = muteDeprecations("canonizeResults", () =>
             cache.diff<T>(diffOptions)
           );
 

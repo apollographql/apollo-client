@@ -11,7 +11,7 @@ type WithValueArgs<TResult, TArgs extends any[], TThis> = [
 
 type DeprecationName = "addTypename" | "canonizeResults" | "connectToDevTools";
 
-export function silenceDeprecations<TResult, TArgs extends any[], TThis = any>(
+export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(
   name: DeprecationName | DeprecationName[],
   ...args: WithValueArgs<TResult, TArgs, TThis>
 ) {

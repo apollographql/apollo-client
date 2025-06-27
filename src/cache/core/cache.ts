@@ -37,7 +37,7 @@ import type {
   Unmasked,
 } from "../../masking/index.js";
 import {
-  silenceDeprecations,
+  muteDeprecations,
   warnRemovedOption,
 } from "../../utilities/deprecation/index.js";
 
@@ -247,7 +247,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       warnRemovedOption(options, "canonizeResults", "cache.readQuery");
     }
 
-    return silenceDeprecations("canonizeResults", () =>
+    return muteDeprecations("canonizeResults", () =>
       this.read({
         ...options,
         rootId: options.id || "ROOT_QUERY",
@@ -362,7 +362,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       warnRemovedOption(options, "canonizeResults", "cache.readFragment");
     }
 
-    return silenceDeprecations("canonizeResults", () =>
+    return muteDeprecations("canonizeResults", () =>
       this.read({
         ...options,
         query: this.getFragmentDoc(options.fragment, options.fragmentName),
@@ -411,7 +411,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
     return this.batch({
       update(cache) {
-        const value = silenceDeprecations("canonizeResults", () =>
+        const value = muteDeprecations("canonizeResults", () =>
           cache.readQuery<TData, TVariables>(options)
         );
         const data = update(value);
@@ -432,7 +432,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
     return this.batch({
       update(cache) {
-        const value = silenceDeprecations("canonizeResults", () =>
+        const value = muteDeprecations("canonizeResults", () =>
           cache.readFragment<TData, TVariables>(options)
         );
         const data = update(value);

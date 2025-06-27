@@ -110,7 +110,7 @@ import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "../masking/index.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
-import { silenceDeprecations } from "../utilities/deprecation/index.js";
+import { muteDeprecations } from "../utilities/deprecation/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -1546,7 +1546,7 @@ export class QueryManager<TStore> {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            diff = silenceDeprecations("canonizeResults", () =>
+            diff = muteDeprecations("canonizeResults", () =>
               this.cache.diff(oq["queryInfo"]["getDiffOptions"]())
             );
           }

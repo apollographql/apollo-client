@@ -36,7 +36,7 @@ import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 import { __esDecorate } from "tslib";
 import {
-  silenceDeprecations,
+  muteDeprecations,
   warnRemovedOption,
 } from "../../utilities/deprecation/index.js";
 
@@ -606,9 +606,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // object, and without having to enumerate the relevant properties (query,
     // variables, etc.) explicitly. There will be some additional properties
     // (lastDiff, callback, etc.), but cache.diff ignores them.
-    const diff = silenceDeprecations("canonizeResults", () =>
-      this.diff<any>(c)
-    );
+    const diff = muteDeprecations("canonizeResults", () => this.diff<any>(c));
 
     if (options) {
       if (c.optimistic && typeof options.optimistic === "string") {

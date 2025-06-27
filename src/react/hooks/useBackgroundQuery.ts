@@ -22,7 +22,7 @@ import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
-import { silenceDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -233,7 +233,7 @@ function useBackgroundQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = silenceDeprecations("canonizeResults", () =>
+  const queryRef = muteDeprecations("canonizeResults", () =>
     suspenseCache.getQueryRef(cacheKey, () =>
       client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
     )

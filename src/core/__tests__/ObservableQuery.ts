@@ -27,7 +27,7 @@ import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
-import { silenceDeprecations } from "../../utilities/deprecation";
+import { muteDeprecations } from "../../utilities/deprecation";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -1772,7 +1772,7 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const client = silenceDeprecations("addTypename", () => {
+        const client = muteDeprecations("addTypename", () => {
           return new ApolloClient({
             cache: new InMemoryCache({ addTypename: false }),
             link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
@@ -1860,7 +1860,7 @@ describe("ObservableQuery", () => {
 
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
-        const client = silenceDeprecations("addTypename", () => {
+        const client = muteDeprecations("addTypename", () => {
           return new ApolloClient({
             cache: new InMemoryCache({ addTypename: false }),
             link: new MockLink(mocks, true, { showWarnings: false }),
@@ -1957,7 +1957,7 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const client = silenceDeprecations("addTypename", () => {
+        const client = muteDeprecations("addTypename", () => {
           return new ApolloClient({
             cache: new InMemoryCache({ addTypename: false }),
             link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),

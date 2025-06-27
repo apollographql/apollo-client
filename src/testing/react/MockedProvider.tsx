@@ -12,7 +12,7 @@ import type { ApolloCache } from "../../cache/index.js";
 import type { DevtoolsOptions } from "../../core/ApolloClient.js";
 import {
   warnRemovedOption,
-  silenceDeprecations,
+  muteDeprecations,
 } from "../../utilities/deprecation/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
@@ -96,7 +96,7 @@ export class MockedProvider extends React.Component<
       );
     }
 
-    const client = silenceDeprecations(
+    const client = muteDeprecations(
       ["connectToDevTools", "addTypename"],
       () =>
         new ApolloClient({

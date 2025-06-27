@@ -26,7 +26,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { silenceDeprecations } from "../../../utilities/deprecation";
+import { muteDeprecations } from "../../../utilities/deprecation";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -745,7 +745,7 @@ describe("useSubscription Hook", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const client = silenceDeprecations("addTypename", () => {
+    const client = muteDeprecations("addTypename", () => {
       return new ApolloClient({
         link,
         cache: new Cache({ addTypename: false }),
@@ -877,7 +877,7 @@ describe("useSubscription Hook", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const client = silenceDeprecations("addTypename", () => {
+    const client = muteDeprecations("addTypename", () => {
       return new ApolloClient({
         link,
         cache: new Cache({ addTypename: false }),
@@ -912,7 +912,7 @@ describe("useSubscription Hook", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const client = silenceDeprecations("addTypename", () => {
+    const client = muteDeprecations("addTypename", () => {
       return new ApolloClient({
         link,
         cache: new Cache({ addTypename: false }),
@@ -1048,7 +1048,7 @@ describe("useSubscription Hook", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const client = silenceDeprecations("addTypename", () => {
+    const client = muteDeprecations("addTypename", () => {
       return new ApolloClient({
         link,
         cache: new Cache({ addTypename: false }),

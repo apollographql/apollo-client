@@ -19,7 +19,7 @@ import {
 } from "./internal/index.js";
 import equal from "@wry/equality";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import { silenceDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -104,7 +104,7 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     }
 
     const { cache } = client;
-    const diff = silenceDeprecations("canonizeResults", () =>
+    const diff = muteDeprecations("canonizeResults", () =>
       cache.diff<TData>({
         ...stableOptions,
         returnPartialData: true,
@@ -134,7 +134,7 @@ function useFragment_<TData = any, TVars = OperationVariables>(
       (forceUpdate) => {
         let lastTimeout = 0;
 
-        const subscription = silenceDeprecations("canonizeResults", () =>
+        const subscription = muteDeprecations("canonizeResults", () =>
           stableOptions.from === null ?
             null
           : client.watchFragment(stableOptions).subscribe({

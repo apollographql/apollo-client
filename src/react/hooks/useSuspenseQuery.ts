@@ -27,7 +27,7 @@ import {
   useWarnRemovedOption,
   wrapHook,
 } from "./internal/index.js";
-import { silenceDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -217,7 +217,7 @@ function useSuspenseQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = silenceDeprecations("canonizeResults", () =>
+  const queryRef = muteDeprecations("canonizeResults", () =>
     suspenseCache.getQueryRef(cacheKey, () =>
       client.watchQuery(watchQueryOptions)
     )

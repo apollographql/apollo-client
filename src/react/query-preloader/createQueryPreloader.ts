@@ -18,7 +18,7 @@ import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer, VariablesOption } from "../index.js";
 import { wrapHook } from "../hooks/internal/index.js";
 import {
-  silenceDeprecations,
+  muteDeprecations,
   warnRemovedOption,
 } from "../../utilities/deprecation/index.js";
 
@@ -175,7 +175,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
   ): PreloadedQueryRef<TData, TVariables> {
     warnRemovedOption(options, "canonizeResults", "preloadQuery");
 
-    const queryRef = silenceDeprecations(
+    const queryRef = muteDeprecations(
       "canonizeResults",
       () =>
         new InternalQueryReference(

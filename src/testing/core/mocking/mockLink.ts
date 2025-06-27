@@ -20,6 +20,7 @@ import {
   removeDirectivesFromDocument,
   checkDocument,
   makeUniqueId,
+  getOperationName,
 } from "../../../utilities/index.js";
 import type { Unmasked } from "../../../masking/index.js";
 
@@ -185,6 +186,21 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         configError = new Error(
           `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
         );
+      }
+    }
+
+    if (__DEV__) {
+      if (response?.request.query) {
+        const serverQuery = removeClientSetsFromDocument(
+          response?.request.query
+        );
+
+        if (!serverQuery) {
+          invariant.warn(
+            "[MockLink]: Apollo Client 4.0 will throw when mocking client-only query '%s'. Please ensure the query has at least 1 non-client field.",
+            getOperationName(response.request.query) ?? "(anonymous)"
+          );
+        }
       }
     }
 

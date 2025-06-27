@@ -296,6 +296,11 @@ export interface MockApolloLink extends ApolloLink {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
+/**
+ * @deprecated `mockSingleLink` will be removed in Apollo Client 4.0. Please
+ * initialize `MockLink` directly. Note that `addTypename` has been removed so
+ * please remove the final boolean argument if it is set.
+ */
 export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
   // set it true later.

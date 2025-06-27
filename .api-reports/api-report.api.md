@@ -455,7 +455,7 @@ namespace Cache_2 {
     }
     // (undocumented)
     interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // @deprecated (undocumented)
+        // @deprecated
         canonizeResults?: boolean;
         // (undocumented)
         optimistic: boolean;
@@ -1359,7 +1359,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
 // @public (undocumented)
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // @deprecated (undocumented)
+    // @deprecated
     canonizeResults?: boolean;
     // Warning: (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
     //
@@ -3293,14 +3293,14 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:160:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:415:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:120:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:52:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:76:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:125:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:70:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

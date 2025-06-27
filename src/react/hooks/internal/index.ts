@@ -2,5 +2,6 @@
 export { useDeepMemo } from "./useDeepMemo.js";
 export { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect.js";
 export { useRenderGuard } from "./useRenderGuard.js";
+export { useWarnRemovedOption } from "./useWarnRemovedOption.js";
 export { __use } from "./__use.js";
 export { wrapHook } from "./wrapHook.js";

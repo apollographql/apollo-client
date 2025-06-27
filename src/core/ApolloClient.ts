@@ -292,6 +292,7 @@ import type {
   WatchFragmentResult,
 } from "../cache/core/cache.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { warnRemovedOption } from "../utilities/deprecation/index.js";
 export { mergeOptions };
 
 /**
@@ -402,37 +403,47 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     } = options;
 
     if (__DEV__) {
-      if ("connectToDevTools" in options) {
-        invariant.warn(
-          "`connectToDevTools` is deprecated and will be removed in Apollo Client 4.0. Please use `devtools.enabled` instead."
-        );
-      }
+      warnRemovedOption(
+        options,
+        "connectToDevTools",
+        "ApolloClient",
+        "Please use `devtools.enabled` instead."
+      );
+      warnRemovedOption(
+        options,
+        "uri",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `uri` instead."
+      );
+      warnRemovedOption(
+        options,
+        "credentials",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `credentials` instead."
+      );
+      warnRemovedOption(
+        options,
+        "headers",
+        "ApolloClient",
+        "Please initialize an instance of `HttpLink` with `headers` instead."
+      );
+      warnRemovedOption(
+        options,
+        "name",
+        "ApolloClient",
+        "Please use the `clientAwareness.name` option instead."
+      );
+      warnRemovedOption(
+        options,
+        "version",
+        "ApolloClient",
+        "Please use the `clientAwareness.version` option instead."
+      );
+      warnRemovedOption(options, "typeDefs", "ApolloClient");
 
       if (!options.link) {
         invariant.warn(
-          "Apollo Client 4.0 will require a `link` option and will not create a default link when not provided. Please provide a `link` option."
-        );
-      }
-
-      if (
-        "uri" in options ||
-        "credentials" in options ||
-        "headers" in options
-      ) {
-        invariant.warn(
-          "Apollo Client 4.0 will no longer support the `uri`, `credentials` or `headers` options. Please instantiate an instance of `HttpLink` with these options instead."
-        );
-      }
-
-      if ("name" in options || "version" in options) {
-        invariant.warn(
-          "Apollo Client 4.0 will no longer support the `name` or `version` options. To use client awareness features, please use the `clientAwareness.name` and `clientAwareness.version` options instead."
-        );
-      }
-
-      if (typeDefs) {
-        invariant.warn(
-          "Apollo Client 4.0 will no longer support `typeDefs`. Please remove this option."
+          "[ApolloClient]: Apollo Client 4.0 will require a `link` option and will not create a default link when not provided. Please provide a `link` option."
         );
       }
     }
@@ -627,6 +638,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: "cache-first" };
     }
 
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "client.watchQuery");
+    }
+
     return this.queryManager.watchQuery<T, TVariables>(options);
   }
 
@@ -659,6 +674,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (this.disableNetworkFetches && options.fetchPolicy === "network-only") {
       options = { ...options, fetchPolicy: "cache-first" };
+    }
+
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "client.query");
     }
 
     return this.queryManager.query<T, TVariables>(options);

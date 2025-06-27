@@ -21,7 +21,13 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import {
+  __use,
+  useDeepMemo,
+  useWarnRemovedOption,
+  wrapHook,
+} from "./internal/index.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -189,6 +195,12 @@ function useSuspenseQuery_<
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables>
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
+  useWarnRemovedOption(
+    typeof options === "symbol" ? {} : options,
+    "canonizeResults",
+    "useSuspenseQuery"
+  );
+
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({
@@ -205,8 +217,10 @@ function useSuspenseQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions)
+  const queryRef = muteDeprecations("canonizeResults", () =>
+    suspenseCache.getQueryRef(cacheKey, () =>
+      client.watchQuery(watchQueryOptions)
+    )
   );
 
   let [current, setPromise] = React.useState<

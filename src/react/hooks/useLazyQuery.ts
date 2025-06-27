@@ -27,6 +27,7 @@ import {
   useQueryInternals,
 } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -91,6 +92,8 @@ export function useLazyQuery<
   >(void 0);
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
+
+  useWarnRemovedOption(merged, "canonizeResults", "useLazyQuery");
 
   // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.

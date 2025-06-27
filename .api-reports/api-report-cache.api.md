@@ -7,6 +7,7 @@
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
+import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
@@ -222,12 +223,12 @@ export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRe
 export namespace DataProxy {
     // (undocumented)
     export type DiffResult<TData> = {
-        result: TData;
+        result: DataValue.Complete<TData>;
         complete: true;
         missing?: never;
         fromOptimisticTransaction?: boolean;
     } | {
-        result: DeepPartial<TData> | null;
+        result: DataValue.Partial<TData> | null;
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;

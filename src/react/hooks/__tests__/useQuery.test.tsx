@@ -24,7 +24,7 @@ import type {
   FetchPolicy,
   OperationVariables,
   RefetchWritePolicy,
-  Streaming,
+  DataValue,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -13267,7 +13267,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -13293,7 +13293,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {

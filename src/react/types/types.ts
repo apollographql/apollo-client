@@ -245,7 +245,7 @@ export interface LazyQueryHookOptions<
   /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member}
    *
-   * @deprecated `contex` will be removed in Apollo Client 4.0.
+   * @deprecated `context` will be removed in Apollo Client 4.0.
    *
    * **Recommended now**
    *

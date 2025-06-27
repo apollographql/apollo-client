@@ -167,7 +167,7 @@ export interface InteropApolloQueryResult<T> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: T;
   /**
-   * @deprecated `errors` is no longer available on the result in Apollo Client 4.0.
+   * @deprecated `errors` will no longer available on the result in Apollo Client 4.0.
    * This value is safe to use in Apollo Client 3.x.
    *
    * **Recommended now**
@@ -187,19 +187,19 @@ export interface InteropApolloQueryResult<T> {
    */
   error?: ApolloError;
   /**
-   * @deprecated `loading` is no longer available on the result in Apollo Client 4.0.
+   * @deprecated `loading` will no longer available on the result in Apollo Client 4.0.
    * This value is always true when the resolved and can safely ignored.
    */
   loading: boolean;
   /**
-   * @deprecated `loading` is no longer available on the result in Apollo Client 4.0.
+   * @deprecated `loading` will no longer available on the result in Apollo Client 4.0.
    * This value is always `NetworkStatus.ready` or `NetworkStatus.error`. To
    * determine if the result contains an error, read from the `error` or `errors`
    * property instead.
    */
   networkStatus: NetworkStatus;
   /**
-   * @deprecated `partial` is no longer available on the result in Apollo Client 4.0.
+   * @deprecated `partial` will no longer available on the result in Apollo Client 4.0.
    * This value is always `false` if there is a data value since the result
    * never contains partial cache data.
    */

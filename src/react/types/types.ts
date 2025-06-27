@@ -409,8 +409,6 @@ export interface InteropLazyQueryExecResult<
    * from the hook instead.
    */
   observable: ObservableQuery<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: MaybeMasked<TData> | undefined;
   /**
    * {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member}
    *
@@ -419,10 +417,6 @@ export interface InteropLazyQueryExecResult<
    * from the hook instead.
    */
   previousData?: MaybeMasked<TData>;
-  /**
-   * {@inheritDoc @apollo/client!QueryResultDocumentation#error:member}
-   */
-  error?: ApolloError;
   /**
    * @deprecated `errors` is no longer available on the result resolved from
    * `execute` in Apollo Client 4.0. This value is safe to use in Apollo Client 3.x.

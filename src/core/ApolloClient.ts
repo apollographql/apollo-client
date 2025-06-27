@@ -23,6 +23,7 @@ import type {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
+  InteropApolloQueryResult,
 } from "./types.js";
 
 import type {
@@ -659,7 +660,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, T>
-  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }

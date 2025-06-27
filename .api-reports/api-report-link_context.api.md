@@ -9,12 +9,14 @@ import type { Operation } from '@apollo/client/link';
 import type { OperationContext } from '@apollo/client/link';
 
 // @public @deprecated (undocumented)
-export function setContext(setter: SetContextLink.ContextSetter): SetContextLink;
+export function setContext(setter: SetContextLink.LegacyContextSetter): SetContextLink;
 
 // @public (undocumented)
 export namespace SetContextLink {
     // (undocumented)
-    export type ContextSetter = (operation: SetContextOperation, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    export type ContextSetter = (prevContext: OperationContext, operation: SetContextOperation) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    // (undocumented)
+    export type LegacyContextSetter = (operation: SetContextOperation, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
     // (undocumented)
     export type SetContextOperation = Omit<Operation, "getContext" | "setContext">;
 }

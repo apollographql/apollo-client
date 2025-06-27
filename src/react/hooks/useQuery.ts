@@ -851,7 +851,14 @@ function bindObservableMethods<TData, TVariables extends OperationVariables>(
 ): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
   return {
     refetch: observable.refetch.bind(observable),
-    reobserve: observable.reobserve.bind(observable),
+    reobserve: function (...args) {
+      if (__DEV__) {
+        invariant.warn(
+          "[useQuery]: `reobserve` is deprecated and will removed in Apollo Client 4.0. Please change options by rerendering `useQuery` with new options."
+        );
+      }
+      return observable.reobserve(...args);
+    },
     fetchMore: observable.fetchMore.bind(observable),
     updateQuery: observable.updateQuery.bind(observable),
     startPolling: observable.startPolling.bind(observable),

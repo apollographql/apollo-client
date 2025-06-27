@@ -241,6 +241,17 @@ export interface LazyQueryHookOptions<
    * Please pass options directly to `useLazyQuery` instead.
    */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member}
+   *
+   * @deprecated `contex` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please pass `context` to the returned `execute` function instead.
+   */
+  context?: DefaultContext;
 }
 export interface LazyQueryHookExecOptions<
   TData = any,

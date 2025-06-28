@@ -152,7 +152,9 @@ export class ApolloClient implements DataProxy {
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
+    // @deprecated
+    reFetchObservableQueries: (includeStandby?: boolean) => Promise<QueryResult<any>[]>;
+    refetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
     refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
     resetStore(): Promise<QueryResult<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;

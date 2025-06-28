@@ -131,7 +131,9 @@ class ApolloClient_2 implements DataProxy {
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables_2>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables_2>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
+    // @deprecated
+    reFetchObservableQueries: (includeStandby?: boolean) => Promise<QueryResult_2<any>[]>;
+    refetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesResult" needs to be exported by the entry point index.d.ts
     refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult_2<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;

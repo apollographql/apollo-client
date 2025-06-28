@@ -15,7 +15,6 @@ import { QueryManager } from "./QueryManager.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 
 import type {
-  ApolloQueryResult,
   DefaultContext,
   OperationVariables,
   Resolvers,
@@ -304,7 +303,7 @@ export { mergeOptions };
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient<TCacheShape> implements DataProxy {
+export class ApolloClient<TCacheShape = any> implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache<TCacheShape>;
 
@@ -682,6 +681,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.query");
+      warnRemovedOption(
+        options,
+        "notifyOnNetworkStatusChange",
+        "client.query",
+        "This option does not affect `client.query` and can be safely removed."
+      );
 
       if (options.fetchPolicy === "standby") {
         invariant.warn(
@@ -874,7 +879,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
+  public resetStore(): Promise<InteropApolloQueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({
@@ -941,7 +946,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public reFetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<ApolloQueryResult<any>[]> {
+  ): Promise<InteropApolloQueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 
@@ -958,7 +963,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
-    TResult = Promise<ApolloQueryResult<any>>,
+    TResult = Promise<InteropApolloQueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {

@@ -53,13 +53,13 @@ export function graphQLResultHasProtocolErrors<T>(
  * **When migrating**
  *
  * Errors are no longer wrapped in Apollo Client 4.0. To check if an error is an
- * instance of an error provided by Apollo Client, use the static `.is` methods
+ * instance of an error provided by Apollo Client, use the static `.is` method
  * on the error class you want to test against.
  *
  * ```ts
  * // Test if an error is an instance of `CombinedGraphQLErrors`
  * const isGraphQLErrors = CombinedGraphQLErrors.is(error);
- * ````
+ * ```
  */
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty("graphQLErrors");

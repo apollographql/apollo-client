@@ -54,7 +54,6 @@ export interface MockedResponse<
    * @deprecated `newData` will be removed in Apollo Client 4.0. Please use the
    * `result` option with a callback function instead and provide a
    * `maxUsageCount` of `Number.POSITIVE_INFINITY` to get the same behavior.
-   * ```
    */
   newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }

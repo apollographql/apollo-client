@@ -27,6 +27,18 @@ export const VERSION = 1;
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   networkError?: NetworkError;
+  /**
+   * @deprecated `response` has renamed to `result` in Apollo Client 4.0. This
+   * property is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When migrating**
+   *
+   * Use the `result` property instead of `response` inside your callback function.
+   */
   response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;

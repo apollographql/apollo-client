@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - graphql_over_http
 ---
 
 Adjusted the accept header for multipart requests according to the new GraphQL over HTTP spec with these changes:

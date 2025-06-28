@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - LocalState
 ---
 
 Revamp local resolvers and fix several issues from the existing `resolvers` option.

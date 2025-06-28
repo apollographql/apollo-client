@@ -1,0 +1,26 @@
+diff --git a/node_modules/@changesets/parse/dist/changesets-parse.cjs.js b/node_modules/@changesets/parse/dist/changesets-parse.cjs.js
+index 53793c5..ba55435 100644
+--- a/node_modules/@changesets/parse/dist/changesets-parse.cjs.js
++++ b/node_modules/@changesets/parse/dist/changesets-parse.cjs.js
+@@ -27,7 +27,7 @@ function parseChangesetFile(contents) {
+       releases = Object.entries(yamlStuff).map(([name, type]) => ({
+         name,
+         type
+-      }));
++      })).filter((({name}) => name[0] !== "_"));
+     } else {
+       releases = [];
+     }
+diff --git a/node_modules/@changesets/parse/dist/changesets-parse.esm.js b/node_modules/@changesets/parse/dist/changesets-parse.esm.js
+index a48e06b..9ec73ef 100644
+--- a/node_modules/@changesets/parse/dist/changesets-parse.esm.js
++++ b/node_modules/@changesets/parse/dist/changesets-parse.esm.js
+@@ -19,7 +19,7 @@ function parseChangesetFile(contents) {
+       releases = Object.entries(yamlStuff).map(([name, type]) => ({
+         name,
+         type
+-      }));
++      })).filter((({name}) => name[0] !== "_"));
+     } else {
+       releases = [];
+     }

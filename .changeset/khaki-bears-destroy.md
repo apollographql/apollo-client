@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - features
+  - links
 ---
 
 Adds enhanced client awareness to the client.

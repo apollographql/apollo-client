@@ -1,5 +1,8 @@
 ---
 "@apollo/client-graphql-codegen": major
+_tags:
+  - codegen
+  - LocalState
 ---
 
 Introduce a new GraphQL Codegen plugin aimed at creating resolver types for `LocalState`. This plugin is similar to `@graphql-codegen/typescript-resolvers` but tailored to provide types that work with `LocalState`.

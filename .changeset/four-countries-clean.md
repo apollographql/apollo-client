@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - errors
 ---
 
 Add a static `is` method to error types defined by Apollo Client. `is` makes it simpler to determine whether an error is a specific type, which can be helpful in cases where you'd like to narrow the error type in order to use specific properties from that error.

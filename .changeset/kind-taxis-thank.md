@@ -1,5 +1,7 @@
 ---
 "@apollo/client": patch
+_tags:
+  - LocalState
 ---
 
 Don't warn about a missing resolver if a `@client` does not have a configured resolver. It is possible the cache contains a `read` function for the field and the warning added confusion.

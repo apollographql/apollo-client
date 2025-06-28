@@ -83,6 +83,15 @@ export class ObservableQuery<
   private static inactiveOnCreation = new Slot<boolean>();
 
   public readonly options: WatchQueryOptions<TVariables, TData>;
+  /**
+   * @deprecated `queryId` will be removed in Apollo Client 4.0. This value is
+   * safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * `ObservableQuery` does not have a unique identifier in 4.0. If you rely on
+   * this value, please try to migrate away from it.
+   */
   public readonly queryId: string;
   public readonly queryName?: string;
 

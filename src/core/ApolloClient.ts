@@ -261,8 +261,8 @@ export class ApolloClient implements DataProxy {
     this.mutate = this.mutate.bind(this);
     this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
-    this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
-    this.refetchObservableQueries = this.refetchObservableQueries.bind(this);
+    this.reFetchObservableQueries = this.refetchObservableQueries =
+      this.refetchObservableQueries.bind(this);
 
     this.version = version;
 

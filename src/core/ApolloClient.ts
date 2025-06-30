@@ -761,7 +761,9 @@ export class ApolloClient implements DataProxy {
    *
    * @deprecated Please use `refetchObservableQueries` instead.
    */
-  public reFetchObservableQueries = this.refetchObservableQueries;
+  public reFetchObservableQueries: (
+    includeStandby?: boolean
+  ) => Promise<QueryResult<any>[]>;
 
   /**
    * Refetches all of your active queries.

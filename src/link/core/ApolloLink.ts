@@ -14,6 +14,7 @@ import {
   createOperation,
   transformOperation,
 } from "../utils/index.js";
+import { warnDeprecated } from "../../utilities/deprecation/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
@@ -145,9 +146,11 @@ export class ApolloLink {
     observer?: Observer<FetchResult>
   ): false | void {
     if (__DEV__) {
-      invariant.warn(
-        "[ApolloLink] `onError` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using it."
-      );
+      warnDeprecated("onError", () => {
+        invariant.warn(
+          "[ApolloLink] `onError` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using it."
+        );
+      });
     }
     if (observer && observer.error) {
       observer.error(error);

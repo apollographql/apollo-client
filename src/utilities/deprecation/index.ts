@@ -1,5 +1,8 @@
 import { Slot } from "optimism";
-import { invariant, global } from "../globals/index.js";
+import { invariant, global as untypedGlobal } from "../globals/index.js";
+
+const muteAllDeprecations = Symbol.for("apollo.deprecations");
+const global = untypedGlobal as { [muteAllDeprecations]?: boolean };
 
 const slot = new Slot<string[]>();
 
@@ -92,10 +95,7 @@ export type DeprecationName =
   | NonNullable<PossibleDeprecations[keyof PossibleDeprecations]>[number];
 
 function isMuted(name: DeprecationName) {
-  return (
-    !!(global as any)[Symbol.for("apollo.deprecations")] ||
-    (slot.getValue() || []).includes(name)
-  );
+  return global[muteAllDeprecations] || (slot.getValue() || []).includes(name);
 }
 
 export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(
@@ -130,4 +130,14 @@ export function warnDeprecated(name: DeprecationName, cb: () => void) {
   if (!isMuted(name)) {
     cb();
   }
+}
+
+export function withDisabledDeprecations() {
+  const prev = global[muteAllDeprecations];
+  global[muteAllDeprecations] = true;
+  return {
+    [Symbol.dispose]() {
+      global[muteAllDeprecations] = prev;
+    },
+  };
 }

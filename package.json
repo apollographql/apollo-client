@@ -57,6 +57,7 @@
       "default": "./src/react/index.ts"
     },
     "./react/internal": "./src/react/internal/index.ts",
+    "./react/internal/compiler-runtime": "./src/react/internal/compiler-runtime/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",
     "./testing": "./src/testing/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
@@ -125,7 +126,6 @@
     "graphql": "^16.0.0",
     "graphql-ws": "^5.5.5 || ^6.0.3",
     "react": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
-    "react-compiler-runtime": "19.1.0-rc.2",
     "react-dom": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
     "rxjs": "^7.3.0",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
@@ -227,7 +227,6 @@
     "react": "19.1.0",
     "react-17": "npm:react@^17",
     "react-18": "npm:react@^18",
-    "react-compiler-runtime": "19.1.0-rc.2",
     "react-dom": "19.1.0",
     "react-dom-17": "npm:react-dom@^17",
     "react-dom-18": "npm:react-dom@^18",

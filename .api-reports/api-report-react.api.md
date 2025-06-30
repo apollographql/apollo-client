@@ -865,6 +865,9 @@ interface QueryResult_2<TData = unknown> {
 }
 
 // @public (undocumented)
+export const reactCompilerVersion: string;
+
+// @public (undocumented)
 type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesIncludeShorthand;
 
 // @public (undocumented)

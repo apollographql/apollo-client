@@ -1,5 +1,5 @@
 import * as assert from "node:assert";
-import { glob, unlink } from "node:fs/promises";
+import { glob, unlink, writeFile } from "node:fs/promises";
 import { mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { relative } from "node:path";
 import * as path from "path";
@@ -10,6 +10,7 @@ import * as tsParser from "recast/parsers/typescript.js";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
+import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
 
@@ -34,7 +35,11 @@ export async function applyRecast({
     ast: recast.types.ASTNode;
     sourceName: string;
     relativeSourcePath: string;
-  }) => MaybePromise<{ ast: recast.types.ASTNode; targetFileName?: string }>;
+  }) => MaybePromise<{
+    ast: recast.types.ASTNode;
+    targetFileName?: string;
+    copy?: boolean;
+  }>;
 }) {
   for await (let sourceFile of glob(globString, {
     withFileTypes: true,
@@ -81,11 +86,17 @@ export async function applyRecast({
       sourceMapName: `${targetFileName}.map`,
     });
 
-    if (targetFileName !== sourceFileName) {
-      // we are renaming the files - as we won't be overriding in place,
-      // delete the old files
-      await rm(sourcePath);
-      await rm(sourceMapPath);
+    if (!transformResult.copy) {
+      if (targetFileName !== sourceFileName) {
+        // we are renaming the files - as we won't be overriding in place,
+        // delete the old files
+        await rm(sourcePath);
+        await rm(sourceMapPath);
+      } else if (result.code === source) {
+        // no changes, so we can skip writing the file, which guarantees no further
+        // changes to the source map
+        continue;
+      }
     }
 
     // load the resulting "targetFileName" and the intermediate file into sorcery
@@ -136,4 +147,24 @@ export function frameComment(text: string) {
     .join("\n")
     .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
   return `*\n${framed}\n`;
+}
+
+type PackageJson = Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
+  author: string;
+};
+
+export async function updatePackageJson(
+  dirname: string,
+  updater: (pkg: PackageJson) => PackageJson | void,
+  replacer: null | ((this: any, key: string, value: any) => any) = null
+) {
+  const packageJsonPath = path.join(dirname, "package.json");
+  const pkg = JSON.parse(
+    await readFile(packageJsonPath, "utf8")
+  ) as PackageJson;
+  const newContents = updater(pkg) ?? pkg;
+  await writeFile(
+    packageJsonPath,
+    JSON.stringify(newContents, replacer, 2) + "\n"
+  );
 }

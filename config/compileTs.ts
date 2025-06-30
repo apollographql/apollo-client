@@ -8,7 +8,7 @@ import { $ } from "zx";
 
 import type { BuildStep, BuildStepOptions } from "./build.ts";
 import type { ExportsCondition } from "./entryPoints.ts";
-import { applyRecast } from "./helpers.ts";
+import { applyRecast, updatePackageJson } from "./helpers.ts";
 
 export const compileTs: BuildStep = async (options) => {
   // TODO use `await using` instead of the `try..finally` here once Node supports it
@@ -18,15 +18,18 @@ export const compileTs: BuildStep = async (options) => {
       await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir}`;
     } else {
       const packageJsonPath = join(import.meta.dirname, "..", `package.json`);
-      const originalPackageJson = await readFile(packageJsonPath, "utf-8");
+      const originalPackageJson = await readFile(
+        join(options.rootDir, "package.json"),
+        "utf-8"
+      );
       try {
         // module `node18` will compile to CommonJS if the [detected module format](https://www.typescriptlang.org/docs/handbook/modules/reference.html#module-format-detection)
         // is CommonJS, so we temporarily overwrite the `package.json` file
         // this is the right way to build CommonJS, the `commonjs` module option should actually not be used
         // see https://www.typescriptlang.org/docs/handbook/modules/reference.html#commonjs
-        const packageJson = JSON.parse(originalPackageJson);
-        packageJson.type = "commonjs";
-        writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+        await updatePackageJson(options.rootDir, (packageJson) => {
+          packageJson.type = "commonjs";
+        });
         // noCheck is required to suppress errors like
         // error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@wry/equality")' call instead.
         await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir} --module node16 --moduleResolution node16 --noCheck`;

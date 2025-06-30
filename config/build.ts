@@ -5,6 +5,7 @@ import { $ } from "zx";
 
 import { babelTransform } from "./babel.ts";
 import { compileTs } from "./compileTs.ts";
+import { reactCompiler } from "./react-compiler.ts";
 import { deprecateInternals } from "./deprecateInternals.ts";
 import { addExports } from "./exports.ts";
 import { distDir } from "./helpers.ts";
@@ -42,6 +43,7 @@ const buildSteps = {
   inlineInheritDoc,
   deprecateInternals,
   processInvariants,
+  reactCompiler,
   verifyVersion,
   verifySourceMaps,
 } satisfies BuildSteps;

@@ -98,7 +98,12 @@ jobs:
 
       - name: Tag release with next on npm
         if: steps.changesets.outcome == 'success'
-        run: npm dist-tag add @apollo/client@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} next
+        env:
+          PUBLISHED: ${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
+        run: |
+          if NEXT=$(npm show @apollo/client@next version) node -e 'process.exit(require("semver").gt(process.env.PUBLISHED,process.env.NEXT)?0:1)'; then
+            npm dist-tag add @apollo/client@${PUBLISHED} next;
+          fi
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'

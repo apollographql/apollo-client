@@ -2,7 +2,7 @@ import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
+import type { GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
 import type { DocumentTransform } from "../utilities/index.js";
@@ -23,6 +23,9 @@ import type {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
+  InteropApolloQueryResult,
+  InteropMutateResult,
+  InteropSubscribeResult,
 } from "./types.js";
 
 import type {
@@ -640,6 +643,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.watchQuery");
+      warnRemovedOption(options, "partialRefetch", "client.watchQuery");
     }
 
     return this.queryManager.watchQuery<T, TVariables>(options);
@@ -659,7 +663,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, T>
-  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -678,6 +682,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (__DEV__) {
       warnRemovedOption(options, "canonizeResults", "client.query");
+
+      if (options.fetchPolicy === "standby") {
+        invariant.warn(
+          "[client.query]: Apollo Client 4.0 will no longer support the `standby` fetch policy with `client.query`. Please use a different fetch policy."
+        );
+      }
     }
 
     return this.queryManager.query<T, TVariables>(options);
@@ -698,7 +708,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<MaybeMasked<TData>>> {
+  ): Promise<InteropMutateResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
@@ -716,7 +726,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, T>
-  ): Observable<FetchResult<MaybeMasked<T>>> {
+  ): Observable<InteropSubscribeResult<MaybeMasked<T>>> {
     const id = this.queryManager.generateQueryId();
 
     return this.queryManager

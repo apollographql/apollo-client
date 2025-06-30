@@ -96,10 +96,6 @@ export const reactCompiler: BuildStep = async (options) => {
     },
   });
   await updatePackageJson(options.packageRoot, (pkg) => {
-    pkg.exports["./react"].default = {
-      "react-compiler": "./react/index.compiled.js",
-      ...pkg.exports["./react"].default,
-    };
     pkg.exports["./react/compiled"] = "./react/index.compiled.js";
   });
 

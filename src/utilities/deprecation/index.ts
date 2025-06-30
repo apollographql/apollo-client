@@ -1,5 +1,5 @@
 import { Slot } from "optimism";
-import { invariant } from "../globals/index.js";
+import { invariant, global } from "../globals/index.js";
 
 const slot = new Slot<string[]>();
 
@@ -92,7 +92,10 @@ export type DeprecationName =
   | NonNullable<PossibleDeprecations[keyof PossibleDeprecations]>[number];
 
 function isMuted(name: DeprecationName) {
-  return (slot.getValue() || []).includes(name);
+  return (
+    !!(global as any)[Symbol.for("apollo.deprecations")] ||
+    (slot.getValue() || []).includes(name)
+  );
 }
 
 export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(

@@ -1,6 +1,7 @@
 import * as React from "rehackt";
+import type {
+  DeprecationName} from "../../../utilities/deprecation/index.js";
 import {
-  DeprecationName,
   warnDeprecated,
 } from "../../../utilities/deprecation/index.js";
 

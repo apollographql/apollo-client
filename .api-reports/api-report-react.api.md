@@ -131,7 +131,9 @@ class ApolloClient_2 implements DataProxy {
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables_2>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables_2>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
+    // @deprecated
+    reFetchObservableQueries: (includeStandby?: boolean) => Promise<QueryResult_2<any>[]>;
+    refetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesResult" needs to be exported by the entry point index.d.ts
     refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult_2<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
@@ -239,18 +241,26 @@ export function createQueryPreloader(client: ApolloClient): PreloadQueryFunction
 
 // @public (undocumented)
 type DataState<TData> = {
-    data: TData;
+    data: DataValue.Complete<TData>;
     dataState: "complete";
 } | {
-    data: Streaming<TData>;
+    data: DataValue.Streaming<TData>;
     dataState: "streaming";
 } | {
-    data: DeepPartial<TData>;
+    data: DataValue.Partial<TData>;
     dataState: "partial";
 } | {
     data: undefined;
     dataState: "empty";
 };
+
+// @public (undocumented)
+namespace DataValue {
+    // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+    type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
+    type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
+    type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
+}
 
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
@@ -495,13 +505,7 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables_2>
 }
 
 // @public
-type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data: TData;
-    dataState: "complete";
-} | {
-    data: Streaming<TData>;
-    dataState: "streaming";
-});
+type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
 
 // @public (undocumented)
 interface ObservableAndInfo<TData> {
@@ -610,11 +614,33 @@ type OperationVariables_2 = Record<string, any>;
 // @public (undocumented)
 namespace OverridableTypes {
     // (undocumented)
+    interface Complete extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+    // (undocumented)
     interface Defaults {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        Complete: Complete;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Partial: Partial;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Partial extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: DeepPartial<this["arg1"]>;
     }
     // (undocumented)
     interface Streaming extends HKT {
@@ -887,11 +913,6 @@ export type SkipToken = typeof skipToken;
 // @public (undocumented)
 export const skipToken: unique symbol;
 
-// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
-//
-// @public
-type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
-
 // @public (undocumented)
 interface SubscribeResult<TData = unknown> {
     data: TData | undefined;
@@ -906,7 +927,7 @@ interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables extends
     // (undocumented)
     document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     // (undocumented)
-    onError?: (error: Error) => void;
+    onError?: (error: ErrorLike) => void;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreUpdateQueryFn" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1627,16 +1648,16 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:157:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:236:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:255:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:308:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:177:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:260:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:263:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:273:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:276:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:285:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:313:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:315:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:327:7 - (ae-forgotten-export) The symbol "DataValue" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:374:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:178:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:264:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:274:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:286:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:70:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:75:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 

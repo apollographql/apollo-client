@@ -146,6 +146,7 @@ export default [
           "./config/tsconfig.json",
           "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/data-masking/tsconfig.json",
+          "./scripts/codemods/ac3-to-ac4/tsconfig.json",
         ],
       },
     },
@@ -214,6 +215,7 @@ export default [
         project: [
           "./tsconfig.tests.json",
           "./eslint-local-rules/tsconfig.json",
+          "./scripts/codemods/ac3-to-ac4/tsconfig.tests.json",
         ],
       },
     },
@@ -238,6 +240,13 @@ export default [
       ],
       "import/no-duplicates": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
+    },
+  },
+  {
+    files: ["scripts/codemods/ac3-to-ac4/**/__tests__/**/*.ts"],
+    // rules for tests only
+    rules: {
+      "local-rules/no-relative-imports": "off",
     },
   },
 ];

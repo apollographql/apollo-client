@@ -152,7 +152,9 @@ export class ApolloClient implements DataProxy {
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
+    // @deprecated
+    reFetchObservableQueries: (includeStandby?: boolean) => Promise<QueryResult<any>[]>;
+    refetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
     refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
     resetStore(): Promise<QueryResult<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
@@ -230,18 +232,26 @@ export { DataProxy }
 
 // @public (undocumented)
 export type DataState<TData> = {
-    data: TData;
+    data: DataValue.Complete<TData>;
     dataState: "complete";
 } | {
-    data: Streaming<TData>;
+    data: DataValue.Streaming<TData>;
     dataState: "streaming";
 } | {
-    data: DeepPartial<TData>;
+    data: DataValue.Partial<TData>;
     dataState: "partial";
 } | {
     data: undefined;
     dataState: "empty";
 };
+
+// @public (undocumented)
+export namespace DataValue {
+    // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+    export type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
+    export type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
+    export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
+}
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
@@ -512,13 +522,7 @@ export { NormalizedCache }
 export { NormalizedCacheObject }
 
 // @public
-export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data: TData;
-    dataState: "complete";
-} | {
-    data: Streaming<TData>;
-    dataState: "streaming";
-});
+export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
 
 export { Observable }
 
@@ -624,11 +628,33 @@ export { OptimisticStoreItem }
 // @public (undocumented)
 namespace OverridableTypes {
     // (undocumented)
+    interface Complete extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+    // (undocumented)
     interface Defaults {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        Complete: Complete;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Partial: Partial;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Partial extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: DeepPartial<this["arg1"]>;
     }
     // (undocumented)
     interface Streaming extends HKT {
@@ -878,11 +904,6 @@ export { StoreObject }
 
 export { StoreValue }
 
-// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
-//
-// @public
-export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
-
 // @public (undocumented)
 export interface SubscribeResult<TData = unknown> {
     data: TData | undefined;
@@ -903,7 +924,7 @@ export interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables 
     // (undocumented)
     document: DocumentNode_2 | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     // (undocumented)
-    onError?: (error: Error) => void;
+    onError?: (error: ErrorLike) => void;
     // (undocumented)
     updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
     // (undocumented)

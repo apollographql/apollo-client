@@ -2640,7 +2640,7 @@ describe("client", () => {
 
     // @ts-ignore
     const spy = jest.spyOn(client.queryManager, "refetchObservableQueries");
-    await client.reFetchObservableQueries();
+    await client.refetchObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
 

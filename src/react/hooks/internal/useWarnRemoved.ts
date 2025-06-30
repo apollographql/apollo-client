@@ -1,9 +1,6 @@
 import * as React from "rehackt";
-import type {
-  DeprecationName} from "../../../utilities/deprecation/index.js";
-import {
-  warnDeprecated,
-} from "../../../utilities/deprecation/index.js";
+import type { DeprecationName } from "../../../utilities/deprecation/index.js";
+import { warnDeprecated } from "../../../utilities/deprecation/index.js";
 
 export function useWarnRemoved(name: DeprecationName, cb: () => void) {
   "use no memo";

@@ -1,5 +1,24 @@
 # @apollo/client
 
+## 4.0.0-rc.3
+
+### Major Changes
+
+- [#12731](https://github.com/apollographql/apollo-client/pull/12731) [`0198870`](https://github.com/apollographql/apollo-client/commit/0198870107eab7ad0bc69a549cb069fa41b3280f) Thanks [@phryneas](https://github.com/phryneas)! - Ship React Compiler compiled React hooks in `@apollo/client/react/compiled`.
+
+  We now ship a React-Compiler compiled version of the React hooks in
+  `@apollo/client/react/compiled`.
+
+  This entry point contains everything that `@apollo/client/react` does,
+  so you can use it as a drop-in replacement in your whole application
+  if you choose to use the compiled hooks.
+
+### Minor Changes
+
+- [#12753](https://github.com/apollographql/apollo-client/pull/12753) [`b85818d`](https://github.com/apollographql/apollo-client/commit/b85818dcc66d3ed8b1c3a7e5e37b2875d6bf9d03) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Renamed `client.reFetchObservableQueries` to `client.refetchObservableQueries`.
+  `client.reFetchObservableQueries` is still available as an alias, but is now
+  deprecated and will be removed in a future major version.
+
 ## 4.0.0-rc.2
 
 ### Major Changes

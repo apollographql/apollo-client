@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.14.0-alpha.1
+
+### Minor Changes
+
+- [#12752](https://github.com/apollographql/apollo-client/pull/12752) [`8b779b4`](https://github.com/apollographql/apollo-client/commit/8b779b428b9dc9dad3e78f02bba6646ff415631d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings to remaining APIs changed in Apollo Client 4.0.
+
+- [#12751](https://github.com/apollographql/apollo-client/pull/12751) [`567cad8`](https://github.com/apollographql/apollo-client/commit/567cad8fcc30ac3b82560abc24970d33f160622e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `@deprecated` tags to all properties returned from any query API (e.g. `client.query`, `observableQuery.refetch`, etc.), `client.mutate`, and `client.subscribe` that are no longer available in Apollo Client 4.0.
+
+- [#12751](https://github.com/apollographql/apollo-client/pull/12751) [`567cad8`](https://github.com/apollographql/apollo-client/commit/567cad8fcc30ac3b82560abc24970d33f160622e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using a `standby` fetch policy with `client.query`.
+
 ## 3.14.0-alpha.0
 
 ### Minor Changes

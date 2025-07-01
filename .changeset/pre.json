@@ -5,12 +5,15 @@
     "@apollo/client": "3.13.4"
   },
   "changesets": [
+    "breezy-lions-rule",
     "chilled-cameras-scream",
+    "great-jobs-fetch",
     "great-suns-cover",
     "perfect-donuts-roll",
     "popular-waves-drop",
     "shy-dragons-tease",
     "smooth-countries-cough",
-    "spotty-walls-repair"
+    "spotty-walls-repair",
+    "tidy-bulldogs-exercise"
   ]
 }

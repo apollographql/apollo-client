@@ -1,8 +1,7 @@
 ---
 "@apollo/client": major
 _tags:
-  - react
-  - bundling
+  - ignore
 _superseded: "other solution taken"
 ---
 

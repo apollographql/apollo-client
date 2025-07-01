@@ -1,8 +1,7 @@
 ---
 "@apollo/client": major
 _tags:
-  - removals
-  - errors
+  - ignore
 _superseded: "Error.is"
 ---
 

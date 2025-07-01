@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - dependencies
+  - rxjs
 ---
 
 Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs` is now a peer dependency of Apollo Client which means you will now need to install `rxjs` in addition to `@apollo/client`.

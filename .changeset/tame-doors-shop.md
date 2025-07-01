@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - links
 ---
 
 Remove workarounds for streaming with non-WhatWG response bodies to reduce bundle size.

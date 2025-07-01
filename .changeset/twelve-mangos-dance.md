@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - ObservableQuery
+  - useLazyQuery
 ---
 
 `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute` function of `useLazyQuery` now return a

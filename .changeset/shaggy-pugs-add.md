@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - links
 ---
 
 Add ability to specify a default `delay` for all mocked responses passed to `MockLink`. This `delay` can be configured globally (all instances of `MockLink` will use the global defaults), or per-instance (all mocks in a single instance will use the defaults). A `delay` defined on a single mock will supercede all default delays. Per-instance defaults supercede global defaults.

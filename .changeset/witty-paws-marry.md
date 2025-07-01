@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - ApolloClient
+  - removals
 ---
 
 Require the `link` option when instantiating `ApolloClient`. This removes the `uri`, `credentials` and `headers` options from `ApolloClient` in favor of passing an instantiated `HttpLink` directly. To migrate:

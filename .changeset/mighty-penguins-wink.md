@@ -1,7 +1,7 @@
 ---
 "@apollo/client": major
 _tags:
-  - removal
+  - removals
   - errors
   - links
 ---

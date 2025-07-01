@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - removals
+  - useLazyQuery
 ---
 
 The `defaultOptions` and `initialFetchPolicy` options are no longer supported with `useLazyQuery`.

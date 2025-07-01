@@ -1,5 +1,9 @@
 ---
 "@apollo/client": major
+_tags:
+  - errors
+  - client.subscribe
+  - useSubscription
 ---
 
 Subscriptions no longer emit errors in the `error` callback and instead provide errors on the `error` property on the result passed to the `next` callback. As a result, errors will no longer automatically terminate the connection allowing additional results to be emitted when the connection stays open.

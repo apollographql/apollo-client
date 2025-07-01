@@ -67,3 +67,5 @@ export type {
   UseSuspenseFragmentResult,
   UseSuspenseQueryResult,
 } from "./types/deprecated.js";
+
+export const reactCompilerVersion = "uncompiled" as string;

@@ -1,5 +1,89 @@
 # @apollo/client
 
+## 4.0.0-rc.3
+
+### Major Changes
+
+- [#12731](https://github.com/apollographql/apollo-client/pull/12731) [`0198870`](https://github.com/apollographql/apollo-client/commit/0198870107eab7ad0bc69a549cb069fa41b3280f) Thanks [@phryneas](https://github.com/phryneas)! - Ship React Compiler compiled React hooks in `@apollo/client/react/compiled`.
+
+  We now ship a React-Compiler compiled version of the React hooks in
+  `@apollo/client/react/compiled`.
+
+  This entry point contains everything that `@apollo/client/react` does,
+  so you can use it as a drop-in replacement in your whole application
+  if you choose to use the compiled hooks.
+
+### Minor Changes
+
+- [#12753](https://github.com/apollographql/apollo-client/pull/12753) [`b85818d`](https://github.com/apollographql/apollo-client/commit/b85818dcc66d3ed8b1c3a7e5e37b2875d6bf9d03) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Renamed `client.reFetchObservableQueries` to `client.refetchObservableQueries`.
+  `client.reFetchObservableQueries` is still available as an alias, but is now
+  deprecated and will be removed in a future major version.
+
+## 4.0.0-rc.2
+
+### Major Changes
+
+- [#12742](https://github.com/apollographql/apollo-client/pull/12742) [`575bf3e`](https://github.com/apollographql/apollo-client/commit/575bf3ed5885efb09c1eec497af4d2690c6b87d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The new `SetContextLink` flips the `prevContext` and `operation` arguments in the callback. The `setContext` function has remained unchanged.
+
+  ```diff
+  - new SetContextLink((operation, prevContext) => {
+  + new SetContextLink((prevContext, operation) => {
+    // ...
+  })
+  ```
+
+- [#12742](https://github.com/apollographql/apollo-client/pull/12742) [`575bf3e`](https://github.com/apollographql/apollo-client/commit/575bf3ed5885efb09c1eec497af4d2690c6b87d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `operation` argument to the callback passed to `SetContextLink` is now of type `SetContextLink.SetContextOperation` which is an `Operation` without the `getContext` or `setContext` functions. Previously the type of `operation` was `GraphQLRequest` which had access to a `context` property. The `context` property was always `undefined` and could result in bugs when using it instead of the `prevContext` argument.
+
+  This change means the `operation` argument now contains an accessible `client` property.
+
+### Minor Changes
+
+- [#12740](https://github.com/apollographql/apollo-client/pull/12740) [`1c6e03c`](https://github.com/apollographql/apollo-client/commit/1c6e03c9c74a9fad2a1c2e1c3ae61a9560038238) Thanks [@phryneas](https://github.com/phryneas)! - Overridable types for `dataState: "complete"`, `dataState: "streaming"` and
+  `dataState: "partial"` responses.
+
+  This adds the `DataValue` namespace exported from Apollo Client with the three
+  types `DataValue.Complete`, `DataValue.Streaming` and `DataValue.Partial`.
+
+  These types will be used to mark `TData` in the respective states.
+
+  - `Complete` defaults to `TData`
+  - `Streaming` defaults to `TData`
+  - `Partial` defaults to `DeepPartial<TData>`
+
+  All three can be overwritten, e.g. to be `DeepReadonly` using higher kinded types
+  by following this pattern:
+
+  ```ts
+  import { HKT, DeepPartial } from "@apollo/client/utilities";
+  import { DeepReadonly } from "some-type-helper-library";
+
+  interface CompleteOverride extends HKT {
+    return: DeepReadonly<this["arg1"]>;
+  }
+
+  interface StreamingOverride extends HKT {
+    return: DeepReadonly<this["arg1"]>;
+  }
+
+  interface PartialOverride extends HKT {
+    return: DeepReadonly<DeepPartial<this["arg1"]>>;
+  }
+
+  declare module "@apollo/client" {
+    export interface TypeOverrides {
+      Complete: CompleteOverride;
+      Streaming: StreamingOverride;
+      Partial: PartialOverride;
+    }
+  }
+  ```
+
+### Patch Changes
+
+- [#12748](https://github.com/apollographql/apollo-client/pull/12748) [`e1ca85e`](https://github.com/apollographql/apollo-client/commit/e1ca85eab181d8e16d945e849dfb13352902f197) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where the new `operationType` property wasn't passed into `operation`.
+
+- [#12739](https://github.com/apollographql/apollo-client/pull/12739) [`b184754`](https://github.com/apollographql/apollo-client/commit/b184754d08810df9a7838615990e90a960966037) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `error` argument on the `onError` option for `subscribeToMore` to `ErrorLike`.
+
 ## 4.0.0-rc.1
 
 ### Major Changes

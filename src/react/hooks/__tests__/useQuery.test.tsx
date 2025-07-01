@@ -24,14 +24,13 @@ import type {
   FetchPolicy,
   OperationVariables,
   RefetchWritePolicy,
-  Streaming,
+  DataValue,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client";
 import {
   ApolloClient,
-  build,
   CombinedGraphQLErrors,
   NetworkStatus,
 } from "@apollo/client";
@@ -67,12 +66,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
-
-test("test is running against source or (compiler-compiled) ESM build", () => {
-  // We want to ensure that in CI, these tests run against the
-  // React Compiler-compiled ESM build
-  expect(build).toBe(process.env.CI ? "esm" : "source");
-});
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -7291,7 +7284,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       {
         const result = await takeSnapshot();
@@ -13267,7 +13260,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -13293,7 +13286,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {

@@ -46,6 +46,11 @@ const transform: Transform = function transform(file, api) {
     "PersistedQueryLink.DisableFunctionOptions",
     "@apollo/client/link/persisted-queries"
   );
+  renameTypeSpecifierToNamespace(
+    "ContextSetter",
+    "SetContextLink.LegacyContextSetter",
+    "@apollo/client/link/context"
+  );
   moveSpecifiersToEntrypoint(
     REACT_IMPORTS_FROM_ROOT,
     "@apollo/client",

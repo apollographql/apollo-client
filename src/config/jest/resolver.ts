@@ -9,7 +9,10 @@ export function sync(path: string, options: ResolverOptions): string {
   const resolver = options.defaultResolver;
 
   if (process.env.TEST_ENV === "ci" && path.startsWith("@apollo/client")) {
-    const result = import.meta.resolve(
+    if (path === "@apollo/client/react") {
+      path = "@apollo/client/react/compiled";
+    }
+    let result = import.meta.resolve(
       path,
       pathToFileURL(join(options.rootDir!, "../dist/index.js"))
     );

@@ -4,6 +4,10 @@ import type {
 } from "../../utilities/index.js";
 import { asyncMap } from "../../utilities/index.js";
 
+/**
+ * @deprecated `subscribeAndCount` will be removed in Apollo Client 4.0. Please
+ * discontinue using this function.
+ */
 export default function subscribeAndCount<TResult>(
   reject: (reason: any) => any,
   observable: Observable<TResult>,

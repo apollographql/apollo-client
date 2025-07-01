@@ -63,6 +63,10 @@ export class MockSubscriptionLink extends ApolloLink {
   }
 }
 
+/**
+ * @deprecated `mockObservableLink` will be removed in Apollo client 4.0. Please
+ * ininitialize `MockSubscriptionLink` directly.
+ */
 export function mockObservableLink(): MockSubscriptionLink {
   return new MockSubscriptionLink();
 }

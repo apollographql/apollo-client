@@ -1009,7 +1009,9 @@ export class QueryManager<TStore> {
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery, queryId) => {
         const { fetchPolicy } = observableQuery.options;
-        observableQuery.resetLastResults();
+        muteDeprecations("resetLastResults", () =>
+          observableQuery.resetLastResults()
+        );
         if (
           includeStandby ||
           (fetchPolicy !== "standby" && fetchPolicy !== "cache-only")

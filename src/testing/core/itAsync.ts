@@ -20,6 +20,11 @@ function wrap(key?: "only" | "skip" | "todo") {
 
 const wrappedIt = wrap();
 
+/**
+ * @deprecated `itAsync` will be removed with Apollo Client 4.0. Prefer using an
+ * `async` callback function or returning a `Promise` from the callback with the
+ * `it` or `test` functions.
+ */
 export const itAsync = Object.assign(
   function (this: unknown, ...args: Parameters<typeof wrappedIt>) {
     return wrappedIt.apply(this, args);

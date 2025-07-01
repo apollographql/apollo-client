@@ -90,6 +90,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     };
 
     if (hasDirectives(["client"], operation.query)) {
+      if (__DEV__) {
+        invariant.warn(
+          "[HttpLink]: Apollo Client 4.0 will no longer remove `@client` fields from queries sent through the link chain. Please open an issue if this warning is displayed under standard usage."
+        );
+      }
       const transformedQuery = removeClientSetsFromDocument(operation.query);
 
       if (!transformedQuery) {

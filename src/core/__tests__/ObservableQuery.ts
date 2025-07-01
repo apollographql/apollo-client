@@ -27,7 +27,10 @@ import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
-import { muteDeprecations } from "../../utilities/deprecation";
+import {
+  muteDeprecations,
+  withDisabledDeprecations,
+} from "../../utilities/deprecation";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -1827,6 +1830,7 @@ describe("ObservableQuery", () => {
 
       it("should warn if passed { variables } and query does not declare $variables", async () => {
         using _ = spyOnConsole("warn");
+        using __ = withDisabledDeprecations();
 
         const queryWithVarsVar = gql`
           query QueryWithVarsVar($vars: [String!]) {

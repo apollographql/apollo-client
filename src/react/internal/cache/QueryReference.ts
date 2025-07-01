@@ -18,6 +18,7 @@ import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 import { invariant } from "../../../utilities/globals/invariantWrappers.js";
 import type { MaybeMasked } from "../../../masking/index.js";
+import { muteDeprecations } from "../../../utilities/deprecation/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>
@@ -60,6 +61,7 @@ interface WrappedQueryRef<TData = unknown, TVariables = unknown>
 
 /**
  * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+ * `QueryReference` will be removed in Apollo Client 4.0.
  *
  * {@inheritDoc @apollo/client!QueryRef:interface}
  */
@@ -287,7 +289,9 @@ export class InternalQueryReference<TData = unknown> {
       if (avoidNetworkRequests) {
         observable.silentSetOptions({ fetchPolicy: "standby" });
       } else {
-        observable.resetLastResults();
+        muteDeprecations("resetLastResults", () =>
+          observable.resetLastResults()
+        );
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
       }
 

@@ -15,7 +15,7 @@ export function warnOnImproperCacheImplementation() {
   if (!issuedWarning) {
     issuedWarning = true;
     invariant.warn(
-      "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+      "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning. Caches will be required to support the necessary data masking APIs in Apollo Client 4.0."
     );
   }
 }

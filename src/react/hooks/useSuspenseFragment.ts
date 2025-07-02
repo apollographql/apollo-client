@@ -2,6 +2,7 @@ import * as React from "react";
 
 import type {
   ApolloClient,
+  DataValue,
   DocumentNode,
   OperationVariables,
   Reference,
@@ -59,7 +60,7 @@ export declare namespace useSuspenseFragment {
     client?: ApolloClient;
   } & VariablesOption<NoInfer<TVariables>>;
 
-  export type Result<TData> = { data: MaybeMasked<TData> };
+  export type Result<TData> = { data: DataValue.Complete<MaybeMasked<TData>> };
 }
 
 const NULL_PLACEHOLDER = [] as unknown as [

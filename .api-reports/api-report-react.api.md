@@ -14,6 +14,7 @@ import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { DataProxy } from '@apollo/client/cache';
 import type { DataState as DataState_2 } from '@apollo/client';
+import type { DataValue as DataValue_2 } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DefaultContext as DefaultContext_2 } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
@@ -1179,15 +1180,13 @@ export namespace useFragment {
         variables?: NoInfer_2<TVariables>;
     }
     // (undocumented)
-    export type Result<TData> = {
-        data: MaybeMasked<TData>;
+    export type Result<TData> = ({
         complete: true;
         missing?: never;
-    } | {
-        data: DeepPartial<MaybeMasked<TData>>;
+    } & GetDataState_2<MaybeMasked<TData>, "complete">) | ({
         complete: false;
         missing?: MissingTree;
-    };
+    } & GetDataState_2<MaybeMasked<TData>, "partial">);
 }
 
 // @public @deprecated (undocumented)
@@ -1539,7 +1538,7 @@ export namespace useSuspenseFragment {
     } & VariablesOption<NoInfer_2<TVariables>>;
     // (undocumented)
     export type Result<TData> = {
-        data: MaybeMasked<TData>;
+        data: DataValue_2.Complete<MaybeMasked<TData>>;
     };
 }
 
@@ -1659,7 +1658,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:286:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:70:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:75:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:76:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

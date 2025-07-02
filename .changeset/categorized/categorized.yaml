@@ -788,6 +788,10 @@ errors:
 
     ```
 rxjs:
+  slow-ravens-explain: Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
+  metal-needles-search: >-
+    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
+    ensure `from(observableQuery)` stays possible
   brave-radios-wait: >-
     Remove the `asyncMap` utility function. Instead use one of the RxJS
     operators that creates Observables from promises, such as `from`.
@@ -795,38 +799,6 @@ rxjs:
   healthy-apes-sneeze: >-
     Remove `fromError` utility function. Use
     [`throwError`](https://rxjs.dev/api/index/function/throwError) instead.
-  metal-needles-search: >-
-    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
-    ensure `from(observableQuery)` stays possible
-  slow-ravens-explain: >-
-    Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
-    is now a peer dependency of Apollo Client which means you will now need to
-    install `rxjs` in addition to `@apollo/client`.
-
-
-    This change is mostly transparent, however transforming values on
-    observables, common in link implementations, differs in RxJS vs
-    `zen-observable`. For example, you could modify values in the link chain
-    emitted from a downstream link by using the `.map` function. In RxJS, this
-    is done with the `.pipe` function and passing a `map` operator instead.
-
-
-    ```ts
-
-    import { map } from "rxjs";
-
-
-    const link new ApolloLink((operation, forward) => {
-      return forward(operation).pipe(
-        map((result) => performTransform(result))
-      );
-    });
-
-    ```
-
-
-    For a full list of operators and comprehensive documentation on the
-    capabilities of RxJS, check out the [documentation](https://rxjs.dev/).
   smooth-coins-collect: >-
     Remove `fromPromise` utility function. Use
     [`from`](https://rxjs.dev/api/index/function/from) instead.
@@ -835,144 +807,53 @@ rxjs:
     [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom)
     instead.
 ObservableQuery:
-  dirty-trees-pump: >-
-    Unusubscribing from `ObservableQuery` while a request is in flight will no
-    longer terminate the request by unsubscribing from the link observable.
-  eighty-squids-fix: >-
-    `ObservableQuery.setOptions` has been removed as it was an alias of
-    `reobserve`. Prefer using `reobserve` directly instead.
+  __behaviour: null
+  metal-needles-search: >-
+    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
+    ensure `from(observableQuery)` stays possible
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
 
 
-    ```diff
+    ```ts
 
-    const observable = client.watchQuery(options);
-
-
-    // Use reobserve to set new options and reevaluate the query
-
-    - observable.setOptions(newOptions);
-
-    + observable.reobserve(newOptions);
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
 
     ```
+  khaki-keys-deliver: >-
+    An initial loading state is now emitted from `ObservableQuery` when
+    subscribing if `notifyOnNetworkStatusChange` is set to `true`.
+    few-crabs-move: >- `ObservableQuery` will now keep previous `data` around
+    when emitting a `loading` state, unless `query` or `variables` changed.
 
+    Note that `@exports` variables are not taken into account for this, so
+    `data` will stay around even if they change.
+  many-papayas-hide: >-
+    `ObservableQuery` will no longer terminate on errors and will instead emit a
+    `next` value with an `error` property. This ensures that `ObservableQuery`
+    instances can continue to receive updates after errors are returned in
+    requests without the need to resubscribe to the observable.
+      shy-experts-cough: >-
+    `ObservableQuery`s will now only be registered with the `ApolloClient` while
+    they
 
-    As a result of this change, `reobserve` has been marked for public use and
-    is no longer considered an internal API. The `newNetworkStatus` argument has
-    been removed to facilitate this change.
+    have subscribers.
   few-crabs-move: >-
     `ObservableQuery` will now keep previous `data` around when emitting a
     `loading` state, unless `query` or `variables` changed.
 
     Note that `@exports` variables are not taken into account for this, so
     `data` will stay around even if they change.
-  forty-hairs-occur: >-
-    Calling `refetch` with new variables will now set the `networkStatus` to
-    `refetch` instead of `setVariables`.
-  four-tables-cheat: >-
-    `cache-only` queries are no longer refetched when calling
-    `client.reFetchObservableQueries` when `includeStandby` is `true`.
-  funny-terms-deny: >-
-    `ObservableQuery.variables` can now be reset back to empty when calling
-    `reobserve` with `variables: undefined`. Previously the `variables` key
-    would be ignored so `variables` would remain unchanged.
-  fuzzy-tips-sit: >-
-    Ensure `ObservableQuery` stops polling if switching to a `standby`
-    `fetchPolicy`. When switching back to a non-`standby` `fetchPolicy`, polling
-    will resume.
-  gold-oranges-double: >-
-    Removed `getLastResult`, `getLastError` and `resetLastResults` from
-    `ObservableQuery`
-  gold-sloths-battle: >-
-    Unsubscribing from an `ObservableQuery` before a value has been emitted will
-    remove the query from the tracked list of queries and will no longer be
-    eligible for query deduplication.
-  great-scissors-jam: >-
-    `cache-only` queries will now initialize with `loading: false` and
-    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
-
-
-    This means `useQuery` will no longer render a short initial loading state
-    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
-    will now return `loading: false` immediately.
-  itchy-chefs-run: >-
-    When passing a `variables` key with the value `undefined`, the value will be
-    replaced by the default value in the query, if it is provided, rather than
-    leave it as `undefined`.
-
-
-    ```ts
-
-    // given this query
-
-    const query = gql`
-      query PaginatedQuery($limit: Int! = 10, $offset: Int) {
-        list(limit: $limit, offset: $offset) {
-          id
-        }
-      }
-    `
-
-
-    const observable = client.query({ query, variables: { limit: 5, offset: 0
-    }});
-
-    console.log(observable.variables) // => { limit: 5, offset: 0 }
-
-
-    observable.reobserve({ variables: { limit: undefined, offset: 10 }})
-
-    // limit is now `10`. This would previously be `undefined`
-
-    console.log(observable.variables) // => { limit: 10, offset: 10 }
-
-    ```
-  khaki-keys-deliver: >-
-    An initial loading state is now emitted from `ObservableQuery` when
-    subscribing if `notifyOnNetworkStatusChange` is set to `true`.
-  kind-crews-warn: >-
-    `ObservableQuery` no longer has a `queryId` property.
-
-    `ApolloClient.getObservableQueries` no longer returns a `Map<string,
-    ObservableQuery>`, but a `Set<ObservableQuery>`.
-  lemon-pans-sit: >-
-    `cache-only` queries are now excluded from `client.refetchQueries` in all
-    situations. `cache-only` queries affected by `updateCache` are also excluded
-    from `refetchQueries` when `onQueryUpdated` is not provided.
-  many-papayas-hide: >-
-    `ObservableQuery` will no longer terminate on errors and will instead emit a
-    `next` value with an `error` property. This ensures that `ObservableQuery`
-    instances can continue to receive updates after errors are returned in
-    requests without the need to resubscribe to the observable.
-  metal-needles-search: >-
-    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
-    ensure `from(observableQuery)` stays possible
-  nice-donkeys-reflect: >-
-    Remove the `errors` property from the results emitted from `ObservableQuery`
-    or returned from `client.query`. Read errors from the `error` property
-    instead.
-  purple-lions-cough: >-
-    `ObservableQuery.setVariables` will now resolve with the last emitted result
-    instead of `undefined` when either the variables match the current variables
-    or there are no subscribers to the query.
-  rich-kids-carry: >-
-    Fix type of `data` property on `ApolloQueryResult`. Previously this field
-    was non-optional, non-null `TData`, however at runtime this value could be
-    set to `undefined`. This field is now reported as `TData | undefined`.
-
-
-    This will affect you in a handful of places:
-
-    - The `data` property emitted from the result passed to the `next` callback
-    from `client.watchQuery`
-
-    - Fetch-based APIs that return an `ApolloQueryResult` type such as
-    `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
-  seven-jeans-trade: >-
-    Added a new `.stop` function on `ObservableQuery`.
-
-    Calling this method will unsubscribe all current subscribers by sending a
-    `complete` event from the observable and tear down the `ObservableQuery`.
   shy-experts-cough: >-
     `ObservableQuery`s will now only be registered with the `ApolloClient` while
     they
@@ -1009,63 +890,25 @@ ObservableQuery:
 
     If local resolvers are used, the time window for "sync vs async" starts as
     soon as `@exports` variables are resolved.
-  small-cycles-rescue: >-
-    Don't emit a partial cache result from `cache-only` queries when
-    `returnPartialData` is `false`.
-  small-poems-rest: Don't `broadcastQueries` when a query is torn down.
-  smart-rats-explode: >-
-    Remove `ObservableQuery.resetQueryStoreErrors` method. This method reset
-    some internal state that was not consumed elsewhere in the client and
-    resulted in a no-op.
+  dirty-trees-pump: >-
+    Unusubscribing from `ObservableQuery` while a request is in flight will no
+    longer terminate the request by unsubscribing from the link observable.
+  gold-sloths-battle: >-
+    Unsubscribing from an `ObservableQuery` before a value has been emitted will
+    remove the query from the tracked list of queries and will no longer be
+    eligible for query deduplication.
+  great-scissors-jam: >-
+    `cache-only` queries will now initialize with `loading: false` and
+    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+
+    This means `useQuery` will no longer render a short initial loading state
+    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
+    will now return `loading: false` immediately.
   sour-colts-tell: >-
     `ObservableQuery` will now return a `loading: false` state for `fetchPolicy`
     `standby`, even before subscription
-  spotty-mugs-poke: >-
-    Dropped the `saveAsLastResult` argument from
-    `ObservableQuery.getCurrentResult`
-  stupid-eagles-fetch: >-
-    `cache-only` queries no longer poll when a `pollInterval` is set. Instead a
-    warning is now emitted that polling has no effect. If the `fetchPolicy` is
-    changed to `cache-only` after polling is already active, polling is stopped.
-  thin-peas-hear: >-
-    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
-    loading states will be emitted (core API) or rendered (React) by default
-    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
-    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
-
-
-    ```ts
-
-    new ApolloClient({
-      defaultOptions: {
-        watchQuery: {
-          // Use the v3 default
-          notifyOnNetworkStatusChange: false
-        }
-      }
-    })
-
-    ```
-  tidy-pandas-punch: >-
-    `ObservableQuery.variables` has been updated to return `TVariables` rather
-    than `TVariables | undefined`. This is more consistent with the runtime
-    value where an empty object (`{}`) will be returned when the `variables`
-    option is not provided.
-  tidy-squids-poke: >-
-    Removes `ObservableQuery.result()` method. If you use this method and need
-    similar functionality, use the `firstValueFrom` helper in RxJS.
-
-
-    ```ts
-
-    import { firstValueFrom, from } from "rxjs";
-
-
-    // The `from` is necessary to turn `observableQuery` into an RxJS observable
-
-    const result = await firstValueFrom(from(observableQuery))
-
-    ```
+  __different_fn_behaviour: null
   twelve-mangos-dance: >-
     `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute`
     function of `useLazyQuery` now return a
@@ -1084,6 +927,117 @@ ObservableQuery:
     `ObservableQuery.refetch` call will always now guarantee that a value will
     be emitted from the observable, even if it is deep equal to the previous
     value.
+  seven-jeans-trade: >-
+    Added a new `.stop` function on `ObservableQuery`.
+
+    Calling this method will unsubscribe all current subscribers by sending a
+    `complete` event from the observable and tear down the `ObservableQuery`.
+  forty-hairs-occur: >-
+    Calling `refetch` with new variables will now set the `networkStatus` to
+    `refetch` instead of `setVariables`.
+  four-tables-cheat: >-
+    `cache-only` queries are no longer refetched when calling
+    `client.reFetchObservableQueries` when `includeStandby` is `true`.
+  lemon-pans-sit: >-
+    `cache-only` queries are now excluded from `client.refetchQueries` in all
+    situations. `cache-only` queries affected by `updateCache` are also excluded
+    from `refetchQueries` when `onQueryUpdated` is not provided.
+  funny-terms-deny: >-
+    `ObservableQuery.variables` can now be reset back to empty when calling
+    `reobserve` with `variables: undefined`. Previously the `variables` key
+    would be ignored so `variables` would remain unchanged.
+  purple-lions-cough: >-
+    `ObservableQuery.setVariables` will now resolve with the last emitted result
+    instead of `undefined` when either the variables match the current variables
+    or there are no subscribers to the query.
+  itchy-chefs-run: >-
+    When passing a `variables` key with the value `undefined`, the value will be
+    replaced by the default value in the query, if it is provided, rather than
+    leave it as `undefined`.
+  __removals: null
+  tidy-squids-poke: >-
+    Removes `ObservableQuery.result()` method. If you use this method and need
+    similar functionality, use the `firstValueFrom` helper in RxJS.
+
+
+    ```ts
+
+    import { firstValueFrom, from } from "rxjs";
+
+
+    // The `from` is necessary to turn `observableQuery` into an RxJS observable
+
+    const result = await firstValueFrom(from(observableQuery))
+
+    ```
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  eighty-squids-fix: >-
+    `ObservableQuery.setOptions` has been removed as it was an alias of
+    `reobserve`. Prefer using `reobserve` directly instead.
+  gold-oranges-double: >-
+    Removed `getLastResult`, `getLastError` and `resetLastResults` from
+    `ObservableQuery`
+  kind-crews-warn: >-
+    `ObservableQuery` no longer has a `queryId` property.
+
+    `ApolloClient.getObservableQueries` no longer returns a `Map<string,
+    ObservableQuery>`, but a `Set<ObservableQuery>`.
+  smart-rats-explode: >-
+    Remove `ObservableQuery.resetQueryStoreErrors` method. This method reset
+    some internal state that was not consumed elsewhere in the client and
+    resulted in a no-op.
+  spotty-mugs-poke: >-
+    Dropped the `saveAsLastResult` argument from
+    `ObservableQuery.getCurrentResult` tidy-squids-poke: >- Removes
+    `ObservableQuery.result()` method. If you use this method and need similar
+    functionality, use the `firstValueFrom` helper in RxJS.
+
+
+    ```ts
+
+    import { firstValueFrom, from } from "rxjs";
+
+
+    // The `from` is necessary to turn `observableQuery` into an RxJS observable
+
+    const result = await firstValueFrom(from(observableQuery))
+
+    ```
+  __fixes: null
+  fuzzy-tips-sit: >-
+    Ensure `ObservableQuery` stops polling if switching to a `standby`
+    `fetchPolicy`. When switching back to a non-`standby` `fetchPolicy`, polling
+    will resume.
+  rich-kids-carry: >-
+    Fix type of `data` property on `ApolloQueryResult`. Previously this field
+    was non-optional, non-null `TData`, however at runtime this value could be
+    set to `undefined`. This field is now reported as `TData | undefined`.
+
+
+    This will affect you in a handful of places:
+
+    - The `data` property emitted from the result passed to the `next` callback
+    from `client.watchQuery`
+
+    - Fetch-based APIs that return an `ApolloQueryResult` type such as
+    `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+  small-cycles-rescue: >-
+    Don't emit a partial cache result from `cache-only` queries when
+    `returnPartialData` is `false`.
+  small-poems-rest: Don't `broadcastQueries` when a query is torn down.
+  stupid-eagles-fetch: >-
+    `cache-only` queries no longer poll when a `pollInterval` is set. Instead a
+    warning is now emitted that polling has no effect. If the `fetchPolicy` is
+    changed to `cache-only` after polling is already active, polling is stopped.
+  tidy-pandas-punch: >-
+    `ObservableQuery.variables` has been updated to return `TVariables` rather
+    than `TVariables | undefined`. This is more consistent with the runtime
+    value where an empty object (`{}`) will be returned when the `variables`
+    option is not provided.
+  __unhandled: null
 observableQuery.fetchMore:
   tender-swans-flash: >-
     Remove `loading`, `networkStatus`, and `partial` properties on all

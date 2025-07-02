@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - client.subscribe
 ---
 
 Subscriptions are no longer eagerly started after calling `client.subscribe`. To kick off the subscription, you will now need to subscribe to the returned observable.

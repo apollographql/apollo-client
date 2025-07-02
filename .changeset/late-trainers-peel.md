@@ -1,5 +1,9 @@
 ---
 "@apollo/client": patch
+_tags:
+  - bundling
+  - removals
+  - imports
 ---
 
 * dropped the deprecated `DEV` export from `@apollo/client/utilities` and `@apollo/client/utilities/globals`

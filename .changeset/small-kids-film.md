@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - bundling
 ---
 
 Rework package publish format (#12329, #12382)

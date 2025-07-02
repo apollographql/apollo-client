@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - testing
+  - links
 ---
 
 Introduce a new `realisticDelay` helper function for use with the `delay` callback for mocked responses used with `MockLink`. `realisticDelay` will generate a random value between 20 and 50ms to provide an experience closer to unpredictable network latency. `realisticDelay` can be configured with a `min` and `max` to set different thresholds if the defaults are not sufficient.

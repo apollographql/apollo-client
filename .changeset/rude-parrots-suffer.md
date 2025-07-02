@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - links
+  - features
 ---
 
 Add the new `ClientAwarenessLink`.

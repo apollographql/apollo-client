@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - fetchMore
 ---
 
 Rework option handling for `fetchMore`.

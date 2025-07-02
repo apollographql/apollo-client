@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - types
+  - dataState
 ---
 
 The `TData` generic provided to types that return a `dataState` property is now modified by the given `DataState` generic instead of passing a modified `TData` type. For example, a `QueryRef` that could return partial data was defined as `QueryRef<DeepPartial<TData>, TVariables>`. Now `TData` should be provided unmodified and a set of allowed states should be given instead: `QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>`.

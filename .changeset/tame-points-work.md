@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - ssr
 ---
 
 Add a new method for static SSR of React components, `prerenderStatic`.

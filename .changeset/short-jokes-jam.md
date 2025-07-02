@@ -1,5 +1,21 @@
 ---
 "@apollo/client": major
+_tags:
+  - bundling
+  - removals
+  - createQueryPreloader
+  - useApolloClient
+  - useBackgroundQuery
+  - useFragment
+  - useLazyQuery
+  - useLoadableQuery
+  - useMutation
+  - useQuery
+  - useQueryRefHandlers
+  - useReactiveVar
+  - useReadQuery
+  - useSubscription
+  - useSuspenseQuery
 ---
 
 Moves all React-related exports to the `@apollo/client/react` entrypoint and out of the main `@apollo/client` entrypoint. This prevents the need to install React in order to use the core client.

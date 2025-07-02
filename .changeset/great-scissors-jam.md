@@ -1,5 +1,10 @@
 ---
 "@apollo/client": major
+_tags:
+  - ObservableQuery
+  - network_status
+  - fetch_policy
+  - useQuery
 ---
 
 `cache-only` queries will now initialize with `loading: false` and `networkStatus: NetworkStatus.ready` when there is no data in the cache.

@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - useLazyQuery
 ---
 
 `useLazyQuery` no longer supports `variables` in the hook options and therefore no longer performs variable merging. The execute function must now be called with `variables` instead.

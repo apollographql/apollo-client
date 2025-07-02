@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - ObservableQuery
+  - removals
 ---
 
 Removes `ObservableQuery.result()` method. If you use this method and need similar functionality, use the `firstValueFrom` helper in RxJS.

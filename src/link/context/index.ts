@@ -1,39 +1,68 @@
-import type { Operation, GraphQLRequest, NextLink } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
-import type { DefaultContext } from "../../core/index.js";
+import { Observable } from "rxjs";
 
-export type ContextSetter = (
-  operation: GraphQLRequest,
-  prevContext: DefaultContext
-) => Promise<DefaultContext> | DefaultContext;
+import type { Operation, OperationContext } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 
-export function setContext(setter: ContextSetter): ApolloLink {
-  return new ApolloLink((operation: Operation, forward: NextLink) => {
-    const { ...request } = operation;
+export declare namespace SetContextLink {
+  export type ContextSetter = (
+    prevContext: OperationContext,
+    operation: SetContextOperation
+  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
 
-    return new Observable((observer) => {
-      let handle: ObservableSubscription;
-      let closed = false;
-      Promise.resolve(request)
-        .then((req) => setter(req, operation.getContext()))
-        .then(operation.setContext)
-        .then(() => {
-          // if the observer is already closed, no need to subscribe.
-          if (closed) return;
-          handle = forward(operation).subscribe({
-            next: observer.next.bind(observer),
-            error: observer.error.bind(observer),
-            complete: observer.complete.bind(observer),
-          });
-        })
-        .catch(observer.error.bind(observer));
+  export type LegacyContextSetter = (
+    operation: SetContextOperation,
+    prevContext: OperationContext
+  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
 
-      return () => {
-        closed = true;
-        if (handle) handle.unsubscribe();
-      };
+  export type SetContextOperation = Omit<
+    Operation,
+    "getContext" | "setContext"
+  >;
+}
+
+/**
+ * @deprecated
+ * Use `SetContextLink` from `@apollo/client/link/context` instead. Note you
+ * will need to flip the arguments when using `SetContextLink` as `prevContext`
+ * is the first argument.
+ *
+ * ```ts
+ * new SetContextLink((prevContext, operation) => {
+ *   // ...
+ * })
+ * ```
+ */
+export function setContext(setter: SetContextLink.LegacyContextSetter) {
+  return new SetContextLink((prevContext, operation) =>
+    setter(operation, prevContext)
+  );
+}
+export class SetContextLink extends ApolloLink {
+  constructor(setter: SetContextLink.ContextSetter) {
+    super((operation, forward) => {
+      const { ...request } = operation as SetContextLink.SetContextOperation;
+
+      Object.defineProperty(request, "client", {
+        enumerable: false,
+        value: operation.client,
+      });
+
+      return new Observable((observer) => {
+        let closed = false;
+        Promise.resolve(request)
+          .then((req) => setter(operation.getContext(), req))
+          .then(operation.setContext)
+          .then(() => {
+            if (!closed) {
+              forward(operation).subscribe(observer);
+            }
+          })
+          .catch(observer.error.bind(observer));
+
+        return () => {
+          closed = true;
+        };
+      });
     });
-  });
+  }
 }

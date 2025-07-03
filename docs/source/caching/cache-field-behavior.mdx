@@ -365,7 +365,7 @@ const cache = new InMemoryCache({
         authors: {
           merge(existing: any[], incoming: any[], { readField, mergeObjects }) {
             const merged: any[] = existing ? existing.slice(0) : [];
-            const authorNameToIndex: Record<string, number> = Object.create(null);
+            const authorNameToIndex: Record<string, number> = {};
             if (existing) {
               existing.forEach((author, index) => {
                 authorNameToIndex[readField<string>("name", author)] = index;

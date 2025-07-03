@@ -2,34 +2,23 @@ import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
-} from "../core/index.js";
-import { invariant } from "../utilities/globals/index.js";
+} from "@apollo/client";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   createFragmentMap,
   getFragmentDefinitions,
   getOperationDefinition,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { maskDefinition } from "./maskDefinition.js";
-import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
 
 /** @internal */
 export function maskOperation<TData = unknown>(
   data: TData,
   document: DocumentNode | TypedDocumentNode<TData>,
-  cache: ApolloCache<unknown>
+  cache: ApolloCache
 ): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
   const definition = getOperationDefinition(document);
 
   invariant(
@@ -47,7 +36,7 @@ export function maskOperation<TData = unknown>(
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
+    mutableTargets: new WeakMap(),
+    knownChanged: new WeakSet(),
   });
 }

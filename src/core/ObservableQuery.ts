@@ -710,6 +710,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
+  >(
+    options: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>
+  ): Promise<QueryResult<TFetchData>>;
+  public fetchMore<
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
   >({
     query,
     variables,

@@ -4,28 +4,36 @@ description: API reference
 api_reference: true
 api_doc:
   - "@apollo/client!ObservableQuery:class"
-  - "@apollo/client!ApolloQueryResult:interface"
   - "@apollo/client!NetworkStatus:enum"
 ---
 
-import { InterfaceDetails, FunctionDetails, PropertyDetails, EnumDetails } from '../../../shared/ApiDoc';
+import { InterfaceDetails, FunctionDetails, EnumDetails } from '../../../shared/ApiDoc';
+
+An `ObservableQuery` is created by calling the `client.watchQuery` method.
+It represents a query that can be observed for changes, allowing you to reactively update your UI.
+
+`ObservableQuery` implements the [RxJS](https://rxjs.dev/) `InteropObservable` interface which means you can convert it into an `RxJS` Observable via `from(observableQuery)`.
+It also provides the `subscribe` and `pipe` functions like an RxJS `Observable`.
+Refer to the [RxJS documentation](https://rxjs.dev/guide/overview) for additional context and API options.
+
 
 ## `ObservableQuery` functions
 
-`ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
-
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#result:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#getCurrentResult:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#refetch:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#setVariables:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#fetchMore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#updateQuery:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#startPolling:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#stopPolling:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#subscribeToMore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#reobserve:member(1)" headingLevel={3} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#getCurrentResult:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!DocumentationTypes.RxjsObservable#pipe:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!DocumentationTypes.RxjsObservable#subscribe:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#refetch:member(1)" headingLevel={3} result={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#fetchMore:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#subscribeToMore:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#stop:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#setVariables:member(1)" headingLevel={3} result={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#updateQuery:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#startPolling:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#stopPolling:member(1)" headingLevel={3} result={false} parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#reobserve:member(1)" headingLevel={3} result={false} parameters={false} />
 
 
 ## Types
 <EnumDetails canonicalReference="@apollo/client!NetworkStatus:enum" headingLevel={3} />
-<InterfaceDetails canonicalReference="@apollo/client!ApolloQueryResult:interface" headingLevel={3} />
+
+<InterfaceDetails canonicalReference="@apollo/client!DocumentationTypes.ApolloQueryResult:interface" headingLevel={3} displayName={"fooo"} />

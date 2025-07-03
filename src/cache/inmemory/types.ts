@@ -137,6 +137,16 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
+  /**
+   * @defaultValue true
+   *
+   * @deprecated `addTypename` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please set `addTypename` to `true` or remove the option entirely to use the
+   * default.
+   */
   addTypename?: boolean;
 };
 
@@ -149,12 +159,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
    * Please use `cacheSizes` instead.
    */
   resultCacheMaxSize?: number;
-  /**
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
 }

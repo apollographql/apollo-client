@@ -20,6 +20,7 @@ import {
   removeDirectivesFromDocument,
   checkDocument,
   makeUniqueId,
+  getOperationName,
 } from "../../../utilities/index.js";
 import type { Unmasked } from "../../../masking/index.js";
 
@@ -49,6 +50,11 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
+  /**
+   * @deprecated `newData` will be removed in Apollo Client 4.0. Please use the
+   * `result` option with a callback function instead and provide a
+   * `maxUsageCount` of `Number.POSITIVE_INFINITY` to get the same behavior.
+   */
   newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }
 
@@ -163,7 +169,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         mockedResponses.splice(responseIndex, 1);
       }
       const { newData } = response;
+
       if (newData) {
+        if (__DEV__) {
+          invariant.warn(
+            "[MockLink]: `newData` is deprecated and will be removed in Apollo Client 4.0. Please use the `result` option with a callback function and set the `maxUsageCount` option to `Number.POSITIVE_INFINITY`.\n\nFound `newData` on response:\n%o",
+            response
+          );
+        }
         response.result = newData(operation.variables);
         mockedResponses.push(response);
       }
@@ -172,6 +185,21 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         configError = new Error(
           `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
         );
+      }
+    }
+
+    if (__DEV__) {
+      if (response?.request.query) {
+        const serverQuery = removeClientSetsFromDocument(
+          response?.request.query
+        );
+
+        if (!serverQuery) {
+          invariant.warn(
+            "[MockLink]: Apollo Client 4.0 will throw when mocking client-only query '%s'. Please ensure the query has at least 1 non-client field.",
+            getOperationName(response.request.query) ?? "(anonymous)"
+          );
+        }
       }
     }
 
@@ -267,6 +295,11 @@ export interface MockApolloLink extends ApolloLink {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
+/**
+ * @deprecated `mockSingleLink` will be removed in Apollo Client 4.0. Please
+ * initialize `MockLink` directly. Note that `addTypename` has been removed so
+ * please remove the final boolean argument if it is set.
+ */
 export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
   // set it true later.

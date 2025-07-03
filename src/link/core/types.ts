@@ -5,12 +5,20 @@ export type { DocumentNode };
 
 import type { Observable } from "../../utilities/index.js";
 
+/**
+ * @deprecated `ExecutionPatchResult` will be removed in Apollo Client 4.0. This
+ * type is safe to use in Apollo Client 3.x.
+ */
 export type Path = ReadonlyArray<string | number>;
 
 interface ExecutionPatchResultBase {
   hasNext?: boolean;
 }
 
+/**
+ * @deprecated `ExecutionPatchResult` will be removed in Apollo Client 4.0. This
+ * type is safe to use in Apollo Client 3.x.
+ */
 export interface ExecutionPatchInitialResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
@@ -22,6 +30,10 @@ export interface ExecutionPatchInitialResult<
   extensions?: TExtensions;
 }
 
+/**
+ * @deprecated `ExecutionPatchResult` will be removed in Apollo Client 4.0. This
+ * type is safe to use in Apollo Client 3.x.
+ */
 export interface IncrementalPayload<TData, TExtensions> {
   // data and path must both be present
   // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
@@ -32,6 +44,10 @@ export interface IncrementalPayload<TData, TExtensions> {
   extensions?: TExtensions;
 }
 
+/**
+ * @deprecated `ExecutionPatchResult` will be removed in Apollo Client 4.0. This
+ * type is safe to use in Apollo Client 3.x.
+ */
 export interface ExecutionPatchIncrementalResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
@@ -59,6 +75,10 @@ export interface ApolloPayloadResult<
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
+/**
+ * @deprecated `ExecutionPatchResult` will be removed in Apollo Client 4.0. This
+ * type is safe to use in Apollo Client 3.x.
+ */
 export type ExecutionPatchResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,

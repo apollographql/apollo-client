@@ -22,10 +22,10 @@ export function filterOperationVariables(variables: Record<string, any>, query: 
     [x: string]: any;
 };
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function fromError<T>(errorValue: any): Observable<T>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function fromPromise<T>(promise: Promise<T>): Observable<T>;
 
 // @public (undocumented)
@@ -70,10 +70,10 @@ export type ServerError = Error & {
     statusCode: number;
 };
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const throwServerError: (response: Response, result: any, message: string) => never;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function toPromise<R>(observable: Observable<R>): Promise<R>;
 
 // @public (undocumented)

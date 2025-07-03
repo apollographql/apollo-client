@@ -144,9 +144,10 @@ it("calls onSubscriptionData with deprecation warning if given", async () => {
     </ApolloProvider>
   );
 
-  expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  // The 1st warning is the deprecation on the Subscription component
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    expect.stringContaining("'onSubscriptionData' is deprecated")
+    expect.stringContaining("`onSubscriptionData` is deprecated")
   );
 
   const interval = setInterval(() => {
@@ -210,9 +211,10 @@ it("should call onSubscriptionComplete with deprecation warning if specified", a
     </ApolloProvider>
   );
 
-  expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-  expect(consoleSpy.warn).toHaveBeenCalledWith(
-    expect.stringContaining("'onSubscriptionComplete' is deprecated")
+  // The 1st warning is the deprecation on the Subscription component
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
+  expect(consoleSpy.warn).toHaveBeenLastCalledWith(
+    expect.stringContaining("`onSubscriptionComplete` is deprecated")
   );
 
   const interval = setInterval(() => {

@@ -836,8 +836,7 @@ export class ApolloClient implements DataProxy {
   }
 
   /**
-   * Get all currently active `ObservableQuery` objects, in a `Map` keyed by
-   * query ID strings.
+   * Get all currently active `ObservableQuery` objects, in a `Set`.
    *
    * An "active" query is one that has observers and a `fetchPolicy` other than
    * "standby" or "cache-only".

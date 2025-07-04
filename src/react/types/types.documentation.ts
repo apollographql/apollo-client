@@ -195,7 +195,8 @@ export interface QueryResultDocumentation {
    */
   previousData: unknown;
   /**
-   * If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+   * A single ErrorLike object describing the error that occured during the latest
+   * query execution.
    *
    * For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).
    *
@@ -274,8 +275,19 @@ export interface QueryResultDocumentation {
    *   the result is still streaming in.
    *  - `complete`: `data` is a fully satisfied query result fulfilled
    *  either from the cache or network.
+   *
+   * @docGroup 1. Operation data
    */
   dataState: unknown;
+
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   *
+   * @deprecated This field will be removed in a future version of Apollo Client.
+   * @docGroup 1. Operation data
+   */
+  partial: boolean;
 }
 
 export interface MutationOptionsDocumentation {

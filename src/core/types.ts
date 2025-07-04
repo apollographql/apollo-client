@@ -305,40 +305,37 @@ export type ApolloQueryResult<
   TData,
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 > = {
-  /**
-   * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
-   * This will contain both a NetworkError field and any GraphQLErrors.
-   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ErrorLike;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
-  /**
-   * Describes whether `data` is a complete or partial result. This flag is only
-   * set when `returnPartialData` is `true` in query options.
-   *
-   * @deprecated This field will be removed in a future version of Apollo Client.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#partial:member} */
   partial: boolean;
 } & GetDataState<TData, TStates>;
 
 export type DataState<TData> =
   | {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: DataValue.Complete<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "complete";
     }
   | {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: DataValue.Streaming<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "streaming";
     }
   | {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: DataValue.Partial<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "partial";
     }
   | {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: undefined;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "empty";

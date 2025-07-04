@@ -2114,6 +2114,38 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    it("if an ObservableQuery is unsubscribed while `refetch` is running, the promise returned by `refetch` rejects with an `AbortError`.", async () => {
+      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = client.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+
+      const stream = new ObservableStream(observableQuery);
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      const promise = observableQuery.refetch({ id: 2 });
+
+      stream.unsubscribe();
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      await expect(promise).rejects.toEqual(
+        new DOMException("The operation was aborted.", "AbortError")
+      );
+    });
+
     it("handles `no-cache` fetchPolicy with refetch", async () => {
       const mockedResponses = [
         {

@@ -30,6 +30,7 @@ export type FetchPolicy =
   | "network-only"
   | "cache-only"
   | "no-cache"
+  | "cache-and-network"
   | "standby";
 
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";

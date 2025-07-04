@@ -843,6 +843,9 @@ export class ApolloClient implements DataProxy {
    * You can include all `ObservableQuery` objects (including the inactive ones)
    * by passing "all" instead of "active", or you can include just a subset of
    * active queries by passing an array of query names or DocumentNode objects.
+   *
+   * Note: This method only returns queries that have active subscribers. Queries
+   * without subscribers are not tracked by the client.
    */
   public getObservableQueries(
     include: RefetchQueriesInclude = "active"

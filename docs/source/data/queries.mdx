@@ -452,8 +452,8 @@ This is the default fetch policy.
 
 Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
 
+When the cache does not contain data for all requested fields, a `cache-only` query returns `data: undefined` with `dataState: "empty"` and a `networkStatus` of `NetworkStatus.ready` rather than throwing an error.
 
-A `cache-only` query throws an error if the cache does not contain data for all requested fields.
 
 </td>
 </tr>
@@ -512,6 +512,8 @@ Similar to `network-only`, except the query's result _is not_ stored in the cach
 <td>
 
 Uses the same logic as `cache-first`, except this query does _not_ automatically update when underlying field values change. You can still _manually_ update this query with `refetch` and `updateQueries`.
+
+`standby` queries return `networkStatus: NetworkStatus.ready` even before subscription, providing immediate feedback to your UI.
 
 </td>
 </tr>

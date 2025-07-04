@@ -13,6 +13,31 @@ It represents a query that can be observed for changes, allowing you to reactive
 It also provides the `subscribe` and `pipe` functions like an RxJS `Observable`.
 Refer to the [RxJS documentation](https://rxjs.dev/guide/overview) for additional context and API options.
 
+## Key Behaviors
+
+### Subscription Lifecycle
+- `ObservableQuery` instances are only registered with `ApolloClient` while they have active subscribers
+- Unsubscribing from an `ObservableQuery` while a request is in flight does not terminate the request
+- Unsubscribing before any value has been emitted removes the query from the tracked list and makes it ineligible for query deduplication
+
+### Error Handling
+- `ObservableQuery` does not terminate on errors - instead it emits a `next` value with an `error` property
+- This ensures `ObservableQuery` instances can continue receiving updates after errors without resubscription
+- The observable remains active and can emit future values even after encountering errors
+
+### Loading States
+- When `notifyOnNetworkStatusChange` is `true`, an initial loading state is emitted when subscribing
+- `ObservableQuery` preserves previous `data` when emitting a loading state, unless `query` or `variables` changed (note: `@export` variables are not considered for this check)
+- If the complete data is found in the cache or the link chain responds synchronously, a loading state may be omitted
+- `cache-only` queries initialize with `networkStatus: NetworkStatus.ready` when there is no data in the cache
+- `standby` queries return `networkStatus: NetworkStatus.ready` even before subscription
+
+### Active vs Inactive Queries
+- **Active queries**: Have at least one subscriber and are not skipped or in `standby`
+- **Inactive queries**: Have a subscriber but are either skipped from a React hook or have a `fetchPolicy` of `standby`
+- `ObservableQuery`s without subscribers but with an active network request are handled as if they had a subscriber for the duration of the query
+- Only queries with subscribers can be refetched using `ApolloClient.refetchQueries`
+
 
 ## `ObservableQuery` functions
 

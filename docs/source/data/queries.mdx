@@ -7,6 +7,10 @@ import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
+
+> **Note:** This article shows how to use Apollo Client in a React application that doesn't make use of React's "Suspense" features.
+For modern React applications built around Suspense, suspense-enabled data fetching hooks are described in Apollo Client's [Suspense docs](./suspense/).
+
 ## Prerequisites
 
 This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/graphql).
@@ -17,9 +21,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
-
-> **Note:** in Apollo Client >= 3.8, Suspense data fetching hooks are available for querying data within `<Suspense />` boundaries using React 18's new concurrent rendering model. For more information see Apollo Client's [Suspense docs](./suspense/).
+The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in a non-suspenseful Apollo application (for information about using Apollo Client with suspenseful React, see [Suspense](./suspense)). To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState` and `data` properties you can use to render your UI.
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
@@ -219,11 +221,11 @@ function DogPhoto({ breed }) {
 
 Since `notifyOnNetworkStatusChange` defaults to `true`, the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
 
-The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts).
+The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out [this table](../api/core/ObservableQuery#networkstatus).
 
 <Note>
 
-If you want to disable automatic re-rendering when the network status changes (for example, to maintain the behavior from Apollo Client v3), you can set `notifyOnNetworkStatusChange` to `false` either in individual queries or globally via `defaultOptions`:
+If you want to disable automatic re-rendering when the network status changes, you can set `notifyOnNetworkStatusChange` to `false` either in individual queries or globally via `defaultOptions`:
 
 ```js
 const client = new ApolloClient({
@@ -281,12 +283,6 @@ function DelayedQuery() {
 The first item in `useLazyQuery`'s return tuple is the query function, and the second item is the same result object returned by `useQuery`.
 
 As shown above, you can pass options to the query function just like you pass them to `useLazyQuery` itself. If you pass a particular option to _both_, the value you pass to the query function takes precedence. This is a handy way to pass _default_ options to `useLazyQuery` and then customize those options in the query function.
-
-<Note>
-
-Variables are merged by taking the `variables` passed as options to the hook and merging them with the `variables` passed to the query function. If you do not pass `variables` to the query function, only the `variables` passed to the hook are used in the query execution.
-
-</Note>
 
 For a full list of supported options, see the [API reference](../api/react/hooks/#uselazyquery).
 
@@ -482,7 +478,7 @@ Provides a fast response while also helping to keep cached data consistent with 
 </td>
 <td>
 
-Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache.
+Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache and after the first result is received, external cache updates will be reflected by this query.
 
 
 Prioritizes consistency with server data, but can't provide a near-instantaneous response when cached data is available.
@@ -498,7 +494,7 @@ Prioritizes consistency with server data, but can't provide a near-instantaneous
 </td>
 <td>
 
-Similar to `network-only`, except the query's result _is not_ stored in the cache.
+Similar to `network-only`, except the query's result _is not_ stored in the cache an external cache updates are completely ignored.
 
 </td>
 </tr>

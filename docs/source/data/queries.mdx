@@ -187,12 +187,11 @@ If you provide new values for _some_ of your original query's variables but not 
 
 We've already seen that the `useQuery` hook exposes our query's current loading state. This is helpful when a query first loads, but what happens to our loading state when we're refetching or polling?
 
-Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
+Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component re-renders while we're refetching the photo because `notifyOnNetworkStatusChange` defaults to `true`.
 
-The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
-of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our [query component](../api/react/components/ "Components - Client (React) - Apollo GraphQL Docs") re-renders while a refetch is in flight:
+The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. This allows us to indicate to the user that we're refetching the photo:
 
-```jsx title="index.js" {4,8,12}
+```jsx title="index.js" {3,7}
 import { NetworkStatus } from '@apollo/client';
 
 function DogPhoto({ breed }) {
@@ -200,7 +199,6 @@ function DogPhoto({ breed }) {
     GET_DOG_PHOTO,
     {
       variables: { breed },
-      notifyOnNetworkStatusChange: true,
     }
   );
 
@@ -219,9 +217,26 @@ function DogPhoto({ breed }) {
 }
 ```
 
-Enabling this option also ensures that the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
+Since `notifyOnNetworkStatusChange` defaults to `true`, the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
 
 The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts).
+
+<Note>
+
+If you want to disable automatic re-rendering when the network status changes (for example, to maintain the behavior from Apollo Client v3), you can set `notifyOnNetworkStatusChange` to `false` either in individual queries or globally via `defaultOptions`:
+
+```js
+const client = new ApolloClient({
+  // ... other options
+  defaultOptions: {
+    watchQuery: {
+      notifyOnNetworkStatusChange: false
+    }
+  }
+});
+```
+
+</Note>
 
 > To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 

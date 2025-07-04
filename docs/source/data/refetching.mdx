@@ -109,7 +109,9 @@ await client.refetchQueries({
 
 Only queries with active subscribers are registered with the client. This means `refetchQueries` will only affect queries that have at least one subscriber. Queries without subscribers are not tracked and cannot be refetched.
 
-To refetch _all_ queries managed by Apollo Client (even those with no observers, or whose components are currently unmounted), pass `"all"` for `include`:
+`cache-only` queries are excluded from `refetchQueries` in all situations, including when affected by `updateCache` operations (unless `onQueryUpdated` is provided).
+
+To refetch _all_ queries managed by Apollo Client (even those with a `fetchPolicy` of `"standby"`), pass `"all"` for `include`:
 
 ```ts
 await client.refetchQueries({

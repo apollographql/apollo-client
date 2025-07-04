@@ -32,6 +32,12 @@ Refer to the [RxJS documentation](https://rxjs.dev/guide/overview) for additiona
 - `cache-only` queries initialize with `networkStatus: NetworkStatus.ready` when there is no data in the cache
 - `standby` queries return `networkStatus: NetworkStatus.ready` even before subscription
 
+### Promise-returning Methods and retention
+- `refetch()` and `reobserve()` return a `ResultPromise` with an additional `.retain()` method
+- Calling `.retain()` keeps the network operation running even if the `ObservableQuery` no longer requires the result
+- If `.retain()` is not called, and e.g. the `ObservableQuery` is unsubscribed, or variables change, the network operation is cancelled and the returned Promise will reject with an `AbortError`
+- `setVariables()` and `refetch()` guarantee that a value will be emitted from the observable, even if it's deep equal to the previous value
+
 ### Active vs Inactive Queries
 - **Active queries**: Have at least one subscriber and are not skipped or in `standby`
 - **Inactive queries**: Have a subscriber but are either skipped from a React hook or have a `fetchPolicy` of `standby`

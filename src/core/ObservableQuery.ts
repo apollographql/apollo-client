@@ -655,6 +655,13 @@ export class ObservableQuery<
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
    *
+   * Returns a `ResultPromise` with an additional `.retain()` method. Calling
+   * `.retain()` keeps the network operation running even if the `ObservableQuery`
+   * no longer requires the result.
+   *
+   * Note: `refetch()` guarantees that a value will be emitted from the
+   * observable, even if the result is deep equal to the previous value.
+   *
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
@@ -977,14 +984,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * `setVariables` in order to to be properly notified of results even when
    * they come from the cache.
    *
-   * Note: the `next` callback will *not* fire if the variables have not changed
-   * or if the result is coming from cache.
+   * Note: `setVariables()` guarantees that a value will be emitted from the
+   * observable, even if the result is deep equal to the previous value.
    *
-   * Note: the promise will return the old results immediately if the variables
-   * have not changed.
-   *
-   * Note: the promise will return the last result immediately if the query is not active
-   * (there are no subscribers).
+   * Note: the promise will resolve with the last emitted result instead of
+   * `undefined` when either the variables match the current variables or there
+   * are no subscribers to the query.
    *
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
@@ -1310,6 +1315,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /**
    * Reevaluate the query, optionally against new options. New options will be
    * merged with the current options when given.
+   *
+   * Note: `variables` can be reset back to empty by calling `reobserve` with
+   * `variables: undefined`.
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>

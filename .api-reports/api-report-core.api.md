@@ -577,7 +577,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     });
     // @internal @deprecated (undocumented)
     applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
-    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>({ query, variables, context, errorPolicy, updateQuery, }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<QueryResult<TFetchData>>;
+    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(options: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<QueryResult<TFetchData>>;
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
         optimistic?: boolean | undefined;

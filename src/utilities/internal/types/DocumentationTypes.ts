@@ -17,8 +17,8 @@ import type {
  * These interfaces are used in the documentation to provide a more readable
  * and understandable API reference.
  */
-export namespace DocumentationTypes {
-  export interface ApolloQueryResult<TData> {
+export declare namespace DocumentationTypes {
+  export interface DataState<TData> {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
     data?:
       | DataValue.Complete<TData>
@@ -27,6 +27,9 @@ export namespace DocumentationTypes {
       | undefined;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
     dataState: "complete" | "streaming" | "partial" | "empty";
+  }
+
+  export interface ApolloQueryResult<TData> extends DataState<TData> {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
     error?: ErrorLike;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */

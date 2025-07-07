@@ -985,11 +985,13 @@ our local resolver code will only be included in the bundle a user downloads whe
 
 ## API
 
-Apollo Client local state handling is baked in, so you don't have to install anything extra. Local state management can be configured during `ApolloClient` instantiation (via the `ApolloClient` constructor) or by using the `ApolloClient` local state API. Data in the cache can be managed through the `ApolloCache` API.
+Apollo Client local state handling is baked in, so you don't have to install anything extra. Local state management can be configured during `ApolloClient` instantiation by passing a `LocalState` instance into the `localState` constructor options. Data in the cache can be managed through the `ApolloCache` API.
 
-### ApolloClient
+### LocalState
 
-#### Constructor
+#### Usage
+
+`LocalState` as a class instance is always passed to the `localState` option of the `ApolloClient` constructor.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -1001,31 +1003,9 @@ const client = new ApolloClient({
 });
 ```
 
-| Option | Type | Description |
-| - | - | - |
-| `resolvers?` | Resolvers \| Resolvers[] | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. |
-| `typeDefs?` | string \| string[] \| DocumentNode \| DocumentNode[];&lt;string&gt; | A string representing your client-side schema written in the [Schema Definition Language](https://www.graphql-tools.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation, but is used for introspection by the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools). |
-
-None of these options are required. If you don't specify anything, you will still be able to use the `@client` directive to query the Apollo Client cache.
-
 #### Methods
 
-```js
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({ uri: 'http://localhost:4000/graphql' }),
-});
-
-client.setResolvers({ ... });
-```
-| Method | Description |
-| - | - |
-| addResolvers(resolvers: Resolvers \| Resolvers[]) | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. Resolver functions added through `addResolvers` are added to the internal resolver function map, meaning any existing resolvers (that aren't overwritten) are preserved. |
-| setResolvers(resolvers: Resolvers \| Resolvers[]) | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. Resolver functions added through `setResolvers` overwrite all existing resolvers (a pre-existing resolver map is wiped out, before the new resolvers are added). |
-| `getResolvers` | Get the currently defined resolver map. |
-| `setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher)` | Set a custom `FragmentMatcher` to be used when resolving local state queries. |
+<FunctionDetails canonicalReference="@apollo/client!LocalState#addResolvers:member(1)" headingLevel={4}  parameters={false} />
 
 **Typescript interfaces/types:**
 
@@ -1040,12 +1020,6 @@ interface Resolvers {
     ) => any;
   };
 }
-
-type FragmentMatcher = (
-  rootValue: any,
-  typeCondition: string,
-  context: any,
-) => boolean;
 ```
 
 ### ApolloCache
@@ -1068,17 +1042,8 @@ cache.writeQuery({
 });
 ```
 
-| Method | Description |
-| - | - |
-| `writeQuery({ query, variables, data })` | Writes data to the root of the cache using the specified query to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the query. Great for prepping the cache with initial data. |
-| `readQuery({ query, variables })` | Read data from the cache for the specified query. |
-| `writeFragment({ id, fragment, fragmentName, variables, data })` | Similar to `writeQuery` (writes data to the cache) but uses the specified fragment to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the fragment. |
-| `readFragment({ id, fragment, fragmentName, variables })` | Read data from the cache for the specified fragment. |
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeQuery:member(1)" headingLevel={4}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readQuery:member(1)" headingLevel={4}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeFragment:member(1)" headingLevel={4}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readFragment:member(1)" headingLevel={4}  parameters={false} result={false}/>
 
-## Deprecation notice
-
-The idea of using client side resolvers to manage local state was first introduced into the Apollo Client ecosystem through the [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project. The Apollo Client team is always looking for ways to improve local state handling, so we decided to bring local resolver and `@client` support into the Apollo Client core directly, in version 2.5. While managing state with local resolvers works well, the functionality offered by `apollo-link-state`, and then from Apollo Client directly, was originally designed with certain imposed limitations due to its distance from the Apollo Client cache. Apollo Link's don't have direct access to the cache, which means `apollo-link-state` had to implement an approach that couldn't feed or hook into the cache as seamlessly as we would have liked. The local resolver support merged into the Apollo Client core in version 2.5 was essentially a mirror of the Link approach, with a few adjustments to tie into the cache a little more closely. This means Apollo Client's local resolver approach is still a bit limited when it comes to being able to work with the cache more closely, and ultimately providing a better developer experience.
-
-To help address limitations in the local resolver API, we have designed and implemented a new approach for managing local state in Apollo Client 3.0, that works as a direct extension of the cache. Field policies and reactive variables not only help provide a better developer experience from an API use and functionality point of view, but they also improve performance and provide a more reliable foundation for local state management. Re-thinking local state handling with the Apollo Client cache in mind has helped reduce a large number of local state bugs caused by local resolvers being a few too many layers removed from the cache internals.
-
-The [managing state with field policies](./managing-state-with-field-policies) section goes into more detail around what Apollo Client 3's new local state management capabilities look like. We highly recommend reviewing and considering the use of these new API's as a replacement for local resolvers. Local resolvers are still supported in Apollo Client 3 but will be moved out of the core module in a future major release.

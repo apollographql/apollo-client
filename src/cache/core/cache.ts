@@ -238,7 +238,28 @@ export abstract class ApolloCache implements DataProxy {
     return false;
   }
 
-  // DataProxy API
+  /**
+   * Read data from the cache for the specified query.
+   */
+  public readQuery<TData = unknown, TVariables = OperationVariables>({
+    // spread in type definitions for discoverability in the docs
+    query,
+    variables,
+    id,
+    optimistic,
+    returnPartialData,
+  }: Cache.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+  /**
+   * {@inheritdoc @apollo/client!ApolloCache#readQuery:member(1)}
+   */
+  public readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadQueryOptions<TData, TVariables>,
+    /**
+     * @deprecated Pass the `optimistic` argument as part of the first argument
+     * instead of passing it as a separate option.
+     */
+    optimistic: boolean
+  ): Unmasked<TData> | null;
   public readQuery<TData = unknown, TVariables = OperationVariables>(
     options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
@@ -352,6 +373,26 @@ export abstract class ApolloCache implements DataProxy {
     cache: WeakCache,
   });
 
+  /**
+   * Read data from the cache for the specified fragment.
+   */
+  public readFragment<TData = unknown, TVariables = OperationVariables>({
+    // spread in type definitions for discoverability in the docs
+    fragment,
+    variables,
+    fragmentName,
+    id,
+    optimistic,
+    returnPartialData,
+  }: Cache.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+  public readFragment<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadFragmentOptions<TData, TVariables>,
+    /**
+     * @deprecated Pass the `optimistic` argument as part of the first argument
+     * instead of passing it as a separate option.
+     */
+    optimistic: boolean
+  ): Unmasked<TData> | null;
   public readFragment<TData = unknown, TVariables = OperationVariables>(
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
@@ -364,6 +405,20 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
+  /**
+   * Writes data to the root of the cache using the specified query to validate that
+   * the shape of the data you’re writing to the cache is the same as the shape of
+   * the data required by the query. Great for prepping the cache with initial data.
+   */
+  public writeQuery<TData = unknown, TVariables = OperationVariables>({
+    // spread in type definitions for discoverability in the docs
+    data,
+    query,
+    variables,
+    overwrite,
+    id,
+    broadcast,
+  }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined;
   public writeQuery<TData = unknown, TVariables = OperationVariables>({
     id,
     data,
@@ -377,6 +432,21 @@ export abstract class ApolloCache implements DataProxy {
     );
   }
 
+  /**
+   * Similar to `writeQuery` (writes data to the cache) but uses the specified
+   * fragment to validate that the shape of the data you’re writing to the cache
+   * is the same as the shape of the data required by the fragment.
+   */
+  public writeFragment<TData = unknown, TVariables = OperationVariables>({
+    // spread in type definitions for discoverability in the docs
+    data,
+    fragment,
+    fragmentName,
+    variables,
+    overwrite,
+    id,
+    broadcast,
+  }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
   public writeFragment<TData = unknown, TVariables = OperationVariables>({
     id,
     data,

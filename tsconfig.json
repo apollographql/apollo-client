@@ -37,9 +37,12 @@
   "references": [
     {
       "path": "./config/tsconfig.json"
+    },
+    {
+      "path": "./docs/tsconfig.json"
     }
   ],
-    "mdx": {
+  "mdx": {
     // Enable strict type checking in MDX files.
     "checkMdx": true
   }

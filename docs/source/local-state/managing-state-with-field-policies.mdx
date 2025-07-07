@@ -112,26 +112,30 @@ const GET_PRODUCT_DETAILS = gql`
 
 That's it! The `@client` directive tells Apollo Client that `isInCart` is a local-only field. Because `isInCart` is local-only, Apollo Client omits it from the query it sends to our server to fetch `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
 
-> **Note:** If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
->
-> <ExpansionPanel title="See example">
->
-> ```js {6-9}
-> const GET_PRODUCT_DETAILS = gql`
->  query ProductDetails($productId: ID!) {
->    product(id: $productId) {
->      name
->      price
->      purchaseStatus @client {
->        isInCart
->        isOnWishlist
->      }
->    }
->  }
->`;
-> ```
->
-> </ExpansionPanel>
+<Note>
+
+If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
+
+<ExpansionPanel title="See example">
+
+```js {6-9}
+const GET_PRODUCT_DETAILS = gql`
+ query ProductDetails($productId: ID!) {
+   product(id: $productId) {
+     name
+     price
+     purchaseStatus @client {
+       isInCart
+       isOnWishlist
+     }
+   }
+ }
+;
+```
+
+</ExpansionPanel>
+
+ </Note>
 
 ## Storing and mutations
 

@@ -1865,6 +1865,69 @@ describe("ApolloClient", () => {
     await expect(stream).not.toEmitAnything();
   });
 
+  it("`cache-only` reverts to an empty but successful result if data was previously there and suddenly went missing", async () => {
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          id
+          name
+        }
+        vader: people_one(id: 4) {
+          id
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        __typename: "Person",
+        id: 1,
+        name: "Luke Skywalker",
+      },
+      vader: {
+        __typename: "Person",
+        id: 4,
+        name: "Darth Vader",
+      },
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        { request: { query: complexQuery }, result: { data: data1 } },
+      ]),
+    });
+
+    // First, prime the cache
+    await client.query({ query: complexQuery });
+
+    const observable = client.watchQuery({
+      query: complexQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: data1,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.cache.evict({ id: "Person:4" }); // Ensure 'vader' is not in cache
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+    await expect(stream).not.toEmitAnything();
+  });
+
   it("runs a mutation", async () => {
     const mutation = gql`
       mutation makeListPrivate {

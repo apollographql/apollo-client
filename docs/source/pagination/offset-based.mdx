@@ -59,9 +59,8 @@ const FeedData() {
     },
   });
 
-  // If you want your component to rerender with loading:true whenever
-  // fetchMore is called, add notifyOnNetworkStatusChange:true to the
-  // options you pass to useQuery above.
+  // Your component will rerender with loading:true whenever fetchMore is called
+  // because notifyOnNetworkStatusChange defaults to true.
   if (loading) return <Loading/>;
 
   return (

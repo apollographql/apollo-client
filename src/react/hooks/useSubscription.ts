@@ -25,48 +25,65 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useSubscription {
+  export namespace Base {
+    export interface Options<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: FetchPolicy;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
+      shouldResubscribe?:
+        | boolean
+        | ((options: Options<TData, TVariables>) => boolean);
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
+      skip?: boolean;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+      extensions?: Record<string, any>;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
+      onComplete?: () => void;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
+      onData?: (options: OnDataOptions<TData>) => any;
+
+      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
+      onError?: (error: ErrorLike) => void;
+
+      /**
+       * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+       * @defaultValue `false`
+       */
+      ignoreResults?: boolean;
+    }
+  }
+
   export type Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > = {
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: FetchPolicy;
+  > = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
 
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
-    errorPolicy?: ErrorPolicy;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
-    shouldResubscribe?:
-      | boolean
-      | ((options: Options<TData, TVariables>) => boolean);
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
-    client?: ApolloClient;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
-    skip?: boolean;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
-    context?: DefaultContext;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
-    extensions?: Record<string, any>;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
-    onComplete?: () => void;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
-    onData?: (options: OnDataOptions<TData>) => any;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
-    onError?: (error: ErrorLike) => void;
-
-    /**
-     * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
-     * @defaultValue `false`
-     */
-    ignoreResults?: boolean;
-  } & VariablesOption<TVariables>;
+  export namespace DocumentationTypes {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > extends Base.Options<TData, TVariables> {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  }
 
   export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */

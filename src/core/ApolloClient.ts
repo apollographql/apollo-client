@@ -759,6 +759,8 @@ export class ApolloClient implements DataProxy {
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    *
+   * Note: `cache-only` queries are generally not refetched by this function.
+   *
    * @deprecated Please use `refetchObservableQueries` instead.
    */
   public reFetchObservableQueries: (
@@ -834,8 +836,7 @@ export class ApolloClient implements DataProxy {
   }
 
   /**
-   * Get all currently active `ObservableQuery` objects, in a `Map` keyed by
-   * query ID strings.
+   * Get all currently active `ObservableQuery` objects, in a `Set`.
    *
    * An "active" query is one that has observers and a `fetchPolicy` other than
    * "standby" or "cache-only".
@@ -843,6 +844,9 @@ export class ApolloClient implements DataProxy {
    * You can include all `ObservableQuery` objects (including the inactive ones)
    * by passing "all" instead of "active", or you can include just a subset of
    * active queries by passing an array of query names or DocumentNode objects.
+   *
+   * Note: This method only returns queries that have active subscribers. Queries
+   * without subscribers are not tracked by the client.
    */
   public getObservableQueries(
     include: RefetchQueriesInclude = "active"

@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#12460](https://github.com/apollographql/apollo-client/pull/12460) [`5de6a3d`](https://github.com/apollographql/apollo-client/commit/5de6a3d3189afa2a7c3bb2eb08d3c4394ae4a16d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump only to release latest as `rc`.
+- [#12763](https://github.com/apollographql/apollo-client/pull/12763) [`5de6a3d`](https://github.com/apollographql/apollo-client/commit/5de6a3d3189afa2a7c3bb2eb08d3c4394ae4a16d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump only to release latest as `rc`.
 
 ## 3.14.0-alpha.1
 

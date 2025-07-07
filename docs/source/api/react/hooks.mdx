@@ -10,7 +10,8 @@ import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-option
 import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
-import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
+
+{/** @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 ## The `ApolloProvider` component
 
@@ -60,9 +61,9 @@ function WithApolloClient() {
 }
 ```
 
-<FunctionDetails canonicalReference="@apollo/client/react!useQuery:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
 
-<FunctionDetails canonicalReference="@apollo/client/react!useLazyQuery:function(1)" headingLevel={2}>
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}>
   ```ts
   [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
   ```
@@ -79,7 +80,7 @@ function WithApolloClient() {
     <ManualTupleItem
       name="result"
       type="QueryResult<TData, TVariables>"
-      canonicalReference="@apollo/client/react!QueryResult:interface"
+      canonicalReference="@apollo/client!QueryResult:interface"
     >
       The result of the query. See the `useQuery` hook for more details.
     </ManualTupleItem>
@@ -87,7 +88,7 @@ function WithApolloClient() {
 </FunctionDetails>
 
 <FunctionDetails
-  canonicalReference="@apollo/client/react!useMutation:function(1)"
+  canonicalReference="@apollo/client!useMutation:function(1)"
   headingLevel={2}
 >
   ```ts
@@ -247,7 +248,7 @@ function useSuspenseQuery<TData, TVariables>(
 Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <InterfaceDetails
-  canonicalReference="@apollo/client/react!SuspenseQueryHookOptions:interface"
+  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
   headingLevel={3}
 />
@@ -386,7 +387,7 @@ function useReadQuery<TData>(
 <UseReadQueryResult />
 
 <FunctionDetails
-  canonicalReference="@apollo/client/react!useLoadableQuery:function(5)"
+  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
   headingLevel={2}
 >
   ```ts
@@ -414,7 +415,7 @@ function useReadQuery<TData>(
       idPrefix="useloadablequery-result"
       name="queryRef"
       type="QueryRef<TData, TVariables> | null"
-      canonicalReference="@apollo/client/react!QueryRef:interface"
+      canonicalReference="@apollo/client!QueryRef:interface"
     >
       The `queryRef` used by `useReadQuery` to read the query result.
     </ManualTupleItem>
@@ -428,7 +429,7 @@ function useReadQuery<TData>(
   </ManualTuple>
 </FunctionDetails>
 
-<FunctionDetails canonicalReference="@apollo/client/react!useQueryRefHandlers:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 

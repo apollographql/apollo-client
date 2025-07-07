@@ -63,6 +63,7 @@ const config = {
     "jest-junit",
     "babel-plugin-react-compiler",
     "react-compiler-runtime",
+    "@mdx-js/language-service",
   ],
   jest: {
     config: "config/jest.config.js",

@@ -4,7 +4,7 @@ description: API reference
 api_reference: true
 ---
 
-import { InterfaceDetails, FunctionDetails, EnumDetails } from '../../../shared/ApiDoc';
+{/** @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 An `ObservableQuery` is created by calling the `client.watchQuery` method.
 It represents a query that can be observed for changes, allowing you to reactively update your UI.
@@ -70,7 +70,6 @@ const result = await firstValueFrom(from(observableQuery));
 <FunctionDetails canonicalReference="@apollo/client!ObservableQuery#startPolling:member(1)" headingLevel={3} result={false} parameters={false} />
 <FunctionDetails canonicalReference="@apollo/client!ObservableQuery#stopPolling:member(1)" headingLevel={3} result={false} parameters={false} />
 <FunctionDetails canonicalReference="@apollo/client!ObservableQuery#reobserve:member(1)" headingLevel={3} result={false} parameters={false} />
-
 
 ## Types
 <EnumDetails canonicalReference="@apollo/client!NetworkStatus:enum" headingLevel={3} />

@@ -22,6 +22,8 @@ This example shows the `@skip` directive, which is a built-in directive (i.e., i
 
 The `@client` directive allows you to resolve client-only data alongside your server data. These fields are not sent to the GraphQL server.
 
+> **Important**: To use `@client` fields, you must configure your `ApolloClient` with a `LocalState` instance. See the [local state documentation](../local-state/local-state-management/) for setup instructions.
+
 ```graphql
 query LaunchDetails($launchId: ID!) {
   launch(id: $launchId) {

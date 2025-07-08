@@ -43,16 +43,18 @@ import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 ```
 
-Next we'll initialize `ApolloClient`, passing its constructor a configuration object with the `uri` and `cache` fields:
+Next we'll initialize `ApolloClient`, passing its constructor a configuration object with the `link` and `cache` fields:
 
 ```jsx title="main.jsx"
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+
 const client = new ApolloClient({
-  uri: 'https://flyby-router-demo.herokuapp.com/',
+  link: new HttpLink({ uri: 'https://flyby-router-demo.herokuapp.com/' }),
   cache: new InMemoryCache(),
 });
 ```
 
-- `uri` specifies the URL of our GraphQL server.
+- `link` specifies how Apollo Client connects to your GraphQL server. Here we use `HttpLink` with the URL of our GraphQL server.
 - `cache` is an instance of `InMemoryCache`, which Apollo Client uses to cache query results after fetching them.
 
 That's it! Our `client` is ready to start fetching data. Now before we start using Apollo Client with React, let's first try sending a query with plain JavaScript.
@@ -93,12 +95,12 @@ In `main.jsx`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx title="main.jsx" {15-17}
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 import App from './App';
 
 const client = new ApolloClient({
-  uri: 'https://flyby-router-demo.herokuapp.com/',
+  link: new HttpLink({ uri: 'https://flyby-router-demo.herokuapp.com/' }),
   cache: new InMemoryCache(),
 });
 

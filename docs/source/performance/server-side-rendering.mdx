@@ -185,9 +185,11 @@ Although the server-side cache's state is available in `__APOLLO_STATE__`, it is
 In your client-side initialization of Apollo Client, you can rehydrate the cache like so:
 
 ```js
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+
 const client = new ApolloClient({
   cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
-  uri: 'https://example.com/graphql'
+  link: new HttpLink({ uri: 'https://example.com/graphql' })
 });
 ```
 

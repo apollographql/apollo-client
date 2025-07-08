@@ -193,18 +193,20 @@ export class ApolloClient implements DataProxy {
    *
    * @example
    * ```js
-   * import { ApolloClient, InMemoryCache } from '@apollo/client';
+   * import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
    *
    * const cache = new InMemoryCache();
    *
    * const client = new ApolloClient({
    *   // Provide required constructor fields
    *   cache: cache,
-   *   uri: 'http://localhost:4000/',
+   *   link: new HttpLink({ uri: 'http://localhost:4000/' }),
    *
    *   // Provide some optional constructor fields
-   *   name: 'react-web-client',
-   *   version: '1.3',
+   *   clientAwareness: {
+   *     name: 'react-web-client',
+   *     version: '1.3',
+   *   },
    *   queryDeduplication: false,
    *   defaultOptions: {
    *     watchQuery: {
@@ -379,6 +381,11 @@ export class ApolloClient implements DataProxy {
   /**
    * Call this method to terminate any active client processes, making it safe
    * to dispose of this `ApolloClient` instance.
+   *
+   * This method performs aggressive cleanup to prevent memory leaks:
+   * - Unsubscribes all active `ObservableQuery` instances by emitting a `completed` event
+   * - Rejects all currently running queries with "QueryManager stopped while query was in flight"
+   * - Removes all queryRefs from the suspense cache
    */
   public stop() {
     this.queryManager.stop();
@@ -778,6 +785,8 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
+   *
+   * Note: `cache-only` queries are excluded from refetching.
    */
   public refetchObservableQueries(
     includeStandby?: boolean

@@ -3200,6 +3200,9 @@ cache:
     `false`. The internal `try`/`catch` blocks have been removed around
     `cache.diff`. If your cache implementation throws for incomplete results,
     please update this to return `null`.
+  pretty-rocks-behave: >-
+    Deprecate second argument to `readFragment` and `readQuery` - `optimistic`
+    should be passed as part of the object in the first argument instead.
 InMemoryCache:
   tall-cups-suffer: >-
     ### Changes for users of `InMemoryCache`

@@ -7,6 +7,8 @@ At its core, Apollo Client is a **state management** library that happens to use
 
 Apollo Client enables you to manage local state alongside remotely fetched state, meaning you can interact with _all_ of your application's state with a single API.
 
+> **Important:** To use `@client` fields or local resolvers, you must configure your `ApolloClient` with a `LocalState` instance. See the [local resolvers documentation](./local-resolvers/) for setup instructions.
+
 ## How it works
 
 You can store your application's local state any way you want (such as in `localStorage` or the Apollo Client cache). You then define the logic that Apollo Client uses to fetch and populate that local data when you query a particular field. You can even include both local _and_ remotely fetched fields in the same query:

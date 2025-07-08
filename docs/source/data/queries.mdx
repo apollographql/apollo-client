@@ -3,7 +3,7 @@ title: Queries
 description: Fetch data with the useQuery hook
 ---
 
-import { PropertySignatureTable } from '../../shared/ApiDoc';
+{/** @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
@@ -510,6 +510,8 @@ Similar to `network-only`, except the query's result _is not_ stored in the cach
 Uses the same logic as `cache-first`, except this query does _not_ automatically update when underlying field values change. You can still _manually_ update this query with `refetch` and `updateQueries`.
 
 `standby` queries return `networkStatus: NetworkStatus.ready` even before subscription, providing immediate feedback to your UI.
+
+Note: `standby` is only supported for watched queries (`useQuery`, `watchQuery`). One-time queries (`client.query`) do not support the `standby` fetchPolicy.
 
 </td>
 </tr>

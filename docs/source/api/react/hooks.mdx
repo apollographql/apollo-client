@@ -10,7 +10,8 @@ import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-option
 import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
-import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
+
+{/** @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 ## The `ApolloProvider` component
 
@@ -24,14 +25,15 @@ import { ApolloProvider } from '@apollo/client/react';
 
 | Option   | Type                       | Description                 |
 | -------- | -------------------------- | --------------------------- |
-| `client` | ApolloClient&lt;TCache&gt; | An `ApolloClient` instance. |
+| `client` | ApolloClient | An `ApolloClient` instance. |
 
 ### Example
 
-```jsx {7-9}
+```jsx {8-10}
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  uri: "http://localhost:4000/graphql"
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" })
 });
 
 ReactDOM.render(
@@ -60,9 +62,9 @@ function WithApolloClient() {
 }
 ```
 
-<FunctionDetails canonicalReference="@apollo/client/react!useQuery:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
 
-<FunctionDetails canonicalReference="@apollo/client/react!useLazyQuery:function(1)" headingLevel={2}>
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}>
   ```ts
   [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
   ```
@@ -79,7 +81,7 @@ function WithApolloClient() {
     <ManualTupleItem
       name="result"
       type="QueryResult<TData, TVariables>"
-      canonicalReference="@apollo/client/react!QueryResult:interface"
+      canonicalReference="@apollo/client!QueryResult:interface"
     >
       The result of the query. See the `useQuery` hook for more details.
     </ManualTupleItem>
@@ -87,7 +89,7 @@ function WithApolloClient() {
 </FunctionDetails>
 
 <FunctionDetails
-  canonicalReference="@apollo/client/react!useMutation:function(1)"
+  canonicalReference="@apollo/client!useMutation:function(1)"
   headingLevel={2}
 >
   ```ts
@@ -247,7 +249,7 @@ function useSuspenseQuery<TData, TVariables>(
 Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <InterfaceDetails
-  canonicalReference="@apollo/client/react!SuspenseQueryHookOptions:interface"
+  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
   headingLevel={3}
 />
@@ -268,7 +270,7 @@ For a detailed explanation of `useBackgroundQuery`, see the [fetching with Suspe
 
 ```jsx
 import { Suspense } from 'react';
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { useBackgroundQuery, useReadQuery } from '@apollo/client/react';
 
 const query = gql`
@@ -278,7 +280,7 @@ const query = gql`
 `;
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
   cache: new InMemoryCache()
 });
 
@@ -386,7 +388,7 @@ function useReadQuery<TData>(
 <UseReadQueryResult />
 
 <FunctionDetails
-  canonicalReference="@apollo/client/react!useLoadableQuery:function(5)"
+  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
   headingLevel={2}
 >
   ```ts
@@ -414,7 +416,7 @@ function useReadQuery<TData>(
       idPrefix="useloadablequery-result"
       name="queryRef"
       type="QueryRef<TData, TVariables> | null"
-      canonicalReference="@apollo/client/react!QueryRef:interface"
+      canonicalReference="@apollo/client!QueryRef:interface"
     >
       The `queryRef` used by `useReadQuery` to read the query result.
     </ManualTupleItem>
@@ -428,7 +430,7 @@ function useReadQuery<TData>(
   </ManualTuple>
 </FunctionDetails>
 
-<FunctionDetails canonicalReference="@apollo/client/react!useQueryRefHandlers:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 

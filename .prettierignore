@@ -28,8 +28,7 @@
 
 !docs/shared
 /docs/shared/**
-!/docs/shared/ApiDoc
-!/docs/shared/ApiDoc/**
+!/docs/shared/MdxProvidedComponents.ts
 !/docs/shared/Overrides
 !/docs/shared/Overrides/**
 

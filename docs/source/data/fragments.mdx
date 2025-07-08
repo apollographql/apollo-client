@@ -106,11 +106,11 @@ We do not recommend using the fragment registry when using the `graphql` functio
 Let's look at an example in React.
 
 ```js title="index.js" {7-12}
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloClient, gql, InMemoryCache, HttpLink } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
   cache: new InMemoryCache({
     fragments: createFragmentRegistry(gql`
       fragment ItemFragment on Item {
@@ -149,11 +149,11 @@ function ToDoList() {
 Queries can declare their own local versions of named fragments which take precedence over ones registered via `createFragmentRegistry`, even if the local fragment is only indirectly referenced by other registered fragments. Take the following example:
 
 ```js title="index.js" {7-17}
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloClient, gql, InMemoryCache, HttpLink } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
   cache: new InMemoryCache({
     fragments: createFragmentRegistry(gql`
       fragment ItemFragment on Item {
@@ -206,10 +206,11 @@ export const { fragmentRegistry } = createFragmentRegistry();
 ```
 
 ```js title="index.js"
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { fragmentRegistry } from "./fragmentRegistry";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
   cache: new InMemoryCache({
     fragments: fragmentRegistry,
   })

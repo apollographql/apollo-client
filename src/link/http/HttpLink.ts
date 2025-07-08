@@ -8,6 +8,9 @@ import type { print } from "@apollo/client/utilities";
 import { BaseHttpLink } from "./BaseHttpLink.js";
 
 export declare namespace HttpLink {
+  /**
+   * Options passed to `HttpLink` through request context.
+   */
   interface ContextOptions {
     /**
      * The URL of the GraphQL endpoint to send requests to. Can also be a
@@ -45,6 +48,10 @@ export declare namespace HttpLink {
     http?: HttpOptions;
   }
 
+  /**
+   * Options passed to `HttpLink` through the `http` constructor option
+   * or the `http` property of a request context.
+   */
   export interface HttpOptions {
     /**
      * If `true`, includes the `extensions` field in operations sent to your
@@ -84,6 +91,9 @@ export declare namespace HttpLink {
     accept?: string[];
   }
 
+  /**
+   * Options for the `HttpLink` constructor.
+   */
   export interface Options {
     /**
      * The URI to use when fetching operations.

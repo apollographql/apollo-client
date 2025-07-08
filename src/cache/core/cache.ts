@@ -250,7 +250,7 @@ export abstract class ApolloCache implements DataProxy {
     returnPartialData,
   }: Cache.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
   /**
-   * {@inheritdoc @apollo/client!ApolloCache#readQuery:member(1)}
+   * {@inheritDoc @apollo/client!ApolloCache#readQuery:member(1)}
    */
   public readQuery<TData = unknown, TVariables = OperationVariables>(
     options: Cache.ReadQueryOptions<TData, TVariables>,

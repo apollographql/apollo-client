@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.0.0-rc.4
+
+### Minor Changes
+
+- [#12757](https://github.com/apollographql/apollo-client/pull/12757) [`5fd2e7c`](https://github.com/apollographql/apollo-client/commit/5fd2e7c15eecc6469ecf5f4fb116633b056ad103) Thanks [@phryneas](https://github.com/phryneas)! - Add `dataState` and overridable `DataValue` types to `useFragment`
+
+- [#12757](https://github.com/apollographql/apollo-client/pull/12757) [`5fd2e7c`](https://github.com/apollographql/apollo-client/commit/5fd2e7c15eecc6469ecf5f4fb116633b056ad103) Thanks [@phryneas](https://github.com/phryneas)! - Add overridable `DataValue` types to `useSuspenseFragment`
+
 ## 4.0.0-rc.3
 
 ### Major Changes

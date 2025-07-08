@@ -68,7 +68,6 @@ export abstract class ApolloCache implements DataProxy {
     readFragment<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
-    // (undocumented)
     readQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)

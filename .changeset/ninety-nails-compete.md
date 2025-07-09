@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - ApolloClient
 ---
 
 Renamed `client.reFetchObservableQueries` to `client.refetchObservableQueries`.

@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - ObservableQuery
 ---
 
 Added a new `.stop` function on `ObservableQuery`.

@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - cache
 ---
 
 Third-party caches must now implement the `fragmentMatches` API. Additionally `fragmentMatches` must be able to handle both `InlineFragmentNode` and `FragmentDefinitionNode` nodes.

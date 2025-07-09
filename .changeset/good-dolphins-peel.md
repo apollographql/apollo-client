@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - errors
+  - removals
 ---
 
 Apollo Client no longer wraps errors in `ApolloError`. `ApolloError` has been replaced with separate error classes depending on the cause of the error. As such, APIs that return an `error` property have been updated to use the generic `Error` type. Use `instanceof` to check for more specific error types.

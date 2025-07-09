@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - links
 ---
 
 All links are now available as classes. The old creator functions have been deprecated.

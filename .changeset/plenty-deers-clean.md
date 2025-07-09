@@ -1,8 +1,11 @@
 ---
 "@apollo/client": major
+_tags:
+  - types
+  - dataState
 ---
 
-Added a new `Streaming` type that will mark `data` in results while `dataStatus`
+Added a new `Streaming` type that will mark `data` in results while `dataState`
 is `"streaming"`.
 
 `Streaming<TData>` defaults to `TData`, but can be overwritten in userland to

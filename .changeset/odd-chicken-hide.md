@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - errors
+  - links
 ---
 
 Add the ability to detect if an error was an error was emitted from the link chain. This is useful if your application throws custom errors in other areas of the application and you'd like to differentiate them from errors emitted by the link chain itself.

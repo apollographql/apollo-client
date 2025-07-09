@@ -1,5 +1,8 @@
 ---
 "@apollo/client": patch
+
+_tags:
+  - defer
 ---
 
 The incremental delivery (`@defer` support) implementation is now pluggable.

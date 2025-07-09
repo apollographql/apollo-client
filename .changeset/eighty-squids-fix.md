@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - ObservableQuery
+  - removals
 ---
 
 `ObservableQuery.setOptions` has been removed as it was an alias of `reobserve`. Prefer using `reobserve` directly instead.

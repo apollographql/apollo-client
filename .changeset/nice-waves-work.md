@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - types
+  - useLazyQuery
 ---
 
 The result resolved from the promise returned from the execute function in `useLazyQuery` is now an `ApolloQueryResult` type and no longer includes all the fields returned from the `useLazyQuery` hook tuple.

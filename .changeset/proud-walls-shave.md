@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - types
+  - dataState
 ---
 
 Overridable types for `dataState: "complete"`, `dataState: "streaming"` and

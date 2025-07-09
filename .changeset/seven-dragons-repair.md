@@ -1,5 +1,7 @@
 ---
 "@apollo/client": patch
+_tags:
+  - errors
 ---
 
 Update format of the error message for `CombinedGraphQLErrors` and `CombinedProtocolErrors` to be more like v3.x.

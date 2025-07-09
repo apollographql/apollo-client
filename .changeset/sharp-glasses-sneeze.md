@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - links
+  - errors
 ---
 
 The `ErrorResponse` object passed to the `disable` and `retry` callback options provided to `createPersistedQueryLink` no longer provides separate `graphQLErrors` and `networkError` properties and instead have been combined to a single `error` property of type `ErrorLike`.

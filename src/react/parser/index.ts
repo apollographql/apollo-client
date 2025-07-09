@@ -12,6 +12,10 @@ import {
   defaultCacheSizes,
 } from "../../utilities/index.js";
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
+import {
+  muteDeprecations,
+  warnDeprecated,
+} from "../../utilities/deprecation/index.js";
 
 export enum DocumentType {
   Query,
@@ -52,8 +56,19 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to safety check incoming documents.
+/**
+ * @deprecated `parser` will be removed in Apollo Client 4.0.
+ *
+ * **Recommended now**
+ *
+ * Remove all usages of `parser` as it is an internal implementation detail.
+ */
 export function parser(document: DocumentNode): IDocumentDefinition {
+  warnDeprecated("parser", () => {
+    invariant.warn(
+      "[parser]: `parser` is deprecated and will be removed in Apollo Client 4.0. Please remove all usages of `parser`."
+    );
+  });
   if (!cache) {
     cache = new AutoCleanedWeakCache(
       cacheSizes.parser || defaultCacheSizes.parser
@@ -159,7 +174,7 @@ if (__DEV__) {
 }
 
 export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
-  const operation = parser(document);
+  const operation = muteDeprecations("parser", parser, [document]);
   const requiredOperationName = operationName(type);
   const usedOperationName = operationName(operation.type);
   invariant(

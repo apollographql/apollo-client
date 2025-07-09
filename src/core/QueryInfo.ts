@@ -16,6 +16,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
+import { muteDeprecations } from "../utilities/deprecation/index.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -160,7 +161,9 @@ export class QueryInfo {
       return { complete: false };
     }
 
-    const diff = this.cache.diff(options);
+    const diff = muteDeprecations("canonizeResults", () =>
+      this.cache.diff(options)
+    );
     this.updateLastDiff(diff, options);
     return diff;
   }
@@ -205,7 +208,14 @@ export class QueryInfo {
     //
     // See https://github.com/apollographql/apollo-client/issues/11400 for more
     // information on this issue.
-    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
+    if (
+      diff &&
+      !diff.complete &&
+      muteDeprecations(
+        "getLastError",
+        () => this.observableQuery?.getLastError()
+      )
+    ) {
       return;
     }
 
@@ -394,7 +404,9 @@ export class QueryInfo {
           }
 
           const diffOptions = this.getDiffOptions(options.variables);
-          const diff = cache.diff<T>(diffOptions);
+          const diff = muteDeprecations("canonizeResults", () =>
+            cache.diff<T>(diffOptions)
+          );
 
           // In case the QueryManager stops this QueryInfo before its
           // results are delivered, it's important to avoid restarting the

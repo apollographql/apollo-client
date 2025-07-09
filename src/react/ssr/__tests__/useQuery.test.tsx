@@ -1,21 +1,33 @@
 /** @jest-environment node */
+import { gql } from "graphql-tag";
 import React from "react";
-import { DocumentNode } from "graphql";
-import gql from "graphql-tag";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
+
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  MockedProvider,
-  MockedResponse,
-  mockSingleLink,
-} from "../../../testing";
-import { ApolloClient } from "../../../core";
-import { InMemoryCache } from "../../../cache";
-import { ApolloProvider, getApolloContext } from "../../context";
-import { useApolloClient, useQuery } from "../../hooks";
-import { renderToStringWithData } from "..";
-import type { Trie } from "@wry/trie";
+  ApolloProvider,
+  useApolloClient,
+  useQuery,
+} from "@apollo/client/react";
+import {
+  prerenderStatic,
+  renderToStringWithData,
+} from "@apollo/client/react/ssr";
+import { MockLink } from "@apollo/client/testing";
+import { resetApolloContext } from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+
+beforeEach(() => {
+  // We are running tests with multiple different renderers, and that can result in a warning like
+  // > Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+  // This avoids that.
+  resetApolloContext();
+});
 
 describe("useQuery Hook SSR", () => {
-  const CAR_QUERY: DocumentNode = gql`
+  const CAR_QUERY: TypedDocumentNode<typeof CAR_RESULT_DATA> = gql`
     query {
       cars {
         make
@@ -50,7 +62,7 @@ describe("useQuery Hook SSR", () => {
       const { loading, data } = useQuery(CAR_QUERY);
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -98,7 +110,7 @@ describe("useQuery Hook SSR", () => {
       expect(loading).toBeTruthy();
 
       if (!loading) {
-        const { make } = data.cars[0];
+        const { make } = data!.cars[0];
         return <div>{make}</div>;
       }
       return null;
@@ -141,10 +153,12 @@ describe("useQuery Hook SSR", () => {
   });
 
   it("should skip both SSR tree rendering and SSR component rendering if `ssr` option is `false` and `ssrMode` is `true`", async () => {
-    const link = mockSingleLink({
-      request: { query: CAR_QUERY },
-      result: { data: CAR_RESULT_DATA },
-    });
+    const link = new MockLink([
+      {
+        request: { query: CAR_QUERY },
+        result: { data: CAR_RESULT_DATA },
+      },
+    ]);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -222,7 +236,7 @@ describe("useQuery Hook SSR", () => {
 
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -265,7 +279,7 @@ describe("useQuery Hook SSR", () => {
       },
     });
 
-    const query = gql`
+    const query: TypedDocumentNode<typeof initialData> = gql`
       query GetSearchResults {
         getSearchResults @client {
           locale
@@ -320,14 +334,14 @@ describe("useQuery Hook SSR", () => {
           getSearchResults: {
             pagination: { pageLimit },
           },
-        } = data;
+        } = data!;
         return <div>{pageLimit}</div>;
       }
       return null;
     };
 
     const app = (
-      <MockedProvider addTypename cache={cache}>
+      <MockedProvider cache={cache}>
         <Component />
       </MockedProvider>
     );
@@ -340,7 +354,7 @@ describe("useQuery Hook SSR", () => {
   });
 
   it("should deduplicate `variables` with identical content, but different order", async () => {
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: {
           query: CAR_QUERY,
@@ -351,18 +365,15 @@ describe("useQuery Hook SSR", () => {
       },
     ];
 
-    let trie: Trie<any> | undefined;
     const Component = ({
       variables,
     }: {
       variables: { foo: string; bar: number };
     }) => {
       const { loading, data } = useQuery(CAR_QUERY, { variables, ssr: true });
-      trie ||=
-        React.useContext(getApolloContext()).renderPromises!["queryInfoTrie"];
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -380,8 +391,131 @@ describe("useQuery Hook SSR", () => {
         </>
       </MockedProvider>
     );
-    expect(
-      Array.from(trie!["getChildTrie"](CAR_QUERY)["strong"].keys())
-    ).toEqual(['{"bar":1,"foo":"a"}']);
   });
+
+  const reactMajor = React.version.split(".")[0];
+  it.each(
+    reactMajor == "19" ?
+      [
+        [
+          "renderToStaticMarkup",
+          renderToStaticMarkup satisfies prerenderStatic.RenderToString,
+        ],
+        [
+          "renderToString",
+          renderToString satisfies prerenderStatic.RenderToString,
+        ],
+        [
+          "prerender",
+          (
+            require("react-dom/static.edge") as typeof import("react-dom/static")
+          ).prerender satisfies prerenderStatic.PrerenderToWebStream,
+        ],
+        [
+          "prerenderToNodeStream",
+          (
+            require("react-dom/static.node") as typeof import("react-dom/static")
+          )
+            .prerenderToNodeStream satisfies prerenderStatic.PrerenderToNodeStream,
+        ],
+      ]
+    : [
+        [
+          "renderToStaticMarkup",
+          renderToStaticMarkup satisfies prerenderStatic.RenderToString,
+        ],
+        [
+          "renderToString",
+          renderToString satisfies prerenderStatic.RenderToString,
+        ],
+      ]
+  )(
+    `React ${reactMajor}, %s, should render waterfalls by rerendering the tree multiple times`,
+    async (_, renderFunction) => {
+      const query1: TypedDocumentNode<{ hello: string }> = gql`
+        query {
+          hello
+        }
+      `;
+      const query2: TypedDocumentNode<{ whoami: { name: string } }> = gql`
+        query {
+          whoami {
+            name
+          }
+        }
+      `;
+      const query3: TypedDocumentNode<{ currentTime: string }> = gql`
+        query {
+          currentTime
+        }
+      `;
+
+      const link = new MockLink([
+        { request: { query: query1 }, result: { data: { hello: "world" } } },
+        {
+          request: { query: query2 },
+          result: { data: { whoami: { name: "Apollo" } } },
+        },
+        {
+          request: { query: query3 },
+          result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
+        },
+      ]);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      function App() {
+        const { loading, data } = useQuery(query1);
+
+        if (loading) {
+          return <p>Loading...</p>;
+        }
+        return (
+          <div>
+            <p>Hello {data?.hello}!</p>
+            <Parent />
+          </div>
+        );
+      }
+      function Parent() {
+        const { loading, data } = useQuery(query2);
+
+        if (loading) {
+          return <p>Loading...</p>;
+        }
+        return (
+          <>
+            <p>My name is {data?.whoami.name}!</p>
+            <Child />
+          </>
+        );
+      }
+      function Child() {
+        const { loading, data } = useQuery(query3);
+
+        if (loading) {
+          return <p>Loading...</p>;
+        }
+        return (
+          <>
+            <p>Current time is {data?.currentTime}!</p>
+          </>
+        );
+      }
+      const { result } = await prerenderStatic({
+        tree: (
+          <ApolloProvider client={client}>
+            <App />
+          </ApolloProvider>
+        ),
+        renderFunction,
+      });
+      expect(result).toMatch(/world/);
+      expect(result).toMatch(/Apollo/);
+      expect(result).toMatch(/2025-03-26T14:40:53.118Z/);
+    }
+  );
 });

@@ -1,15 +1,23 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type {
+  NextNotification,
+  Observable,
+  ObservableNotification,
+} from "rxjs";
 
-import type { ApolloCache } from "../cache/index.js";
-import type { FetchResult } from "../link/core/index.js";
-import type { ApolloError } from "../errors/index.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type {
+  ApplyHKTImplementationWithDefault,
+  IsAny,
+} from "@apollo/client/utilities/internal";
+
 import type { NetworkStatus } from "./networkStatus.js";
-import type { Resolver } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
-import type { Cache } from "../cache/index.js";
-import type { IsStrictlyAny } from "../utilities/index.js";
-import type { Unmasked } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -17,7 +25,169 @@ export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
-export interface DefaultContext extends Record<string, any> {}
+export interface TypeOverrides {}
+
+namespace OverridableTypes {
+  export interface Defaults {
+    Complete: Complete;
+    Streaming: Streaming;
+    Partial: Partial;
+  }
+
+  interface Complete extends HKT {
+    arg1: unknown; // TData
+    return: this["arg1"];
+  }
+
+  interface Streaming extends HKT {
+    arg1: unknown; // TData
+    return: this["arg1"];
+  }
+
+  interface Partial extends HKT {
+    arg1: unknown; // TData
+    return: DeepPartial<this["arg1"]>;
+  }
+}
+
+export declare namespace DataValue {
+  /**
+   * Returns a representation of `TData` in it's "complete" state.
+   *
+   * @defaultValue `TData` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type CompleteOverride<TData> = TData extends { _complete?: infer _Complete } ? _Complete : TData;
+   *
+   * interface CompleteOverrideHKT extends HKT {
+   *   return: CompleteOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Complete: CompleteOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Complete<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Complete",
+    OverridableTypes.Defaults,
+    TData
+  >;
+
+  /**
+   * Returns a representation of `TData` while it is streaming.
+   *
+   * @defaultValue `TData` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type StreamingOverride<TData> = DeepPartial<TData>;
+   *
+   * interface StreamingOverrideHKT extends HKT {
+   *   return: StreamingOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Streaming: StreamingOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Streaming<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Streaming",
+    OverridableTypes.Defaults,
+    TData
+  >;
+
+  /**
+   * Returns a representation of `TData` while it is partial.
+   *
+   * @defaultValue `DeepPartial<TData>` if no overrides are provided.
+   *
+   * @example
+   * You can override this type globally - this example shows how to override it
+   * with `DeepPartial<TData>`:
+   *
+   * ```ts
+   * import { HKT, DeepPartial } from "@apollo/client/utilities";
+   *
+   * type PartialOverride<TData> = DeepPartial<Complete<TData>>;
+   *
+   * interface PartialOverrideHKT extends HKT {
+   *   return: PartialOverride<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     Partial: PartialOverrideHKT;
+   *   }
+   * }
+   * ```
+   */
+  export type Partial<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "Partial",
+    OverridableTypes.Defaults,
+    TData
+  >;
+}
+export interface DefaultContext extends Record<string, any> {
+  /**
+   * Indicates whether `queryDeduplication` was enabled for the request.
+   */
+  queryDeduplication?: boolean;
+  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+}
+
+/**
+ * Represents an `Error` type, but used throughout Apollo Client to represent
+ * errors that may otherwise fail `instanceof` checks if they are cross-realm
+ * Error instances (see the [`Error.isError` proposal](https://github.com/tc39/proposal-is-error) for more details).
+ *
+ * Apollo Client uses several types of errors throughout the client which can be
+ * narrowed using `instanceof`:
+ * - `CombinedGraphQLErrors` - `errors` returned from a GraphQL result
+ * - `CombinedProtocolErrors` - Transport-level errors from multipart subscriptions.
+ * - `ServerParseError` - A JSON-parse error when parsing the server response.
+ * - `ServerError` - A non-200 server response.
+ *
+ * @example
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client";
+ *
+ * try {
+ *   await client.query({ query });
+ * } catch (error) {
+ *   // Use `instanceof` to check for more specific types of errors.
+ *   if (error instanceof CombinedGraphQLErrors) {
+ *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *   } else {
+ *     console.error(errors);
+ *   }
+ * }
+ * ```
+ */
+export interface ErrorLike {
+  message: string;
+  name: string;
+  stack?: string;
+}
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
@@ -42,10 +212,7 @@ export type InternalRefetchQueriesInclude =
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.
-export interface RefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
-  TResult,
-> {
+export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
   updateCache?: (cache: TCache) => void;
   // The client.refetchQueries method discourages passing QueryOptions, by
   // restricting the public type of options.include to exclude QueryOptions as
@@ -72,13 +239,13 @@ export type RefetchQueriesPromiseResults<TResult> =
   // we get if we don't check for any. I hoped `any extends TResult` would do
   // the trick here, instead of IsStrictlyAny, but you can see for yourself what
   // fails in the refetchQueries tests if you try making that simplification.
-  IsStrictlyAny<TResult> extends true ? any[]
+  IsAny<TResult> extends true ? any[]
   : // If the onQueryUpdated function passed to client.refetchQueries returns true
   // or false, that means either to refetch the query (true) or to skip the
   // query (false). Since refetching produces an ApolloQueryResult<any>, and
   // skipping produces nothing, the fully-resolved array of all results produced
   // will be an ApolloQueryResult<any>[], when TResult extends boolean.
-  TResult extends boolean ? ApolloQueryResult<any>[]
+  TResult extends boolean ? QueryResult<any>[]
   : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
   // an array element to Promise.all, so we infer/unwrap the array type U here.
   TResult extends PromiseLike<infer U> ? U[]
@@ -105,7 +272,7 @@ export interface RefetchQueriesResult<TResult>
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
   TResult,
 > extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries option for a mutation, an array of strings,
@@ -121,7 +288,7 @@ export type InternalRefetchQueriesResult<TResult> =
   // If onQueryUpdated returns a boolean, that's equivalent to refetching the
   // query when the boolean is true and skipping the query when false, so the
   // internal type of refetched results is Promise<ApolloQueryResult<any>>.
-  TResult extends boolean ? Promise<ApolloQueryResult<any>>
+  TResult extends boolean ? Promise<QueryResult<any>>
   : // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
     // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
     // generic type parameters of client.refetchQueries).
@@ -132,37 +299,72 @@ export type InternalRefetchQueriesMap<TResult> = Map<
   InternalRefetchQueriesResult<TResult>
 >;
 
-// TODO Remove this unnecessary type in Apollo Client 4.
-export type { QueryOptions as PureQueryOptions };
-
 export type OperationVariables = Record<string, any>;
 
-export interface ApolloQueryResult<T> {
-  data: T;
-  /**
-   * A list of any errors that occurred during server-side execution of a GraphQL operation.
-   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-   */
-  errors?: ReadonlyArray<GraphQLFormattedError>;
+export type ApolloQueryResult<
+  TData,
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
+> = {
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: ApolloError;
+  error?: ErrorLike;
   loading: boolean;
   networkStatus: NetworkStatus;
-  // If result.data was read from the cache with missing fields,
-  // result.partial will be true. Otherwise, result.partial will be falsy
-  // (usually because the property is absent from the result object).
-  partial?: boolean;
-}
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   *
+   * @deprecated This field will be removed in a future version of Apollo Client.
+   */
+  partial: boolean;
+} & GetDataState<TData, TStates>;
+
+export type DataState<TData> =
+  | {
+      data: DataValue.Complete<TData>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+      dataState: "complete";
+    }
+  | {
+      data: DataValue.Streaming<TData>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+      dataState: "streaming";
+    }
+  | {
+      data: DataValue.Partial<TData>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+      dataState: "partial";
+    }
+  | {
+      data: undefined;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+      dataState: "empty";
+    };
+
+export type GetDataState<
+  TData,
+  TState extends DataState<TData>["dataState"],
+> = Extract<DataState<TData>, { dataState: TState }>;
+
+/**
+ * Represents a result that might be complete or still streaming and
+ * has been normalized into a plain GraphQL result. When the result is
+ * still `streaming`, some fields might not yet be available.
+ */
+export type NormalizedExecutionResult<
+  TData = Record<string, unknown>,
+  TExtensions = Record<string, unknown>,
+> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> &
+  GetDataState<TData, "streaming" | "complete">;
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FetchResult<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }
@@ -172,32 +374,92 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
-/**
- * @deprecated Use `MutationUpdaterFunction` instead.
- */
-export type MutationUpdaterFn<T = { [key: string]: any }> = (
-  // The MutationUpdaterFn type is broken because it mistakenly uses the same
-  // type parameter T for both the cache and the mutationResult. Do not use this
-  // type unless you absolutely need it for backwards compatibility.
-  cache: ApolloCache<T>,
-  mutationResult: FetchResult<T>
-) => void;
-
 export type MutationUpdaterFunction<
   TData,
   TVariables,
-  TContext,
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
 > = (
   cache: TCache,
-  result: Omit<FetchResult<Unmasked<TData>>, "context">,
+  result: FormattedExecutionResult<Unmasked<TData>>,
   options: {
-    context?: TContext;
+    context?: DefaultContext;
     variables?: TVariables;
   }
 ) => void;
-export interface Resolvers {
-  [key: string]: {
-    [field: string]: Resolver;
+
+export interface MutateResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}
+
+export interface SubscribeResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}
+
+export interface QueryResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+  error?: ErrorLike;
+}
+
+export declare namespace QueryNotification {
+  type NewNetworkStatus<TData> = NextNotification<{
+    resetError?: boolean;
+  }> & {
+    source: "newNetworkStatus";
   };
+
+  type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "setResult";
+  };
+
+  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
+    source: "network";
+  };
+
+  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "cache";
+  };
+
+  type Value<TData> =
+    | FromCache<TData>
+    | FromNetwork<TData>
+    | NewNetworkStatus<TData>
+    | SetResult<TData>;
+}
+
+/** Observable created by initiating a subscription operation. */
+export interface SubscriptionObservable<T> extends Observable<T> {
+  /**
+   * Used to restart the connection to the link chain. Calling this on a
+   * deduplicated subscription will restart the connection for all observables
+   * that share the request.
+   *
+   * @example
+   *
+   * ```ts
+   * const observable = client.subscribe({ query: subscription });
+   * observable.subscribe((value) => {
+   *   // ...
+   * });
+   *
+   * observable.restart();
+   * ```
+   */
+  restart: () => void;
 }

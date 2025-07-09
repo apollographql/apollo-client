@@ -1,12 +1,17 @@
 import { __rest } from "tslib";
 
-import type { FieldPolicy, Reference } from "../../cache/index.js";
-import { mergeDeep } from "../common/mergeDeep.js";
+import type { FieldPolicy, Reference } from "@apollo/client/cache";
+import { mergeDeep } from "@apollo/client/utilities/internal";
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
-// A very basic pagination field policy that always concatenates new
-// results onto the existing array, without examining options.args.
+/**
+ * A basic pagination field policy that always concatenates new
+ * results onto the existing array, without examining options.args.
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles concatenating field results.
+ */
 export function concatPagination<T = Reference>(
   keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
@@ -18,10 +23,15 @@ export function concatPagination<T = Reference>(
   };
 }
 
-// A basic field policy that uses options.args.{offset,limit} to splice
-// the incoming data into the existing array. If your arguments are called
-// something different (like args.{start,count}), feel free to copy/paste
-// this implementation and make the appropriate changes.
+/**
+ * A basic field policy that uses `options.args.{offset,limit}` to splice
+ * the incoming data into the existing array. If your arguments are called
+ * something different (like `args.{start,count}`), feel free to copy/paste
+ * this implementation and make the appropriate changes.
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles offset/limit pagination
+ */
 export function offsetLimitPagination<T = Reference>(
   keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
@@ -58,7 +68,7 @@ export function offsetLimitPagination<T = Reference>(
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-export type TRelayEdge<TNode> =
+type TRelayEdge<TNode> =
   | {
       cursor?: string;
       node: TNode;
@@ -72,17 +82,17 @@ export type TRelayPageInfo = {
   endCursor: string;
 };
 
-export type TExistingRelay<TNode> = Readonly<{
+type TExistingRelay<TNode> = Readonly<{
   edges: TRelayEdge<TNode>[];
   pageInfo: TRelayPageInfo;
 }>;
 
-export type TIncomingRelay<TNode> = {
+type TIncomingRelay<TNode> = {
   edges?: TRelayEdge<TNode>[];
   pageInfo?: TRelayPageInfo;
 };
 
-export type RelayFieldPolicy<TNode> = FieldPolicy<
+type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode> | null,
   TIncomingRelay<TNode> | null,
   TIncomingRelay<TNode> | null
@@ -91,6 +101,13 @@ export type RelayFieldPolicy<TNode> = FieldPolicy<
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
+/**
+ * A field policy that attempts to handle pagination for fields that adhere to
+ * the [Relay Connections Spec](https://relay.dev/graphql/connections.htm).
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles Relay pagination
+ */
 export function relayStylePagination<TNode extends Reference = Reference>(
   keyArgs: KeyArgs = false
 ): RelayFieldPolicy<TNode> {

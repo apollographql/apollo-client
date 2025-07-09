@@ -2,8 +2,8 @@
 title: Mutations in Apollo Client
 description: Modify data with the useMutation hook
 api_doc:
-  - "@apollo/client!MutationHookOptions:interface"
-  - "@apollo/client!MutationResult:interface"
+  - "@apollo/client/react!MutationHookOptions:interface"
+  - "@apollo/client/react!MutationResult:interface"
 ---
 
 import { PropertySignatureTable } from '../../shared/ApiDoc';
@@ -28,7 +28,8 @@ The `useMutation` [React hook](https://react.dev/reference/react) is the primary
 To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
 ```jsx {13} title="my-component.jsx"
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 // Define mutation
 const INCREMENT_COUNTER = gql`
@@ -58,7 +59,8 @@ When your component renders, `useMutation` returns a tuple that includes:
 Let's say we're creating a to-do list application and we want the user to be able to add items to their list. First, we'll create a corresponding GraphQL mutation named `ADD_TODO`. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 ```jsx title="add-todo.jsx"
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -382,7 +384,7 @@ detail with usage examples, see the [API reference](../api/react/hooks/).
 
 The `useMutation` hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationHookOptions:interface" idPrefix="mutationhookoptions-interface" />
+<PropertySignatureTable canonicalReference="@apollo/client/react!MutationHookOptions:interface" idPrefix="mutationhookoptions-interface" />
 
 ### Result
 
@@ -390,7 +392,7 @@ The `useMutation` result is a tuple with a mutate function in the first position
 
 You call the mutate function to trigger the mutation from your UI.
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" idPrefix="mutationresult-interface" />
+<PropertySignatureTable canonicalReference="@apollo/client/react!MutationResult:interface" idPrefix="mutationresult-interface" />
 
 ## Next steps
 

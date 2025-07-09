@@ -43,6 +43,13 @@ export enum NetworkStatus {
    * No request is in flight for this query, but one or more errors were detected.
    */
   error = 8,
+
+  /**
+   * Indicates that a `@defer` query has received at least the first chunk of
+   * the result but the full result has not yet been fully streamed to the
+   * client.
+   */
+  streaming = 9,
 }
 
 /**
@@ -52,7 +59,7 @@ export enum NetworkStatus {
 export function isNetworkRequestInFlight(
   networkStatus?: NetworkStatus
 ): boolean {
-  return networkStatus ? networkStatus < 7 : false;
+  return !isNetworkRequestSettled(networkStatus);
 }
 
 /**

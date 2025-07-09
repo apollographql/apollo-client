@@ -1,6 +1,9 @@
-import type { MatcherFunction, MatcherContext } from "expect";
-import type { ObservableStream } from "../internal/index.js";
+import type { MatcherContext, MatcherFunction } from "expect";
+
+import type { ObservableStream } from "@apollo/client/testing/internal";
+
 import type { TakeOptions } from "../internal/ObservableStream.js";
+import { EventMismatchError } from "../internal/ObservableStream.js";
 
 function isErrorEqual(this: MatcherContext, expected: any, actual: any) {
   if (typeof expected === "string" && actual instanceof Error) {
@@ -60,6 +63,11 @@ export const toEmitError: MatcherFunction<
         pass: false,
         message: () =>
           hint + "\n\nExpected stream to emit an error but it did not.",
+      };
+    } else if (EventMismatchError.is(error)) {
+      return {
+        pass: false,
+        message: () => error.formatMessage("toEmitError"),
       };
     } else {
       throw error;

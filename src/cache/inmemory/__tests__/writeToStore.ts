@@ -1,32 +1,36 @@
-import { assign, omit } from "lodash";
-import {
-  SelectionNode,
-  FieldNode,
-  DefinitionNode,
-  OperationDefinitionNode,
+import type {
   ASTNode,
+  DefinitionNode,
   DocumentNode,
+  FieldNode,
+  OperationDefinitionNode,
+  SelectionNode,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { assign, omit } from "lodash";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
+import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
 import {
-  storeKeyNameFromField,
-  makeReference,
-  isReference,
-  Reference,
-  StoreObject,
-  addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from "../../../utilities";
-import { StoreWriter } from "../writeToStore";
-import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
-import { InMemoryCache } from "../inMemoryCache";
-import { TypedDocumentNode } from "../../../core";
-import { extractFragmentContext } from "../helpers";
-import { KeyFieldsFunction } from "../policies";
-import { invariant } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+  makeReference,
+  storeKeyNameFromField,
+} from "@apollo/client/utilities/internal";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { extractFragmentContext } from "../helpers.js";
+import type { KeyFieldsFunction } from "../policies.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { StoreWriter } from "../writeToStore.js";
+
+import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
 
 const getIdField: KeyFieldsFunction = ({ id }) => {
   invariant(typeof id === "string", "id is not a string");
@@ -2815,7 +2819,7 @@ describe("writing to the store", () => {
       },
     });
 
-    const mergeCounts: Record<string, number> = Object.create(null);
+    const mergeCounts: Record<string, number> = {};
 
     const query = gql`
       query {
@@ -2893,7 +2897,14 @@ describe("writing to the store", () => {
       },
     });
 
-    const query = gql`
+    type Data = {
+      counter: {
+        __typename: "Counter";
+        count: number;
+      };
+    };
+
+    const query: TypedDocumentNode<Data> = gql`
       query {
         counter {
           count
@@ -2901,14 +2912,14 @@ describe("writing to the store", () => {
       }
     `;
 
-    const results: number[] = [];
+    const results: Data[] = [];
 
     const promise = new Promise<void>((resolve) => {
       cache.watch({
         query,
         optimistic: true,
         callback(diff) {
-          results.push(diff.result);
+          results.push(diff.result as Data);
           expect(diff.result).toEqual({
             counter: {
               __typename: "Counter",
@@ -3986,20 +3997,26 @@ describe("writing to the store", () => {
         }
       }
     `;
-    cache.write({
-      query: injectingQuery,
-      variables: { id: 5 },
-      dataId: "ROOT_QUERY",
-      result: {
-        user: {
-          __typename: "Post",
-          id: "1",
-          title: "Incorrect!",
-          ignore: "User",
-          ignore2: "5",
+    expect(() =>
+      cache.write({
+        query: injectingQuery,
+        variables: { id: 5 },
+        dataId: "ROOT_QUERY",
+        result: {
+          user: {
+            __typename: "Post",
+            id: "1",
+            title: "Incorrect!",
+            ignore: "User",
+            ignore2: "5",
+          },
         },
-      },
-    });
+      })
+    ).toThrow(
+      new InvariantError(
+        '`__typename` is a forbidden field alias name in the selection set for field `user.firstName` in query "(anonymous)".'
+      )
+    );
 
     expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
       Object {
@@ -4009,14 +4026,6 @@ describe("writing to the store", () => {
       }
     `);
 
-    expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`
-      Object {
-        "__typename": "User",
-        "firstName": "Post",
-        "id": "5",
-        "lastName": "1",
-        "title": "Incorrect!",
-      }
-    `);
+    expect(cache.extract()["User:5"]).toBeUndefined();
   });
 });

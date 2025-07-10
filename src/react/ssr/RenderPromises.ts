@@ -161,7 +161,7 @@ export class RenderPromises {
         timeoutId = setTimeout(handleResolve, batchOptions.debounce);
 
         // Listen for the first promise to resolve
-        promises.forEach(promise => {
+        promises.forEach((promise) => {
           promise.then(handleResolve).catch(handleResolve);
         });
       });

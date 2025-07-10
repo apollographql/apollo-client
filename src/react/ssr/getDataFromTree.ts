@@ -3,10 +3,12 @@ import type * as ReactTypes from "react";
 import { getApolloContext } from "../context/index.js";
 import { RenderPromises } from "./RenderPromises.js";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { BatchOptions } from "./types.js";
 
 export function getDataFromTree(
   tree: ReactTypes.ReactNode,
-  context: { [key: string]: any } = {}
+  context: { [key: string]: any } = {},
+  batchOptions?: BatchOptions
 ) {
   return getMarkupFromTree({
     tree,
@@ -14,6 +16,7 @@ export function getDataFromTree(
     // If you need to configure this renderFunction, call getMarkupFromTree
     // directly instead of getDataFromTree.
     renderFunction: renderToStaticMarkup,
+    batchOptions,
   });
 }
 
@@ -23,6 +26,7 @@ export type GetMarkupFromTreeOptions = {
   renderFunction?: (
     tree: ReactTypes.ReactElement<any>
   ) => string | PromiseLike<string>;
+  batchOptions?: BatchOptions;
 };
 
 export function getMarkupFromTree({
@@ -32,6 +36,7 @@ export function getMarkupFromTree({
   // the default, because it's a little less expensive than renderToString,
   // and legacy usage of getDataFromTree ignores the return value anyway.
   renderFunction = renderToStaticMarkup,
+  batchOptions,
 }: GetMarkupFromTreeOptions): Promise<string> {
   const renderPromises = new RenderPromises();
 
@@ -53,7 +58,9 @@ export function getMarkupFromTree({
     })
       .then((html) => {
         return renderPromises.hasPromises() ?
-            renderPromises.consumeAndAwaitPromises().then(process)
+            renderPromises
+              .consumeAndAwaitPromises({ batchOptions })
+              .then(process)
           : html;
       })
       .finally(() => {

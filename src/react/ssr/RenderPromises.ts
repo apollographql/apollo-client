@@ -4,6 +4,7 @@ import type { ObservableQuery, OperationVariables } from "../../core/index.js";
 import type { QueryDataOptions } from "../types/types.js";
 import { Trie } from "@wry/trie";
 import { canonicalStringify } from "../../cache/index.js";
+import type { BatchOptions } from "./types.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
@@ -114,7 +115,11 @@ export class RenderPromises {
     return this.queryPromises.size > 0;
   }
 
-  public consumeAndAwaitPromises() {
+  public consumeAndAwaitPromises({
+    batchOptions,
+  }: {
+    batchOptions?: BatchOptions;
+  }) {
     const promises: Promise<any>[] = [];
     this.queryPromises.forEach((promise, queryInstance) => {
       // Make sure we never try to call fetchData for this query document and
@@ -130,6 +135,39 @@ export class RenderPromises {
       promises.push(promise);
     });
     this.queryPromises.clear();
+
+    if (promises.length === 0) {
+      return Promise.resolve();
+    }
+
+    // If batchOptions with debounce is provided, use Promise.any behavior
+    if (batchOptions?.debounce !== undefined) {
+      return new Promise((resolve) => {
+        let resolved = false;
+        let timeoutId: NodeJS.Timeout | null = null;
+
+        const handleResolve = () => {
+          if (!resolved) {
+            resolved = true;
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+            resolve(undefined);
+          }
+        };
+
+        // Set up timeout for debounce
+        timeoutId = setTimeout(handleResolve, batchOptions.debounce);
+
+        // Listen for the first promise to resolve
+        promises.forEach(promise => {
+          promise.then(handleResolve).catch(handleResolve);
+        });
+      });
+    }
+
+    // Default behavior: wait for all promises (Promise.all)
     return Promise.all(promises);
   }
 

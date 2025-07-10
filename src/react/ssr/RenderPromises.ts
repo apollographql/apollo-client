@@ -37,10 +37,14 @@ export class RenderPromises {
   // beyond a single call to renderToStaticMarkup.
   private queryInfoTrie = makeQueryInfoTrie();
 
+  // Track resolved promises to prevent infinite loops in debounced mode
+  private resolvedPromises = new Set<QueryDataOptions<any, any>>();
+
   private stopped = false;
   public stop() {
     if (!this.stopped) {
       this.queryPromises.clear();
+      this.resolvedPromises.clear();
       this.queryInfoTrie = makeQueryInfoTrie();
       this.stopped = true;
     }
@@ -66,10 +70,17 @@ export class RenderPromises {
     finish?: () => ReactTypes.ReactNode
   ): ReactTypes.ReactNode {
     if (!this.stopped) {
-      const info = this.lookupQueryInfo(queryInstance.getOptions());
+      const options = queryInstance.getOptions();
+      const info = this.lookupQueryInfo(options);
+
+      // Check if this query was already resolved in a previous batch
+      if (this.resolvedPromises.has(options)) {
+        return finish ? finish() : null;
+      }
+
       if (!info.seen) {
         this.queryPromises.set(
-          queryInstance.getOptions(),
+          options,
           new Promise((resolve) => {
             resolve(queryInstance.fetchData());
           })
@@ -121,6 +132,8 @@ export class RenderPromises {
     batchOptions?: BatchOptions;
   }) {
     const promises: Promise<any>[] = [];
+    const promiseOptions: QueryDataOptions<any, any>[] = [];
+
     this.queryPromises.forEach((promise, queryInstance) => {
       // Make sure we never try to call fetchData for this query document and
       // these variables again. Since the queryInstance objects change with
@@ -133,6 +146,7 @@ export class RenderPromises {
       // queryInstance.fetchData for the same Query component indefinitely.
       this.lookupQueryInfo(queryInstance).seen = true;
       promises.push(promise);
+      promiseOptions.push(queryInstance);
     });
     this.queryPromises.clear();
 
@@ -142,27 +156,55 @@ export class RenderPromises {
 
     // If batchOptions with debounce is provided, use Promise.any behavior
     if (batchOptions?.debounce !== undefined) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         let resolved = false;
         let timeoutId: NodeJS.Timeout | null = null;
+        let rejectedPromises = 0;
+        const totalPromises = promises.length;
+        const resolvedQueries = new Set<QueryDataOptions<any, any>>();
 
-        const handleResolve = () => {
+        const handleResolve = (index: number) => {
+          resolvedQueries.add(promiseOptions[index]);
           if (!resolved) {
             resolved = true;
             if (timeoutId) {
               clearTimeout(timeoutId);
               timeoutId = null;
             }
+            // Mark these as resolved for the next render cycle
+            resolvedQueries.forEach(query => this.resolvedPromises.add(query));
             resolve(undefined);
           }
         };
 
-        // Set up timeout for debounce
-        timeoutId = setTimeout(handleResolve, batchOptions.debounce);
+        const handleReject = (index: number, error: any) => {
+          rejectedPromises++;
+          // Only reject if ALL promises fail
+          if (rejectedPromises === totalPromises) {
+            if (!resolved) {
+              resolved = true;
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+              reject(new Error(`All ${totalPromises} queries failed during SSR: ${error?.message || 'Unknown error'}`));
+            }
+          }
+        };
 
-        // Listen for the first promise to resolve
-        promises.forEach((promise) => {
-          promise.then(handleResolve).catch(handleResolve);
+        // Set up timeout for debounce
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            // Mark all as resolved when timeout occurs
+            promiseOptions.forEach(query => this.resolvedPromises.add(query));
+            resolve(undefined);
+          }
+        }, batchOptions.debounce);
+
+        // Listen for promises to resolve or reject
+        promises.forEach((promise, index) => {
+          promise.then(() => handleResolve(index)).catch((error) => handleReject(index, error));
         });
       });
     }

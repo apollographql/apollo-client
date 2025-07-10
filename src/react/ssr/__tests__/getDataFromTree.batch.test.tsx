@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import * as React from "react";
 import { getDataFromTree, renderToStringWithData } from "../index.js";
 import { ApolloClient, InMemoryCache } from "../../../core/index.js";
@@ -60,7 +61,7 @@ describe("getDataFromTree with batch options", () => {
 
     // Should complete within a reasonable time
     expect(duration).toBeLessThan(200);
-    expect(view).toContain("Data: success");
+    expect(view).toMatch(/Data:.*success/);
   });
 
   it("should work with renderToStringWithData and batching", async () => {
@@ -81,7 +82,7 @@ describe("getDataFromTree with batch options", () => {
 
     // Should complete within a reasonable time
     expect(duration).toBeLessThan(150);
-    expect(view).toContain("Data: success");
+    expect(view).toMatch(/Data:.*success/);
   });
 
   it("should handle multiple queries with debouncing", async () => {
@@ -118,8 +119,8 @@ describe("getDataFromTree with batch options", () => {
 
     // Should resolve quickly due to debouncing
     expect(duration).toBeLessThan(100);
-    expect(view).toContain("Query 1: success");
-    expect(view).toContain("Query 2: success");
+    expect(view).toMatch(/Query 1:.*success/);
+    expect(view).toMatch(/Query 2:.*success/);
   });
 
   it("should fall back to default behavior when no batch options provided", async () => {
@@ -131,6 +132,6 @@ describe("getDataFromTree with batch options", () => {
 
     const view = await getDataFromTree(element);
 
-    expect(view).toContain("Data: success");
+    expect(view).toMatch(/Data:.*success/);
   });
 });

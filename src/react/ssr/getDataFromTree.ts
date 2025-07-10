@@ -69,8 +69,8 @@ export function getMarkupFromTree({
                 if (iterationCount > MAX_ITERATIONS) {
                   console.warn(
                     `SSR: Exceeded maximum iterations (${MAX_ITERATIONS}). ` +
-                    `This might indicate an infinite loop in the SSR process. ` +
-                    `Consider checking for queries that never resolve or circular dependencies.`
+                      `This might indicate an infinite loop in the SSR process. ` +
+                      `Consider checking for queries that never resolve or circular dependencies.`
                   );
                   return html; // Return current HTML to prevent infinite loop
                 }
@@ -78,15 +78,15 @@ export function getMarkupFromTree({
                 // If we still have promises after consumption, something went wrong
                 if (renderPromises.hasPromises()) {
                   console.warn(
-                    'SSR: Still have promises after consumption, this might indicate a bug. ' +
-                    'Continuing with next iteration...'
+                    "SSR: Still have promises after consumption, this might indicate a bug. " +
+                      "Continuing with next iteration..."
                   );
                 }
 
                 return process();
               })
               .catch((error) => {
-                console.error('SSR: Error during promise consumption:', error);
+                console.error("SSR: Error during promise consumption:", error);
                 // Return current HTML on error to prevent complete failure
                 return html;
               })

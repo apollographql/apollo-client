@@ -24,12 +24,12 @@ describe("RenderPromises with debounced batching", () => {
 
     const mockOptions1: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     const mockOptions2: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 2 }
+      variables: { id: 2 },
     };
 
     // Add promises to the map directly for testing
@@ -39,7 +39,7 @@ describe("RenderPromises with debounced batching", () => {
     const startTime = Date.now();
 
     await renderPromises.consumeAndAwaitPromises({
-      batchOptions: { debounce: 50 }
+      batchOptions: { debounce: 50 },
     });
 
     const endTime = Date.now();
@@ -55,12 +55,12 @@ describe("RenderPromises with debounced batching", () => {
 
     const mockOptions1: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     const mockOptions2: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 2 }
+      variables: { id: 2 },
     };
 
     (renderPromises as any).queryPromises.set(mockOptions1, fastPromise);
@@ -69,7 +69,7 @@ describe("RenderPromises with debounced batching", () => {
     // Should resolve successfully because fastPromise resolves first
     await expect(
       renderPromises.consumeAndAwaitPromises({
-        batchOptions: { debounce: 10 }
+        batchOptions: { debounce: 10 },
       })
     ).resolves.toBeUndefined();
   });
@@ -80,12 +80,12 @@ describe("RenderPromises with debounced batching", () => {
 
     const mockOptions1: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     const mockOptions2: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 2 }
+      variables: { id: 2 },
     };
 
     (renderPromises as any).queryPromises.set(mockOptions1, failingPromise1);
@@ -94,7 +94,7 @@ describe("RenderPromises with debounced batching", () => {
     // Should reject when all promises fail
     await expect(
       renderPromises.consumeAndAwaitPromises({
-        batchOptions: { debounce: 10 }
+        batchOptions: { debounce: 10 },
       })
     ).rejects.toThrow("All 2 queries failed during SSR");
   });
@@ -106,7 +106,7 @@ describe("RenderPromises with debounced batching", () => {
 
     const mockOptions: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     (renderPromises as any).queryPromises.set(mockOptions, slowPromise);
@@ -114,7 +114,7 @@ describe("RenderPromises with debounced batching", () => {
     const startTime = Date.now();
 
     await renderPromises.consumeAndAwaitPromises({
-      batchOptions: { debounce: 20 }
+      batchOptions: { debounce: 20 },
     });
 
     const endTime = Date.now();
@@ -128,7 +128,7 @@ describe("RenderPromises with debounced batching", () => {
   it("should track resolved promises to prevent infinite loops", async () => {
     const mockOptions: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     const promise = Promise.resolve();
@@ -136,16 +136,18 @@ describe("RenderPromises with debounced batching", () => {
     (renderPromises as any).queryPromises.set(mockOptions, promise);
 
     await renderPromises.consumeAndAwaitPromises({
-      batchOptions: { debounce: 10 }
+      batchOptions: { debounce: 10 },
     });
 
     // The promise should be marked as resolved
-    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(true);
+    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
+      true
+    );
 
     // Adding the same query again should not create a new promise
     const result = renderPromises.addQueryPromise({
       getOptions: () => mockOptions,
-      fetchData: () => Promise.resolve()
+      fetchData: () => Promise.resolve(),
     });
 
     // Should return finish() instead of null (indicating no new promise was created)
@@ -155,13 +157,17 @@ describe("RenderPromises with debounced batching", () => {
   it("should clear resolved promises on stop", () => {
     const mockOptions: QueryDataOptions<any, any> = {
       query: { kind: Kind.DOCUMENT, definitions: [] },
-      variables: { id: 1 }
+      variables: { id: 1 },
     };
 
     (renderPromises as any).resolvedPromises.add(mockOptions);
-    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(true);
+    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
+      true
+    );
 
     renderPromises.stop();
-    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(false);
+    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
+      false
+    );
   });
 });

@@ -172,7 +172,9 @@ export class RenderPromises {
               timeoutId = null;
             }
             // Mark these as resolved for the next render cycle
-            resolvedQueries.forEach(query => this.resolvedPromises.add(query));
+            resolvedQueries.forEach((query) =>
+              this.resolvedPromises.add(query)
+            );
             resolve(undefined);
           }
         };
@@ -187,7 +189,13 @@ export class RenderPromises {
                 clearTimeout(timeoutId);
                 timeoutId = null;
               }
-              reject(new Error(`All ${totalPromises} queries failed during SSR: ${error?.message || 'Unknown error'}`));
+              reject(
+                new Error(
+                  `All ${totalPromises} queries failed during SSR: ${
+                    error?.message || "Unknown error"
+                  }`
+                )
+              );
             }
           }
         };
@@ -197,14 +205,16 @@ export class RenderPromises {
           if (!resolved) {
             resolved = true;
             // Mark all as resolved when timeout occurs
-            promiseOptions.forEach(query => this.resolvedPromises.add(query));
+            promiseOptions.forEach((query) => this.resolvedPromises.add(query));
             resolve(undefined);
           }
         }, batchOptions.debounce);
 
         // Listen for promises to resolve or reject
         promises.forEach((promise, index) => {
-          promise.then(() => handleResolve(index)).catch((error) => handleReject(index, error));
+          promise
+            .then(() => handleResolve(index))
+            .catch((error) => handleReject(index, error));
         });
       });
     }

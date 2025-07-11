@@ -1,0 +1,602 @@
+diff --git a/.changeset/breezy-gorillas-relate.md b/.changeset/breezy-gorillas-relate.md
+new file mode 100644
+index 000000000..a3c1e6933
+--- /dev/null
++++ b/.changeset/breezy-gorillas-relate.md
+@@ -0,0 +1,5 @@
++---
++"@apollo/client": minor
++---
++
++SSR functions take batchOptions, to modulate query batching
+diff --git a/src/react/ssr/RenderPromises.ts b/src/react/ssr/RenderPromises.ts
+index 44ca99519..5e912f86d 100644
+--- a/src/react/ssr/RenderPromises.ts
++++ b/src/react/ssr/RenderPromises.ts
+@@ -4,6 +4,7 @@ import type { ObservableQuery, OperationVariables } from "../../core/index.js";
+ import type { QueryDataOptions } from "../types/types.js";
+ import { Trie } from "@wry/trie";
+ import { canonicalStringify } from "../../cache/index.js";
++import type { BatchOptions } from "./types.js";
+ 
+ // TODO: A vestigial interface from when hooks were implemented with utility
+ // classes, which should be deleted in the future.
+@@ -36,10 +37,14 @@ export class RenderPromises {
+   // beyond a single call to renderToStaticMarkup.
+   private queryInfoTrie = makeQueryInfoTrie();
+ 
++  // Track resolved promises to prevent infinite loops in debounced mode
++  private resolvedPromises = new Set<QueryDataOptions<any, any>>();
++
+   private stopped = false;
+   public stop() {
+     if (!this.stopped) {
+       this.queryPromises.clear();
++      this.resolvedPromises.clear();
+       this.queryInfoTrie = makeQueryInfoTrie();
+       this.stopped = true;
+     }
+@@ -65,10 +70,17 @@ export class RenderPromises {
+     finish?: () => ReactTypes.ReactNode
+   ): ReactTypes.ReactNode {
+     if (!this.stopped) {
+-      const info = this.lookupQueryInfo(queryInstance.getOptions());
++      const options = queryInstance.getOptions();
++      const info = this.lookupQueryInfo(options);
++
++      // Check if this query was already resolved in a previous batch
++      if (this.resolvedPromises.has(options)) {
++        return finish ? finish() : null;
++      }
++
+       if (!info.seen) {
+         this.queryPromises.set(
+-          queryInstance.getOptions(),
++          options,
+           new Promise((resolve) => {
+             resolve(queryInstance.fetchData());
+           })
+@@ -114,8 +126,14 @@ export class RenderPromises {
+     return this.queryPromises.size > 0;
+   }
+ 
+-  public consumeAndAwaitPromises() {
++  public consumeAndAwaitPromises({
++    batchOptions,
++  }: {
++    batchOptions?: BatchOptions;
++  }) {
+     const promises: Promise<any>[] = [];
++    const promiseOptions: QueryDataOptions<any, any>[] = [];
++
+     this.queryPromises.forEach((promise, queryInstance) => {
+       // Make sure we never try to call fetchData for this query document and
+       // these variables again. Since the queryInstance objects change with
+@@ -128,8 +146,80 @@ export class RenderPromises {
+       // queryInstance.fetchData for the same Query component indefinitely.
+       this.lookupQueryInfo(queryInstance).seen = true;
+       promises.push(promise);
++      promiseOptions.push(queryInstance);
+     });
+     this.queryPromises.clear();
++
++    if (promises.length === 0) {
++      return Promise.resolve();
++    }
++
++    // If batchOptions with debounce is provided, use Promise.any behavior
++    if (batchOptions?.debounce !== undefined) {
++      return new Promise((resolve, reject) => {
++        let resolved = false;
++        let timeoutId: NodeJS.Timeout | null = null;
++        let rejectedPromises = 0;
++        const totalPromises = promises.length;
++        const resolvedQueries = new Set<QueryDataOptions<any, any>>();
++
++        const handleResolve = (index: number) => {
++          resolvedQueries.add(promiseOptions[index]);
++          if (!resolved) {
++            resolved = true;
++            if (timeoutId) {
++              clearTimeout(timeoutId);
++              timeoutId = null;
++            }
++            // Mark these as resolved for the next render cycle
++            resolvedQueries.forEach((query) =>
++              this.resolvedPromises.add(query)
++            );
++            resolve(undefined);
++          }
++        };
++
++        const handleReject = (index: number, error: any) => {
++          rejectedPromises++;
++          // Only reject if ALL promises fail
++          if (rejectedPromises === totalPromises) {
++            if (!resolved) {
++              resolved = true;
++              if (timeoutId) {
++                clearTimeout(timeoutId);
++                timeoutId = null;
++              }
++              reject(
++                new Error(
++                  `All ${totalPromises} queries failed during SSR: ${
++                    error?.message || "Unknown error"
++                  }`
++                )
++              );
++            }
++          }
++        };
++
++        // Set up timeout for debounce
++        timeoutId = setTimeout(() => {
++          if (!resolved) {
++            resolved = true;
++            // Mark all as resolved when timeout occurs
++            promiseOptions.forEach((query) => this.resolvedPromises.add(query));
++            resolve(undefined);
++          }
++        }, batchOptions.debounce);
++
++        // Listen for promises to resolve or reject
++        promises.forEach((promise, index) => {
++          promise
++            .then(() => handleResolve(index))
++            .catch((error) => handleReject(index, error));
++        });
++      });
++    }
++
++    // Default behavior: wait for all promises (Promise.all)
+     return Promise.all(promises);
+   }
+ 
+diff --git a/src/react/ssr/__tests__/RenderPromises.debounce.test.ts b/src/react/ssr/__tests__/RenderPromises.debounce.test.ts
+new file mode 100644
+index 000000000..7b93e6b0e
+--- /dev/null
++++ b/src/react/ssr/__tests__/RenderPromises.debounce.test.ts
+@@ -0,0 +1,173 @@
++import { RenderPromises } from "../RenderPromises.js";
++import type { QueryDataOptions } from "../../types/types.js";
++import { Kind } from "graphql";
++
++describe("RenderPromises with debounced batching", () => {
++  let renderPromises: RenderPromises;
++
++  beforeEach(() => {
++    renderPromises = new RenderPromises();
++  });
++
++  afterEach(() => {
++    renderPromises.stop();
++  });
++
++  it("should resolve on first promise in debounced mode", async () => {
++    const fastPromise = new Promise<void>((resolve) => {
++      setTimeout(() => resolve(), 10);
++    });
++
++    const slowPromise = new Promise<void>((resolve) => {
++      setTimeout(() => resolve(), 100);
++    });
++
++    const mockOptions1: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    const mockOptions2: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 2 },
++    };
++
++    // Add promises to the map directly for testing
++    (renderPromises as any).queryPromises.set(mockOptions1, fastPromise);
++    (renderPromises as any).queryPromises.set(mockOptions2, slowPromise);
++
++    const startTime = Date.now();
++
++    await renderPromises.consumeAndAwaitPromises({
++      batchOptions: { debounce: 50 },
++    });
++
++    const endTime = Date.now();
++    const duration = endTime - startTime;
++
++    // Should resolve quickly (around 10ms) not wait for the slow promise
++    expect(duration).toBeLessThan(50);
++  });
++
++  it("should handle promise rejections correctly in debounced mode", async () => {
++    const fastPromise = Promise.resolve();
++    const failingPromise = Promise.reject(new Error("Test error"));
++
++    const mockOptions1: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    const mockOptions2: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 2 },
++    };
++
++    (renderPromises as any).queryPromises.set(mockOptions1, fastPromise);
++    (renderPromises as any).queryPromises.set(mockOptions2, failingPromise);
++
++    // Should resolve successfully because fastPromise resolves first
++    await expect(
++      renderPromises.consumeAndAwaitPromises({
++        batchOptions: { debounce: 10 },
++      })
++    ).resolves.toBeUndefined();
++  });
++
++  it("should reject when all promises fail in debounced mode", async () => {
++    const failingPromise1 = Promise.reject(new Error("Error 1"));
++    const failingPromise2 = Promise.reject(new Error("Error 2"));
++
++    const mockOptions1: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    const mockOptions2: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 2 },
++    };
++
++    (renderPromises as any).queryPromises.set(mockOptions1, failingPromise1);
++    (renderPromises as any).queryPromises.set(mockOptions2, failingPromise2);
++
++    // Should reject when all promises fail
++    await expect(
++      renderPromises.consumeAndAwaitPromises({
++        batchOptions: { debounce: 10 },
++      })
++    ).rejects.toThrow("All 2 queries failed during SSR");
++  });
++
++  it("should timeout when debounce expires", async () => {
++    const slowPromise = new Promise<void>((resolve) => {
++      setTimeout(() => resolve(), 100);
++    });
++
++    const mockOptions: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    (renderPromises as any).queryPromises.set(mockOptions, slowPromise);
++
++    const startTime = Date.now();
++
++    await renderPromises.consumeAndAwaitPromises({
++      batchOptions: { debounce: 20 },
++    });
++
++    const endTime = Date.now();
++    const duration = endTime - startTime;
++
++    // Should timeout around 20ms, not wait for the 100ms promise
++    expect(duration).toBeGreaterThanOrEqual(15);
++    expect(duration).toBeLessThan(50);
++  });
++
++  it("should track resolved promises to prevent infinite loops", async () => {
++    const mockOptions: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    const promise = Promise.resolve();
++
++    (renderPromises as any).queryPromises.set(mockOptions, promise);
++
++    await renderPromises.consumeAndAwaitPromises({
++      batchOptions: { debounce: 10 },
++    });
++
++    // The promise should be marked as resolved
++    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
++      true
++    );
++
++    // Adding the same query again should not create a new promise
++    const result = renderPromises.addQueryPromise({
++      getOptions: () => mockOptions,
++      fetchData: () => Promise.resolve(),
++    });
++
++    // Should return finish() instead of null (indicating no new promise was created)
++    expect(result).toBe(null);
++  });
++
++  it("should clear resolved promises on stop", () => {
++    const mockOptions: QueryDataOptions<any, any> = {
++      query: { kind: Kind.DOCUMENT, definitions: [] },
++      variables: { id: 1 },
++    };
++
++    (renderPromises as any).resolvedPromises.add(mockOptions);
++    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
++      true
++    );
++
++    renderPromises.stop();
++    expect((renderPromises as any).resolvedPromises.has(mockOptions)).toBe(
++      false
++    );
++  });
++});
+diff --git a/src/react/ssr/__tests__/getDataFromTree.batch.test.tsx b/src/react/ssr/__tests__/getDataFromTree.batch.test.tsx
+new file mode 100644
+index 000000000..138bc07cd
+--- /dev/null
++++ b/src/react/ssr/__tests__/getDataFromTree.batch.test.tsx
+@@ -0,0 +1,137 @@
++/** @jest-environment node */
++import * as React from "react";
++import { getDataFromTree, renderToStringWithData } from "../index.js";
++import { ApolloClient, InMemoryCache } from "../../../core/index.js";
++import { ApolloProvider } from "../../context/index.js";
++import { useQuery } from "../../hooks/index.js";
++import { gql } from "../../../core/index.js";
++import { ApolloLink } from "../../../link/core/index.js";
++import { Observable } from "../../../utilities/index.js";
++
++const TEST_QUERY = gql`
++  query TestQuery {
++    test
++  }
++`;
++
++const TestComponent = () => {
++  const { data, loading } = useQuery(TEST_QUERY);
++
++  if (loading) return <div>Loading...</div>;
++  return <div>Data: {data?.test}</div>;
++};
++
++describe("getDataFromTree with batch options", () => {
++  let client: ApolloClient<any>;
++
++  beforeEach(() => {
++    const mockLink = new ApolloLink(() => {
++      return new Observable((observer) => {
++        // Resolve immediately for testing
++        observer.next({ data: { test: "success" } });
++        observer.complete();
++      });
++    });
++
++    client = new ApolloClient({
++      cache: new InMemoryCache(),
++      link: mockLink,
++    });
++  });
++
++  it("should work with debounced batching", async () => {
++    const element = (
++      <ApolloProvider client={client}>
++        <TestComponent />
++      </ApolloProvider>
++    );
++
++    const startTime = Date.now();
++
++    const view = await getDataFromTree(
++      element,
++      {},
++      {
++        debounce: 50,
++      }
++    );
++
++    const endTime = Date.now();
++    const duration = endTime - startTime;
++
++    // Should complete within a reasonable time
++    expect(duration).toBeLessThan(200);
++    expect(view).toMatch(/Data:.*success/);
++  });
++
++  it("should work with renderToStringWithData and batching", async () => {
++    const element = (
++      <ApolloProvider client={client}>
++        <TestComponent />
++      </ApolloProvider>
++    );
++
++    const startTime = Date.now();
++
++    const view = await renderToStringWithData(element, {
++      debounce: 30,
++    });
++
++    const endTime = Date.now();
++    const duration = endTime - startTime;
++
++    // Should complete within a reasonable time
++    expect(duration).toBeLessThan(150);
++    expect(view).toMatch(/Data:.*success/);
++  });
++
++  it("should handle multiple queries with debouncing", async () => {
++    const MultiQueryComponent = () => {
++      const { data: data1 } = useQuery(TEST_QUERY);
++      const { data: data2 } = useQuery(TEST_QUERY);
++
++      return (
++        <div>
++          <div>Query 1: {data1?.test}</div>
++          <div>Query 2: {data2?.test}</div>
++        </div>
++      );
++    };
++
++    const element = (
++      <ApolloProvider client={client}>
++        <MultiQueryComponent />
++      </ApolloProvider>
++    );
++
++    const startTime = Date.now();
++
++    const view = await getDataFromTree(
++      element,
++      {},
++      {
++        debounce: 20,
++      }
++    );
++
++    const endTime = Date.now();
++    const duration = endTime - startTime;
++
++    // Should resolve quickly due to debouncing
++    expect(duration).toBeLessThan(100);
++    expect(view).toMatch(/Query 1:.*success/);
++    expect(view).toMatch(/Query 2:.*success/);
++  });
++
++  it("should fall back to default behavior when no batch options provided", async () => {
++    const element = (
++      <ApolloProvider client={client}>
++        <TestComponent />
++      </ApolloProvider>
++    );
++
++    const view = await getDataFromTree(element);
++
++    expect(view).toMatch(/Data:.*success/);
++  });
++});
+diff --git a/src/react/ssr/getDataFromTree.ts b/src/react/ssr/getDataFromTree.ts
+index 4dde58ec6..bfefd749b 100644
+--- a/src/react/ssr/getDataFromTree.ts
++++ b/src/react/ssr/getDataFromTree.ts
+@@ -3,10 +3,12 @@ import type * as ReactTypes from "react";
+ import { getApolloContext } from "../context/index.js";
+ import { RenderPromises } from "./RenderPromises.js";
+ import { renderToStaticMarkup } from "react-dom/server";
++import type { BatchOptions } from "./types.js";
+ 
+ export function getDataFromTree(
+   tree: ReactTypes.ReactNode,
+-  context: { [key: string]: any } = {}
++  context: { [key: string]: any } = {},
++  batchOptions?: BatchOptions
+ ) {
+   return getMarkupFromTree({
+     tree,
+@@ -14,6 +16,7 @@ export function getDataFromTree(
+     // If you need to configure this renderFunction, call getMarkupFromTree
+     // directly instead of getDataFromTree.
+     renderFunction: renderToStaticMarkup,
++    batchOptions,
+   });
+ }
+ 
+@@ -23,6 +26,7 @@ export type GetMarkupFromTreeOptions = {
+   renderFunction?: (
+     tree: ReactTypes.ReactElement<any>
+   ) => string | PromiseLike<string>;
++  batchOptions?: BatchOptions;
+ };
+ 
+ export function getMarkupFromTree({
+@@ -32,8 +36,11 @@ export function getMarkupFromTree({
+   // the default, because it's a little less expensive than renderToString,
+   // and legacy usage of getDataFromTree ignores the return value anyway.
+   renderFunction = renderToStaticMarkup,
++  batchOptions,
+ }: GetMarkupFromTreeOptions): Promise<string> {
+   const renderPromises = new RenderPromises();
++  let iterationCount = 0;
++  const MAX_ITERATIONS = 50; // Prevent infinite loops
+ 
+   function process(): Promise<string> {
+     // Always re-render from the rootElement, even though it might seem
+@@ -53,7 +60,36 @@ export function getMarkupFromTree({
+     })
+       .then((html) => {
+         return renderPromises.hasPromises() ?
+-            renderPromises.consumeAndAwaitPromises().then(process)
++            renderPromises
++              .consumeAndAwaitPromises({ batchOptions })
++              .then(() => {
++                iterationCount++;
++
++                // Safety check to prevent infinite loops
++                if (iterationCount > MAX_ITERATIONS) {
++                  console.warn(
++                    `SSR: Exceeded maximum iterations (${MAX_ITERATIONS}). ` +
++                      `This might indicate an infinite loop in the SSR process. ` +
++                      `Consider checking for queries that never resolve or circular dependencies.`
++                  );
++                  return html; // Return current HTML to prevent infinite loop
++                }
++
++                // If we still have promises after consumption, something went wrong
++                if (renderPromises.hasPromises()) {
++                  console.warn(
++                    "SSR: Still have promises after consumption, this might indicate a bug. " +
++                      "Continuing with next iteration..."
++                  );
++                }
++
++                return process();
++              })
++              .catch((error) => {
++                console.error("SSR: Error during promise consumption:", error);
++                // Return current HTML on error to prevent complete failure
++                return html;
++              })
+           : html;
+       })
+       .finally(() => {
+diff --git a/src/react/ssr/renderToStringWithData.ts b/src/react/ssr/renderToStringWithData.ts
+index f6bcb3458..ad3f0268f 100644
+--- a/src/react/ssr/renderToStringWithData.ts
++++ b/src/react/ssr/renderToStringWithData.ts
+@@ -1,12 +1,15 @@
+ import type * as ReactTypes from "react";
+ import { getMarkupFromTree } from "./getDataFromTree.js";
+ import { renderToString } from "react-dom/server";
++import type { BatchOptions } from "./types.js";
+ 
+ export function renderToStringWithData(
+-  component: ReactTypes.ReactElement<any>
++  component: ReactTypes.ReactElement<any>,
++  batchOptions?: BatchOptions
+ ): Promise<string> {
+   return getMarkupFromTree({
+     tree: component,
+     renderFunction: renderToString,
++    batchOptions,
+   });
+ }
+diff --git a/src/react/ssr/types.ts b/src/react/ssr/types.ts
+new file mode 100644
+index 000000000..c8012b89a
+--- /dev/null
++++ b/src/react/ssr/types.ts
+@@ -0,0 +1,14 @@
++export type BatchOptions = {
++  /**
++   * Debounce timeout in milliseconds for SSR query batching.
++   * When provided, the SSR process will wait for the first query to resolve
++   * OR the debounce timeout to expire before continuing to the next render cycle.
++   *
++   * This is useful for optimizing SSR performance by not waiting for all queries
++   * to complete, but should be used carefully as it may result in incomplete data
++   * if queries have dependencies on each other.
++   *
++   * @default undefined (wait for all queries to resolve)
++   */
++  debounce?: number;
++};

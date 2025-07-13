@@ -870,8 +870,7 @@ it("does not rerender when fields with @nonreactive on nested fragment change", 
   await expect(takeSnapshot).not.toRerender();
 });
 
-// TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
-it.failing(
+it(
   "warns and suspends when passing parent object to `from` when key fields are missing",
   async () => {
     using _ = spyOnConsole("warn");

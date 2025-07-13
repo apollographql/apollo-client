@@ -261,12 +261,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Only apply this fix when:
     // 1. options.id is explicitly undefined (not just missing)
     // 2. The query is a pure fragment query (not a named query with fragments)
-    if (options.id === undefined && hasOwn.call(options, 'id')) {
+    if (options.id === undefined && hasOwn.call(options, "id")) {
       const mainDef = getMainDefinition(options.query);
       // Check if this is a pure fragment query (operation without name, only fragment spreads)
-      if (mainDef.kind === 'OperationDefinition' &&
-          !mainDef.name &&
-          mainDef.selectionSet.selections.every(sel => sel.kind === "FragmentSpread")) {
+      if (
+        mainDef.kind === "OperationDefinition" &&
+        !mainDef.name &&
+        mainDef.selectionSet.selections.every(
+          (sel) => sel.kind === "FragmentSpread"
+        )
+      ) {
         return {
           result: {} as TData,
           complete: false,
@@ -276,8 +280,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
               "Can't determine completeness for fragment query on non-identifiable object",
               options.query,
               options.variables
-            )
-          ]
+            ),
+          ],
         };
       }
     }

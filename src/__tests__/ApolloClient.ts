@@ -14,7 +14,11 @@ import { Kind } from "graphql";
 import { DeepPartial, Observable } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
-import { createFragmentRegistry, InMemoryCache, MissingFieldError } from "../cache";
+import {
+  createFragmentRegistry,
+  InMemoryCache,
+  MissingFieldError,
+} from "../cache";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
@@ -2674,7 +2678,8 @@ describe("ApolloClient", () => {
         expect(result).toStrictEqual({
           data: {},
           complete: false,
-          missing: "Can't determine completeness for fragment query on non-identifiable object",
+          missing:
+            "Can't determine completeness for fragment query on non-identifiable object",
         });
       }
     });

@@ -20,6 +20,7 @@ import {
   print,
   cacheSizes,
   defaultCacheSizes,
+  getMainDefinition,
 } from "../../utilities/index.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
@@ -252,6 +253,31 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public diff<TData, TVariables extends OperationVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>
   ): Cache.DiffResult<TData> {
+    // Detect non-identifiable objects with fragment queries
+    // Only apply this fix when:
+    // 1. options.id is explicitly undefined (not just missing)
+    // 2. The query is a pure fragment query (not a named query with fragments)
+    if (options.id === undefined && hasOwn.call(options, 'id')) {
+      const mainDef = getMainDefinition(options.query);
+      // Check if this is a pure fragment query (operation without name, only fragment spreads)
+      if (mainDef.kind === 'OperationDefinition' &&
+          !mainDef.name &&
+          mainDef.selectionSet.selections.every(sel => sel.kind === "FragmentSpread")) {
+        return {
+          result: {} as TData,
+          complete: false,
+          missing: [
+            new MissingFieldError(
+              "Can't determine completeness for fragment query on non-identifiable object",
+              "Can't determine completeness for fragment query on non-identifiable object",
+              options.query,
+              options.variables
+            )
+          ]
+        };
+      }
+    }
+
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,

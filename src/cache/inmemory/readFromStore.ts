@@ -446,44 +446,8 @@ export class StoreReader {
           context.lookupFragment
         );
 
-        if (selection.kind === Kind.FRAGMENT_SPREAD) {
-          if (!fragment) {
-            throw newInvariantError(
-              `No fragment named %s`,
-              selection.name.value
-            );
-          }
-          fragment.selectionSet.selections.forEach((subSelection) => {
-            if (isField(subSelection)) {
-              let subFieldValue = policies.readField(
-                {
-                  fieldName: subSelection.name.value,
-                  field: subSelection,
-                  variables: context.variables,
-                  from: objectOrReference,
-                },
-                context
-              );
-
-              const subResultName = resultKeyNameFromField(subSelection);
-
-              if (subFieldValue === void 0) {
-                missing = missingMerger.merge(missing, {
-                  [subResultName]: `Can't find field '${
-                    subSelection.name.value
-                  }' on ${
-                    isReference(objectOrReference) ?
-                      objectOrReference.__ref + " object"
-                    : "object " + JSON.stringify(objectOrReference, null, 2)
-                  }`,
-                });
-              }
-
-              if (subFieldValue !== void 0) {
-                objectsToMerge.push({ [subResultName]: subFieldValue });
-              }
-            }
-          });
+        if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+          throw newInvariantError(`No fragment named %s`, selection.name.value);
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {

@@ -2542,10 +2542,7 @@ describe("ApolloClient", () => {
         expect(result).toStrictEqual({
           data: {},
           complete: false,
-          missing: {
-            id: "Can't find field 'id' on ROOT_QUERY object",
-            text: "Can't find field 'text' on ROOT_QUERY object",
-          },
+          missing: "Can't determine completeness for fragment query on non-identifiable object",
         });
       }
     });
@@ -2569,7 +2566,7 @@ describe("ApolloClient", () => {
         complete: false,
         missing: [
           new MissingFieldError(
-            "Can't find field 'foo' on ROOT_QUERY object",
+            "Can't determine completeness for fragment query on non-identifiable object",
             expect.anything(), // query
             expect.anything() // variables
           ),
@@ -2593,7 +2590,7 @@ describe("ApolloClient", () => {
               complete: false,
               missing: [
                 new MissingFieldError(
-                  "Can't find field 'foo' on ROOT_QUERY object",
+                  "Can't determine completeness for fragment query on non-identifiable object",
                   expect.anything(), // query
                   expect.anything() // variables
                 ),

@@ -1,8 +1,13 @@
 import { Trie } from "@wry/trie";
-import type { ObservableQuery } from "../../../core/index.js";
+import type {
+  ApolloClient,
+  ObservableQuery,
+  WatchFragmentOptions,
+} from "../../../core/index.js";
 import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
-import type { CacheKey } from "./types.js";
+import type { CacheKey, FragmentCacheKey } from "./types.js";
+import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -22,6 +27,10 @@ export class SuspenseCache {
   private queryRefs = new Trie<{ current?: InternalQueryReference }>(
     canUseWeakMap
   );
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
+    canUseWeakMap
+  );
+
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -38,6 +47,27 @@ export class SuspenseCache {
 
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
+        autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+        onDispose: () => {
+          delete ref.current;
+        },
+      });
+    }
+
+    return ref.current;
+  }
+
+  getFragmentRef<TData, TVariables>(
+    cacheKey: FragmentCacheKey,
+    client: ApolloClient<any>,
+    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+  ) {
+    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
+      current?: FragmentReference<TData, TVariables>;
+    };
+
+    if (!ref.current) {
+      ref.current = new FragmentReference(client, options, {
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
           delete ref.current;

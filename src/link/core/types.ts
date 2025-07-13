@@ -50,10 +50,13 @@ export interface ApolloPayloadResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
 > {
-  payload: SingleExecutionResult | ExecutionPatchResult | null;
+  payload:
+    | SingleExecutionResult<TData, DefaultContext, TExtensions>
+    | ExecutionPatchResult<TData, TExtensions>
+    | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
-  errors?: ReadonlyArray<Error | string>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
 export type ExecutionPatchResult<

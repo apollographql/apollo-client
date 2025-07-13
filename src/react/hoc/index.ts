@@ -7,4 +7,4 @@ export { withMutation } from "./mutation-hoc.js";
 export { withSubscription } from "./subscription-hoc.js";
 export { withApollo } from "./withApollo.js";
 
-export * from "./types.js";
+export type * from "./types.js";

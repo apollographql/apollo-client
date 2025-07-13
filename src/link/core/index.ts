@@ -7,4 +7,4 @@ export { concat } from "./concat.js";
 export { execute } from "./execute.js";
 export { ApolloLink } from "./ApolloLink.js";
 
-export * from "./types.js";
+export type * from "./types.js";

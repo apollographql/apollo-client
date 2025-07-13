@@ -1,4 +1,8 @@
 import gql from "graphql-tag";
+import { TextEncoder, TextDecoder } from "util";
+global.TextEncoder ??= TextEncoder;
+// @ts-ignore
+global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
@@ -33,5 +37,5 @@ if (!Symbol.asyncDispose) {
 // @ts-ignore
 expect.addEqualityTesters([areApolloErrorsEqual, areGraphQLErrorsEqual]);
 
-// @ts-ignore
-globalThis.REACT_FALLBACK_THROTTLE_MS = 10;
+// not available in JSDOM 🙄
+global.structuredClone = (val) => JSON.parse(JSON.stringify(val));

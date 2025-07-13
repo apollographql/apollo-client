@@ -49,4 +49,4 @@ export { Policies } from "./inmemory/policies.js";
 export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
 export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
-export * from "./inmemory/types.js";
+export type * from "./inmemory/types.js";

@@ -1,12 +1,5 @@
 import React, { Suspense, useState } from "react";
-import {
-  act,
-  render,
-  screen,
-  renderHook,
-  waitFor,
-  RenderOptions,
-} from "@testing-library/react";
+import { act, screen, renderHook, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
@@ -25,6 +18,7 @@ import {
   SubscribeToMoreOptions,
   split,
 } from "../../../core";
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
 import {
   MockedProvider,
   MockedProviderProps,
@@ -46,22 +40,23 @@ import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryRef } from "../../../react";
-import {
-  FetchMoreFunction,
-  RefetchFunction,
-  SubscribeToMoreFunction,
-} from "../useSuspenseQuery";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
-  Profiler,
   SimpleCaseData,
-  createProfiler,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
-  useTrackRenders,
+  renderAsync,
 } from "../../../testing/internal";
 
+import {
+  RenderStream,
+  createRenderStream,
+  disableActEnvironment,
+  useTrackRenders,
+  AsyncRenderFn,
+} from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {
@@ -169,7 +164,7 @@ function usePaginatedQueryCase() {
 }
 
 function createDefaultProfiler<TData>() {
-  return createProfiler({
+  return createRenderStream({
     initialSnapshot: {
       error: null as Error | null,
       result: null as UseReadQueryResult<TData> | null,
@@ -186,7 +181,7 @@ function createDefaultProfiledComponents<
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
     TData
   : unknown,
->(profiler: Profiler<Snapshot>) {
+>(profiler: RenderStream<Snapshot>) {
   function SuspenseFallback() {
     useTrackRenders();
     return <p>Loading</p>;
@@ -224,38 +219,33 @@ function createDefaultProfiledComponents<
   };
 }
 
-function renderWithMocks(
+async function renderWithMocks(
   ui: React.ReactElement,
-  {
-    wrapper: Wrapper = React.Fragment,
-    ...props
-  }: MockedProviderProps & { wrapper?: RenderOptions["wrapper"] }
+  props: MockedProviderProps,
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const user = userEvent.setup();
 
-  const utils = render(ui, {
+  const utils = await doRender(ui, {
     wrapper: ({ children }) => (
-      <MockedProvider {...props}>
-        <Wrapper>{children}</Wrapper>
-      </MockedProvider>
+      <MockedProvider {...props}>{children}</MockedProvider>
     ),
   });
 
   return { ...utils, user };
 }
 
-function renderWithClient(
+async function renderWithClient(
   ui: React.ReactElement,
-  options: { client: ApolloClient<any>; wrapper?: RenderOptions["wrapper"] }
+  options: { client: ApolloClient<any> },
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
-  const { client, wrapper: Wrapper = React.Fragment } = options;
+  const { client } = options;
   const user = userEvent.setup();
 
-  const utils = render(ui, {
-    wrapper: ({ children }) => (
-      <ApolloProvider client={client}>
-        <Wrapper>{children}</Wrapper>
-      </ApolloProvider>
+  const utils = await doRender(ui, {
+    wrapper: ({ children }: { children: React.ReactNode }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
   });
 
@@ -265,10 +255,11 @@ function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
-  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -284,24 +275,30 @@ it("loads a query and suspends when the load query function is called", async ()
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -316,10 +313,11 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -335,24 +333,30 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -362,7 +366,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("tears down the query on unmount", async () => {
@@ -373,9 +377,10 @@ it("tears down the query on unmount", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -391,18 +396,21 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { user, unmount } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler,
-  });
+  const { user, unmount } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: { greeting: "Hello" },
@@ -505,9 +513,10 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     },
   });
 
-  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -525,17 +534,23 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await renderStream.takeRender();
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
   }
@@ -546,10 +561,10 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(screen.getByText("Toggle")));
+  await user.click(screen.getByText("Toggle"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -565,7 +580,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -575,7 +590,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender({ timeout: 50 });
+  await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
 it("auto resubscribes when mounting useReadQuery after naturally disposed by useReadQuery", async () => {
@@ -585,9 +600,10 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -605,24 +621,30 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await renderStream.takeRender();
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -631,14 +653,14 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     });
   }
 
-  await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await user.click(toggleButton);
+  await renderStream.takeRender();
   await wait(0);
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(client.getObservableQueries().size).toBe(1);
   // Here we don't expect a suspense cache entry because we previously disposed
@@ -647,7 +669,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -663,7 +685,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -673,16 +695,17 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     });
   }
 
-  await expect(Profiler).not.toRerender({ timeout: 50 });
+  await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const App = () => {
     useTrackRenders();
@@ -703,24 +726,30 @@ it("changes variables on a query and resuspends when passing new variables to th
     );
   };
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load 1st character")));
+  await user.click(screen.getByText("Load 1st character"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -730,16 +759,16 @@ it("changes variables on a query and resuspends when passing new variables to th
     });
   }
 
-  await act(() => user.click(screen.getByText("Load 2nd character")));
+  await user.click(screen.getByText("Load 2nd character"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -749,7 +778,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("resets the `queryRef` to null and disposes of it when calling the `reset` function", async () => {
@@ -760,9 +789,10 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -770,7 +800,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
 
     // Resetting the result allows us to detect when ReadQueryHook is unmounted
     // since it won't render and overwrite the `null`
-    Profiler.mergeSnapshot({ result: null });
+    renderStream.mergeSnapshot({ result: null });
 
     return (
       <>
@@ -783,16 +813,22 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -801,10 +837,10 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     });
   }
 
-  await act(() => user.click(screen.getByText("Reset query")));
+  await user.click(screen.getByText("Reset query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toBeNull();
@@ -842,10 +878,11 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -863,18 +900,21 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client: globalClient,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client: globalClient,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: { greeting: "local hello" },
@@ -907,10 +947,11 @@ it("passes context to the link", async () => {
     }),
   });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -928,15 +969,21 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: { context: { valueA: "A", valueB: "B" } },
@@ -990,10 +1037,11 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     link: new MockLink([]),
   });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1011,14 +1059,20 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
@@ -1073,9 +1127,10 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     data: { results },
   });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1093,14 +1148,20 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  const { user } = renderWithMocks(<App />, { cache, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      cache,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
@@ -1133,10 +1194,11 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1154,15 +1216,21 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1173,7 +1241,7 @@ it("returns initial cache data followed by network data when the fetch policy is
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1206,9 +1274,10 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const Profiler = createDefaultProfiler();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1224,14 +1293,20 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
-  const { snapshot, renderedComponents } = await Profiler.takeRender();
+  const { snapshot, renderedComponents } = await renderStream.takeRender();
 
   expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
   expect(snapshot.result).toEqual({
@@ -1240,7 +1315,7 @@ it("all data is present in the cache, no network request is made", async () => {
     error: undefined,
   });
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {
@@ -1271,9 +1346,10 @@ it("partial data is present in the cache so it is ignored and network request is
     cache.writeQuery({ query, data: { hello: "from cache" } });
   }
 
-  const Profiler = createDefaultProfiler();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1289,21 +1365,27 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { foo: "bar", hello: "from link" },
@@ -1335,9 +1417,10 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const Profiler = createDefaultProfiler();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1355,21 +1438,27 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { hello: "from link" },
@@ -1398,9 +1487,10 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const Profiler = createDefaultProfiler();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1418,21 +1508,27 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { hello: "from link" },
@@ -1542,7 +1638,8 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load first todo")));
 
@@ -1614,9 +1711,10 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1633,15 +1731,21 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
 
@@ -1668,7 +1772,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1703,7 +1807,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   );
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1719,7 +1823,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("reacts to cache updates", async () => {
@@ -1729,14 +1833,15 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleQueryData> | null,
     },
   });
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1752,16 +1857,22 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1777,7 +1888,7 @@ it("reacts to cache updates", async () => {
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1787,7 +1898,7 @@ it("reacts to cache updates", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
@@ -1808,9 +1919,10 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
-  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1835,16 +1947,22 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -1853,14 +1971,14 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     });
   }
 
-  await act(() => user.click(screen.getByText("Change error policy")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Change error policy"));
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch greeting")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch greeting"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     // Ensure we aren't rendering the error boundary and instead rendering the
     // error message in the hook component.
@@ -1902,9 +2020,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -1925,30 +2044,36 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result!.data).toEqual({
       phase: "initial",
     });
   }
 
-  await act(() => user.click(screen.getByText("Update context")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Update context"));
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result!.data).toEqual({
       phase: "rerender",
@@ -2004,9 +2129,10 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     cache,
   });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2028,15 +2154,21 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
     const { data } = snapshot.result!;
     const resultSet = new Set(data.results);
     const values = Array.from(resultSet).map((item) => item.value);
@@ -2046,10 +2178,10 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
 
-  await act(() => user.click(screen.getByText("Canonize results")));
+  await user.click(screen.getByText("Canonize results"));
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
     const { data } = snapshot.result!;
     const resultSet = new Set(data.results);
     const values = Array.from(resultSet).map((item) => item.value);
@@ -2112,9 +2244,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2146,27 +2279,33 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
     const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([2, 3, 5, 7, 11]);
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch next")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch next"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
     const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([2, 3, 5, 7, 11, 13, 17, 19, 23, 29]);
@@ -2179,14 +2318,14 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     ]);
   }
 
-  await act(() => user.click(screen.getByText("Change refetch write policy")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Change refetch write policy"));
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch last")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch last"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
     const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([31, 37, 41, 43, 47]);
@@ -2277,9 +2416,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2302,16 +2442,22 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -2322,8 +2468,8 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     });
   }
 
-  await act(() => user.click(screen.getByText("Update partial data")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Update partial data"));
+  await renderStream.takeRender();
 
   cache.modify({
     id: cache.identify({ __typename: "Character", id: "1" }),
@@ -2333,7 +2479,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -2346,7 +2492,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -2416,9 +2562,10 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
-  const Profiler = createDefaultProfiler<Data>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2443,15 +2590,21 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -2466,14 +2619,14 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     });
   }
 
-  await act(() => user.click(screen.getByText("Change fetch policy")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Change fetch policy"));
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -2520,9 +2673,10 @@ it("re-suspends when calling `refetch`", async () => {
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2539,21 +2693,27 @@ it("re-suspends when calling `refetch`", async () => {
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -2562,16 +2722,16 @@ it("re-suspends when calling `refetch`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man (updated)" } },
@@ -2580,7 +2740,7 @@ it("re-suspends when calling `refetch`", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("re-suspends when calling `refetch` with new variables", async () => {
@@ -2603,9 +2763,10 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2622,21 +2783,27 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
@@ -2645,16 +2812,16 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch with ID 2")));
+  await user.click(screen.getByText("Refetch with ID 2"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "2", name: "Captain America" } },
@@ -2663,7 +2830,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("re-suspends multiple times when calling `refetch` multiple times", async () => {
@@ -2680,10 +2847,11 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2700,21 +2868,27 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -2725,16 +2899,16 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
   const button = screen.getByText("Refetch");
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -2743,16 +2917,16 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     });
   }
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -2761,7 +2935,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("throws errors when errors are returned after calling `refetch`", async () => {
@@ -2786,10 +2960,11 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2808,16 +2983,22 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
@@ -2826,11 +3007,11 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ErrorFallback]);
     expect(snapshot.error).toEqual(
@@ -2861,10 +3042,11 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData | undefined>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2885,16 +3067,22 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toStrictEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
@@ -2903,11 +3091,11 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toEqual({
@@ -2919,7 +3107,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     expect(renderedComponents).not.toContain(ErrorFallback);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
@@ -2942,10 +3130,11 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData | undefined>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -2966,16 +3155,22 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
@@ -2984,11 +3179,11 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.error).toBeNull();
@@ -3001,7 +3196,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
@@ -3025,10 +3220,11 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     },
   ];
 
-  const Profiler = createDefaultProfiler<VariablesCaseData | undefined>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -3049,16 +3245,22 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
@@ -3067,11 +3269,11 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.error).toBeNull();
@@ -3084,7 +3286,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
@@ -3164,7 +3366,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
         <button
           onClick={() => {
             startTransition(() => {
-              refetch();
+              void refetch();
             });
           }}
         >
@@ -3178,7 +3380,8 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  await renderWithMocks(<App />, { mocks }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3232,9 +3435,10 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     }),
   });
 
-  const Profiler = createDefaultProfiler<PaginatedQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -3255,16 +3459,22 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -3278,16 +3488,16 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -3302,14 +3512,15 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const { query, client } = usePaginatedQueryCase();
-  const Profiler = createDefaultProfiler<PaginatedQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -3337,16 +3548,22 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -3360,11 +3577,11 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Fetch more"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -3383,14 +3600,15 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   // TODO investigate: this test highlights a React render
   // that actually doesn't rerender any user-provided components
   // so we need to use `skipNonTrackingRenders`
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
   const { query, link } = usePaginatedQueryCase();
-  const Profiler = createDefaultProfiler<PaginatedQueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const client = new ApolloClient({
     link,
@@ -3424,16 +3642,22 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -3447,11 +3671,11 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Fetch more"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -3470,7 +3694,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   // TODO investigate: this test highlights a React render
   // that actually doesn't rerender any user-provided components
   // so we need to use `skipNonTrackingRenders`
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
@@ -3579,7 +3803,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
         <button
           onClick={() => {
             startTransition(() => {
-              fetchMore({ variables: { offset: 1 } });
+              void fetchMore({ variables: { offset: 1 } });
             });
           }}
         >
@@ -3597,7 +3821,8 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3682,9 +3907,10 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const client = new ApolloClient({
     link: new MockLink(mocks),
@@ -3710,16 +3936,22 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
@@ -3729,11 +3961,11 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
@@ -3749,7 +3981,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     ]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('defaults refetchWritePolicy to "overwrite"', async () => {
@@ -3796,9 +4028,10 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     },
   });
 
-  const Profiler = createDefaultProfiler<QueryData>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const client = new ApolloClient({
     link: new MockLink(mocks),
@@ -3822,16 +4055,22 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial load
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Load query"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
@@ -3841,11 +4080,11 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await user.click(screen.getByText("Refetch"));
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [13, 17, 19, 23, 29] },
@@ -3891,9 +4130,10 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     },
   ];
 
-  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const cache = new InMemoryCache();
 
@@ -3921,15 +4161,21 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial load
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
@@ -3941,7 +4187,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
@@ -3952,7 +4198,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('suspends and does not use partial data from other variables in the cache when changing variables and using a "cache-first" fetch policy with returnPartialData: true', async () => {
@@ -3974,9 +4220,10 @@ it('suspends and does not use partial data from other variables in the cache whe
     variables: { id: "1" },
   });
 
-  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -3996,19 +4243,22 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    cache,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+      cache,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
@@ -4020,7 +4270,7 @@ it('suspends and does not use partial data from other variables in the cache whe
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -4031,16 +4281,16 @@ it('suspends and does not use partial data from other variables in the cache whe
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "2", name: "Black Widow" } },
@@ -4051,7 +4301,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
@@ -4086,9 +4336,10 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     },
   ];
 
-  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   const cache = new InMemoryCache();
 
@@ -4114,25 +4365,28 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    cache,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+      cache,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
@@ -4141,7 +4395,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
@@ -4185,9 +4439,10 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     data: { character: { id: "1" } },
   });
 
-  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4206,25 +4461,28 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    cache,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+      cache,
+    },
+    renderStream
+  );
 
   // initial load
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
@@ -4301,9 +4559,10 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     data: { character: { id: "1" } },
   });
 
-  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4322,19 +4581,22 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    cache,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+      cache,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4345,7 +4607,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
@@ -4374,9 +4636,10 @@ it('suspends and does not use partial data when changing variables and using a "
     variables: { id: "1" },
   });
 
-  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4396,19 +4659,22 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    cache,
-    wrapper: Profiler,
-  });
+  const { user } = await renderWithMocks(
+    <App />,
+    {
+      mocks,
+      cache,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4419,7 +4685,7 @@ it('suspends and does not use partial data when changing variables and using a "
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4429,16 +4695,16 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { character: { id: "2", name: "Black Widow" } },
@@ -4494,9 +4760,10 @@ it('does not suspend deferred queries with partial data in the cache and using a
 
   const client = new ApolloClient({ link, cache });
 
-  const Profiler = createDefaultProfiler<DeepPartial<QueryData>>();
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4515,15 +4782,21 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4548,7 +4821,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4583,7 +4856,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   );
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4599,7 +4872,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 it("throws when calling loadQuery on first render", async () => {
@@ -4616,7 +4889,15 @@ it("throws when calling loadQuery on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).toThrow(
+  await expect(
+    renderWithMocks(
+      <App />,
+      { mocks },
+      {
+        render: renderAsync,
+      }
+    )
+  ).rejects.toThrow(
     new InvariantError(
       "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
@@ -4642,12 +4923,14 @@ it("throws when calling loadQuery on subsequent render", async () => {
     return <button onClick={() => setCount(1)}>Load query in render</button>;
   }
 
-  const { user } = renderWithMocks(
+  await renderWithMocks(
     <ReactErrorBoundary onError={(e) => (error = e)} fallback={<div>Oops</div>}>
       <App />
     </ReactErrorBoundary>,
-    { mocks }
+    { mocks },
+    { render: renderAsync }
   );
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query in render")));
 
@@ -4671,7 +4954,9 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
+  await expect(
+    renderWithMocks(<App />, { mocks }, { render: renderAsync })
+  ).resolves.not.toThrow();
 });
 
 it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
@@ -4716,7 +5001,8 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-  const Profiler = createProfiler({
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
         SimpleCaseData,
@@ -4727,13 +5013,13 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   });
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
     const [loadQuery, queryRef, { subscribeToMore }] = useLoadableQuery(query);
 
-    Profiler.mergeSnapshot({ subscribeToMore });
+    renderStream.mergeSnapshot({ subscribeToMore });
 
     return (
       <div>
@@ -4745,20 +5031,26 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     );
   }
 
-  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { user } = await renderWithClient(
+    <App />,
+    {
+      client,
+    },
+    renderStream
+  );
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4775,7 +5067,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     return { greeting: data.greetingUpdated };
   });
 
-  const { snapshot } = Profiler.getCurrentRender();
+  const { snapshot } = renderStream.getCurrentRender();
 
   snapshot.subscribeToMore!({ document: subscription, updateQuery });
 
@@ -4788,7 +5080,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -4802,6 +5094,8 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   expect(updateQuery).toHaveBeenCalledWith(
     { greeting: "Hello" },
     {
+      complete: true,
+      previousData: { greeting: "Hello" },
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },
@@ -4844,7 +5138,8 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-  const Profiler = createProfiler({
+  using _disabledAct = disableActEnvironment();
+  const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
         SimpleCaseData,
@@ -4855,13 +5150,13 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
   });
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(Profiler);
+    createDefaultProfiledComponents(renderStream);
 
   function App() {
     useTrackRenders();
     const [loadQuery, queryRef, { subscribeToMore }] = useLoadableQuery(query);
 
-    Profiler.mergeSnapshot({ subscribeToMore });
+    renderStream.mergeSnapshot({ subscribeToMore });
 
     return (
       <div>
@@ -4873,11 +5168,11 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  await renderWithClient(<App />, { client }, renderStream);
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  const { snapshot } = Profiler.getCurrentRender();
+  const { snapshot } = renderStream.getCurrentRender();
 
   expect(() => {
     snapshot.subscribeToMore!({ document: subscription });

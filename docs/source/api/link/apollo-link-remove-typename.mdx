@@ -6,7 +6,7 @@ minVersion: 3.8.0
 
 ## Overview
 
-When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. 
+When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations.
 
 ## Remove `__typename` from all variables
 
@@ -78,8 +78,8 @@ const client = new ApolloClient({
 });
 ```
 
-If you're using [directional composition](./link/introduction#directional-composition), 
-for example, to [send a subscription to a websocket connection](../data/subscriptions#3-split-communication-by-operation-recommended),
+If you're using [directional composition](/react/api/link/introduction#directional-composition),
+for example, to [send a subscription to a websocket connection](/react/data/subscriptions#3-split-communication-by-operation-recommended),
 place `removeTypenameLink` before `splitLink` to remove `__typename` from variables for all operations.
 
 ```ts

@@ -7,7 +7,6 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../ApolloProvider";
 import { ApolloConsumer } from "../ApolloConsumer";
 import { getApolloContext } from "../ApolloContext";
-import { itAsync } from "../../../testing";
 
 const client = new ApolloClient({
   cache: new Cache(),
@@ -15,17 +14,13 @@ const client = new ApolloClient({
 });
 
 describe("<ApolloConsumer /> component", () => {
-  itAsync("has a render prop", (resolve, reject) => {
+  it("has a render prop", (done) => {
     render(
       <ApolloProvider client={client}>
         <ApolloConsumer>
           {(clientRender) => {
-            try {
-              expect(clientRender).toBe(client);
-              resolve();
-            } catch (e) {
-              reject(e);
-            }
+            expect(clientRender).toBe(client);
+            done();
             return null;
           }}
         </ApolloConsumer>

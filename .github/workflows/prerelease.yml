@@ -98,12 +98,17 @@ jobs:
 
       - name: Tag release with next on npm
         if: steps.changesets.outcome == 'success'
-        run: npm dist-tag add @apollo/client@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} next
+        env:
+          PUBLISHED: ${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
+        run: |
+          if NEXT=$(npm show @apollo/client@next version) node -e 'process.exit(require("semver").gt(process.env.PUBLISHED,process.env.NEXT)?0:1)'; then
+            npm dist-tag add @apollo/client@${PUBLISHED} next;
+          fi
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
         id: slack
-        uses: slackapi/slack-github-action@v1.26.0
+        uses: slackapi/slack-github-action@v1.27.0
         with:
           # Slack channel id, channel name, or user id to post message
           # See also: https://api.slack.com/methods/chat.postMessage#channels

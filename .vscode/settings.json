@@ -5,6 +5,9 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never"
+  },
   "cSpell.enableFiletypes": ["mdx"],
-  "jest.jestCommandLine": "node_modules/.bin/jest --config ./config/jest.config.js --ignoreProjects 'ReactDOM 17' --runInBand"
+  "jest.jestCommandLine": "node --expose-gc  node_modules/.bin/jest --config ./config/jest.config.js --ignoreProjects 'ReactDOM 17' --runInBand"
 }

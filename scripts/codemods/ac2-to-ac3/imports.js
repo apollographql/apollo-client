@@ -15,7 +15,9 @@ export default function transformer(file, api) {
   renameOrCreateApolloClientImport();
 
   moveSpecifiersToApolloClient("react-apollo");
+  moveSpecifiersToApolloClient("@apollo/react-common");
   moveSpecifiersToApolloClient("@apollo/react-hooks");
+  moveSpecifiersToApolloClient("apollo-cache");
   moveSpecifiersToApolloClient("apollo-cache-inmemory");
   moveSpecifiersToApolloClient("apollo-link");
   moveSpecifiersToApolloClient("apollo-link-http");
@@ -28,6 +30,7 @@ export default function transformer(file, api) {
   renameImport("@apollo/react-hoc", "@apollo/client/react/hoc");
   renameImport("@apollo/react-ssr", "@apollo/client/react/ssr");
   renameImport("@apollo/react-testing", "@apollo/client/testing");
+  renameImport("apollo-utilities", "@apollo/client/utilities");
 
   renameDefaultSpecifier(getImport("apollo-link-schema"), "SchemaLink");
   [

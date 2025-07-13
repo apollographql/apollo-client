@@ -1,5 +1,5 @@
 /* eslint-disable testing-library/render-result-naming-convention */
-import React, { useEffect } from "rehackt";
+import * as React from "rehackt";
 import { useRenderGuard } from "../useRenderGuard";
 import { render, waitFor } from "@testing-library/react";
 
@@ -23,7 +23,7 @@ it("returns a function that returns `false` if called after render", async () =>
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     const calledDuringRender = useRenderGuard();
-    useEffect(() => {
+    React.useEffect(() => {
       result = calledDuringRender();
     });
     return <>Test</>;

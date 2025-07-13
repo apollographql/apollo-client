@@ -3,6 +3,7 @@ import { ApolloCache } from "../cache";
 import { Cache, DataProxy } from "../..";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();

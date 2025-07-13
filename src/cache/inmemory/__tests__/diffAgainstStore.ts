@@ -21,7 +21,7 @@ describe("diffing queries against the store", () => {
   const writer = new StoreWriter(cache);
 
   it(
-    "expects named fragments to return complete as true when diffd against " +
+    "expects named fragments to return complete as false when diffd against " +
       "the store",
     () => {
       const store = defaultNormalizedCacheFactory({});
@@ -45,11 +45,12 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
+      expect(queryResult.result).toEqual({});
     }
   );
 
   it(
-    "expects inline fragments to return complete as true when diffd against " +
+    "expects inline fragments to return complete as false when diffd against " +
       "the store",
     () => {
       const store = defaultNormalizedCacheFactory();
@@ -87,9 +88,13 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
+      expect(queryResult.result).toEqual({});
     }
   );
 
+  // TODO: Determine what this means. `complete` is `true` and the result is the
+  // written result, so I'm not sure what the "nothing" is referring to or what
+  // it means for the store to be "enough".
   it("returns nothing when the store is enough", () => {
     const query = gql`
       {
@@ -111,12 +116,13 @@ describe("diffing queries against the store", () => {
       query,
     });
 
-    expect(
-      reader.diffQueryAgainstStore({
-        store,
-        query,
-      }).complete
-    ).toBeTruthy();
+    const queryResult = reader.diffQueryAgainstStore({
+      store,
+      query,
+    });
+
+    expect(queryResult.complete).toBe(true);
+    expect(queryResult.result).toEqual(result);
   });
 
   it("caches root queries both under the ID of the node and the query name", () => {
@@ -160,12 +166,15 @@ describe("diffing queries against the store", () => {
       }
     `;
 
-    const { complete } = reader.diffQueryAgainstStore({
+    const { result, complete } = reader.diffQueryAgainstStore({
       store,
       query: secondQuery,
     });
 
-    expect(complete).toBeTruthy();
+    expect(complete).toBe(true);
+    expect(result).toEqual({
+      people_one: { __typename: "Person", id: "1", name: "Luke Skywalker" },
+    });
     expect((store as any).lookup('Person:{"id":"1"}')).toEqual({
       __typename: "Person",
       id: "1",
@@ -201,7 +210,7 @@ describe("diffing queries against the store", () => {
         store,
         query: unionQuery,
       });
-    }).toThrowError(/No fragment/);
+    }).toThrow(/No fragment/);
   });
 
   it("does not error on a correct query with union typed fragments", () => {
@@ -241,13 +250,14 @@ describe("diffing queries against the store", () => {
           }
         }
       `;
-      const { complete } = reader.diffQueryAgainstStore({
+      const { complete, result } = reader.diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
       });
 
       expect(complete).toBe(true);
+      expect(result).toEqual(firstResult);
     });
   });
 
@@ -291,12 +301,15 @@ describe("diffing queries against the store", () => {
       }
     `;
 
-    const { complete } = reader.diffQueryAgainstStore({
+    const { complete, result } = reader.diffQueryAgainstStore({
       store,
       query: unionQuery,
     });
 
     expect(complete).toBe(true);
+    expect(result).toEqual({
+      person: { __typename: "Author", firstName: "John" },
+    });
   });
 
   it("throws an error on a query with fields missing from matching named fragments", () => {
@@ -413,6 +426,7 @@ describe("diffing queries against the store", () => {
       query: simpleQuery,
     });
 
+    expect(simpleDiff.complete).toBe(false);
     expect(simpleDiff.result).toEqual({
       people_one: {
         __typename: "Person",
@@ -425,6 +439,7 @@ describe("diffing queries against the store", () => {
       query: inlineFragmentQuery,
     });
 
+    expect(inlineDiff.complete).toBe(false);
     expect(inlineDiff.result).toEqual({
       people_one: {
         __typename: "Person",
@@ -437,6 +452,7 @@ describe("diffing queries against the store", () => {
       query: namedFragmentQuery,
     });
 
+    expect(namedDiff.complete).toBe(false);
     expect(namedDiff.result).toEqual({
       people_one: {
         __typename: "Person",
@@ -522,6 +538,12 @@ describe("diffing queries against the store", () => {
     expect(cache.identify(result.c.e[4])).toEqual("e:5");
   });
 
+  // TODO: Remove these tests on the 4.0 branch. Support for the
+  // `previousResult` option was removed in https://github.com/apollographql/apollo-client/pull/5644
+  // so there is no referential equality in the way these tests are making them.
+  // We should remove support for `previousResult` entirely from the TypeScript
+  // types and eliminate any use in the codebase since this option is completely
+  // ignored within `diffQueryAgainstStore`.
   describe("referential equality preservation", () => {
     it("will return the previous result if there are no changes", () => {
       const query = gql`
@@ -560,6 +582,8 @@ describe("diffing queries against the store", () => {
         previousResult,
       });
 
+      expect(result).not.toBe(queryResult);
+      expect(result).not.toBe(previousResult);
       expect(result).toEqual(queryResult);
       expect(result).toEqual(previousResult);
     });
@@ -1060,17 +1084,14 @@ describe("diffing queries against the store", () => {
         },
       });
 
-      try {
+      expect(() => {
         reader.diffQueryAgainstStore({
           store,
           query: invalidQuery,
         });
-        throw new Error("should have thrown");
-      } catch (e) {
-        expect((e as Error).message).toEqual(
-          "Missing selection set for object of type Message returned for query field messageList"
-        );
-      }
+      }).toThrow(
+        "Missing selection set for object of type Message returned for query field messageList"
+      );
     });
   });
 

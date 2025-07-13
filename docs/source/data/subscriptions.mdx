@@ -460,69 +460,75 @@ const COMMENTS_SUBSCRIPTION = gql`
 
 </MultiCodeBlock>
 
-Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComments` property to the `CommentsPage` component it returns. This property is a function that will be responsible for calling `subscribeToMore` after the component mounts.
+Next, we modify our `CommentsPageWithData` component to call `subscribeToMore` after the comments query loads.
 
 <MultiCodeBlock>
 
 ```tsx {10-25}
 function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
-  const { subscribeToMore, ...result } = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const { subscribeToMore, ...result } = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
-  return (
-    <CommentsPage
-      {...result}
-      subscribeToNewComments={() =>
-        subscribeToMore({
-          document: COMMENTS_SUBSCRIPTION,
-          variables: { postID: params.postID },
-          updateQuery: (prev, { subscriptionData }) => {
-            if (!subscriptionData.data) return prev;
-            const newFeedItem = subscriptionData.data.commentAdded;
+  useEffect(() => {
+    // This assumes you want to wait to start the subscription
+    // after the query has loaded.
+    if (result.data) {
+      const unsubscribe = subscribeToMore({
+        document: COMMENTS_SUBSCRIPTION,
+        variables: { postID: params.postID },
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const newFeedItem = subscriptionData.data.commentAdded;
 
-            return Object.assign({}, prev, {
-              post: {
-                comments: [newFeedItem, ...prev.post.comments]
-              }
-            });
-          }
-        })
-      }
-    />
-  );
+          return Object.assign({}, prev, {
+            post: {
+              comments: [newFeedItem, ...prev.post.comments],
+            },
+          });
+        },
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [result.data, params.postID, subscribeToMore]);
+
+  return <CommentsPage {...result} />;
 }
 ```
 
 ```jsx {10-25}
 function CommentsPageWithData({ params }) {
-  const { subscribeToMore, ...result } = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const { subscribeToMore, ...result } = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
-  return (
-    <CommentsPage
-      {...result}
-      subscribeToNewComments={() =>
-        subscribeToMore({
-          document: COMMENTS_SUBSCRIPTION,
-          variables: { postID: params.postID },
-          updateQuery: (prev, { subscriptionData }) => {
-            if (!subscriptionData.data) return prev;
-            const newFeedItem = subscriptionData.data.commentAdded;
+  useEffect(() => {
+    if (result.data) {
+      const unsubscribe = subscribeToMore({
+        document: COMMENTS_SUBSCRIPTION,
+        variables: { postID: params.postID },
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const newFeedItem = subscriptionData.data.commentAdded;
 
-            return Object.assign({}, prev, {
-              post: {
-                comments: [newFeedItem, ...prev.post.comments]
-              }
-            });
-          }
-        })
-      }
-    />
-  );
+          return Object.assign({}, prev, {
+            post: {
+              comments: [newFeedItem, ...prev.post.comments],
+            },
+          });
+        },
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [result.data, params.postID]);
+
+  return <CommentsPage {...result} />;
 }
 ```
 
@@ -533,28 +539,6 @@ In the example above, we pass three options to `subscribeToMore`:
 * `document` indicates the subscription to execute.
 * `variables` indicates the variables to include when executing the subscription.
 * `updateQuery` is a function that tells Apollo Client how to combine the query's currently cached result (`prev`) with the `subscriptionData` that's pushed by our GraphQL server. The return value of this function **completely replaces** the current cached result for the query.
-
-Finally, in our definition of `CommentsPage`, we tell the component to `subscribeToNewComments` when it mounts:
-
-<MultiCodeBlock>
-
-```tsx
-export function CommentsPage({ subscribeToNewComments }: CommentsPageProps) {
-  useEffect(() => subscribeToNewComments(), []);
-
-  return <>...</>
-}
-```
-
-```jsx
-export function CommentsPage({ subscribeToNewComments }) {
-  useEffect(() => subscribeToNewComments(), []);
-
-  return <>...</>
-}
-```
-
-</MultiCodeBlock>
 
 ## `useSubscription` API reference
 

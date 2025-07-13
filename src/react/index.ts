@@ -20,4 +20,4 @@ export type {
 } from "./query-preloader/createQueryPreloader.js";
 export { createQueryPreloader } from "./query-preloader/createQueryPreloader.js";
 
-export * from "./types/types.js";
+export type * from "./types/types.js";

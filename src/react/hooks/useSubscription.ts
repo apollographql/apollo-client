@@ -24,6 +24,7 @@ import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type { MaybeMasked } from "../../masking/index.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -121,6 +122,7 @@ export function useSubscription<
   verifyDocumentType(subscription, DocumentType.Subscription);
 
   if (!hasIssuedDeprecationWarningRef.current) {
+    // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;
 
     if (options.onSubscriptionData) {
@@ -304,19 +306,16 @@ export function useSubscription<
       : fallbackResult,
     () => fallbackResult
   );
-  return React.useMemo(
-    () => ({
-      ...ret,
-      restart() {
-        invariant(
-          !optionsRef.current.skip,
-          "A subscription that is skipped cannot be restarted."
-        );
-        setObservable(recreateRef.current());
-      },
-    }),
-    [ret]
-  );
+
+  const restart = React.useCallback(() => {
+    invariant(
+      !optionsRef.current.skip,
+      "A subscription that is skipped cannot be restarted."
+    );
+    setObservable(recreateRef.current());
+  }, [optionsRef, recreateRef]);
+
+  return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
 
 function createSubscription<
@@ -353,9 +352,9 @@ function createSubscription<
     },
   };
 
-  let observable: Observable<FetchResult<TData>> | null = null;
+  let observable: Observable<FetchResult<MaybeMasked<TData>>> | null = null;
   return Object.assign(
-    new Observable<FetchResult<TData>>((observer) => {
+    new Observable<FetchResult<MaybeMasked<TData>>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {

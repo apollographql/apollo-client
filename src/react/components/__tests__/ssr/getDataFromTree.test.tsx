@@ -3,7 +3,7 @@ import React from "react";
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 
-import { ApolloClient } from "../../../../core";
+import { ApolloClient, TypedDocumentNode } from "../../../../core";
 import { InMemoryCache as Cache } from "../../../../cache";
 import {
   ApolloProvider,
@@ -37,7 +37,7 @@ describe("SSR", () => {
     });
 
     it("should run through all of the queries (also defined via Query component) that want SSR", () => {
-      const query = gql`
+      const query: TypedDocumentNode<Data> = gql`
         {
           currentUser {
             firstName
@@ -63,7 +63,7 @@ describe("SSR", () => {
 
       const WrappedElement = () => (
         <Query query={query}>
-          {({ data, loading }: { data: Data; loading: boolean }) => (
+          {({ data, loading }) => (
             <div>
               {loading || !data ? "loading" : data.currentUser!.firstName}
             </div>

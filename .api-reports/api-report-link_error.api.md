@@ -80,14 +80,12 @@ export class ErrorLink extends ApolloLink {
 export interface ErrorResponse {
     // (undocumented)
     forward: NextLink;
-    // (undocumented)
     graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // Warning: (ae-forgotten-export) The symbol "NetworkError" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
+    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     response?: FormattedExecutionResult;
 }

@@ -32,7 +32,7 @@ Using persisted queries for safelisting has the following requirements:
 - The [`@apollo/generate-persisted-query-manifest` package](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
 - The [`@apollo/persisted-query-lists` package](https://www.npmjs.com/package/@apollo/persisted-query-lists)
 - [GraphOS Router](/router) (v1.25.0+)
-- [GraphOS Enterprise plan](/graphos/enterprise/)
+- [GraphOS Enterprise plan](https://www.apollographql.com/pricing)
 
 You can use APQ with the following versions of Apollo Client Web, Apollo Server, and Apollo Router Core:
 - Apollo Client Web (v3.2.0+)
@@ -80,6 +80,10 @@ The resulting operation manifest looks something like this:
 You can optionally create a configuration file in the root of your project to override the default options. Refer to the package's [README](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) for details.
 
 To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
+
+<Tip>
+If you see a difference in the `id` generated in the manifest and the one your client is sending at runtime, read the options available in the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package to ensure the configuration matches your usage of Apollo Client.
+</Tip>
 
 ## 2. Publish manifests to a PQL
 

@@ -4,6 +4,14 @@ description: Using createTestSchema and associated APIs
 minVersion: 3.10.0
 ---
 
+<Caution>
+  The testing utilities described in this document are deprecated and will be
+  removed in [Apollo Client
+  v4](https://community.apollographql.com/t/apollo-client-v4-alpha-releases-are-here/8719)
+  in June 2025. Please use [GraphQL Testing
+  Library](https://github.com/apollographql/graphql-testing-library) instead.
+</Caution>
+
 This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. These testing tools allow developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
 
 ## Guiding principles
@@ -557,4 +565,12 @@ Please see [this issue](https://github.com/graphql/graphql-js/issues/4062) to tr
 
 For a working example that demonstrates how to use both Testing Library and Mock Service Worker to write integration tests with `createTestSchema`, check out this project on CodeSandbox:
 
-[![Edit Testing React Components](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/sandbox/github/apollographql/docs-examples/tree/main/apollo-client/v3/schema-driven-testing)
+<a href="https://codesandbox.io/p/sandbox/github/apollographql/docs-examples/tree/main/apollo-client/v3/schema-driven-testing">
+  <img
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+    width="12em"
+    alt="Edit Testing React Components"
+    style="display: inline;"
+    noZoom
+  />
+</a>

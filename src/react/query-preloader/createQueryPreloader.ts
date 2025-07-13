@@ -15,24 +15,8 @@ import type {
 } from "../../utilities/index.js";
 import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { PreloadedQueryRef } from "../internal/index.js";
-import type { NoInfer } from "../index.js";
+import type { NoInfer, VariablesOption } from "../index.js";
 import { wrapHook } from "../hooks/internal/index.js";
-
-type VariablesOption<TVariables extends OperationVariables> =
-  [TVariables] extends [never] ?
-    {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: Record<string, never>;
-    }
-  : {} extends OnlyRequiredProperties<TVariables> ?
-    {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: TVariables;
-    }
-  : {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables: TVariables;
-    };
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,

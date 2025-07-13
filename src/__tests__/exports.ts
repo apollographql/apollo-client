@@ -21,6 +21,7 @@ import * as linkSchema from "../link/schema";
 import * as linkSubscriptions from "../link/subscriptions";
 import * as linkUtils from "../link/utils";
 import * as linkWS from "../link/ws";
+import * as masking from "../masking";
 import * as react from "../react";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
@@ -68,6 +69,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/link/subscriptions", linkSubscriptions);
   check("@apollo/client/link/utils", linkUtils);
   check("@apollo/client/link/ws", linkWS);
+  check("@apollo/client/masking", masking);
   check("@apollo/client/react", react);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);

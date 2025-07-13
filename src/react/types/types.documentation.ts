@@ -465,9 +465,15 @@ export interface MutationOptionsDocumentation {
    */
   onError: unknown;
   /**
-   * If `true`, the mutation's `data` property is not updated with the mutation's result.
+   * If `true`:
+   *
+   * - The initial state update (setting loading to true) is skipped
+   * - The success state update (setting data and setting loading to false) is skipped
+   * - Error updates will still occur
    *
    * The default value is `false`.
+   *
+   * This option is useful when you want to execute a mutation but don't need to track its progress or result in the UI, potentially improving performance by reducing re-renders.
    *
    * @docGroup 1. Operation options
    */

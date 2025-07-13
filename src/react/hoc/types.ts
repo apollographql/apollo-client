@@ -1,13 +1,14 @@
-import type { ApolloCache, ApolloClient } from "../../core/index.js";
 import type { ApolloError } from "../../errors/index.js";
 import type {
+  ApolloCache,
+  ApolloClient,
   ApolloQueryResult,
-  OperationVariables,
-  FetchMoreOptions,
-  UpdateQueryOptions,
-  FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
   DefaultContext,
+  FetchMoreOptions,
+  FetchMoreQueryOptions,
+  OperationVariables,
+  SubscribeToMoreOptions,
+  UpdateQueryMapFn,
 } from "../../core/index.js";
 import type {
   MutationFunction,
@@ -32,9 +33,7 @@ export interface QueryControls<
   startPolling: (pollInterval: number) => void;
   stopPolling: () => void;
   subscribeToMore: (options: SubscribeToMoreOptions) => () => void;
-  updateQuery: (
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions<any>) => any
-  ) => void;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TGraphQLVariables>) => void;
 }
 
 export type DataValue<

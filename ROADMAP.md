@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-08-12**
+**Last updated: 2025-07-09**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,39 +17,45 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - October 7, 2024
-_Release candidate - September 30, 2024_
+#### 3.14.0 - July 31st, 2025
+_Release candidate - July 7th, 2025_
 
-- Data masking
-- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+- 4.0 compatibility release/deprecations
 
-#### Upcoming features
+To be released together with 4.0.
 
-- Leaner client (under alternate entry point)
-- Better types for `useQuery`/`useMutation`/`useSubscription`
-
-#### 4.0
-
-- `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.
+#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - July 31st, 2025
+_Release candidate - June 18th 2025_
 
 ### GraphQL Testing Library
 
 - New documentation
-- Subscription support (waiting for MSW WebSocket support to land)
-- Better TypeScript support
+- Subscription support
+
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
 
 ### VSCode Extension
 
-- Bug fixes and long-requested features
+_No outstanding work_
 
 ### GraphQL Tag
 
-_no work in progress_
+- `Release 3.0` will be our next major release of `graphql-tag` and is still in planning. See Github [3.0 Milestone](https://github.com/apollographql/graphql-tag/milestone/3) for more details.
 
 ### Apollo Client DevTools
 
-_no work in progress_
+- Memory panel
+- Add compatibility for 4.0
 
-### Apollo Client NextJS
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+
+### Apollo Client React Framework Integrations
 
 - New/more robust documentation
+- Add compatibility for 4.0
+
+**TanStack Start**
+- Support for Apollo Client Streaming in TanStack Router - will stay alpha
+
+**React Router**
+- Support for Apollo Client Streaming in React Router 7 - will stay alpha

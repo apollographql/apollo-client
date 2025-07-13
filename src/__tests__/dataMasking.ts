@@ -1436,7 +1436,6 @@ describe("client.watchQuery", () => {
       const { data, complete } = await fragmentStream.takeNext();
 
       expect(data).toEqual({});
-      // Fixed: Issue #12003 - now correctly returns complete: false for non-identifiable objects
       expect(complete).toBe(false);
     }
   });

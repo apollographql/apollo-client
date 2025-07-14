@@ -1,3 +1,4 @@
+import type { DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -578,7 +579,10 @@ export class ApolloClient implements DataProxy {
     options: DataProxy.Query<TVariables, TData>,
     optimistic: boolean = false
   ): Unmasked<TData> | null {
-    return this.cache.readQuery<TData, TVariables>(options, optimistic);
+    return this.cache.readQuery<TData, TVariables>(
+      { ...options, query: this.transform(options.query) },
+      optimistic
+    );
   }
 
   /**
@@ -603,6 +607,7 @@ export class ApolloClient implements DataProxy {
   ): Observable<WatchFragmentResult<TData>> {
     return this.cache.watchFragment({
       ...options,
+      fragment: this.transform(options.fragment),
       [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
     });
   }
@@ -625,7 +630,10 @@ export class ApolloClient implements DataProxy {
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
   ): Unmasked<T> | null {
-    return this.cache.readFragment<T, TVariables>(options, optimistic);
+    return this.cache.readFragment<T, TVariables>(
+      { ...options, fragment: this.transform(options.fragment) },
+      optimistic
+    );
   }
 
   /**
@@ -877,6 +885,10 @@ export class ApolloClient implements DataProxy {
 
   public get defaultContext() {
     return this.queryManager.defaultContext;
+  }
+
+  private transform(document: DocumentNode) {
+    return this.queryManager.transform(document);
   }
 
   /**

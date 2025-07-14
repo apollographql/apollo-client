@@ -6640,6 +6640,105 @@ describe("custom document transforms", () => {
       }
     `);
   });
+
+  it("runs custom document transform when calling `readQuery`", async () => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed @custom
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    client.writeQuery({
+      query: gql`
+        query {
+          dogs {
+            id
+            name
+          }
+        }
+      `,
+      data: {
+        dogs: [{ __typename: "Dog", id: 1, name: "Buddy" }],
+      },
+    });
+
+    const data = client.readQuery({ query });
+
+    expect(data).toEqual({
+      dogs: [
+        {
+          id: 1,
+          name: "Buddy",
+          __typename: "Dog",
+        },
+      ],
+    });
+  });
+
+  it("runs custom document transform when calling `readFragment`", async () => {
+    const fragment = gql`
+      fragment TestFragment on Dog {
+        id
+        name
+        breed @custom
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    client.writeFragment({
+      fragment: gql`
+        fragment TestFragment on Dog {
+          id
+          name
+        }
+      `,
+      data: {
+        __typename: "Dog",
+        id: 1,
+        name: "Buddy",
+      },
+    });
+
+    const data = client.readFragment({
+      fragment,
+      id: client.cache.identify({ __typename: "Dog", id: 1 }),
+    });
+
+    expect(data).toStrictEqualTyped({
+      id: 1,
+      name: "Buddy",
+      __typename: "Dog",
+    });
+  });
 });
 
 describe("unconventional errors", () => {

@@ -6744,6 +6744,69 @@ describe("custom document transforms", () => {
     // due to missing `breed` field.
     expect(cache.readFragment({ fragment, id })).toStrictEqualTyped(null);
   });
+
+  it("runs custom document transforms when calling `client.watchFragment`", async () => {
+    const fragment = gql`
+      fragment TestFragment on Dog {
+        id
+        name
+        breed @custom
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache,
+      documentTransform,
+    });
+
+    client.writeFragment({
+      fragment: gql`
+        fragment TestFragment on Dog {
+          id
+          name
+        }
+      `,
+      data: {
+        __typename: "Dog",
+        id: 1,
+        name: "Buddy",
+      },
+    });
+
+    const from = { __typename: "Dog", id: 1 };
+
+    const clientStream = new ObservableStream(
+      client.watchFragment({ fragment, from })
+    );
+
+    await expect(clientStream).toEmitTypedValue({
+      data: { __typename: "Dog", id: 1, name: "Buddy" },
+      complete: true,
+    });
+
+    const cacheStream = new ObservableStream(
+      cache.watchFragment({ fragment, from })
+    );
+
+    // Transforms aren't run on cache.watchFragment, so we expect a partial result
+    // due to missing `breed` field.
+    await expect(cacheStream).toEmitTypedValue({
+      data: { __typename: "Dog", id: 1, name: "Buddy" },
+      complete: false,
+      missing: {
+        breed: "Can't find field 'breed' on Dog:1 object",
+      },
+    });
+  });
 });
 
 describe("unconventional errors", () => {

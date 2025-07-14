@@ -6641,7 +6641,7 @@ describe("custom document transforms", () => {
     `);
   });
 
-  it("runs custom document transform when calling `readQuery`", async () => {
+  it("runs custom document transform when calling `client.readQuery`", async () => {
     const query = gql`
       query TestQuery {
         dogs {
@@ -6659,9 +6659,10 @@ describe("custom document transforms", () => {
       )!;
     });
 
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache,
       documentTransform,
     });
 
@@ -6679,9 +6680,7 @@ describe("custom document transforms", () => {
       },
     });
 
-    const data = client.readQuery({ query });
-
-    expect(data).toEqual({
+    expect(client.readQuery({ query })).toStrictEqualTyped({
       dogs: [
         {
           id: 1,
@@ -6690,9 +6689,13 @@ describe("custom document transforms", () => {
         },
       ],
     });
+
+    // Transforms aren't run on cache.readFragment, so we expect a null result
+    // due to missing `breed` field.
+    expect(cache.readQuery({ query })).toStrictEqualTyped(null);
   });
 
-  it("runs custom document transform when calling `readFragment`", async () => {
+  it("runs custom document transform when calling `client.readFragment`", async () => {
     const fragment = gql`
       fragment TestFragment on Dog {
         id
@@ -6708,9 +6711,10 @@ describe("custom document transforms", () => {
       )!;
     });
 
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
+      cache,
       documentTransform,
     });
 
@@ -6728,16 +6732,17 @@ describe("custom document transforms", () => {
       },
     });
 
-    const data = client.readFragment({
-      fragment,
-      id: client.cache.identify({ __typename: "Dog", id: 1 }),
-    });
+    const id = cache.identify({ __typename: "Dog", id: 1 });
 
-    expect(data).toStrictEqualTyped({
+    expect(client.readFragment({ fragment, id })).toStrictEqualTyped({
       id: 1,
       name: "Buddy",
       __typename: "Dog",
     });
+
+    // Transforms aren't run on cache.readFragment, so we expect a null result
+    // due to missing `breed` field.
+    expect(cache.readFragment({ fragment, id })).toStrictEqualTyped(null);
   });
 });
 

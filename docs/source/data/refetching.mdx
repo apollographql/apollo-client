@@ -2,7 +2,6 @@
 title: Refetching queries in Apollo Client
 ---
 
-import RefetchQueriesOptions from '../../shared/refetchQueries-options.mdx';
 
 Apollo Client allows you to make local modifications to your GraphQL data by [updating the cache](./mutations/#updating-the-cache-directly), but sometimes it's more straightforward to update your client-side GraphQL data by refetching queries from the server.
 
@@ -18,9 +17,14 @@ To selectively refetch queries _outside_ of a mutation, you instead use the `ref
 
 ### Refetch options
 
-<RefetchQueriesOptions />
+<InterfaceDetails
+  canonicalReference="@apollo/client!RefetchQueriesOptions:interface"
+  headingLevel={4}
+/>
 
 ### Refetch results
+
+<!-- TODO -->
 
 The `client.refetchQueries` method collects the `TResult` results returned by `onQueryUpdated`, defaulting to `TResult = Promise<ApolloQueryResult<any>>` if `onQueryUpdated` is not provided. It combines those results into a single `Promise<TResolved[]>` using `Promise.all(results)`.
 

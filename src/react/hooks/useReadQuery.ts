@@ -26,19 +26,14 @@ export declare namespace useReadQuery {
   export namespace Base {
     export interface Result<TData = unknown> {
       /**
-       * If the query produces one or more errors, this object contains either an
-       * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
-       * is `undefined`.
+       * {@inheritDoc @apollo/client!QueryResultDocumentation#error:member}
        *
        * This property can be ignored when using the default `errorPolicy` or an
        * `errorPolicy` of `none`. The hook will throw the error instead of setting
        * this property.
        */
       error: ErrorLike | undefined;
-      /**
-       * A number indicating the current network state of the query's associated
-       * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
-       */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
       networkStatus: NetworkStatus;
     }
   }
@@ -62,7 +57,34 @@ export declare namespace useReadQuery {
   }
 }
 
-/** # TODO needs documentation */
+/**
+ * For a detailed explanation of `useReadQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense#avoiding-request-waterfalls).
+ *
+ * @param queryRef - The `QueryRef` that was generated via `useBackgroundQuery`.
+ * @returns An object containing the query result data, error, and network status.
+ *
+ * @example
+ * ```jsx
+ * import { Suspense } from 'react';
+ * import { useBackgroundQuery, useReadQuery } from '@apollo/client';
+ *
+ * function Parent() {
+ *   const [queryRef] = useBackgroundQuery(query);
+ *
+ *   return (
+ *     <Suspense fallback={<div>Loading...</div>}>
+ *       <Child queryRef={queryRef} />
+ *     </Suspense>
+ *   );
+ * }
+ *
+ * function Child({ queryRef }) {
+ *   const { data } = useReadQuery(queryRef);
+ *
+ *   return <div>{data.name}</div>;
+ * }
+ * ```
+ */
 export function useReadQuery<
   TData,
   TStates extends DataState<TData>["dataState"],

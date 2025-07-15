@@ -7,18 +7,18 @@ import type {
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type {
+  GetDataState,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type {
   FragmentType,
   MaybeMasked,
   Unmasked,
 } from "@apollo/client/masking";
 import { maskFragment } from "@apollo/client/masking";
-import type {
-  DeepPartial,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
@@ -88,16 +88,14 @@ export interface WatchFragmentOptions<TData, TVars> {
  * Watched fragment results.
  */
 export type WatchFragmentResult<TData> =
-  | {
-      data: MaybeMasked<TData>;
+  | ({
       complete: true;
       missing?: never;
-    }
-  | {
-      data: DeepPartial<MaybeMasked<TData>>;
+    } & GetDataState<MaybeMasked<TData>, "complete">)
+  | ({
       complete: false;
       missing: MissingTree;
-    };
+    } & GetDataState<MaybeMasked<TData>, "partial">);
 
 export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
@@ -346,6 +344,7 @@ export abstract class ApolloCache implements DataProxy {
 
           const result = {
             data,
+            dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
           } as WatchFragmentResult<TData>;
 

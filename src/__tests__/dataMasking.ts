@@ -2887,6 +2887,7 @@ describe("client.watchFragment", () => {
 
     expect(result).toStrictEqualTyped({
       data: { __typename: "User", id: 1, age: 30 },
+      dataState: "complete",
       complete: true,
     });
 
@@ -2898,6 +2899,7 @@ describe("client.watchFragment", () => {
 
     await expect(nestedFragmentStream).toEmitTypedValue({
       data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -2972,6 +2974,7 @@ describe("client.watchFragment", () => {
         firstName: "Test",
         lastName: "User",
       },
+      dataState: "complete",
       complete: true,
     });
     invariant(result.complete, "Should never be incomplete");
@@ -2982,6 +2985,7 @@ describe("client.watchFragment", () => {
 
     await expect(nestedFragmentStream).toEmitTypedValue({
       data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -3055,6 +3059,7 @@ describe("client.watchFragment", () => {
         firstName: "Test",
         lastName: "User",
       },
+      dataState: "complete",
       complete: true,
     });
     expect(result.complete).toBe(true);
@@ -3066,6 +3071,7 @@ describe("client.watchFragment", () => {
 
     await expect(nestedFragmentStream).toEmitTypedValue({
       data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -3124,6 +3130,7 @@ describe("client.watchFragment", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "User", id: 1, name: "Test User", age: 30 },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -3181,6 +3188,7 @@ describe("client.watchFragment", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "User", id: 1, name: "Test User" },
+      dataState: "complete",
       complete: true,
     });
 
@@ -3197,6 +3205,7 @@ describe("client.watchFragment", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "User", id: 1, name: "Test User (updated)" },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -3253,6 +3262,7 @@ describe("client.watchFragment", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "User", id: 1, name: "Test User" },
+      dataState: "complete",
       complete: true,
     });
 
@@ -3351,10 +3361,12 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1, name: "Test User" },
+        dataState: "complete",
         complete: true,
       }),
       expect(nameFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 30 },
+        dataState: "complete",
         complete: true,
       }),
     ]);
@@ -3373,6 +3385,7 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(nameFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 35 },
+        dataState: "complete",
         complete: true,
       }),
       expect(userFieldsStream).not.toEmitAnything(),
@@ -3462,10 +3475,12 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
         complete: true,
       }),
       expect(profileFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
         complete: true,
       }),
     ]);
@@ -3570,10 +3585,12 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
         complete: true,
       }),
       expect(profileFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
         complete: true,
       }),
     ]);
@@ -3585,7 +3602,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         lastUpdatedAt: "2024-01-02",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 31,
       },
     });
@@ -3594,6 +3610,7 @@ describe("client.watchFragment", () => {
       expect(userFieldsStream).not.toEmitAnything(),
       expect(profileFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 31, lastUpdatedAt: "2024-01-02" },
+        dataState: "complete",
         complete: true,
       }),
     ]);
@@ -3739,6 +3756,7 @@ describe("client.watchFragment", () => {
         id: 1,
         age: 30,
       },
+      dataState: "complete",
       complete: true,
     });
   });
@@ -3803,11 +3821,13 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: {},
+        dataState: "partial",
         complete: false,
         missing: "Dangling reference to missing User:1 object",
       }),
       expect(profileFieldsStream).toEmitTypedValue({
         data: {},
+        dataState: "partial",
         complete: false,
         missing: "Dangling reference to missing User:1 object",
       }),
@@ -3827,10 +3847,12 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        dataState: "complete",
         complete: true,
       }),
       expect(profileFieldsStream).toEmitTypedValue({
         data: { __typename: "User" },
+        dataState: "partial",
         complete: false,
         missing: {
           age: "Can't find field 'age' on User:1 object",
@@ -3856,6 +3878,7 @@ describe("client.watchFragment", () => {
       expect(userFieldsStream).not.toEmitAnything(),
       expect(profileFieldsStream).toEmitTypedValue({
         data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
         complete: true,
       }),
     ]);
@@ -3870,6 +3893,7 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1 },
+        dataState: "partial",
         complete: false,
         missing: {
           birthdate: "Can't find field 'birthdate' on User:1 object",
@@ -3894,6 +3918,7 @@ describe("client.watchFragment", () => {
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
         data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        dataState: "complete",
         complete: true,
       }),
       expect(profileFieldsStream).not.toEmitAnything(),

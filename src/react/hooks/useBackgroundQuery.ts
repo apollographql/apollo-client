@@ -48,7 +48,7 @@ export declare namespace useBackgroundQuery {
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
       client?: ApolloClient;
 
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
       refetchWritePolicy?: RefetchWritePolicy;
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
@@ -100,10 +100,20 @@ export declare namespace useBackgroundQuery {
     /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 
-    /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
+    /**
+     * {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)}
+     *
+     * @remarks
+     * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+     */
     fetchMore: FetchMoreFunction<TData, TVariables>;
 
-    /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
+    /**
+     * {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member}
+     *
+     * @remarks
+     * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+     */
     refetch: RefetchFunction<TData, TVariables>;
   }
 
@@ -130,6 +140,13 @@ export declare namespace useBackgroundQuery {
 
 /**
  * For a detailed explanation of useBackgroundQuery, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+ *
+ * @returns A tuple containing:
+ * 1. A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
+ * 2. An object containing helper functions for the query:
+ *    - `refetch`: A function to re-execute the query
+ *    - `fetchMore`: A function to fetch more results for pagination
+ *    - `subscribeToMore`: A function to subscribe to updates
  *
  * @example
  *

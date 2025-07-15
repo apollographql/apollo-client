@@ -121,7 +121,8 @@ export interface QueryOptionsDocumentation {
    * @deprecated We recommend using `skipToken` in place of the `skip` option as
    * it is more type-safe.
    *
-   * This option is deprecated and only supported to ease the migration from useQuery. It will be removed in a future release.
+   * This option is deprecated and only supported to ease the migration from `useQuery`. It will be removed in a future release.
+   * Please use [`skipToken`](https://www.apollographql.com/docs/react/api/react/hooks#skiptoken) instead of the `skip` option as it is more type-safe.
    *
    * @docGroup 1. Operation options
    */
@@ -230,6 +231,10 @@ export interface QueryResultDocumentation {
    * To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
    *
    * See also [Refetching](https://www.apollographql.com/docs/react/data/queries/#refetching).
+   *
+   * Returns a `ResultPromise` with an additional `.retain()` method. Calling
+   * `.retain()` keeps the network operation running even if the `ObservableQuery`
+   * no longer requires the result.
    *
    *   @docGroup 3. Helper functions
    */

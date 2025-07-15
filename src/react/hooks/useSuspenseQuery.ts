@@ -106,13 +106,23 @@ export declare namespace useSuspenseQuery {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error: ErrorLike | undefined;
 
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+      /**
+       * {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member}
+       *
+       * @remarks
+       * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+       */
       fetchMore: FetchMoreFunction<TData, TVariables>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
       networkStatus: NetworkStatus;
 
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+      /**
+       * {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member}
+       *
+       * @remarks
+       * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+       */
       refetch: RefetchFunction<TData, TVariables>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */

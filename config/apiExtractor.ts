@@ -85,6 +85,9 @@ try {
     );
 
     await buildReport("@apollo/client", entryPointFile, "docModel");
+    if (process.exitCode === 50) {
+      process.exitCode = 0; // if there were only warnings, we still want to exit with 0
+    }
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
@@ -164,6 +167,7 @@ async function buildReport(
   if (extractorResult.succeeded) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
+    process.exitCode = extractorResult.errorCount === 0 ? 50 : 1;
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
@@ -180,6 +184,5 @@ async function buildReport(
         }
       );
     }
-    process.exitCode = 1;
   }
 }

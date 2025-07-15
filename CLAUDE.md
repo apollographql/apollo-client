@@ -124,3 +124,5 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 
 ## Additional Instructions
 @.claude/documentation.md
+@.claude/hooks.md
+

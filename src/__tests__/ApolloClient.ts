@@ -6,11 +6,11 @@ import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloQueryResult,
+  DataValue,
   DefaultOptions,
   MutateResult,
   ObservableQuery,
   QueryOptions,
-  DataValue,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
@@ -2694,6 +2694,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "Item #5",
         },
+        dataState: "complete",
         complete: true,
       });
 
@@ -2712,6 +2713,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "changed Item #5",
         },
+        dataState: "complete",
         complete: true,
       });
     });

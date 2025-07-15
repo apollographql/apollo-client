@@ -6790,6 +6790,7 @@ describe("custom document transforms", () => {
 
     await expect(clientStream).toEmitTypedValue({
       data: { __typename: "Dog", id: 1, name: "Buddy" },
+      dataState: "complete",
       complete: true,
     });
 
@@ -6801,6 +6802,7 @@ describe("custom document transforms", () => {
     // due to missing `breed` field.
     await expect(cacheStream).toEmitTypedValue({
       data: { __typename: "Dog", id: 1, name: "Buddy" },
+      dataState: "partial",
       complete: false,
       missing: {
         breed: "Can't find field 'breed' on Dog:1 object",

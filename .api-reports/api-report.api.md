@@ -2647,15 +2647,13 @@ export interface WatchFragmentOptions<TData, TVars> {
 }
 
 // @public
-export type WatchFragmentResult<TData> = {
-    data: MaybeMasked<TData>;
+export type WatchFragmentResult<TData> = ({
     complete: true;
     missing?: never;
-} | {
-    data: DeepPartial<MaybeMasked<TData>>;
+} & GetDataState<MaybeMasked<TData>, "complete">) | ({
     complete: false;
     missing: MissingTree;
-};
+} & GetDataState<MaybeMasked<TData>, "partial">);
 
 // @public (undocumented)
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network" | "standby";

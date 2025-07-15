@@ -16,6 +16,7 @@ import type { FragmentMap } from '@apollo/client/utilities/internal';
 import type { FragmentMapFunction } from '@apollo/client/utilities/internal';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { InlineFragmentNode } from 'graphql';
 import { isReference } from '@apollo/client/utilities';
@@ -911,15 +912,13 @@ export interface WatchFragmentOptions<TData, TVars> {
 }
 
 // @public
-export type WatchFragmentResult<TData> = {
-    data: MaybeMasked<TData>;
+export type WatchFragmentResult<TData> = ({
     complete: true;
     missing?: never;
-} | {
-    data: DeepPartial<MaybeMasked<TData>>;
+} & GetDataState<MaybeMasked<TData>, "complete">) | ({
     complete: false;
     missing: MissingTree;
-};
+} & GetDataState<MaybeMasked<TData>, "partial">);
 
 // @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {

@@ -3753,7 +3753,7 @@ describe("client.watchFragment", () => {
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
-      lastUpdatedAt: string;
+      birthdate: string;
     } & { " $fragmentName"?: "UserFieldsFragment" } & {
       " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
@@ -3772,31 +3772,18 @@ describe("client.watchFragment", () => {
       gql`
         fragment UserFields on User {
           id
-          lastUpdatedAt
+          birthdate
           ...ProfileFields
         }
 
         ${profileFieldsFragment}
       `;
 
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache,
       link: ApolloLink.empty(),
-    });
-
-    client.writeFragment({
-      fragment: gql`
-        fragment UserFields on User {
-          id
-          lastUpdatedAt
-        }
-      `,
-      data: {
-        __typename: "User",
-        id: 1,
-        lastUpdatedAt: "2024-01-01",
-      },
     });
 
     const userFieldsObservable = client.watchFragment({
@@ -3815,23 +3802,52 @@ describe("client.watchFragment", () => {
 
     await Promise.all([
       expect(userFieldsStream).toEmitTypedValue({
-        data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
-        complete: true,
+        data: {},
+        complete: false,
+        missing: "Dangling reference to missing User:1 object",
       }),
       expect(profileFieldsStream).toEmitTypedValue({
-        data: { __typename: "User", lastUpdatedAt: "2024-01-01" },
+        data: {},
         complete: false,
-        missing: { age: "Can't find field 'age' on User:1 object" },
+        missing: "Dangling reference to missing User:1 object",
       }),
     ]);
 
     client.writeFragment({
+      fragment: gql`
+        fragment UserFields on User {
+          id
+          birthdate
+        }
+      `,
+      id: cache.identify({ __typename: "User", id: 1 }),
+      data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        complete: true,
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User" },
+        complete: false,
+        missing: {
+          age: "Can't find field 'age' on User:1 object",
+          lastUpdatedAt: "Can't find field 'lastUpdatedAt' on User:1 object",
+        },
+      }),
+    ]);
+
+    client.writeFragment({
+      id: cache.identify({ __typename: "User", id: 1 }),
       fragment: userFieldsFragment,
       fragmentName: "UserFields",
       data: {
         __typename: "User",
         id: 1,
         age: 30,
+        birthdate: "1994-01-01",
         lastUpdatedAt: "2024-01-01",
       },
     });
@@ -3842,6 +3858,45 @@ describe("client.watchFragment", () => {
         data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
         complete: true,
       }),
+    ]);
+
+    cache.modify({
+      id: cache.identify({ __typename: "User", id: 1 }),
+      fields: {
+        birthdate: (_, { DELETE }) => DELETE,
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1 },
+        complete: false,
+        missing: {
+          birthdate: "Can't find field 'birthdate' on User:1 object",
+        },
+      }),
+      expect(profileFieldsStream).not.toEmitAnything(),
+    ]);
+
+    client.writeFragment({
+      id: cache.identify({ __typename: "User", id: 1 }),
+      fragment: gql`
+        fragment UserFields on User {
+          birthdate
+        }
+      `,
+      data: {
+        __typename: "User",
+        birthdate: "1994-01-01",
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        complete: true,
+      }),
+      expect(profileFieldsStream).not.toEmitAnything(),
     ]);
   });
 });

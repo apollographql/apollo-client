@@ -30,7 +30,6 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState as GetDataState_2 } from '@apollo/client';
-import { gql } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link';
 import type { HKT } from '@apollo/client/utilities';
 import type { HookWrappers } from '@apollo/client/react/internal';
@@ -324,8 +323,6 @@ export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 type GetDataState<TData, TState extends DataState<TData>["dataState"]> = Extract<DataState<TData>, {
     dataState: TState;
 }>;
-
-export { gql }
 
 // Warning: (ae-forgotten-export) The symbol "InternalRefetchQueryDescriptor" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts

@@ -192,13 +192,7 @@ const transform: Transform = function transform(file, api) {
     sourceEntrypoint: string,
     targetEntrypoint: string
   ) {
-    if (
-      areAllSpecifiersFrom(
-        specifiers.concat(specifiers === REACT_IMPORTS_FROM_ROOT ? "gql" : []),
-        sourceEntrypoint
-      ) &&
-      !isOnlySpecifier("gql", sourceEntrypoint)
-    ) {
+    if (areAllSpecifiersFrom(specifiers, sourceEntrypoint)) {
       renameImport(sourceEntrypoint, targetEntrypoint);
     } else {
       specifiers.forEach((name) =>

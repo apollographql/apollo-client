@@ -27,12 +27,19 @@ import type {
   StoreObject,
   TypedDocumentNode,
 } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  DocumentTransform,
+  gql,
+  InMemoryCache,
+} from "@apollo/client";
 import type { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider, useFragment, useQuery } from "@apollo/client/react";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -63,6 +70,7 @@ describe("useFragment", () => {
   `;
 
   interface QueryData {
+    __typename?: "Query";
     list: Item[];
   }
 
@@ -1147,7 +1155,9 @@ describe("useFragment", () => {
     }
 
     expect(renderResult.current.complete).toBe(false);
-    expect(renderResult.current.data).toStrictEqualTyped({}); // TODO Should be undefined?
+    expect(renderResult.current.data).toStrictEqualTyped({
+      __typename: "Query",
+    });
     expect(renderResult.current.missing).toStrictEqualTyped({
       list: "Can't find field 'list' on ROOT_QUERY object",
     });
@@ -1155,6 +1165,7 @@ describe("useFragment", () => {
     checkHistory(1);
 
     const data125 = {
+      __typename: "Query" as const,
       list: [
         { __typename: "Item", id: 1 },
         { __typename: "Item", id: 2 },
@@ -1192,6 +1203,7 @@ describe("useFragment", () => {
     checkHistory(2);
 
     const data182WithText = {
+      __typename: "Query" as const,
       list: [
         { __typename: "Item", id: 1, text: "oyez1" },
         { __typename: "Item", id: 8, text: "oyez8" },
@@ -1237,6 +1249,7 @@ describe("useFragment", () => {
 
     await waitFor(() =>
       expect(renderResult.current.data).toStrictEqualTyped({
+        __typename: "Query",
         list: [
           { __typename: "Item", id: 1, text: "oyez1" },
           { __typename: "Item", id: 2 },
@@ -2481,6 +2494,61 @@ describe("has the same timing as `useQuery`", () => {
 
     await expect(renderStream).toRenderExactlyTimes(3);
   });
+});
+
+test("runs custom document transforms", async () => {
+  const fragment = gql`
+    fragment TestFragment on Dog {
+      id
+      name
+      breed @custom
+    }
+  `;
+
+  const documentTransform = new DocumentTransform((document) => {
+    return removeDirectivesFromDocument(
+      [{ name: "custom", remove: true }],
+      document
+    )!;
+  });
+
+  const client = new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache(),
+    documentTransform,
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment TestFragment on Dog {
+        id
+        name
+      }
+    `,
+    data: {
+      __typename: "Dog",
+      id: 1,
+      name: "Buddy",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useFragment({ fragment, from: { __typename: "Dog", id: 1 } }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { __typename: "Dog", id: 1, name: "Buddy" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
 });
 
 describe.skip("Type Tests", () => {

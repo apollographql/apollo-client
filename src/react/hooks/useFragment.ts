@@ -136,7 +136,10 @@ function useFragment_<TData, TVariables extends OperationVariables>(
       ...stableOptions,
       returnPartialData: true,
       id: from,
-      query: cache["getFragmentDoc"](fragment, fragmentName),
+      query: cache["getFragmentDoc"](
+        client["transform"](fragment),
+        fragmentName
+      ),
       optimistic,
     });
 

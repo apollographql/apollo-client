@@ -244,20 +244,38 @@ export declare namespace ApolloClient {
     error?: ErrorLike;
   }
 
-  // TODO Improve documentation comments for this public type.
+  /**
+   * Options object for the `client.refetchQueries` method.
+   */
   export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+    /**
+     * Optional function that updates cached fields to trigger refetches of queries that include those fields.
+     */
     updateCache?: (cache: TCache) => void;
-    // The client.refetchQueries method discourages passing QueryOptions, by
-    // restricting the public type of options.include to exclude QueryOptions as
-    // an available array element type (see InternalRefetchQueriesInclude for a
-    // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
+
+    /**
+     * Optional array specifying queries to refetch. Each element can be either a query's string name or a `DocumentNode` object.
+     *
+     * Pass `"active"` (or `"all"`) as a shorthand to refetch all (active) queries.
+     *
+     * Analogous to the [`options.refetchQueries`](https://www.apollographql.com/docs/react/data/mutations/#options) array for mutations.
+     */
     include?: RefetchQueriesInclude;
+
+    /**
+     * If `true`, the `options.updateCache` function is executed on a temporary optimistic layer of `InMemoryCache`, so its modifications can be discarded from the cache after observing which fields it invalidated.
+     *
+     * Defaults to `false`, meaning `options.updateCache` updates the cache in a lasting way.
+     */
     optimistic?: boolean;
-    // If no onQueryUpdated function is provided, any queries affected by the
-    // updateCache function or included in the options.include array will be
-    // refetched by default. Passing null instead of undefined disables this
-    // default refetching behavior for affected queries, though included queries
-    // will still be refetched.
+
+    /**
+     * Optional callback function that's called once for each `ObservableQuery` that's either affected by `options.updateCache` or listed in `options.include` (or both).
+     *
+     * If `onQueryUpdated` is not provided, the default implementation returns the result of calling `observableQuery.refetch()`. When `onQueryUpdated` is provided, it can dynamically decide whether (and how) each query should be refetched.
+     *
+     * Returning `false` from `onQueryUpdated` prevents the associated query from being refetched.
+     */
     onQueryUpdated?: OnQueryUpdated<TResult> | null;
   }
 

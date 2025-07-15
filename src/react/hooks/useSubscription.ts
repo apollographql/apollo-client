@@ -12,6 +12,7 @@ import type {
   OperationVariables,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
+import type { DocumentationTypes as UtilityDocumentationTypes } from "@apollo/client/utilities/internal";
 import type {
   NoInfer,
   VariablesOption,
@@ -24,6 +25,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useSubscription {
+  import _self = useSubscription;
   export namespace Base {
     export interface Options<
       TData = unknown,
@@ -75,12 +77,12 @@ export declare namespace useSubscription {
   > = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
 
   export namespace DocumentationTypes {
-    export interface Result<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Options<TData, TVariables> {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: TVariables;
+    namespace useSubscription {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
 
@@ -95,6 +97,22 @@ export declare namespace useSubscription {
     error?: ErrorLike;
 
     restart: () => void;
+  }
+
+  export namespace DocumentationTypes {
+    namespace useSubscription {
+      export import Result = _self.Result;
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useSubscription:function(1)} */
+    export function useSubscription<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      options?: useSubscription.Options<TData, TVariables>
+    ): useSubscription.Result<TData>;
   }
 
   export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;

@@ -13,6 +13,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -31,36 +32,70 @@ type From<TData> =
   | null;
 
 export declare namespace useSuspenseFragment {
-  export type Options<TData, TVariables extends OperationVariables> = {
-    /**
-     * A GraphQL document created using the `gql` template string tag from
-     * `graphql-tag` with one or more fragments which will be used to determine
-     * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
-     */
-    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  import _self = useSuspenseFragment;
+  export namespace Base {
+    export type Options<TData, TVariables extends OperationVariables> = {
+      /**
+       * A GraphQL document created using the `gql` template string tag from
+       * `graphql-tag` with one or more fragments which will be used to determine
+       * the shape of data to read. If you provide more than one fragment in this
+       * document then you must also specify `fragmentName` to select a single.
+       */
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-    /**
-     * The name of the fragment in your GraphQL document to be used. If you do
-     * not provide a `fragmentName` and there is only one fragment in your
-     * `fragment` document then that fragment will be used.
-     */
-    fragmentName?: string;
-    from: From<TData>;
-    // Override this field to make it optional (default: true).
-    optimistic?: boolean;
-    /**
-     * The instance of `ApolloClient` to use to look up the fragment.
-     *
-     * By default, the instance that's passed down via context is used, but you
-     * can provide a different instance here.
-     *
-     * @docGroup 1. Operation options
-     */
-    client?: ApolloClient;
-  } & VariablesOption<NoInfer<TVariables>>;
+      /**
+       * The name of the fragment in your GraphQL document to be used. If you do
+       * not provide a `fragmentName` and there is only one fragment in your
+       * `fragment` document then that fragment will be used.
+       */
+      fragmentName?: string;
+      from: From<TData>;
+      // Override this field to make it optional (default: true).
+      optimistic?: boolean;
+      /**
+       * The instance of `ApolloClient` to use to look up the fragment.
+       *
+       * By default, the instance that's passed down via context is used, but you
+       * can provide a different instance here.
+       *
+       * @docGroup 1. Operation options
+       */
+      client?: ApolloClient;
+    };
+  }
+  export type Options<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.Options<TData, TVariables> & VariablesOption<NoInfer<TVariables>>;
 
-  export type Result<TData> = { data: DataValue.Complete<MaybeMasked<TData>> };
+  export namespace DocumentationTypes {
+    export namespace useSuspenseFragment {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+    }
+  }
+
+  export interface Result<TData> {
+    data: DataValue.Complete<MaybeMasked<TData>>;
+  }
+  export namespace DocumentationTypes {
+    export namespace useSuspenseFragment {
+      export import Result = _self.Result;
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
+    export function useSuspenseFragment<
+      TData,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      options: useSuspenseFragment.Options<TData, TVariables>
+    ): useSuspenseFragment.Result<TData>;
+  }
 }
 
 const NULL_PLACEHOLDER = [] as unknown as [
@@ -68,6 +103,7 @@ const NULL_PLACEHOLDER = [] as unknown as [
   Promise<MaybeMasked<any> | null>,
 ];
 
+/** #TODO documentation */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -77,6 +113,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<TData>;
 
+/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -86,6 +123,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<null>;
 
+/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -95,6 +133,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<TData | null>;
 
+/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,

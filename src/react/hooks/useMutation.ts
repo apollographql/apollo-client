@@ -163,6 +163,17 @@ export declare namespace useMutation {
     // in the mutation function
     mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   };
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useMutation:function(1)} */
+    export function useMutation<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useMutation.Options<TData, TVariables>
+    ): useMutation.ResultTuple<TData, TVariables>;
+  }
 }
 
 /**

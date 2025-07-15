@@ -3742,6 +3742,108 @@ describe("client.watchFragment", () => {
       complete: true,
     });
   });
+
+  test("reports masked fragment as complete even if masked data is not fully complete", async () => {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      lastUpdatedAt: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      lastUpdatedAt: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
+
+    const profileFieldsFragment: MaskedDocumentNode<
+      ProfileFieldsFragment,
+      never
+    > = gql`
+      fragment ProfileFields on User {
+        age
+        lastUpdatedAt
+      }
+    `;
+
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
+      gql`
+        fragment UserFields on User {
+          id
+          lastUpdatedAt
+          ...ProfileFields
+        }
+
+        ${profileFieldsFragment}
+      `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment: gql`
+        fragment UserFields on User {
+          id
+          lastUpdatedAt
+        }
+      `,
+      data: {
+        __typename: "User",
+        id: 1,
+        lastUpdatedAt: "2024-01-01",
+      },
+    });
+
+    const userFieldsObservable = client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    });
+
+    const profileFieldsObservable = client.watchFragment({
+      fragment: profileFieldsFragment,
+      from: { __typename: "User", id: 1 },
+    });
+
+    const userFieldsStream = new ObservableStream(userFieldsObservable);
+    const profileFieldsStream = new ObservableStream(profileFieldsObservable);
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
+        complete: true,
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", lastUpdatedAt: "2024-01-01" },
+        complete: false,
+        missing: { age: "Can't find field 'age' on User:1 object" },
+      }),
+    ]);
+
+    client.writeFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        lastUpdatedAt: "2024-01-01",
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).not.toEmitAnything(),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        complete: true,
+      }),
+    ]);
+  });
 });
 
 describe("client.query", () => {

@@ -4,6 +4,7 @@ import type {
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
+import { visit } from "graphql";
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
@@ -19,7 +20,7 @@ import type {
   Reference,
   StoreObject,
 } from "@apollo/client/utilities";
-import { cacheSizes } from "@apollo/client/utilities";
+import { cacheSizes, DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
@@ -257,6 +258,22 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
+  private maskedFragmentTransform = new DocumentTransform((document) => {
+    return visit(document, {
+      FragmentSpread(node) {
+        if (
+          node.directives?.some(
+            (directive) => directive.name.value === "unmask"
+          )
+        ) {
+          return;
+        }
+
+        return null;
+      },
+    });
+  });
+
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<TData = unknown, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
@@ -268,7 +285,13 @@ export abstract class ApolloCache implements DataProxy {
       optimistic = true,
       ...otherOptions
     } = options;
-    const query = this.getFragmentDoc(fragment, fragmentName);
+    const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
+    const query = this.getFragmentDoc(
+      dataMasking ?
+        this.maskedFragmentTransform.transformDocument(fragment)
+      : fragment,
+      fragmentName
+    );
     // While our TypeScript types do not allow for `undefined` as a valid
     // `from`, its possible `useFragment` gives us an `undefined` since it
     // calls` cache.identify` and provides that value to `from`. We are
@@ -279,7 +302,6 @@ export abstract class ApolloCache implements DataProxy {
       typeof from === "undefined" || typeof from === "string" ?
         from
       : this.identify(from);
-    const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
 
     if (__DEV__) {
       const actualFragmentName =

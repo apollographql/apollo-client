@@ -31,7 +31,6 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
-  DecoratedPromise,
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";

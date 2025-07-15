@@ -4,7 +4,6 @@ import type {
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
-import { visit } from "graphql";
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
@@ -27,6 +26,7 @@ import {
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
+  removeFragmentSpreads,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -258,15 +258,9 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
-  private maskedFragmentTransform = new DocumentTransform((document) => {
-    return visit(document, {
-      FragmentSpread(node) {
-        if (!node.directives?.some(({ name }) => name.value === "unmask")) {
-          return null;
-        }
-      },
-    });
-  });
+  private maskedFragmentTransform = new DocumentTransform(
+    removeFragmentSpreads
+  );
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<TData = unknown, TVars = OperationVariables>(

@@ -141,47 +141,30 @@ function WithApolloClient() {
 
 <FunctionDetails canonicalReference="@apollo/client!useReactiveVar:function(1)" headingLevel={2} />
 
-<MinVersion version="3.8.0">
+<FunctionDetails
+  canonicalReference="@apollo/client!useFragment.DocumentationTypes.useFragment:function(1)"
+  headingLevel={2}
+  parameters={false}
+  result={false}
+/>
 
-## `useFragment`
+<InterfaceDetails
+  canonicalReference="@apollo/client!useFragment.Options:interface"
+  headingLevel={3}
+/>
 
-</MinVersion>
+<InterfaceDetails
+  canonicalReference="@apollo/client!useFragment.DocumentationTypes.useFragment.Result:interface"
+  headingLevel={3}
+/>
 
-`useFragment` represents a lightweight live binding into the Apollo Client Cache and enables Apollo Client to broadcast very specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
-Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
-
-> **Note**: this hook was introduced in `3.7.0` as experimental but stabilized in `3.8.0`. In `3.7.x` and `3.8.0-alpha.x` releases, this hook is exported as `useFragment_experimental`. Starting with `3.8.0-beta.0` and greater the `_experimental` suffix was removed in its named export.
-
-### Example
-
-To view a `useFragment` example, see the [Fragments](../../data/fragments#usefragment) page.
-
-### Function Signature
-
-```ts
-function useFragment<
-  TData = unknown,
-  TVars = OperationVariables
->({
-  from: string | StoreObject | Reference;
-  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-  fragmentName?: string;
-  optimistic?: boolean;
-  variables?: TVars;
-  returnPartialData?: boolean;
-}): UseFragmentResult<TData> {}
-```
-
-### Params
-
-#### `options`
-
-<UseFragmentOptions />
-
-### Result
-
-<UseFragmentResult />
+<FunctionDetails
+  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:function(1)"
+  headingLevel={2}
+  parameters={false}
+  result={false}
+/>
 
 <MinVersion version="3.8.0">
 
@@ -248,7 +231,7 @@ function useSuspenseQuery<TData, TVariables>(
 Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <InterfaceDetails
-  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.Options:interface"
+  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
   headingLevel={3}
 />

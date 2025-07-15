@@ -29,6 +29,11 @@ export declare namespace DocumentationTypes {
     dataState: "complete" | "streaming" | "partial" | "empty";
   }
 
+  export interface VariableOptions<TVariables> {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables?: TVariables;
+  }
+
   export interface ApolloQueryResult<TData> extends DataState<TData> {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
     error?: ErrorLike;

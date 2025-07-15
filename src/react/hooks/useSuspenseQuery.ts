@@ -31,6 +31,7 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
+  DecoratedPromise,
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
@@ -88,11 +89,11 @@ export declare namespace useSuspenseQuery {
   > = Base.Options<TVariables> & VariablesOption<TVariables>;
 
   export namespace DocumentationTypes {
-    export interface Options<
-      TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Options<TVariables> {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: TVariables;
+    namespace useSuspenseQuery {
+      export interface Options<
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
 
@@ -129,14 +130,62 @@ export declare namespace useSuspenseQuery {
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export namespace DocumentationTypes {
-    export interface Result<
+    namespace useSuspenseQuery {
+      export interface Result<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Result<TData, TVariables>,
+          UtilityDocumentationTypes.DataState<TData> {}
+    }
+  }
+  export namespace DocumentationTypes {
+    /** Test {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
+    export function useSuspenseQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Result<TData, TVariables>,
-        UtilityDocumentationTypes.DataState<TData> {}
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useSuspenseQuery.Options<TVariables>
+    ): useSuspenseQuery.Result<TData, TVariables>;
   }
 }
 
+/**
+ * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+ *
+ * @example
+ * ```jsx
+ * import { Suspense } from 'react';
+ * import { useSuspenseQuery } from '@apollo/client';
+ *
+ * const listQuery = gql`
+ *   query {
+ *     list {
+ *       id
+ *     }
+ *   }
+ * `;
+ *
+ * function App() {
+ *   return (
+ *     <Suspense fallback={<Spinner />}>
+ *       <List />
+ *     </Suspense>
+ *   );
+ * }
+ *
+ * function List() {
+ *   const { data } = useSuspenseQuery(listQuery);
+ *
+ *   return (
+ *     <ol>
+ *       {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+ *     </ol>
+ *   );
+ * }
+ *
+ * ```
+ */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -152,6 +201,7 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "partial" | "empty"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -166,6 +216,7 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -181,6 +232,7 @@ export function useSuspenseQuery<
   "complete" | "empty" | "streaming" | "partial"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -195,6 +247,7 @@ export function useSuspenseQuery<
   "partial" | "streaming" | "complete"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -209,6 +262,7 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -225,6 +279,7 @@ export function useSuspenseQuery<
   "empty" | "streaming" | "complete" | "partial"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -235,6 +290,7 @@ export function useSuspenseQuery<
   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -249,6 +305,7 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
+/** {@inheritDoc @apollo/client!useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

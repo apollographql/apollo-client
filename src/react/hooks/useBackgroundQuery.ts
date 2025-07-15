@@ -27,6 +27,7 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -37,52 +38,66 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export declare namespace useBackgroundQuery {
+  import _self = useBackgroundQuery;
   export type FetchPolicy = Extract<
     WatchQueryFetchPolicy,
     "cache-first" | "network-only" | "no-cache" | "cache-and-network"
   >;
 
+  export namespace Base {
+    export interface Options {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+      refetchWritePolicy?: RefetchWritePolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+      returnPartialData?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: FetchPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+      queryKey?: string | number | any[];
+
+      /**
+       * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+       *
+       * @example Recommended usage of `skipToken`:
+       * ```ts
+       * import { skipToken, useBackgroundQuery } from '@apollo/client';
+       *
+       * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
+       * ```
+       */
+      skip?: boolean;
+    }
+  }
+
   export type Options<
     TVariables extends OperationVariables = OperationVariables,
-  > = {
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-    client?: ApolloClient;
+  > = Base.Options & VariablesOption<TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-    refetchWritePolicy?: RefetchWritePolicy;
+  export namespace DocumentationTypes {
+    namespace useBackgroundQuery {
+      export interface Options<
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+    }
+  }
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-    errorPolicy?: ErrorPolicy;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-    context?: DefaultContext;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-    returnPartialData?: boolean;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: FetchPolicy;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
-    queryKey?: string | number | any[];
-
-    /**
-     * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
-     *
-     * @example Recommended usage of `skipToken`:
-     * ```ts
-     * import { skipToken, useBackgroundQuery } from '@apollo/client';
-     *
-     * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
-     * ```
-     */
-    skip?: boolean;
-  } & VariablesOption<TVariables>;
-
-  export type Result<
+  export interface Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > = {
+  > {
     /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 
@@ -91,9 +106,79 @@ export declare namespace useBackgroundQuery {
 
     /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
     refetch: RefetchFunction<TData, TVariables>;
-  };
+  }
+
+  namespace DocumentationTypes {
+    namespace useBackgroundQuery {
+      export import Result = _self.Result;
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+    export function useBackgroundQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options: SkipToken | useBackgroundQuery.Options<TVariables>
+    ): [
+      QueryRef<TData, TVariables> | undefined,
+      useBackgroundQuery.Result<TData, TVariables>,
+    ];
+  }
 }
 
+/**
+ * For a detailed explanation of useBackgroundQuery, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+ *
+ * @example
+ *
+ * ```jsx
+ * import { Suspense } from 'react';
+ * import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+ * import { useBackgroundQuery, useReadQuery } from '@apollo/client/react';
+ *
+ * const query = gql`
+ *   foo {
+ *     bar
+ *   }
+ * `;
+ *
+ * const client = new ApolloClient({
+ *   link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
+ *   cache: new InMemoryCache()
+ * });
+ *
+ * function SuspenseFallback() {
+ *   return <div>Loading...</div>;
+ * }
+ *
+ * function Child({ queryRef }) {
+ *   const { data } = useReadQuery(queryRef);
+ *
+ *   return <div>{data.foo.bar}</div>;
+ * }
+ *
+ * function Parent() {
+ *   const [queryRef] = useBackgroundQuery(query);
+ *
+ *   return (
+ *     <Suspense fallback={<SuspenseFallback />}>
+ *       <Child queryRef={queryRef} />
+ *     </Suspense>
+ *   );
+ * }
+ *
+ * function App() {
+ *   return (
+ *     <ApolloProvider client={client}>
+ *       <Parent />
+ *     </ApolloProvider>
+ *   );
+ * }
+ * ```
+ */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -109,6 +194,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -123,6 +209,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -137,6 +224,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -150,6 +238,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -164,6 +253,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -178,6 +268,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -191,6 +282,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -204,6 +296,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -217,6 +310,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -225,6 +319,7 @@ export function useBackgroundQuery<
   options: SkipToken
 ): [undefined, useBackgroundQuery.Result<TData, TVariables>];
 
+/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

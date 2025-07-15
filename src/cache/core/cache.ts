@@ -261,15 +261,9 @@ export abstract class ApolloCache implements DataProxy {
   private maskedFragmentTransform = new DocumentTransform((document) => {
     return visit(document, {
       FragmentSpread(node) {
-        if (
-          node.directives?.some(
-            (directive) => directive.name.value === "unmask"
-          )
-        ) {
-          return;
+        if (!node.directives?.some(({ name }) => name.value === "unmask")) {
+          return null;
         }
-
-        return null;
       },
     });
   });

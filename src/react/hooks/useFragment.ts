@@ -170,16 +170,11 @@ function useFragment_<TData, TVariables extends OperationVariables>(
             null
           : client.watchFragment(stableOptions).subscribe({
               next: (result) => {
-                // Since `next` is called async by zen-observable, we want to avoid
-                // unnecessarily rerendering this hook for the initial result
+                // Avoid unnecessarily rerendering this hook for the initial result
                 // emitted from watchFragment which should be equal to
                 // `diff.result`.
-                const resultWithDataState = {
-                  ...result,
-                  dataState: result.complete ? "complete" : "partial",
-                } as useFragment.Result<TData>;
-                if (equal(resultWithDataState, diff.result)) return;
-                diff.result = resultWithDataState;
+                if (equal(result, diff.result)) return;
+                diff.result = result;
                 // If we get another update before we've re-rendered, bail out of
                 // the update and try again. This ensures that the relative timing
                 // between useQuery and useFragment stays roughly the same as

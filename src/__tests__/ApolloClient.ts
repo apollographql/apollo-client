@@ -285,7 +285,7 @@ describe("ApolloClient", () => {
           `,
         });
       }).toThrowError(
-        "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
+        'Schema type definitions not allowed in queries. Found: "SchemaDefinition"'
       );
     });
 

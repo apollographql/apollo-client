@@ -251,8 +251,11 @@ export abstract class ApolloCache implements DataProxy {
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
-  public watchFragment<TData = unknown, TVars = OperationVariables>(
-    options: WatchFragmentOptions<TData, TVars>
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: WatchFragmentOptions<TData, TVariables>
   ): Observable<WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
@@ -285,7 +288,7 @@ export abstract class ApolloCache implements DataProxy {
       }
     }
 
-    const diffOptions: Cache.DiffOptions<TData, TVars> = {
+    const diffOptions: Cache.DiffOptions<TData, TVariables> = {
       ...otherOptions,
       returnPartialData: true,
       id,
@@ -296,7 +299,7 @@ export abstract class ApolloCache implements DataProxy {
     let latestDiff: DataProxy.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
-      return this.watch<TData, TVars>({
+      return this.watch<TData, TVariables>({
         ...diffOptions,
         immediate: true,
         callback: (diff) => {

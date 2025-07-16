@@ -603,7 +603,10 @@ export class ApolloClient implements DataProxy {
    * to optimistic updates.
    */
 
-  public watchFragment<TData = unknown, TVariables = OperationVariables>(
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: WatchFragmentOptions<TData, TVariables>
   ): Observable<WatchFragmentResult<MaybeMasked<TData>>> {
     const dataMasking = this.queryManager.dataMasking;

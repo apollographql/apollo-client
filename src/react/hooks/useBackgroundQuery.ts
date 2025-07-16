@@ -120,7 +120,10 @@ export declare namespace useBackgroundQuery {
 
   namespace DocumentationTypes {
     namespace useBackgroundQuery {
-      export import Result = _self.Result;
+      export interface Result<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends _self.Result<TData, TVariables> {}
     }
   }
 
@@ -195,6 +198,9 @@ export declare namespace useBackgroundQuery {
  *   );
  * }
  * ```
+ *
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - An optional object containing options for the query. Instead of passing a `useBackgroundQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query or suspending.
  */
 export function useBackgroundQuery<
   TData = unknown,

@@ -1,71 +1,70 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
-
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
+import type { Reference, StoreObject } from "@apollo/client/utilities";
+import {
+  addTypenameToDocument,
+  cacheSizes,
+  canonicalStringify,
+  isReference,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  Reference,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities/internal";
 import {
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  makeReference,
-  shouldInclude,
-  addTypenameToDocument,
+  DeepMerger,
   getDefaultValues,
+  getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
-  getFragmentFromSelection,
+  isArray,
+  isField,
+  isNonNullObject,
+  makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
-  DeepMerger,
-  isNonNullObject,
-  canUseWeakMap,
-  compact,
-  canonicalStringify,
-  cacheSizes,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities/internal";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import type { Cache } from "../core/types/Cache.js";
+import type { MissingTree } from "../core/types/common.js";
+import { MissingFieldError } from "../core/types/common.js";
+
+import {
+  maybeDependOnExistenceOfEntity,
+  supportsResultCaching,
+} from "./entityStore.js";
+import {
+  extractFragmentContext,
+  getTypenameFromStoreObject,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import type { Policies } from "./policies.js";
 import type {
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import {
-  maybeDependOnExistenceOfEntity,
-  supportsResultCaching,
-} from "./entityStore.js";
-import {
-  isArray,
-  extractFragmentContext,
-  getTypenameFromStoreObject,
-  shouldCanonizeResults,
-} from "./helpers.js";
-import type { Policies } from "./policies.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import type { MissingTree } from "../core/types/common.js";
-import { MissingFieldError } from "../core/types/common.js";
-import { ObjectCanon } from "./object-canon.js";
-
-export type VariableMap = { [name: string]: any };
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
-  canonizeResults: boolean;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
 }
 
-export type ExecResult<R = any> = {
+type ExecResult<R = any> = {
   result: R;
   missing?: MissingTree;
 };
@@ -84,12 +83,8 @@ type ExecSubSelectedArrayOptions = {
   context: ReadContext;
 };
 
-export interface StoreReaderConfig {
+interface StoreReaderConfig {
   cache: InMemoryCache;
-  addTypename?: boolean;
-  resultCacheMaxSize?: number;
-  canonizeResults?: boolean;
-  canon?: ObjectCanon;
   fragments?: InMemoryCacheConfig["fragments"];
 }
 
@@ -98,20 +93,12 @@ type ExecSelectionSetKeyArgs = [
   SelectionSetNode,
   StoreObject | Reference,
   ReadMergeModifyContext,
-  boolean,
 ];
 
 function execSelectionSetKeyArgs(
   options: ExecSelectionSetOptions
 ): ExecSelectionSetKeyArgs {
-  return [
-    options.selectionSet,
-    options.objectOrReference,
-    options.context,
-    // We split out this property so we can pass different values
-    // independently without modifying options.context itself.
-    options.context.canonizeResults,
-  ];
+  return [options.selectionSet, options.objectOrReference, options.context];
 }
 
 export class StoreReader {
@@ -131,29 +118,13 @@ export class StoreReader {
 
   private config: {
     cache: InMemoryCache;
-    addTypename: boolean;
-    resultCacheMaxSize?: number;
-    canonizeResults: boolean;
     fragments?: InMemoryCacheConfig["fragments"];
   };
 
-  private knownResults = new (canUseWeakMap ? WeakMap : Map)<
-    Record<string, any>,
-    SelectionSetNode
-  >();
-
-  public canon: ObjectCanon;
-  public resetCanon() {
-    this.canon = new ObjectCanon();
-  }
+  private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
   constructor(config: StoreReaderConfig) {
-    this.config = compact(config, {
-      addTypename: config.addTypename !== false,
-      canonizeResults: shouldCanonizeResults(config),
-    });
-
-    this.canon = config.canon || new ObjectCanon();
+    this.config = config;
 
     // memoized functions in this class will be "garbage-collected"
     // by recreating the whole `StoreReader` in
@@ -161,25 +132,11 @@ export class StoreReader {
     // (triggered from `InMemoryCache.gc` with `resetResultCache: true`)
     this.executeSelectionSet = wrap(
       (options) => {
-        const { canonizeResults } = options.context;
-
         const peekArgs = execSelectionSetKeyArgs(options);
-
-        // Negate this boolean option so we can find out if we've already read
-        // this result using the other boolean value.
-        peekArgs[3] = !canonizeResults;
 
         const other = this.executeSelectionSet.peek(...peekArgs);
 
         if (other) {
-          if (canonizeResults) {
-            return {
-              ...other,
-              // If we previously read this result without canonizing it, we can
-              // reuse that result simply by canonizing it now.
-              result: this.canon.admit(other.result),
-            };
-          }
           // If we previously read this result with canonization enabled, we can
           // return that canonized result as-is.
           return other;
@@ -196,19 +153,17 @@ export class StoreReader {
       },
       {
         max:
-          this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSelectionSet"] ||
           defaultCacheSizes["inMemoryCache.executeSelectionSet"],
         keyArgs: execSelectionSetKeyArgs,
         // Note that the parameters of makeCacheKey are determined by the
         // array returned by keyArgs.
-        makeCacheKey(selectionSet, parent, context, canonizeResults) {
+        makeCacheKey(selectionSet, parent, context) {
           if (supportsResultCaching(context.store)) {
             return context.store.makeCacheKey(
               selectionSet,
               isReference(parent) ? parent.__ref : parent,
-              context.varString,
-              canonizeResults
+              context.varString
             );
           }
         },
@@ -225,7 +180,6 @@ export class StoreReader {
       },
       {
         max:
-          this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSubSelectedArray"] ||
           defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
@@ -247,7 +201,6 @@ export class StoreReader {
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
-    canonizeResults = this.config.canonizeResults,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 
@@ -267,35 +220,33 @@ export class StoreReader {
         policies,
         variables,
         varString: canonicalStringify(variables),
-        canonizeResults,
         ...extractFragmentContext(query, this.config.fragments),
       },
     });
 
-    let missing: MissingFieldError[] | undefined;
+    let missing: MissingFieldError | undefined;
     if (execResult.missing) {
-      // For backwards compatibility we still report an array of
-      // MissingFieldError objects, even though there will only ever be at most
-      // one of them, now that all missing field error messages are grouped
-      // together in the execResult.missing tree.
-      missing = [
-        new MissingFieldError(
-          firstMissing(execResult.missing)!,
-          execResult.missing,
-          query,
-          variables
-        ),
-      ];
-      if (!returnPartialData) {
-        throw missing[0];
-      }
+      missing = new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables
+      );
     }
 
+    const complete = !missing;
+    const { result } = execResult;
+
     return {
-      result: execResult.result,
-      complete: !missing,
+      result:
+        complete || returnPartialData ?
+          Object.keys(result).length === 0 ?
+            null
+          : result
+        : null,
+      complete,
       missing,
-    };
+    } as Cache.DiffResult<T>;
   }
 
   public isFresh(
@@ -311,11 +262,7 @@ export class StoreReader {
       const latest = this.executeSelectionSet.peek(
         selectionSet,
         parent,
-        context,
-        // If result is canonical, then it could only have been previously
-        // cached by the canonizing version of executeSelectionSet, so we can
-        // avoid checking both possibilities here.
-        this.canon.isKnown(result)
+        context
       );
       if (latest && result === latest.result) {
         return true;
@@ -337,7 +284,7 @@ export class StoreReader {
       !context.store.has(objectOrReference.__ref)
     ) {
       return {
-        result: this.canon.empty,
+        result: {},
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
       };
     }
@@ -352,14 +299,10 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
-    if (
-      this.config.addTypename &&
-      typeof typename === "string" &&
-      !policies.rootIdsByTypename[typename]
-    ) {
+    if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
-      // field, if we have one, and this.config.addTypename is true. Note
-      // that this field can be overridden by other merged objects.
+      // field, if we have one. Note that this field can be overridden by other
+      // merged objects.
       objectsToMerge.push({ __typename: typename });
     }
 
@@ -415,13 +358,7 @@ export class StoreReader {
             );
           }
         } else if (!selection.selectionSet) {
-          // If the field does not have a selection set, then we handle it
-          // as a scalar value. To keep this.canon from canonicalizing
-          // this value, we use this.canon.pass to wrap fieldValue in a
-          // Pass object that this.canon.admit will later unwrap as-is.
-          if (context.canonizeResults) {
-            fieldValue = this.canon.pass(fieldValue);
-          }
+          // do nothing
         } else if (fieldValue != null) {
           // In this case, because we know the field has a selection set,
           // it must be trying to query a GraphQLObjectType, which is why
@@ -458,12 +395,7 @@ export class StoreReader {
 
     const result = mergeDeepArray(objectsToMerge);
     const finalResult: ExecResult = { result, missing };
-    const frozen =
-      context.canonizeResults ?
-        this.canon.admit(finalResult)
-        // Since this.canon is normally responsible for freezing results (only in
-        // development), freeze them manually if canonization is disabled.
-      : maybeDeepFreeze(finalResult);
+    const frozen = maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
@@ -535,7 +467,7 @@ export class StoreReader {
     });
 
     return {
-      result: context.canonizeResults ? this.canon.admit(array) : array,
+      result: array,
       missing,
     };
   }

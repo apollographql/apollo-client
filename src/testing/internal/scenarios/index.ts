@@ -1,7 +1,9 @@
-import { ApolloLink, Observable, gql } from "../../../core/index.js";
-import type { TypedDocumentNode } from "../../../core/index.js";
-import type { MaskedDocumentNode } from "../../../masking/index.js";
-import type { MockedResponse } from "../../core/index.js";
+import { Observable } from "rxjs";
+
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloLink, gql } from "@apollo/client";
+import type { MaskedDocumentNode } from "@apollo/client/masking";
+import type { MockLink } from "@apollo/client/testing";
 
 export interface SimpleCaseData {
   greeting: string;
@@ -14,7 +16,7 @@ export function setupSimpleCase() {
     }
   `;
 
-  const mocks: MockedResponse<SimpleCaseData>[] = [
+  const mocks: MockLink.MockedResponse<SimpleCaseData>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
@@ -49,22 +51,23 @@ export function setupVariablesCase() {
     `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
-    (name, index) => ({
-      request: { query, variables: { id: String(index + 1) } },
-      result: {
-        data: {
-          character: { __typename: "Character", id: String(index + 1), name },
-        },
+  const mocks: MockLink.MockedResponse<
+    VariablesCaseData,
+    VariablesCaseVariables
+  >[] = [...CHARACTERS].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: {
+      data: {
+        character: { __typename: "Character", id: String(index + 1), name },
       },
-      delay: 20,
-    })
-  );
+    },
+    delay: 20,
+  }));
 
   return { mocks, query };
 }
 
-export type MaskedVariablesCaseFragment = {
+type MaskedVariablesCaseFragment = {
   __typename: "Character";
   name: string;
 } & { " $fragmentName"?: "MaskedVariablesCaseFragment" };
@@ -113,22 +116,22 @@ export function setupMaskedVariablesCase() {
 
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks: MockedResponse<MaskedVariablesCaseData>[] = [...CHARACTERS].map(
-    (name, index) => ({
-      request: { query, variables: { id: String(index + 1) } },
-      result: {
-        data: {
-          character: { __typename: "Character", id: String(index + 1), name },
-        },
+  const mocks: MockLink.MockedResponse<MaskedVariablesCaseData>[] = [
+    ...CHARACTERS,
+  ].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: {
+      data: {
+        character: { __typename: "Character", id: String(index + 1), name },
       },
-      delay: 20,
-    })
-  );
+    },
+    delay: 20,
+  }));
 
   return { mocks, query, unmaskedQuery };
 }
 
-export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
+export function addDelayToMocks<T extends MockLink.MockedResponse<unknown>[]>(
   mocks: T,
   delay = 150,
   override = false

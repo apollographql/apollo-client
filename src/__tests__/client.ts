@@ -1,60 +1,54 @@
-import { cloneDeep, assign } from "lodash";
-import {
-  GraphQLError,
+import { waitFor } from "@testing-library/react";
+import type {
   DocumentNode,
-  Kind,
-  print,
-  visit,
   FormattedExecutionResult,
+  GraphQLFormattedError,
 } from "graphql";
-import gql from "graphql-tag";
+import { GraphQLError, Kind, visit } from "graphql";
+import { gql } from "graphql-tag";
+import { assign, cloneDeep } from "lodash";
+import type { Subscription } from "rxjs";
+import { Observable, of } from "rxjs";
 
-import {
-  ApolloClient,
+import type {
+  ApolloQueryResult,
   FetchPolicy,
-  WatchQueryFetchPolicy,
-  QueryOptions,
   ObservableQuery,
   Operation,
+  QueryOptions,
   TypedDocumentNode,
-  NetworkStatus,
-} from "../core";
-
-import {
-  DocumentTransform,
-  Observable,
-  ObservableSubscription,
-  offsetLimitPagination,
-  removeDirectivesFromDocument,
-} from "../utilities";
-import { ApolloLink } from "../link/core";
+  WatchQueryFetchPolicy,
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import type {
+  NormalizedCacheObject,
+  PossibleTypesMap,
+} from "@apollo/client/cache";
 import {
   createFragmentRegistry,
   InMemoryCache,
   makeVar,
-  PossibleTypesMap,
-} from "../cache";
-import { ApolloError } from "../errors";
-
-import { mockSingleLink, MockLink, wait } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { waitFor } from "@testing-library/react";
+} from "@apollo/client/cache";
+import {
+  CombinedGraphQLErrors,
+  UnconventionalError,
+} from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
+import { MockLink } from "@apollo/client/testing";
+import {
+  ObservableStream,
+  spyOnConsole,
+  wait,
+} from "@apollo/client/testing/internal";
+import {
+  DocumentTransform,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("client", () => {
-  it("can be loaded via require", () => {
-    /* tslint:disable */
-    const ApolloClientRequire = require("../").ApolloClient;
-    /* tslint:enable */
-
-    const client = new ApolloClientRequire({
-      link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
-    });
-
-    expect(client.queryManager).toBeDefined();
-    expect(client.cache).toBeDefined();
-  });
-
   it("can allow passing in a link", () => {
     const link = ApolloLink.empty();
     const client = new ApolloClient({
@@ -87,13 +81,13 @@ describe("client", () => {
     }).toThrow('You must wrap the query string in a "gql" tag.');
   });
 
-  it("should throw an error if mutation option is missing", async () => {
+  it("should throw an error if mutation option is missing", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
-    return await expect(
+    expect(() =>
       client.mutate({
         query: gql`
           {
@@ -101,8 +95,8 @@ describe("client", () => {
           }
         `,
       } as any)
-    ).rejects.toThrow(
-      "mutation option is required. You must specify your GraphQL document in the mutation option."
+    ).toThrow(
+      "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
     );
   });
 
@@ -161,11 +155,11 @@ describe("client", () => {
 
     const variables = { first: 1 };
 
-    const link = ApolloLink.from([() => Observable.of({ data })]);
+    const link = ApolloLink.from([() => of({ data })]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query, variables });
@@ -203,14 +197,16 @@ describe("client", () => {
       test: { key1: ["value", "value2"], key2: { key3: 4 } },
     };
 
-    const link = mockSingleLink({
-      request: { query, variables },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query, variables },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     {
@@ -263,7 +259,7 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query, variables },
         result: { data: result },
@@ -271,12 +267,12 @@ describe("client", () => {
       {
         request: { query, variables: override },
         result: { data: overriddenResult },
-      }
-    );
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     {
@@ -410,10 +406,12 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const initialState: any = {
       data: {
@@ -434,9 +432,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     const result = await client.query({ query });
@@ -460,16 +456,19 @@ describe("client", () => {
       allPeople: {
         people: [
           {
+            __typename: "Person",
             name: "Luke Skywalker",
           },
         ],
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const initialState: any = {
       data: {
@@ -477,6 +476,7 @@ describe("client", () => {
           'allPeople({"first":1})': {
             people: [
               {
+                __typename: "Person",
                 name: "Luke Skywalker",
               },
             ],
@@ -486,13 +486,11 @@ describe("client", () => {
       },
     };
 
-    const finalState = assign({}, initialState, {});
+    const finalState = Object.assign({}, initialState);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     const result = await client.query({ query });
@@ -522,10 +520,12 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const initialState: any = {
       data: {
@@ -554,9 +554,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     expect(client.restore(initialState.data)).toEqual(
@@ -581,18 +579,20 @@ describe("client", () => {
       ),
     ];
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { errors },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { errors },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors({ errors })
     );
   });
 
@@ -633,11 +633,11 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors({ data, errors })
     );
   });
 
@@ -664,12 +664,10 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
-    await expect(client.query({ query })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.query({ query })).rejects.toThrow(networkError);
   });
 
   it("should not warn when receiving multiple results from apollo-link network interface", () => {
@@ -693,16 +691,105 @@ describe("client", () => {
       },
     };
 
-    const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
+    const link = ApolloLink.from([() => of({ data }, { data })]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
-    return client.query({ query }).then((result: FormattedExecutionResult) => {
+    return client.query({ query }).then((result) => {
       expect(result.data).toEqual(data);
     });
+  });
+
+  it("emits InvariantError when link chain completes without emitting a result", async () => {
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => observer.complete(), 10);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+    const expectedError = new InvariantError(
+      "The link chain completed without emitting a value. This is likely unintentional and should be updated to emit a value before completing."
+    );
+
+    await expect(
+      client.query({
+        query: gql`
+          query {
+            hello
+          }
+        `,
+      })
+    ).rejects.toThrow(expectedError);
+
+    await expect(
+      client.mutate({
+        mutation: gql`
+          mutation {
+            foo
+          }
+        `,
+      })
+    ).rejects.toThrow(expectedError);
+
+    const observable = client.watchQuery({
+      query: gql`
+        query {
+          hello
+        }
+      `,
+      notifyOnNetworkStatusChange: false,
+    });
+
+    const stream = new ObservableStream(observable);
+    const emittedValue: ApolloQueryResult<unknown> = {
+      data: undefined,
+      dataState: "empty",
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    };
+
+    await expect(stream).toEmitTypedValue(emittedValue);
+
+    await expect(observable.refetch()).rejects.toThrow(expectedError);
+    await expect(stream).toEmitTypedValue(emittedValue);
+
+    await expect(observable.fetchMore({})).rejects.toThrow(expectedError);
+    await expect(stream).toEmitTypedValue(emittedValue);
+
+    await expect(observable.setVariables({ ignored: true })).rejects.toThrow(
+      expectedError
+    );
+    await expect(stream).toEmitTypedValue(emittedValue);
+
+    await expect(observable.reobserve()).rejects.toThrow(expectedError);
+    await expect(stream).toEmitTypedValue(emittedValue);
+  });
+
+  it("allows subscriptions to terminate without emitting results", async () => {
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => observer.complete(), 10);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+    const subscription = client.subscribe({
+      query: gql`
+        subscription {
+          hello
+        }
+      `,
+    });
+
+    const stream = new ObservableStream(subscription);
+
+    await expect(stream).toComplete();
   });
 
   it.skip("should surface errors in observer.next as uncaught", async () => {
@@ -741,14 +828,16 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
@@ -784,14 +873,16 @@ describe("client", () => {
       }
     `;
 
-    const link = mockSingleLink({
-      request: { query },
-      result: {},
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: {},
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
@@ -826,20 +917,36 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
     const stream = new ObservableStream(handle);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should be able to transform queries", async () => {
@@ -861,12 +968,6 @@ describe("client", () => {
       }
     `;
 
-    const result = {
-      author: {
-        firstName: "John",
-        lastName: "Smith",
-      },
-    };
     const transformedResult = {
       author: {
         firstName: "John",
@@ -875,21 +976,16 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
+    const link = new MockLink([
       {
         request: { query: transformedQuery },
         result: { data: transformedResult },
       },
-      false
-    );
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -915,12 +1011,6 @@ describe("client", () => {
         }
       }
     `;
-    const result = {
-      author: {
-        firstName: "John",
-        lastName: "Smith",
-      },
-    };
     const transformedResult = {
       author: {
         firstName: "John",
@@ -928,21 +1018,16 @@ describe("client", () => {
         __typename: "Author",
       },
     };
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
+    const link = new MockLink([
       {
         request: { query: transformedQuery },
         result: { data: transformedResult },
       },
-      false
-    );
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({
@@ -954,6 +1039,8 @@ describe("client", () => {
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
+    // Silence warning for unconfigured local resolvers
+    using _ = spyOnConsole("warn");
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -973,6 +1060,7 @@ describe("client", () => {
         author {
           firstName
           lastName
+          __typename
         }
       }
     `;
@@ -980,7 +1068,7 @@ describe("client", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           author: {
             firstName: "John",
@@ -993,12 +1081,13 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(transformedQuery));
+    expect(result.current!.query).toMatchDocument(transformedQuery);
   });
 
   it("should handle named fragments on mutations", async () => {
@@ -1026,13 +1115,15 @@ describe("client", () => {
         },
       },
     };
-    const link = mockSingleLink({
-      request: { query: mutation },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: mutation },
+        result: { data: result },
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.mutate({ mutation });
@@ -1062,14 +1153,16 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({
@@ -1108,13 +1201,15 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: result },
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -1144,13 +1239,15 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: result },
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -1190,10 +1287,12 @@ describe("client", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: result },
+      },
+    ]);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
@@ -1239,10 +1338,12 @@ describe("client", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -1299,15 +1400,18 @@ describe("client", () => {
       fortuneCookie: "The waiter spit in your food",
     };
 
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: mutation },
-        result: { data: mutationResult },
-      }
+    const link = new MockLink(
+      [
+        {
+          request: { query },
+          result: { data: result },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationResult },
+        },
+      ],
+      { defaultOptions: { delay: 0 } }
     );
 
     const client = new ApolloClient({
@@ -1319,11 +1423,7 @@ describe("client", () => {
       }),
     });
 
-    const queryUpdaterSpy = jest.fn();
-    const queryUpdater = (prev: any) => {
-      queryUpdaterSpy();
-      return prev;
-    };
+    const queryUpdater = jest.fn((prev) => prev);
     const updateQueries = {
       items: queryUpdater,
     };
@@ -1336,8 +1436,8 @@ describe("client", () => {
     await expect(stream).toEmitNext();
     await client.mutate({ mutation, updateQueries, update: updateSpy });
 
-    expect(queryUpdaterSpy).toBeCalled();
-    expect(updateSpy).toBeCalled();
+    expect(queryUpdater).toHaveBeenCalled();
+    expect(updateSpy).toHaveBeenCalled();
   });
 
   it("should send operationName along with the query to the server", () => {
@@ -1352,12 +1452,12 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myQueryName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     return client.query({ query }).then((actualResult) => {
@@ -1377,12 +1477,12 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myMutationName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     return client.mutate({ mutation }).then((actualResult) => {
@@ -1411,7 +1511,7 @@ describe("client", () => {
 
     // we have two responses for identical queries, and both should be requested.
     // the second one should make it through to the network interface.
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query: queryDoc },
         result: { data },
@@ -1420,12 +1520,12 @@ describe("client", () => {
       {
         request: { query: queryDoc },
         result: { data: data2 },
-      }
-    );
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       queryDeduplication: false,
     });
 
@@ -1460,7 +1560,7 @@ describe("client", () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query: queryDoc },
         result: { data },
@@ -1469,11 +1569,11 @@ describe("client", () => {
       {
         request: { query: queryDoc },
         result: { data: data2 },
-      }
-    );
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1506,7 +1606,7 @@ describe("client", () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query: queryDoc },
         result: { data },
@@ -1515,11 +1615,11 @@ describe("client", () => {
       {
         request: { query: queryDoc },
         result: { data: data2 },
-      }
-    );
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       queryDeduplication: false,
     });
 
@@ -1561,7 +1661,7 @@ describe("client", () => {
 
     // we have two responses for identical queries, and both should be requested.
     // the second one should make it through to the network interface.
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query: queryDoc },
         result: { data },
@@ -1570,11 +1670,11 @@ describe("client", () => {
       {
         request: { query: queryDoc },
         result: { data: data2 },
-      }
-    );
+      },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     // The first query gets tracked in the dedup logic, the second one ignores it and runs anyways
@@ -1591,6 +1691,11 @@ describe("client", () => {
     });
   });
 
+  // TODO: This is a bit of an odd test because its half testing that
+  // deduplication kicks in, but its also testing some of the behavior of the
+  // observable itself. With the move to RxJS, the unsubscribe cleanup function
+  // is called with `complete` which means it might be called synchronously
+  // (hence why the `complete` needs to be wrapped in setTimeout for this test).
   it("unsubscribes from deduplicated observables only once", async () => {
     const document: DocumentNode = gql`
       query test1($x: String) {
@@ -1606,7 +1711,7 @@ describe("client", () => {
     const client = new ApolloClient({
       link: new ApolloLink(() => {
         return new Observable((observer) => {
-          observer.complete();
+          setTimeout(() => observer.complete());
           return () => {
             unsubscribeCount++;
           };
@@ -1691,17 +1796,18 @@ describe("client", () => {
     };
 
     it("for internal store", async () => {
-      const link = mockSingleLink({
-        request: { query },
-        result: { data },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
 
         cache: new InMemoryCache({
           dataIdFromObject: (obj: any) => obj.id,
-          addTypename: false,
         }),
       });
 
@@ -1779,14 +1885,16 @@ describe("client", () => {
     });
 
     it("fetches from cache first, then network", async () => {
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: networkFetch },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: networkFetch },
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({ query, data: initialData });
@@ -1798,20 +1906,34 @@ describe("client", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).not.toEmitAnything();
     });
 
     it("does not fail if cache entry is not present", async () => {
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: networkFetch },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: networkFetch },
+        },
+      ]);
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const obs = client.watchQuery({
@@ -1820,19 +1942,35 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
     });
 
     it("fails if network request fails", async () => {
-      const link = mockSingleLink(); // no queries = no replies.
+      const link = new MockLink([
+        {
+          request: { query },
+          error: new Error("Oops"),
+        },
+      ]);
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const obs = client.watchQuery({
@@ -1841,20 +1979,37 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-      expect(error.message).toMatch(/No more mocked responses/);
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        error: new Error("Oops"),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("fetches from cache first, then network and does not have an unhandled error", async () => {
-      const link = mockSingleLink({
-        request: { query },
-        result: { errors: [{ message: "network failure" }] },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { errors: [{ message: "network failure" }] },
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({ query, data: initialData });
@@ -1865,15 +2020,26 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         data: initialData,
+        dataState: "complete",
         networkStatus: 1,
+        partial: false,
       });
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        dataState: "complete",
+        error: new CombinedGraphQLErrors({
+          errors: [{ message: "network failure" }],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
-      expect(error.message).toMatch(/network failure/);
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1887,18 +2053,36 @@ describe("client", () => {
       const data = { test: "ok" };
       const data2 = { test: "not ok" };
 
-      const link = mockSingleLink({
-        request: { query },
-        result: { data },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+      ]);
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(stream).toEmitTypedValue({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(
+        obs.reobserve({ query, fetchPolicy: "standby" })
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -1914,25 +2098,49 @@ describe("client", () => {
       const data = { test: "ok" };
       const data2 = { test: "not ok" };
 
-      const link = mockSingleLink({
-        request: { query },
-        result: { data },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+      ]);
 
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(stream).toEmitTypedValue({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(
+        obs.reobserve({ query, fetchPolicy: "standby" })
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
-        void obs.setOptions({ query, fetchPolicy: "cache-first" });
+        void obs.reobserve({ query, fetchPolicy: "cache-first" });
       }, 10);
 
-      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitTypedValue({
+        data: data2,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
   });
@@ -1958,7 +2166,7 @@ describe("client", () => {
     };
 
     function makeLink() {
-      return mockSingleLink(
+      return new MockLink([
         {
           request: { query },
           result: { data: firstFetch },
@@ -1966,14 +2174,14 @@ describe("client", () => {
         {
           request: { query },
           result: { data: secondFetch },
-        }
-      );
+        },
+      ]);
     }
 
     it("forces the query to rerun", async () => {
       const client = new ApolloClient({
         link: makeLink(),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       // Run a query first to initialize the store
@@ -1988,7 +2196,7 @@ describe("client", () => {
       const client = new ApolloClient({
         link: makeLink(),
         ssrMode: true,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const options: QueryOptions = { query, fetchPolicy: "network-only" };
@@ -2010,7 +2218,7 @@ describe("client", () => {
       const client = new ApolloClient({
         link: makeLink(),
         ssrForceFetchDelay: 100,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       // Run a query first to initialize the store
@@ -2050,17 +2258,17 @@ describe("client", () => {
     };
     const networkError = new Error("Some kind of network error.");
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: { data },
-        error: networkError,
-      }),
-      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data },
+          error: networkError,
+        },
+      ]),
+      cache: new InMemoryCache(),
     });
 
-    await expect(client.mutate({ mutation })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.mutate({ mutation })).rejects.toThrow(networkError);
   });
 
   it("should pass a GraphQL error correctly on a mutation", async () => {
@@ -2082,15 +2290,17 @@ describe("client", () => {
     };
     const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: { data, errors },
-      }),
-      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data, errors },
+        },
+      ]),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors({ data, errors })
     );
   });
 
@@ -2106,32 +2316,32 @@ describe("client", () => {
       }
     `;
     const data = {
-      person: {
-        firstName: "John",
-        lastName: "Smith",
+      newPerson: {
+        person: {
+          firstName: "John",
+          lastName: "Smith",
+        },
       },
     };
-    const errors = [new Error("Some kind of GraphQL error.")];
+    const errors = [{ message: "Some kind of GraphQL error." }];
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: {
-          errors,
-          data: {
-            newPerson: data,
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: {
+            errors,
+            data,
           },
         },
-      }),
-      cache: new InMemoryCache({ addTypename: false }),
+      ]),
+      cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "all" });
-
-    expect(result.errors).toBeDefined();
-    expect(result.errors!.length).toBe(1);
-    expect(result.errors![0].message).toBe(errors[0].message);
-    expect(result.data).toEqual({
-      newPerson: data,
+    await expect(
+      client.mutate({ mutation, errorPolicy: "all" })
+    ).resolves.toStrictEqualTyped({
+      data,
+      error: new CombinedGraphQLErrors({ data, errors }),
     });
   });
 
@@ -2156,17 +2366,18 @@ describe("client", () => {
     };
     const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: { data, errors },
-      }),
-      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data, errors },
+        },
+      ]),
+      cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "ignore" });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual(data);
+    await expect(
+      client.mutate({ mutation, errorPolicy: "ignore" })
+    ).resolves.toStrictEqualTyped({ data });
   });
 
   it("should rollback optimistic after mutation got a GraphQL error", async () => {
@@ -2190,11 +2401,13 @@ describe("client", () => {
     };
     const errors = [new Error("Some kind of GraphQL error.")];
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: { data, errors },
-      }),
-      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data, errors },
+        },
+      ]),
+      cache: new InMemoryCache(),
     });
     const mutatePromise = client.mutate({
       mutation,
@@ -2407,21 +2620,27 @@ describe("client", () => {
     await client.resetStore();
     expect(count).toBe(2);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     await expect(stream).toEmitNext();
 
     expect(onResetStoreOne).toHaveBeenCalled();
   });
 
-  it("has a reFetchObservableQueries method which calls QueryManager", async () => {
+  it("has a refetchObservableQueries method which calls QueryManager", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
     // @ts-ignore
-    const spy = jest.spyOn(client.queryManager, "reFetchObservableQueries");
-    await client.reFetchObservableQueries();
+    const spy = jest.spyOn(client.queryManager, "refetchObservableQueries");
+    await client.refetchObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
 
@@ -2448,10 +2667,12 @@ describe("client", () => {
         noop
       }
     `;
-    const link = mockSingleLink({
-      request: { query: mutation },
-      result: { data: { noop: false } },
-    });
+    const link = new MockLink([
+      {
+        request: { query: mutation },
+        result: { data: { noop: false } },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2493,7 +2714,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({
@@ -2508,9 +2729,14 @@ describe("client", () => {
 
     const stream = new ObservableStream(handle);
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("Uh oh!");
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      error: new Error("Uh oh!"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 
   it("should be able to refetch after there was a network error", async () => {
@@ -2526,76 +2752,89 @@ describe("client", () => {
 
     const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     const dataTwo = { allPeople: { people: [{ name: "Princess Leia" }] } };
-    const link = mockSingleLink(
+    const link = new MockLink([
       { request: { query }, result: { data } },
       { request: { query }, error: new Error("This is an error!") },
-      { request: { query }, result: { data: dataTwo } }
-    );
+      { request: { query }, result: { data: dataTwo } },
+    ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
-    const observable = client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: true,
-    });
+    const observable = client.watchQuery({ query });
 
     let stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).rejects.toThrow();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
+      partial: false,
     });
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("This is an error!");
+    await expect(stream).toEmitTypedValue({
+      data,
+      dataState: "complete",
+      error: new Error("This is an error!"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
 
     stream.unsubscribe();
 
-    const lastError = observable.getLastError();
-    expect(lastError).toBeInstanceOf(ApolloError);
-    expect(lastError!.networkError).toEqual((error as any).networkError);
+    const lastError = observable.getCurrentResult().error;
+    expect(lastError).toBeInstanceOf(Error);
+    expect(lastError).toEqual(new Error("This is an error!"));
 
-    const lastResult = observable.getLastResult();
-    expect(lastResult).toBeTruthy();
-    expect(lastResult!.loading).toBe(false);
-    expect(lastResult!.networkStatus).toBe(8);
-
-    observable.resetLastResults();
     stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).resolves.toBeTruthy();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
-      errors: undefined,
       data: dataTwo,
+      dataState: "complete",
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -2613,10 +2852,12 @@ describe("client", () => {
     const errors: GraphQLError[] = [
       new GraphQLError('Cannot query field "foo" on type "Post".'),
     ];
-    const link = mockSingleLink({
-      request: { query },
-      result: { errors },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { errors },
+      },
+    ]);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -2625,6 +2866,144 @@ describe("client", () => {
     await expect(client.query({ query })).rejects.toThrow(
       'Cannot query field "foo" on type "Post".'
     );
+  });
+
+  it("rejects network errors", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = new MockLink([
+      {
+        request: { query },
+        error,
+      },
+    ]);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(client.query({ query })).rejects.toThrow(error);
+  });
+
+  it("resolves partial data and GraphQL errors when errorPolicy is 'all'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const errors: GraphQLFormattedError[] = [
+      { message: 'Cannot query field "foo" on type "Post".' },
+    ];
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: { posts: null }, errors },
+      },
+    ]);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "all" })
+    ).resolves.toStrictEqualTyped({
+      data: { posts: null },
+      error: new CombinedGraphQLErrors({
+        data: { posts: null },
+        errors: [{ message: 'Cannot query field "foo" on type "Post".' }],
+      }),
+    });
+  });
+
+  it("resolves with network error when errorPolicy is 'all'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = new MockLink([
+      {
+        request: { query },
+        error,
+      },
+    ]);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "all" })
+    ).resolves.toStrictEqualTyped({ data: undefined, error });
+  });
+
+  it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const errors: GraphQLFormattedError[] = [
+      { message: 'Cannot query field "foo" on type "Post".' },
+    ];
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: { posts: null }, errors },
+      },
+    ]);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "ignore" })
+    ).resolves.toStrictEqualTyped({ data: { posts: null } });
+  });
+
+  it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = new MockLink([
+      {
+        request: { query },
+        error,
+      },
+    ]);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "ignore" })
+    ).resolves.toStrictEqualTyped({ data: undefined });
   });
 
   it("should warn if server returns wrong data", async () => {
@@ -2652,10 +3031,12 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink({
-      request: { query },
-      result,
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result,
+      },
+    ]);
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
@@ -2696,10 +3077,12 @@ describe("client", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2738,10 +3121,12 @@ describe("client", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2790,10 +3175,12 @@ describe("client", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2834,10 +3221,12 @@ describe("@connection", () => {
       ],
     };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2879,10 +3268,12 @@ describe("@connection", () => {
 
     const variables = { order: "popularity" };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery, variables },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery, variables },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2923,10 +3314,12 @@ describe("@connection", () => {
 
     const variables = { order: "popularity" };
 
-    const link = mockSingleLink({
-      request: { query: transformedQuery, variables },
-      result: { data: result },
-    });
+    const link = new MockLink([
+      {
+        request: { query: transformedQuery, variables },
+        result: { data: result },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2967,7 +3360,7 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
     function watch(
@@ -2999,88 +3392,96 @@ describe("@connection", () => {
       }
     `);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 123 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 123, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     aVar(aVar() + 111);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 234 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(bStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     bVar(bVar().toUpperCase());
 
     await expect(aStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     aVar(aVar() + 222);
     bVar("oyez");
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 456 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 456, b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
-
-    // Since the ObservableQuery skips results that are the same as the
-    // previous result, and nothing is actually changing about the
-    // ROOT_QUERY.a field, clear previous results to give the invalidated
-    // results a chance to be delivered.
-    obsQueries.forEach((obsQuery) => obsQuery.resetLastResults());
-
-    // Verify that resetting previous results did not trigger the delivery
-    // of any new results, by itself.
-    await expect(aStream).not.toEmitAnything({ timeout: 10 });
-    await expect(bStream).not.toEmitAnything({ timeout: 10 });
-    await expect(abStream).not.toEmitAnything({ timeout: 10 });
 
     // Now invalidate the ROOT_QUERY.a field.
     client.cache.evict({ fieldName: "a" });
@@ -3098,8 +3499,9 @@ describe("@connection", () => {
     // result to be delivered even though networkStatus is still loading.
     const cStream = watch(cQuery, "cache-only");
 
-    await expect(cStream).toEmitValue({
-      data: {},
+    await expect(cStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3117,10 +3519,12 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitTypedValue({
       data: { c: "see" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     cache.modify({
@@ -3135,10 +3539,12 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitTypedValue({
       data: { c: "saw" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     client.cache.evict({ fieldName: "c" });
@@ -3146,8 +3552,9 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
-      data: {},
+    await expect(cStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3163,7 +3570,7 @@ describe("@connection", () => {
     const bVar = makeVar("asdf");
     const aSpy = jest.spyOn(aVar, "forgetCache");
     const bSpy = jest.spyOn(bVar, "forgetCache");
-    const cache: InMemoryCache = new InMemoryCache({
+    const cache = new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {
@@ -3178,10 +3585,10 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
-    const subs = new Set<ObservableSubscription>();
+    const subs = new Set<Subscription>();
     function watch(
       query: DocumentNode,
       fetchPolicy: WatchQueryFetchPolicy = "cache-first"
@@ -3224,41 +3631,41 @@ describe("@connection", () => {
 
     expect(cache["watches"].size).toBe(2);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
-    expect(aSpy).not.toBeCalled();
-    expect(bSpy).not.toBeCalled();
+    expect(aSpy).not.toHaveBeenCalled();
+    expect(bSpy).not.toHaveBeenCalled();
 
     subs.forEach((sub) => sub.unsubscribe());
 
-    expect(aSpy).toBeCalledTimes(1);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(1);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(1);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(1);
+    expect(bSpy).toHaveBeenCalledWith(cache);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
     expect(cache["watches"].size).toBe(0);
     const abResults = watch(abQuery);
-    expect(abResults).toEqual([]);
+    expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
     expect(cache["watches"].size).toBe(1);
 
     await wait();
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
     expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
 
     client.stop();
 
     await wait();
 
-    expect(aSpy).toBeCalledTimes(2);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(2);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(2);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(2);
+    expect(bSpy).toHaveBeenCalledWith(cache);
   });
 
   describe("default settings", () => {
@@ -3282,13 +3689,15 @@ describe("@connection", () => {
     };
 
     it("allows setting default options for watchQuery", async () => {
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: networkFetch },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: networkFetch },
+        },
+      ]);
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           watchQuery: {
             fetchPolicy: "cache-and-network",
@@ -3310,8 +3719,20 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
 
@@ -3323,12 +3744,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  count: networkCounter++,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    count: networkCounter++,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         cache: new InMemoryCache(),
@@ -3374,7 +3797,13 @@ describe("@connection", () => {
       const obs = client.watchQuery({ query });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "initial" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(1);
 
       // Refetching makes a copy of the current options, which
@@ -3382,7 +3811,21 @@ describe("@connection", () => {
       // nextFetchPolicy function ends up getting called twice.
       void obs.refetch();
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 0 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "initial" },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: { count: 0 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(2);
 
       client.writeQuery({
@@ -3392,12 +3835,32 @@ describe("@connection", () => {
         },
       });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "secondary" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "secondary" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(3);
 
       client.cache.evict({ fieldName: "count" });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "secondary" },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: { count: 1 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(4);
       expect(obs.options.fetchPolicy).toBe("cache-first");
 
@@ -3411,12 +3874,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  linkCount: ++linkCount,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    linkCount: ++linkCount,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         defaultOptions: {
@@ -3447,9 +3912,20 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first"]);
 
@@ -3458,42 +3934,57 @@ describe("@connection", () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0]).toMatchObject({
-        loading: false,
+      expect(results[0]).toStrictEqualTyped({
         data: { linkCount: 2 },
       });
 
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
+        data: { linkCount: 1 },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
       const finalResult = await observable.reobserve({
-        // Allow delivery of loading:true result.
-        notifyOnNetworkStatusChange: true,
         // Force a network request in addition to loading:true cache result.
         fetchPolicy: "cache-and-network",
       });
 
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.data).toEqual({ linkCount: 3 });
+      expect(finalResult).toStrictEqualTyped({
+        data: { linkCount: 3 },
+      });
+
       expect(fetchPolicyRecord).toEqual([
         "cache-first",
         "network-only",
         "cache-and-network",
       ]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: true,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
       });
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 3 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(fetchPolicyRecord).toEqual([
@@ -3507,13 +3998,15 @@ describe("@connection", () => {
 
     it("allows setting default options for query", async () => {
       const errors = [{ message: "failure", name: "failure" }];
-      const link = mockSingleLink({
-        request: { query },
-        result: { errors },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { errors },
+        },
+      ]);
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           query: { errorPolicy: "all" },
         },
@@ -3521,7 +4014,10 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result.errors).toEqual(errors);
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        error: new CombinedGraphQLErrors({ errors }),
+      });
     });
 
     it("allows setting default options for mutation", async () => {
@@ -3537,14 +4033,16 @@ describe("@connection", () => {
         upvote: { success: true },
       };
 
-      const link = mockSingleLink({
-        request: { query: mutation, variables: { id: 1 } },
-        result: { data },
-      });
+      const link = new MockLink([
+        {
+          request: { query: mutation, variables: { id: 1 } },
+          result: { data },
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           mutate: { variables: { id: 1 } },
         },
@@ -3583,7 +4081,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3665,7 +4163,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3709,7 +4207,7 @@ describe("custom document transforms", () => {
       ],
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["Dog:1"]).toEqual({
       id: 1,
@@ -3752,7 +4250,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -3803,6 +4301,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs @client directives added from custom transforms through local state", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery {
         currentUser {
@@ -3844,7 +4344,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3870,6 +4370,7 @@ describe("custom document transforms", () => {
           },
         },
       }),
+      localState: new LocalState(),
     });
 
     const { data } = await client.query({ query });
@@ -3907,7 +4408,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3929,6 +4430,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `query`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery {
         currentUser @nonreactive {
@@ -3946,15 +4449,17 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of();
+      return of({ data: null });
     });
 
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
-    await client.query({ query });
+    // Pass no-cache to silence cache write warnings
+    await client.query({ query, fetchPolicy: "no-cache" });
 
     expect(document!).toMatchDocument(gql`
       query TestQuery {
@@ -3989,7 +4494,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4161,7 +4666,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4201,7 +4706,7 @@ describe("custom document transforms", () => {
       },
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["User:1"]).toEqual({
       __typename: "User",
@@ -4226,7 +4731,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4249,6 +4754,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `mutate`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const mutation = gql`
       mutation TestMutation {
         updateProfile @nonreactive {
@@ -4266,7 +4773,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           updateProfile: {
             __typename: "Profile",
@@ -4280,6 +4787,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.mutate({ mutation });
@@ -4317,7 +4825,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4393,7 +4901,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4432,7 +4940,7 @@ describe("custom document transforms", () => {
       },
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["Profile:1"]).toEqual({
       __typename: "Profile",
@@ -4469,6 +4977,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `subscribe`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       subscription TestSubscription {
         profileUpdated @nonreactive {
@@ -4486,7 +4996,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             __typename: "Profile",
@@ -4500,6 +5010,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const subscription = client.subscribe({ query }).subscribe(jest.fn());
@@ -4553,7 +5064,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: { currentUser: { __typename: "User", id: 1, name: "John Doe" } },
       });
     });
@@ -4582,8 +5093,10 @@ describe("custom document transforms", () => {
         data: {
           currentUser: { __typename: "User", id: 1, name: "John Doe" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -4594,6 +5107,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `watchQuery`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery @nonreactive {
         currentUser {
@@ -4611,7 +5126,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             __typename: "User",
@@ -4625,6 +5140,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const observable = client.watchQuery({ query });
@@ -4680,7 +5196,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -4733,8 +5249,10 @@ describe("custom document transforms", () => {
             description: "Cached product description",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
   });
@@ -4823,8 +5341,10 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -4848,8 +5368,10 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 1 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -4936,23 +5458,29 @@ describe("custom document transforms", () => {
     });
 
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
-    const handleNext = jest.fn();
+    const stream = new ObservableStream(observable);
 
-    observable.subscribe(handleNext);
-
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      });
-
-      expect(document).toMatchDocument(enabledQuery);
-      expect(observable.options.query).toMatchDocument(query);
-      expect(observable.query).toMatchDocument(enabledQuery);
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(document!).toMatchDocument(enabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(enabledQuery);
 
     enabled = false;
 
@@ -4966,16 +5494,30 @@ describe("custom document transforms", () => {
       products: [{ __typename: "Product", id: 2 }],
     });
 
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitTypedValue({
+      data: {
+        products: [{ __typename: "Product", id: 1 }],
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         products: [
           { __typename: "Product", id: 1 },
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query", async () => {
@@ -5068,7 +5610,7 @@ describe("custom document transforms", () => {
       { cache: false }
     );
 
-    let document: DocumentNode;
+    let document!: DocumentNode;
 
     const link = new ApolloLink((operation, forward) => {
       document = operation.query;
@@ -5099,25 +5641,31 @@ describe("custom document transforms", () => {
       query: initialQuery,
       variables: { offset: 0 },
     });
-    const handleNext = jest.fn();
 
-    observable.subscribe(handleNext);
+    const stream = new ObservableStream(observable);
 
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          currentUser: { id: 1 },
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      });
-
-      expect(handleNext).toHaveBeenCalledTimes(1);
-      expect(document).toMatchDocument(enabledInitialQuery);
-      expect(observable.options.query).toMatchDocument(initialQuery);
-      expect(observable.query).toMatchDocument(enabledInitialQuery);
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: { id: 1 },
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(document).toMatchDocument(enabledInitialQuery);
+    expect(observable.options.query).toMatchDocument(initialQuery);
+    expect(observable.query).toMatchDocument(enabledInitialQuery);
 
     enabled = false;
 
@@ -5140,12 +5688,18 @@ describe("custom document transforms", () => {
     // a field).
     expect(observable.query).toMatchDocument(disabledInitialQuery);
 
-    // QueryInfo.notify is run in a setTimeout, so give time for it to run
-    // before we make assertions on it.
-    await wait(0);
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: { id: 1 },
+        products: [{ __typename: "Product", id: 1 }],
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
+    });
 
-    expect(handleNext).toHaveBeenCalledTimes(2);
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentUser: { id: 1 },
         products: [
@@ -5153,9 +5707,13 @@ describe("custom document transforms", () => {
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("re-runs custom document transforms when calling `setVariables`", async () => {
@@ -5242,8 +5800,10 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5267,12 +5827,14 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
-  it("re-runs custom document transforms when calling `setOptions`", async () => {
+  it("re-runs custom document transforms when calling `reobserve`", async () => {
     const query = gql`
       query TestQuery($id: ID!) {
         product(id: $id) {
@@ -5356,8 +5918,10 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5367,7 +5931,7 @@ describe("custom document transforms", () => {
 
     enabled = false;
 
-    const { data } = await observable.setOptions({ variables: { id: 2 } });
+    const { data } = await observable.reobserve({ variables: { id: 2 } });
 
     expect(document!).toMatchDocument(disabledQuery);
     expect(observable.options.query).toMatchDocument(query);
@@ -5381,12 +5945,14 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
-  it("runs custom document transforms when passing a new query to `setOptions`", async () => {
+  it("runs custom document transforms when passing a new query to `reobserve`", async () => {
     const query = gql`
       query TestQuery($id: ID!) {
         product(id: $id) {
@@ -5479,8 +6045,10 @@ describe("custom document transforms", () => {
     await waitFor(() => {
       expect(handleNext).toHaveBeenLastCalledWith({
         data: mocks[0].result.data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -5488,7 +6056,7 @@ describe("custom document transforms", () => {
       expect(observable.query).toMatchDocument(transformedQuery);
     });
 
-    const { data } = await observable.setOptions({ query: updatedQuery });
+    const { data } = await observable.reobserve({ query: updatedQuery });
 
     expect(document!).toMatchDocument(transformedUpdatedQuery);
     expect(observable.options.query).toMatchDocument(updatedQuery);
@@ -5498,8 +6066,10 @@ describe("custom document transforms", () => {
 
     expect(handleNext).toHaveBeenLastCalledWith({
       data: mocks[1].result.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -5523,7 +6093,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5599,7 +6169,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5688,7 +6258,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5770,7 +6340,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5855,7 +6425,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5871,8 +6441,11 @@ describe("custom document transforms", () => {
 
     client.watchQuery({ query: aQuery }).subscribe(jest.fn());
     client.watchQuery({ query: bQuery }).subscribe(jest.fn());
-    // purposely avoid subscribing to prevent it from being an "active" query
-    client.watchQuery({ query: abQuery });
+    client
+      // set `fetchPolicy` to `"standby"` to prevent it from being an "active" query
+      .watchQuery({ query: abQuery, fetchPolicy: "standby" })
+      // need to subscribe to it to ensure it is registered with `QueryManager`
+      .subscribe(jest.fn());
 
     await waitFor(() => {
       return (
@@ -5944,7 +6517,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6018,7 +6591,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6067,18 +6640,323 @@ describe("custom document transforms", () => {
       }
     `);
   });
+
+  it("runs custom document transform when calling `client.readQuery`", async () => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed @custom
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache,
+      documentTransform,
+    });
+
+    client.writeQuery({
+      query: gql`
+        query {
+          dogs {
+            id
+            name
+          }
+        }
+      `,
+      data: {
+        dogs: [{ __typename: "Dog", id: 1, name: "Buddy" }],
+      },
+    });
+
+    expect(client.readQuery({ query })).toStrictEqualTyped({
+      dogs: [
+        {
+          id: 1,
+          name: "Buddy",
+          __typename: "Dog",
+        },
+      ],
+    });
+
+    // Transforms aren't run on cache.readFragment, so we expect a null result
+    // due to missing `breed` field.
+    expect(cache.readQuery({ query })).toStrictEqualTyped(null);
+  });
+
+  it("runs custom document transform when calling `client.readFragment`", async () => {
+    const fragment = gql`
+      fragment TestFragment on Dog {
+        id
+        name
+        breed @custom
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache,
+      documentTransform,
+    });
+
+    client.writeFragment({
+      fragment: gql`
+        fragment TestFragment on Dog {
+          id
+          name
+        }
+      `,
+      data: {
+        __typename: "Dog",
+        id: 1,
+        name: "Buddy",
+      },
+    });
+
+    const id = cache.identify({ __typename: "Dog", id: 1 });
+
+    expect(client.readFragment({ fragment, id })).toStrictEqualTyped({
+      id: 1,
+      name: "Buddy",
+      __typename: "Dog",
+    });
+
+    // Transforms aren't run on cache.readFragment, so we expect a null result
+    // due to missing `breed` field.
+    expect(cache.readFragment({ fragment, id })).toStrictEqualTyped(null);
+  });
+
+  it("runs custom document transforms when calling `client.watchFragment`", async () => {
+    const fragment = gql`
+      fragment TestFragment on Dog {
+        id
+        name
+        breed @custom
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument(
+        [{ name: "custom", remove: true }],
+        document
+      )!;
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache,
+      documentTransform,
+    });
+
+    client.writeFragment({
+      fragment: gql`
+        fragment TestFragment on Dog {
+          id
+          name
+        }
+      `,
+      data: {
+        __typename: "Dog",
+        id: 1,
+        name: "Buddy",
+      },
+    });
+
+    const from = { __typename: "Dog", id: 1 };
+
+    const clientStream = new ObservableStream(
+      client.watchFragment({ fragment, from })
+    );
+
+    await expect(clientStream).toEmitTypedValue({
+      data: { __typename: "Dog", id: 1, name: "Buddy" },
+      complete: true,
+    });
+
+    const cacheStream = new ObservableStream(
+      cache.watchFragment({ fragment, from })
+    );
+
+    // Transforms aren't run on cache.watchFragment, so we expect a partial result
+    // due to missing `breed` field.
+    await expect(cacheStream).toEmitTypedValue({
+      data: { __typename: "Dog", id: 1, name: "Buddy" },
+      complete: false,
+      missing: {
+        breed: "Can't find field 'breed' on Dog:1 object",
+      },
+    });
+  });
 });
 
-function clientRoundtrip(
+describe("unconventional errors", () => {
+  test("wraps error message in Error type when erroring with a string", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.error("This is an error");
+          }, 10);
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const expectedError = new Error("This is an error");
+
+    await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(
+      client.mutate({
+        mutation: gql`
+          mutation {
+            foo
+          }
+        `,
+      })
+    ).rejects.toEqual(expectedError);
+
+    const subscription = client.subscribe({
+      query: gql`
+        subscription {
+          foo
+        }
+      `,
+    });
+    const subscriptionStream = new ObservableStream(subscription);
+
+    await expect(subscriptionStream).toEmitTypedValue({
+      data: undefined,
+      error: expectedError,
+    });
+  });
+
+  test("wraps unconventional types in UnconventionalError", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => {
+          return new Observable((observer) => {
+            setTimeout(() => {
+              observer.error(type);
+            }, 10);
+          });
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      const expectedError = new UnconventionalError(type);
+
+      await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      await expect(
+        client.mutate({
+          mutation: gql`
+            mutation {
+              foo
+            }
+          `,
+        })
+      ).rejects.toEqual(expectedError);
+
+      const subscription = client.subscribe({
+        query: gql`
+          subscription {
+            foo
+          }
+        `,
+      });
+      const subscriptionStream = new ObservableStream(subscription);
+
+      await expect(subscriptionStream).toEmitTypedValue({
+        data: undefined,
+        error: expectedError,
+      });
+    }
+  });
+});
+
+async function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,
   variables?: any,
   possibleTypes?: PossibleTypesMap
 ) {
-  const link = mockSingleLink({
-    request: { query: cloneDeep(query) },
-    result: data,
-  });
+  const link = new MockLink([
+    {
+      request: { query: cloneDeep(query) },
+      result: data,
+    },
+  ]);
 
   const client = new ApolloClient({
     link,
@@ -6087,7 +6965,6 @@ function clientRoundtrip(
     }),
   });
 
-  return client.query({ query, variables }).then((result) => {
-    expect(result.data).toEqual(data.data);
-  });
+  const result = await client.query({ query, variables });
+  expect(result.data).toEqual(data.data);
 }

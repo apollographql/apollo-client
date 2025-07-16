@@ -1,9 +1,10 @@
 import type { MatcherFunction } from "expect";
-import type { QueryRef } from "../../react/internal/index.js";
+
+import type { QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   unwrapQueryRef,
-} from "../../react/internal/index.js";
+} from "@apollo/client/react/internal";
 
 export const toBeDisposed: MatcherFunction<[]> = function (_queryRef) {
   const hint = this.utils.matcherHint("toBeDisposed", "queryRef", "", {

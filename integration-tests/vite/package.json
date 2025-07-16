@@ -12,10 +12,12 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@apollo/client": "^3.10.1",
+    "@apollo/client": "3.13.0",
+    "expect-type": "^1.2.1",
     "graphql": "^16.8.1",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@playwright/test": "*",
@@ -28,7 +30,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "playwright": "*",
-    "shared": "*",
+    "shared": "workspace:^",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
   }

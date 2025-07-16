@@ -1,4 +1,4 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESTree as AST } from "@typescript-eslint/types";
 
 type Fn =
@@ -79,5 +79,5 @@ function findParentFunction(node: AST.Node): Fn | undefined {
   ) {
     parentFunction = parentFunction.parent;
   }
-  return parentFunction;
+  return parentFunction as any;
 }

@@ -1,4 +1,6 @@
-import { buildDelayFunction } from "../delayFunction";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { buildDelayFunction } from "../delayFunction.js";
 
 describe("buildDelayFunction", () => {
   // For easy testing of just the delay component, which is all we care about in

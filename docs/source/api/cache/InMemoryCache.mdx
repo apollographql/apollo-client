@@ -135,35 +135,16 @@ By specifying the ID of another cached object, you can query arbitrary cached da
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `canonizeResults`
-
-`Boolean`
-</td>
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
-</td>
-</tr>
-
 </tbody>
 </table>
 
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-readQuery<QueryType, TVariables = any>(
-  options: DataProxy.Query<TVariables>,
+readQuery<TData = unknown, TVariables = OperationVariables>(
+  options: Cache.ReadQueryOptions<TData, TVariables>,
   optimistic: boolean = false,
-): QueryType | null
+): Unmasked<TData> | null
 ```
 
 
@@ -307,7 +288,7 @@ The default value is `false`.
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-writeQuery<TData = any, TVariables = any>(
+writeQuery<TData = unknown, TVariables = OperationVariables>(
   options: Cache.WriteQueryOptions<TData, TVariables>,
 ): Reference | undefined
 ```
@@ -448,7 +429,7 @@ Please note the `update` function has to calculate the new value in an immutable
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-public updateQuery<TData = any, TVariables = any>(
+public updateQuery<TData = unknown, TVariables = OperationVariables>(
   options: Cache.UpdateQueryOptions<TData, TVariables>,
   update: (data: TData | null) => TData | null | void,
 ): TData | null
@@ -589,36 +570,16 @@ A map of any GraphQL variable names and values required by `fragment`.
 </td>
 </tr>
 
-
-<tr>
-<td>
-
-###### `canonizeResults`
-
-`Boolean`
-</td>
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
-</td>
-</tr>
-
 </tbody>
 </table>
 
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-readFragment<FragmentType, TVariables = any>(
-  options: DataProxy.Fragment<TVariables>,
+readFragment<TData = unknown, TVariables = OperationVariables>(
+  options: Cache.ReadFragmentOptions<TData, TVariables>,
   optimistic: boolean = false,
-): FragmentType | null
+): Unmasked<TData> | null
 ```
 
 ## `writeFragment`
@@ -768,7 +729,7 @@ The default value is `false`.
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-writeFragment<TData = any, TVariables = any>(
+writeFragment<TData = unknown, TVariables = OperationVariables>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
 ```
@@ -917,7 +878,7 @@ Please note the `update` function has to calculate the new value in an immutable
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-public updateFragment<TData = any, TVariables = any>(
+public updateFragment<TData = unknown, TVariables = OperationVariables>(
   options: Cache.UpdateFragmentOptions<TData, TVariables>,
   update: (data: TData | null) => TData | null | void,
 ): TData | null

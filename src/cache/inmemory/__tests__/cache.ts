@@ -1,25 +1,18 @@
-import gql, { disableFragmentWarnings } from "graphql-tag";
 import { expectTypeOf } from "expect-type";
+import { disableFragmentWarnings, gql } from "graphql-tag";
 
-import { cloneDeep } from "../../../utilities/common/cloneDeep";
-import {
-  makeReference,
-  Reference,
-  makeVar,
-  TypedDocumentNode,
-  isReference,
+import type {
   DocumentNode,
-} from "../../../core";
-import { Cache } from "../../../cache";
-import { InMemoryCache } from "../inMemoryCache";
-import { InMemoryCacheConfig } from "../types";
+  Reference,
+  TypedDocumentNode,
+} from "@apollo/client";
+import { isReference, makeVar } from "@apollo/client";
+import type { Cache, InMemoryCacheConfig } from "@apollo/client/cache";
+import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import { cloneDeep, makeReference } from "@apollo/client/utilities/internal";
 
-import { StoreReader } from "../readFromStore";
-import { StoreWriter } from "../writeToStore";
-import { ObjectCanon } from "../object-canon";
-import { TypePolicies } from "../policies";
-import { spyOnConsole } from "../../../testing/internal";
-import { defaultCacheSizes } from "../../../utilities";
+import { defaultCacheSizes } from "../../../utilities/caching/sizes.js";
 
 disableFragmentWarnings();
 
@@ -31,13 +24,10 @@ describe("Cache", () => {
   ) {
     const cachesList: InMemoryCache[][] = [
       initialDataForCaches.map((data) =>
-        new InMemoryCache({
-          addTypename: false,
-        }).restore(cloneDeep(data))
+        new InMemoryCache().restore(cloneDeep(data))
       ),
       initialDataForCaches.map((data) =>
         new InMemoryCache({
-          addTypename: false,
           resultCaching: false,
         }).restore(cloneDeep(data))
       ),
@@ -56,12 +46,10 @@ describe("Cache", () => {
   ) {
     const caches = [
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: true,
       }),
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: false,
       }),
@@ -402,7 +390,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ e: 4, h: { i: 7 } });
+        ).toEqual({ __typename: "Foo", e: 4, h: { __typename: "Bar", i: 7 } });
         expect(
           proxy.readFragment({
             id: "foo",
@@ -419,7 +407,13 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+        ).toEqual({
+          __typename: "Foo",
+          e: 4,
+          f: 5,
+          g: 6,
+          h: { __typename: "Bar", i: 7, j: 8, k: 9 },
+        });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -429,7 +423,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ i: 7 });
+        ).toEqual({ __typename: "Bar", i: 7 });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -441,7 +435,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ i: 7, j: 8, k: 9 });
+        ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
         expect(
           proxy.readFragment({
             id: "foo",
@@ -465,7 +459,13 @@ describe("Cache", () => {
             `,
             fragmentName: "fragmentFoo",
           })
-        ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+        ).toEqual({
+          __typename: "Foo",
+          e: 4,
+          f: 5,
+          g: 6,
+          h: { __typename: "Bar", i: 7, j: 8, k: 9 },
+        });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -489,7 +489,7 @@ describe("Cache", () => {
             `,
             fragmentName: "fragmentBar",
           })
-        ).toEqual({ i: 7, j: 8, k: 9 });
+        ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
       }
     );
 
@@ -519,7 +519,7 @@ describe("Cache", () => {
               value: 42,
             },
           })
-        ).toEqual({ a: 1, b: 2 });
+        ).toEqual({ __typename: "Foo", a: 1, b: 2 });
       }
     );
 
@@ -573,7 +573,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ a: 1, b: 2, c: 3 });
+        ).toEqual({ __typename: "Foo", a: 1, b: 2, c: 3 });
       }
     );
 
@@ -1129,7 +1129,6 @@ describe("Cache", () => {
       "will write some deeply nested data into the store at any id",
       {
         dataIdFromObject: (o: any) => o.id,
-        addTypename: false,
       },
       (proxy) => {
         proxy.writeFragment({
@@ -1248,42 +1247,34 @@ describe("Cache", () => {
       }
     );
 
-    itWithCacheConfig(
-      "writes data that can be read back",
-      {
-        addTypename: true,
-      },
-      (proxy) => {
-        const readWriteFragment = gql`
-          fragment aFragment on query {
-            getSomething {
-              id
-            }
+    itWithCacheConfig("writes data that can be read back", {}, (proxy) => {
+      const readWriteFragment = gql`
+        fragment aFragment on query {
+          getSomething {
+            id
           }
-        `;
-        const data = {
-          __typename: "query",
-          getSomething: { id: "123", __typename: "Something" },
-        };
-        proxy.writeFragment({
-          data,
-          id: "query",
-          fragment: readWriteFragment,
-        });
+        }
+      `;
+      const data = {
+        __typename: "query",
+        getSomething: { id: "123", __typename: "Something" },
+      };
+      proxy.writeFragment({
+        data,
+        id: "query",
+        fragment: readWriteFragment,
+      });
 
-        const result = proxy.readFragment({
-          fragment: readWriteFragment,
-          id: "query",
-        });
-        expect(result).toEqual(data);
-      }
-    );
+      const result = proxy.readFragment({
+        fragment: readWriteFragment,
+        id: "query",
+      });
+      expect(result).toEqual(data);
+    });
 
     itWithCacheConfig(
       "will write some data to the store with variables",
-      {
-        addTypename: true,
-      },
+      {},
       (proxy) => {
         proxy.writeFragment({
           data: {
@@ -1348,7 +1339,9 @@ describe("Cache", () => {
         query,
         optimistic: true,
         callback(diff) {
-          results.push(diff.result!);
+          if (diff.complete) {
+            results.push(diff.result);
+          }
         },
       });
 
@@ -1405,7 +1398,7 @@ describe("Cache", () => {
         name: "Ben Newman",
       });
 
-      cache.updateFragment(
+      cache.updateFragment<any>(
         {
           id: bnId,
           fragment: usernameFragment,
@@ -1499,16 +1492,10 @@ describe("Cache", () => {
       `;
 
       const originalReader = cache["storeReader"];
-      expect(originalReader).toBeInstanceOf(StoreReader);
-
       const originalWriter = cache["storeWriter"];
-      expect(originalWriter).toBeInstanceOf(StoreWriter);
 
       const originalMBW = cache["maybeBroadcastWatch"];
       expect(typeof originalMBW).toBe("function");
-
-      const originalCanon = originalReader.canon;
-      expect(originalCanon).toBeInstanceOf(ObjectCanon);
 
       cache.writeQuery({
         query,
@@ -1537,9 +1524,6 @@ describe("Cache", () => {
       expect(originalReader).not.toBe(cache["storeReader"]);
       expect(originalWriter).not.toBe(cache["storeWriter"]);
       expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
-      // The cache.storeReader.canon is preserved by default, but can be dropped
-      // by passing resetResultIdentities:true to cache.gc.
-      expect(originalCanon).toBe(cache["storeReader"].canon);
     });
   });
 
@@ -1620,7 +1604,7 @@ describe("Cache", () => {
       expect(abInfo.diffs.length).toBe(1);
       expect(last(abInfo.diffs)).toEqual({
         complete: false,
-        missing: expect.any(Array),
+        missing: expect.any(MissingFieldError),
         result: {
           a: "ay",
         },
@@ -2120,25 +2104,13 @@ describe("Cache", () => {
 });
 
 describe("resultCacheMaxSize", () => {
-  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+  it("uses default max size on caches", () => {
     const cache = new InMemoryCache();
     expect(cache["maybeBroadcastWatch"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
     expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.executeSelectionSet"]
-    );
-    expect(cache["getFragmentDoc"].options.max).toBe(
-      defaultCacheSizes["cache.fragmentQueryDocuments"]
-    );
-  });
-
-  it("configures max size on caches when resultCacheMaxSize is set", () => {
-    const resultCacheMaxSize = 12345;
-    const cache = new InMemoryCache({ resultCacheMaxSize });
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(resultCacheMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
-      resultCacheMaxSize
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
       defaultCacheSizes["cache.fragmentQueryDocuments"]
@@ -2291,169 +2263,6 @@ describe("InMemoryCache#broadcastWatches", function () {
       received2AllCaps,
     ]);
   });
-
-  it("should pass WatchOptions through to cache.diff", () => {
-    const typePolicies: TypePolicies = {
-      Query: {
-        fields: {
-          object(_, { variables }) {
-            return { name: variables?.name ?? "UNKNOWN" };
-          },
-        },
-      },
-    };
-
-    const canonicalCache = new InMemoryCache({
-      canonizeResults: true,
-      typePolicies,
-    });
-
-    const nonCanonicalCache = new InMemoryCache({
-      canonizeResults: false,
-      typePolicies,
-    });
-
-    const query = gql`
-      query {
-        object {
-          name
-        }
-      }
-    `;
-
-    const unwatchers = new Set<() => void>();
-
-    type Diff = Cache.DiffResult<{
-      object: {
-        name: string;
-      };
-    }>;
-    const diffs: Record<string, Diff[]> = Object.create(null);
-    function addDiff(name: string, diff: Diff) {
-      (diffs[name] || (diffs[name] = [])).push(diff);
-    }
-
-    const commonWatchOptions = {
-      query,
-      optimistic: true,
-      immediate: true,
-      callback(diff: Diff) {
-        addDiff(diff.result!.object.name, diff);
-      },
-    };
-
-    unwatchers.add(
-      canonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "canonicalByDefault" },
-        // Pass nothing for canonizeResults to let the default for canonicalCache
-        // (true) prevail.
-      })
-    );
-
-    unwatchers.add(
-      nonCanonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "nonCanonicalByDefault" },
-        // Pass nothing for canonizeResults to let the default for
-        // nonCanonicalCache (false) prevail.
-      })
-    );
-
-    unwatchers.add(
-      nonCanonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "canonicalByChoice" },
-        canonizeResults: true, // Override the default.
-      })
-    );
-
-    unwatchers.add(
-      canonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "nonCanonicalByChoice" },
-        canonizeResults: false, // Override the default.
-      })
-    );
-
-    function makeDiff(name: string): Diff {
-      return {
-        complete: true,
-        result: {
-          object: { name },
-        },
-      };
-    }
-
-    const canonicalByDefaultDiff = makeDiff("canonicalByDefault");
-    const nonCanonicalByDefaultDiff = makeDiff("nonCanonicalByDefault");
-    const canonicalByChoiceDiff = makeDiff("canonicalByChoice");
-    const nonCanonicalByChoiceDiff = makeDiff("nonCanonicalByChoice");
-
-    expect(diffs).toEqual({
-      canonicalByDefault: [canonicalByDefaultDiff],
-      nonCanonicalByDefault: [nonCanonicalByDefaultDiff],
-      canonicalByChoice: [canonicalByChoiceDiff],
-      nonCanonicalByChoice: [nonCanonicalByChoiceDiff],
-    });
-
-    [canonicalCache, nonCanonicalCache].forEach((cache) => {
-      // Hack: delete every watch.lastDiff, so subsequent results will be
-      // broadcast, even though they are deeply equal to the previous results.
-      cache["watches"].forEach((watch) => {
-        delete watch.lastDiff;
-      });
-    });
-
-    // Evict Query.object to invalidate the result cache.
-    canonicalCache.evict({
-      fieldName: "object",
-    });
-    nonCanonicalCache.evict({
-      fieldName: "object",
-    });
-
-    // Every watcher receives the same (deeply equal) Diff a second time.
-    expect(diffs).toEqual({
-      canonicalByDefault: [canonicalByDefaultDiff, canonicalByDefaultDiff],
-      nonCanonicalByDefault: [
-        nonCanonicalByDefaultDiff,
-        nonCanonicalByDefaultDiff,
-      ],
-      canonicalByChoice: [canonicalByChoiceDiff, canonicalByChoiceDiff],
-      nonCanonicalByChoice: [
-        nonCanonicalByChoiceDiff,
-        nonCanonicalByChoiceDiff,
-      ],
-    });
-
-    function expectCanonical(name: string) {
-      const count = diffs[name].length;
-      const firstDiff = diffs[name][0];
-      for (let i = 1; i < count; ++i) {
-        expect(firstDiff).toEqual(diffs[name][i]);
-        expect(firstDiff.result).toBe(diffs[name][i].result);
-      }
-    }
-
-    function expectNonCanonical(name: string) {
-      const count = diffs[name].length;
-      const firstDiff = diffs[name][0];
-      for (let i = 1; i < count; ++i) {
-        expect(firstDiff).toEqual(diffs[name][i]);
-        expect(firstDiff.result).not.toBe(diffs[name][i].result);
-      }
-    }
-
-    // However, some of the diff.result objects are canonized and thus ===, and
-    // others are deeply equal but not canonized (and thus not ===).
-    expectCanonical("canonicalByDefault");
-    expectCanonical("canonicalByChoice");
-    expectNonCanonical("nonCanonicalByDefault");
-    expectNonCanonical("nonCanonicalByChoice");
-
-    unwatchers.forEach((unwatch) => unwatch());
-  });
 });
 
 describe("InMemoryCache#modify", () => {
@@ -2563,7 +2372,6 @@ describe("InMemoryCache#modify", () => {
 
   it("should allow invalidation using details.INVALIDATE", () => {
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Book: {
           keyFields: ["isbn"],
@@ -2635,7 +2443,7 @@ describe("InMemoryCache#modify", () => {
 
     const resultAfterAuthorInvalidation = read();
     expect(resultAfterAuthorInvalidation).toEqual(initialResult);
-    expect(resultAfterAuthorInvalidation).toBe(initialResult);
+    expect(resultAfterAuthorInvalidation).not.toBe(initialResult);
 
     expect(
       cache.modify({
@@ -2652,7 +2460,7 @@ describe("InMemoryCache#modify", () => {
 
     const resultAfterBookInvalidation = read();
     expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
-    expect(resultAfterBookInvalidation).toBe(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation).not.toBe(resultAfterAuthorInvalidation);
     expect(resultAfterBookInvalidation.currentlyReading.author).toEqual({
       __typename: "Author",
       name: "Maria Dahvana Headley",
@@ -3761,10 +3569,7 @@ describe("ReactiveVar and makeVar", () => {
   it("should work with resultCaching disabled (unusual)", () => {
     const { cache, nameVar, query } = makeCacheAndVar(false);
 
-    const result1 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result1 = cache.readQuery({ query });
     expect(result1).toEqual({
       onCall: {
         __typename: "Person",
@@ -3772,20 +3577,14 @@ describe("ReactiveVar and makeVar", () => {
       },
     });
 
-    const result2 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result2 = cache.readQuery({ query });
     expect(result2).toEqual(result1);
-    expect(result2).toBe(result1);
+    expect(result2).not.toBe(result1);
 
     expect(nameVar()).toBe("Ben");
     expect(nameVar("Hugh")).toBe("Hugh");
 
-    const result3 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result3 = cache.readQuery({ query });
     expect(result3).toEqual({
       onCall: {
         __typename: "Person",
@@ -3842,8 +3641,8 @@ describe("ReactiveVar and makeVar", () => {
 
   it("should remove all watchers when cache.reset() called", () => {
     const { cache, query, nameVar } = makeCacheAndVar(false);
-    const unwatchers: Record<string, Array<() => void>> = Object.create(null);
-    const diffCounts: Record<string, number> = Object.create(null);
+    const unwatchers: Record<string, Array<() => void>> = {};
+    const diffCounts: Record<string, number> = {};
 
     function watch(id: string) {
       const fns = unwatchers[id] || (unwatchers[id] = []);

@@ -1,11 +1,12 @@
-import type { GraphQLRequest, Operation } from "../core/index.js";
-import { getOperationName } from "../../utilities/index.js";
+import type { GraphQLRequest } from "@apollo/client/link";
+import { getOperationName } from "@apollo/client/utilities/internal";
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {
     variables: operation.variables || {},
     extensions: operation.extensions || {},
     operationName: operation.operationName,
+    operationType: operation.operationType,
     query: operation.query,
   };
 
@@ -13,9 +14,9 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   if (!transformedOperation.operationName) {
     transformedOperation.operationName =
       typeof transformedOperation.query !== "string" ?
-        getOperationName(transformedOperation.query) || undefined
+        getOperationName(transformedOperation.query)
       : "";
   }
 
-  return transformedOperation as Operation;
+  return transformedOperation;
 }

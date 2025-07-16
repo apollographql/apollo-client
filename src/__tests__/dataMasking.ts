@@ -3926,6 +3926,181 @@ describe("client.watchFragment", () => {
   });
 });
 
+describe("cache.watchFragment", () => {
+  test("does not mask fragments when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    } & { " $fragmentName"?: "NameFieldsFragment" };
+
+    const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+      fragment NameFields on User {
+        firstName
+        lastName
+      }
+    `;
+
+    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+      fragment UserFields on User {
+        id
+        age
+        ...NameFields
+      }
+
+      ${nameFieldsFragment}
+    `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+    });
+
+    const fragmentStream = new ObservableStream(
+      cache.watchFragment({
+        fragment: userFieldsFragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    const result = await fragmentStream.takeNext();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+      dataState: "complete",
+      complete: true,
+    });
+
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      client.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
+  });
+
+  test("does not mask watched fragments when dataMasking is disabled", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+      firstName: string;
+      lastName: string;
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    };
+
+    const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+      fragment NameFields on User {
+        __typename
+        firstName
+        lastName
+      }
+    `;
+
+    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+      fragment UserFields on User {
+        __typename
+        id
+        age
+        ...NameFields
+      }
+
+      ${nameFieldsFragment}
+    `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+    });
+
+    const fragmentStream = new ObservableStream(
+      cache.watchFragment({
+        fragment: userFieldsFragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    const result = await fragmentStream.takeNext();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+      dataState: "complete",
+      complete: true,
+    });
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      cache.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
+  });
+});
+
 describe("client.query", () => {
   test("masks data returned from client.query when dataMasking is `true`", async () => {
     type UserFieldsFragment = {

@@ -184,7 +184,10 @@ export class FragmentReference<
 
     const diff = cache.diff<TData, TVariables>({
       ...options,
-      query: cache["getFragmentDoc"](fragment, fragmentName),
+      query: cache["getFragmentDoc"](
+        client["transform"](fragment),
+        fragmentName
+      ),
       returnPartialData: true,
       id: from,
       optimistic: true,

@@ -17,7 +17,13 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  DocumentTransform,
+  gql,
+  InMemoryCache,
+} from "@apollo/client";
 import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -26,6 +32,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 function createDefaultRenderStream<TData = unknown>() {
@@ -1831,6 +1838,93 @@ test("cancels autoDisposeTimeoutMs if the component renders before timer finishe
   expect(cache["watches"].size).toBe(1);
 
   jest.useRealTimers();
+});
+
+test("runs custom document transforms", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const { render, takeRender, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  const documentTransform = new DocumentTransform((document) => {
+    return removeDirectivesFromDocument(
+      [{ name: "custom", remove: true }],
+      document
+    )!;
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+    documentTransform,
+  });
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+      description @custom
+    }
+  `;
+
+  function App() {
+    useTrackRenders();
+
+    const result = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id: 1 },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  client.writeFragment({
+    fragment: gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => {
+        return <ApolloProvider client={client}>{children}</ApolloProvider>;
+      },
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Item #1",
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
 });
 
 describe.skip("type tests", () => {

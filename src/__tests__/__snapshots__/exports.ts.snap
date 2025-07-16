@@ -283,7 +283,6 @@ Array [
   "ApolloProvider",
   "createQueryPreloader",
   "getApolloContext",
-  "gql",
   "reactCompilerVersion",
   "skipToken",
   "useApolloClient",

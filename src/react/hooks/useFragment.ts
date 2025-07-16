@@ -4,6 +4,7 @@ import * as React from "react";
 import type {
   ApolloClient,
   DocumentNode,
+  GetDataState,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
@@ -14,7 +15,6 @@ import type {
   StoreObject,
 } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
@@ -73,16 +73,14 @@ export declare namespace useFragment {
   // TODO: Update this to return `null` when there is no data returned from the
   // fragment.
   export type Result<TData> =
-    | {
-        data: MaybeMasked<TData>;
+    | ({
         complete: true;
         missing?: never;
-      }
-    | {
-        data: DeepPartial<MaybeMasked<TData>>;
+      } & GetDataState<MaybeMasked<TData>, "complete">)
+    | ({
         complete: false;
         missing?: MissingTree;
-      };
+      } & GetDataState<MaybeMasked<TData>, "partial">);
 }
 
 export function useFragment<
@@ -138,23 +136,24 @@ function useFragment_<TData, TVariables extends OperationVariables>(
       ...stableOptions,
       returnPartialData: true,
       id: from,
-      query: cache["getFragmentDoc"](fragment, fragmentName),
+      query: cache["getFragmentDoc"](
+        client["transform"](fragment),
+        fragmentName
+      ),
       optimistic,
     });
 
     return {
-      result: diffToResult(
-        {
-          ...diff,
-          result: client["queryManager"].maskFragment({
-            fragment,
-            fragmentName,
-            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
-            // valid return value
-            data: diff.result === null ? {} : diff.result,
-          }),
-        } as Cache.DiffResult<TData> // TODO: Remove assertion
-      ),
+      result: diffToResult<TData>({
+        ...diff,
+        result: client["queryManager"].maskFragment({
+          fragment,
+          fragmentName,
+          // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+          // valid return value
+          data: diff.result === null ? {} : diff.result,
+        }) as any,
+      }),
     };
   }, [client, stableOptions]);
 
@@ -175,8 +174,12 @@ function useFragment_<TData, TVariables extends OperationVariables>(
                 // unnecessarily rerendering this hook for the initial result
                 // emitted from watchFragment which should be equal to
                 // `diff.result`.
-                if (equal(result, diff.result)) return;
-                diff.result = result;
+                const resultWithDataState = {
+                  ...result,
+                  dataState: result.complete ? "complete" : "partial",
+                } as useFragment.Result<TData>;
+                if (equal(resultWithDataState, diff.result)) return;
+                diff.result = resultWithDataState;
                 // If we get another update before we've re-rendered, bail out of
                 // the update and try again. This ensures that the relative timing
                 // between useQuery and useFragment stays roughly the same as
@@ -203,6 +206,7 @@ function diffToResult<TData>(
   const result = {
     data: diff.result,
     complete: !!diff.complete,
+    dataState: diff.complete ? "complete" : "partial",
   } as useFragment.Result<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {

@@ -52,7 +52,7 @@ export { mergeOptions } from "./mergeOptions.js";
 export { omitDeep } from "./omitDeep.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
-export { removeFragmentSpreads } from "./removeFragmentSpreads.js";
+export { removeMaskedFragmentSpreads } from "./removeFragmentSpreads.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";

@@ -468,7 +468,7 @@ Array [
   "preventUnhandledRejection",
   "registerGlobalCache",
   "removeDirectivesFromDocument",
-  "removeFragmentSpreads",
+  "removeMaskedFragmentSpreads",
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",

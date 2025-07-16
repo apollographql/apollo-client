@@ -26,7 +26,7 @@ import {
   compact,
   getApolloClientMemoryInternals,
   mergeOptions,
-  removeFragmentSpreads,
+  removeMaskedFragmentSpreads,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -912,7 +912,7 @@ export class ApolloClient implements DataProxy {
   }
 
   private maskedFragmentTransform = new DocumentTransform(
-    removeFragmentSpreads
+    removeMaskedFragmentSpreads
   );
 
   private transform(document: DocumentNode, dataMasking = false) {

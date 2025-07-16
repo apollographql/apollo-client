@@ -255,7 +255,7 @@ export abstract class ApolloCache implements DataProxy {
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<TData = unknown, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
-  ): Observable<WatchFragmentResult<TData>> {
+  ): Observable<WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
       fragmentName,

@@ -13,16 +13,14 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import { maskFragment } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
-import { cacheSizes, DocumentTransform } from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
-  removeFragmentSpreads,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 

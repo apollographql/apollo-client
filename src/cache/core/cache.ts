@@ -327,7 +327,7 @@ export abstract class ApolloCache implements DataProxy {
             data,
             dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
-          } as WatchFragmentResult<TData>;
+          } as WatchFragmentResult<Unmasked<TData>>;
 
           if (diff.missing) {
             result.missing = diff.missing.missing;

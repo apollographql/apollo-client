@@ -19,13 +19,14 @@ import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { DocumentTransform } from "@apollo/client/utilities";
+import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
   compact,
   getApolloClientMemoryInternals,
   mergeOptions,
+  removeFragmentSpreads,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -604,12 +605,35 @@ export class ApolloClient implements DataProxy {
 
   public watchFragment<TData = unknown, TVariables = OperationVariables>(
     options: WatchFragmentOptions<TData, TVariables>
-  ): Observable<WatchFragmentResult<TData>> {
-    return this.cache.watchFragment({
-      ...options,
-      fragment: this.transform(options.fragment),
-      [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
-    });
+  ): Observable<WatchFragmentResult<MaybeMasked<TData>>> {
+    const dataMasking = this.queryManager.dataMasking;
+
+    return this.cache
+      .watchFragment({
+        ...options,
+        fragment: this.transform(options.fragment, dataMasking),
+      })
+      .pipe(
+        map((result) => {
+          let data = result.data;
+
+          // The transform will remove fragment spreads from the fragment
+          // document when dataMasking is enabled. The `maskFragment` function
+          // remains to apply warnings to fragments marked as
+          // `@unmask(mode: "migrate")`. Since these warnings are only applied
+          // in dev, we can skip the masking algorithm entirely for production.
+          if (__DEV__) {
+            if (dataMasking) {
+              data = this.queryManager.maskFragment({
+                ...options,
+                data: result.data,
+              });
+            }
+          }
+
+          return { ...result, data } as WatchFragmentResult<TData>;
+        })
+      );
   }
 
   /**
@@ -887,8 +911,15 @@ export class ApolloClient implements DataProxy {
     return this.queryManager.defaultContext;
   }
 
-  private transform(document: DocumentNode) {
-    return this.queryManager.transform(document);
+  private maskedFragmentTransform = new DocumentTransform(
+    removeFragmentSpreads
+  );
+
+  private transform(document: DocumentNode, dataMasking = false) {
+    const transformed = this.queryManager.transform(document);
+    return dataMasking ?
+        this.maskedFragmentTransform.transformDocument(transformed)
+      : transformed;
   }
 
   /**

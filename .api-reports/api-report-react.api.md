@@ -147,7 +147,7 @@ class ApolloClient_2 implements DataProxy {
     subscribe<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: SubscriptionOptions<TVariables, TData>): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
-    watchFragment<TData = unknown, TVariables = OperationVariables_2>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<TData>>;
+    watchFragment<TData = unknown, TVariables = OperationVariables_2>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<MaybeMasked<TData>>>;
     // Warning: (ae-forgotten-export) The symbol "OperationVariables_2" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "WatchQueryOptions_2" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ObservableQuery" needs to be exported by the entry point index.d.ts

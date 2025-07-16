@@ -54,30 +54,10 @@ function WithApolloClient() {
 }
 ```
 
-<FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} parameters={false} result={false} />
+<FunctionDetails canonicalReference="@apollo/client!useQuery.DocumentationTypes.useQuery:function(1)" headingLevel={2} />
 
 
-### Params
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | `(Typed)DocumentNode` | A GraphQL query document parsed into an AST by `gql`. |
-| `options` | `useQuery.Options \| skipToken` | An optional object containing options for the query. |
-
-Instead of passing a `useQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useQuery` hook from executing the query.
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options:interface"
-  customPropertyOrder={["variables", "errorPolicy", "skip"]}
-  headingLevel={3}
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result:interface"
-  headingLevel={3}
-/>
-
-<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}>
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery.DocumentationTypes.useLazyQuery:function(1)" headingLevel={2}>
   ```ts
   [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
   ```
@@ -156,98 +136,58 @@ Instead of passing a `useQuery.Options` object into the hook, you can also pass 
 <FunctionDetails canonicalReference="@apollo/client!useReactiveVar:function(1)" headingLevel={2} />
 
 <FunctionDetails
-  canonicalReference="@apollo/client!useFragment.DocumentationTypes.useFragment:function(1)"
-  headingLevel={2}
-  parameters={false}
-  result={false}
-/>
+  canonicalReference="@apollo/client!useFragment.DocumentationTypes.useFragment:function(1)" headingLevel={2} />
 
-<InterfaceDetails
-  canonicalReference="@apollo/client!useFragment.Options:interface"
-  headingLevel={3}
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useFragment.DocumentationTypes.useFragment.Result:interface"
-  headingLevel={3}
-/>
 
 
 <FunctionDetails
   canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:function(1)"
   headingLevel={2}
-  parameters={false}
-  result={false}
-/>
-
-### Params
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | `(Typed)DocumentNode` | A GraphQL query document parsed into an AST by `gql`. |
-| `options` | `useSuspenseQuery.Options \| skipToken` | An optional object containing options for the query. |
-
-Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options:interface"
-  customPropertyOrder={["variables", "errorPolicy", "skip"]}
-  headingLevel={3}
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result:interface"
-  headingLevel={3}
 />
 
 <FunctionDetails
   canonicalReference="@apollo/client!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:function(1)"
   headingLevel={2}
-  parameters={false}
-  result={false}
-/>
 
-### Params
+>
+  ```ts
+    [
+      QueryRef<TData, TVariables> | undefined,
+      useBackgroundQuery.Result<TData, TVariables>,
+    ]
+  ```
 
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | `(Typed)DocumentNode` | A GraphQL query document parsed into an AST by `gql`. |
-| `options` | `useBackgroundQuery.Options \| skipToken` | An optional object containing options for the query. |
+  A tuple of three values:
+  <ManualTuple>
 
-Instead of passing a `useBackgroundQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query or suspending.
+    <ManualTupleItem
+      idPrefix="usebackgroundquery-result"
+      name="queryRef"
+      type="QueryRef<TData, TVariables> | undefined"
+    >
+      A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="usebackgroundquery-result"
+      name="result"
+      type="useBackgroundQuery.Result<TData, TVariables>"
+      canonicalReference={"@apollo/client!useBackgroundQuery.Result:interface"}
+    >
+      An object containing helper functions for the query:
+      - `refetch`: A function to re-execute the query
+      - `fetchMore`: A function to fetch more results for pagination
+      - `subscribeToMore`: A function to subscribe to updates
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>
 
 
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options:interface"
-  headingLevel={3}
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useBackgroundQuery.Result:interface"
-  headingLevel={3}
-/>
 
 If no query has been executed yet and you skip the query, the hook will return `undefined` instead of a `queryRef`.
 
 <FunctionDetails
   canonicalReference="@apollo/client!useReadQuery.DocumentationTypes.useReadQuery:function(1)"
   headingLevel={2}
-  parameters={false}
-  result={false}
-/>
-
-### Params
-
-#### `queryRef`
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `queryRef` | QueryRef | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
-
-<InterfaceDetails
-  canonicalReference="@apollo/client!useReadQuery.DocumentationTypes.useReadQuery.Result:interface"
-  headingLevel={3}
 />
 
 <FunctionDetails

@@ -101,7 +101,7 @@ export declare namespace useSubscription {
 
   export namespace DocumentationTypes {
     namespace useSubscription {
-      export import Result = _self.Result;
+      export interface Result<TData = unknown> extends _self.Result<TData> {}
     }
   }
 

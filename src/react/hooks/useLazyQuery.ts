@@ -75,7 +75,10 @@ export declare namespace useLazyQuery {
   }
   namespace DocumentationTypes {
     namespace useLazyQuery {
-      export import Options = _self.Options;
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends _self.Options<TData, TVariables> {}
     }
   }
 

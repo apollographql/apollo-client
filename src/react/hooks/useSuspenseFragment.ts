@@ -83,7 +83,7 @@ export declare namespace useSuspenseFragment {
   }
   export namespace DocumentationTypes {
     export namespace useSuspenseFragment {
-      export import Result = _self.Result;
+      export interface Result<TData = unknown> extends _self.Result<TData> {}
     }
   }
 

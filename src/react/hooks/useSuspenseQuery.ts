@@ -193,6 +193,10 @@ export declare namespace useSuspenseQuery {
  * }
  *
  * ```
+ *
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options -  An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
+
  */
 export function useSuspenseQuery<
   TData = unknown,

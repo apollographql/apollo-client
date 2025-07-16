@@ -1360,8 +1360,7 @@ describe("client.watchQuery", () => {
       const { data, complete } = await fragmentStream.takeNext();
 
       expect(data).toEqual({});
-      // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
-      expect(complete).toBe(true);
+      expect(complete).toBe(false);
     }
   });
 
@@ -1437,8 +1436,7 @@ describe("client.watchQuery", () => {
       const { data, complete } = await fragmentStream.takeNext();
 
       expect(data).toEqual({});
-      // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
-      expect(complete).toBe(true);
+      expect(complete).toBe(false);
     }
   });
 

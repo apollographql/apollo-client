@@ -1639,8 +1639,7 @@ describe("useFragment", () => {
       const { data, complete } = await takeSnapshot();
 
       expect(data).toEqual({});
-      // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
-      expect(complete).toBe(true);
+      expect(complete).toBe(false);
     }
 
     expect(console.warn).toHaveBeenCalledTimes(1);

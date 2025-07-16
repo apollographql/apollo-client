@@ -51,6 +51,9 @@ try {
     fs.writeFileSync(entryPointFile, buildDocEntryPoints());
 
     buildReport(entryPointFile, "docModel");
+    if (process.exitCode === 50) {
+      process.exitCode = 0; // if there were only warnings, we still want to exit with 0
+    }
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
@@ -134,6 +137,7 @@ function buildReport(
   if (extractorResult.succeeded && succeededAdditionalChecks) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
+    process.exitCode = extractorResult.errorCount === 0 ? 50 : 1;
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
@@ -141,6 +145,5 @@ function buildReport(
     if (!succeededAdditionalChecks) {
       console.error("Additional checks failed.");
     }
-    process.exitCode = 1;
   }
 }

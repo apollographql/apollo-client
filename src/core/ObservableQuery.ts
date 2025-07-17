@@ -478,7 +478,7 @@ export class ObservableQuery<
   // to the non-deprecated signature which works properly with type inference.
   /**
    * Subscribes to the `ObservableQuery`.
-   * @param observerOrNext Either an RxJS `Observer` with some or all callback methods,
+   * @param observerOrNext - Either an RxJS `Observer` with some or all callback methods,
    * or the `next` handler that is called for each value emitted from the subscribed Observable.
    * @returns A subscription reference to the registered handlers.
    */

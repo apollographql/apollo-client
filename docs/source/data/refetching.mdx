@@ -16,8 +16,6 @@ To selectively refetch queries _outside_ of a mutation, you instead use the `ref
 
 ## `client.refetchQueries`
 
-> This method is new in Apollo Client 3.4.
-
 ### Refetch options
 
 <RefetchQueriesOptions />
@@ -100,6 +98,14 @@ await client.refetchQueries({
 
 #### Refetching all queries
 
+<Note>
+
+The distinction between "active" and "inactive" queries:
+- **Active queries**: Have at least one subscriber and are not skipped or in `standby`
+- **Inactive queries**: Have a subscriber but are either skipped from a React hook or have a `fetchPolicy` of `standby`
+
+</Note>
+
 To refetch all _active_ queries, pass the `"active"` shorthand for `include`:
 ```ts
 await client.refetchQueries({
@@ -111,17 +117,13 @@ Only queries with active subscribers are registered with the client. This means 
 
 `cache-only` queries are excluded from `refetchQueries` in all situations, including when affected by `updateCache` operations. A `cache-only` query _can_ be refetched however by providing an [`onQueryUpdated` function](#refetching-selectively).
 
-To refetch _all_ queries managed by Apollo Client (even those with a `fetchPolicy` of `"standby"`), pass `"all"` for `include`:
+To refetch _all_ queries managed by Apollo Client, including inactive queries, pass `"all"` for  for `include`:
 
 ```ts
 await client.refetchQueries({
   include: "all", // Consider using "active" instead!
 });
 ```
-
-The distinction between "active" and "inactive" queries:
-- **Active queries**: Have at least one subscriber and are not skipped or in `standby`
-- **Inactive queries**: Have a subscriber but are either skipped from a React hook or have a `fetchPolicy` of `standby`
 
 #### Refetching queries affected by cache updates
 

@@ -786,6 +786,8 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
+   *
+   * Note: `cache-only` queries are not refetched by this function.
    */
   public refetchObservableQueries(
     includeStandby?: boolean

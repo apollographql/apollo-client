@@ -618,8 +618,6 @@ export class ApolloClient implements DataProxy {
       })
       .pipe(
         map((result) => {
-          let data = result.data;
-
           // The transform will remove fragment spreads from the fragment
           // document when dataMasking is enabled. The `maskFragment` function
           // remains to apply warnings to fragments marked as
@@ -627,14 +625,15 @@ export class ApolloClient implements DataProxy {
           // in dev, we can skip the masking algorithm entirely for production.
           if (__DEV__) {
             if (dataMasking) {
-              data = this.queryManager.maskFragment({
+              const data = this.queryManager.maskFragment({
                 ...options,
                 data: result.data,
               });
+              return {...result, data } as WatchFragmentResult<MaybeMasked<TData>>;
             }
           }
 
-          return { ...result, data } as WatchFragmentResult<MaybeMasked<TData>>;
+          return result as WatchFragmentResult<MaybeMasked<TData>>;
         })
       );
   }

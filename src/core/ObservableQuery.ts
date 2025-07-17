@@ -220,6 +220,26 @@ export declare namespace ObservableQuery {
      */
     retain(): this;
   }
+
+  export namespace DocumentationTypes {
+    type OperatorFunctionChain<From, To> = [];
+    interface ObservableMethods<TData, OperatorResult> {
+      /** {@inheritDoc @apollo/client!ObservableQuery#pipe:member} */
+      pipe(
+        ...operators: OperatorFunctionChain<
+          ApolloQueryResult<TData>,
+          OperatorResult
+        >
+      ): Observable<OperatorResult>;
+
+      /** {@inheritDoc @apollo/client!ObservableQuery#subscribe:member} */
+      subscribe(
+        observerOrNext:
+          | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
+          | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
+      ): Subscription;
+    }
+  }
 }
 
 interface SubjectValue<TData, TVariables extends OperationVariables> {
@@ -456,12 +476,37 @@ export class ObservableQuery<
   // We can't use Observable['subscribe'] here as the type as it conflicts with
   // the ability to infer T from Subscribable<T>. This limits the surface area
   // to the non-deprecated signature which works properly with type inference.
+  /**
+   * Subscribes to the `ObservableQuery`.
+   * @param observerOrNext Either an RxJS `Observer` with some or all callback methods,
+   * or the `next` handler that is called for each value emitted from the subscribed Observable.
+   * @returns A subscription reference to the registered handlers.
+   */
   public subscribe!: (
-    observer:
+    observerOrNext:
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) => Subscription;
 
+  /**
+   * Used to stitch together functional operators into a chain.
+   *
+   * @example
+   *
+   * ```ts
+   * import { filter, map } from 'rxjs';
+   *
+   * observableQuery
+   *   .pipe(
+   *     filter(...),
+   *     map(...),
+   *   )
+   *   .subscribe(x => console.log(x));
+   * ```
+   *
+   * @returns The Observable result of all the operators having been called
+   * in the order they were passed in.
+   */
   public pipe!: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
   public [Symbol.observable]!: () => Subscribable<

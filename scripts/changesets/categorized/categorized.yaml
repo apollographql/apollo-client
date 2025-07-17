@@ -792,7 +792,35 @@ errors:
 
     ```
 rxjs:
-  slow-ravens-explain: Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
+  slow-ravens-explain: >-
+    Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
+    is now a peer dependency of Apollo Client which means you will now need to
+    install `rxjs` in addition to `@apollo/client`.
+
+
+    This change is mostly transparent, however transforming values on
+    observables, common in link implementations, differs in RxJS vs
+    `zen-observable`. For example, you could modify values in the link chain
+    emitted from a downstream link by using the `.map` function. In RxJS, this
+    is done with the `.pipe` function and passing a `map` operator instead.
+
+
+    ```ts
+
+    import { map } from "rxjs";
+
+
+    const link new ApolloLink((operation, forward) => {
+      return forward(operation).pipe(
+        map((result) => performTransform(result))
+      );
+    });
+
+    ```
+
+
+    For a full list of operators and comprehensive documentation on the
+    capabilities of RxJS, check out the [documentation](https://rxjs.dev/).
   metal-needles-search: >-
     ObservableQuery: implement the `rxjs` `InteropObservable` interface to
     ensure `from(observableQuery)` stays possible
@@ -837,21 +865,11 @@ ObservableQuery:
   khaki-keys-deliver: >-
     An initial loading state is now emitted from `ObservableQuery` when
     subscribing if `notifyOnNetworkStatusChange` is set to `true`.
-    few-crabs-move: >- `ObservableQuery` will now keep previous `data` around
-    when emitting a `loading` state, unless `query` or `variables` changed.
-
-    Note that `@exports` variables are not taken into account for this, so
-    `data` will stay around even if they change.
   many-papayas-hide: >-
     `ObservableQuery` will no longer terminate on errors and will instead emit a
     `next` value with an `error` property. This ensures that `ObservableQuery`
     instances can continue to receive updates after errors are returned in
     requests without the need to resubscribe to the observable.
-      shy-experts-cough: >-
-    `ObservableQuery`s will now only be registered with the `ApolloClient` while
-    they
-
-    have subscribers.
   few-crabs-move: >-
     `ObservableQuery` will now keep previous `data` around when emitting a
     `loading` state, unless `query` or `variables` changed.
@@ -958,6 +976,34 @@ ObservableQuery:
     When passing a `variables` key with the value `undefined`, the value will be
     replaced by the default value in the query, if it is provided, rather than
     leave it as `undefined`.
+
+
+    ```ts
+
+    // given this query
+
+    const query = gql`
+      query PaginatedQuery($limit: Int! = 10, $offset: Int) {
+        list(limit: $limit, offset: $offset) {
+          id
+        }
+      }
+    `
+
+
+    const observable = client.query({ query, variables: { limit: 5, offset: 0
+    }});
+
+    console.log(observable.variables) // => { limit: 5, offset: 0 }
+
+
+    observable.reobserve({ variables: { limit: undefined, offset: 10 }})
+
+    // limit is now `10`. This would previously be `undefined`
+
+    console.log(observable.variables) // => { limit: 10, offset: 10 }
+
+    ```
   __removals: null
   tidy-squids-poke: >-
     Removes `ObservableQuery.result()` method. If you use this method and need
@@ -981,6 +1027,25 @@ ObservableQuery:
   eighty-squids-fix: >-
     `ObservableQuery.setOptions` has been removed as it was an alias of
     `reobserve`. Prefer using `reobserve` directly instead.
+
+
+    ```diff
+
+    const observable = client.watchQuery(options);
+
+
+    // Use reobserve to set new options and reevaluate the query
+
+    - observable.setOptions(newOptions);
+
+    + observable.reobserve(newOptions);
+
+    ```
+
+
+    As a result of this change, `reobserve` has been marked for public use and
+    is no longer considered an internal API. The `newNetworkStatus` argument has
+    been removed to facilitate this change.
   gold-oranges-double: >-
     Removed `getLastResult`, `getLastError` and `resetLastResults` from
     `ObservableQuery`
@@ -995,21 +1060,7 @@ ObservableQuery:
     resulted in a no-op.
   spotty-mugs-poke: >-
     Dropped the `saveAsLastResult` argument from
-    `ObservableQuery.getCurrentResult` tidy-squids-poke: >- Removes
-    `ObservableQuery.result()` method. If you use this method and need similar
-    functionality, use the `firstValueFrom` helper in RxJS.
-
-
-    ```ts
-
-    import { firstValueFrom, from } from "rxjs";
-
-
-    // The `from` is necessary to turn `observableQuery` into an RxJS observable
-
-    const result = await firstValueFrom(from(observableQuery))
-
-    ```
+    `ObservableQuery.getCurrentResult`
   __fixes: null
   fuzzy-tips-sit: >-
     Ensure `ObservableQuery` stops polling if switching to a `standby`
@@ -4606,7 +4657,7 @@ useQuery:
     that should now import from `@apollo/client/testing/react`:
 
     - `MockedProvider`
-  slimy-ants-bake: '`useQuery`: only advance `previousData` if `data` actually changed'
+  slimy-ants-bake: "`useQuery`: only advance `previousData` if `data` actually changed"
   strange-walls-march: >-
     The `error` property is no longer present when `skip` is `true` in
     `useQuery`.

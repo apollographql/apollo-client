@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - types
+  - cache
 ---
 
 The `Cache.DiffResult<T>` type is now a union type with better type safety for both complete and partial results. Checking `diff.complete` will now narrow the type of `result` depending on whether the value is `true` or `false`.

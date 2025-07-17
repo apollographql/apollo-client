@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - ApolloClient
 ---
 
 The `ApolloClient` constructor options `name` and `version` that are used to

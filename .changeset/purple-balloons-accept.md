@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - useLazyQuery
 ---
 
 If the `execute` function of `useLazyQuery` is executed, previously started queries

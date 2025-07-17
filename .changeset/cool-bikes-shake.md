@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - removals
+  - polyfills
 ---
 
 Remove polyfills for Object.freeze,seal and preventExtensions in React Native

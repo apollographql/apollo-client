@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - types
+  - data_masking
 ---
 
 Provide a mechanism to override the DataMasking types.

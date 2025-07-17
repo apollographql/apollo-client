@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - mutations
+  - dataState
 ---
 
 The `mutationResult` option passed to the `updateQueries` callback now has an

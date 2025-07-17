@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(npm run:*)",
+      "Edit(docs/**)",
+      "Edit(src/**)"
+    ],
+    "deny": []
+  }
+}

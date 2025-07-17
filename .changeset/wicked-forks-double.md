@@ -1,5 +1,9 @@
 ---
 "@apollo/client": major
+_tags:
+  - links
+  - testing
+  - removals
 ---
 
 Remove `newData` option for mocked responses passed to `MockLink` or the `mocks` option on `MockedProvider`. This option was undocumented and was nearly identical to using the `result` option as a callback.

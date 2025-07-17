@@ -220,6 +220,26 @@ export declare namespace ObservableQuery {
      */
     retain(): this;
   }
+
+  export namespace DocumentationTypes {
+    type OperatorFunctionChain<From, To> = [];
+    interface ObservableMethods<TData, OperatorResult> {
+      /** {@inheritDoc @apollo/client!ObservableQuery#pipe:member} */
+      pipe(
+        ...operators: OperatorFunctionChain<
+          ApolloQueryResult<TData>,
+          OperatorResult
+        >
+      ): Observable<OperatorResult>;
+
+      /** {@inheritDoc @apollo/client!ObservableQuery#subscribe:member} */
+      subscribe(
+        observerOrNext:
+          | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
+          | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
+      ): Subscription;
+    }
+  }
 }
 
 interface SubjectValue<TData, TVariables extends OperationVariables> {
@@ -456,12 +476,37 @@ export class ObservableQuery<
   // We can't use Observable['subscribe'] here as the type as it conflicts with
   // the ability to infer T from Subscribable<T>. This limits the surface area
   // to the non-deprecated signature which works properly with type inference.
+  /**
+   * Subscribes to the `ObservableQuery`.
+   * @param observerOrNext - Either an RxJS `Observer` with some or all callback methods,
+   * or the `next` handler that is called for each value emitted from the subscribed Observable.
+   * @returns A subscription reference to the registered handlers.
+   */
   public subscribe!: (
-    observer:
+    observerOrNext:
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) => Subscription;
 
+  /**
+   * Used to stitch together functional operators into a chain.
+   *
+   * @example
+   *
+   * ```ts
+   * import { filter, map } from 'rxjs';
+   *
+   * observableQuery
+   *   .pipe(
+   *     filter(...),
+   *     map(...),
+   *   )
+   *   .subscribe(x => console.log(x));
+   * ```
+   *
+   * @returns The Observable result of all the operators having been called
+   * in the order they were passed in.
+   */
   public pipe!: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
   public [Symbol.observable]!: () => Subscribable<
@@ -655,6 +700,13 @@ export class ObservableQuery<
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
    *
+   * Returns a `ResultPromise` with an additional `.retain()` method. Calling
+   * `.retain()` keeps the network operation running even if the `ObservableQuery`
+   * no longer requires the result.
+   *
+   * Note: `refetch()` guarantees that a value will be emitted from the
+   * observable, even if the result is deep equal to the previous value.
+   *
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
@@ -707,6 +759,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /**
    * A function that helps you fetch the next set of results for a [paginated list field](https://www.apollographql.com/docs/react/pagination/core-api/).
    */
+  public fetchMore<
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    options: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>
+  ): Promise<QueryResult<TFetchData>>;
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -971,14 +1029,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * `setVariables` in order to to be properly notified of results even when
    * they come from the cache.
    *
-   * Note: the `next` callback will *not* fire if the variables have not changed
-   * or if the result is coming from cache.
+   * Note: `setVariables()` guarantees that a value will be emitted from the
+   * observable, even if the result is deeply equal to the previous value.
    *
-   * Note: the promise will return the old results immediately if the variables
-   * have not changed.
-   *
-   * Note: the promise will return the last result immediately if the query is not active
-   * (there are no subscribers).
+   * Note: the promise will resolve with the last emitted result
+   * when either the variables match the current variables or there
+   * are no subscribers to the query.
    *
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
@@ -1304,6 +1360,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /**
    * Reevaluate the query, optionally against new options. New options will be
    * merged with the current options when given.
+   *
+   * Note: `variables` can be reset back to their defaults (typically empty) by calling `reobserve` with
+   * `variables: undefined`.
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>

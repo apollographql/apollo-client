@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - LocalState
 ---
 
 The resolver function's `context` argument (the 3rd argument) has changed to provide additional information without the possibility of name clashes. Previously the `context` argument would spread request context and override the `client` and `cache` properties to give access to both inside of a resolver. The `context` argument takes now takes the following shape:

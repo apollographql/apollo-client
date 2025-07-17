@@ -1,5 +1,9 @@
 ---
 "@apollo/client": patch
+_tags:
+  - useQuery
+  - ssr
+  - fetch_policy
 ---
 
 `useQuery` with `ssr: false` - previously, `skip` had a higher priortity than `ssr: false` while `ssr: false` had a higher priority than `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).

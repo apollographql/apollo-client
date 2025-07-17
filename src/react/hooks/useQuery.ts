@@ -38,6 +38,7 @@ import type {
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -53,113 +54,144 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useQuery {
+  export namespace Base {
+    export interface Options<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: WatchQueryFetchPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+      nextFetchPolicy?:
+        | WatchQueryFetchPolicy
+        | ((
+            this: WatchQueryOptions<TVariables, TData>,
+            currentFetchPolicy: WatchQueryFetchPolicy,
+            context: NextFetchPolicyContext<TData, TVariables>
+          ) => WatchQueryFetchPolicy);
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+
+      initialFetchPolicy?: WatchQueryFetchPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+      refetchWritePolicy?: RefetchWritePolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+      pollInterval?: number;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+      notifyOnNetworkStatusChange?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+      returnPartialData?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+      skipPollAttempt?: () => boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+      ssr?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
+      skip?: boolean;
+    }
+  }
   export type Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > = {
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: WatchQueryFetchPolicy;
+  > = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
-    nextFetchPolicy?:
-      | WatchQueryFetchPolicy
-      | ((
-          this: WatchQueryOptions<TVariables, TData>,
-          currentFetchPolicy: WatchQueryFetchPolicy,
-          context: NextFetchPolicyContext<TData, TVariables>
-        ) => WatchQueryFetchPolicy);
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  export namespace DocumentationTypes {
+    export interface Options<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > extends Base.Options<TData, TVariables> {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  }
 
-    initialFetchPolicy?: WatchQueryFetchPolicy;
+  export namespace Base {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+      client: ApolloClient;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-    refetchWritePolicy?: RefetchWritePolicy;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+      observable: ObservableQuery<TData, TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-    errorPolicy?: ErrorPolicy;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+      previousData?: MaybeMasked<TData>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-    pollInterval?: number;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-    notifyOnNetworkStatusChange?: boolean;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+      loading: boolean;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-    returnPartialData?: boolean;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+      networkStatus: NetworkStatus;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
-    skipPollAttempt?: () => boolean;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+      startPolling: (pollInterval: number) => void;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
-    ssr?: boolean;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+      stopPolling: () => void;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-    client?: ApolloClient;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-    context?: DefaultContext;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+      updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
-    skip?: boolean;
-  } & VariablesOption<TVariables>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+      refetch: (
+        variables?: Partial<TVariables>
+      ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+      variables: TVariables;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+      fetchMore: <
+        TFetchData = TData,
+        TFetchVars extends OperationVariables = TVariables,
+      >(
+        fetchMoreOptions: FetchMoreOptions<
+          TData,
+          TVariables,
+          TFetchData,
+          TFetchVars
+        >
+      ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+    }
+  }
   export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = {
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-    client: ApolloClient;
+  > = Base.Result<TData, TVariables> &
+    GetDataState<MaybeMasked<TData>, TStates>;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-    observable: ObservableQuery<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-    previousData?: MaybeMasked<TData>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-    error?: ErrorLike;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
-    loading: boolean;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-    networkStatus: NetworkStatus;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-    startPolling: (pollInterval: number) => void;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-    stopPolling: () => void;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-    refetch: (
-      variables?: Partial<TVariables>
-    ) => Promise<QueryResult<MaybeMasked<TData>>>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: TVariables;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-    fetchMore: <
-      TFetchData = TData,
-      TFetchVars extends OperationVariables = TVariables,
-    >(
-      fetchMoreOptions: FetchMoreOptions<
-        TData,
-        TVariables,
-        TFetchData,
-        TFetchVars
-      >
-    ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
-  } & GetDataState<MaybeMasked<TData>, TStates>;
+  export namespace DocumentationTypes {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > extends Base.Result<TData, TVariables>,
+        UtilityDocumentationTypes.DataState<TData> {}
+  }
 }
 
 const lastWatchOptions = Symbol();

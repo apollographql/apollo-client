@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - types
+  - links
 ---
 
 Prioritize usage of `FormattedExecutionResult` over `FetchResult` where applicable.

@@ -1,5 +1,9 @@
 ---
 "@apollo/client": major
+_tags:
+  - ObservableQuery
+  - client.refetchQueries
+  - client.getObservableQueries
 ---
 
 `ObservableQuery`s will now only be registered with the `ApolloClient` while they

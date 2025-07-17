@@ -6,15 +6,21 @@
 
 import type { ApolloQueryResult } from '@apollo/client';
 import type { ASTNode } from 'graphql';
+import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
+import type { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
+import type { MaybeMasked } from '@apollo/client';
 import type { MutationOptions } from '@apollo/client';
+import type { NetworkStatus } from '@apollo/client';
+import type { Observable } from 'rxjs';
+import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
@@ -25,6 +31,7 @@ import type { Reference } from '@apollo/client/utilities';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
+import type { Subscription } from 'rxjs';
 import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -128,6 +135,36 @@ type Directives = {
         [argName: string]: any;
     };
 };
+
+// @public
+export namespace DocumentationTypes {
+    // (undocumented)
+    export interface ApolloQueryResult<TData> extends DataState<TData> {
+        error?: ErrorLike;
+        loading: boolean;
+        networkStatus: NetworkStatus;
+        // @deprecated
+        partial: boolean;
+    }
+    // (undocumented)
+    export interface DataState<TData> {
+        data?: DataValue.Complete<TData> | DataValue.Streaming<TData> | DataValue.Partial<TData> | undefined;
+        dataState: "complete" | "streaming" | "partial" | "empty";
+    }
+    // (undocumented)
+    export interface RxjsObservable<TData> {
+        // (undocumented)
+        pipe<OperatorResult>(...operators: [
+        OperatorFunction<Observable<ApolloQueryResult<TData>>, OperatorResult>
+        ] | [
+        OperatorFunction<Observable<ApolloQueryResult<TData>>, unknown>,
+        ...OperatorFunction<unknown, unknown>[],
+        OperatorFunction<unknown, OperatorResult>
+        ]): Observable<OperatorResult>;
+        // (undocumented)
+        subscribe(observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)): Subscription;
+    }
+}
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;

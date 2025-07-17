@@ -629,7 +629,9 @@ export class ApolloClient implements DataProxy {
                 ...options,
                 data: result.data,
               });
-              return {...result, data } as WatchFragmentResult<MaybeMasked<TData>>;
+              return { ...result, data } as WatchFragmentResult<
+                MaybeMasked<TData>
+              >;
             }
           }
 

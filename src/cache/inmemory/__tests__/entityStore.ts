@@ -1212,7 +1212,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1233,7 +1233,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1254,7 +1254,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1360,7 +1360,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1382,7 +1382,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1404,7 +1404,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",

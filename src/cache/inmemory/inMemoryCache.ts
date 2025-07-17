@@ -234,7 +234,7 @@ export class InMemoryCache extends ApolloCache {
       : this.data;
     try {
       ++this.txCount;
-      return store.modify(options.id || "ROOT_QUERY", options.fields);
+      return store.modify(options.id || "ROOT_QUERY", options.fields, false);
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();

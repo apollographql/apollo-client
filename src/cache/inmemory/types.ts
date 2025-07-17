@@ -51,7 +51,8 @@ export interface NormalizedCache {
 
   modify<Entity extends Record<string, any>>(
     dataId: string,
-    fields: Modifiers<Entity> | AllFieldsModifier<Entity>
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>,
+    exact: boolean
   ): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;

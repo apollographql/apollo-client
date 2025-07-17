@@ -3,6 +3,7 @@
 _tags:
   - types
   - useLazyQuery
+_superseded: "return type"
 ---
 
 The result resolved from the promise returned from the execute function in `useLazyQuery` is now an `ApolloQueryResult` type and no longer includes all the fields returned from the `useLazyQuery` hook tuple.

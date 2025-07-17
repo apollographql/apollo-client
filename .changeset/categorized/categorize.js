@@ -30,7 +30,7 @@ for await (const file of  glob(join(import.meta.dirname, '..','*.md'))) {
   }
   const [,frontmatter,body] = match;
   const parsed = (load(frontmatter)||{})
-  const tags = parsed._tags || {};
+  const tags = parsed._tags || []
   for (const tag of tags) {
     categorized[tag]??={}
     if (updateExisting || !categorized[tag][name]) {

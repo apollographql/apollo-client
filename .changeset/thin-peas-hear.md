@@ -4,6 +4,7 @@ _tags:
   - ObservableQuery
   - useQuery
   - useLazyQuery
+  - client.watchQuery
 ---
 
 `notifyOnNetworkStatusChange` now defaults to `true`. This means that loading states will be emitted (core API) or rendered (React) by default when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.

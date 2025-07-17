@@ -6,11 +6,11 @@ import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloQueryResult,
+  DataValue,
   DefaultOptions,
   MutateResult,
   ObservableQuery,
   QueryOptions,
-  DataValue,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
@@ -2335,19 +2335,17 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
+
     it("cache writes emit a new value", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2377,18 +2375,15 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        dataState: "complete",
+        complete: true,
+      });
 
       cache.writeFragment({
         fragment: ItemFragment,
@@ -2399,19 +2394,17 @@ describe("ApolloClient", () => {
         },
       });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5 (edited)",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 (edited)",
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
+
     it("if only partial data is available, `complete` is `false`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2445,21 +2438,19 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-          },
-          complete: false,
-          missing: {
-            text: "Can't find field 'text' on Item:5 object",
-          },
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+        dataState: "partial",
+        complete: false,
+        missing: {
+          text: "Can't find field 'text' on Item:5 object",
+        },
+      });
     });
+
     it("if no data is written after observable is subscribed to, next is never called", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2480,19 +2471,14 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitTypedValue({
+        data: {},
+        dataState: "partial",
+        complete: false,
+        missing: "Dangling reference to missing Item:5 object",
+      });
 
-        expect(result).toEqual({
-          complete: false,
-          data: {},
-          missing: "Dangling reference to missing Item:5 object",
-        });
-      }
-
-      await expect(stream.takeNext({ timeout: 1000 })).rejects.toEqual(
-        expect.any(Error)
-      );
+      await expect(stream).not.toEmitAnything({ timeout: 1000 });
     });
 
     it("supports the @nonreactive directive", async () => {
@@ -2524,18 +2510,15 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        dataState: "complete",
+        complete: true,
+      });
 
       cache.writeFragment({
         fragment: ItemFragment,
@@ -2546,10 +2529,9 @@ describe("ApolloClient", () => {
         },
       });
 
-      await expect(stream.takeNext()).rejects.toThrow(
-        new Error("Timeout waiting for next event")
-      );
+      await expect(stream).not.toEmitAnything();
     });
+
     it("works with `variables`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2581,19 +2563,17 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toStrictEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
+
     it("supports the @includes directive with `variables`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2633,18 +2613,15 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toStrictEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
 
     it("supports the @includes directive with `variables` - parallel cache modification", async () => {
@@ -2694,6 +2671,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "Item #5",
         },
+        dataState: "complete",
         complete: true,
       });
 
@@ -2712,6 +2690,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "changed Item #5",
         },
+        dataState: "complete",
         complete: true,
       });
     });
@@ -2758,19 +2737,16 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-            complete: true,
-          },
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
           complete: true,
-        });
-      }
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
 
     it("can use the fragment registry for nested fragments", async () => {
@@ -2815,19 +2791,16 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-            complete: true,
-          },
+      await expect(stream).toEmitTypedValue({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
           complete: true,
-        });
-      }
+        },
+        dataState: "complete",
+        complete: true,
+      });
     });
   });
 

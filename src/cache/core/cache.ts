@@ -7,18 +7,13 @@ import type {
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import type {
-  FragmentType,
-  MaybeMasked,
-  Unmasked,
-} from "@apollo/client/masking";
-import { maskFragment } from "@apollo/client/masking";
-import type {
-  DeepPartial,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+  GetDataState,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
+import type { FragmentType, Unmasked } from "@apollo/client/masking";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
@@ -87,16 +82,14 @@ export interface WatchFragmentOptions<TData, TVars> {
  * Watched fragment results.
  */
 export type WatchFragmentResult<TData> =
-  | {
-      data: MaybeMasked<TData>;
+  | ({
       complete: true;
       missing?: never;
-    }
-  | {
-      data: DeepPartial<MaybeMasked<TData>>;
+    } & GetDataState<TData, "complete">)
+  | ({
       complete: false;
       missing: MissingTree;
-    };
+    } & GetDataState<TData, "partial">);
 
 export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
@@ -258,9 +251,12 @@ export abstract class ApolloCache implements DataProxy {
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
-  public watchFragment<TData = unknown, TVars = OperationVariables>(
-    options: WatchFragmentOptions<TData, TVars>
-  ): Observable<WatchFragmentResult<TData>> {
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: WatchFragmentOptions<TData, TVariables>
+  ): Observable<WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
       fragmentName,
@@ -279,7 +275,6 @@ export abstract class ApolloCache implements DataProxy {
       typeof from === "undefined" || typeof from === "string" ?
         from
       : this.identify(from);
-    const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
 
     if (__DEV__) {
       const actualFragmentName =
@@ -293,7 +288,7 @@ export abstract class ApolloCache implements DataProxy {
       }
     }
 
-    const diffOptions: Cache.DiffOptions<TData, TVars> = {
+    const diffOptions: Cache.DiffOptions<TData, TVariables> = {
       ...otherOptions,
       returnPartialData: true,
       id,
@@ -304,14 +299,11 @@ export abstract class ApolloCache implements DataProxy {
     let latestDiff: DataProxy.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
-      return this.watch<TData, TVars>({
+      return this.watch<TData, TVariables>({
         ...diffOptions,
         immediate: true,
         callback: (diff) => {
-          let data =
-            dataMasking ?
-              maskFragment(diff.result, fragment, this, fragmentName)
-            : diff.result;
+          let data = diff.result;
 
           // TODO: Remove this once `watchFragment` supports `null` as valid
           // value emitted
@@ -336,8 +328,9 @@ export abstract class ApolloCache implements DataProxy {
 
           const result = {
             data,
+            dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
-          } as WatchFragmentResult<TData>;
+          } as WatchFragmentResult<Unmasked<TData>>;
 
           if (diff.missing) {
             result.missing = diff.missing.missing;

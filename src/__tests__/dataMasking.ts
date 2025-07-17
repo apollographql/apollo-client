@@ -2883,26 +2883,25 @@ describe("client.watchFragment", () => {
       })
     );
 
-    const { data, complete } = await fragmentStream.takeNext();
+    const result = await fragmentStream.takeNext();
 
-    expect(data).toEqual({ __typename: "User", id: 1, age: 30 });
-    expect(complete).toBe(true);
-    invariant(complete, "Should never be incomplete");
+    expect(result).toStrictEqualTyped({
+      data: { __typename: "User", id: 1, age: 30 },
+      dataState: "complete",
+      complete: true,
+    });
+
+    invariant(result.complete, "Should never be incomplete");
 
     const nestedFragmentStream = new ObservableStream(
-      client.watchFragment({ fragment: nameFieldsFragment, from: data })
+      client.watchFragment({ fragment: nameFieldsFragment, from: result.data })
     );
 
-    {
-      const { data, complete } = await nestedFragmentStream.takeNext();
-
-      expect(complete).toBe(true);
-      expect(data).toEqual({
-        __typename: "User",
-        firstName: "Test",
-        lastName: "User",
-      });
-    }
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   test("does not mask watched fragments when dataMasking is disabled", async () => {
@@ -2910,15 +2909,15 @@ describe("client.watchFragment", () => {
       __typename: "User";
       id: number;
       age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" } & {
-      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
+      firstName: string;
+      lastName: string;
     };
 
     type NameFieldsFragment = {
       __typename: "User";
       firstName: string;
       lastName: string;
-    } & { " $fragmentName"?: "NameFieldsFragment" };
+    };
 
     const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
       fragment NameFields on User {
@@ -2965,32 +2964,30 @@ describe("client.watchFragment", () => {
       })
     );
 
-    const { data, complete } = await fragmentStream.takeNext();
+    const result = await fragmentStream.takeNext();
 
-    expect(data).toEqual({
-      __typename: "User",
-      id: 1,
-      age: 30,
-      firstName: "Test",
-      lastName: "User",
-    });
-    expect(complete).toBe(true);
-    invariant(complete, "Should never be incomplete");
-
-    const nestedFragmentStream = new ObservableStream(
-      client.watchFragment({ fragment: nameFieldsFragment, from: data })
-    );
-
-    {
-      const { data, complete } = await nestedFragmentStream.takeNext();
-
-      expect(complete).toBe(true);
-      expect(data).toEqual({
+    expect(result).toStrictEqualTyped({
+      data: {
         __typename: "User",
+        id: 1,
+        age: 30,
         firstName: "Test",
         lastName: "User",
-      });
-    }
+      },
+      dataState: "complete",
+      complete: true,
+    });
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      client.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   test("does not mask watched fragments by default", async () => {
@@ -2998,15 +2995,15 @@ describe("client.watchFragment", () => {
       __typename: "User";
       id: number;
       age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" } & {
-      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
+      firstName: string;
+      lastName: string;
     };
 
     type NameFieldsFragment = {
       __typename: "User";
       firstName: string;
       lastName: string;
-    } & { " $fragmentName"?: "NameFieldsFragment" };
+    };
 
     const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
       fragment NameFields on User {
@@ -3052,32 +3049,31 @@ describe("client.watchFragment", () => {
       })
     );
 
-    const { data, complete } = await fragmentStream.takeNext();
+    const result = await fragmentStream.takeNext();
 
-    expect(data).toEqual({
-      __typename: "User",
-      id: 1,
-      age: 30,
-      firstName: "Test",
-      lastName: "User",
-    });
-    expect(complete).toBe(true);
-    invariant(complete, "Should never be incomplete");
-
-    const nestedFragmentStream = new ObservableStream(
-      client.watchFragment({ fragment: nameFieldsFragment, from: data })
-    );
-
-    {
-      const { data, complete } = await nestedFragmentStream.takeNext();
-
-      expect(complete).toBe(true);
-      expect(data).toEqual({
+    expect(result).toStrictEqualTyped({
+      data: {
         __typename: "User",
+        id: 1,
+        age: 30,
         firstName: "Test",
         lastName: "User",
-      });
-    }
+      },
+      dataState: "complete",
+      complete: true,
+    });
+    expect(result.complete).toBe(true);
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      client.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   test("does not mask watched fragments marked with @unmask", async () => {
@@ -3132,30 +3128,25 @@ describe("client.watchFragment", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-        age: 30,
-      });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User", age: 30 },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   test("masks watched fragments updated by the cache", async () => {
     type ProfileFieldsFragment = {
       __typename: "User";
       age: number;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
@@ -3195,15 +3186,11 @@ describe("client.watchFragment", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-      });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User" },
+      dataState: "complete",
+      complete: true,
+    });
 
     client.writeFragment({
       fragment,
@@ -3212,35 +3199,29 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User (updated)",
-        // @ts-ignore TODO: Determine how to handle cache writes with masked
-        // query type
         age: 35,
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        name: "Test User (updated)",
-      });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User (updated)" },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   test("does not trigger update on watched fragment when updating field in named fragment", async () => {
     type ProfileFieldsFragment = {
       __typename: "User";
       age: number;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
@@ -3268,7 +3249,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 30,
       },
     });
@@ -3280,15 +3260,11 @@ describe("client.watchFragment", () => {
     });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-      });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User" },
+      dataState: "complete",
+      complete: true,
+    });
 
     client.writeFragment({
       fragment,
@@ -3297,14 +3273,11 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 35,
       },
     });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
 
     expect(
       client.readFragment({
@@ -3312,7 +3285,7 @@ describe("client.watchFragment", () => {
         fragmentName: "UserFields",
         id: "User:1",
       })
-    ).toEqual({
+    ).toStrictEqualTyped({
       __typename: "User",
       id: 1,
       name: "Test User",
@@ -3324,14 +3297,14 @@ describe("client.watchFragment", () => {
     type ProfileFieldsFragment = {
       __typename: "User";
       age: number;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const profileFieldsFragment: MaskedDocumentNode<
@@ -3367,7 +3340,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 30,
       },
     });
@@ -3386,24 +3358,18 @@ describe("client.watchFragment", () => {
     const userFieldsStream = new ObservableStream(userFieldsObservable);
     const nameFieldsStream = new ObservableStream(nameFieldsObservable);
 
-    {
-      const { data } = await userFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-      });
-    }
-
-    {
-      const { data } = await nameFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        age: 30,
-      });
-    }
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, name: "Test User" },
+        dataState: "complete",
+        complete: true,
+      }),
+      expect(nameFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 30 },
+        dataState: "complete",
+        complete: true,
+      }),
+    ]);
 
     client.writeFragment({
       fragment: userFieldsFragment,
@@ -3412,23 +3378,18 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 35,
       },
     });
 
-    {
-      const { data } = await nameFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        age: 35,
-      });
-    }
-
-    await expect(userFieldsStream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await Promise.all([
+      expect(nameFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 35 },
+        dataState: "complete",
+        complete: true,
+      }),
+      expect(userFieldsStream).not.toEmitAnything(),
+    ]);
 
     expect(
       client.readFragment({
@@ -3436,7 +3397,7 @@ describe("client.watchFragment", () => {
         fragmentName: "UserFields",
         id: "User:1",
       })
-    ).toEqual({
+    ).toStrictEqualTyped({
       __typename: "User",
       id: 1,
       name: "Test User",
@@ -3449,14 +3410,14 @@ describe("client.watchFragment", () => {
       __typename: "User";
       age: number;
       lastUpdatedAt: string;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       lastUpdatedAt: string;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const profileFieldsFragment: MaskedDocumentNode<
@@ -3493,7 +3454,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         lastUpdatedAt: "2024-01-01",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 30,
       },
     });
@@ -3512,25 +3472,18 @@ describe("client.watchFragment", () => {
     const userFieldsStream = new ObservableStream(userFieldsObservable);
     const profileFieldsStream = new ObservableStream(profileFieldsObservable);
 
-    {
-      const { data } = await userFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        lastUpdatedAt: "2024-01-01",
-      });
-    }
-
-    {
-      const { data } = await profileFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        age: 30,
-        lastUpdatedAt: "2024-01-01",
-      });
-    }
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+    ]);
 
     client.writeFragment({
       fragment: userFieldsFragment,
@@ -3539,17 +3492,14 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         lastUpdatedAt: "2024-01-02",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 30,
       },
     });
 
-    await expect(userFieldsStream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
-    await expect(profileFieldsStream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await Promise.all([
+      expect(userFieldsStream).not.toEmitAnything(),
+      expect(profileFieldsStream).not.toEmitAnything(),
+    ]);
 
     expect(
       client.readFragment({
@@ -3557,7 +3507,7 @@ describe("client.watchFragment", () => {
         fragmentName: "UserFields",
         id: "User:1",
       })
-    ).toEqual({
+    ).toStrictEqualTyped({
       __typename: "User",
       id: 1,
       lastUpdatedAt: "2024-01-02",
@@ -3570,14 +3520,14 @@ describe("client.watchFragment", () => {
       __typename: "User";
       age: number;
       lastUpdatedAt: string;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       lastUpdatedAt: string;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const profileFieldsFragment: MaskedDocumentNode<
@@ -3614,7 +3564,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         lastUpdatedAt: "2024-01-01",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 30,
       },
     });
@@ -3633,25 +3582,18 @@ describe("client.watchFragment", () => {
     const userFieldsStream = new ObservableStream(userFieldsObservable);
     const profileFieldsStream = new ObservableStream(profileFieldsObservable);
 
-    {
-      const { data } = await userFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        id: 1,
-        lastUpdatedAt: "2024-01-01",
-      });
-    }
-
-    {
-      const { data } = await profileFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        age: 30,
-        lastUpdatedAt: "2024-01-01",
-      });
-    }
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+    ]);
 
     client.writeFragment({
       fragment: userFieldsFragment,
@@ -3660,24 +3602,18 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         lastUpdatedAt: "2024-01-02",
-        // @ts-ignore TODO: Determine how to handle cache writes with masking
         age: 31,
       },
     });
 
-    {
-      const { data } = await profileFieldsStream.takeNext();
-
-      expect(data).toEqual({
-        __typename: "User",
-        age: 31,
-        lastUpdatedAt: "2024-01-02",
-      });
-    }
-
-    await expect(userFieldsStream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await Promise.all([
+      expect(userFieldsStream).not.toEmitAnything(),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 31, lastUpdatedAt: "2024-01-02" },
+        dataState: "complete",
+        complete: true,
+      }),
+    ]);
 
     expect(
       client.readFragment({
@@ -3685,7 +3621,7 @@ describe("client.watchFragment", () => {
         fragmentName: "UserFields",
         id: "User:1",
       })
-    ).toEqual({
+    ).toStrictEqualTyped({
       __typename: "User",
       id: 1,
       lastUpdatedAt: "2024-01-02",
@@ -3700,16 +3636,15 @@ describe("client.watchFragment", () => {
       __typename: "User";
       age: number;
       name: string;
-    } & { " $fragmentName": "UserFieldsFragment" };
+    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-      /** @deprecated */
       age: number;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
     const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
@@ -3815,18 +3750,354 @@ describe("client.watchFragment", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+      },
+      dataState: "complete",
+      complete: true,
+    });
+  });
 
-      expect(result).toEqual({
-        data: {
-          __typename: "User",
-          id: 1,
-          age: 30,
-        },
+  test("reports masked fragment as complete even if masked data is not fully complete", async () => {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      lastUpdatedAt: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      birthdate: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
+
+    const profileFieldsFragment: MaskedDocumentNode<
+      ProfileFieldsFragment,
+      never
+    > = gql`
+      fragment ProfileFields on User {
+        age
+        lastUpdatedAt
+      }
+    `;
+
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
+      gql`
+        fragment UserFields on User {
+          id
+          birthdate
+          ...ProfileFields
+        }
+
+        ${profileFieldsFragment}
+      `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    const userFieldsObservable = client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    });
+
+    const profileFieldsObservable = client.watchFragment({
+      fragment: profileFieldsFragment,
+      from: { __typename: "User", id: 1 },
+    });
+
+    const userFieldsStream = new ObservableStream(userFieldsObservable);
+    const profileFieldsStream = new ObservableStream(profileFieldsObservable);
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: {},
+        dataState: "partial",
+        complete: false,
+        missing: "Dangling reference to missing User:1 object",
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: {},
+        dataState: "partial",
+        complete: false,
+        missing: "Dangling reference to missing User:1 object",
+      }),
+    ]);
+
+    client.writeFragment({
+      fragment: gql`
+        fragment UserFields on User {
+          id
+          birthdate
+        }
+      `,
+      id: cache.identify({ __typename: "User", id: 1 }),
+      data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        dataState: "complete",
         complete: true,
-      });
-    }
+      }),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User" },
+        dataState: "partial",
+        complete: false,
+        missing: {
+          age: "Can't find field 'age' on User:1 object",
+          lastUpdatedAt: "Can't find field 'lastUpdatedAt' on User:1 object",
+        },
+      }),
+    ]);
+
+    client.writeFragment({
+      id: cache.identify({ __typename: "User", id: 1 }),
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        birthdate: "1994-01-01",
+        lastUpdatedAt: "2024-01-01",
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).not.toEmitAnything(),
+      expect(profileFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", age: 30, lastUpdatedAt: "2024-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+    ]);
+
+    cache.modify({
+      id: cache.identify({ __typename: "User", id: 1 }),
+      fields: {
+        birthdate: (_, { DELETE }) => DELETE,
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1 },
+        dataState: "partial",
+        complete: false,
+        missing: {
+          birthdate: "Can't find field 'birthdate' on User:1 object",
+        },
+      }),
+      expect(profileFieldsStream).not.toEmitAnything(),
+    ]);
+
+    client.writeFragment({
+      id: cache.identify({ __typename: "User", id: 1 }),
+      fragment: gql`
+        fragment UserFields on User {
+          birthdate
+        }
+      `,
+      data: {
+        __typename: "User",
+        birthdate: "1994-01-01",
+      },
+    });
+
+    await Promise.all([
+      expect(userFieldsStream).toEmitTypedValue({
+        data: { __typename: "User", id: 1, birthdate: "1994-01-01" },
+        dataState: "complete",
+        complete: true,
+      }),
+      expect(profileFieldsStream).not.toEmitAnything(),
+    ]);
+  });
+});
+
+describe("cache.watchFragment", () => {
+  test("does not mask fragments when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    } & { " $fragmentName"?: "NameFieldsFragment" };
+
+    const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+      fragment NameFields on User {
+        firstName
+        lastName
+      }
+    `;
+
+    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+      fragment UserFields on User {
+        id
+        age
+        ...NameFields
+      }
+
+      ${nameFieldsFragment}
+    `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+    });
+
+    const fragmentStream = new ObservableStream(
+      cache.watchFragment({
+        fragment: userFieldsFragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    const result = await fragmentStream.takeNext();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+      dataState: "complete",
+      complete: true,
+    });
+
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      client.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
+  });
+
+  test("does not mask watched fragments when dataMasking is disabled", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+      firstName: string;
+      lastName: string;
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    };
+
+    const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+      fragment NameFields on User {
+        __typename
+        firstName
+        lastName
+      }
+    `;
+
+    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+      fragment UserFields on User {
+        __typename
+        id
+        age
+        ...NameFields
+      }
+
+      ${nameFieldsFragment}
+    `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+    });
+
+    const fragmentStream = new ObservableStream(
+      cache.watchFragment({
+        fragment: userFieldsFragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    const result = await fragmentStream.takeNext();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        firstName: "Test",
+        lastName: "User",
+      },
+      dataState: "complete",
+      complete: true,
+    });
+    invariant(result.complete, "Should never be incomplete");
+
+    const nestedFragmentStream = new ObservableStream(
+      cache.watchFragment({ fragment: nameFieldsFragment, from: result.data })
+    );
+
+    await expect(nestedFragmentStream).toEmitTypedValue({
+      data: { __typename: "User", firstName: "Test", lastName: "User" },
+      dataState: "complete",
+      complete: true,
+    });
   });
 });
 

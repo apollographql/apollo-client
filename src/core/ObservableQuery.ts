@@ -985,10 +985,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * they come from the cache.
    *
    * Note: `setVariables()` guarantees that a value will be emitted from the
-   * observable, even if the result is deep equal to the previous value.
+   * observable, even if the result is deeply equal to the previous value.
    *
-   * Note: the promise will resolve with the last emitted result instead of
-   * `undefined` when either the variables match the current variables or there
+   * Note: the promise will resolve with the last emitted result
+   * when either the variables match the current variables or there
    * are no subscribers to the query.
    *
    * @param variables - The new set of variables. If there are missing variables,
@@ -1316,7 +1316,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Reevaluate the query, optionally against new options. New options will be
    * merged with the current options when given.
    *
-   * Note: `variables` can be reset back to empty by calling `reobserve` with
+   * Note: `variables` can be reset back to their defaults (typically empty) by calling `reobserve` with
    * `variables: undefined`.
    */
   public reobserve(

@@ -8,8 +8,10 @@ import { PropertySignatureTable } from '../../shared/ApiDoc';
 This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
 
-> **Note:** This article shows how to use Apollo Client in a React application that doesn't make use of React's "Suspense" features.
+<Note>
+This article shows how to use Apollo Client in a React application that doesn't make use of React's "Suspense" features.
 For modern React applications built around Suspense, suspense-enabled data fetching hooks are described in Apollo Client's [Suspense docs](./suspense/).
+</Note>
 
 ## Prerequisites
 
@@ -21,7 +23,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in a non-suspenseful Apollo application (for information about using Apollo Client with suspenseful React, see [Suspense](./suspense)). To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState` and `data` properties you can use to render your UI.
+The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in a non-suspenseful Apollo application (for information about using Apollo Client with suspenseful React, see [Suspense](./suspense)). To run a query within a React component, call `useQuery` and pass it a GraphQL document. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState` and `data` properties you can use to render your UI.
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
@@ -189,7 +191,7 @@ If you provide new values for _some_ of your original query's variables but not 
 
 We've already seen that the `useQuery` hook exposes our query's current loading state. This is helpful when a query first loads, but what happens to our loading state when we're refetching or polling?
 
-Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component re-renders while we're refetching the photo because `notifyOnNetworkStatusChange` defaults to `true`.
+Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component re-renders while we're refetching the photo.
 
 The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. This allows us to indicate to the user that we're refetching the photo:
 
@@ -219,13 +221,13 @@ function DogPhoto({ breed }) {
 }
 ```
 
-Since `notifyOnNetworkStatusChange` defaults to `true`, the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
+The value of `loading` also updates accordingly. Even if you don't use the more fine-grained information provided by the `networkStatus` property, the `loading` property indicates that the refetch is in progress.
 
-The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out [this table](../api/core/ObservableQuery#networkstatus).
+The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`. There are additional values for e.g. polling and pagination. For a full list of all the possible loading states, check out [this table](../api/core/ObservableQuery#networkstatus).
 
 <Note>
 
-If you want to disable automatic re-rendering when the network status changes, you can set `notifyOnNetworkStatusChange` to `false` either in individual queries or globally via `defaultOptions`:
+If you want to disable automatic re-rendering when the network status changes, set `notifyOnNetworkStatusChange` to `false` either in individual queries or globally via `defaultOptions`:
 
 ```js
 const client = new ApolloClient({
@@ -448,7 +450,7 @@ This is the default fetch policy.
 
 Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
 
-When the cache does not contain data for all requested fields, a `cache-only` query returns `data: undefined` with `dataState: "empty"` and a `networkStatus` of `NetworkStatus.ready` rather than throwing an error.
+When the cache does not contain data for all requested fields, a `cache-only` query returns `data: undefined` with `dataState: "empty"` and a `networkStatus` of `NetworkStatus.ready`.
 
 
 </td>
@@ -478,7 +480,7 @@ Provides a fast response while also helping to keep cached data consistent with 
 </td>
 <td>
 
-Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache and after the first result is received, external cache updates will be reflected by this query.
+Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache. After the first result is received, external cache updates will be reflected by this query.
 
 
 Prioritizes consistency with server data, but can't provide a near-instantaneous response when cached data is available.
@@ -494,7 +496,7 @@ Prioritizes consistency with server data, but can't provide a near-instantaneous
 </td>
 <td>
 
-Similar to `network-only`, except the query's result _is not_ stored in the cache an external cache updates are completely ignored.
+Similar to `network-only`, except the query's result _is not_ stored in the cache and external cache updates are completely ignored.
 
 </td>
 </tr>

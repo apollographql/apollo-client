@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Apollo Client Overview
 
-Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScript. The project is maintained at version 4.0.0-rc.3 and uses a monorepo structure with npm workspaces.
+Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScript. The project is maintained at version 4.x.x and uses a monorepo structure with npm workspaces.
 
 ## Common Development Commands
 
@@ -117,7 +117,7 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 ### Important Notes
 
 - This is a monorepo with workspaces: main package, codegen, and codemods
-- The project is currently at version 4.0.0-rc.3 (release candidate)
+- The project is currently at version 4.x.x (release candidate)
 - Supports multiple peer dependencies (React 17/18/19, GraphQL 16)
 - Uses patch-package for dependency patches
 - Has extensive CI checks that must pass before merging

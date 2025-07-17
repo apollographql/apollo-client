@@ -2441,6 +2441,17 @@ types:
   young-phones-fold: >-
     Default the `TData` generic type to `unknown` in all APIs that use a `TData`
     generic argument such as `useQuery`, `client.query`, etc.
+  rude-crabs-eat: >-
+    The `operation` argument to the callback passed to `SetContextLink` is now
+    of type `SetContextLink.SetContextOperation` which is an `Operation` without
+    the `getContext` or `setContext` functions. Previously the type of
+    `operation` was `GraphQLRequest` which had access to a `context` property.
+    The `context` property was always `undefined` and could result in bugs when
+    using it instead of the `prevContext` argument.
+
+
+    This change means the `operation` argument now contains an accessible
+    `client` property.
 dataState:
   healthy-books-flash: >-
     The `TData` generic provided to types that return a `dataState` property is

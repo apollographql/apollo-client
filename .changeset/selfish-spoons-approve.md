@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - removals
+  - types
 ---
 
 Move internal testing utilities in `@apollo/client/testing` to `@apollo/client/testing/internal` and remove deprecated testing utilities. Some of the testing utilities exported from the `@apollo/client/testing` endpoint were not considered stable. As a result of this change, testing utilities or types exported from `@apollo/client/testing` are now considered stable and will not undergo breaking changes.

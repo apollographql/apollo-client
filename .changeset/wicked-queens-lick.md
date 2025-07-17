@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - ApolloClient
 ---
 
 `ApolloClient.stop()` now cleans up more agressively to prevent memory leaks:

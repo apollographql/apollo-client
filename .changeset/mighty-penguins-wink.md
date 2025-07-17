@@ -1,5 +1,9 @@
 ---
 "@apollo/client": major
+_tags:
+  - removals
+  - errors
+  - links
 ---
 
 Removes the `throwServerError` utility function. Now that `ServerError` is an

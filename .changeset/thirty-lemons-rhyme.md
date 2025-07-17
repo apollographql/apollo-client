@@ -1,5 +1,7 @@
 ---
 "@apollo/client": minor
+_tags:
+  - links
 ---
 
 Add `operationType` to `operation` in `ApolloLink`. This means that determining whether a `query` is a specific operation type can now be compared with this property instead of using `getMainDefinition`.

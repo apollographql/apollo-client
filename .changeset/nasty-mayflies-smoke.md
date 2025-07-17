@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - bundling
 ---
 
 Ship React Compiler compiled React hooks in `@apollo/client/react/compiled`.

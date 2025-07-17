@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - links
 ---
 
 The `includeExtensions` option of `HttpLink` and `BatchHttpLink` now defaults

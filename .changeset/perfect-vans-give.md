@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - imports
+  - bundling
 ---
 
 The `@apollo/client` and `@apollo/client/core` entry points are now equal.

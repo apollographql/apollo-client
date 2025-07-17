@@ -1,5 +1,8 @@
 ---
 "@apollo/client": minor
+_tags:
+  - types
+  - links
 ---
 
 Provide an extension to define types for `context` passed to the link chain. To define your own types, use [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) to add properties to the `DefaultContext` type.

@@ -1,5 +1,8 @@
 ---
 "@apollo/client": major
+_tags:
+  - useLazyQuery
+  - network_status
 ---
 
 `useLazyQuery` will no longer rerender with the loading state when calling the execute function the first time unless the `notifyOnNetworkStatusChange` option is set to `true` (which is the new default).

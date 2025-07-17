@@ -1,5 +1,7 @@
 ---
 "@apollo/client": major
+_tags:
+  - InMemoryCache
 ---
 
 ### Changes for users of `InMemoryCache`

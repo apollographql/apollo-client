@@ -1,5 +1,9 @@
 ---
 "@apollo/client": major
+_tags:
+  - removals
+  - useQuery
+  - useLazyQuery
 ---
 
 Remove the `onCompleted` and `onError` callbacks from `useQuery` and `useLazyQuery`.

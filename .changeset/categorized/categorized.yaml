@@ -177,6 +177,10 @@ bundling:
     libraries directly
 
     based on Apollo Client like the `@apollo/client-integration-*` packages.)
+  sour-guests-poke: >-
+    Remove the `@apollo/client/testing/core` entrypoint in favor of
+    `@apollo/client/testing`.
+  sour-kids-deliver: Rename the `@apollo/client/link/core` entrypoint to `@apollo/client/link`.
 polyfills:
   cool-bikes-shake: >-
     Remove polyfills for Object.freeze,seal and preventExtensions in React
@@ -1513,6 +1517,25 @@ client.watchQuery:
 
     - Fetch-based APIs that return an `ApolloQueryResult` type such as
     `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+
+    ```ts
+
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
+
+    ```
 client.subscribe:
   forty-shrimps-fry: >-
     Subscriptions now emit a `SubscribeResult` instead of a `FetchResult`. As a
@@ -3055,6 +3078,10 @@ LocalState:
     });
 
     ```
+  thirty-pens-jump: >-
+    Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment
+    matchers used with local state are no longer supported. Fragment matching is
+    now performed by the configured `cache` via the `cache.fragmentMatches` API.
 codegen:
   flat-readers-invite: >-
     Introduce a new GraphQL Codegen plugin aimed at creating resolver types for
@@ -3200,6 +3227,16 @@ cache:
     `false`. The internal `try`/`catch` blocks have been removed around
     `cache.diff`. If your cache implementation throws for incomplete results,
     please update this to return `null`.
+  calm-frogs-remain: >-
+    Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`.
+    `__typename` is now always added to the outgoing query document when using
+    `InMemoryCache` and cannot be disabled.
+
+
+    If you are using `<MockedProvider />` with `addTypename={false}`, ensure
+    that your mocked responses include a `__typename` field. This will ensure
+    cache normalization kicks in and behaves more like production.
+  eleven-moons-heal: Remove deprecated `resultCacheMaxSize` option from `InMemoryCache` options.
 InMemoryCache:
   tall-cups-suffer: >-
     ### Changes for users of `InMemoryCache`
@@ -3412,6 +3449,68 @@ testing:
         }
       ]}
     />
+
+    ```
+  shaggy-pugs-add: >-
+    Add ability to specify a default `delay` for all mocked responses passed to
+    `MockLink`. This `delay` can be configured globally (all instances of
+    `MockLink` will use the global defaults), or per-instance (all mocks in a
+    single instance will use the defaults). A `delay` defined on a single mock
+    will supercede all default delays. Per-instance defaults supercede global
+    defaults.
+
+
+    **Global defaults**
+
+
+    ```ts
+
+    MockLink.defaultOptions = {
+      // Use a default delay of 20ms for all mocks in all instances without a specified delay
+      delay: 20,
+
+      // altenatively use a callback which will be executed for each mock
+      delay: () => getRandomNumber(),
+
+      // or use the built-in `realisticDelay`. This is the default
+      delay: realisticDelay(),
+    }
+
+    ```
+
+
+    **Per-instance defaults**
+
+
+    ```ts
+
+    new MockLink(
+      [
+        // Use the default delay
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+        },
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+          // Override the default for this mock
+          delay: 10
+        },
+      ],
+      {
+        defaultOptions: {
+          // Use a default delay of 20ms for all mocks without a specified delay
+          delay: 20,
+
+          // altenatively use a callback which will be executed for each mock
+          delay: () => getRandomNumber(),
+
+          // or use the built-in `realisticDelay`. This is the default
+          delay: realisticDelay(),
+        }
+      }
+    );
 
     ```
 links:
@@ -4243,6 +4342,23 @@ features:
     });
 
     ```
+  rare-apes-drive: >-
+    Deduplicating subscription operations is now supported. Previously it was
+    possible to deduplicate a subscription only if the new subscription was
+    created before a previously subscribed subscription emitted any values. As
+    soon as a value was emitted from a subscription, new subscriptions would
+    create new connections. Deduplication is now active for as long as a
+    subscription connection is open (i.e. the source observable hasn't emitted a
+    `complete` or `error` notification yet.)
+
+
+    To disable deduplication and force a new connection, use the
+    `queryDeduplication` option in `context` like you would a query operation.
+
+
+    As a result of this change, calling the `restart` function returned from
+    `useSubscription` will now restart the connection on deduplicated
+    subscriptions.
 graphql_over_http:
   afraid-penguins-sniff: >-
     Replace the `result` property on `ServerError` with `bodyText`. `bodyText`
@@ -4296,6 +4412,10 @@ graphql_over_http:
   real-onions-drive: >-
     Change the default `Accept` header to
     `application/graphql-response+json,application/json;q=0.9`.
+  rich-turtles-clap: >-
+    `HttpLink` and `BatchHttpLink` no longer emit a `next` notification with the
+    JSON-parsed response body when a well-formed GraphQL response is returned
+    and a `ServerError` is thrown.
 defer:
   beige-kings-grow: >-
     A `@defer` query that has not yet finished streaming is now considered
@@ -6330,6 +6450,35 @@ removals:
   young-turtles-explode: >-
     Remove the deprecated `Query`, `Mutation`, and `Subscription` components.
     Use the provided React hooks instead.
+  mean-lizards-think: >-
+    Ensure `useLazyQuery` does not return a `partial` property which is not
+    specified by the result type.
+  ninety-bags-bake: >-
+    Mocked responses passed to `MockLink` now accept a callback for the
+    `request.variables` option. This is used to determine if the mock should be
+    matched for a set of request variables. With this change, the
+    `variableMatcher` option has been removed in favor of passing a callback to
+    `variables`. Update by moving the callback function from `variableMatcher`
+    to `request.variables`.
+
+
+    ```diff
+
+    new MockLink([
+      {
+        request: {
+          query,
+    +     variables: (requestVariables) => true
+        },
+    -   variableMatcher: (requestVariables) => true
+      }
+    ]);
+
+    ```
+  thirty-pens-jump: >-
+    Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment
+    matchers used with local state are no longer supported. Fragment matching is
+    now performed by the configured `cache` via the `cache.fragmentMatches` API.
 other:
   itchy-roses-accept: >-
     Use an an empty object (`{}`) rather than an object with `null` prototype

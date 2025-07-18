@@ -1,5 +1,50 @@
 # @apollo/client
 
+## 4.0.0-rc.5
+
+### Major Changes
+
+- [#12776](https://github.com/apollographql/apollo-client/pull/12776) [`bce9b74`](https://github.com/apollographql/apollo-client/commit/bce9b7448a226b109cbe8f14911503fb09f37825) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Report masked fragments as complete even when a nested masked fragment contains partial data.
+
+- [#12774](https://github.com/apollographql/apollo-client/pull/12774) [`511b4f3`](https://github.com/apollographql/apollo-client/commit/511b4f3e792a75aa5aa27b335e8119dbc2a9c254) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Apply document transforms before reading data from the cache for `client.readQuery`, `client.readFragment`, `client.watchFragment`, `useFragment`, and `useSuspenseFragment`.
+
+  NOTE: This change does not affect the equivalent `cache.*` APIs. To read data from the cache without first running document transforms, run `cache.readQuery`, `cache.readFragment`, etc.
+
+### Minor Changes
+
+- [#12776](https://github.com/apollographql/apollo-client/pull/12776) [`bce9b74`](https://github.com/apollographql/apollo-client/commit/bce9b7448a226b109cbe8f14911503fb09f37825) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `dataState` to the value emitted from `client.watchFragment`.
+
+### Patch Changes
+
+- [#12776](https://github.com/apollographql/apollo-client/pull/12776) [`bce9b74`](https://github.com/apollographql/apollo-client/commit/bce9b7448a226b109cbe8f14911503fb09f37825) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `cache.watchFragment` now returns an `Unmasked<TData>` result since `cache.watchFragment` does not mask fragment spreads.
+
+- [#12370](https://github.com/apollographql/apollo-client/pull/12370) [`0517163`](https://github.com/apollographql/apollo-client/commit/05171634404a44231329bf63eee960db52d08b25) Thanks [@phryneas](https://github.com/phryneas)! - `InMemoryCache`: Fields with an empty argument object are now saved the same way as fields without arguments.
+
+  Previously, it was possible that the reponses for these two queries would be stored differently in the cache:
+
+  ```gql
+  query PlainAccess {
+    myField
+  }
+  ```
+
+  would be stored as `myField`
+  and
+
+  ```gql
+  query AccessWithoutOptionalArgument($optional: String) {
+    myField(optional: $optional)
+  }
+  ```
+
+  would be stored as `myField({"optional":"Foo"})` if called with `{optional: "Foo"}` and as `myField({})` if called without the optional argument.
+
+  The cases `myField` and `myField({})` are equivalent from the perspective of a GraphQL server, and so in the future both of these will be stored as `myField` in the cache.
+
+- [#12775](https://github.com/apollographql/apollo-client/pull/12775) [`454ec78`](https://github.com/apollographql/apollo-client/commit/454ec78b751853da07243174a6f9bdc4535e7e8f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't export `gql` from `@apollo/client/react` entrypoint. Import from `@apollo/client` instead.
+
+- [#12761](https://github.com/apollographql/apollo-client/pull/12761) [`db6f7c3`](https://github.com/apollographql/apollo-client/commit/db6f7c3823aaf58ee403ef45f0e817241b1c56a2) Thanks [@phryneas](https://github.com/phryneas)! - Deprecate second argument to `readFragment` and `readQuery` - `optimistic` should be passed as part of the object in the first argument instead.
+
 ## 4.0.0-rc.4
 
 ### Minor Changes

@@ -256,7 +256,7 @@ export declare namespace ApolloClient {
     /**
      * Optional array specifying queries to refetch. Each element can be either a query's string name or a `DocumentNode` object.
      *
-     * Pass `"active"` (or `"all"`) as a shorthand to refetch all (active) queries.
+     * Pass `"active"` as a shorthand to refetch all active queries, or `"all"` to refetch all active and inactive queries.
      *
      * Analogous to the [`options.refetchQueries`](https://www.apollographql.com/docs/react/data/mutations/#options) array for mutations.
      */

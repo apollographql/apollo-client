@@ -279,19 +279,32 @@ export declare namespace ApolloClient {
     onQueryUpdated?: OnQueryUpdated<TResult> | null;
   }
 
-  // The result of client.refetchQueries is thenable/awaitable, if you just want
-  // an array of fully resolved results, but you can also access the raw results
-  // immediately by examining the additional { queries, results } properties of
-  // the RefetchQueriesResult<TResult> object.
+  /**
+   * The result of client.refetchQueries is thenable/awaitable, if you just want
+   * an array of fully resolved results, but you can also access the raw results
+   * immediately by examining the additional { queries, results } properties of
+   * the RefetchQueriesResult<TResult> object.
+   */
   export interface RefetchQueriesResult<TResult>
-    extends Promise<RefetchQueriesPromiseResults<TResult>> {
-    // An array of ObservableQuery objects corresponding 1:1 to TResult values
-    // in the results arrays (both the TResult[] array below, and the results
-    // array resolved by the Promise above).
-    queries: ObservableQuery<any>[];
-    // These are the raw TResult values returned by any onQueryUpdated functions
-    // that were invoked by client.refetchQueries.
-    results: InternalRefetchQueriesResult<TResult>[];
+    extends Promise<RefetchQueriesPromiseResults<TResult>>,
+      RefetchQueriesResult.AdditionalProperties<TResult> {}
+
+  export namespace RefetchQueriesResult {
+    export interface AdditionalProperties<TResult> {
+      /**
+       * An array of ObservableQuery objects corresponding 1:1 to TResult values
+       * in the results arrays (both the `result` property and the resolved value).
+       */
+      queries: ObservableQuery<any>[];
+      /**
+       * An array of results that were either returned by `onQueryUpdated`, or provided by default in the absence of `onQueryUpdated`, including pending promises.
+       *
+       * If `onQueryUpdated` returns `false` for a given query, no result is provided for that query.
+       *
+       * If `onQueryUpdated` returns `true`, the resulting `Promise<ApolloQueryResult<any>>` is included in the `results` array instead of `true`.
+       */
+      results: InternalRefetchQueriesResult<TResult>[];
+    }
   }
 
   export type SubscribeOptions<

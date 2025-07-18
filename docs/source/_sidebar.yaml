@@ -75,8 +75,6 @@ items:
         href: ./local-state/managing-state-with-field-policies
       - label: Reactive variables
         href: ./local-state/reactive-variables
-      - label: Client-side schema
-        href: ./local-state/client-side-schema
       - label: Local resolvers
         href: ./local-state/local-resolvers
   - label: Development & Testing

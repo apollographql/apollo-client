@@ -62,10 +62,13 @@ export abstract class ApolloCache implements DataProxy {
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
     abstract read<TData = unknown, TVariables = OperationVariables>(query: Cache_2.ReadOptions<TVariables, TData>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
-    readFragment<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
-    // (undocumented)
-    readQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
+    optimistic: boolean): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
+    optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)
     recordOptimisticTransaction(transaction: Transaction, optimisticId: string): void;
     // (undocumented)
@@ -86,10 +89,8 @@ export abstract class ApolloCache implements DataProxy {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<Unmasked<TData>>>;
     // (undocumented)
     abstract write<TData = unknown, TVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    // (undocumented)
-    writeFragment<TData = unknown, TVariables = OperationVariables>({ id, data, fragment, fragmentName, ...options }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    // (undocumented)
-    writeQuery<TData = unknown, TVariables = OperationVariables>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public
@@ -1183,22 +1184,19 @@ export namespace HttpLink {
         // (undocumented)
         variables?: Record<string, any>;
     }
-    // (undocumented)
     export interface ContextOptions {
         credentials?: RequestCredentials;
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
-        http?: HttpOptions;
+        http?: HttpLink.HttpOptions;
         uri?: string | UriFunction;
     }
-    // (undocumented)
     export interface HttpOptions {
         accept?: string[];
         includeExtensions?: boolean;
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;
     }
-    // (undocumented)
     export interface Options {
         credentials?: string;
         fetch?: typeof fetch;

@@ -241,11 +241,11 @@ Context options:
 The following example shows how to use the `context` to pass a special header for a single query:
 
 ```js
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  uri: "/graphql"
+  link: new HttpLink({ uri: "/graphql" })
 });
 
 client.query({

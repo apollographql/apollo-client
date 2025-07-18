@@ -5,6 +5,7 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "node_modules/typescript/lib",
+  "mdx.server.enable": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "never"
   },

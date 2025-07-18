@@ -76,22 +76,19 @@ export namespace HttpLink {
         // (undocumented)
         variables?: Record<string, any>;
     }
-    // (undocumented)
     export interface ContextOptions {
         credentials?: RequestCredentials;
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
-        http?: HttpOptions;
+        http?: HttpLink.HttpOptions;
         uri?: string | UriFunction;
     }
-    // (undocumented)
     export interface HttpOptions {
         accept?: string[];
         includeExtensions?: boolean;
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;
     }
-    // (undocumented)
     export interface Options {
         credentials?: string;
         fetch?: typeof fetch;

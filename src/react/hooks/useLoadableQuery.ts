@@ -152,7 +152,6 @@ export declare namespace useLoadableQuery {
  * }
  * ```
  *
- * @since 3.9.0
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Options to control how the query is executed.
  * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`

@@ -60,7 +60,6 @@ export declare namespace useQueryRefHandlers {
  *   // ...
  * }
  * ```
- * @since 3.9.0
  * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<

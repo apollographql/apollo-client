@@ -17,7 +17,6 @@ import { getApolloContext } from "../context/ApolloContext.js";
  * }
  * ```
  *
- * @since 3.0.0
  * @returns The `ApolloClient` instance being used by the application.
  */
 export function useApolloClient(override?: ApolloClient): ApolloClient {

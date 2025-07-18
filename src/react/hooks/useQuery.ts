@@ -261,7 +261,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  *   return <h1>Hello {data.greeting.message}!</h1>;
  * }
  * ```
- * @since 3.0.0
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Options to control how the query is executed.
  * @returns Query result object

@@ -80,7 +80,7 @@ export namespace HttpLink {
         credentials?: RequestCredentials;
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
-        http?: HttpOptions;
+        http?: HttpLink.HttpOptions;
         uri?: string | UriFunction;
     }
     export interface HttpOptions {

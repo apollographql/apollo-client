@@ -165,6 +165,123 @@ new LocalState<Resolvers, ContextValue>({
 });
 ```
 
+#### Generating types for local resolvers
+
+When using TypeScript, you can generate resolver types for your local resolvers using the `@apollo/client-graphql-codegen` package. This package provides a specialized GraphQL Code Generator plugin that creates resolver types compatible with Apollo Client's `LocalState`.
+
+##### Installation
+
+Install the GraphQL Code Generator plugin for local state:
+
+```bash
+npm install -D @apollo/client-graphql-codegen
+```
+
+##### Configuration
+
+Add the local-state plugin to your `codegen.ts` configuration. It's recommended to use a separate schema file containing only your local fields to avoid generating resolver types for your entire remote schema:
+
+```ts title="codegen.ts"
+import type { CodegenConfig } from '@graphql-codegen/cli';
+import type { LocalStatePluginConfig } from '@apollo/client-graphql-codegen/local-state';
+
+  const config: CodegenConfig = {
+  // ... your existing configuration
+    generates: {
+    // ... your existing generates
+    './src/__generated__/local-resolvers.ts': {
+      schema: ['./src/local-schema.graphql'],
+      plugins: [
+        'typescript',
+        '@apollo/client-graphql-codegen/local-state',
+        ],
+        config: {
+          // Ensures you return a `__typename` for any `@client` fields that
+          // return object or array types
+          nonOptionalTypename: true,
+        // Required if your local schema extends existing schema types
+        baseTypesPath: './src/__generated__/graphql',
+          // If you provide a `context` function to customize the context value,
+        // provide the path or type here
+        contextType: './src/context#MyContextType',
+        } satisfies LocalStatePluginConfig,
+      },
+    },
+  };
+
+export default config;
+```
+
+##### Creating your local schema
+
+Create a GraphQL schema file that defines your local-only fields:
+
+```graphql title="src/local-schema.graphql"
+extend type Query {
+  isLoggedIn: Boolean!
+  cartItems: [String!]!
+}
+
+extend type Mutation {
+  login(token: String!): Boolean!
+  addToCart(item: String!): [String!]!
+}
+
+extend type Product {
+  isInCart: Boolean!
+}
+```
+
+##### Using generated types
+
+After running the code generator, you can use the generated `Resolvers` type with your `LocalState` instance:
+
+```ts
+import { LocalState } from "@apollo/client/local-state";
+import type { Resolvers } from "./src/__generated__/local-resolvers";
+
+const localState =
+  new LocalState() <
+  Resolvers >
+  {
+    resolvers: {
+      Query: {
+        isLoggedIn: () => {
+          return !!localStorage.getItem("token");
+        },
+        cartItems: () => {
+          return JSON.parse(localStorage.getItem("cart") || "[]");
+        },
+      },
+      Mutation: {
+        login: (_, { token }) => {
+          localStorage.setItem("token", token);
+          return true;
+        },
+        addToCart: (_, { item }) => {
+          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+          cart.push(item);
+          localStorage.setItem("cart", JSON.stringify(cart));
+          return cart;
+        },
+      },
+      Product: {
+        isInCart: (product) => {
+          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+          return cart.includes(product.id);
+        },
+      },
+    },
+  };
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  localState,
+});
+```
+
+This approach ensures that your local resolver functions are properly typed and checked against your local schema, providing better development experience and catching type errors at compile time.
+
 ### Error handling
 
 Throwing errors in a resolver will set the field value as `null` and add an error to the response's `errors` array. This follows GraphQL's standard error handling behavior:

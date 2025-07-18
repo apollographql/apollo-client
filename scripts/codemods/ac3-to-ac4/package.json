@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client-codemod-migrate-3-to-4",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.1",
   "description": "Apollo Client Codemod to migrate from version 3 to version 4",
   "keywords": [
     "apollo",

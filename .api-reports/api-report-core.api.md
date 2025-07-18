@@ -185,23 +185,21 @@ export namespace ApolloClient {
         data: TData | undefined;
         error?: ErrorLike;
     }
-    // (undocumented)
     export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
-        // (undocumented)
         include?: RefetchQueriesInclude;
-        // (undocumented)
         onQueryUpdated?: OnQueryUpdated<TResult> | null;
-        // (undocumented)
         optimistic?: boolean;
-        // (undocumented)
         updateCache?: (cache: TCache) => void;
     }
+    export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>>, RefetchQueriesResult.AdditionalProperties<TResult> {
+    }
     // (undocumented)
-    export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>> {
+    export namespace RefetchQueriesResult {
         // (undocumented)
-        queries: ObservableQuery<any>[];
-        // (undocumented)
-        results: InternalRefetchQueriesResult<TResult>[];
+        export interface AdditionalProperties<TResult> {
+            queries: ObservableQuery<any>[];
+            results: InternalRefetchQueriesResult<TResult>[];
+        }
     }
     // (undocumented)
     export type SubscribeOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
@@ -1069,7 +1067,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:329:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:360:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

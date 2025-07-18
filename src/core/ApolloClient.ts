@@ -282,8 +282,8 @@ export declare namespace ApolloClient {
   /**
    * The result of client.refetchQueries is thenable/awaitable, if you just want
    * an array of fully resolved results, but you can also access the raw results
-   * immediately by examining the additional { queries, results } properties of
-   * the RefetchQueriesResult<TResult> object.
+   * immediately by examining the additional `queries` and `results` properties of
+   * the `RefetchQueriesResult<TResult> object`.
    */
   export interface RefetchQueriesResult<TResult>
     extends Promise<RefetchQueriesPromiseResults<TResult>>,

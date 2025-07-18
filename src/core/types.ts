@@ -212,7 +212,6 @@ export type InternalRefetchQueriesInclude =
 
 /**
  * Options object for the `client.refetchQueries` method.
- * @public
  */
 export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
   /**

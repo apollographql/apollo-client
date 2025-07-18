@@ -4,6 +4,8 @@ import type * as ReactTypes from "react";
 import type { OperationVariables } from "../../core/index.js";
 import type { SubscriptionComponentOptions } from "./types.js";
 import { useSubscription } from "../hooks/index.js";
+import { useWarnRemoved } from "../hooks/internal/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /**
  * @deprecated
@@ -17,6 +19,11 @@ export function Subscription<
 >(
   props: SubscriptionComponentOptions<TData, TVariables>
 ): ReactTypes.JSX.Element | null {
+  useWarnRemoved("<Subscription />", () => {
+    invariant.warn(
+      "[Subscription]: The `<Subscription />` component is deprecated and will be removed in Apollo Client 4.0. Please use the `useSubscription` React hook instead."
+    );
+  });
   const result = useSubscription(props.subscription, props);
   return props.children && result ? props.children(result) : null;
 }

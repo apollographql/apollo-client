@@ -11,6 +11,7 @@ import { ApolloLink } from "../../../../link/core";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataProps } from "../../types";
+import { muteDeprecations } from "../../../../utilities/deprecation";
 
 describe("queries", () => {
   let error: typeof console.error;
@@ -226,11 +227,13 @@ describe("queries", () => {
     console.warn = (str: any) => warnings.push(str);
 
     try {
-      graphql(gql`
-        query foo {
-          bar
-        }
-      `);
+      muteDeprecations("graphql", () => {
+        graphql(gql`
+          query foo {
+            bar
+          }
+        `);
+      });
       expect(warnings.length).toEqual(0);
     } finally {
       console.warn = oldWarn;

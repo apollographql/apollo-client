@@ -26,13 +26,13 @@ export class ApolloLink {
     getMemoryInternals?: () => unknown;
     // @internal
     readonly left?: ApolloLink;
-    // (undocumented)
+    // @deprecated (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal
     readonly right?: ApolloLink;
-    // (undocumented)
+    // @deprecated (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // (undocumented)
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
@@ -67,7 +67,7 @@ export const execute: typeof ApolloLink.execute;
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data?: never;
@@ -79,7 +79,7 @@ export interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TE
     incremental?: IncrementalPayload<TData, TExtensions>[];
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data: TData | null | undefined;
@@ -91,7 +91,7 @@ export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExten
     incremental?: never;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
 // @public (undocumented)
@@ -120,7 +120,7 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     variables?: TVariables;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -156,7 +156,7 @@ export interface Operation {
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)

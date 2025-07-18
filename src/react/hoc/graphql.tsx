@@ -7,6 +7,11 @@ import { withMutation } from "./mutation-hoc.js";
 import { withSubscription } from "./subscription-hoc.js";
 import type { OperationOption, DataProps, MutateProps } from "./types.js";
 import type { OperationVariables } from "../../core/index.js";
+import { invariant } from "../../utilities/globals/index.js";
+import {
+  muteDeprecations,
+  warnDeprecated,
+} from "../../utilities/deprecation/index.js";
 
 /**
  * @deprecated
@@ -30,13 +35,27 @@ export function graphql<
 ): (
   WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
 ) => ReactTypes.ComponentClass<TProps> {
-  switch (parser(document).type) {
+  if (__DEV__) {
+    warnDeprecated("graphql", () => {
+      invariant.warn(
+        "[graphql]: The `graphql` higher order component is deprecated and will be removed in Apollo Client 4.0. Please switch to an available React hook such as `useQuery`, `useMutation`, or `useSubscription`."
+      );
+    });
+  }
+
+  switch (muteDeprecations("parser", () => parser(document).type)) {
     case DocumentType.Mutation:
-      return withMutation(document, operationOptions);
+      return muteDeprecations("withMutation", () =>
+        withMutation(document, operationOptions)
+      );
     case DocumentType.Subscription:
-      return withSubscription(document, operationOptions);
+      return muteDeprecations("withSubscription", () =>
+        withSubscription(document, operationOptions)
+      );
     case DocumentType.Query:
     default:
-      return withQuery(document, operationOptions);
+      return muteDeprecations("withQuery", () =>
+        withQuery(document, operationOptions)
+      );
   }
 }

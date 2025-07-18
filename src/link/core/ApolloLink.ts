@@ -14,6 +14,7 @@ import {
   createOperation,
   transformOperation,
 } from "../utils/index.js";
+import { warnDeprecated } from "../../utilities/deprecation/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
@@ -136,10 +137,21 @@ export class ApolloLink {
     throw newInvariantError("request is not implemented");
   }
 
+  /**
+   * @deprecated `onError` will be removed with Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   protected onError(
     error: any,
     observer?: Observer<FetchResult>
   ): false | void {
+    if (__DEV__) {
+      warnDeprecated("onError", () => {
+        invariant.warn(
+          "[ApolloLink] `onError` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using it."
+        );
+      });
+    }
     if (observer && observer.error) {
       observer.error(error);
       // Returning false indicates that observer.error does not need to be
@@ -154,7 +166,16 @@ export class ApolloLink {
     throw error;
   }
 
+  /**
+   * @deprecated `setOnError` will be removed with Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public setOnError(fn: ApolloLink["onError"]): this {
+    if (__DEV__) {
+      invariant.warn(
+        "[ApolloLink] `setOnError` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using it."
+      );
+    }
     this.onError = fn;
     return this;
   }

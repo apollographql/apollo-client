@@ -32,7 +32,7 @@ class ApolloLink {
     getMemoryInternals?: () => unknown;
     // @internal
     readonly left?: ApolloLink;
-    // (undocumented)
+    // @deprecated (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
@@ -40,7 +40,7 @@ class ApolloLink {
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal
     readonly right?: ApolloLink;
-    // (undocumented)
+    // @deprecated (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
     //
@@ -80,19 +80,23 @@ export class ErrorLink extends ApolloLink {
 export interface ErrorResponse {
     // (undocumented)
     forward: NextLink;
+    // @deprecated
     graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // Warning: (ae-forgotten-export) The symbol "NetworkError" needs to be exported by the entry point index.d.ts
+    //
+    // @deprecated
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
+    // @deprecated
     protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
+    // @deprecated (undocumented)
     response?: FormattedExecutionResult;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data?: never;
@@ -106,7 +110,7 @@ interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensio
     incremental?: IncrementalPayload<TData, TExtensions>[];
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data: TData | null | undefined;
@@ -121,7 +125,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
 // @public (undocumented)
@@ -152,7 +156,7 @@ interface GraphQLRequest<TVariables = Record<string, any>> {
     variables?: TVariables;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -199,7 +203,7 @@ interface Operation {
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)

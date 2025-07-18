@@ -56,7 +56,7 @@ interface DefaultContext extends Record<string, any> {
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data?: never;
@@ -70,7 +70,7 @@ interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensio
     incremental?: IncrementalPayload<TData, TExtensions>[];
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
     // (undocumented)
     data: TData | null | undefined;
@@ -85,7 +85,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
 // @public (undocumented)
@@ -115,7 +115,7 @@ export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 // @public (undocumented)
 export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -131,13 +131,13 @@ interface IncrementalPayload<TData, TExtensions> {
     path: Path;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function isApolloError(err: Error): err is ApolloError;
 
 // @public (undocumented)
 export type NetworkError = Error | ServerParseError | ServerError | null;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)

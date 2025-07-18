@@ -36,6 +36,10 @@ import type {
   MaybeMasked,
   Unmasked,
 } from "../../masking/index.js";
+import {
+  muteDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -239,11 +243,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.ReadQueryOptions<QueryType, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<QueryType> | null {
-    return this.read({
-      ...options,
-      rootId: options.id || "ROOT_QUERY",
-      optimistic,
-    });
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.readQuery");
+    }
+
+    return muteDeprecations("canonizeResults", () =>
+      this.read({
+        ...options,
+        rootId: options.id || "ROOT_QUERY",
+        optimistic,
+      })
+    );
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
@@ -348,12 +358,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<FragmentType> | null {
-    return this.read({
-      ...options,
-      query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      rootId: options.id,
-      optimistic,
-    });
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.readFragment");
+    }
+
+    return muteDeprecations("canonizeResults", () =>
+      this.read({
+        ...options,
+        query: this.getFragmentDoc(options.fragment, options.fragmentName),
+        rootId: options.id,
+        optimistic,
+      })
+    );
   }
 
   public writeQuery<TData = any, TVariables = any>({
@@ -389,9 +405,15 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.UpdateQueryOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.updateQuery");
+    }
+
     return this.batch({
       update(cache) {
-        const value = cache.readQuery<TData, TVariables>(options);
+        const value = muteDeprecations("canonizeResults", () =>
+          cache.readQuery<TData, TVariables>(options)
+        );
         const data = update(value);
         if (data === void 0 || data === null) return value;
         cache.writeQuery<TData, TVariables>({ ...options, data });
@@ -404,9 +426,15 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.updateFragment");
+    }
+
     return this.batch({
       update(cache) {
-        const value = cache.readFragment<TData, TVariables>(options);
+        const value = muteDeprecations("canonizeResults", () =>
+          cache.readFragment<TData, TVariables>(options)
+        );
         const data = update(value);
         if (data === void 0 || data === null) return value;
         cache.writeFragment<TData, TVariables>({ ...options, data });

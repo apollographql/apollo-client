@@ -985,13 +985,13 @@ our local resolver code will only be included in the bundle a user downloads whe
 
 ## API
 
-Apollo Client local state handling is baked in, so you don't have to install anything extra. Local state management can be configured during `ApolloClient` instantiation by passing a `LocalState` instance into the `localState` constructor options. Data in the cache can be managed through the `ApolloCache` API.
+Apollo Client local state handling is baked in, so you don't have to install anything extra. Local state management can be configured during `ApolloClient` instantiation by passing a `LocalState` instance into the `localState` constructor option. Data in the cache can be managed through the `ApolloCache` API.
 
 ### LocalState
 
 #### Usage
 
-`LocalState` as a class instance is always passed to the `localState` option of the `ApolloClient` constructor.
+`LocalState` as a class instance is passed to the `localState` option of the `ApolloClient` constructor.
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -1005,7 +1005,7 @@ const client = new ApolloClient({
 
 #### Methods
 
-<FunctionDetails canonicalReference="@apollo/client!LocalState#addResolvers:member(1)" headingLevel={4}  parameters={false} />
+<FunctionDetails canonicalReference="@apollo/client!LocalState#addResolvers:member(1)" headingLevel={5}  parameters={false} />
 
 **Typescript interfaces/types:**
 
@@ -1042,8 +1042,8 @@ cache.writeQuery({
 });
 ```
 
-<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeQuery:member(1)" headingLevel={4}  parameters={false} result={false}/>
-<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readQuery:member(1)" headingLevel={4}  parameters={false} result={false}/>
-<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeFragment:member(1)" headingLevel={4}  parameters={false} result={false}/>
-<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readFragment:member(1)" headingLevel={4}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeQuery:member(1)" headingLevel={5}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readQuery:member(1)" headingLevel={5}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#writeFragment:member(1)" headingLevel={5}  parameters={false} result={false}/>
+<FunctionDetails canonicalReference="@apollo/client!ApolloCache#readFragment:member(1)" headingLevel={5}  parameters={false} result={false}/>
 

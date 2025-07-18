@@ -45,7 +45,7 @@ export declare namespace HttpLink {
      * An object that configures advanced `HttpLink` functionality, such as
      * support for persisted queries.
      */
-    http?: HttpOptions;
+    http?: HttpLink.HttpOptions;
   }
 
   /**

@@ -19,6 +19,28 @@ The values for these fields are calculated locally using any logic you want, suc
 
 As shown, a query can include both local-only fields _and_ fields that are fetched from your GraphQL server.
 
+<Note>
+
+**Important**: Using `@client` fields requires configuring local state in your Apollo Client instance. If you use `@client` fields without configuring local state, you'll get an error like:
+
+```
+Query 'ProductDetails' contains '@client' fields but local state has not been configured.
+```
+
+To enable `@client` fields, you must provide a `LocalState` instance to your Apollo Client:
+
+```ts
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { LocalState } from '@apollo/client/local-state';
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  localState: new LocalState(),
+});
+```
+
+</Note>
+
 ## Defining
 
 Let's say we're building an e-commerce application. Most of a product's details are stored on our back-end server, but we want to define a `Product.isInCart` boolean field that's local to the client. First, we create a **field policy** for `isInCart`.

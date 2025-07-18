@@ -28,6 +28,7 @@ import type {
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -44,67 +45,96 @@ export declare namespace useSuspenseQuery {
     "cache-first" | "network-only" | "no-cache" | "cache-and-network"
   >;
 
+  export namespace Base {
+    export interface Options<
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+      returnPartialData?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
+      refetchWritePolicy?: RefetchWritePolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: FetchPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+      queryKey?: string | number | any[];
+
+      /**
+       * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+       *
+       * @example Recommended usage of `skipToken`:
+       * ```ts
+       * import { skipToken, useSuspenseQuery } from '@apollo/client';
+       *
+       * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
+       * ```
+       */
+      skip?: boolean;
+    }
+  }
   export type Options<
     TVariables extends OperationVariables = OperationVariables,
-  > = {
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-    client?: ApolloClient;
+  > = Base.Options<TVariables> & VariablesOption<TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-    context?: DefaultContext;
+  export namespace DocumentationTypes {
+    export interface Options<
+      TVariables extends OperationVariables = OperationVariables,
+    > extends Base.Options<TVariables> {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  }
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-    errorPolicy?: ErrorPolicy;
+  export namespace Base {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client: ApolloClient;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-    returnPartialData?: boolean;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
-    refetchWritePolicy?: RefetchWritePolicy;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+      fetchMore: FetchMoreFunction<TData, TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: FetchPolicy;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+      networkStatus: NetworkStatus;
 
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
-    queryKey?: string | number | any[];
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+      refetch: RefetchFunction<TData, TVariables>;
 
-    /**
-     * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
-     *
-     * @example Recommended usage of `skipToken`:
-     * ```ts
-     * import { skipToken, useSuspenseQuery } from '@apollo/client';
-     *
-     * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
-     * ```
-     */
-    skip?: boolean;
-  } & VariablesOption<TVariables>;
-
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    }
+  }
   export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = {
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-    client: ApolloClient;
+  > = Base.Result<TData, TVariables> &
+    GetDataState<MaybeMasked<TData>, TStates>;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-    error: ErrorLike | undefined;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-    networkStatus: NetworkStatus;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-    refetch: RefetchFunction<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-  } & GetDataState<MaybeMasked<TData>, TStates>;
+  export namespace DocumentationTypes {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > extends Base.Result<TData, TVariables>,
+        UtilityDocumentationTypes.DataState<TData> {}
+  }
 }
 
 export function useSuspenseQuery<

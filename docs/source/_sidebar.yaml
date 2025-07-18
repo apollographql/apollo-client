@@ -143,10 +143,6 @@ items:
             href: ./api/react/testing
           - label: SSR
             href: ./api/react/ssr
-          - label: Components (deprecated)
-            href: ./api/react/components
-          - label: HOC (deprecated)
-            href: ./api/react/hoc
       - label: Apollo Link
         children:
           - label: Overview

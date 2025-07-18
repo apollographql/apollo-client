@@ -230,8 +230,8 @@ function List() {
 ```ts
 function useSuspenseQuery<TData, TVariables>(
   query: DocumentNode,
-  options?: SuspenseQueryHookOptions<TData, TVariables> | SkipToken,
-): UseSuspenseQueryResult<TData, TVariables>
+  options?: useSuspenseQuery.Options<TData, TVariables> | SkipToken,
+): useSuspenseQuery.Result<TData, TVariables>
 ```
 
 ### Params
@@ -245,10 +245,10 @@ function useSuspenseQuery<TData, TVariables>(
 
 #### `options`
 
-Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
+Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <InterfaceDetails
-  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
+  canonicalReference="@apollo/client!useSuspenseQuery.DocumentationTypes.Options:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
   headingLevel={3}
 />
@@ -387,7 +387,7 @@ function useReadQuery<TData>(
 <UseReadQueryResult />
 
 <FunctionDetails
-  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
+  canonicalReference="@apollo/client!useLoadableQuery.DocumentationTypes.useLoadableQuery:function(1)"
   headingLevel={2}
 >
   ```ts
@@ -397,6 +397,7 @@ function useReadQuery<TData>(
     {
       fetchMore: FetchMoreFunction<TData, TVariables>;
       refetch: RefetchFunction<TData, TVariables>;
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
       reset: ResetFunction;
     }
   ]
@@ -415,14 +416,13 @@ function useReadQuery<TData>(
       idPrefix="useloadablequery-result"
       name="queryRef"
       type="QueryRef<TData, TVariables> | null"
-      canonicalReference="@apollo/client!QueryRef:interface"
     >
       The `queryRef` used by `useReadQuery` to read the query result.
     </ManualTupleItem>
     <ManualTupleItem
       idPrefix="useloadablequery-result"
       name="handlers"
-      type="{ fetchMore: FetchMoreFunction<TData, TVariables>; refetch: RefetchFunction<TData, TVariables>; reset: ResetFunction; }"
+      type="{ fetchMore: FetchMoreFunction<TData, TVariables>; refetch: RefetchFunction<TData, TVariables>; subscribeToMore: SubscribeToMoreFunction<TData, TVariables>; reset: ResetFunction; }"
     >
       Additional handlers used for the query, such as `refetch`.
     </ManualTupleItem>

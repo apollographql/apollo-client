@@ -43,15 +43,30 @@ export class SuspenseCache {
   >(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
       current?: InternalQueryReference<TData, TStates>;
+      disposeTimeout?: ReturnType<typeof setTimeout>;
     };
 
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-        onDispose: () => {
+        onDispose: (internalRef) => {
+          if (internalRef !== ref.current) {
+            return;
+          }
           delete ref.current;
+          if (ref.disposeTimeout) {
+            clearTimeout(ref.disposeTimeout);
+            delete ref.disposeTimeout;
+          }
         },
       });
+    } else if (ref.current.promise.status === "rejected") {
+      if (ref.disposeTimeout) {
+        clearTimeout(ref.disposeTimeout);
+      }
+      ref.disposeTimeout = setTimeout(() => {
+        ref.current?.dispose();
+      }, 1000);
     }
 
     return ref.current;

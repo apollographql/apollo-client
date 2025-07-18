@@ -135,11 +135,39 @@ items:
             href: ./api/core/ObservableQuery
       - label: React
         children:
-          - label: Hooks
-            href: ./api/react/hooks
-          - label: Preloading
+          - label: ApolloProvider
+            href: ./api/react/ApolloProvider
+          - label: ApolloConsumer
+            href: ./api/react/ApolloConsumer
+          - label: useQuery
+            href: ./api/react/useQuery
+          - label: useLazyQuery
+            href: ./api/react/useLazyQuery
+          - label: useMutation
+            href: ./api/react/useMutation
+          - label: useSubscription
+            href: ./api/react/useSubscription
+          - label: useFragment
+            href: ./api/react/useFragment
+          - label: useApolloClient
+            href: ./api/react/useApolloClient
+          - label: useReactiveVar
+            href: ./api/react/useReactiveVar
+          - label: useSuspenseQuery
+            href: ./api/react/useSuspenseQuery
+          - label: useBackgroundQuery
+            href: ./api/react/useBackgroundQuery
+          - label: useReadQuery
+            href: ./api/react/useReadQuery
+          - label: useLoadableQuery
+            href: ./api/react/useLoadableQuery
+          - label: useQueryRefHandlers
+            href: ./api/react/useQueryRefHandlers
+          - label: skipToken
+            href: ./api/react/skipToken
+          - label: createQueryPreloader
             href: ./api/react/preloading
-          - label: Testing
+          - label: MockProvider
             href: ./api/react/testing
           - label: SSR
             href: ./api/react/ssr

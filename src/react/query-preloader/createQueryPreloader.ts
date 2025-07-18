@@ -141,8 +141,6 @@ export interface PreloadQueryFunction {
    *   // ...
    * }
    * ```
-   *
-   * @since 4.0.0
    */
   toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
     queryRef: TQueryRef
@@ -165,7 +163,6 @@ export interface PreloadQueryFunction {
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * ```
- * @since 3.9.0
  */
 export function createQueryPreloader(
   client: ApolloClient

@@ -54,6 +54,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useQuery {
+  import _self = useQuery;
   export namespace Base {
     export interface Options<
       TData = unknown,
@@ -111,12 +112,12 @@ export declare namespace useQuery {
   > = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
 
   export namespace DocumentationTypes {
-    export interface Options<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Options<TData, TVariables> {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: TVariables;
+    namespace useQuery {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
 
@@ -186,11 +187,24 @@ export declare namespace useQuery {
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export namespace DocumentationTypes {
-    export interface Result<
+    namespace useQuery {
+      export interface Result<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Result<TData, TVariables>,
+          UtilityDocumentationTypes.DataState<TData> {}
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useQuery:function(1)} */
+    export function useQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Result<TData, TVariables>,
-        UtilityDocumentationTypes.DataState<TData> {}
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options: useQuery.Options<TData, TVariables>
+    ): useQuery.Result<TData, TVariables>;
   }
 }
 
@@ -219,44 +233,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData>;
 }
-
-export function useQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): useQuery.Result<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-export function useQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useQuery.Result<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-export function useQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
 
 /**
  * A hook for executing queries in an Apollo application.
@@ -287,11 +263,50 @@ export function useQuery<
  *   return <h1>Hello {data.greeting.message}!</h1>;
  * }
  * ```
- * @since 3.0.0
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Options to control how the query is executed.
  * @returns Query result object
  */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: boolean;
+  }
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

@@ -13,6 +13,7 @@ import type {
   SubscriptionOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
+import type { DocumentationTypes as UtilityDocumentationTypes } from "@apollo/client/utilities/internal";
 import type {
   NoInfer,
   VariablesOption,
@@ -25,6 +26,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useSubscription {
+  import _self = useSubscription;
   export namespace Base {
     export interface Options<
       TData = unknown,
@@ -76,12 +78,12 @@ export declare namespace useSubscription {
   > = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
 
   export namespace DocumentationTypes {
-    export interface Result<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    > extends Base.Options<TData, TVariables> {
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-      variables?: TVariables;
+    namespace useSubscription {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
 
@@ -96,6 +98,22 @@ export declare namespace useSubscription {
     error?: ErrorLike;
 
     restart: () => void;
+  }
+
+  export namespace DocumentationTypes {
+    namespace useSubscription {
+      export interface Result<TData = unknown> extends _self.Result<TData> {}
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useSubscription:function(1)} */
+    export function useSubscription<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      options?: useSubscription.Options<TData, TVariables>
+    ): useSubscription.Result<TData>;
   }
 
   export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
@@ -187,7 +205,6 @@ export declare namespace useSubscription {
  *
  * Now, the first message will be added to the `accumulatedData` array since `onData` is called _before_ the component re-renders. React 18 automatic batching is still in effect and results in a single re-render, but with `onData` we can guarantee each message received after the component mounts is added to `accumulatedData`.
  *
- * @since 3.0.0
  * @param subscription - A GraphQL subscription document parsed into an AST by `gql`.
  * @param options - Options to control how the subscription is executed.
  * @returns Query result object

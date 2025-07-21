@@ -334,7 +334,7 @@ export type MutationUpdaterFunction<
 ) => void;
 
 export declare namespace QueryNotification {
-  type NewNetworkStatus<TData> = NextNotification<{
+  type NewNetworkStatus = NextNotification<{
     resetError?: boolean;
   }> & {
     source: "newNetworkStatus";
@@ -357,7 +357,7 @@ export declare namespace QueryNotification {
   type Value<TData> =
     | FromCache<TData>
     | FromNetwork<TData>
-    | NewNetworkStatus<TData>
+    | NewNetworkStatus
     | SetResult<TData>;
 }
 

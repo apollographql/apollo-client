@@ -9,7 +9,6 @@ import type {
   IgnoreModifier,
   Reference,
 } from "@apollo/client/cache";
-import type { WatchFragmentResult } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import { NotImplementedHandler } from "@apollo/client/incremental";
 import type {
@@ -312,6 +311,9 @@ export declare namespace ApolloClient {
     TData,
     TVariables extends OperationVariables,
   > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
+
+  export type WatchFragmentResult<TData> =
+    ApolloCache.WatchFragmentResult<TData>;
 
   /**
    * Watched query options.
@@ -822,7 +824,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
-  ): Observable<WatchFragmentResult<MaybeMasked<TData>>> {
+  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
     const dataMasking = this.queryManager.dataMasking;
 
     return this.cache
@@ -843,13 +845,13 @@ export class ApolloClient implements DataProxy {
                 ...options,
                 data: result.data,
               });
-              return { ...result, data } as WatchFragmentResult<
+              return { ...result, data } as ApolloClient.WatchFragmentResult<
                 MaybeMasked<TData>
               >;
             }
           }
 
-          return result as WatchFragmentResult<MaybeMasked<TData>>;
+          return result as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
         })
       );
   }

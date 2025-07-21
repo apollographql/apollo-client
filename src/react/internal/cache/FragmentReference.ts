@@ -2,7 +2,6 @@ import { equal } from "@wry/equality";
 import type { Observable, Subscription } from "rxjs";
 
 import type { ApolloClient, OperationVariables } from "@apollo/client";
-import type { WatchFragmentResult } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
@@ -24,7 +23,9 @@ export class FragmentReference<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: Observable<WatchFragmentResult<TData>>;
+  public readonly observable: Observable<
+    ApolloClient.WatchFragmentResult<TData>
+  >;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 
@@ -129,7 +130,7 @@ export class FragmentReference<
     this.subscription.add(this.onDispose);
   }
 
-  private handleNext(result: WatchFragmentResult<TData>) {
+  private handleNext(result: ApolloClient.WatchFragmentResult<TData>) {
     switch (this.promise.status) {
       case "pending": {
         if (result.complete) {

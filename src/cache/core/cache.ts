@@ -33,19 +33,6 @@ import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
-/**
- * Watched fragment results.
- */
-export type WatchFragmentResult<TData> =
-  | ({
-      complete: true;
-      missing?: never;
-    } & GetDataState<TData, "complete">)
-  | ({
-      complete: false;
-      missing: MissingTree;
-    } & GetDataState<TData, "partial">);
-
 export declare namespace ApolloCache {
   /**
    * Watched fragment options.
@@ -91,6 +78,19 @@ export declare namespace ApolloCache {
      */
     optimistic?: boolean;
   }
+
+  /**
+   * Watched fragment results.
+   */
+  export type WatchFragmentResult<TData> =
+    | ({
+        complete: true;
+        missing?: never;
+      } & GetDataState<TData, "complete">)
+    | ({
+        complete: false;
+        missing: MissingTree;
+      } & GetDataState<TData, "partial">);
 }
 
 export abstract class ApolloCache implements DataProxy {
@@ -279,7 +279,7 @@ export abstract class ApolloCache implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
-  ): Observable<WatchFragmentResult<Unmasked<TData>>> {
+  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
       fragmentName,
@@ -353,7 +353,7 @@ export abstract class ApolloCache implements DataProxy {
             data,
             dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
-          } as WatchFragmentResult<Unmasked<TData>>;
+          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
 
           if (diff.missing) {
             result.missing = diff.missing.missing;

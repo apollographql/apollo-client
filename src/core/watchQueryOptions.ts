@@ -10,6 +10,7 @@ import type {
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 
+import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
@@ -78,60 +79,13 @@ export type QueryOptions<
   fetchPolicy?: FetchPolicy;
 } & VariablesOption<NoInfer<TVariables>>;
 
-/**
- * Watched query options.
- */
-export type WatchQueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = unknown,
-> = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
-  nextFetchPolicy?:
-    | WatchQueryFetchPolicy
-    | ((
-        this: WatchQueryOptions<TVariables, TData>,
-        currentFetchPolicy: WatchQueryFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => WatchQueryFetchPolicy);
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
-  initialFetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  pollInterval?: number;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
-  skipPollAttempt?: () => boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-} & VariablesOption<NoInfer<TVariables>>;
-
 export interface NextFetchPolicyContext<
   TData,
   TVariables extends OperationVariables,
 > {
   reason: "after-fetch" | "variables-changed";
   observable: ObservableQuery<TData, TVariables>;
-  options: WatchQueryOptions<TVariables, TData>;
+  options: ApolloClient.WatchQueryOptions<TData, TVariables>;
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 

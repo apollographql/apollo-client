@@ -14,10 +14,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 import type { ApolloQueryResult } from "../types.js";
-import type {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../watchQueryOptions.js";
+import type { WatchQueryFetchPolicy } from "../watchQueryOptions.js";
 
 const query = gql`
   query {
@@ -863,7 +860,10 @@ describe("nextFetchPolicy", () => {
 
   const checkNextFetchPolicy = (args: {
     fetchPolicy: WatchQueryFetchPolicy;
-    nextFetchPolicy: WatchQueryOptions<{}, TData>["nextFetchPolicy"];
+    nextFetchPolicy: ApolloClient.WatchQueryOptions<
+      TData,
+      {}
+    >["nextFetchPolicy"];
     useDefaultOptions: boolean;
     checkResult: (info: {
       stream: ObservableStream<ApolloQueryResult<TData>>;
@@ -888,7 +888,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      const watchQueryOptions: WatchQueryOptions<TVars, TData> = {
+      const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVars> = {
         query: EchoQuery,
         fetchPolicy: args.fetchPolicy,
       };

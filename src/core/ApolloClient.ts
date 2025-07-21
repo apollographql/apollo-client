@@ -21,6 +21,7 @@ import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { VariablesOption } from "@apollo/client/utilities/internal";
 import {
   checkDocument,
   compact,
@@ -45,19 +46,21 @@ import type {
   RefetchQueriesResult,
   SubscribeResult,
   SubscriptionObservable,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
   MutationOptions,
+  NextFetchPolicyContext,
   QueryOptions,
+  RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
 export interface DefaultOptions {
-  watchQuery?: Partial<WatchQueryOptions<any, any>>;
+  watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
@@ -152,6 +155,53 @@ export declare namespace ApolloClient {
      */
     name?: string;
   }
+
+  /**
+   * Watched query options.
+   */
+  export type WatchQueryOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TData, TVariables>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  } & VariablesOption<NoInfer<TVariables>>;
 }
 
 /**
@@ -416,12 +466,12 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: WatchQueryOptions<TVariables, TData>
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(
         this.defaultOptions.watchQuery as Partial<
-          WatchQueryOptions<TVariables, TData>
+          ApolloClient.WatchQueryOptions<TData, TVariables>
         >,
         options
       );

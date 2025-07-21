@@ -65,11 +65,7 @@ import {
 
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type {
-  ApolloClient,
-  ApolloClientOptions,
-  DefaultOptions,
-} from "./ApolloClient.js";
+import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
@@ -95,7 +91,6 @@ import type {
   QueryOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
 interface MutationStoreValue {
@@ -139,7 +134,7 @@ interface MaskOperationOptions<TData> {
 
 interface QueryManagerOptions {
   client: ApolloClient;
-  clientOptions: ApolloClientOptions;
+  clientOptions: ApolloClient.Options;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
@@ -159,7 +154,7 @@ export class QueryManager {
   /**
    * The options that were passed to the ApolloClient constructor.
    */
-  public readonly clientOptions: ApolloClientOptions;
+  public readonly clientOptions: ApolloClient.Options;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -440,7 +435,7 @@ export class QueryManager {
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(
-    options: WatchQueryOptions<TVars, TData>,
+    options: ApolloClient.WatchQueryOptions<TData, TVars>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
@@ -558,7 +553,9 @@ export class QueryManager {
   public watchQuery<
     T,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+  >(
+    options: ApolloClient.WatchQueryOptions<T, TVariables>
+  ): ObservableQuery<T, TVariables> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
     const query = this.transform(options.query);
@@ -1121,7 +1118,7 @@ export class QueryManager {
   }
 
   public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
-    options: WatchQueryOptions<TVars, TData>,
+    options: ApolloClient.WatchQueryOptions<TData, TVars>,
     {
       // The initial networkStatus for this fetch, most often
       // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,

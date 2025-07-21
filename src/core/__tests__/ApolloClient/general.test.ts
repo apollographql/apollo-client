@@ -27,10 +27,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { MockApolloLink } from "../../../testing/core/mocking/mockLink.js";
-import type {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../watchQueryOptions.js";
+import type { WatchQueryFetchPolicy } from "../../watchQueryOptions.js";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({
@@ -1246,7 +1243,7 @@ describe("ApolloClient", () => {
         expectedInitialResults,
         expectedRefetchedResults
       ) => {
-        const request: WatchQueryOptions = {
+        const request: ApolloClient.WatchQueryOptions = {
           query: gql`
             query fetchLuke($id: String) {
               people_one(id: $id) {
@@ -4478,7 +4475,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -4514,7 +4511,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -4549,7 +4546,7 @@ describe("ApolloClient", () => {
 
       const options = {
         query,
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5042,7 +5039,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5078,7 +5075,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5114,7 +5111,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5151,7 +5148,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5187,7 +5184,7 @@ describe("ApolloClient", () => {
 
       const options = {
         query,
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 

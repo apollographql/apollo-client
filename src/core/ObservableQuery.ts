@@ -26,6 +26,7 @@ import {
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { ApolloClient } from "./ApolloClient.js";
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -46,7 +47,6 @@ import type {
   UpdateQueryMapFn,
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
 const { assign, hasOwnProperty } = Object;
@@ -145,7 +145,7 @@ export declare namespace ObservableQuery {
     nextFetchPolicy?:
       | WatchQueryFetchPolicy
       | ((
-          this: WatchQueryOptions<TVariables, TData>,
+          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
           currentFetchPolicy: WatchQueryFetchPolicy,
           context: NextFetchPolicyContext<TData, TVariables>
         ) => WatchQueryFetchPolicy);
@@ -323,7 +323,7 @@ export class ObservableQuery<
     transformedQuery = queryManager.transform(options.query),
   }: {
     queryManager: QueryManager;
-    options: WatchQueryOptions<TVariables, TData>;
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>;
     transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
     queryId?: string;
   }) {
@@ -1120,7 +1120,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // options.fetchPolicy even if options !== this.options, though that happens
     // most often when the options are temporary, used for only one request and
     // then thrown away, so nextFetchPolicy may not end up mattering.
-    options: WatchQueryOptions<TVariables, TData>
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ) {
     if (options.nextFetchPolicy) {
       const { fetchPolicy = "cache-first", initialFetchPolicy = fetchPolicy } =
@@ -1857,7 +1857,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
         nextFetchPolicy(
-          this: WatchQueryOptions<TVariables, TData>,
+          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
           currentFetchPolicy: WatchQueryFetchPolicy,
           context: NextFetchPolicyContext<TData, TVariables>
         ) {

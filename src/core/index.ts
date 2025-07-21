@@ -39,7 +39,6 @@ export type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueryDescriptor,
-  MethodKeys,
   MutationQueryReducer,
   MutationQueryReducersMap,
   MutationUpdaterFunction,

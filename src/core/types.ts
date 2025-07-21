@@ -20,10 +20,6 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-export type MethodKeys<T> = {
-  [P in keyof T]: T[P] extends Function ? P : never;
-}[keyof T];
-
 export interface TypeOverrides {}
 
 namespace OverridableTypes {

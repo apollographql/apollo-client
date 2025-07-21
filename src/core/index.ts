@@ -1,6 +1,7 @@
 /* Core */
 
-export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
+export type { DefaultOptions } from "./ApolloClient.js";
+export type { ApolloClientOptions } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
 export type { FetchMoreOptions } from "./ObservableQuery.js";
 export { ObservableQuery } from "./ObservableQuery.js";

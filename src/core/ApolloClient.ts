@@ -80,76 +80,78 @@ interface DevtoolsOptions {
 
 let hasSuggestedDevtools = false;
 
-export interface ApolloClientOptions {
-  /**
-   * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
-   *
-   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   */
-  link: ApolloLink;
-  /**
-   * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
-   *
-   * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
-   */
-  cache: ApolloCache;
-  /**
-   * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
-   *
-   * @defaultValue `0` (no delay)
-   */
-  ssrForceFetchDelay?: number;
-  /**
-   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
-   *
-   * @defaultValue `false`
-   */
-  ssrMode?: boolean;
-  /**
-   * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
-   *
-   * @defaultValue `true`
-   */
-  queryDeduplication?: boolean;
-  /**
-   * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-   *
-   * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-   */
-  defaultOptions?: DefaultOptions;
-  defaultContext?: Partial<DefaultContext>;
-  /**
-   * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
-   *
-   * @defaultValue `false`
-   */
-  assumeImmutableResults?: boolean;
-  localState?: LocalState;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
-  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
-  enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
-  documentTransform?: DocumentTransform;
+export declare namespace ApolloClient {
+  export interface Options {
+    /**
+     * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
+     *
+     * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+     */
+    link: ApolloLink;
+    /**
+     * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
+     *
+     * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
+     */
+    cache: ApolloCache;
+    /**
+     * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
+     *
+     * @defaultValue `0` (no delay)
+     */
+    ssrForceFetchDelay?: number;
+    /**
+     * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+     *
+     * @defaultValue `false`
+     */
+    ssrMode?: boolean;
+    /**
+     * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
+     *
+     * @defaultValue `true`
+     */
+    queryDeduplication?: boolean;
+    /**
+     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+     *
+     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
+     */
+    defaultOptions?: DefaultOptions;
+    defaultContext?: Partial<DefaultContext>;
+    /**
+     * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
+     *
+     * @defaultValue `false`
+     */
+    assumeImmutableResults?: boolean;
+    localState?: LocalState;
+    /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+    /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    documentTransform?: DocumentTransform;
 
-  /**
-   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
-   *
-   * @since 3.11.0
-   */
-  devtools?: DevtoolsOptions;
+    /**
+     * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+     *
+     * @since 3.11.0
+     */
+    devtools?: DevtoolsOptions;
 
-  /**
-   * Determines if data masking is enabled for the client.
-   *
-   * @defaultValue false
-   */
-  dataMasking?: boolean;
+    /**
+     * Determines if data masking is enabled for the client.
+     *
+     * @defaultValue false
+     */
+    dataMasking?: boolean;
 
-  /**
-   * Determines the strategy used to parse incremental chunks from `@defer`
-   * queries.
-   */
-  incrementalHandler?: Incremental.Handler<any>;
+    /**
+     * Determines the strategy used to parse incremental chunks from `@defer`
+     * queries.
+     */
+    incrementalHandler?: Incremental.Handler<any>;
+  }
 }
 
 /**
@@ -216,7 +218,7 @@ export class ApolloClient implements DataProxy {
    * });
    * ```
    */
-  constructor(options: ApolloClientOptions) {
+  constructor(options: ApolloClient.Options) {
     if (__DEV__) {
       invariant(
         options.cache,

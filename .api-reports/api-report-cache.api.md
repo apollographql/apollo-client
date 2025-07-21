@@ -28,14 +28,32 @@ import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
+import type { TypedDocumentNode } from '@apollo/client';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@graphql-typed-document-node/core';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[keyof Entity] extends infer Value ? StoreObjectValueMaybeReference<Exclude<Value, undefined>> : never>;
+
+// @public (undocumented)
+export namespace ApolloCache {
+    export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+        optimistic?: boolean;
+        variables?: TVariables;
+    }
+    export type WatchFragmentResult<TData = unknown> = ({
+        complete: true;
+        missing?: never;
+    } & GetDataState<TData, "complete">) | ({
+        complete: false;
+        missing: MissingTree;
+    } & GetDataState<TData, "partial">);
+}
 
 // @public (undocumented)
 export abstract class ApolloCache implements DataProxy {
@@ -87,7 +105,7 @@ export abstract class ApolloCache implements DataProxy {
     updateQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
     abstract watch<TData = unknown, TVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
-    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<Unmasked<TData>>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
     // (undocumented)
     abstract write<TData = unknown, TVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     writeFragment<TData = unknown, TVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
@@ -236,7 +254,7 @@ export namespace DataProxy {
     };
     // (undocumented)
     export interface Fragment<TVariables, TData> {
-        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragment: DocumentNode | TypedDocumentNode_2<TData, TVariables>;
         fragmentName?: string;
         id?: string;
         variables?: TVariables;
@@ -244,7 +262,7 @@ export namespace DataProxy {
     // (undocumented)
     export interface Query<TVariables, TData> {
         id?: string;
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        query: DocumentNode | TypedDocumentNode_2<TData, TVariables>;
         variables?: TVariables;
     }
     // (undocumented)
@@ -403,7 +421,7 @@ export namespace EntityStore {
 }
 
 // @public (undocumented)
-export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Record<string, any>> {
+export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables = Record<string, any>> {
     // (undocumented)
     args: TArgs | null;
     // (undocumented)
@@ -431,7 +449,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Recor
     // (undocumented)
     toReference: ToReferenceFunction;
     // (undocumented)
-    variables?: TVars;
+    variables?: TVariables;
 }
 
 // @public (undocumented)
@@ -902,23 +920,11 @@ export type TypePolicy = {
     };
 };
 
-// @public
-export interface WatchFragmentOptions<TData, TVars> {
-    fragment: DocumentNode | TypedDocumentNode_2<TData, TVars>;
-    fragmentName?: string;
-    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
-    optimistic?: boolean;
-    variables?: TVars;
-}
+// @public @deprecated (undocumented)
+export type WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = ApolloCache_2.WatchFragmentOptions<TData, TVariables>;
 
-// @public
-export type WatchFragmentResult<TData> = ({
-    complete: true;
-    missing?: never;
-} & GetDataState<TData, "complete">) | ({
-    complete: false;
-    missing: MissingTree;
-} & GetDataState<TData, "partial">);
+// @public @deprecated (undocumented)
+export type WatchFragmentResult<TData> = ApolloCache_2.WatchFragmentResult<TData>;
 
 // @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {

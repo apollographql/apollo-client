@@ -9,6 +9,7 @@ export type {
   QueryOptions,
   RefetchQueriesOptions,
   RefetchQueriesResult,
+  SubscribeToMoreOptions,
   SubscriptionOptions,
   WatchQueryOptions,
 } from "./deprecated.js";
@@ -20,7 +21,6 @@ export type {
   MutationFetchPolicy,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
   SubscribeToMoreUpdateQueryFn,
   UpdateQueryMapFn,
   UpdateQueryOptions,

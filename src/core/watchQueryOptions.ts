@@ -10,7 +10,7 @@ import type {
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import type { DefaultContext, ErrorLike, OperationVariables } from "./types.js";
+import type { DefaultContext, OperationVariables } from "./types.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -111,25 +111,6 @@ export type SubscribeToMoreUpdateQueryFn<
   ): Unmasked<TData> | void;
 };
 
-export interface SubscribeToMoreOptions<
-  TData = unknown,
-  TSubscriptionVariables extends OperationVariables = OperationVariables,
-  TSubscriptionData = TData,
-  TVariables extends OperationVariables = TSubscriptionVariables,
-> {
-  document:
-    | DocumentNode
-    | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
-  variables?: TSubscriptionVariables;
-  updateQuery?: SubscribeToMoreUpdateQueryFn<
-    TData,
-    TVariables,
-    TSubscriptionData
-  >;
-  onError?: (error: ErrorLike) => void;
-  context?: DefaultContext;
-}
-
 export interface SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -138,7 +119,7 @@ export interface SubscribeToMoreFunction<
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
   >(
-    options: SubscribeToMoreOptions<
+    options: ObservableQuery.SubscribeToMoreOptions<
       TData,
       TSubscriptionVariables,
       TSubscriptionData,

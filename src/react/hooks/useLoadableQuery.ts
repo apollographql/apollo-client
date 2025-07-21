@@ -6,15 +6,13 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
-import type {
-  SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
-} from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   CacheKey,
@@ -317,7 +315,10 @@ export function useLoadableQuery<
 
         return internalQueryRef.observable.subscribeToMore(
           // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
-          options as any as SubscribeToMoreOptions<TData, OperationVariables>
+          options as any as ObservableQuery.SubscribeToMoreOptions<
+            TData,
+            OperationVariables
+          >
         );
       },
       [internalQueryRef]

@@ -45,6 +45,19 @@ export type RefetchQueriesOptions<
 export type RefetchQueriesResult<TResult> =
   ApolloClient.RefetchQueriesResult<TResult>;
 
+/** @deprecated Use `ObservableQuery.SubscribeToMoreOptions` instead */
+export type SubscribeToMoreOptions<
+  TData = unknown,
+  TSubscriptionVariables extends OperationVariables = OperationVariables,
+  TSubscriptionData = TData,
+  TVariables extends OperationVariables = TSubscriptionVariables,
+> = ObservableQuery.SubscribeToMoreOptions<
+  TData,
+  TSubscriptionVariables,
+  TSubscriptionData,
+  TVariables
+>;
+
 /** @deprecated Use `ApolloClient.SubscribeOptions` instead */
 export type SubscriptionOptions<
   TVariables extends OperationVariables = OperationVariables,

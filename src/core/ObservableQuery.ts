@@ -43,7 +43,7 @@ import type {
   ErrorPolicy,
   NextFetchPolicyContext,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
+  SubscribeToMoreUpdateQueryFn,
   UpdateQueryMapFn,
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
@@ -180,6 +180,25 @@ export declare namespace ObservableQuery {
       }
     ) => Unmasked<TData>;
   };
+
+  export interface SubscribeToMoreOptions<
+    TData = unknown,
+    TSubscriptionVariables extends OperationVariables = OperationVariables,
+    TSubscriptionData = TData,
+    TVariables extends OperationVariables = TSubscriptionVariables,
+  > {
+    document:
+      | DocumentNode
+      | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
+    variables?: TSubscriptionVariables;
+    updateQuery?: SubscribeToMoreUpdateQueryFn<
+      TData,
+      TVariables,
+      TSubscriptionData
+    >;
+    onError?: (error: ErrorLike) => void;
+    context?: DefaultContext;
+  }
 
   /**
    * @internal
@@ -987,7 +1006,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
   >(
-    options: SubscribeToMoreOptions<
+    options: ObservableQuery.SubscribeToMoreOptions<
       TData,
       TSubscriptionVariables,
       TSubscriptionData,

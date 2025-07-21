@@ -19,8 +19,8 @@ import type {
   DataValue,
   DocumentNode,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
-  SubscribeToMoreOptions,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -9985,7 +9985,7 @@ describe("useSuspenseQuery", () => {
     }
 
     type UpdateQueryFn = NonNullable<
-      SubscribeToMoreOptions<
+      ObservableQuery.SubscribeToMoreOptions<
         QueryData | undefined,
         OperationVariables,
         SubscriptionData

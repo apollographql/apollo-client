@@ -16,9 +16,10 @@ import { Observable, of } from "rxjs";
 
 import type {
   DataState,
-  ErrorPolicy,
-  OperationVariables,
   DataValue,
+  ErrorPolicy,
+  ObservableQuery,
+  OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -68,7 +69,6 @@ import { getMainDefinition } from "@apollo/client/utilities/internal";
 import type {
   RefetchWritePolicy,
   SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
 } from "../../../core/watchQueryOptions.js";
 import type {
   MaskedVariablesCaseData,
@@ -7039,7 +7039,7 @@ describe("fetchMore", () => {
     }
 
     type UpdateQueryFn = NonNullable<
-      SubscribeToMoreOptions<
+      ObservableQuery.SubscribeToMoreOptions<
         SimpleCaseData,
         Record<string, never>,
         SubscriptionData

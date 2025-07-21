@@ -1116,8 +1116,8 @@ export class QueryManager {
     );
   }
 
-  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
-    options: ApolloClient.WatchQueryOptions<TData, TVars>,
+  public fetchObservableWithInfo<TData, TVariables extends OperationVariables>(
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>,
     {
       // The initial networkStatus for this fetch, most often
       // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1132,10 +1132,10 @@ export class QueryManager {
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
-      observableQuery?: ObservableQuery<TData, TVars> | undefined;
+      observableQuery?: ObservableQuery<TData, TVariables> | undefined;
     }
   ): ObservableAndInfo<TData> {
-    const variables = this.getVariables(query, options.variables) as TVars;
+    const variables = this.getVariables(query, options.variables) as TVariables;
 
     const defaults = this.defaultOptions.watchQuery;
     let {
@@ -1163,9 +1163,9 @@ export class QueryManager {
       context,
     });
 
-    const queryInfo = new QueryInfo<TData, TVars>(this, observableQuery);
+    const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
 
-    const fromVariables = (variables: TVars) => {
+    const fromVariables = (variables: TVariables) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
@@ -1181,7 +1181,7 @@ export class QueryManager {
         ) ?
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
-      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
+      const observableWithInfo = this.fetchQueryByPolicy<TData, TVariables>(
         normalized,
         { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
       );
@@ -1491,7 +1491,7 @@ export class QueryManager {
       : data;
   }
 
-  private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
+  private fetchQueryByPolicy<TData, TVariables extends OperationVariables>(
     {
       query,
       variables,
@@ -1500,8 +1500,8 @@ export class QueryManager {
       returnPartialData,
       context,
     }: {
-      query: DocumentNode | TypedDocumentNode<TData, TVars>;
-      variables: TVars;
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+      variables: TVariables;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
       returnPartialData?: boolean;
@@ -1515,8 +1515,8 @@ export class QueryManager {
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
-      queryInfo: QueryInfo<TData, TVars>;
-      observableQuery: ObservableQuery<TData, TVars> | undefined;
+      queryInfo: QueryInfo<TData, TVariables>;
+      observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
   ): ObservableAndInfo<TData> {
     const readCache = () =>
@@ -1622,7 +1622,7 @@ export class QueryManager {
     };
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(
+      this.getResultsFromLink<TData, TVariables>(
         {
           query,
           variables,

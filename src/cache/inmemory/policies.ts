@@ -180,7 +180,7 @@ function argsFromFieldSpecifier(spec: FieldSpecifier) {
 
 export interface FieldFunctionOptions<
   TArgs = Record<string, any>,
-  TVars = Record<string, any>,
+  TVariables = Record<string, any>,
 > {
   args: TArgs | null;
 
@@ -198,7 +198,7 @@ export interface FieldFunctionOptions<
   // option will be null when a string was passed to options.readField.
   field: FieldNode | null;
 
-  variables?: TVars;
+  variables?: TVariables;
 
   // Utilities for dealing with { __ref } objects.
   isReference: typeof isReference;

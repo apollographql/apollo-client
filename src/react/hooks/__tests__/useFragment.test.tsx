@@ -2565,13 +2565,15 @@ describe.skip("Type Tests", () => {
     });
   });
 
-  test("UseFragmentOptions interface shape", <TData, TVars>() => {
-    expectTypeOf<useFragment.Options<TData, TVars>>().branded.toEqualTypeOf<{
+  test("UseFragmentOptions interface shape", <TData, TVariables>() => {
+    expectTypeOf<
+      useFragment.Options<TData, TVariables>
+    >().branded.toEqualTypeOf<{
       from: string | StoreObject | Reference | FragmentType<TData> | null;
-      fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
       fragmentName?: string;
       optimistic?: boolean;
-      variables?: TVars;
+      variables?: TVariables;
       client?: ApolloClient;
     }>();
   });

@@ -37,14 +37,14 @@ export declare namespace ApolloCache {
   /**
    * Watched fragment options.
    */
-  export interface WatchFragmentOptions<TData, TVars> {
+  export interface WatchFragmentOptions<TData, TVariables> {
     /**
      * A GraphQL fragment document parsed into an AST with the `gql`
      * template literal.
      *
      * @docGroup 1. Required options
      */
-    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
     /**
      * An object containing a `__typename` and primary key fields
      * (such as `id`) identifying the entity object from which the fragment will
@@ -59,7 +59,7 @@ export declare namespace ApolloCache {
      *
      * @docGroup 2. Cache options
      */
-    variables?: TVars;
+    variables?: TVariables;
     /**
      * The name of the fragment defined in the fragment document.
      *

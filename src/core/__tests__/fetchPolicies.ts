@@ -822,7 +822,7 @@ describe("nextFetchPolicy", () => {
     };
   };
 
-  type TVars = {
+  type TVariables = {
     refetching?: boolean;
   };
 
@@ -867,7 +867,7 @@ describe("nextFetchPolicy", () => {
     useDefaultOptions: boolean;
     checkResult: (info: {
       stream: ObservableStream<ApolloQueryResult<TData>>;
-      observable: ObservableQuery<TData, TVars>;
+      observable: ObservableQuery<TData, TVariables>;
     }) => Promise<void>;
   }) =>
     it(`transitions ${args.fetchPolicy} to ${
@@ -888,7 +888,10 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVars> = {
+      const watchQueryOptions: ApolloClient.WatchQueryOptions<
+        TData,
+        TVariables
+      > = {
         query: EchoQuery,
         fetchPolicy: args.fetchPolicy,
       };

@@ -1197,10 +1197,10 @@ describe("type policies", function () {
 
       function check<
         TData extends typeof data,
-        TVars extends OperationVariables,
+        TVariables extends OperationVariables,
       >(
-        query: DocumentNode | TypedDocumentNode<TData, TVars>,
-        variables?: TVars
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        variables?: TVariables
       ) {
         cache.writeQuery<typeof data>({ query, variables, data });
         expect(cache.readQuery({ query, variables })).toEqual(data);

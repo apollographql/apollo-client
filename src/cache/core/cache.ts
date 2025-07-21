@@ -37,7 +37,10 @@ export declare namespace ApolloCache {
   /**
    * Watched fragment options.
    */
-  export interface WatchFragmentOptions<TData, TVariables> {
+  export interface WatchFragmentOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
     /**
      * A GraphQL fragment document parsed into an AST with the `gql`
      * template literal.
@@ -82,7 +85,7 @@ export declare namespace ApolloCache {
   /**
    * Watched fragment results.
    */
-  export type WatchFragmentResult<TData> =
+  export type WatchFragmentResult<TData = unknown> =
     | ({
         complete: true;
         missing?: never;
@@ -341,9 +344,7 @@ export abstract class ApolloCache implements DataProxy {
               query,
               { data: latestDiff.result },
               { data },
-              // TODO: Fix the type on WatchFragmentOptions so that TVars
-              // extends OperationVariables
-              options.variables as OperationVariables
+              options.variables
             )
           ) {
             return;

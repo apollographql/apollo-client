@@ -308,11 +308,11 @@ export declare namespace ApolloClient {
   }
 
   export type WatchFragmentOptions<
-    TData,
-    TVariables extends OperationVariables,
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
   > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
 
-  export type WatchFragmentResult<TData> =
+  export type WatchFragmentResult<TData = unknown> =
     ApolloCache.WatchFragmentResult<TData>;
 
   /**

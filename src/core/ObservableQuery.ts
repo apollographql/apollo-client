@@ -32,7 +32,10 @@ import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  DataState,
   DefaultContext,
+  ErrorLike,
+  GetDataState,
   OperationVariables,
   QueryNotification,
   TypedDocumentNode,
@@ -201,6 +204,21 @@ export declare namespace ObservableQuery {
      */
     lastOwnDiff?: Cache.DiffResult<TData>;
   }
+
+  export type Result<
+    TData,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+    loading: boolean;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+    networkStatus: NetworkStatus;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#partial:member} */
+    partial: boolean;
+  } & GetDataState<TData, TStates>;
 
   /**
    * Promise returned by `reobserve` and `refetch` methods.

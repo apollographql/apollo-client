@@ -5,7 +5,6 @@ import { gql } from "graphql-tag";
 import { delay, Observable, of } from "rxjs";
 
 import type {
-  ApolloQueryResult,
   DataValue,
   DefaultOptions,
   ObservableQuery,
@@ -3422,7 +3421,7 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(observableQuery.getCurrentResult()).toEqualTypeOf<
-        ApolloQueryResult<Masked<Query>>
+        ObservableQuery.Result<Masked<Query>>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({

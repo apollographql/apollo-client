@@ -11,7 +11,6 @@ import type { Subscription } from "rxjs";
 import { Observable, of } from "rxjs";
 
 import type {
-  ApolloQueryResult,
   FetchPolicy,
   ObservableQuery,
   Operation,
@@ -744,7 +743,7 @@ describe("client", () => {
     });
 
     const stream = new ObservableStream(observable);
-    const emittedValue: ApolloQueryResult<unknown> = {
+    const emittedValue: ObservableQuery.Result<unknown> = {
       data: undefined,
       dataState: "empty",
       error: expectedError,

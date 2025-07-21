@@ -5,7 +5,7 @@ import { gql } from "graphql-tag";
 import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
+import type { ObservableQuery, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -1051,8 +1051,8 @@ describe("ApolloClient", () => {
       [
         notifyOnNetworkStatusChange: boolean,
         fetchPolicy: WatchQueryFetchPolicy,
-        expectedInitialResults: ApolloQueryResult<typeof data1>[],
-        expectedRefetchedResults: ApolloQueryResult<typeof data1>[],
+        expectedInitialResults: ObservableQuery.Result<typeof data1>[],
+        expectedRefetchedResults: ObservableQuery.Result<typeof data1>[],
       ]
     >([
       [
@@ -7594,7 +7594,7 @@ describe("ApolloClient", () => {
           ],
         },
       };
-      const initialResult: ApolloQueryResult<typeof initialData> = {
+      const initialResult: ObservableQuery.Result<typeof initialData> = {
         data: initialData,
         dataState: "streaming",
         loading: true,
@@ -7644,7 +7644,7 @@ describe("ApolloClient", () => {
       };
       const resultAfterFirstChunk = structuredClone(
         initialResult
-      ) as ApolloQueryResult<any>;
+      ) as ObservableQuery.Result<any>;
       resultAfterFirstChunk.data.people.friends[0].name = "Leia";
 
       defer.enqueueSubsequentChunk(firstChunk);
@@ -7676,7 +7676,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         dataState: "complete",
         partial: false,
-      } as ApolloQueryResult<any>;
+      } as ObservableQuery.Result<any>;
       resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
 
       defer.enqueueSubsequentChunk(secondChunk);

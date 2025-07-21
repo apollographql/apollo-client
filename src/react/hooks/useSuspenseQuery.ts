@@ -2,7 +2,6 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   DocumentNode,
@@ -10,6 +9,7 @@ import type {
   ErrorPolicy,
   GetDataState,
   MaybeMasked,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -314,7 +314,7 @@ function useSuspenseQuery_<
   );
 
   let [current, setPromise] = React.useState<
-    [QueryKey, Promise<ApolloQueryResult<any>>]
+    [QueryKey, Promise<ObservableQuery.Result<any>>]
   >([queryRef.key, queryRef.promise]);
 
   // This saves us a re-execution of the render function when a variable changed.
@@ -342,7 +342,7 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
+  const skipResult = React.useMemo<ObservableQuery.Result<TData>>(() => {
     const error = queryRef.result.error;
     const complete = !!queryRef.result.data;
 

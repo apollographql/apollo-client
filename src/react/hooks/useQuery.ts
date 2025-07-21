@@ -17,7 +17,6 @@ import { asapScheduler, observeOn } from "rxjs";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   DocumentNode,
@@ -204,7 +203,7 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
 interface InternalResult<TData> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  current: ApolloQueryResult<TData>;
+  current: ObservableQuery.Result<TData>;
   previousData?: undefined | MaybeMasked<TData>;
 
   // Track current variables separately in case a call to e.g. `refetch(newVars)`
@@ -546,4 +545,4 @@ useQuery.ssrDisabledResult = maybeDeepFreeze({
   error: void 0,
   networkStatus: NetworkStatus.loading,
   partial: true,
-}) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;
+}) satisfies ObservableQuery.Result<any> as ObservableQuery.Result<any>;

@@ -3,12 +3,13 @@
 export type { DefaultOptions } from "./ApolloClient.js";
 export type {
   ApolloClientOptions,
+  ApolloQueryResult,
+  MutateResult,
   MutationOptions,
   QueryOptions,
   RefetchQueriesOptions,
   RefetchQueriesResult,
   SubscriptionOptions,
-  MutateResult,
   WatchQueryOptions,
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
@@ -28,7 +29,6 @@ export type {
 } from "./watchQueryOptions.js";
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
-  ApolloQueryResult,
   DataState,
   DataValue,
   DefaultContext,

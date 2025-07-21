@@ -5,7 +5,6 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   ErrorLike,
@@ -278,7 +277,7 @@ export function useLazyQuery<
 ): useLazyQuery.ResultTuple<TData, TVariables, TStates> {
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
-  const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
+  const resultRef = React.useRef<ObservableQuery.Result<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
   const calledDuringRender = useRenderGuard();
 
@@ -303,7 +302,7 @@ export function useLazyQuery<
   // observable.getCurrentResult() (or equivalent) to get these values which
   // will hopefully alleviate the need for us to use refs to track these values.
   const updateResult = React.useCallback(
-    (result: ApolloQueryResult<TData>, forceUpdate: () => void) => {
+    (result: ObservableQuery.Result<TData>, forceUpdate: () => void) => {
       const previousData = resultRef.current?.data;
 
       if (previousData && !equal(previousData, result.data)) {
@@ -449,7 +448,7 @@ export function useLazyQuery<
   return [stableExecute, result as any];
 }
 
-const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
+const initialResult: ObservableQuery.Result<any> = maybeDeepFreeze({
   data: undefined,
   dataState: "empty",
   loading: false,

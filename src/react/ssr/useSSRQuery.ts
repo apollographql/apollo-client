@@ -1,13 +1,13 @@
 import type { DocumentNode } from "graphql";
 
-import type { ApolloQueryResult, ObservableQuery } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import { useApolloClient, useQuery } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 
 import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";
 
-const skipStandbyResult: ApolloQueryResult<any> = maybeDeepFreeze({
+const skipStandbyResult: ObservableQuery.Result<any> = maybeDeepFreeze({
   loading: false,
   data: void 0 as any,
   dataState: "empty",

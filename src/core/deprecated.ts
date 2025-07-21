@@ -1,10 +1,17 @@
 import type { ApolloCache } from "@apollo/client/cache";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import type { OperationVariables } from "./types.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import type { DataState, OperationVariables } from "./types.js";
 
 /** @deprecated Use `ApolloClient.Options` instead */
 export type ApolloClientOptions = ApolloClient.Options;
+
+/** @deprecated Use `ObservableQuery.Result` instead */
+export type ApolloQueryResult<
+  TData,
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
+> = ObservableQuery.Result<TData, TStates>;
 
 /** @deprecated Use `ApolloClient.DevtoolsOptions` instead */
 export type DevtoolsOptions = ApolloClient.DevtoolsOptions;

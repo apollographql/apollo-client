@@ -1,8 +1,8 @@
-import type { ApolloClient, ApolloQueryResult } from "@apollo/client";
+import type { ApolloClient, ObservableQuery } from "@apollo/client";
 
 /** @internal */
 export function toQueryResult<TData = unknown>(
-  value: ApolloQueryResult<TData>
+  value: ObservableQuery.Result<TData>
 ) {
   const result: ApolloClient.QueryResult<TData> = {
     data: value.data as TData | undefined,

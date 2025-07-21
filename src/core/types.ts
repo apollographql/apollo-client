@@ -16,7 +16,6 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -269,20 +268,6 @@ export type InternalRefetchQueriesMap<TResult> = Map<
 
 export type OperationVariables = Record<string, any>;
 
-export type ApolloQueryResult<
-  TData,
-  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
-> = {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ErrorLike;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
-  loading: boolean;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-  networkStatus: NetworkStatus;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#partial:member} */
-  partial: boolean;
-} & GetDataState<TData, TStates>;
-
 export type DataState<TData> =
   | {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
@@ -359,15 +344,17 @@ export declare namespace QueryNotification {
     source: "newNetworkStatus";
   };
 
-  type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
+  type SetResult<TData> = NextNotification<ObservableQuery.Result<TData>> & {
     source: "setResult";
   };
 
-  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
+  type FromNetwork<TData> = ObservableNotification<
+    ObservableQuery.Result<TData>
+  > & {
     source: "network";
   };
 
-  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
+  type FromCache<TData> = NextNotification<ObservableQuery.Result<TData>> & {
     source: "cache";
   };
 

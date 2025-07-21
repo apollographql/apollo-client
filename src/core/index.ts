@@ -4,6 +4,7 @@ export type {
   ApolloClientOptions,
   ApolloQueryResult,
   DefaultOptions,
+  DevtoolsOptions,
   MutateResult,
   MutationOptions,
   QueryOptions,

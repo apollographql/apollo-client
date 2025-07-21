@@ -544,11 +544,11 @@ export class QueryManager {
   }
 
   public watchQuery<
-    T,
+    TData,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.WatchQueryOptions<T, TVariables>
-  ): ObservableQuery<T, TVariables> {
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>
+  ): ObservableQuery<TData, TVariables> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
     const query = this.transform(options.query);
@@ -565,7 +565,7 @@ export class QueryManager {
       options.notifyOnNetworkStatusChange = true;
     }
 
-    const observable = new ObservableQuery<T, TVariables>({
+    const observable = new ObservableQuery<TData, TVariables>({
       queryManager: this,
       options,
       transformedQuery: query,

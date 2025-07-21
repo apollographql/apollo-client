@@ -79,7 +79,6 @@ import type {
   MutateResult,
   OperationVariables,
   QueryNotification,
-  SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
@@ -740,7 +739,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: ApolloClient.SubscribeOptions<TData>
-  ): SubscriptionObservable<SubscribeResult<TData>> {
+  ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -787,7 +786,7 @@ export class QueryManager {
 
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
-          map((rawResult): SubscribeResult<TData> => {
+          map((rawResult): ApolloClient.SubscribeResult<TData> => {
             queryInfo.markSubscriptionResult(rawResult, {
               document: query,
               variables,
@@ -798,7 +797,7 @@ export class QueryManager {
                 : CacheWriteBehavior.MERGE,
             });
 
-            const result: SubscribeResult<TData> = {
+            const result: ApolloClient.SubscribeResult<TData> = {
               data: rawResult.data ?? undefined,
             };
 
@@ -829,7 +828,9 @@ export class QueryManager {
           }),
           catchError((error) => {
             if (errorPolicy === "ignore") {
-              return of({ data: undefined } as SubscribeResult<TData>);
+              return of({
+                data: undefined,
+              } as ApolloClient.SubscribeResult<TData>);
             }
 
             return of({ data: undefined, error });

@@ -53,7 +53,6 @@ import type {
   OperationVariables,
   RefetchQueriesInclude,
   RefetchQueriesResult,
-  SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
@@ -275,6 +274,17 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
     extensions?: Record<string, any>;
   } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface SubscribeResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+    extensions?: Record<string, unknown>;
+  }
 
   /**
    * Watched query options.
@@ -723,7 +733,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.SubscribeOptions<TData, TVariables>
-  ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
+  ): SubscriptionObservable<ApolloClient.SubscribeResult<MaybeMasked<TData>>> {
     const cause = {};
 
     const observable =

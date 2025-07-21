@@ -49,7 +49,6 @@ export type {
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
-  SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
   TypeOverrides,

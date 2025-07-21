@@ -52,7 +52,7 @@ import type {
   OnQueryUpdated,
   OperationVariables,
   RefetchQueriesInclude,
-  RefetchQueriesResult,
+  RefetchQueriesPromiseResults,
   SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
@@ -253,6 +253,21 @@ export declare namespace ApolloClient {
     // default refetching behavior for affected queries, though included queries
     // will still be refetched.
     onQueryUpdated?: OnQueryUpdated<TResult> | null;
+  }
+
+  // The result of client.refetchQueries is thenable/awaitable, if you just want
+  // an array of fully resolved results, but you can also access the raw results
+  // immediately by examining the additional { queries, results } properties of
+  // the RefetchQueriesResult<TResult> object.
+  export interface RefetchQueriesResult<TResult>
+    extends Promise<RefetchQueriesPromiseResults<TResult>> {
+    // An array of ObservableQuery objects corresponding 1:1 to TResult values
+    // in the results arrays (both the TResult[] array below, and the results
+    // array resolved by the Promise above).
+    queries: ObservableQuery<any>[];
+    // These are the raw TResult values returned by any onQueryUpdated functions
+    // that were invoked by client.refetchQueries.
+    results: InternalRefetchQueriesResult<TResult>[];
   }
 
   export type SubscribeOptions<
@@ -1026,7 +1041,7 @@ export class ApolloClient implements DataProxy {
     TResult = Promise<ApolloClient.QueryResult<any>>,
   >(
     options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
-  ): RefetchQueriesResult<TResult> {
+  ): ApolloClient.RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
       options as ApolloClient.RefetchQueriesOptions<ApolloCache, TResult>
     );
@@ -1040,7 +1055,7 @@ export class ApolloClient implements DataProxy {
 
     const result = Promise.all<TResult>(
       results as TResult[]
-    ) as RefetchQueriesResult<TResult>;
+    ) as ApolloClient.RefetchQueriesResult<TResult>;
 
     // In case you need the raw results immediately, without awaiting
     // Promise.all(results):

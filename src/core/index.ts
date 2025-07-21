@@ -6,6 +6,7 @@ export type {
   MutationOptions,
   QueryOptions,
   RefetchQueriesOptions,
+  RefetchQueriesResult,
   SubscriptionOptions,
   WatchQueryOptions,
 } from "./deprecated.js";
@@ -47,7 +48,6 @@ export type {
   OperationVariables,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
-  RefetchQueriesResult,
   RefetchQueryDescriptor,
   SubscriptionObservable,
   TypedDocumentNode,

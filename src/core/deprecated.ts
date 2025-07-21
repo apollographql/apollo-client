@@ -28,6 +28,10 @@ export type RefetchQueriesOptions<
   TResult,
 > = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
+/** @deprecated Use `ApolloClient.RefetchQueriesResult` instead */
+export type RefetchQueriesResult<TResult> =
+  ApolloClient.RefetchQueriesResult<TResult>;
+
 /** @deprecated Use `ApolloClient.SubscribeOptions` instead */
 export type SubscriptionOptions<
   TVariables extends OperationVariables = OperationVariables,

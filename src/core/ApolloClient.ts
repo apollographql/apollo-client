@@ -62,22 +62,6 @@ export interface DefaultOptions {
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
-interface DevtoolsOptions {
-  /**
-   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
-   *
-   * The default value is `false` in production and `true` in development if there is a `window` object.
-   */
-  enabled?: boolean;
-
-  /**
-   * Optional name for this `ApolloClient` instance in the devtools. This is
-   * useful when you instantiate multiple clients and want to be able to
-   * identify them by name.
-   */
-  name?: string;
-}
-
 let hasSuggestedDevtools = false;
 
 export declare namespace ApolloClient {
@@ -152,6 +136,22 @@ export declare namespace ApolloClient {
      */
     incrementalHandler?: Incremental.Handler<any>;
   }
+
+  interface DevtoolsOptions {
+    /**
+     * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
+     *
+     * The default value is `false` in production and `true` in development if there is a `window` object.
+     */
+    enabled?: boolean;
+
+    /**
+     * Optional name for this `ApolloClient` instance in the devtools. This is
+     * useful when you instantiate multiple clients and want to be able to
+     * identify them by name.
+     */
+    name?: string;
+  }
 }
 
 /**
@@ -185,7 +185,7 @@ export class ApolloClient implements DataProxy {
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
-  public readonly devtoolsConfig: DevtoolsOptions;
+  public readonly devtoolsConfig: ApolloClient.DevtoolsOptions;
 
   private queryManager: QueryManager;
   private devToolsHookCb?: Function;

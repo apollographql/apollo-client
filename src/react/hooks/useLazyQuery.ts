@@ -9,7 +9,6 @@ import type {
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreOptions,
   GetDataState,
   MaybeMasked,
   ObservableQuery,
@@ -102,7 +101,7 @@ export declare namespace useLazyQuery {
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
     >(
-      fetchMoreOptions: FetchMoreOptions<
+      fetchMoreOptions: ObservableQuery.FetchMoreOptions<
         TData,
         TVariables,
         TFetchData,

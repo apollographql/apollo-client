@@ -51,29 +51,6 @@ import type {
 
 const { assign, hasOwnProperty } = Object;
 
-export type FetchMoreOptions<
-  TData,
-  TVariables extends OperationVariables,
-  TFetchData = TData,
-  TFetchVars extends OperationVariables = TVariables,
-> = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query?: DocumentNode | TypedDocumentNode<TFetchData, TFetchVars>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: Partial<NoInfer<TFetchVars>>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-  updateQuery?: (
-    previousQueryResult: Unmasked<TData>,
-    options: {
-      fetchMoreResult: Unmasked<TFetchData>;
-      variables: TFetchVars;
-    }
-  ) => Unmasked<TData>;
-};
-
 interface TrackedOperation {
   /**
    * This NetworkStatus will be used to override the current networkStatus
@@ -179,6 +156,29 @@ export declare namespace ObservableQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
     variables: TVariables;
+  };
+
+  export type FetchMoreOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query?: DocumentNode | TypedDocumentNode<TFetchData, TFetchVars>;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables?: Partial<NoInfer<TFetchVars>>;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+    updateQuery?: (
+      previousQueryResult: Unmasked<TData>,
+      options: {
+        fetchMoreResult: Unmasked<TFetchData>;
+        variables: TFetchVars;
+      }
+    ) => Unmasked<TData>;
   };
 
   /**
@@ -778,7 +778,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
   >(
-    options: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>
+    options: ObservableQuery.FetchMoreOptions<
+      TData,
+      TVariables,
+      TFetchData,
+      TFetchVars
+    >
   ): Promise<ApolloClient.QueryResult<TFetchData>>;
   public fetchMore<
     TFetchData = TData,
@@ -789,9 +794,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     context,
     errorPolicy,
     updateQuery,
-  }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<
-    ApolloClient.QueryResult<TFetchData>
-  > {
+  }: ObservableQuery.FetchMoreOptions<
+    TData,
+    TVariables,
+    TFetchData,
+    TFetchVars
+  >): Promise<ApolloClient.QueryResult<TFetchData>> {
     invariant(
       this.options.fetchPolicy !== "cache-only",
       "Cannot execute `fetchMore` for 'cache-only' query '%s'. Please use a different fetch policy.",

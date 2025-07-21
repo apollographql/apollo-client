@@ -22,7 +22,6 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreOptions,
   GetDataState,
   ObservableQuery,
   OperationVariables,
@@ -165,7 +164,7 @@ export declare namespace useQuery {
         TFetchData = TData,
         TFetchVars extends OperationVariables = TVariables,
       >(
-        fetchMoreOptions: FetchMoreOptions<
+        fetchMoreOptions: ObservableQuery.FetchMoreOptions<
           TData,
           TVariables,
           TFetchData,

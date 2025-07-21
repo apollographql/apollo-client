@@ -5,7 +5,6 @@ import { filter } from "rxjs";
 import type {
   ApolloClient,
   DataState,
-  FetchMoreOptions,
   ObservableQuery,
   OperationVariables,
 } from "@apollo/client";
@@ -345,7 +344,7 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData, any, any, any>) {
+  fetchMore(options: ObservableQuery.FetchMoreOptions<TData, any, any, any>) {
     return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 

@@ -1,7 +1,7 @@
 import type {
   ApolloClient,
-  FetchMoreOptions,
   MaybeMasked,
+  ObservableQuery,
   OperationVariables,
 } from "@apollo/client";
 
@@ -13,5 +13,10 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <
   TFetchData = TData,
   TFetchVars extends OperationVariables = TVariables,
 >(
-  fetchMoreOptions: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>
+  fetchMoreOptions: ObservableQuery.FetchMoreOptions<
+    TData,
+    TVariables,
+    TFetchData,
+    TFetchVars
+  >
 ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;

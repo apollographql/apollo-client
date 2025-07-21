@@ -45,7 +45,6 @@ import type {
   ErrorLike,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesResult,
-  MutateResult,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
   NormalizedExecutionResult,
@@ -209,6 +208,17 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface MutateResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+    extensions?: Record<string, unknown>;
+  }
 
   /**
    * Query options.
@@ -704,7 +714,7 @@ export class ApolloClient implements DataProxy {
     TCache extends ApolloCache = ApolloCache,
   >(
     options: ApolloClient.MutateOptions<TData, TVariables, TCache>
-  ): Promise<MutateResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
     const optionsWithDefaults = mergeOptions(
       compact(
         {

@@ -76,7 +76,6 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
-  MutateResult,
   OperationVariables,
   QueryNotification,
   SubscriptionObservable,
@@ -267,7 +266,7 @@ export class QueryManager {
   }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
     errorPolicy: ErrorPolicy;
     fetchPolicy: MutationFetchPolicy;
-  }): Promise<MutateResult<MaybeMasked<TData>>> {
+  }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
     const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
@@ -382,7 +381,7 @@ export class QueryManager {
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
             if (!queryInfo.hasNext) {
-              const result: MutateResult<TData> = {
+              const result: ApolloClient.MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,

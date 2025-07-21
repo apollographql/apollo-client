@@ -11,7 +11,6 @@ import type {
   ErrorPolicy,
   InternalRefetchQueriesInclude,
   MaybeMasked,
-  MutateResult,
   MutationFetchPolicy,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
@@ -152,7 +151,7 @@ export declare namespace useMutation {
           variables: TVariables;
         },
       ]
-  ) => Promise<MutateResult<MaybeMasked<TData>>>;
+  ) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
 
   export type MutationFunctionOptions<
     TData = unknown,

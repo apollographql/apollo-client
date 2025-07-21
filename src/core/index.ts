@@ -8,6 +8,7 @@ export type {
   RefetchQueriesOptions,
   RefetchQueriesResult,
   SubscriptionOptions,
+  MutateResult,
   WatchQueryOptions,
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
@@ -39,7 +40,6 @@ export type {
   InternalRefetchQueriesResult,
   InternalRefetchQueryDescriptor,
   MethodKeys,
-  MutateResult,
   MutationQueryReducer,
   MutationQueryReducersMap,
   MutationUpdaterFunction,

@@ -8,7 +8,6 @@ import type {
   ApolloQueryResult,
   DataValue,
   DefaultOptions,
-  MutateResult,
   ObservableQuery,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
@@ -3099,7 +3098,9 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(promise).branded.toEqualTypeOf<Promise<MutateResult<any>>>();
+      expectTypeOf(promise).branded.toEqualTypeOf<
+        Promise<ApolloClient.MutateResult<any>>
+      >();
     });
 
     test("client.mutate uses TData type when using plain TypedDocumentNode", () => {
@@ -3184,7 +3185,7 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(promise).branded.toEqualTypeOf<
-        Promise<MutateResult<Mutation>>
+        Promise<ApolloClient.MutateResult<Mutation>>
       >();
     });
 

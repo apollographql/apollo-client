@@ -16,6 +16,9 @@ export type MutationOptions<
   TCache extends ApolloCache = ApolloCache,
 > = ApolloClient.MutateOptions<TData, TVariables, TCache>;
 
+/** @deprecated Use `ApolloClient.MutateResult` instead */
+export type MutateResult<TData = unknown> = ApolloClient.MutateResult<TData>;
+
 /** @deprecated Use `ApolloClient.QueryOptions` instead */
 export type QueryOptions<
   TVariables extends OperationVariables = OperationVariables,

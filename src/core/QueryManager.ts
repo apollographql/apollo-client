@@ -65,12 +65,11 @@ import {
 
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
+import type { ApolloClient } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
-  ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -129,7 +128,7 @@ interface MaskOperationOptions<TData> {
 interface QueryManagerOptions {
   client: ApolloClient;
   clientOptions: ApolloClient.Options;
-  defaultOptions: DefaultOptions;
+  defaultOptions: ApolloClient.DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
@@ -142,7 +141,7 @@ interface QueryManagerOptions {
 }
 
 export class QueryManager {
-  public defaultOptions: DefaultOptions;
+  public defaultOptions: ApolloClient.DefaultOptions;
 
   public readonly client: ApolloClient;
   /**
@@ -428,8 +427,8 @@ export class QueryManager {
     });
   }
 
-  public fetchQuery<TData, TVars extends OperationVariables>(
-    options: ApolloClient.WatchQueryOptions<TData, TVars>,
+  public fetchQuery<TData, TVariables extends OperationVariables>(
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloClient.QueryResult<TData>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
@@ -575,12 +574,15 @@ export class QueryManager {
     return observable;
   }
 
-  public query<TData, TVars extends OperationVariables = OperationVariables>(
-    options: ApolloClient.QueryOptions<TData, TVars>
+  public query<
+    TData,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>({
+    return this.fetchQuery<TData, TVariables>({
       ...(options as any),
       query,
     }).then((value) => ({
@@ -1021,7 +1023,7 @@ export class QueryManager {
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
-  ): Observable<ApolloQueryResult<TData>> {
+  ): Observable<ObservableQuery.Result<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
 
@@ -1067,7 +1069,7 @@ export class QueryManager {
               networkStatus: NetworkStatus.ready,
               partial: !result.data,
             }),
-        } as ApolloQueryResult<TData>;
+        } as ObservableQuery.Result<TData>;
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1096,7 +1098,7 @@ export class QueryManager {
           throw error;
         }
 
-        const aqr: ApolloQueryResult<TData> = {
+        const aqr: ObservableQuery.Result<TData> = {
           data: undefined,
           dataState: "empty",
           loading: false,
@@ -1537,7 +1539,7 @@ export class QueryManager {
 
       const toResult = (
         data: TData | DeepPartial<TData> | undefined
-      ): ApolloQueryResult<TData> => {
+      ): ObservableQuery.Result<TData> => {
         // TODO: Eventually we should move this handling into
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
         // on returnPartialData: false, we should take advantage of that instead
@@ -1556,7 +1558,7 @@ export class QueryManager {
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
-        } as ApolloQueryResult<TData>;
+        } as ObservableQuery.Result<TData>;
       };
 
       const fromData = (

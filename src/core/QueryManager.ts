@@ -87,7 +87,6 @@ import type {
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
-  MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
@@ -268,7 +267,7 @@ export class QueryManager {
     errorPolicy,
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TCache> & {
+  }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
     errorPolicy: ErrorPolicy;
     fetchPolicy: MutationFetchPolicy;
   }): Promise<MutateResult<MaybeMasked<TData>>> {

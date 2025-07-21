@@ -1,15 +1,11 @@
-import type {
-  ApolloClient,
-  MutationOptions,
-  OperationVariables,
-} from "@apollo/client";
+import type { ApolloClient, OperationVariables } from "@apollo/client";
 
 import { compact } from "./compact.js";
 
 type OptionsUnion<TData, TVariables extends OperationVariables> =
   | ApolloClient.WatchQueryOptions<TData, TVariables>
   | ApolloClient.QueryOptions<TData, TVariables>
-  | MutationOptions<TData, TVariables, any>;
+  | ApolloClient.MutateOptions<TData, TVariables, any>;
 
 /** @internal */
 export function mergeOptions<

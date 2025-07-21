@@ -3,7 +3,12 @@ import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
-import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
+import type {
+  ApolloCache,
+  DataProxy,
+  IgnoreModifier,
+  Reference,
+} from "@apollo/client/cache";
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
@@ -37,8 +42,13 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
+  InternalRefetchQueriesInclude,
   InternalRefetchQueriesResult,
   MutateResult,
+  MutationQueryReducersMap,
+  MutationUpdaterFunction,
+  NormalizedExecutionResult,
+  OnQueryUpdated,
   OperationVariables,
   QueryResult,
   RefetchQueriesInclude,
@@ -52,7 +62,6 @@ import type {
   ErrorPolicy,
   FetchPolicy,
   MutationFetchPolicy,
-  MutationOptions,
   NextFetchPolicyContext,
   RefetchWritePolicy,
   SubscriptionOptions,
@@ -62,7 +71,7 @@ import type {
 export interface DefaultOptions {
   watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
   query?: Partial<ApolloClient.QueryOptions<any, any>>;
-  mutate?: Partial<MutationOptions<any, any, any>>;
+  mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
 }
 
 let hasSuggestedDevtools = false;
@@ -155,6 +164,54 @@ export declare namespace ApolloClient {
      */
     name?: string;
   }
+
+  export type MutateOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+    TCache extends ApolloCache = ApolloCache,
+  > = {
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+    optimisticResponse?:
+      | Unmasked<NoInfer<TData>>
+      | ((
+          vars: TVariables,
+          { IGNORE }: { IGNORE: IgnoreModifier }
+        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+    updateQueries?: MutationQueryReducersMap<TData>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+    refetchQueries?:
+      | ((
+          result: NormalizedExecutionResult<Unmasked<TData>>
+        ) => InternalRefetchQueriesInclude)
+      | InternalRefetchQueriesInclude;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+    awaitRefetchQueries?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+    update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+    onQueryUpdated?: OnQueryUpdated<any>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: MutationFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+    keepRootFields?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+    mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  } & VariablesOption<NoInfer<TVariables>>;
 
   /**
    * Query options.
@@ -578,7 +635,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
   >(
-    options: MutationOptions<TData, TVariables, TCache>
+    options: ApolloClient.MutateOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
     const optionsWithDefaults = mergeOptions(
       compact(
@@ -589,7 +646,7 @@ export class ApolloClient implements DataProxy {
         this.defaultOptions.mutate
       ),
       options
-    ) as MutationOptions<TData, TVariables, TCache> & {
+    ) as ApolloClient.MutateOptions<TData, TVariables, TCache> & {
       fetchPolicy: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
     };

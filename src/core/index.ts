@@ -3,8 +3,9 @@
 export type { DefaultOptions } from "./ApolloClient.js";
 export type {
   ApolloClientOptions,
-  WatchQueryOptions,
+  MutationOptions,
   QueryOptions,
+  WatchQueryOptions,
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
 export type { FetchMoreOptions } from "./ObservableQuery.js";
@@ -13,7 +14,6 @@ export type {
   ErrorPolicy,
   FetchPolicy,
   MutationFetchPolicy,
-  MutationOptions,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,

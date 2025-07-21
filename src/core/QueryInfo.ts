@@ -27,9 +27,13 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
-import type { ErrorPolicy, MutationOptions } from "./watchQueryOptions.js";
+import type { ErrorPolicy } from "./watchQueryOptions.js";
 
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
+type UpdateQueries<TData> = ApolloClient.MutateOptions<
+  TData,
+  any,
+  any
+>["updateQueries"];
 
 const IGNORE = {} as IgnoreModifier;
 

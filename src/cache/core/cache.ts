@@ -34,51 +34,6 @@ import type { DataProxy } from "./types/DataProxy.js";
 export type Transaction = (c: ApolloCache) => void;
 
 /**
- * Watched fragment options.
- */
-export interface WatchFragmentOptions<TData, TVars> {
-  /**
-   * A GraphQL fragment document parsed into an AST with the `gql`
-   * template literal.
-   *
-   * @docGroup 1. Required options
-   */
-  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-  /**
-   * An object containing a `__typename` and primary key fields
-   * (such as `id`) identifying the entity object from which the fragment will
-   * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
-   * (uncommon).
-   *
-   * @docGroup 1. Required options
-   */
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
-  /**
-   * Any variables that the GraphQL fragment may depend on.
-   *
-   * @docGroup 2. Cache options
-   */
-  variables?: TVars;
-  /**
-   * The name of the fragment defined in the fragment document.
-   *
-   * Required if the fragment document includes more than one fragment,
-   * optional otherwise.
-   *
-   * @docGroup 2. Cache options
-   */
-  fragmentName?: string;
-  /**
-   * If `true`, `watchFragment` returns optimistic results.
-   *
-   * The default value is `true`.
-   *
-   * @docGroup 2. Cache options
-   */
-  optimistic?: boolean;
-}
-
-/**
  * Watched fragment results.
  */
 export type WatchFragmentResult<TData> =
@@ -90,6 +45,53 @@ export type WatchFragmentResult<TData> =
       complete: false;
       missing: MissingTree;
     } & GetDataState<TData, "partial">);
+
+export declare namespace ApolloCache {
+  /**
+   * Watched fragment options.
+   */
+  export interface WatchFragmentOptions<TData, TVars> {
+    /**
+     * A GraphQL fragment document parsed into an AST with the `gql`
+     * template literal.
+     *
+     * @docGroup 1. Required options
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    /**
+     * An object containing a `__typename` and primary key fields
+     * (such as `id`) identifying the entity object from which the fragment will
+     * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+     * (uncommon).
+     *
+     * @docGroup 1. Required options
+     */
+    from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
+    /**
+     * Any variables that the GraphQL fragment may depend on.
+     *
+     * @docGroup 2. Cache options
+     */
+    variables?: TVars;
+    /**
+     * The name of the fragment defined in the fragment document.
+     *
+     * Required if the fragment document includes more than one fragment,
+     * optional otherwise.
+     *
+     * @docGroup 2. Cache options
+     */
+    fragmentName?: string;
+    /**
+     * If `true`, `watchFragment` returns optimistic results.
+     *
+     * The default value is `true`.
+     *
+     * @docGroup 2. Cache options
+     */
+    optimistic?: boolean;
+  }
+}
 
 export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
@@ -276,7 +278,7 @@ export abstract class ApolloCache implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: WatchFragmentOptions<TData, TVariables>
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
   ): Observable<WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,

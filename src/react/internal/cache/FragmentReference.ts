@@ -2,10 +2,7 @@ import { equal } from "@wry/equality";
 import type { Observable, Subscription } from "rxjs";
 
 import type { ApolloClient, OperationVariables } from "@apollo/client";
-import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
-} from "@apollo/client/cache";
+import type { WatchFragmentResult } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
@@ -42,7 +39,10 @@ export class FragmentReference<
 
   constructor(
     client: ApolloClient,
-    watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
+    watchFragmentOptions: ApolloClient.WatchFragmentOptions<
+      TData,
+      TVariables
+    > & {
       from: string;
     },
     options: FragmentReferenceOptions
@@ -177,7 +177,9 @@ export class FragmentReference<
 
   private getDiff<TData, TVariables extends OperationVariables>(
     client: ApolloClient,
-    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    }
   ) {
     const { cache } = client;
     const { from, fragment, fragmentName } = options;

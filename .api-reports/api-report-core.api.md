@@ -361,6 +361,9 @@ export type DefaultOptions = ApolloClient.DefaultOptions;
 
 export { defaultPrinter }
 
+// @public @deprecated (undocumented)
+export type DevtoolsOptions = ApolloClient.DevtoolsOptions;
+
 export { DiffQueryAgainstStoreOptions }
 
 export { disableExperimentalFragmentVariables }

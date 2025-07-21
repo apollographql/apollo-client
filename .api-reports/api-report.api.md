@@ -762,6 +762,9 @@ interface DeleteModifier {
 // @public (undocumented)
 const _deleteModifier: unique symbol;
 
+// @public @deprecated (undocumented)
+export type DevtoolsOptions = ApolloClient.DevtoolsOptions;
+
 // @public (undocumented)
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
     returnPartialData?: boolean;

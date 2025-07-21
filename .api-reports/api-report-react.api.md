@@ -1694,7 +1694,7 @@ type WatchQueryFetchPolicy_2 = FetchPolicy | "cache-and-network" | "standby";
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:270:7 - (ae-forgotten-export) The symbol "DataValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:320:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:101:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:94:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:67:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:76:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 

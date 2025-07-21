@@ -20,7 +20,6 @@ import type {
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
@@ -50,7 +49,7 @@ export declare namespace useLazyQuery {
     nextFetchPolicy?:
       | WatchQueryFetchPolicy
       | ((
-          this: WatchQueryOptions<TVariables, TData>,
+          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
           currentFetchPolicy: WatchQueryFetchPolicy,
           context: NextFetchPolicyContext<TData, TVariables>
         ) => WatchQueryFetchPolicy);
@@ -290,7 +289,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
-    } as WatchQueryOptions<TVariables, TData>);
+    } as ApolloClient.WatchQueryOptions<TData, TVariables>);
   }
 
   const [currentClient, setCurrentClient] = React.useState(client);

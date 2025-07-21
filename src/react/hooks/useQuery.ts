@@ -33,7 +33,6 @@ import type {
   TypedDocumentNode,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -66,7 +65,7 @@ export declare namespace useQuery {
       nextFetchPolicy?:
         | WatchQueryFetchPolicy
         | ((
-            this: WatchQueryOptions<TVariables, TData>,
+            this: ApolloClient.WatchQueryOptions<TData, TVariables>,
             currentFetchPolicy: WatchQueryFetchPolicy,
             context: NextFetchPolicyContext<TData, TVariables>
           ) => WatchQueryFetchPolicy);
@@ -198,7 +197,9 @@ const lastWatchOptions = Symbol();
 
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
-  [lastWatchOptions]?: Readonly<WatchQueryOptions<TVariables, TData>>;
+  [lastWatchOptions]?: Readonly<
+    ApolloClient.WatchQueryOptions<TData, TVariables>
+  >;
 }
 
 interface InternalResult<TData> {
@@ -320,10 +321,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;
 
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
-    client.defaultOptions.watchQuery as any,
-    { ...opts, query }
-  );
+  const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+    mergeOptions(client.defaultOptions.watchQuery as any, { ...opts, query });
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -415,7 +414,7 @@ function useInitialFetchPolicyIfNecessary<
   TData,
   TVariables extends OperationVariables,
 >(
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
+  watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables>,
   observable: ObsQueryWithMeta<TData, TVariables>
 ) {
   "use no memo";
@@ -492,7 +491,7 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
+  watchQueryOptions: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>
 ) {
   "use no memo";
   if (
@@ -529,8 +528,8 @@ function useResubscribeIfNecessary<
 }
 
 function shouldReobserve<TData, TVariables extends OperationVariables>(
-  previousOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  options: Readonly<WatchQueryOptions<TVariables, TData>>
+  previousOptions: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>,
+  options: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>
 ) {
   return (
     previousOptions.query !== options.query ||

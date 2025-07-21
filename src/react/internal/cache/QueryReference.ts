@@ -3,13 +3,13 @@ import type { Subscription } from "rxjs";
 import { filter } from "rxjs";
 
 import type {
+  ApolloClient,
   ApolloQueryResult,
   DataState,
   FetchMoreOptions,
   ObservableQuery,
   OperationVariables,
   QueryResult,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
@@ -175,7 +175,7 @@ const OBSERVED_CHANGED_OPTIONS = [
 ] as const;
 
 type ObservedOptions = Pick<
-  WatchQueryOptions,
+  ApolloClient.WatchQueryOptions,
   (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 

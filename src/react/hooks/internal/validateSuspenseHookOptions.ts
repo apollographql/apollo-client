@@ -1,14 +1,14 @@
 import type {
+  ApolloClient,
   OperationVariables,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 export function validateSuspenseHookOptions<
   TData,
   TVariables extends OperationVariables,
->(options: WatchQueryOptions<TVariables, TData>) {
+>(options: ApolloClient.WatchQueryOptions<TData, TVariables>) {
   const { fetchPolicy, returnPartialData } = options;
 
   validateFetchPolicy(fetchPolicy);

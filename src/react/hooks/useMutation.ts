@@ -13,7 +13,6 @@ import type {
   MaybeMasked,
   MutateResult,
   MutationFetchPolicy,
-  MutationOptions,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
   NormalizedExecutionResult,
@@ -282,7 +281,9 @@ export function useMutation<
       const clientOptions = mergeOptions(baseOptions, executeOptions as any);
 
       return client
-        .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
+        .mutate(
+          clientOptions as ApolloClient.MutateOptions<TData, OperationVariables>
+        )
         .then(
           (response) => {
             const { data, error } = response;

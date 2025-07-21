@@ -10,7 +10,6 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type {
   SubscribeToMoreFunction,
@@ -293,7 +292,7 @@ export function useLoadableQuery<
           client.watchQuery({
             ...watchQueryOptions,
             variables,
-          } as WatchQueryOptions<any, any>)
+          } as ApolloClient.WatchQueryOptions<any, any>)
         );
 
         setQueryRef(wrapQueryRef(queryRef));
@@ -339,8 +338,8 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: useLoadableQuery.Options;
-}): WatchQueryOptions<TVariables, TData> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+}): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     const fetchPolicy =
       options.fetchPolicy ||
       client.defaultOptions.watchQuery?.fetchPolicy ||
@@ -358,6 +357,9 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
       validateSuspenseHookOptions(watchQueryOptions as any);
     }
 
-    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
+    return watchQueryOptions as ApolloClient.WatchQueryOptions<
+      TData,
+      TVariables
+    >;
   }, [client, options, query]);
 }

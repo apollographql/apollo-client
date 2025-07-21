@@ -14,7 +14,6 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
@@ -422,16 +421,16 @@ export function useWatchQueryOptions<
   client,
   query,
   options,
-}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
-  TVariables,
-  TData
-> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+}: UseWatchQueryOptionsHookOptions<
+  TData,
+  TVariables
+>): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      return { query, fetchPolicy: "standby" } as WatchQueryOptions<
-        TVariables,
-        TData
-      >;
+      return {
+        query,
+        fetchPolicy: "standby",
+      } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 
     const fetchPolicy =
@@ -439,13 +438,14 @@ export function useWatchQueryOptions<
       client.defaultOptions.watchQuery?.fetchPolicy ||
       "cache-first";
 
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
-      ...options,
-      fetchPolicy,
-      query,
-      notifyOnNetworkStatusChange: false,
-      nextFetchPolicy: void 0,
-    };
+    const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+      {
+        ...options,
+        fetchPolicy,
+        query,
+        notifyOnNetworkStatusChange: false,
+        nextFetchPolicy: void 0,
+      };
 
     if (__DEV__) {
       validateSuspenseHookOptions(watchQueryOptions);

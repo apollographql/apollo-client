@@ -13,6 +13,9 @@ export type ApolloQueryResult<
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 > = ObservableQuery.Result<TData, TStates>;
 
+/** @deprecated Use `ApolloClient.DefaultOptions` instead */
+export type DefaultOptions = ApolloClient.DefaultOptions;
+
 /** @deprecated Use `ApolloClient.DevtoolsOptions` instead */
 export type DevtoolsOptions = ApolloClient.DevtoolsOptions;
 

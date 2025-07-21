@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import type { DefaultOptions } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
@@ -11,7 +10,7 @@ import { MockLink } from "@apollo/client/testing";
 
 export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockLink.MockedResponse<any, any>>;
-  defaultOptions?: DefaultOptions;
+  defaultOptions?: ApolloClient.DefaultOptions;
   cache?: ApolloCache;
   localState?: LocalState;
   childProps?: object;

@@ -1,9 +1,9 @@
 /* Core */
 
-export type { DefaultOptions } from "./ApolloClient.js";
 export type {
   ApolloClientOptions,
   ApolloQueryResult,
+  DefaultOptions,
   MutateResult,
   MutationOptions,
   QueryOptions,

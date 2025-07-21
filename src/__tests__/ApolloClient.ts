@@ -2815,7 +2815,7 @@ describe("ApolloClient", () => {
     );
 
     it("should set `defaultOptions` using options passed into the constructor", () => {
-      const defaultOptions: DefaultOptions = {
+      const defaultOptions: ApolloClient.DefaultOptions = {
         query: {
           fetchPolicy: "no-cache",
         },
@@ -2829,7 +2829,7 @@ describe("ApolloClient", () => {
     });
 
     it("should use default options (unless overridden) when querying", async () => {
-      const defaultOptions: DefaultOptions = {
+      const defaultOptions: ApolloClient.DefaultOptions = {
         query: {
           fetchPolicy: "no-cache",
         },

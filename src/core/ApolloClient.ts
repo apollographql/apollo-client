@@ -60,15 +60,15 @@ import type {
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 
-export interface DefaultOptions {
-  watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
-  query?: Partial<ApolloClient.QueryOptions<any, any>>;
-  mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-}
-
 let hasSuggestedDevtools = false;
 
 export declare namespace ApolloClient {
+  export interface DefaultOptions {
+    watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
+    query?: Partial<ApolloClient.QueryOptions<any, any>>;
+    mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
+  }
+
   export interface Options {
     /**
      * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
@@ -105,7 +105,7 @@ export declare namespace ApolloClient {
      *
      * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
      */
-    defaultOptions?: DefaultOptions;
+    defaultOptions?: ApolloClient.DefaultOptions;
     defaultContext?: Partial<DefaultContext>;
     /**
      * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
@@ -393,7 +393,7 @@ export class ApolloClient implements DataProxy {
   }
   public version: string;
   public queryDeduplication: boolean;
-  public defaultOptions: DefaultOptions;
+  public defaultOptions: ApolloClient.DefaultOptions;
   public readonly devtoolsConfig: ApolloClient.DevtoolsOptions;
 
   private queryManager: QueryManager;

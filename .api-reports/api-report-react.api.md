@@ -842,7 +842,7 @@ class QueryManager {
     // (undocumented)
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)
-    watchQuery<T, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient_2.WatchQueryOptions<T, TVariables>): ObservableQuery<T, TVariables>;
+    watchQuery<TData, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient_2.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;
 }
 
 // @public (undocumented)

@@ -22,6 +22,12 @@ export type QueryOptions<
   TData = unknown,
 > = ApolloClient.QueryOptions<TData, TVariables>;
 
+/** @deprecated Use `ApolloClient.SubscribeOptions` instead */
+export type SubscriptionOptions<
+  TVariables extends OperationVariables = OperationVariables,
+  TData = unknown,
+> = ApolloClient.SubscribeOptions<TData, TVariables>;
+
 /** @deprecated Use `ApolloClient.WatchQueryOptions` instead */
 export type WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,

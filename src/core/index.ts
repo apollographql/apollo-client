@@ -5,6 +5,7 @@ export type {
   ApolloClientOptions,
   MutationOptions,
   QueryOptions,
+  SubscriptionOptions,
   WatchQueryOptions,
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
@@ -18,7 +19,6 @@ export type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
   SubscribeToMoreUpdateQueryFn,
-  SubscriptionOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
   WatchQueryFetchPolicy,

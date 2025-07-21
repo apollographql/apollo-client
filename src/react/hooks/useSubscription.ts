@@ -10,7 +10,6 @@ import type {
   ErrorPolicy,
   FetchPolicy,
   OperationVariables,
-  SubscriptionOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
@@ -377,7 +376,7 @@ function createSubscription<
     errorPolicy,
     context,
     extensions,
-  } as SubscriptionOptions<TVariables, TData>;
+  } as ApolloClient.SubscribeOptions<TData, TVariables>;
   const __ = {
     ...options,
     client,

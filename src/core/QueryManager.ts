@@ -87,7 +87,6 @@ import type {
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
-  SubscriptionOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 
@@ -740,7 +739,7 @@ export class QueryManager {
   }
 
   public startGraphQLSubscription<TData = unknown>(
-    options: SubscriptionOptions
+    options: ApolloClient.SubscribeOptions<TData>
   ): SubscriptionObservable<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {

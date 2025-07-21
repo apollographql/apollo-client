@@ -64,7 +64,6 @@ import type {
   MutationFetchPolicy,
   NextFetchPolicyContext,
   RefetchWritePolicy,
-  SubscriptionOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 
@@ -231,6 +230,26 @@ export declare namespace ApolloClient {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: FetchPolicy;
+  } & VariablesOption<NoInfer<TVariables>>;
+
+  export type SubscribeOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+    extensions?: Record<string, any>;
   } & VariablesOption<NoInfer<TVariables>>;
 
   /**
@@ -679,7 +698,7 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: SubscriptionOptions<TVariables, TData>
+    options: ApolloClient.SubscribeOptions<TData, TVariables>
   ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
     const cause = {};
 

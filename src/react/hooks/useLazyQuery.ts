@@ -15,7 +15,6 @@ import type {
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
@@ -97,7 +96,7 @@ export declare namespace useLazyQuery {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: (
       variables?: Partial<TVariables>
-    ) => Promise<QueryResult<MaybeMasked<TData>>>;
+    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <
@@ -110,7 +109,7 @@ export declare namespace useLazyQuery {
         TFetchData,
         TFetchVars
       >
-    ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
@@ -180,7 +179,7 @@ export declare namespace useLazyQuery {
     ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
-  ) => ObservableQuery.ResultPromise<QueryResult<TData>>;
+  ) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>>;
 }
 
 // The following methods, when called will execute the query, regardless of

@@ -79,7 +79,6 @@ import type {
   MutateResult,
   OperationVariables,
   QueryNotification,
-  QueryResult,
   SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
@@ -434,7 +433,7 @@ export class QueryManager {
   public fetchQuery<TData, TVars extends OperationVariables>(
     options: ApolloClient.WatchQueryOptions<TData, TVars>,
     networkStatus?: NetworkStatus
-  ): Promise<QueryResult<TData>> {
+  ): Promise<ApolloClient.QueryResult<TData>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
     // do the rest asynchronously to keep the same rejection timing as
@@ -580,7 +579,7 @@ export class QueryManager {
 
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: ApolloClient.QueryOptions<TData, TVars>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>({
@@ -718,8 +717,9 @@ export class QueryManager {
 
   public refetchObservableQueries(
     includeStandby: boolean = false
-  ): Promise<QueryResult<any>[]> {
-    const observableQueryPromises: Promise<QueryResult<any>>[] = [];
+  ): Promise<ApolloClient.QueryResult<any>[]> {
+    const observableQueryPromises: Promise<ApolloClient.QueryResult<any>>[] =
+      [];
 
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery) => {
@@ -1360,8 +1360,14 @@ export class QueryManager {
               // options.include.
               includedQueriesByOq.delete(oq);
 
-              let result: TResult | boolean | Promise<QueryResult<any>> =
-                onQueryUpdated(oq, diff, lastDiff);
+              let result:
+                | TResult
+                | boolean
+                | Promise<ApolloClient.QueryResult<any>> = onQueryUpdated(
+                oq,
+                diff,
+                lastDiff
+              );
 
               if (result === true) {
                 // The onQueryUpdated function requested the default refetching
@@ -1401,7 +1407,11 @@ export class QueryManager {
 
     if (includedQueriesByOq.size) {
       includedQueriesByOq.forEach(({ oq, lastDiff, diff }) => {
-        let result: TResult | boolean | Promise<QueryResult<any>> | undefined;
+        let result:
+          | TResult
+          | boolean
+          | Promise<ApolloClient.QueryResult<any>>
+          | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
         // queries, even the QueryOptions ones.

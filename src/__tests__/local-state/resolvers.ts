@@ -2,7 +2,6 @@ import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { delay, of } from "rxjs";
 
-import type { QueryResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
@@ -570,7 +569,7 @@ describe("Basic resolver capabilities", () => {
       }),
     });
 
-    function check(result: QueryResult<any>) {
+    function check(result: ApolloClient.QueryResult<any>) {
       return new Promise<void>((resolve) => {
         expect(result.data.developer.id).toBe(developerId);
         expect(result.data.developer.handle).toBe("@benjamn");

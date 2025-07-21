@@ -35,7 +35,6 @@ import type {
   DefaultContext,
   OperationVariables,
   QueryNotification,
-  QueryResult,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -711,7 +710,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): ObservableQuery.ResultPromise<QueryResult<TData>> {
+  ): ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>> {
     const { fetchPolicy } = this.options;
 
     const reobserveOptions: Partial<
@@ -763,7 +762,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     TFetchVars extends OperationVariables = TVariables,
   >(
     options: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>
-  ): Promise<QueryResult<TFetchData>>;
+  ): Promise<ApolloClient.QueryResult<TFetchData>>;
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -774,7 +773,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     errorPolicy,
     updateQuery,
   }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<
-    QueryResult<TFetchData>
+    ApolloClient.QueryResult<TFetchData>
   > {
     invariant(
       this.options.fetchPolicy !== "cache-only",
@@ -1040,7 +1039,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public async setVariables(
     variables: TVariables
-  ): Promise<QueryResult<TData>> {
+  ): Promise<ApolloClient.QueryResult<TData>> {
     variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
@@ -1365,7 +1364,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
-  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
+  ): ObservableQuery.ResultPromise<
+    ApolloClient.QueryResult<MaybeMasked<TData>>
+  > {
     return this._reobserve(newOptions);
   }
   private _reobserve(
@@ -1373,7 +1374,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     internalOptions?: {
       newNetworkStatus?: NetworkStatus;
     }
-  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
+  ): ObservableQuery.ResultPromise<
+    ApolloClient.QueryResult<MaybeMasked<TData>>
+  > {
     this.isTornDown = false;
     let { newNetworkStatus } = internalOptions || {};
 

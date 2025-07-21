@@ -45,7 +45,6 @@ export type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,

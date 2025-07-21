@@ -9,7 +9,6 @@ import type {
   FetchMoreOptions,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
@@ -417,7 +416,7 @@ export class InternalQueryReference<
   }
 
   private initiateFetch(
-    returnedPromise: Promise<QueryResult<MaybeMasked<TData>>>
+    returnedPromise: Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>
   ) {
     this.promise = this.createPendingPromise();
     this.promise.catch(() => {});

@@ -42,6 +42,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
+  ErrorLike,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesResult,
   MutateResult,
@@ -50,7 +51,6 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesResult,
   SubscribeResult,
@@ -230,6 +230,14 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: FetchPolicy;
   } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface QueryResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+  }
 
   // TODO Improve documentation comments for this public type.
   export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
@@ -606,7 +614,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.QueryOptions<TData, TVariables>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -899,7 +907,7 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<QueryResult<any>[] | null> {
+  public resetStore(): Promise<ApolloClient.QueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({
@@ -970,7 +978,7 @@ export class ApolloClient implements DataProxy {
    */
   public reFetchObservableQueries: (
     includeStandby?: boolean
-  ) => Promise<QueryResult<any>[]>;
+  ) => Promise<ApolloClient.QueryResult<any>[]>;
 
   /**
    * Refetches all of your active queries.
@@ -988,7 +996,7 @@ export class ApolloClient implements DataProxy {
    */
   public refetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<QueryResult<any>[]> {
+  ): Promise<ApolloClient.QueryResult<any>[]> {
     return this.queryManager.refetchObservableQueries(includeStandby);
   }
 
@@ -1005,7 +1013,7 @@ export class ApolloClient implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache = ApolloCache,
-    TResult = Promise<QueryResult<any>>,
+    TResult = Promise<ApolloClient.QueryResult<any>>,
   >(
     options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {

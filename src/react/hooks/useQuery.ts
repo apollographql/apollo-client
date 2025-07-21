@@ -27,7 +27,6 @@ import type {
   GetDataState,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   TypedDocumentNode,
@@ -157,7 +156,7 @@ export declare namespace useQuery {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
       refetch: (
         variables?: Partial<TVariables>
-      ) => Promise<QueryResult<MaybeMasked<TData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
       variables: TVariables;
@@ -173,7 +172,7 @@ export declare namespace useQuery {
           TFetchData,
           TFetchVars
         >
-      ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
     }
   }
   export type Result<

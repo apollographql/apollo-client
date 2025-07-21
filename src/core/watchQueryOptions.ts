@@ -1,16 +1,9 @@
-import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type { DocumentNode } from "graphql";
-
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type {
-  NoInfer,
-  VariablesOption,
-} from "@apollo/client/utilities/internal";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import type { DefaultContext, OperationVariables } from "./types.js";
+import type { OperationVariables } from "./types.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -127,23 +120,3 @@ export interface SubscribeToMoreFunction<
     >
   ): () => void;
 }
-
-export type SubscriptionOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = unknown,
-> = {
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: FetchPolicy;
-
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
-  extensions?: Record<string, any>;
-} & VariablesOption<NoInfer<TVariables>>;

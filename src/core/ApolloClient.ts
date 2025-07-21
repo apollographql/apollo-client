@@ -52,7 +52,6 @@ import type {
   OperationVariables,
   QueryResult,
   RefetchQueriesInclude,
-  RefetchQueriesOptions,
   RefetchQueriesResult,
   SubscribeResult,
   SubscriptionObservable,
@@ -231,6 +230,23 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: FetchPolicy;
   } & VariablesOption<NoInfer<TVariables>>;
+
+  // TODO Improve documentation comments for this public type.
+  export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+    updateCache?: (cache: TCache) => void;
+    // The client.refetchQueries method discourages passing QueryOptions, by
+    // restricting the public type of options.include to exclude QueryOptions as
+    // an available array element type (see InternalRefetchQueriesInclude for a
+    // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
+    include?: RefetchQueriesInclude;
+    optimistic?: boolean;
+    // If no onQueryUpdated function is provided, any queries affected by the
+    // updateCache function or included in the options.include array will be
+    // refetched by default. Passing null instead of undefined disables this
+    // default refetching behavior for affected queries, though included queries
+    // will still be refetched.
+    onQueryUpdated?: OnQueryUpdated<TResult> | null;
+  }
 
   export type SubscribeOptions<
     TData = unknown,
@@ -991,10 +1007,10 @@ export class ApolloClient implements DataProxy {
     TCache extends ApolloCache = ApolloCache,
     TResult = Promise<QueryResult<any>>,
   >(
-    options: RefetchQueriesOptions<TCache, TResult>
+    options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as RefetchQueriesOptions<ApolloCache, TResult>
+      options as ApolloClient.RefetchQueriesOptions<ApolloCache, TResult>
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];

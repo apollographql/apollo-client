@@ -210,24 +210,6 @@ export type InternalRefetchQueriesInclude =
   | InternalRefetchQueryDescriptor[]
   | RefetchQueriesIncludeShorthand;
 
-// Used by ApolloClient["refetchQueries"]
-// TODO Improve documentation comments for this public type.
-export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
-  updateCache?: (cache: TCache) => void;
-  // The client.refetchQueries method discourages passing QueryOptions, by
-  // restricting the public type of options.include to exclude QueryOptions as
-  // an available array element type (see InternalRefetchQueriesInclude for a
-  // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
-  include?: RefetchQueriesInclude;
-  optimistic?: boolean;
-  // If no onQueryUpdated function is provided, any queries affected by the
-  // updateCache function or included in the options.include array will be
-  // refetched by default. Passing null instead of undefined disables this
-  // default refetching behavior for affected queries, though included queries
-  // will still be refetched.
-  onQueryUpdated?: OnQueryUpdated<TResult> | null;
-}
-
 // The client.refetchQueries method returns a thenable (PromiseLike) object
 // whose result is an array of Promise.resolve'd TResult values, where TResult
 // is whatever type the (optional) onQueryUpdated function returns. When no
@@ -274,7 +256,7 @@ export interface RefetchQueriesResult<TResult>
 export interface InternalRefetchQueriesOptions<
   TCache extends ApolloCache,
   TResult,
-> extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
+> extends Omit<ApolloClient.RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries option for a mutation, an array of strings,
   // DocumentNode objects, and/or QueryOptions objects, or one of the shorthand
   // strings "all" or "active", to select every (active) query.

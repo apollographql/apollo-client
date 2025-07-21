@@ -22,6 +22,12 @@ export type QueryOptions<
   TData = unknown,
 > = ApolloClient.QueryOptions<TData, TVariables>;
 
+/** @deprecated Use `ApolloClient.RefetchQueriesOptions` instead */
+export type RefetchQueriesOptions<
+  TCache extends ApolloCache,
+  TResult,
+> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
+
 /** @deprecated Use `ApolloClient.SubscribeOptions` instead */
 export type SubscriptionOptions<
   TVariables extends OperationVariables = OperationVariables,

@@ -5,6 +5,7 @@ export type {
   ApolloClientOptions,
   MutationOptions,
   QueryOptions,
+  RefetchQueriesOptions,
   SubscriptionOptions,
   WatchQueryOptions,
 } from "./deprecated.js";
@@ -46,7 +47,6 @@ export type {
   OperationVariables,
   QueryResult,
   RefetchQueriesInclude,
-  RefetchQueriesOptions,
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,

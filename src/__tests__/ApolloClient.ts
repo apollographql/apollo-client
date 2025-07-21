@@ -10,7 +10,6 @@ import type {
   DefaultOptions,
   MutateResult,
   ObservableQuery,
-  QueryOptions,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
@@ -2844,7 +2843,7 @@ describe("ApolloClient", () => {
         defaultOptions,
       });
 
-      let queryOptions: QueryOptions = {
+      let queryOptions: ApolloClient.QueryOptions = {
         query: gql`
           {
             a

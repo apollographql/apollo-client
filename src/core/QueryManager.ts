@@ -88,7 +88,6 @@ import type {
   ErrorPolicy,
   MutationFetchPolicy,
   MutationOptions,
-  QueryOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
@@ -582,7 +581,7 @@ export class QueryManager {
   }
 
   public query<TData, TVars extends OperationVariables = OperationVariables>(
-    options: QueryOptions<TVars, TData>
+    options: ApolloClient.QueryOptions<TData, TVars>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
@@ -640,7 +639,7 @@ export class QueryManager {
     const queries = new Set<ObservableQuery<any>>();
     const queryNames = new Map<string, string | undefined>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
-    const legacyQueryOptions = new Set<QueryOptions>();
+    const legacyQueryOptions = new Set<ApolloClient.QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach((desc) => {
@@ -685,7 +684,7 @@ export class QueryManager {
     });
 
     if (legacyQueryOptions.size) {
-      legacyQueryOptions.forEach((options: QueryOptions) => {
+      legacyQueryOptions.forEach((options) => {
         const oq = new ObservableQuery({
           queryManager: this,
           options: {

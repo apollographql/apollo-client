@@ -59,26 +59,6 @@ export type RefetchWritePolicy = "merge" | "overwrite";
  */
 export type ErrorPolicy = "none" | "ignore" | "all";
 
-/**
- * Query options.
- */
-export type QueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = unknown,
-> = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: FetchPolicy;
-} & VariablesOption<NoInfer<TVariables>>;
-
 export interface NextFetchPolicyContext<
   TData,
   TVariables extends OperationVariables,

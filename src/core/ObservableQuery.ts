@@ -41,7 +41,6 @@ import type {
 import type {
   ErrorPolicy,
   NextFetchPolicyContext,
-  QueryOptions,
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   UpdateQueryMapFn,
@@ -805,7 +804,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
       notifyOnNetworkStatusChange: this.options.notifyOnNetworkStatusChange,
-    } as QueryOptions<TFetchVars, TFetchData>;
+    } as ApolloClient.QueryOptions<TFetchData, TFetchVars>;
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);
 

@@ -50,10 +50,10 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
+  FetchPolicy,
   MutationFetchPolicy,
   MutationOptions,
   NextFetchPolicyContext,
-  QueryOptions,
   RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
@@ -61,7 +61,7 @@ import type {
 
 export interface DefaultOptions {
   watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
-  query?: Partial<QueryOptions<any, any>>;
+  query?: Partial<ApolloClient.QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
@@ -155,6 +155,26 @@ export declare namespace ApolloClient {
      */
     name?: string;
   }
+
+  /**
+   * Query options.
+   */
+  export type QueryOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+  } & VariablesOption<NoInfer<TVariables>>;
 
   /**
    * Watched query options.
@@ -493,7 +513,7 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: QueryOptions<TVariables, TData>
+    options: ApolloClient.QueryOptions<TData, TVariables>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);

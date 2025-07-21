@@ -15,9 +15,9 @@ import type {
   IsAny,
 } from "@apollo/client/utilities/internal";
 
+import type { ApolloClient } from "./ApolloClient.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import type { QueryOptions } from "./watchQueryOptions.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -198,7 +198,7 @@ export type OnQueryUpdated<TResult> = (
 export type RefetchQueryDescriptor = string | DocumentNode;
 export type InternalRefetchQueryDescriptor =
   | RefetchQueryDescriptor
-  | QueryOptions;
+  | ApolloClient.QueryOptions;
 
 type RefetchQueriesIncludeShorthand = "all" | "active";
 

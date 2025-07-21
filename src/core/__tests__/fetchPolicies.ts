@@ -13,7 +13,6 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
-import type { ApolloQueryResult } from "../types.js";
 import type { WatchQueryFetchPolicy } from "../watchQueryOptions.js";
 
 const query = gql`
@@ -866,7 +865,7 @@ describe("nextFetchPolicy", () => {
     >["nextFetchPolicy"];
     useDefaultOptions: boolean;
     checkResult: (info: {
-      stream: ObservableStream<ApolloQueryResult<TData>>;
+      stream: ObservableStream<ObservableQuery.Result<TData>>;
       observable: ObservableQuery<TData, TVariables>;
     }) => Promise<void>;
   }) =>

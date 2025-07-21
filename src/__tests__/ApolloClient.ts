@@ -4,11 +4,7 @@ import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 import { delay, Observable, of } from "rxjs";
 
-import type {
-  DataValue,
-  DefaultOptions,
-  ObservableQuery,
-} from "@apollo/client";
+import type { DataValue, ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";

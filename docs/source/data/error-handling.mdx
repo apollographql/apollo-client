@@ -52,9 +52,11 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
 
 </ExpansionPanel>
 
-Apollo Client then adds those errors to the `error` field returned by your `useQuery` call (or whichever operation hook you used), wrapped as a `CombinedGraphQLErrors` object.
+Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a `CombinedGraphQLErrors` error instance.
 
-If a GraphQL error prevents Apollo Server from executing your operation at all, it responds with a `4xx` status code. Apollo Server responds with a `200` status code if resolver errors occurred but the response still includes [partial data](#partial-data-with-resolver-errors).
+<Note>
+If a GraphQL error prevents your server from executing your operation at all, your server may respond with a non-`2xx` status code. Apollo Client handles this according to the [GraphQL Over HTTP specification](https://graphql.github.io/graphql-over-http/draft/).
+</Note>
 
 #### Partial data with resolver errors
 

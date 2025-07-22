@@ -41,7 +41,7 @@ const delModifier: Modifier<any> = () => DELETE;
 const INVALIDATE = {} as InvalidateModifier;
 
 export abstract class EntityStore implements NormalizedCache {
-  public static Root: typeof Root;
+  public declare static Root: typeof Root;
 
   protected data: NormalizedCacheObject = {};
 

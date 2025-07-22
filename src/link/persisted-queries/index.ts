@@ -20,7 +20,6 @@ import {
   isFormattedExecutionResult,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { Prettify } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   compact,
@@ -31,13 +30,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
-
-type CallbackOptions = {
-  error: ErrorLike;
-  operation: Operation;
-  meta: ErrorMeta;
-  result?: FormattedExecutionResult;
-};
 
 type ErrorMeta = {
   persistedQueryNotSupported: boolean;
@@ -56,20 +48,27 @@ interface BaseOptions {
 }
 
 export declare namespace PersistedQueryLink {
-  interface SHA256Options extends BaseOptions {
+  interface CallbackOptions {
+    error: ErrorLike;
+    operation: Operation;
+    meta: ErrorMeta;
+    result?: FormattedExecutionResult;
+  }
+
+  export interface SHA256Options extends BaseOptions {
     sha256: SHA256Function;
     generateHash?: never;
   }
 
-  interface GenerateHashOptions extends BaseOptions {
+  export interface GenerateHashOptions extends BaseOptions {
     sha256?: never;
     generateHash: GenerateHashFunction;
   }
 
   export type Options = SHA256Options | GenerateHashOptions;
 
-  export type RetryFunctionOptions = Prettify<CallbackOptions>;
-  export type DisableFunctionOptions = Prettify<CallbackOptions>;
+  export interface RetryFunctionOptions extends CallbackOptions {}
+  export interface DisableFunctionOptions extends CallbackOptions {}
 }
 
 function processErrors(
@@ -193,7 +192,10 @@ export class PersistedQueryLink extends ApolloLink {
         let originalFetchOptions: any;
         let setFetchOptions = false;
 
-        function handleRetry(options: CallbackOptions, cb: () => void) {
+        function handleRetry(
+          options: PersistedQueryLink.RetryFunctionOptions,
+          cb: () => void
+        ) {
           if (retried) {
             return cb();
           }

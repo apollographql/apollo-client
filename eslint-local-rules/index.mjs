@@ -1,3 +1,4 @@
+import { validInheritDoc } from "./canonical-references.ts";
 import { rule as forbidActInDisabledActEnvironment } from "./forbid-act-in-disabled-act-environment.ts";
 import {
   importFromExport,
@@ -18,4 +19,5 @@ export default {
   "no-internal-import-official-export": noInternalImportOfficialExport,
   "no-duplicate-exports": noDuplicateExports,
   "no-relative-imports": noRelativeImports,
+  "valid-inherit-doc": validInheritDoc,
 };

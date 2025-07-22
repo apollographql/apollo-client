@@ -194,6 +194,7 @@ export default [
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 
       "local-rules/require-using-disposable": "error",
+      "local-rules/valid-inherit-doc": "error",
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({

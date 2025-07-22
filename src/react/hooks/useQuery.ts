@@ -17,23 +17,19 @@ import { asapScheduler, observeOn } from "rxjs";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreOptions,
   GetDataState,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   TypedDocumentNode,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -66,7 +62,7 @@ export declare namespace useQuery {
       nextFetchPolicy?:
         | WatchQueryFetchPolicy
         | ((
-            this: WatchQueryOptions<TVariables, TData>,
+            this: ApolloClient.WatchQueryOptions<TData, TVariables>,
             currentFetchPolicy: WatchQueryFetchPolicy,
             context: NextFetchPolicyContext<TData, TVariables>
           ) => WatchQueryFetchPolicy);
@@ -158,7 +154,7 @@ export declare namespace useQuery {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
       refetch: (
         variables?: Partial<TVariables>
-      ) => Promise<QueryResult<MaybeMasked<TData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
       variables: TVariables;
@@ -168,13 +164,13 @@ export declare namespace useQuery {
         TFetchData = TData,
         TFetchVars extends OperationVariables = TVariables,
       >(
-        fetchMoreOptions: FetchMoreOptions<
+        fetchMoreOptions: ObservableQuery.FetchMoreOptions<
           TData,
           TVariables,
           TFetchData,
           TFetchVars
         >
-      ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
     }
   }
   export type Result<
@@ -198,13 +194,15 @@ const lastWatchOptions = Symbol();
 
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
-  [lastWatchOptions]?: Readonly<WatchQueryOptions<TVariables, TData>>;
+  [lastWatchOptions]?: Readonly<
+    ApolloClient.WatchQueryOptions<TData, TVariables>
+  >;
 }
 
 interface InternalResult<TData> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  current: ApolloQueryResult<TData>;
+  current: ObservableQuery.Result<TData>;
   previousData?: undefined | MaybeMasked<TData>;
 
   // Track current variables separately in case a call to e.g. `refetch(newVars)`
@@ -320,10 +318,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;
 
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
-    client.defaultOptions.watchQuery as any,
-    { ...opts, query }
-  );
+  const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+    mergeOptions(client.defaultOptions.watchQuery as any, { ...opts, query });
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -415,7 +411,7 @@ function useInitialFetchPolicyIfNecessary<
   TData,
   TVariables extends OperationVariables,
 >(
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
+  watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables>,
   observable: ObsQueryWithMeta<TData, TVariables>
 ) {
   "use no memo";
@@ -492,7 +488,7 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
+  watchQueryOptions: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>
 ) {
   "use no memo";
   if (
@@ -529,8 +525,8 @@ function useResubscribeIfNecessary<
 }
 
 function shouldReobserve<TData, TVariables extends OperationVariables>(
-  previousOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  options: Readonly<WatchQueryOptions<TVariables, TData>>
+  previousOptions: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>,
+  options: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>
 ) {
   return (
     previousOptions.query !== options.query ||
@@ -548,4 +544,4 @@ useQuery.ssrDisabledResult = maybeDeepFreeze({
   error: void 0,
   networkStatus: NetworkStatus.loading,
   partial: true,
-}) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;
+}) satisfies ObservableQuery.Result<any> as ObservableQuery.Result<any>;

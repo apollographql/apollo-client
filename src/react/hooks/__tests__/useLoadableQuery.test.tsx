@@ -17,11 +17,11 @@ import { Observable } from "rxjs";
 
 import type {
   DataState,
+  DataValue,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
-  DataValue,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -4812,7 +4812,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   }
 
   type UpdateQueryFn = NonNullable<
-    SubscribeToMoreOptions<
+    ObservableQuery.SubscribeToMoreOptions<
       SimpleCaseData,
       Record<string, never>,
       SubscriptionData

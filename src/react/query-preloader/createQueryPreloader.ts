@@ -7,7 +7,6 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
@@ -191,7 +190,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
         ...options,
         query,
         notifyOnNetworkStatusChange: false,
-      } as WatchQueryOptions<any, any>),
+      } as ApolloClient.WatchQueryOptions<any, any>),
       {
         autoDisposeTimeoutMs:
           client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,

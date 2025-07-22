@@ -10,7 +10,6 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
@@ -346,7 +345,9 @@ function useBackgroundQuery_<
   ];
 
   const queryRef = suspenseCache.getQueryRef<TData, TStates>(cacheKey, () =>
-    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
+    client.watchQuery(
+      watchQueryOptions as ApolloClient.WatchQueryOptions<any, any>
+    )
   );
 
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(

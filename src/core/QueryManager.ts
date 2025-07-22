@@ -65,37 +65,25 @@ import {
 
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type {
-  ApolloClient,
-  ApolloClientOptions,
-  DefaultOptions,
-} from "./ApolloClient.js";
+import type { ApolloClient } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
-  ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
-  MutateResult,
   OperationVariables,
   QueryNotification,
-  QueryResult,
-  SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
-  MutationOptions,
-  QueryOptions,
-  SubscriptionOptions,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
 interface MutationStoreValue {
@@ -139,8 +127,8 @@ interface MaskOperationOptions<TData> {
 
 interface QueryManagerOptions {
   client: ApolloClient;
-  clientOptions: ApolloClientOptions;
-  defaultOptions: DefaultOptions;
+  clientOptions: ApolloClient.Options;
+  defaultOptions: ApolloClient.DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
@@ -153,13 +141,13 @@ interface QueryManagerOptions {
 }
 
 export class QueryManager {
-  public defaultOptions: DefaultOptions;
+  public defaultOptions: ApolloClient.DefaultOptions;
 
   public readonly client: ApolloClient;
   /**
    * The options that were passed to the ApolloClient constructor.
    */
-  public readonly clientOptions: ApolloClientOptions;
+  public readonly clientOptions: ApolloClient.Options;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -274,10 +262,10 @@ export class QueryManager {
     errorPolicy,
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TCache> & {
+  }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
     errorPolicy: ErrorPolicy;
     fetchPolicy: MutationFetchPolicy;
-  }): Promise<MutateResult<MaybeMasked<TData>>> {
+  }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
     const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
@@ -392,7 +380,7 @@ export class QueryManager {
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
             if (!queryInfo.hasNext) {
-              const result: MutateResult<TData> = {
+              const result: ApolloClient.MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,
@@ -439,10 +427,10 @@ export class QueryManager {
     });
   }
 
-  public fetchQuery<TData, TVars extends OperationVariables>(
-    options: WatchQueryOptions<TVars, TData>,
+  public fetchQuery<TData, TVariables extends OperationVariables>(
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>,
     networkStatus?: NetworkStatus
-  ): Promise<QueryResult<TData>> {
+  ): Promise<ApolloClient.QueryResult<TData>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
     // do the rest asynchronously to keep the same rejection timing as
@@ -556,9 +544,11 @@ export class QueryManager {
   }
 
   public watchQuery<
-    T,
+    TData,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+  >(
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>
+  ): ObservableQuery<TData, TVariables> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
     const query = this.transform(options.query);
@@ -575,7 +565,7 @@ export class QueryManager {
       options.notifyOnNetworkStatusChange = true;
     }
 
-    const observable = new ObservableQuery<T, TVariables>({
+    const observable = new ObservableQuery<TData, TVariables>({
       queryManager: this,
       options,
       transformedQuery: query,
@@ -584,12 +574,15 @@ export class QueryManager {
     return observable;
   }
 
-  public query<TData, TVars extends OperationVariables = OperationVariables>(
-    options: QueryOptions<TVars, TData>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
+  public query<
+    TData,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables>
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>({
+    return this.fetchQuery<TData, TVariables>({
       ...(options as any),
       query,
     }).then((value) => ({
@@ -643,7 +636,7 @@ export class QueryManager {
     const queries = new Set<ObservableQuery<any>>();
     const queryNames = new Map<string, string | undefined>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
-    const legacyQueryOptions = new Set<QueryOptions>();
+    const legacyQueryOptions = new Set<ApolloClient.QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach((desc) => {
@@ -688,7 +681,7 @@ export class QueryManager {
     });
 
     if (legacyQueryOptions.size) {
-      legacyQueryOptions.forEach((options: QueryOptions) => {
+      legacyQueryOptions.forEach((options) => {
         const oq = new ObservableQuery({
           queryManager: this,
           options: {
@@ -724,8 +717,9 @@ export class QueryManager {
 
   public refetchObservableQueries(
     includeStandby: boolean = false
-  ): Promise<QueryResult<any>[]> {
-    const observableQueryPromises: Promise<QueryResult<any>>[] = [];
+  ): Promise<ApolloClient.QueryResult<any>[]> {
+    const observableQueryPromises: Promise<ApolloClient.QueryResult<any>>[] =
+      [];
 
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery) => {
@@ -745,8 +739,8 @@ export class QueryManager {
   }
 
   public startGraphQLSubscription<TData = unknown>(
-    options: SubscriptionOptions
-  ): SubscriptionObservable<SubscribeResult<TData>> {
+    options: ApolloClient.SubscribeOptions<TData>
+  ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -793,7 +787,7 @@ export class QueryManager {
 
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
-          map((rawResult): SubscribeResult<TData> => {
+          map((rawResult): ApolloClient.SubscribeResult<TData> => {
             queryInfo.markSubscriptionResult(rawResult, {
               document: query,
               variables,
@@ -804,7 +798,7 @@ export class QueryManager {
                 : CacheWriteBehavior.MERGE,
             });
 
-            const result: SubscribeResult<TData> = {
+            const result: ApolloClient.SubscribeResult<TData> = {
               data: rawResult.data ?? undefined,
             };
 
@@ -835,7 +829,9 @@ export class QueryManager {
           }),
           catchError((error) => {
             if (errorPolicy === "ignore") {
-              return of({ data: undefined } as SubscribeResult<TData>);
+              return of({
+                data: undefined,
+              } as ApolloClient.SubscribeResult<TData>);
             }
 
             return of({ data: undefined, error });
@@ -1027,7 +1023,7 @@ export class QueryManager {
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
-  ): Observable<ApolloQueryResult<TData>> {
+  ): Observable<ObservableQuery.Result<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
 
@@ -1073,7 +1069,7 @@ export class QueryManager {
               networkStatus: NetworkStatus.ready,
               partial: !result.data,
             }),
-        } as ApolloQueryResult<TData>;
+        } as ObservableQuery.Result<TData>;
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1102,7 +1098,7 @@ export class QueryManager {
           throw error;
         }
 
-        const aqr: ApolloQueryResult<TData> = {
+        const aqr: ObservableQuery.Result<TData> = {
           data: undefined,
           dataState: "empty",
           loading: false,
@@ -1120,8 +1116,8 @@ export class QueryManager {
     );
   }
 
-  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
-    options: WatchQueryOptions<TVars, TData>,
+  public fetchObservableWithInfo<TData, TVariables extends OperationVariables>(
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>,
     {
       // The initial networkStatus for this fetch, most often
       // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1136,10 +1132,10 @@ export class QueryManager {
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
-      observableQuery?: ObservableQuery<TData, TVars> | undefined;
+      observableQuery?: ObservableQuery<TData, TVariables> | undefined;
     }
   ): ObservableAndInfo<TData> {
-    const variables = this.getVariables(query, options.variables) as TVars;
+    const variables = this.getVariables(query, options.variables) as TVariables;
 
     const defaults = this.defaultOptions.watchQuery;
     let {
@@ -1167,9 +1163,9 @@ export class QueryManager {
       context,
     });
 
-    const queryInfo = new QueryInfo<TData, TVars>(this, observableQuery);
+    const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
 
-    const fromVariables = (variables: TVars) => {
+    const fromVariables = (variables: TVariables) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
@@ -1185,7 +1181,7 @@ export class QueryManager {
         ) ?
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
-      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
+      const observableWithInfo = this.fetchQueryByPolicy<TData, TVariables>(
         normalized,
         { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
       );
@@ -1366,8 +1362,14 @@ export class QueryManager {
               // options.include.
               includedQueriesByOq.delete(oq);
 
-              let result: TResult | boolean | Promise<QueryResult<any>> =
-                onQueryUpdated(oq, diff, lastDiff);
+              let result:
+                | TResult
+                | boolean
+                | Promise<ApolloClient.QueryResult<any>> = onQueryUpdated(
+                oq,
+                diff,
+                lastDiff
+              );
 
               if (result === true) {
                 // The onQueryUpdated function requested the default refetching
@@ -1407,7 +1409,11 @@ export class QueryManager {
 
     if (includedQueriesByOq.size) {
       includedQueriesByOq.forEach(({ oq, lastDiff, diff }) => {
-        let result: TResult | boolean | Promise<QueryResult<any>> | undefined;
+        let result:
+          | TResult
+          | boolean
+          | Promise<ApolloClient.QueryResult<any>>
+          | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
         // queries, even the QueryOptions ones.
@@ -1485,7 +1491,7 @@ export class QueryManager {
       : data;
   }
 
-  private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
+  private fetchQueryByPolicy<TData, TVariables extends OperationVariables>(
     {
       query,
       variables,
@@ -1494,8 +1500,8 @@ export class QueryManager {
       returnPartialData,
       context,
     }: {
-      query: DocumentNode | TypedDocumentNode<TData, TVars>;
-      variables: TVars;
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+      variables: TVariables;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
       returnPartialData?: boolean;
@@ -1509,8 +1515,8 @@ export class QueryManager {
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
-      queryInfo: QueryInfo<TData, TVars>;
-      observableQuery: ObservableQuery<TData, TVars> | undefined;
+      queryInfo: QueryInfo<TData, TVariables>;
+      observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
   ): ObservableAndInfo<TData> {
     const readCache = () =>
@@ -1533,7 +1539,7 @@ export class QueryManager {
 
       const toResult = (
         data: TData | DeepPartial<TData> | undefined
-      ): ApolloQueryResult<TData> => {
+      ): ObservableQuery.Result<TData> => {
         // TODO: Eventually we should move this handling into
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
         // on returnPartialData: false, we should take advantage of that instead
@@ -1552,7 +1558,7 @@ export class QueryManager {
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
-        } as ApolloQueryResult<TData>;
+        } as ObservableQuery.Result<TData>;
       };
 
       const fromData = (
@@ -1616,7 +1622,7 @@ export class QueryManager {
     };
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(
+      this.getResultsFromLink<TData, TVariables>(
         {
           query,
           variables,

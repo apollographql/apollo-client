@@ -378,8 +378,8 @@ describe("subscribeToMore", () => {
     });
 
     type TData = (typeof typedReq)["result"]["data"];
-    type TVars = (typeof typedReq)["request"]["variables"];
-    const obsHandle = client.watchQuery<TData, TVars>({
+    type TVariables = (typeof typedReq)["request"]["variables"];
+    const obsHandle = client.watchQuery<TData, TVariables>({
       query,
       variables: { someNumber: 1 },
     });

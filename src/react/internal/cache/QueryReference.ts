@@ -3,13 +3,10 @@ import type { Subscription } from "rxjs";
 import { filter } from "rxjs";
 
 import type {
-  ApolloQueryResult,
+  ApolloClient,
   DataState,
-  FetchMoreOptions,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
@@ -25,7 +22,7 @@ import type { QueryKey } from "./types.js";
 type QueryRefPromise<
   TData,
   TStates extends DataState<TData>["dataState"],
-> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>, TStates>>;
+> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 type Listener<TData, TStates extends DataState<TData>["dataState"]> = (
   promise: QueryRefPromise<TData, TStates>
@@ -175,7 +172,7 @@ const OBSERVED_CHANGED_OPTIONS = [
 ] as const;
 
 type ObservedOptions = Pick<
-  WatchQueryOptions,
+  ApolloClient.WatchQueryOptions,
   (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
@@ -183,7 +180,7 @@ export class InternalQueryReference<
   TData = unknown,
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 > {
-  public result!: ApolloQueryResult<MaybeMasked<TData>, TStates>;
+  public result!: ObservableQuery.Result<MaybeMasked<TData>, TStates>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
@@ -194,7 +191,7 @@ export class InternalQueryReference<
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
   private resolve:
-    | ((result: ApolloQueryResult<MaybeMasked<TData>, TStates>) => void)
+    | ((result: ObservableQuery.Result<MaybeMasked<TData>, TStates>) => void)
     | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
@@ -347,7 +344,7 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData, any, any, any>) {
+  fetchMore(options: ObservableQuery.FetchMoreOptions<TData, any, any, any>) {
     return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 
@@ -359,7 +356,9 @@ export class InternalQueryReference<
     // noop. overridable by options
   }
 
-  private handleNext(result: ApolloQueryResult<MaybeMasked<TData>, TStates>) {
+  private handleNext(
+    result: ObservableQuery.Result<MaybeMasked<TData>, TStates>
+  ) {
     switch (this.promise.status) {
       case "pending": {
         // Maintain the last successful `data` value if the next result does not
@@ -417,7 +416,7 @@ export class InternalQueryReference<
   }
 
   private initiateFetch(
-    returnedPromise: Promise<QueryResult<MaybeMasked<TData>>>
+    returnedPromise: Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>
   ) {
     this.promise = this.createPendingPromise();
     this.promise.catch(() => {});
@@ -450,7 +449,7 @@ export class InternalQueryReference<
             // See the following for more information:
             // https://github.com/apollographql/apollo-client/issues/11642
             this.result =
-              this.observable.getCurrentResult() as ApolloQueryResult<
+              this.observable.getCurrentResult() as ObservableQuery.Result<
                 TData,
                 TStates
               >;
@@ -474,7 +473,7 @@ export class InternalQueryReference<
   }
 
   private setResult() {
-    const result = this.observable.getCurrentResult() as ApolloQueryResult<
+    const result = this.observable.getCurrentResult() as ObservableQuery.Result<
       TData,
       TStates
     >;
@@ -490,7 +489,7 @@ export class InternalQueryReference<
       : this.createPendingPromise();
   }
 
-  private shouldReject(result: ApolloQueryResult<any>) {
+  private shouldReject(result: ObservableQuery.Result<any>) {
     const { errorPolicy = "none" } = this.watchQueryOptions;
 
     return result.error && errorPolicy === "none";
@@ -498,7 +497,7 @@ export class InternalQueryReference<
 
   private createPendingPromise() {
     return decoratePromise(
-      new Promise<ApolloQueryResult<MaybeMasked<TData>, TStates>>(
+      new Promise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>(
         (resolve, reject) => {
           this.resolve = resolve;
           this.reject = reject;

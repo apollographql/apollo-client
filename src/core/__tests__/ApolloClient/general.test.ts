@@ -5,7 +5,7 @@ import { gql } from "graphql-tag";
 import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
+import type { ObservableQuery, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -27,10 +27,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { MockApolloLink } from "../../../testing/core/mocking/mockLink.js";
-import type {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../watchQueryOptions.js";
+import type { WatchQueryFetchPolicy } from "../../watchQueryOptions.js";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({
@@ -1054,8 +1051,8 @@ describe("ApolloClient", () => {
       [
         notifyOnNetworkStatusChange: boolean,
         fetchPolicy: WatchQueryFetchPolicy,
-        expectedInitialResults: ApolloQueryResult<typeof data1>[],
-        expectedRefetchedResults: ApolloQueryResult<typeof data1>[],
+        expectedInitialResults: ObservableQuery.Result<typeof data1>[],
+        expectedRefetchedResults: ObservableQuery.Result<typeof data1>[],
       ]
     >([
       [
@@ -1246,7 +1243,7 @@ describe("ApolloClient", () => {
         expectedInitialResults,
         expectedRefetchedResults
       ) => {
-        const request: WatchQueryOptions = {
+        const request: ApolloClient.WatchQueryOptions = {
           query: gql`
             query fetchLuke($id: String) {
               people_one(id: $id) {
@@ -4478,7 +4475,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -4514,7 +4511,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -4549,7 +4546,7 @@ describe("ApolloClient", () => {
 
       const options = {
         query,
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5042,7 +5039,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5078,7 +5075,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5114,7 +5111,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "standby",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5151,7 +5148,7 @@ describe("ApolloClient", () => {
       const options = {
         query,
         fetchPolicy: "cache-only",
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -5187,7 +5184,7 @@ describe("ApolloClient", () => {
 
       const options = {
         query,
-      } as WatchQueryOptions;
+      } as ApolloClient.WatchQueryOptions;
 
       let refetchCount = 0;
 
@@ -7597,7 +7594,7 @@ describe("ApolloClient", () => {
           ],
         },
       };
-      const initialResult: ApolloQueryResult<typeof initialData> = {
+      const initialResult: ObservableQuery.Result<typeof initialData> = {
         data: initialData,
         dataState: "streaming",
         loading: true,
@@ -7647,7 +7644,7 @@ describe("ApolloClient", () => {
       };
       const resultAfterFirstChunk = structuredClone(
         initialResult
-      ) as ApolloQueryResult<any>;
+      ) as ObservableQuery.Result<any>;
       resultAfterFirstChunk.data.people.friends[0].name = "Leia";
 
       defer.enqueueSubsequentChunk(firstChunk);
@@ -7679,7 +7676,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         dataState: "complete",
         partial: false,
-      } as ApolloQueryResult<any>;
+      } as ObservableQuery.Result<any>;
       resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
 
       defer.enqueueSubsequentChunk(secondChunk);

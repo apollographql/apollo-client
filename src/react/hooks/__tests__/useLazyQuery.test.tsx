@@ -12,10 +12,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
 import type {
-  ErrorPolicy,
-  QueryResult,
-  RefetchWritePolicy,
   DataValue,
+  ErrorPolicy,
+  RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
@@ -2292,8 +2291,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = result.current;
 
-    let promise1: Promise<QueryResult<{ hello: string }>>;
-    let promise2: Promise<QueryResult<{ hello: string }>>;
+    let promise1: Promise<ApolloClient.QueryResult<{ hello: string }>>;
+    let promise2: Promise<ApolloClient.QueryResult<{ hello: string }>>;
     act(() => {
       promise1 = execute().retain();
       promise2 = execute().retain();
@@ -2303,7 +2302,7 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    const expectedResult: QueryResult<{ hello: string }> = {
+    const expectedResult: ApolloClient.QueryResult<{ hello: string }> = {
       data: { hello: "Greetings" },
     };
 
@@ -6633,7 +6632,7 @@ describe.skip("Type Tests", () => {
     // test assignability to a normal promise
     expectTypeOf(result).toMatchTypeOf<
       Promise<
-        QueryResult<{
+        ApolloClient.QueryResult<{
           greeting: string;
         }>
       >

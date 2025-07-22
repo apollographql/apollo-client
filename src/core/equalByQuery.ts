@@ -21,14 +21,15 @@ import {
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 
-import type { ApolloQueryResult, OperationVariables } from "./types.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import type { OperationVariables } from "./types.js";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
 export function equalByQuery(
   query: DocumentNode,
-  { data: aData, ...aRest }: Partial<ApolloQueryResult<unknown>>,
-  { data: bData, ...bRest }: Partial<ApolloQueryResult<unknown>>,
+  { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>,
+  { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>,
   variables?: OperationVariables
 ): boolean {
   return (

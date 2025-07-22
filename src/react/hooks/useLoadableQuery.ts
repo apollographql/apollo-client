@@ -6,16 +6,13 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
-import type {
-  SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
-} from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   CacheKey,
@@ -293,7 +290,7 @@ export function useLoadableQuery<
           client.watchQuery({
             ...watchQueryOptions,
             variables,
-          } as WatchQueryOptions<any, any>)
+          } as ApolloClient.WatchQueryOptions<any, any>)
         );
 
         setQueryRef(wrapQueryRef(queryRef));
@@ -318,7 +315,10 @@ export function useLoadableQuery<
 
         return internalQueryRef.observable.subscribeToMore(
           // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
-          options as any as SubscribeToMoreOptions<TData, OperationVariables>
+          options as any as ObservableQuery.SubscribeToMoreOptions<
+            TData,
+            OperationVariables
+          >
         );
       },
       [internalQueryRef]
@@ -339,8 +339,8 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: useLoadableQuery.Options;
-}): WatchQueryOptions<TVariables, TData> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+}): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     const fetchPolicy =
       options.fetchPolicy ||
       client.defaultOptions.watchQuery?.fetchPolicy ||
@@ -358,6 +358,9 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
       validateSuspenseHookOptions(watchQueryOptions as any);
     }
 
-    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
+    return watchQueryOptions as ApolloClient.WatchQueryOptions<
+      TData,
+      TVariables
+    >;
   }, [client, options, query]);
 }

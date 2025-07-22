@@ -11,11 +11,9 @@ import type { Subscription } from "rxjs";
 import { Observable, of } from "rxjs";
 
 import type {
-  ApolloQueryResult,
   FetchPolicy,
   ObservableQuery,
   Operation,
-  QueryOptions,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
@@ -745,7 +743,7 @@ describe("client", () => {
     });
 
     const stream = new ObservableStream(observable);
-    const emittedValue: ApolloQueryResult<unknown> = {
+    const emittedValue: ObservableQuery.Result<unknown> = {
       data: undefined,
       dataState: "empty",
       error: expectedError,
@@ -1757,7 +1755,10 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        void client.query({ query, returnPartialData: true } as QueryOptions);
+        void client.query({
+          query,
+          returnPartialData: true,
+        } as ApolloClient.QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
 
@@ -1767,7 +1768,10 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        void client.query({ query, returnPartialData: true } as QueryOptions);
+        void client.query({
+          query,
+          returnPartialData: true,
+        } as ApolloClient.QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
   });
@@ -2199,7 +2203,10 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
 
-      const options: QueryOptions = { query, fetchPolicy: "network-only" };
+      const options: ApolloClient.QueryOptions = {
+        query,
+        fetchPolicy: "network-only",
+      };
 
       // Run a query first to initialize the store
       await client.query({ query });

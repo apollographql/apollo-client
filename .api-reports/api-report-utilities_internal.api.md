@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ApolloQueryResult } from '@apollo/client';
+import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
@@ -17,22 +17,19 @@ import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
-import type { MutationOptions } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
 import type { Observable } from 'rxjs';
+import type { ObservableQuery } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
 import type { OperatorFunction } from 'rxjs';
-import type { QueryOptions } from '@apollo/client';
-import type { QueryResult } from '@apollo/client';
 import type { Reference } from '@apollo/client/utilities';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
-import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
@@ -353,7 +350,7 @@ export { NoInfer_2 as NoInfer }
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 
 // @public (undocumented)
-type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;
+type OptionsUnion<TData, TVariables extends OperationVariables> = ApolloClient.WatchQueryOptions<TData, TVariables> | ApolloClient.QueryOptions<TData, TVariables> | ApolloClient.MutateOptions<TData, TVariables, any>;
 
 // @internal @deprecated (undocumented)
 export interface PendingPromise<TValue> extends Promise<TValue> {
@@ -426,7 +423,7 @@ let storeKeyNameStringify: (value: any) => string;
 export function stringifyForDisplay(value: any, space?: number): string;
 
 // @internal @deprecated (undocumented)
-export function toQueryResult<TData = unknown>(value: ApolloQueryResult<TData>): QueryResult<TData>;
+export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): ApolloClient.QueryResult<TData>;
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;

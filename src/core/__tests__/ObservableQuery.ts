@@ -7,7 +7,6 @@ import type { ObservedValueOf, Observer } from "rxjs";
 import { delay, from, lastValueFrom, Observable, of, Subject } from "rxjs";
 
 import type {
-  ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryFetchPolicy,
@@ -3993,9 +3992,9 @@ describe("ObservableQuery", () => {
     {
       type Result =
         // wait for the emit of a new value
-        | { emit: ApolloQueryResult<{ hello: string }> }
+        | { emit: ObservableQuery.Result<{ hello: string }> }
         // don't expect an emit, but `currentResult` should change
-        | { currentResult: ApolloQueryResult<{ hello: string }> }
+        | { currentResult: ObservableQuery.Result<{ hello: string }> }
         // `currentResult` should stay the same
         | undefined;
 
@@ -7404,7 +7403,7 @@ describe.skip("type tests", () => {
   test.skip("type test for `from`", () => {
     expectTypeOf<
       ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>
-    >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
+    >().toEqualTypeOf<ObservableQuery.Result<{ foo: string }>>();
   });
 
   test("variables with DocumentNode", () => {

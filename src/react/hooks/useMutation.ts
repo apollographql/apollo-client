@@ -11,9 +11,7 @@ import type {
   ErrorPolicy,
   InternalRefetchQueriesInclude,
   MaybeMasked,
-  MutateResult,
   MutationFetchPolicy,
-  MutationOptions,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
   NormalizedExecutionResult,
@@ -153,7 +151,7 @@ export declare namespace useMutation {
           variables: TVariables;
         },
       ]
-  ) => Promise<MutateResult<MaybeMasked<TData>>>;
+  ) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
 
   export type MutationFunctionOptions<
     TData = unknown,
@@ -282,7 +280,9 @@ export function useMutation<
       const clientOptions = mergeOptions(baseOptions, executeOptions as any);
 
       return client
-        .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
+        .mutate(
+          clientOptions as ApolloClient.MutateOptions<TData, OperationVariables>
+        )
         .then(
           (response) => {
             const { data, error } = response;

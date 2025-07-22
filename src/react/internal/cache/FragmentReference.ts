@@ -2,10 +2,6 @@ import { equal } from "@wry/equality";
 import type { Observable, Subscription } from "rxjs";
 
 import type { ApolloClient, OperationVariables } from "@apollo/client";
-import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
-} from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
@@ -27,7 +23,9 @@ export class FragmentReference<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: Observable<WatchFragmentResult<TData>>;
+  public readonly observable: Observable<
+    ApolloClient.WatchFragmentResult<TData>
+  >;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 
@@ -42,7 +40,10 @@ export class FragmentReference<
 
   constructor(
     client: ApolloClient,
-    watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
+    watchFragmentOptions: ApolloClient.WatchFragmentOptions<
+      TData,
+      TVariables
+    > & {
       from: string;
     },
     options: FragmentReferenceOptions
@@ -129,7 +130,7 @@ export class FragmentReference<
     this.subscription.add(this.onDispose);
   }
 
-  private handleNext(result: WatchFragmentResult<TData>) {
+  private handleNext(result: ApolloClient.WatchFragmentResult<TData>) {
     switch (this.promise.status) {
       case "pending": {
         if (result.complete) {
@@ -177,7 +178,9 @@ export class FragmentReference<
 
   private getDiff<TData, TVariables extends OperationVariables>(
     client: ApolloClient,
-    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    }
   ) {
     const { cache } = client;
     const { from, fragment, fragmentName } = options;

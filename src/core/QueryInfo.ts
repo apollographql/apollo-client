@@ -13,9 +13,11 @@ import {
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
+  DataValue,
   DefaultContext,
   InternalRefetchQueriesInclude,
   MutationQueryReducer,
@@ -23,16 +25,15 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  DataValue,
   TypedDocumentNode,
 } from "./types.js";
-import type {
-  ErrorPolicy,
-  MutationOptions,
-  WatchQueryOptions,
-} from "./watchQueryOptions.js";
+import type { ErrorPolicy } from "./watchQueryOptions.js";
 
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
+type UpdateQueries<TData> = ApolloClient.MutateOptions<
+  TData,
+  any,
+  any
+>["updateQueries"];
 
 const IGNORE = {} as IgnoreModifier;
 
@@ -44,7 +45,7 @@ export const enum CacheWriteBehavior {
 
 interface LastWrite {
   result: FormattedExecutionResult<any>;
-  variables: WatchQueryOptions["variables"];
+  variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
 
@@ -156,7 +157,7 @@ export class QueryInfo<
 
   private shouldWrite(
     result: FormattedExecutionResult<any>,
-    variables: WatchQueryOptions["variables"]
+    variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
     return !(

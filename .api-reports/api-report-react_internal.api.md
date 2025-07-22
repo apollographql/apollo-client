@@ -5,18 +5,15 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
-import type { ApolloQueryResult } from '@apollo/client';
 import type { createQueryPreloader } from '@apollo/client/react';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
-import type { FetchMoreOptions } from '@apollo/client';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
-import type { QueryResult } from '@apollo/client';
 import type { useBackgroundQuery } from '@apollo/client/react';
 import type { useFragment } from '@apollo/client/react';
 import type { useQuery } from '@apollo/client/react';
@@ -24,10 +21,6 @@ import type { useQueryRefHandlers } from '@apollo/client/react';
 import type { useReadQuery } from '@apollo/client/react';
 import type { useSuspenseFragment } from '@apollo/client/react';
 import type { useSuspenseQuery } from '@apollo/client/react';
-import type { WatchFragmentOptions } from '@apollo/client';
-import type { WatchFragmentOptions as WatchFragmentOptions_2 } from '@apollo/client/cache';
-import type { WatchFragmentResult } from '@apollo/client/cache';
-import type { WatchQueryOptions } from '@apollo/client';
 
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //
@@ -45,7 +38,7 @@ stringifiedVariables: string,
 ];
 
 // @public (undocumented)
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<QueryResult<MaybeMasked_2<TData>>>;
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>>>;
 
 // @public (undocumented)
 type FragmentCacheKey = [
@@ -63,7 +56,7 @@ interface FragmentKey {
 // @public (undocumented)
 class FragmentReference<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
-    constructor(client: ApolloClient, watchFragmentOptions: WatchFragmentOptions_2<TData, TVariables> & {
+    constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: string;
     }, options: FragmentReferenceOptions);
     // Warning: (ae-forgotten-export) The symbol "FragmentKey" needs to be exported by the entry point index.d.ts
@@ -75,7 +68,7 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     // (undocumented)
     listen(listener: Listener_2<MaybeMasked<TData>>): () => void;
     // (undocumented)
-    readonly observable: Observable<WatchFragmentResult<TData>>;
+    readonly observable: Observable<ApolloClient.WatchFragmentResult<TData>>;
     // Warning: (ae-forgotten-export) The symbol "FragmentRefPromise" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -130,7 +123,7 @@ export class InternalQueryReference<TData = unknown, TStates extends DataState<T
     // (undocumented)
     get disposed(): boolean;
     // (undocumented)
-    fetchMore(options: FetchMoreOptions<TData, any, any, any>): Promise<QueryResult<TData>>;
+    fetchMore(options: ObservableQuery.FetchMoreOptions<TData, any, any, any>): Promise<ApolloClient.QueryResult<TData>>;
     // (undocumented)
     readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
@@ -142,11 +135,11 @@ export class InternalQueryReference<TData = unknown, TStates extends DataState<T
     // (undocumented)
     promise: QueryRefPromise<TData, TStates>;
     // (undocumented)
-    refetch(variables: OperationVariables | undefined): Promise<QueryResult<TData>>;
+    refetch(variables: OperationVariables | undefined): Promise<ApolloClient.QueryResult<TData>>;
     // (undocumented)
     reinitialize(): void;
     // (undocumented)
-    result: ApolloQueryResult<MaybeMasked<TData>, TStates>;
+    result: ObservableQuery.Result<MaybeMasked<TData>, TStates>;
     // (undocumented)
     retain(): () => void;
     // (undocumented)
@@ -175,7 +168,7 @@ const OBSERVED_CHANGED_OPTIONS: readonly ["context", "errorPolicy", "fetchPolicy
 // Warning: (ae-forgotten-export) The symbol "OBSERVED_CHANGED_OPTIONS" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ObservedOptions = Pick<WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)[number]>;
+type ObservedOptions = Pick<ApolloClient.WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)[number]>;
 
 // @public (undocumented)
 const PRELOADED_QUERY_REF_BRAND: unique symbol;
@@ -211,10 +204,10 @@ export interface QueryRef<TData = unknown, TVariables = unknown, TStates extends
 }
 
 // @public (undocumented)
-type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>, TStates>>;
+type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
-export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<QueryResult<TData>>;
+export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<TData>>;
 
 // @public (undocumented)
 class SuspenseCache {
@@ -225,7 +218,7 @@ class SuspenseCache {
     // Warning: (ae-forgotten-export) The symbol "FragmentReference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: WatchFragmentOptions<TData, TVariables> & {
+    getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: string;
     }): FragmentReference<TData, TVariables>;
     // (undocumented)

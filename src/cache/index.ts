@@ -1,8 +1,8 @@
+export type { Transaction } from "./core/cache.js";
 export type {
-  Transaction,
   WatchFragmentOptions,
   WatchFragmentResult,
-} from "./core/cache.js";
+} from "./deprecated.js";
 export { ApolloCache } from "./core/cache.js";
 export type { Cache } from "./core/types/Cache.js";
 export type { DataProxy } from "./core/types/DataProxy.js";

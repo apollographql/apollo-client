@@ -18,12 +18,7 @@ import { gql } from "graphql-tag";
 import React, { useEffect } from "react";
 import { Observable } from "rxjs";
 
-import type {
-  Cache,
-  ObservableQuery,
-  QueryResult,
-  TypedDocumentNode,
-} from "@apollo/client";
+import type { Cache, ObservableQuery, TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -39,9 +34,8 @@ import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { invariant } from "@apollo/client/utilities/invariant";
-
 import type { DeepPartial } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -2659,7 +2653,7 @@ describe("useMutation Hook", () => {
       interface OnQueryUpdatedResults {
         obsQuery: ObservableQuery;
         diff: Cache.DiffResult<TData>;
-        result: QueryResult<TData>;
+        result: ApolloClient.QueryResult<TData>;
       }
       let resolveOnUpdate: (results: OnQueryUpdatedResults) => any;
       const onUpdatePromise = new Promise<OnQueryUpdatedResults>((resolve) => {

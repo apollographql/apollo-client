@@ -20,14 +20,13 @@ import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
 import type {
+  DataValue,
   ErrorPolicy,
   FetchPolicy,
   OperationVariables,
   RefetchWritePolicy,
-  DataValue,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import {
   ApolloClient,
@@ -8168,9 +8167,9 @@ describe("useQuery Hook", () => {
         data: { user: { __typename: "User", id: 2, name: "Cached User 2" } },
       });
 
-      const nextFetchPolicy: WatchQueryOptions<
-        OperationVariables,
-        any
+      const nextFetchPolicy: ApolloClient.WatchQueryOptions<
+        any,
+        OperationVariables
       >["nextFetchPolicy"] = jest.fn((_, context) => {
         if (context.reason === "variables-changed") {
           return "cache-and-network";

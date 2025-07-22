@@ -4,14 +4,7 @@ import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 import { delay, Observable, of } from "rxjs";
 
-import type {
-  ApolloQueryResult,
-  DataValue,
-  DefaultOptions,
-  MutateResult,
-  ObservableQuery,
-  QueryOptions,
-} from "@apollo/client";
+import type { DataValue, ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
@@ -2818,7 +2811,7 @@ describe("ApolloClient", () => {
     );
 
     it("should set `defaultOptions` using options passed into the constructor", () => {
-      const defaultOptions: DefaultOptions = {
+      const defaultOptions: ApolloClient.DefaultOptions = {
         query: {
           fetchPolicy: "no-cache",
         },
@@ -2832,7 +2825,7 @@ describe("ApolloClient", () => {
     });
 
     it("should use default options (unless overridden) when querying", async () => {
-      const defaultOptions: DefaultOptions = {
+      const defaultOptions: ApolloClient.DefaultOptions = {
         query: {
           fetchPolicy: "no-cache",
         },
@@ -2844,7 +2837,7 @@ describe("ApolloClient", () => {
         defaultOptions,
       });
 
-      let queryOptions: QueryOptions = {
+      let queryOptions: ApolloClient.QueryOptions = {
         query: gql`
           {
             a
@@ -3100,7 +3093,9 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(promise).branded.toEqualTypeOf<Promise<MutateResult<any>>>();
+      expectTypeOf(promise).branded.toEqualTypeOf<
+        Promise<ApolloClient.MutateResult<any>>
+      >();
     });
 
     test("client.mutate uses TData type when using plain TypedDocumentNode", () => {
@@ -3185,7 +3180,7 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(promise).branded.toEqualTypeOf<
-        Promise<MutateResult<Mutation>>
+        Promise<ApolloClient.MutateResult<Mutation>>
       >();
     });
 
@@ -3422,7 +3417,7 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(observableQuery.getCurrentResult()).toEqualTypeOf<
-        ApolloQueryResult<Masked<Query>>
+        ObservableQuery.Result<Masked<Query>>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({

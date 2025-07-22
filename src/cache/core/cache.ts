@@ -33,63 +33,68 @@ import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
-/**
- * Watched fragment options.
- */
-export interface WatchFragmentOptions<TData, TVars> {
+export declare namespace ApolloCache {
   /**
-   * A GraphQL fragment document parsed into an AST with the `gql`
-   * template literal.
-   *
-   * @docGroup 1. Required options
+   * Watched fragment options.
    */
-  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-  /**
-   * An object containing a `__typename` and primary key fields
-   * (such as `id`) identifying the entity object from which the fragment will
-   * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
-   * (uncommon).
-   *
-   * @docGroup 1. Required options
-   */
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
-  /**
-   * Any variables that the GraphQL fragment may depend on.
-   *
-   * @docGroup 2. Cache options
-   */
-  variables?: TVars;
-  /**
-   * The name of the fragment defined in the fragment document.
-   *
-   * Required if the fragment document includes more than one fragment,
-   * optional otherwise.
-   *
-   * @docGroup 2. Cache options
-   */
-  fragmentName?: string;
-  /**
-   * If `true`, `watchFragment` returns optimistic results.
-   *
-   * The default value is `true`.
-   *
-   * @docGroup 2. Cache options
-   */
-  optimistic?: boolean;
-}
+  export interface WatchFragmentOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /**
+     * A GraphQL fragment document parsed into an AST with the `gql`
+     * template literal.
+     *
+     * @docGroup 1. Required options
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    /**
+     * An object containing a `__typename` and primary key fields
+     * (such as `id`) identifying the entity object from which the fragment will
+     * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+     * (uncommon).
+     *
+     * @docGroup 1. Required options
+     */
+    from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
+    /**
+     * Any variables that the GraphQL fragment may depend on.
+     *
+     * @docGroup 2. Cache options
+     */
+    variables?: TVariables;
+    /**
+     * The name of the fragment defined in the fragment document.
+     *
+     * Required if the fragment document includes more than one fragment,
+     * optional otherwise.
+     *
+     * @docGroup 2. Cache options
+     */
+    fragmentName?: string;
+    /**
+     * If `true`, `watchFragment` returns optimistic results.
+     *
+     * The default value is `true`.
+     *
+     * @docGroup 2. Cache options
+     */
+    optimistic?: boolean;
+  }
 
-/**
- * Watched fragment results.
- */
-export type WatchFragmentResult<TData> =
-  | ({
-      complete: true;
-      missing?: never;
-    } & GetDataState<TData, "complete">)
-  | ({
-      complete: false;
-      missing: MissingTree;
-    } & GetDataState<TData, "partial">);
+  /**
+   * Watched fragment results.
+   */
+  export type WatchFragmentResult<TData = unknown> =
+    | ({
+        complete: true;
+        missing?: never;
+      } & GetDataState<TData, "complete">)
+    | ({
+        complete: false;
+        missing: MissingTree;
+      } & GetDataState<TData, "partial">);
+}
 
 export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
@@ -276,8 +281,8 @@ export abstract class ApolloCache implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: WatchFragmentOptions<TData, TVariables>
-  ): Observable<WatchFragmentResult<Unmasked<TData>>> {
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
+  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
       fragmentName,
@@ -339,9 +344,7 @@ export abstract class ApolloCache implements DataProxy {
               query,
               { data: latestDiff.result },
               { data },
-              // TODO: Fix the type on WatchFragmentOptions so that TVars
-              // extends OperationVariables
-              options.variables as OperationVariables
+              options.variables
             )
           ) {
             return;
@@ -351,7 +354,7 @@ export abstract class ApolloCache implements DataProxy {
             data,
             dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
-          } as WatchFragmentResult<Unmasked<TData>>;
+          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
 
           if (diff.missing) {
             result.missing = diff.missing.missing;

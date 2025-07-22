@@ -3,10 +3,11 @@ import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
-import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
 import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
+  ApolloCache,
+  DataProxy,
+  IgnoreModifier,
+  Reference,
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import { NotImplementedHandler } from "@apollo/client/incremental";
@@ -21,6 +22,7 @@ import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { VariablesOption } from "@apollo/client/utilities/internal";
 import {
   checkDocument,
   compact,
@@ -36,120 +38,329 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
+  ErrorLike,
+  InternalRefetchQueriesInclude,
   InternalRefetchQueriesResult,
-  MutateResult,
+  MutationQueryReducersMap,
+  MutationUpdaterFunction,
+  NormalizedExecutionResult,
+  OnQueryUpdated,
   OperationVariables,
-  QueryResult,
   RefetchQueriesInclude,
-  RefetchQueriesOptions,
-  RefetchQueriesResult,
-  SubscribeResult,
+  RefetchQueriesPromiseResults,
   SubscriptionObservable,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
+  FetchPolicy,
   MutationFetchPolicy,
-  MutationOptions,
-  QueryOptions,
-  SubscriptionOptions,
+  NextFetchPolicyContext,
+  RefetchWritePolicy,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
-
-export interface DefaultOptions {
-  watchQuery?: Partial<WatchQueryOptions<any, any>>;
-  query?: Partial<QueryOptions<any, any>>;
-  mutate?: Partial<MutationOptions<any, any, any>>;
-}
-
-interface DevtoolsOptions {
-  /**
-   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
-   *
-   * The default value is `false` in production and `true` in development if there is a `window` object.
-   */
-  enabled?: boolean;
-
-  /**
-   * Optional name for this `ApolloClient` instance in the devtools. This is
-   * useful when you instantiate multiple clients and want to be able to
-   * identify them by name.
-   */
-  name?: string;
-}
 
 let hasSuggestedDevtools = false;
 
-export interface ApolloClientOptions {
-  /**
-   * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
-   *
-   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   */
-  link: ApolloLink;
-  /**
-   * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
-   *
-   * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
-   */
-  cache: ApolloCache;
-  /**
-   * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
-   *
-   * @defaultValue `0` (no delay)
-   */
-  ssrForceFetchDelay?: number;
-  /**
-   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
-   *
-   * @defaultValue `false`
-   */
-  ssrMode?: boolean;
-  /**
-   * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
-   *
-   * @defaultValue `true`
-   */
-  queryDeduplication?: boolean;
-  /**
-   * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-   *
-   * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-   */
-  defaultOptions?: DefaultOptions;
-  defaultContext?: Partial<DefaultContext>;
-  /**
-   * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
-   *
-   * @defaultValue `false`
-   */
-  assumeImmutableResults?: boolean;
-  localState?: LocalState;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
-  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
-  enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
-  documentTransform?: DocumentTransform;
+export declare namespace ApolloClient {
+  export interface DefaultOptions {
+    watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
+    query?: Partial<ApolloClient.QueryOptions<any, any>>;
+    mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
+  }
+
+  export interface Options {
+    /**
+     * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
+     *
+     * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+     */
+    link: ApolloLink;
+    /**
+     * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
+     *
+     * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
+     */
+    cache: ApolloCache;
+    /**
+     * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
+     *
+     * @defaultValue `0` (no delay)
+     */
+    ssrForceFetchDelay?: number;
+    /**
+     * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+     *
+     * @defaultValue `false`
+     */
+    ssrMode?: boolean;
+    /**
+     * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
+     *
+     * @defaultValue `true`
+     */
+    queryDeduplication?: boolean;
+    /**
+     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+     *
+     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
+     */
+    defaultOptions?: ApolloClient.DefaultOptions;
+    defaultContext?: Partial<DefaultContext>;
+    /**
+     * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
+     *
+     * @defaultValue `false`
+     */
+    assumeImmutableResults?: boolean;
+    localState?: LocalState;
+    /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+    /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    documentTransform?: DocumentTransform;
+
+    /**
+     * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+     *
+     * @since 3.11.0
+     */
+    devtools?: DevtoolsOptions;
+
+    /**
+     * Determines if data masking is enabled for the client.
+     *
+     * @defaultValue false
+     */
+    dataMasking?: boolean;
+
+    /**
+     * Determines the strategy used to parse incremental chunks from `@defer`
+     * queries.
+     */
+    incrementalHandler?: Incremental.Handler<any>;
+  }
+
+  interface DevtoolsOptions {
+    /**
+     * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
+     *
+     * The default value is `false` in production and `true` in development if there is a `window` object.
+     */
+    enabled?: boolean;
+
+    /**
+     * Optional name for this `ApolloClient` instance in the devtools. This is
+     * useful when you instantiate multiple clients and want to be able to
+     * identify them by name.
+     */
+    name?: string;
+  }
+
+  export type MutateOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+    TCache extends ApolloCache = ApolloCache,
+  > = {
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+    optimisticResponse?:
+      | Unmasked<NoInfer<TData>>
+      | ((
+          vars: TVariables,
+          { IGNORE }: { IGNORE: IgnoreModifier }
+        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+    updateQueries?: MutationQueryReducersMap<TData>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+    refetchQueries?:
+      | ((
+          result: NormalizedExecutionResult<Unmasked<TData>>
+        ) => InternalRefetchQueriesInclude)
+      | InternalRefetchQueriesInclude;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+    awaitRefetchQueries?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+    update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+    onQueryUpdated?: OnQueryUpdated<any>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: MutationFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+    keepRootFields?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+    mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface MutateResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+    extensions?: Record<string, unknown>;
+  }
 
   /**
-   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
-   *
-   * @since 3.11.0
+   * Query options.
    */
-  devtools?: DevtoolsOptions;
+  export type QueryOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+  } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface QueryResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+  }
+
+  // TODO Improve documentation comments for this public type.
+  export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+    updateCache?: (cache: TCache) => void;
+    // The client.refetchQueries method discourages passing QueryOptions, by
+    // restricting the public type of options.include to exclude QueryOptions as
+    // an available array element type (see InternalRefetchQueriesInclude for a
+    // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
+    include?: RefetchQueriesInclude;
+    optimistic?: boolean;
+    // If no onQueryUpdated function is provided, any queries affected by the
+    // updateCache function or included in the options.include array will be
+    // refetched by default. Passing null instead of undefined disables this
+    // default refetching behavior for affected queries, though included queries
+    // will still be refetched.
+    onQueryUpdated?: OnQueryUpdated<TResult> | null;
+  }
+
+  // The result of client.refetchQueries is thenable/awaitable, if you just want
+  // an array of fully resolved results, but you can also access the raw results
+  // immediately by examining the additional { queries, results } properties of
+  // the RefetchQueriesResult<TResult> object.
+  export interface RefetchQueriesResult<TResult>
+    extends Promise<RefetchQueriesPromiseResults<TResult>> {
+    // An array of ObservableQuery objects corresponding 1:1 to TResult values
+    // in the results arrays (both the TResult[] array below, and the results
+    // array resolved by the Promise above).
+    queries: ObservableQuery<any>[];
+    // These are the raw TResult values returned by any onQueryUpdated functions
+    // that were invoked by client.refetchQueries.
+    results: InternalRefetchQueriesResult<TResult>[];
+  }
+
+  export type SubscribeOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+    extensions?: Record<string, any>;
+  } & VariablesOption<NoInfer<TVariables>>;
+
+  export interface SubscribeResult<TData = unknown> {
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+    data: TData | undefined;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+    extensions?: Record<string, unknown>;
+  }
+
+  export type WatchFragmentOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
+
+  export type WatchFragmentResult<TData = unknown> =
+    ApolloCache.WatchFragmentResult<TData>;
 
   /**
-   * Determines if data masking is enabled for the client.
-   *
-   * @defaultValue false
+   * Watched query options.
    */
-  dataMasking?: boolean;
+  export type WatchQueryOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
 
-  /**
-   * Determines the strategy used to parse incremental chunks from `@defer`
-   * queries.
-   */
-  incrementalHandler?: Incremental.Handler<any>;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TData, TVariables>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  } & VariablesOption<NoInfer<TVariables>>;
 }
 
 /**
@@ -182,8 +393,8 @@ export class ApolloClient implements DataProxy {
   }
   public version: string;
   public queryDeduplication: boolean;
-  public defaultOptions: DefaultOptions;
-  public readonly devtoolsConfig: DevtoolsOptions;
+  public defaultOptions: ApolloClient.DefaultOptions;
+  public readonly devtoolsConfig: ApolloClient.DevtoolsOptions;
 
   private queryManager: QueryManager;
   private devToolsHookCb?: Function;
@@ -216,7 +427,7 @@ export class ApolloClient implements DataProxy {
    * });
    * ```
    */
-  constructor(options: ApolloClientOptions) {
+  constructor(options: ApolloClient.Options) {
     if (__DEV__) {
       invariant(
         options.cache,
@@ -414,12 +625,12 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: WatchQueryOptions<TVariables, TData>
+    options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(
         this.defaultOptions.watchQuery as Partial<
-          WatchQueryOptions<TVariables, TData>
+          ApolloClient.WatchQueryOptions<TData, TVariables>
         >,
         options
       );
@@ -441,8 +652,8 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: QueryOptions<TVariables, TData>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
+    options: ApolloClient.QueryOptions<TData, TVariables>
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -506,8 +717,8 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
   >(
-    options: MutationOptions<TData, TVariables, TCache>
-  ): Promise<MutateResult<MaybeMasked<TData>>> {
+    options: ApolloClient.MutateOptions<TData, TVariables, TCache>
+  ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
     const optionsWithDefaults = mergeOptions(
       compact(
         {
@@ -517,7 +728,7 @@ export class ApolloClient implements DataProxy {
         this.defaultOptions.mutate
       ),
       options
-    ) as MutationOptions<TData, TVariables, TCache> & {
+    ) as ApolloClient.MutateOptions<TData, TVariables, TCache> & {
       fetchPolicy: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
     };
@@ -550,8 +761,8 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: SubscriptionOptions<TVariables, TData>
-  ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
+    options: ApolloClient.SubscribeOptions<TData, TVariables>
+  ): SubscriptionObservable<ApolloClient.SubscribeResult<MaybeMasked<TData>>> {
     const cause = {};
 
     const observable =
@@ -612,8 +823,8 @@ export class ApolloClient implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: WatchFragmentOptions<TData, TVariables>
-  ): Observable<WatchFragmentResult<MaybeMasked<TData>>> {
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
     const dataMasking = this.queryManager.dataMasking;
 
     return this.cache
@@ -634,13 +845,13 @@ export class ApolloClient implements DataProxy {
                 ...options,
                 data: result.data,
               });
-              return { ...result, data } as WatchFragmentResult<
+              return { ...result, data } as ApolloClient.WatchFragmentResult<
                 MaybeMasked<TData>
               >;
             }
           }
 
-          return result as WatchFragmentResult<MaybeMasked<TData>>;
+          return result as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
         })
       );
   }
@@ -735,7 +946,7 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<QueryResult<any>[] | null> {
+  public resetStore(): Promise<ApolloClient.QueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({
@@ -806,7 +1017,7 @@ export class ApolloClient implements DataProxy {
    */
   public reFetchObservableQueries: (
     includeStandby?: boolean
-  ) => Promise<QueryResult<any>[]>;
+  ) => Promise<ApolloClient.QueryResult<any>[]>;
 
   /**
    * Refetches all of your active queries.
@@ -824,7 +1035,7 @@ export class ApolloClient implements DataProxy {
    */
   public refetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<QueryResult<any>[]> {
+  ): Promise<ApolloClient.QueryResult<any>[]> {
     return this.queryManager.refetchObservableQueries(includeStandby);
   }
 
@@ -841,12 +1052,12 @@ export class ApolloClient implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache = ApolloCache,
-    TResult = Promise<QueryResult<any>>,
+    TResult = Promise<ApolloClient.QueryResult<any>>,
   >(
-    options: RefetchQueriesOptions<TCache, TResult>
-  ): RefetchQueriesResult<TResult> {
+    options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
+  ): ApolloClient.RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as RefetchQueriesOptions<ApolloCache, TResult>
+      options as ApolloClient.RefetchQueriesOptions<ApolloCache, TResult>
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];
@@ -858,7 +1069,7 @@ export class ApolloClient implements DataProxy {
 
     const result = Promise.all<TResult>(
       results as TResult[]
-    ) as RefetchQueriesResult<TResult>;
+    ) as ApolloClient.RefetchQueriesResult<TResult>;
 
     // In case you need the raw results immediately, without awaiting
     // Promise.all(results):

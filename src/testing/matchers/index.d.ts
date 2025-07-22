@@ -1,6 +1,5 @@
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DocumentNode,
   FetchResult,
   ObservableQuery,

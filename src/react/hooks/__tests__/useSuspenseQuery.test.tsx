@@ -16,12 +16,11 @@ import { Observable, of } from "rxjs";
 
 import type {
   ApolloCache,
+  DataValue,
   DocumentNode,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
-  QueryResult,
-  SubscribeToMoreOptions,
-  DataValue,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -8097,7 +8096,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let refetchPromise: Promise<QueryResult<unknown>>;
+    let refetchPromise: Promise<ApolloClient.QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -8482,7 +8481,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let fetchMorePromise: Promise<QueryResult<unknown>>;
+    let fetchMorePromise: Promise<ApolloClient.QueryResult<unknown>>;
     await actAsync(() => {
       fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
     });
@@ -8773,7 +8772,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      let fetchMorePromise: Promise<QueryResult<unknown>>;
+      let fetchMorePromise: Promise<ApolloClient.QueryResult<unknown>>;
       await actAsync(() => {
         fetchMorePromise = result.current.fetchMore({
           variables: { offset: 1 },
@@ -9770,7 +9769,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let refetchPromise: Promise<QueryResult<unknown>>;
+    let refetchPromise: Promise<ApolloClient.QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -9986,7 +9985,7 @@ describe("useSuspenseQuery", () => {
     }
 
     type UpdateQueryFn = NonNullable<
-      SubscribeToMoreOptions<
+      ObservableQuery.SubscribeToMoreOptions<
         QueryData | undefined,
         OperationVariables,
         SubscriptionData

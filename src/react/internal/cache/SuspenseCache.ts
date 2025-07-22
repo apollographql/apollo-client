@@ -5,7 +5,6 @@ import type {
   DataState,
   ObservableQuery,
   OperationVariables,
-  WatchFragmentOptions,
 } from "@apollo/client";
 
 import { FragmentReference } from "./FragmentReference.js";
@@ -60,7 +59,9 @@ export class SuspenseCache {
   getFragmentRef<TData, TVariables extends OperationVariables>(
     cacheKey: FragmentCacheKey,
     client: ApolloClient,
-    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    }
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {
       current?: FragmentReference<TData, TVariables>;

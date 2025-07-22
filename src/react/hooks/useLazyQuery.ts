@@ -5,22 +5,18 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreOptions,
   GetDataState,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
-  QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
@@ -50,7 +46,7 @@ export declare namespace useLazyQuery {
     nextFetchPolicy?:
       | WatchQueryFetchPolicy
       | ((
-          this: WatchQueryOptions<TVariables, TData>,
+          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
           currentFetchPolicy: WatchQueryFetchPolicy,
           context: NextFetchPolicyContext<TData, TVariables>
         ) => WatchQueryFetchPolicy);
@@ -98,20 +94,20 @@ export declare namespace useLazyQuery {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: (
       variables?: Partial<TVariables>
-    ) => Promise<QueryResult<MaybeMasked<TData>>>;
+    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
     >(
-      fetchMoreOptions: FetchMoreOptions<
+      fetchMoreOptions: ObservableQuery.FetchMoreOptions<
         TData,
         TVariables,
         TFetchData,
         TFetchVars
       >
-    ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
@@ -181,7 +177,7 @@ export declare namespace useLazyQuery {
     ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
-  ) => ObservableQuery.ResultPromise<QueryResult<TData>>;
+  ) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>>;
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -280,7 +276,7 @@ export function useLazyQuery<
 ): useLazyQuery.ResultTuple<TData, TVariables, TStates> {
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
-  const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
+  const resultRef = React.useRef<ObservableQuery.Result<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
   const calledDuringRender = useRenderGuard();
 
@@ -290,7 +286,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
-    } as WatchQueryOptions<TVariables, TData>);
+    } as ApolloClient.WatchQueryOptions<TData, TVariables>);
   }
 
   const [currentClient, setCurrentClient] = React.useState(client);
@@ -305,7 +301,7 @@ export function useLazyQuery<
   // observable.getCurrentResult() (or equivalent) to get these values which
   // will hopefully alleviate the need for us to use refs to track these values.
   const updateResult = React.useCallback(
-    (result: ApolloQueryResult<TData>, forceUpdate: () => void) => {
+    (result: ObservableQuery.Result<TData>, forceUpdate: () => void) => {
       const previousData = resultRef.current?.data;
 
       if (previousData && !equal(previousData, result.data)) {
@@ -451,7 +447,7 @@ export function useLazyQuery<
   return [stableExecute, result as any];
 }
 
-const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
+const initialResult: ObservableQuery.Result<any> = maybeDeepFreeze({
   data: undefined,
   dataState: "empty",
   loading: false,

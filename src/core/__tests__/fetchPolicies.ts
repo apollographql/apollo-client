@@ -13,11 +13,7 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
-import type { ApolloQueryResult } from "../types.js";
-import type {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../watchQueryOptions.js";
+import type { WatchQueryFetchPolicy } from "../watchQueryOptions.js";
 
 const query = gql`
   query {
@@ -825,7 +821,7 @@ describe("nextFetchPolicy", () => {
     };
   };
 
-  type TVars = {
+  type TVariables = {
     refetching?: boolean;
   };
 
@@ -863,11 +859,14 @@ describe("nextFetchPolicy", () => {
 
   const checkNextFetchPolicy = (args: {
     fetchPolicy: WatchQueryFetchPolicy;
-    nextFetchPolicy: WatchQueryOptions<{}, TData>["nextFetchPolicy"];
+    nextFetchPolicy: ApolloClient.WatchQueryOptions<
+      TData,
+      {}
+    >["nextFetchPolicy"];
     useDefaultOptions: boolean;
     checkResult: (info: {
-      stream: ObservableStream<ApolloQueryResult<TData>>;
-      observable: ObservableQuery<TData, TVars>;
+      stream: ObservableStream<ObservableQuery.Result<TData>>;
+      observable: ObservableQuery<TData, TVariables>;
     }) => Promise<void>;
   }) =>
     it(`transitions ${args.fetchPolicy} to ${
@@ -888,7 +887,10 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      const watchQueryOptions: WatchQueryOptions<TVars, TData> = {
+      const watchQueryOptions: ApolloClient.WatchQueryOptions<
+        TData,
+        TVariables
+      > = {
         query: EchoQuery,
         fetchPolicy: args.fetchPolicy,
       };

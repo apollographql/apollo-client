@@ -1,28 +1,34 @@
 /* Core */
 
-export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
+export type {
+  ApolloClientOptions,
+  ApolloQueryResult,
+  DefaultOptions,
+  DevtoolsOptions,
+  MutateResult,
+  MutationOptions,
+  QueryOptions,
+  RefetchQueriesOptions,
+  RefetchQueriesResult,
+  SubscribeToMoreOptions,
+  SubscriptionOptions,
+  WatchQueryOptions,
+} from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
-export type { FetchMoreOptions } from "./ObservableQuery.js";
 export { ObservableQuery } from "./ObservableQuery.js";
 export type {
   ErrorPolicy,
   FetchPolicy,
   MutationFetchPolicy,
-  MutationOptions,
-  QueryOptions,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
   SubscribeToMoreUpdateQueryFn,
-  SubscriptionOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "./watchQueryOptions.js";
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
-  ApolloQueryResult,
   DataState,
   DataValue,
   DefaultContext,
@@ -33,21 +39,15 @@ export type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueryDescriptor,
-  MethodKeys,
-  MutateResult,
   MutationQueryReducer,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  QueryResult,
   RefetchQueriesInclude,
-  RefetchQueriesOptions,
   RefetchQueriesPromiseResults,
-  RefetchQueriesResult,
   RefetchQueryDescriptor,
-  SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
   TypeOverrides,

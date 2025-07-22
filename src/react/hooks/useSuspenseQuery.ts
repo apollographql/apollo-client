@@ -2,7 +2,6 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DataState,
   DefaultContext,
   DocumentNode,
@@ -10,11 +9,11 @@ import type {
   ErrorPolicy,
   GetDataState,
   MaybeMasked,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
@@ -315,7 +314,7 @@ function useSuspenseQuery_<
   );
 
   let [current, setPromise] = React.useState<
-    [QueryKey, Promise<ApolloQueryResult<any>>]
+    [QueryKey, Promise<ObservableQuery.Result<any>>]
   >([queryRef.key, queryRef.promise]);
 
   // This saves us a re-execution of the render function when a variable changed.
@@ -343,7 +342,7 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
+  const skipResult = React.useMemo<ObservableQuery.Result<TData>>(() => {
     const error = queryRef.result.error;
     const complete = !!queryRef.result.data;
 
@@ -422,16 +421,16 @@ export function useWatchQueryOptions<
   client,
   query,
   options,
-}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
-  TVariables,
-  TData
-> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+}: UseWatchQueryOptionsHookOptions<
+  TData,
+  TVariables
+>): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      return { query, fetchPolicy: "standby" } as WatchQueryOptions<
-        TVariables,
-        TData
-      >;
+      return {
+        query,
+        fetchPolicy: "standby",
+      } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 
     const fetchPolicy =
@@ -439,13 +438,14 @@ export function useWatchQueryOptions<
       client.defaultOptions.watchQuery?.fetchPolicy ||
       "cache-first";
 
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
-      ...options,
-      fetchPolicy,
-      query,
-      notifyOnNetworkStatusChange: false,
-      nextFetchPolicy: void 0,
-    };
+    const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+      {
+        ...options,
+        fetchPolicy,
+        query,
+        notifyOnNetworkStatusChange: false,
+        nextFetchPolicy: void 0,
+      };
 
     if (__DEV__) {
       validateSuspenseHookOptions(watchQueryOptions);

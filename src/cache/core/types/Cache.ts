@@ -19,9 +19,14 @@ export declare namespace Cache {
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<
-    TVariables = OperationVariables,
+  /**
+   * @deprecated Use `Cache.ReadFnOptions` instead. Note that `TVariables` and `TData` are flipped.
+   */
+  export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
+    extends ReadFnOptions<TData, TVariables & OperationVariables> {}
+  export interface ReadFnOptions<
     TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
   > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
@@ -77,8 +82,10 @@ export declare namespace Cache {
     overwrite?: boolean;
   }
 
-  export interface DiffOptions<TData = unknown, TVariables = OperationVariables>
-    extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+  export interface DiffOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > extends Omit<ReadFnOptions<TData, TVariables>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
@@ -86,7 +93,7 @@ export declare namespace Cache {
 
   export interface WatchOptions<
     TData = unknown,
-    TVariables = OperationVariables,
+    TVariables extends OperationVariables = OperationVariables,
   > extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;

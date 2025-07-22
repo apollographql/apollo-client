@@ -167,17 +167,17 @@ export class InMemoryCache extends ApolloCache {
   }
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<OperationVariables, TData> & {
+    options: Cache.ReadFnOptions<TData, OperationVariables> & {
       returnPartialData: true;
     }
   ): TData | DeepPartial<TData> | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<OperationVariables, TData>
+    options: Cache.ReadFnOptions<TData, OperationVariables>
   ): TData | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<OperationVariables, TData>
+    options: Cache.ReadFnOptions<TData, OperationVariables>
   ): TData | DeepPartial<TData> | null {
     const {
       // Since read returns data or null, without any additional metadata
@@ -254,9 +254,10 @@ export class InMemoryCache extends ApolloCache {
     });
   }
 
-  public watch<TData = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<TData, TVariables>
-  ): () => void {
+  public watch<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<TData, TVariables>): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any

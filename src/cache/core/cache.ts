@@ -100,9 +100,10 @@ export abstract class ApolloCache {
 
   // required to implement
   // core API
-  public abstract read<TData = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, TData>
-  ): Unmasked<TData> | null;
+  public abstract read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadFnOptions<TData, TVariables>): Unmasked<TData> | null;
   public abstract write<TData = unknown, TVariables = OperationVariables>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
@@ -122,9 +123,10 @@ export abstract class ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
-  public abstract watch<TData = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<TData, TVariables>
-  ): () => void;
+  public abstract watch<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<TData, TVariables>): () => void;
 
   // Empty the cache and restart all current watches (unless
   // options.discardWatches is true).
@@ -264,7 +266,10 @@ export abstract class ApolloCache {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
-  public readQuery<TData = unknown, TVariables = OperationVariables>(
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
@@ -395,7 +400,10 @@ export abstract class ApolloCache {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
-  public readFragment<TData = unknown, TVariables = OperationVariables>(
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {

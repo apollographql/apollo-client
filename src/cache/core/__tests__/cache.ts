@@ -36,9 +36,10 @@ class TestCache extends ApolloCache {
     transaction(this);
   }
 
-  public read<T = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, T>
-  ): Unmasked<T> | null {
+  public read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadFnOptions<TData, TVariables>): Unmasked<TData> | null {
     return null;
   }
 
@@ -57,9 +58,10 @@ class TestCache extends ApolloCache {
     return this;
   }
 
-  public watch<T = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<T, TVariables>
-  ): () => void {
+  public watch<
+    T = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<T, TVariables>): () => void {
     return function () {};
   }
 

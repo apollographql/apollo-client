@@ -576,7 +576,7 @@ interface MutationStoreValue {
 export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 // @public (undocumented)
-type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
+type MutationUpdaterFunction<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -873,7 +873,7 @@ class QueryManager {
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Set<ObservableQuery<any, OperationVariables_2>>;
     // (undocumented)
-    getVariables<TVariables>(document: DocumentNode, variables?: TVariables): TVariables;
+    getVariables<TVariables extends OperationVariables_2>(document: DocumentNode, variables?: TVariables): TVariables;
     // (undocumented)
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
@@ -1067,14 +1067,14 @@ interface TransformCacheEntry {
 }
 
 // @public (undocumented)
-interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables_2> {
+interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2> {
     // (undocumented)
     (
     unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
-type UpdateQueryOptions<TData, TVariables> = {
+type UpdateQueryOptions<TData, TVariables extends OperationVariables_2> = {
     variables?: TVariables;
 } & ({
     complete: true;
@@ -1297,7 +1297,7 @@ export namespace useFragment {
         export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, from, fragmentName, variables, optimistic, client, }: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
     }
     // (undocumented)
-    export interface Options<TData, TVariables> {
+    export interface Options<TData, TVariables extends OperationVariables> {
         client?: ApolloClient;
         fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
         fragmentName?: string;
@@ -1316,7 +1316,7 @@ export namespace useFragment {
 }
 
 // @public @deprecated (undocumented)
-export type UseFragmentOptions<TData, TVariables> = useFragment.Options<TData, TVariables>;
+export type UseFragmentOptions<TData, TVariables extends OperationVariables> = useFragment.Options<TData, TVariables>;
 
 // @public @deprecated (undocumented)
 export type UseFragmentResult<TData> = useFragment.Result<TData>;
@@ -1962,8 +1962,8 @@ type WatchQueryFetchPolicy_2 = FetchPolicy | "cache-and-network" | "standby";
 // src/core/ApolloClient.ts:354:5 - (ae-forgotten-export) The symbol "WatchQueryFetchPolicy_2" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:369:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:236:5 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:237:5 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:270:7 - (ae-forgotten-export) The symbol "DataValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:320:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

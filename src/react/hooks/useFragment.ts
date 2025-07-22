@@ -24,7 +24,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useFragment {
   import _self = useFragment;
-  export interface Options<TData, TVariables> {
+  export interface Options<TData, TVariables extends OperationVariables> {
     /**
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine

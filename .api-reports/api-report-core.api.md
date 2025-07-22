@@ -615,7 +615,7 @@ interface MutationStoreValue {
 }
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
+export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -883,7 +883,7 @@ class QueryManager {
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Set<ObservableQuery<any, OperationVariables>>;
     // (undocumented)
-    getVariables<TVariables>(document: DocumentNode_2, variables?: TVariables): TVariables;
+    getVariables<TVariables extends OperationVariables>(document: DocumentNode_2, variables?: TVariables): TVariables;
     // (undocumented)
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
@@ -1116,14 +1116,14 @@ export { UnconventionalError }
 export { Unmasked }
 
 // @public (undocumented)
-export interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables> {
+export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     (
     unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
-export type UpdateQueryOptions<TData, TVariables> = {
+export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
     variables?: TVariables;
 } & ({
     complete: true;
@@ -1149,7 +1149,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // Warnings were encountered during analysis:
 //
 // src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

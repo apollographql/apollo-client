@@ -43,7 +43,7 @@ export function equalByQuery(
 
 // Encapsulates the information used by equalBySelectionSet that does not change
 // during the recursion.
-interface CompareContext<TVariables> {
+interface CompareContext<TVariables extends OperationVariables> {
   fragmentMap: FragmentMap;
   variables: TVariables | undefined;
 }

@@ -41,7 +41,7 @@ declare const PRELOADED_QUERY_REF_BRAND: unique symbol;
  */
 export interface QueryRef<
   TData = unknown,
-  TVariables = unknown,
+  TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > {
   /** @internal */
@@ -54,7 +54,7 @@ export interface QueryRef<
  */
 interface WrappedQueryRef<
   TData = unknown,
-  TVariables = unknown,
+  TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /** @internal */
@@ -68,7 +68,7 @@ interface WrappedQueryRef<
  */
 export interface PreloadedQueryRef<
   TData = unknown,
-  TVariables = unknown,
+  TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /** @internal */
@@ -93,7 +93,7 @@ export function wrapQueryRef<
 
 export function assertWrappedQueryRef<
   TData,
-  TVariables,
+  TVariables extends OperationVariables,
   TStates extends DataState<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, TVariables, TStates>
@@ -101,7 +101,7 @@ export function assertWrappedQueryRef<
 
 export function assertWrappedQueryRef<
   TData,
-  TVariables,
+  TVariables extends OperationVariables,
   TStates extends DataState<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, TVariables, TStates> | undefined | null
@@ -112,7 +112,7 @@ export function assertWrappedQueryRef<
 
 export function assertWrappedQueryRef<
   TData,
-  TVariables,
+  TVariables extends OperationVariables,
   TStates extends DataState<TData>["dataState"],
 >(queryRef: QueryRef<TData, TVariables, TStates> | undefined | null) {
   invariant(

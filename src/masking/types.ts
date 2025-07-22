@@ -24,6 +24,7 @@ export type Masked<TData> = ApplyHKTImplementationWithDefault<
  */
 export type MaskedDocumentNode<
   TData = { [key: string]: any },
+  // eslint-disable-next-line local-rules/variables-should-extend-operation-variables
   TVariables = { [key: string]: any },
 > = ApplyHKTImplementationWithDefault<
   TypeOverrides,

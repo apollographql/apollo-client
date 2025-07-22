@@ -32,6 +32,7 @@ export type MutateResult<TData = unknown> = ApolloClient.MutateResult<TData>;
 /** @deprecated Use `ApolloClient.QueryOptions` instead */
 export type QueryOptions<
   TVariables extends OperationVariables = OperationVariables,
+  // eslint-disable-next-line local-rules/tdata-tvariables-order
   TData = unknown,
 > = ApolloClient.QueryOptions<TData, TVariables>;
 
@@ -47,6 +48,7 @@ export type RefetchQueriesResult<TResult> =
 
 /** @deprecated Use `ObservableQuery.SubscribeToMoreOptions` instead */
 export type SubscribeToMoreOptions<
+  // eslint-disable-next-line local-rules/tdata-tvariables-order
   TData = unknown,
   TSubscriptionVariables extends OperationVariables = OperationVariables,
   TSubscriptionData = TData,
@@ -61,11 +63,13 @@ export type SubscribeToMoreOptions<
 /** @deprecated Use `ApolloClient.SubscribeOptions` instead */
 export type SubscriptionOptions<
   TVariables extends OperationVariables = OperationVariables,
+  // eslint-disable-next-line local-rules/tdata-tvariables-order
   TData = unknown,
 > = ApolloClient.SubscribeOptions<TData, TVariables>;
 
 /** @deprecated Use `ApolloClient.WatchQueryOptions` instead */
 export type WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
+  // eslint-disable-next-line local-rules/tdata-tvariables-order
   TData = unknown,
 > = ApolloClient.WatchQueryOptions<TData, TVariables>;

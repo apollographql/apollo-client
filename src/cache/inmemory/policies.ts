@@ -5,6 +5,7 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
+import type { OperationVariables } from "@apollo/client";
 import { disableWarningsSlot } from "@apollo/client/masking";
 import type {
   Reference,
@@ -180,7 +181,7 @@ function argsFromFieldSpecifier(spec: FieldSpecifier) {
 
 export interface FieldFunctionOptions<
   TArgs = Record<string, any>,
-  TVariables = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
 > {
   args: TArgs | null;
 

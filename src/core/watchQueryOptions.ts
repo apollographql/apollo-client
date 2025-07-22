@@ -51,7 +51,7 @@ export interface NextFetchPolicyContext<
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
-export type UpdateQueryOptions<TData, TVariables> = {
+export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
   variables?: TVariables;
 } & (
   | {
@@ -73,7 +73,7 @@ export type UpdateQueryOptions<TData, TVariables> = {
 
 export interface UpdateQueryMapFn<
   TData = unknown,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 > {
   (
     /**

@@ -1,7 +1,7 @@
 import React from "react";
 import { of } from "rxjs";
 
-import type { DataState } from "@apollo/client";
+import type { DataState, OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { InternalQueryReference } from "@apollo/client/react/internal";
 import { setupSimpleCase } from "@apollo/client/testing/internal";
@@ -34,12 +34,12 @@ test.skip("type tests", () => {
     interface Data {
       foo: string;
     }
-    interface Vars {
+    type Vars = {
       bar: string;
-    }
+    };
     function ComponentWithQueryRefProp<
       TData = unknown,
-      TVariables = unknown,
+      TVariables extends OperationVariables = Record<string, unknown>,
       TStates extends
         DataState<TData>["dataState"] = DataState<TData>["dataState"],
     >({}: { queryRef: QueryRef<TData, TVariables, TStates> }) {
@@ -47,7 +47,7 @@ test.skip("type tests", () => {
     }
     function ComponentWithPreloadedQueryRefProp<
       TData = unknown,
-      TVariables = unknown,
+      TVariables extends OperationVariables = Record<string, unknown>,
       TStates extends
         DataState<TData>["dataState"] = DataState<TData>["dataState"],
     >({}: { queryRef: PreloadedQueryRef<TData, TVariables, TStates> }) {

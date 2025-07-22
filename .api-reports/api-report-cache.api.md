@@ -389,7 +389,7 @@ export abstract class EntityStore implements NormalizedCache {
 }
 
 // @public (undocumented)
-export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables = Record<string, any>> {
+export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> {
     // (undocumented)
     args: TArgs | null;
     // (undocumented)
@@ -947,8 +947,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

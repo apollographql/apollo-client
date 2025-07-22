@@ -10,6 +10,7 @@ import type {
   ErrorLike,
   MaybeMasked,
   NetworkStatus,
+  OperationVariables,
 } from "@apollo/client";
 
 /**
@@ -29,7 +30,7 @@ export declare namespace DocumentationTypes {
     dataState: "complete" | "streaming" | "partial" | "empty";
   }
 
-  export interface VariableOptions<TVariables> {
+  export interface VariableOptions<TVariables extends OperationVariables> {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
     variables?: TVariables;
   }

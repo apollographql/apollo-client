@@ -7,9 +7,7 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["**/*.ts"]
 }

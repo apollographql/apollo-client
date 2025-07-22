@@ -19,8 +19,28 @@ export declare namespace Cache {
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
-    extends Helpers.Query<TVariables, TData> {
+  export interface ReadOptions<
+    TVariables = OperationVariables,
+    TData = unknown,
+  > {
+    /**
+     * The GraphQL query shape to be used constructed using the `gql` template
+     * string tag from `graphql-tag`. The query will be used to determine the
+     * shape of the data to be read.
+     */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: TVariables;
+
+    /**
+     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+     * root query object. This property makes writeQuery capable of writing data
+     * to any object in the cache.
+     */
+    id?: string;
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
@@ -30,8 +50,19 @@ export declare namespace Cache {
   export interface WriteOptions<
     TData = unknown,
     TVariables = OperationVariables,
-  > extends Omit<Helpers.Query<TVariables, TData>, "id">,
-      Omit<Helpers.WriteOptions<TData>, "data"> {
+  > extends Omit<Helpers.WriteOptions<TData>, "data"> {
+    /**
+     * The GraphQL query shape to be used constructed using the `gql` template
+     * string tag from `graphql-tag`. The query will be used to determine the
+     * shape of the data to be read.
+     */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: TVariables;
+
     dataId?: string;
     result: Unmasked<TData>;
   }
@@ -111,8 +142,25 @@ export declare namespace Cache {
     ) => any;
   }
 
-  export interface ReadQueryOptions<TData, TVariables>
-    extends Helpers.Query<TVariables, TData> {
+  export interface ReadQueryOptions<TData, TVariables> {
+    /**
+     * The GraphQL query shape to be used constructed using the `gql` template
+     * string tag from `graphql-tag`. The query will be used to determine the
+     * shape of the data to be read.
+     */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: TVariables;
+
+    /**
+     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+     * root query object. This property makes writeQuery capable of writing data
+     * to any object in the cache.
+     */
+    id?: string;
     /**
      * Whether to return incomplete data rather than null.
      * Defaults to false.
@@ -142,8 +190,26 @@ export declare namespace Cache {
   }
 
   export interface WriteQueryOptions<TData, TVariables>
-    extends Helpers.Query<TVariables, TData>,
-      Helpers.WriteOptions<TData> {}
+    extends Helpers.WriteOptions<TData> {
+    /**
+     * The GraphQL query shape to be used constructed using the `gql` template
+     * string tag from `graphql-tag`. The query will be used to determine the
+     * shape of the data to be read.
+     */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: TVariables;
+
+    /**
+     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+     * root query object. This property makes writeQuery capable of writing data
+     * to any object in the cache.
+     */
+    id?: string;
+  }
 
   export interface WriteFragmentOptions<TData, TVariables>
     extends Helpers.Fragment<TVariables, TData>,
@@ -179,27 +245,6 @@ export declare namespace Cache {
 }
 
 declare namespace Helpers {
-  export interface Query<TVariables, TData> {
-    /**
-     * The GraphQL query shape to be used constructed using the `gql` template
-     * string tag from `graphql-tag`. The query will be used to determine the
-     * shape of the data to be read.
-     */
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-    /**
-     * Any variables that the GraphQL query may depend on.
-     */
-    variables?: TVariables;
-
-    /**
-     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
-     * root query object. This property makes writeQuery capable of writing data
-     * to any object in the cache.
-     */
-    id?: string;
-  }
-
   export interface Fragment<TVariables, TData> {
     /**
      * The root id to be used. This id should take the same form as the

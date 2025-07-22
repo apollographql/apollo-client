@@ -5,7 +5,7 @@ import { Observable } from "rxjs";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export namespace SchemaLink {
+export declare namespace SchemaLink {
   export type ResolverContext = Record<string, any>;
   export type ResolverContextFunction = (
     operation: Operation

@@ -493,11 +493,9 @@ export function useLazyQuery<
       ...eagerMethods,
       ...result,
       client,
-
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
-
       called: !!resultRef.current,
     };
   }, [client, observableResult, eagerMethods, observable]);

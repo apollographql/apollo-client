@@ -55,7 +55,7 @@ interface BaseOptions {
   useGETForHashedQueries?: boolean;
 }
 
-export namespace PersistedQueryLink {
+export declare namespace PersistedQueryLink {
   interface SHA256Options extends BaseOptions {
     sha256: SHA256Function;
     generateHash?: never;

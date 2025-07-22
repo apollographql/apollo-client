@@ -695,6 +695,7 @@ export function maybeDependOnExistenceOfEntity(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace EntityStore {
   // Refer to this class as EntityStore.Root outside this namespace.
   export class Root extends EntityStore {

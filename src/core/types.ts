@@ -22,7 +22,7 @@ export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export interface TypeOverrides {}
 
-namespace OverridableTypes {
+declare namespace OverridableTypes {
   export interface Defaults {
     Complete: Complete;
     Streaming: Streaming;

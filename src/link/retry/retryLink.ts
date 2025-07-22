@@ -14,7 +14,7 @@ import { buildDelayFunction } from "./delayFunction.js";
 import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 
-export namespace RetryLink {
+export declare namespace RetryLink {
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.

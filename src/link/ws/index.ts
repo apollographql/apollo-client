@@ -5,7 +5,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export namespace WebSocketLink {
+export declare namespace WebSocketLink {
   /**
    * Configuration to use when constructing the subscription client (subscriptions-transport-ws).
    */

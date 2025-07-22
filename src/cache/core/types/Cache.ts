@@ -22,8 +22,10 @@ export declare namespace Cache {
   /**
    * @deprecated Use `Cache.ReadFnOptions` instead. Note that `TVariables` and `TData` are flipped.
    */
-  export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
-    extends ReadFnOptions<TData, TVariables & OperationVariables> {}
+  export interface ReadOptions<
+    TVariables extends OperationVariables = OperationVariables,
+    TData = unknown,
+  > extends ReadFnOptions<TData, TVariables> {}
   export interface ReadFnOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -54,7 +56,7 @@ export declare namespace Cache {
 
   export interface WriteOptions<
     TData = unknown,
-    TVariables = OperationVariables,
+    TVariables extends OperationVariables = OperationVariables,
   > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
@@ -159,7 +161,10 @@ export declare namespace Cache {
     ) => any;
   }
 
-  export interface ReadQueryOptions<TData, TVariables> {
+  export interface ReadQueryOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -191,7 +196,10 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface ReadFragmentOptions<TData, TVariables> {
+  export interface ReadFragmentOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -232,7 +240,10 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface WriteQueryOptions<TData, TVariables> {
+  export interface WriteQueryOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -267,7 +278,10 @@ export declare namespace Cache {
     overwrite?: boolean;
   }
 
-  export interface WriteFragmentOptions<TData, TVariables> {
+  export interface WriteFragmentOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -309,15 +323,19 @@ export declare namespace Cache {
     overwrite?: boolean;
   }
 
-  export interface UpdateQueryOptions<TData, TVariables>
-    extends Omit<
+  export interface UpdateQueryOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > extends Omit<
       ReadQueryOptions<TData, TVariables> &
         WriteQueryOptions<TData, TVariables>,
       "data"
     > {}
 
-  export interface UpdateFragmentOptions<TData, TVariables>
-    extends Omit<
+  export interface UpdateFragmentOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > extends Omit<
       ReadFragmentOptions<TData, TVariables> &
         WriteFragmentOptions<TData, TVariables>,
       "data"

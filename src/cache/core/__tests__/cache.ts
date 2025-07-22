@@ -65,9 +65,10 @@ class TestCache extends ApolloCache {
     return function () {};
   }
 
-  public write<TResult = unknown, TVariables = OperationVariables>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
+  public write<
+    TResult = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(_: Cache.WriteOptions<TResult, TVariables>): Reference | undefined {
     return;
   }
 }

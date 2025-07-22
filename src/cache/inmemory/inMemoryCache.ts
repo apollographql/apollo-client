@@ -198,9 +198,10 @@ export class InMemoryCache extends ApolloCache {
     }).result;
   }
 
-  public write<TData = unknown, TVariables = OperationVariables>(
-    options: Cache.WriteOptions<TData, TVariables>
-  ): Reference | undefined {
+  public write<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
     try {
       ++this.txCount;
       return this.storeWriter.writeToStore(this.data, options);

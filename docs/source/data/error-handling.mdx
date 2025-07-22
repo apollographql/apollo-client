@@ -4,8 +4,6 @@ title: Handling operation errors
 
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
-When errors occur, Apollo Client returns them in the `error` field of the result object returned by hooks like `useQuery`, `useMutation`, and `useSubscription`. The `error` field contains an `ErrorLike` object that provides details about what went wrong.
-
 ## Error types
 
 Executing GraphQL operations on a remote server can result in [GraphQL errors](#graphql-errors) or [network errors](#network-errors).

@@ -71,7 +71,6 @@ export namespace PersistedQueryLink {
         // (undocumented)
         sha256: SHA256Function;
     }
-        {};
 }
 
 // @public (undocumented)

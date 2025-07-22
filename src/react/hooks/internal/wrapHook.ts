@@ -23,14 +23,14 @@ type FunctionSignature<T> =
   T extends (...args: infer A) => infer R ? (...args: A) => R : never;
 
 interface WrappableHooks {
-  createQueryPreloader: typeof createQueryPreloader;
+  createQueryPreloader: FunctionSignature<typeof createQueryPreloader>;
   useQuery: FunctionSignature<typeof useQuery>;
-  useSuspenseQuery: typeof useSuspenseQuery;
-  useSuspenseFragment: typeof useSuspenseFragment;
-  useBackgroundQuery: typeof useBackgroundQuery;
-  useReadQuery: typeof useReadQuery;
-  useFragment: typeof useFragment;
-  useQueryRefHandlers: typeof useQueryRefHandlers;
+  useSuspenseQuery: FunctionSignature<typeof useSuspenseQuery>;
+  useSuspenseFragment: FunctionSignature<typeof useSuspenseFragment>;
+  useBackgroundQuery: FunctionSignature<typeof useBackgroundQuery>;
+  useReadQuery: FunctionSignature<typeof useReadQuery>;
+  useFragment: FunctionSignature<typeof useFragment>;
+  useQueryRefHandlers: FunctionSignature<typeof useQueryRefHandlers>;
 }
 
 /**

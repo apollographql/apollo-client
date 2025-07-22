@@ -1,0 +1,75 @@
+---
+title: skipToken
+description: Apollo Client API reference
+---
+
+{/** @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+## `skipToken`
+
+`skipToken` provides a type-safe mechanism to skip query execution. It is currently supported with `useSuspenseQuery` and `useBackgroundQuery`.
+When you pass a `skipToken` to one of the supported hooks instead of the `options` object, the hook will not cause any requests or suspenseful behavior and keeps the last `data` available. It is typically used conditionally to start query execution when the input data is available.
+
+```js title="Recommended usage of skipToken with useSuspenseQuery"
+import { skipToken, useSuspenseQuery } from '@apollo/client/react';
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+
+```js title="Recommended usage of skipToken with useBackgroundQuery"
+import { skipToken, useBackgroundQuery } from '@apollo/client/react';
+const [queryRef] = useBackgroundQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+<blockquote>
+
+Note: **Why do we recommend `skipToken` over `{ skip: true }`?**
+
+Imagine this very common scenario for `skip`: You want to skip your query if a certain required variable is not set. You might be tempted to write something like this:
+
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id },
+  skip: !id
+});
+```
+But in that case, TypeScript will complain:
+```
+Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.ts(2769)
+```
+
+To get around that, you have to tell TypeScript to ignore the fact that `id` could be `undefined`:
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id: id! },
+  skip: !id
+});
+```
+Alternatively, you could also use some obscure default value:
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id: id || 0 },
+  skip: !id
+});
+```
+
+Both of these solutions hide a potential bug. If your `skip` logic becomes more complex, you might accidentally introduce a bug that causes your query to execute, even when `id` is still `undefined`. In that case, TypeScript cannot warn you about it.
+
+Instead we recommend using `skipToken`. It provides type safety without the need for an obscure default value:
+
+```ts
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+Here it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
+
+</blockquote>

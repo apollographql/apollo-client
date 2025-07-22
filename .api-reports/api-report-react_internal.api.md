@@ -244,24 +244,24 @@ export function updateWrappedQueryRef<TData, TStates extends DataState<TData>["d
 
 // @public (undocumented)
 interface WrappableHooks {
-    // (undocumented)
-    createQueryPreloader: typeof createQueryPreloader;
-    // (undocumented)
-    useBackgroundQuery: typeof useBackgroundQuery;
-    // (undocumented)
-    useFragment: typeof useFragment;
     // Warning: (ae-forgotten-export) The symbol "FunctionSignature" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
+    createQueryPreloader: FunctionSignature<typeof createQueryPreloader>;
+    // (undocumented)
+    useBackgroundQuery: FunctionSignature<typeof useBackgroundQuery>;
+    // (undocumented)
+    useFragment: FunctionSignature<typeof useFragment>;
+    // (undocumented)
     useQuery: FunctionSignature<typeof useQuery>;
     // (undocumented)
-    useQueryRefHandlers: typeof useQueryRefHandlers;
+    useQueryRefHandlers: FunctionSignature<typeof useQueryRefHandlers>;
     // (undocumented)
-    useReadQuery: typeof useReadQuery;
+    useReadQuery: FunctionSignature<typeof useReadQuery>;
     // (undocumented)
-    useSuspenseFragment: typeof useSuspenseFragment;
+    useSuspenseFragment: FunctionSignature<typeof useSuspenseFragment>;
     // (undocumented)
-    useSuspenseQuery: typeof useSuspenseQuery;
+    useSuspenseQuery: FunctionSignature<typeof useSuspenseQuery>;
 }
 
 // @internal @deprecated

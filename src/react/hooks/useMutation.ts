@@ -163,6 +163,17 @@ export declare namespace useMutation {
     // in the mutation function
     mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   };
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useMutation:function(1)} */
+    export function useMutation<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useMutation.Options<TData, TVariables>
+    ): useMutation.ResultTuple<TData, TVariables>;
+  }
 }
 
 /**
@@ -207,7 +218,6 @@ export declare namespace useMutation {
  *   );
  * }
  * ```
- * @since 3.0.0
  * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
  * @param options - Options to control how the mutation is executed.
  * @returns A tuple in the form of `[mutate, result]`

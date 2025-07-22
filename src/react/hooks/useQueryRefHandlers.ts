@@ -32,6 +32,16 @@ export declare namespace useQueryRefHandlers {
     /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useQueryRefHandlers:function(1)} */
+    export function useQueryRefHandlers<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      queryRef: QueryRef<TData, TVariables>
+    ): useQueryRefHandlers.Result<TData, TVariables>;
+  }
 }
 
 /**
@@ -50,7 +60,6 @@ export declare namespace useQueryRefHandlers {
  *   // ...
  * }
  * ```
- * @since 3.9.0
  * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<

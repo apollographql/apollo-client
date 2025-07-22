@@ -244,36 +244,67 @@ export declare namespace ApolloClient {
     error?: ErrorLike;
   }
 
-  // TODO Improve documentation comments for this public type.
+  /**
+   * Options object for the `client.refetchQueries` method.
+   */
   export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+    /**
+     * Optional function that updates cached fields to trigger refetches of queries that include those fields.
+     */
     updateCache?: (cache: TCache) => void;
-    // The client.refetchQueries method discourages passing QueryOptions, by
-    // restricting the public type of options.include to exclude QueryOptions as
-    // an available array element type (see InternalRefetchQueriesInclude for a
-    // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
+
+    /**
+     * Optional array specifying queries to refetch. Each element can be either a query's string name or a `DocumentNode` object.
+     *
+     * Pass `"active"` as a shorthand to refetch all active queries, or `"all"` to refetch all active and inactive queries.
+     *
+     * Analogous to the [`options.refetchQueries`](https://www.apollographql.com/docs/react/data/mutations/#options) array for mutations.
+     */
     include?: RefetchQueriesInclude;
+
+    /**
+     * If `true`, the `options.updateCache` function is executed on a temporary optimistic layer of `InMemoryCache`, so its modifications can be discarded from the cache after observing which fields it invalidated.
+     *
+     * Defaults to `false`, meaning `options.updateCache` updates the cache in a lasting way.
+     */
     optimistic?: boolean;
-    // If no onQueryUpdated function is provided, any queries affected by the
-    // updateCache function or included in the options.include array will be
-    // refetched by default. Passing null instead of undefined disables this
-    // default refetching behavior for affected queries, though included queries
-    // will still be refetched.
+
+    /**
+     * Optional callback function that's called once for each `ObservableQuery` that's either affected by `options.updateCache` or listed in `options.include` (or both).
+     *
+     * If `onQueryUpdated` is not provided, the default implementation returns the result of calling `observableQuery.refetch()`. When `onQueryUpdated` is provided, it can dynamically decide whether (and how) each query should be refetched.
+     *
+     * Returning `false` from `onQueryUpdated` prevents the associated query from being refetched.
+     */
     onQueryUpdated?: OnQueryUpdated<TResult> | null;
   }
 
-  // The result of client.refetchQueries is thenable/awaitable, if you just want
-  // an array of fully resolved results, but you can also access the raw results
-  // immediately by examining the additional { queries, results } properties of
-  // the RefetchQueriesResult<TResult> object.
+  /**
+   * The result of client.refetchQueries is thenable/awaitable, if you just want
+   * an array of fully resolved results, but you can also access the raw results
+   * immediately by examining the additional `queries` and `results` properties of
+   * the `RefetchQueriesResult<TResult> object`.
+   */
   export interface RefetchQueriesResult<TResult>
-    extends Promise<RefetchQueriesPromiseResults<TResult>> {
-    // An array of ObservableQuery objects corresponding 1:1 to TResult values
-    // in the results arrays (both the TResult[] array below, and the results
-    // array resolved by the Promise above).
-    queries: ObservableQuery<any>[];
-    // These are the raw TResult values returned by any onQueryUpdated functions
-    // that were invoked by client.refetchQueries.
-    results: InternalRefetchQueriesResult<TResult>[];
+    extends Promise<RefetchQueriesPromiseResults<TResult>>,
+      RefetchQueriesResult.AdditionalProperties<TResult> {}
+
+  export namespace RefetchQueriesResult {
+    export interface AdditionalProperties<TResult> {
+      /**
+       * An array of ObservableQuery objects corresponding 1:1 to TResult values
+       * in the results arrays (both the `result` property and the resolved value).
+       */
+      queries: ObservableQuery<any>[];
+      /**
+       * An array of results that were either returned by `onQueryUpdated`, or provided by default in the absence of `onQueryUpdated`, including pending promises.
+       *
+       * If `onQueryUpdated` returns `false` for a given query, no result is provided for that query.
+       *
+       * If `onQueryUpdated` returns `true`, the resulting `Promise<ApolloQueryResult<any>>` is included in the `results` array instead of `true`.
+       */
+      results: InternalRefetchQueriesResult<TResult>[];
+    }
   }
 
   export type SubscribeOptions<

@@ -191,23 +191,21 @@ export namespace ApolloClient {
         data: TData | undefined;
         error?: ErrorLike;
     }
-    // (undocumented)
     export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
-        // (undocumented)
         include?: RefetchQueriesInclude;
-        // (undocumented)
         onQueryUpdated?: OnQueryUpdated<TResult> | null;
-        // (undocumented)
         optimistic?: boolean;
-        // (undocumented)
         updateCache?: (cache: TCache) => void;
     }
+    export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>>, RefetchQueriesResult.AdditionalProperties<TResult> {
+    }
     // (undocumented)
-    export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>> {
+    export namespace RefetchQueriesResult {
         // (undocumented)
-        queries: ObservableQuery<any>[];
-        // (undocumented)
-        results: InternalRefetchQueriesResult<TResult>[];
+        export interface AdditionalProperties<TResult> {
+            queries: ObservableQuery<any>[];
+            results: InternalRefetchQueriesResult<TResult>[];
+        }
     }
     // (undocumented)
     export type SubscribeOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
@@ -2744,7 +2742,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:166:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:329:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:360:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

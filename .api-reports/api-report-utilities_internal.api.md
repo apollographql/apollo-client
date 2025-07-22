@@ -161,6 +161,10 @@ export namespace DocumentationTypes {
         // (undocumented)
         subscribe(observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)): Subscription;
     }
+    // (undocumented)
+    export interface VariableOptions<TVariables> {
+        variables?: TVariables;
+    }
 }
 
 // @public (undocumented)

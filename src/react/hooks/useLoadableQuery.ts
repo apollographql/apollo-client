@@ -54,19 +54,23 @@ export declare namespace useLoadableQuery {
   > = [
     loadQuery: LoadQueryFunction<TVariables>,
     queryRef: QueryRef<TData, TVariables, TStates> | null,
-    handlers: {
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-      fetchMore: FetchMoreFunction<TData, TVariables>;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-      refetch: RefetchFunction<TData, TVariables>;
-      /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
-      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-      /**
-       * A function that resets the `queryRef` back to `null`.
-       */
-      reset: ResetFunction;
-    },
+    handlers: Handlers<TData, TVariables>,
   ];
+  export interface Handlers<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: RefetchFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    /**
+     * A function that resets the `queryRef` back to `null`.
+     */
+    reset: ResetFunction;
+  }
 
   export type FetchPolicy = Extract<
     WatchQueryFetchPolicy,
@@ -148,7 +152,6 @@ export declare namespace useLoadableQuery {
  * }
  * ```
  *
- * @since 3.9.0
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Options to control how the query is executed.
  * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`

@@ -20,6 +20,7 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -33,8 +34,8 @@ import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-
 export declare namespace useLazyQuery {
+  import _self = useLazyQuery;
   export interface Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -72,89 +73,118 @@ export declare namespace useLazyQuery {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
   }
+  namespace DocumentationTypes {
+    namespace useLazyQuery {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends _self.Options<TData, TVariables> {}
+    }
+  }
+
+  namespace Base {
+    export interface Result<TData, TVariables extends OperationVariables> {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+      startPolling: (pollInterval: number) => void;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+      stopPolling: () => void;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+      updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+      refetch: (
+        variables?: Partial<TVariables>
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+      fetchMore: <
+        TFetchData = TData,
+        TFetchVars extends OperationVariables = TVariables,
+      >(
+        fetchMoreOptions: ObservableQuery.FetchMoreOptions<
+          TData,
+          TVariables,
+          TFetchData,
+          TFetchVars
+        >
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+      client: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+      observable: ObservableQuery<TData, TVariables>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+      previousData?: MaybeMasked<TData>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+      loading: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+      networkStatus: NetworkStatus;
+    }
+  }
 
   export type Result<
     TData,
     TVariables extends OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = {
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-    startPolling: (pollInterval: number) => void;
+  > = Base.Result<TData, TVariables> &
+    (
+      | ({
+          /**
+           * If `true`, the associated lazy query has been executed.
+           *
+           * @docGroup 2. Network info
+           */
+          called: true;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-    stopPolling: () => void;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+          variables: TVariables;
+        } & GetDataState<MaybeMasked<TData>, TStates>)
+      | {
+          /**
+           * If `true`, the associated lazy query has been executed.
+           *
+           * @docGroup 2. Network info
+           */
+          called: false;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+          variables: Partial<TVariables>;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+          data: undefined;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+          dataState: "empty";
+        }
+    );
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-    refetch: (
-      variables?: Partial<TVariables>
-    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-    fetchMore: <
-      TFetchData = TData,
-      TFetchVars extends OperationVariables = TVariables,
-    >(
-      fetchMoreOptions: ObservableQuery.FetchMoreOptions<
-        TData,
-        TVariables,
-        TFetchData,
-        TFetchVars
-      >
-    ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-    client: ApolloClient;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-    observable: ObservableQuery<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-    previousData?: MaybeMasked<TData>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-    error?: ErrorLike;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
-    loading: boolean;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-    networkStatus: NetworkStatus;
-  } & (
-    | ({
+  namespace DocumentationTypes {
+    namespace useLazyQuery {
+      export interface Result<TData, TVariables extends OperationVariables>
+        extends Base.Result<TData, TVariables>,
+          UtilityDocumentationTypes.DataState<TData>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {
         /**
          * If `true`, the associated lazy query has been executed.
          *
          * @docGroup 2. Network info
          */
-        called: true;
-
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-        variables: TVariables;
-      } & GetDataState<MaybeMasked<TData>, TStates>)
-    | {
-        /**
-         * If `true`, the associated lazy query has been executed.
-         *
-         * @docGroup 2. Network info
-         */
-        called: false;
-
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-        variables: Partial<TVariables>;
-
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: undefined;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "empty";
+        called: boolean;
       }
-  );
+    }
+  }
 
   export type ExecOptions<
     TVariables extends OperationVariables = OperationVariables,
@@ -162,6 +192,16 @@ export declare namespace useLazyQuery {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
     context?: DefaultContext;
   } & VariablesOption<TVariables>;
+
+  namespace DocumentationTypes {
+    namespace useLazyQuery {
+      export interface ExecOptions<TVariables extends OperationVariables>
+        extends UtilityDocumentationTypes.VariableOptions<TVariables> {
+        /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+        context?: DefaultContext;
+      }
+    }
+  }
 
   export type ResultTuple<
     TData,
@@ -178,6 +218,23 @@ export declare namespace useLazyQuery {
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
   ) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>>;
+
+  namespace DocumentationTypes {
+    namespace useLazyQuery {
+      export import ResultTuple = _self.ResultTuple;
+    }
+  }
+
+  namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+    export function useLazyQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options: useLazyQuery.Options<TData, TVariables>
+    ): useLazyQuery.ResultTuple<TData, TVariables>;
+  }
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -191,46 +248,6 @@ const EAGER_METHODS = [
   "subscribeToMore",
 ] as const;
 
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming"
->;
-
 /**
  * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
  *
@@ -238,7 +255,8 @@ export function useLazyQuery<
  *
  * @example
  * ```jsx
- * import { gql, useLazyQuery } from "@apollo/client";
+ * import { gql } from "@apollo/client";
+ * import { useLazyQuery } from "@apollo/client/react";
  *
  * const GET_GREETING = gql`
  *   query GetGreeting($language: String!) {
@@ -260,12 +278,53 @@ export function useLazyQuery<
  *   return <h1>Hello {data.greeting.message}!</h1>;
  * }
  * ```
- * @since 3.0.0
  *
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Default options to control how the query is executed.
  * @returns A tuple in the form of `[execute, result]`
  */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: boolean;
+  }
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming"
+>;
+
 export function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -338,7 +397,6 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      // eslint-disable-next-line react-compiler/react-compiler
       eagerMethods[key] = function (...args: any[]) {
         invariant(
           resultRef.current,
@@ -435,11 +493,11 @@ export function useLazyQuery<
       ...eagerMethods,
       ...result,
       client,
-      // eslint-disable-next-line react-compiler/react-compiler
+
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
-      // eslint-disable-next-line react-compiler/react-compiler
+
       called: !!resultRef.current,
     };
   }, [client, observableResult, eagerMethods, observable]);

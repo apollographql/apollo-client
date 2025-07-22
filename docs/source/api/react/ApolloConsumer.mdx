@@ -1,0 +1,23 @@
+---
+title: ApolloConsumer
+description: Apollo Client API reference
+---
+
+
+## The `ApolloConsumer` component
+
+To access the configured Apollo Client instance directly, create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function is called with your `ApolloClient` instance as its only argument. The `ApolloConsumer` component is similar to the `Consumer` component from the [React Context API](https://react.dev/reference/react/useContext).
+
+### Example
+
+```jsx
+import { ApolloConsumer } from '@apollo/client/react';
+
+function WithApolloClient() {
+  return (
+    <ApolloConsumer>
+      {client => 'We have access to the client!' /* do stuff here */}
+    </ApolloConsumer>
+  );
+}
+```

@@ -3,6 +3,7 @@ import * as React from "react";
 
 import type {
   ApolloClient,
+  DataValue,
   DocumentNode,
   GetDataState,
   OperationVariables,
@@ -22,6 +23,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useFragment {
+  import _self = useFragment;
   export interface Options<TData, TVariables> {
     /**
      * A GraphQL document created using the `gql` template string tag from
@@ -43,6 +45,9 @@ export declare namespace useFragment {
      */
     variables?: NoInfer<TVariables>;
 
+    /**
+     * An object containing a `__typename` and primary key fields (such as `id`) identifying the entity object from which the fragment will be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+     */
     from:
       | StoreObject
       | Reference
@@ -70,19 +75,66 @@ export declare namespace useFragment {
     client?: ApolloClient;
   }
 
+  namespace DocumentationTypes {
+    namespace useFragment {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends _self.Options<TData, TVariables> {}
+    }
+  }
+
   // TODO: Update this to return `null` when there is no data returned from the
   // fragment.
   export type Result<TData> =
     | ({
+        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
         complete: true;
+        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: never;
       } & GetDataState<MaybeMasked<TData>, "complete">)
     | ({
+        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
         complete: false;
+        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: MissingTree;
       } & GetDataState<MaybeMasked<TData>, "partial">);
+
+  export namespace DocumentationTypes {
+    namespace useFragment {
+      export interface Result<TData> {
+        data: MaybeMasked<TData> | DataValue.Partial<MaybeMasked<TData>>;
+        complete: boolean;
+        /**
+         * A tree of all `MissingFieldError` messages reported during fragment reading, where the branches of the tree indicate the paths of the errors within the query result.
+         */
+        missing?: MissingTree;
+      }
+    }
+  }
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client!useFragment:function(1)} */
+    export function useFragment<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >({
+      fragment,
+      from,
+      fragmentName,
+      variables,
+      optimistic,
+      client,
+    }: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
+  }
 }
 
+/**
+ * `useFragment` represents a lightweight live binding into the Apollo Client Cache and enables Apollo Client to broadcast very specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+ *
+ * Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+ *
+ * To view a `useFragment` example, see the [Fragments](https://www.apollographql.com/docs/react/data/fragments#usefragment) page.
+ */
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

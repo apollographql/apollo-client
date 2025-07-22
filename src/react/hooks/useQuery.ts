@@ -237,13 +237,14 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  *
  * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
  *
- * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+ * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState`, and `data` properties you can use to render your UI.
  *
  * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
  *
  * @example
  * ```jsx
- * import { gql, useQuery } from '@apollo/client';
+ * import { gql } from '@apollo/client';
+ * import { useQuery } from '@apollo/client/react';
  *
  * const GET_GREETING = gql`
  *   query GetGreeting($language: String!) {

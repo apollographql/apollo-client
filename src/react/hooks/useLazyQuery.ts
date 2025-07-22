@@ -255,7 +255,8 @@ const EAGER_METHODS = [
  *
  * @example
  * ```jsx
- * import { gql, useLazyQuery } from "@apollo/client";
+ * import { gql } from "@apollo/client";
+ * import { useLazyQuery } from "@apollo/client/react";
  *
  * const GET_GREETING = gql`
  *   query GetGreeting($language: String!) {

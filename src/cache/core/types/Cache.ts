@@ -174,8 +174,34 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface ReadFragmentOptions<TData, TVariables>
-    extends Helpers.Fragment<TVariables, TData> {
+  export interface ReadFragmentOptions<TData, TVariables> {
+    /**
+     * The root id to be used. This id should take the same form as the
+     * value returned by your `dataIdFromObject` function. If a value with your
+     * id does not exist in the store, `null` will be returned.
+     */
+    id?: string;
+
+    /**
+     * A GraphQL document created using the `gql` template string tag from
+     * `graphql-tag` with one or more fragments which will be used to determine
+     * the shape of data to read. If you provide more than one fragment in this
+     * document then you must also specify `fragmentName` to select a single.
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * The name of the fragment in your GraphQL document to be used. If you do
+     * not provide a `fragmentName` and there is only one fragment in your
+     * `fragment` document then that fragment will be used.
+     */
+    fragmentName?: string;
+
+    /**
+     * Any variables that your GraphQL fragments depend on.
+     */
+    variables?: TVariables;
+
     /**
      * Whether to return incomplete data rather than null.
      * Defaults to false.
@@ -212,8 +238,34 @@ export declare namespace Cache {
   }
 
   export interface WriteFragmentOptions<TData, TVariables>
-    extends Helpers.Fragment<TVariables, TData>,
-      Helpers.WriteOptions<TData> {}
+    extends Helpers.WriteOptions<TData> {
+    /**
+     * The root id to be used. This id should take the same form as the
+     * value returned by your `dataIdFromObject` function. If a value with your
+     * id does not exist in the store, `null` will be returned.
+     */
+    id?: string;
+
+    /**
+     * A GraphQL document created using the `gql` template string tag from
+     * `graphql-tag` with one or more fragments which will be used to determine
+     * the shape of data to read. If you provide more than one fragment in this
+     * document then you must also specify `fragmentName` to select a single.
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * The name of the fragment in your GraphQL document to be used. If you do
+     * not provide a `fragmentName` and there is only one fragment in your
+     * `fragment` document then that fragment will be used.
+     */
+    fragmentName?: string;
+
+    /**
+     * Any variables that your GraphQL fragments depend on.
+     */
+    variables?: TVariables;
+  }
 
   export interface UpdateQueryOptions<TData, TVariables>
     extends Omit<
@@ -245,35 +297,6 @@ export declare namespace Cache {
 }
 
 declare namespace Helpers {
-  export interface Fragment<TVariables, TData> {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by your `dataIdFromObject` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
-    /**
-     * A GraphQL document created using the `gql` template string tag from
-     * `graphql-tag` with one or more fragments which will be used to determine
-     * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
-     */
-    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-    /**
-     * The name of the fragment in your GraphQL document to be used. If you do
-     * not provide a `fragmentName` and there is only one fragment in your
-     * `fragment` document then that fragment will be used.
-     */
-    fragmentName?: string;
-
-    /**
-     * Any variables that your GraphQL fragments depend on.
-     */
-    variables?: TVariables;
-  }
-
   export interface WriteOptions<TData> {
     /**
      * The data you will be writing to the store.

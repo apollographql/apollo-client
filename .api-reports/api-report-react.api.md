@@ -11,7 +11,6 @@ import { ApolloLink } from '@apollo/client/link';
 import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import type { DataProxy } from '@apollo/client/cache';
 import type { DataState as DataState_2 } from '@apollo/client';
 import type { DataValue as DataValue_2 } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
@@ -82,6 +81,50 @@ import type { wrapperSymbol } from '@apollo/client/react/internal';
 // @public (undocumented)
 namespace ApolloClient {
     // (undocumented)
+    namespace Base {
+        // (undocumented)
+        interface ReadQueryOptions<TData, TVariables extends OperationVariables_2> {
+            id?: string;
+            optimistic?: boolean;
+            query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+            returnPartialData?: boolean;
+        }
+    }
+    // (undocumented)
+    namespace Base {
+        // (undocumented)
+        interface ReadFragmentOptions<TData, TVariables extends OperationVariables_2> {
+            fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+            fragmentName?: string;
+            id?: string;
+            optimistic?: boolean;
+            returnPartialData?: boolean;
+        }
+    }
+    // (undocumented)
+    namespace Base {
+        // (undocumented)
+        interface WriteQueryOptions<TData, TVariables extends OperationVariables_2> {
+            broadcast?: boolean;
+            data: Unmasked<TData>;
+            id?: string;
+            overwrite?: boolean;
+            query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        }
+    }
+    // (undocumented)
+    namespace Base {
+        // (undocumented)
+        interface WriteFragmentOptions<TData, TVariables extends OperationVariables_2> {
+            broadcast?: boolean;
+            data: Unmasked<TData>;
+            fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+            fragmentName?: string;
+            id?: string;
+            overwrite?: boolean;
+        }
+    }
+    // (undocumented)
     interface DefaultOptions {
         // (undocumented)
         mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
@@ -94,6 +137,34 @@ namespace ApolloClient {
     interface DevtoolsOptions {
         enabled?: boolean;
         name?: string;
+    }
+    // (undocumented)
+    namespace DocumentationTypes {
+        // (undocumented)
+        interface ReadQueryOptions<TData, TVariables extends OperationVariables_2> extends Base.ReadQueryOptions<TData, TVariables> {
+            variables?: TVariables;
+        }
+    }
+    // (undocumented)
+    namespace DocumentationTypes {
+        // (undocumented)
+        interface WriteQueryOptions<TData, TVariables extends OperationVariables_2> extends Base.WriteQueryOptions<TData, TVariables> {
+            variables?: TVariables;
+        }
+    }
+    // (undocumented)
+    namespace DocumentationTypes {
+        // (undocumented)
+        interface WriteQueryOptions<TData, TVariables extends OperationVariables_2> extends Base.WriteQueryOptions<TData, TVariables> {
+            variables?: TVariables;
+        }
+    }
+    // (undocumented)
+    namespace DocumentationTypes {
+        // (undocumented)
+        interface WriteFragmentOptions<TData, TVariables extends OperationVariables_2> extends Base.WriteFragmentOptions<TData, TVariables> {
+            variables?: TVariables;
+        }
     }
     // Warning: (ae-forgotten-export) The symbol "OperationVariables_2" needs to be exported by the entry point index.d.ts
     //
@@ -157,6 +228,12 @@ namespace ApolloClient {
         data: TData | undefined;
         error?: ErrorLike;
     }
+    // (undocumented)
+    type ReadFragmentOptions<TData, TVariables extends OperationVariables_2> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    type ReadQueryOptions<TData, TVariables extends OperationVariables_2> = Base.ReadQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
     interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
         // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
         include?: RefetchQueriesInclude;
@@ -208,10 +285,14 @@ namespace ApolloClient {
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     } & VariablesOption<NoInfer<TVariables>>;
+    // (undocumented)
+    type WriteFragmentOptions<TData, TVariables extends OperationVariables_2> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+    // (undocumented)
+    type WriteQueryOptions<TData, TVariables extends OperationVariables_2> = Base.WriteQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
 }
 
 // @public
-class ApolloClient implements DataProxy {
+class ApolloClient {
     // (undocumented)
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
@@ -244,8 +325,13 @@ class ApolloClient implements DataProxy {
     query<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
     // (undocumented)
     queryDeduplication: boolean;
-    readFragment<T = unknown, TVariables = OperationVariables_2>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
-    readQuery<TData = unknown, TVariables = OperationVariables_2>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    // @deprecated
+    readFragment<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>, optimistic: boolean): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    // @deprecated
+    readQuery<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.ReadQueryOptions<TData, TVariables>,
+    optimistic: boolean): Unmasked<TData> | null;
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
@@ -260,8 +346,8 @@ class ApolloClient implements DataProxy {
     version: string;
     watchFragment<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
     watchQuery<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;
-    writeFragment<TData = unknown, TVariables = OperationVariables_2>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables = OperationVariables_2>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ApolloConsumer_2" needs to be exported by the entry point index.d.ts
@@ -1865,17 +1951,17 @@ type WatchQueryFetchPolicy_2 = FetchPolicy | "cache-and-network" | "standby";
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:172:5 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:175:5 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:175:5 - (ae-forgotten-export) The symbol "InternalRefetchQueriesInclude" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:185:5 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:188:5 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:191:5 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:197:5 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:234:5 - (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:355:5 - (ae-forgotten-export) The symbol "WatchQueryFetchPolicy_2" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:358:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:370:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:171:5 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:174:5 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:174:5 - (ae-forgotten-export) The symbol "InternalRefetchQueriesInclude" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:184:5 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:187:5 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:190:5 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:196:5 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:233:5 - (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:354:5 - (ae-forgotten-export) The symbol "WatchQueryFetchPolicy_2" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:369:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:236:5 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts

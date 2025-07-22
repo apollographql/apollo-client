@@ -3091,7 +3091,10 @@ describe("client.watchFragment", () => {
       " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         name
@@ -3149,7 +3152,10 @@ describe("client.watchFragment", () => {
       " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         name
@@ -3224,7 +3230,10 @@ describe("client.watchFragment", () => {
       " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         name
@@ -3316,16 +3325,18 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
-      gql`
-        fragment UserFields on User {
-          id
-          name
-          ...ProfileFields
-        }
+    const userFieldsFragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        name
+        ...ProfileFields
+      }
 
-        ${profileFieldsFragment}
-      `;
+      ${profileFieldsFragment}
+    `;
 
     const client = new ApolloClient({
       dataMasking: true,
@@ -3430,16 +3441,18 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
-      gql`
-        fragment UserFields on User {
-          id
-          lastUpdatedAt @nonreactive
-          ...ProfileFields
-        }
+    const userFieldsFragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        lastUpdatedAt @nonreactive
+        ...ProfileFields
+      }
 
-        ${profileFieldsFragment}
-      `;
+      ${profileFieldsFragment}
+    `;
 
     const client = new ApolloClient({
       dataMasking: true,
@@ -3540,16 +3553,18 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
-      gql`
-        fragment UserFields on User {
-          id
-          lastUpdatedAt @nonreactive
-          ...ProfileFields
-        }
+    const userFieldsFragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        lastUpdatedAt @nonreactive
+        ...ProfileFields
+      }
 
-        ${profileFieldsFragment}
-      `;
+      ${profileFieldsFragment}
+    `;
 
     const client = new ApolloClient({
       dataMasking: true,
@@ -3647,7 +3662,10 @@ describe("client.watchFragment", () => {
       " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
     };
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         name
@@ -3786,16 +3804,18 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
-      gql`
-        fragment UserFields on User {
-          id
-          birthdate
-          ...ProfileFields
-        }
+    const userFieldsFragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        birthdate
+        ...ProfileFields
+      }
 
-        ${profileFieldsFragment}
-      `;
+      ${profileFieldsFragment}
+    `;
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({

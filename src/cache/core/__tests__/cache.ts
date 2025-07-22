@@ -3,7 +3,7 @@ import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
 import { gql } from "graphql-tag";
 
 import type { OperationVariables, Unmasked } from "@apollo/client";
-import type { Cache, DataProxy } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { ApolloCache } from "@apollo/client/cache";
 
 import type { Reference } from "../../../utilities/graphql/storeUtils.js";
@@ -13,7 +13,7 @@ class TestCache extends ApolloCache {
     super();
   }
 
-  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+  public diff<T>(query: Cache.DiffOptions<T>): Cache.DiffResult<T> {
     return { result: null, complete: false };
   }
 

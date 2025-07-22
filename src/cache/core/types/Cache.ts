@@ -1,11 +1,18 @@
-import type { OperationVariables } from "@apollo/client";
+import type {
+  DataValue,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 
 import type { ApolloCache } from "../cache.js";
 
-import type { AllFieldsModifier, Modifiers } from "./common.js";
-import { DataProxy } from "./DataProxy.js";
-
+import type {
+  AllFieldsModifier,
+  MissingFieldError,
+  Modifiers,
+} from "./common.js";
 export declare namespace Cache {
   export type WatchCallback<TData = unknown> = (
     diff: Cache.DiffResult<TData>,
@@ -13,7 +20,7 @@ export declare namespace Cache {
   ) => void;
 
   export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
-    extends DataProxy.Query<TVariables, TData> {
+    extends Helpers.Query<TVariables, TData> {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
@@ -23,8 +30,8 @@ export declare namespace Cache {
   export interface WriteOptions<
     TData = unknown,
     TVariables = OperationVariables,
-  > extends Omit<DataProxy.Query<TVariables, TData>, "id">,
-      Omit<DataProxy.WriteOptions<TData>, "data"> {
+  > extends Omit<Helpers.Query<TVariables, TData>, "id">,
+      Omit<Helpers.WriteOptions<TData>, "data"> {
     dataId?: string;
     result: Unmasked<TData>;
   }
@@ -104,12 +111,137 @@ export declare namespace Cache {
     ) => any;
   }
 
-  export import DiffResult = DataProxy.DiffResult;
-  export import ReadQueryOptions = DataProxy.ReadQueryOptions;
-  export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
-  export import WriteQueryOptions = DataProxy.WriteQueryOptions;
-  export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
-  export import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
-  export import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
-  export import Fragment = DataProxy.Fragment;
+  export interface ReadQueryOptions<TData, TVariables>
+    extends Helpers.Query<TVariables, TData> {
+    /**
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
+     */
+    returnPartialData?: boolean;
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
+     */
+    optimistic?: boolean;
+  }
+
+  export interface ReadFragmentOptions<TData, TVariables>
+    extends Helpers.Fragment<TVariables, TData> {
+    /**
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
+     */
+    returnPartialData?: boolean;
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
+     */
+    optimistic?: boolean;
+  }
+
+  export interface WriteQueryOptions<TData, TVariables>
+    extends Helpers.Query<TVariables, TData>,
+      Helpers.WriteOptions<TData> {}
+
+  export interface WriteFragmentOptions<TData, TVariables>
+    extends Helpers.Fragment<TVariables, TData>,
+      Helpers.WriteOptions<TData> {}
+
+  export interface UpdateQueryOptions<TData, TVariables>
+    extends Omit<
+      ReadQueryOptions<TData, TVariables> &
+        WriteQueryOptions<TData, TVariables>,
+      "data"
+    > {}
+
+  export interface UpdateFragmentOptions<TData, TVariables>
+    extends Omit<
+      ReadFragmentOptions<TData, TVariables> &
+        WriteFragmentOptions<TData, TVariables>,
+      "data"
+    > {}
+
+  export type DiffResult<TData> =
+    | {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DataValue.Partial<TData> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+      };
+}
+
+declare namespace Helpers {
+  export interface Query<TVariables, TData> {
+    /**
+     * The GraphQL query shape to be used constructed using the `gql` template
+     * string tag from `graphql-tag`. The query will be used to determine the
+     * shape of the data to be read.
+     */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: TVariables;
+
+    /**
+     * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+     * root query object. This property makes writeQuery capable of writing data
+     * to any object in the cache.
+     */
+    id?: string;
+  }
+
+  export interface Fragment<TVariables, TData> {
+    /**
+     * The root id to be used. This id should take the same form as the
+     * value returned by your `dataIdFromObject` function. If a value with your
+     * id does not exist in the store, `null` will be returned.
+     */
+    id?: string;
+
+    /**
+     * A GraphQL document created using the `gql` template string tag from
+     * `graphql-tag` with one or more fragments which will be used to determine
+     * the shape of data to read. If you provide more than one fragment in this
+     * document then you must also specify `fragmentName` to select a single.
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * The name of the fragment in your GraphQL document to be used. If you do
+     * not provide a `fragmentName` and there is only one fragment in your
+     * `fragment` document then that fragment will be used.
+     */
+    fragmentName?: string;
+
+    /**
+     * Any variables that your GraphQL fragments depend on.
+     */
+    variables?: TVariables;
+  }
+
+  export interface WriteOptions<TData> {
+    /**
+     * The data you will be writing to the store.
+     */
+    data: Unmasked<TData>;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
+  }
 }

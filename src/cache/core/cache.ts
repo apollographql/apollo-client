@@ -29,7 +29,6 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";
-import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
@@ -96,7 +95,7 @@ export declare namespace ApolloCache {
       } & GetDataState<TData, "partial">);
 }
 
-export abstract class ApolloCache implements DataProxy {
+export abstract class ApolloCache {
   public readonly assumeImmutableResults: boolean = false;
 
   // required to implement
@@ -322,7 +321,7 @@ export abstract class ApolloCache implements DataProxy {
       optimistic,
     };
 
-    let latestDiff: DataProxy.DiffResult<TData> | undefined;
+    let latestDiff: Cache.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
       return this.watch<TData, TVariables>({
@@ -360,7 +359,7 @@ export abstract class ApolloCache implements DataProxy {
             result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
+          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
           observer.next(result);
         },
       });

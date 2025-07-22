@@ -60,7 +60,7 @@ If a GraphQL error prevents your server from executing your operation at all, yo
 
 #### Partial data with resolver errors
 
-An operation that produces resolver errors might _also_ return **partial data**. This means that some (but not all) of the data your operation requested is included in your server's response. Apollo Client _ignores_ partial data by default, but you can override this behavior by [setting a GraphQL error policy](#graphql-error-policies).
+An operation that produces resolver errors might _also_ return partial data. This means that some (but not all) of the data your operation requested is included in your server's response. Apollo Client _ignores_ partial data by default to avoid caching `null` values due to errors, but you can override this behavior by [setting a GraphQL error policy](#graphql-error-policies).
 
 ### Network errors
 

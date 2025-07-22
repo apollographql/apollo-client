@@ -50,7 +50,7 @@ export declare namespace Cache {
   export interface WriteOptions<
     TData = unknown,
     TVariables = OperationVariables,
-  > extends Omit<Helpers.WriteOptions<TData>, "data"> {
+  > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -65,6 +65,16 @@ export declare namespace Cache {
 
     dataId?: string;
     result: Unmasked<TData>;
+
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
 
   export interface DiffOptions<TData = unknown, TVariables = OperationVariables>
@@ -215,8 +225,7 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface WriteQueryOptions<TData, TVariables>
-    extends Helpers.WriteOptions<TData> {
+  export interface WriteQueryOptions<TData, TVariables> {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -235,10 +244,23 @@ export declare namespace Cache {
      * to any object in the cache.
      */
     id?: string;
+
+    /**
+     * The data you will be writing to the store.
+     */
+    data: Unmasked<TData>;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
 
-  export interface WriteFragmentOptions<TData, TVariables>
-    extends Helpers.WriteOptions<TData> {
+  export interface WriteFragmentOptions<TData, TVariables> {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -265,6 +287,19 @@ export declare namespace Cache {
      * Any variables that your GraphQL fragments depend on.
      */
     variables?: TVariables;
+    /**
+     * The data you will be writing to the store.
+     */
+    data: Unmasked<TData>;
+    /**
+     * Whether to notify query watchers (default: true).
+     */
+    broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
 
   export interface UpdateQueryOptions<TData, TVariables>
@@ -294,22 +329,4 @@ export declare namespace Cache {
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
       };
-}
-
-declare namespace Helpers {
-  export interface WriteOptions<TData> {
-    /**
-     * The data you will be writing to the store.
-     */
-    data: Unmasked<TData>;
-    /**
-     * Whether to notify query watchers (default: true).
-     */
-    broadcast?: boolean;
-    /**
-     * When true, ignore existing field data rather than merging it with
-     * incoming data (default: false).
-     */
-    overwrite?: boolean;
-  }
 }

@@ -67,6 +67,41 @@ export const validInheritDoc = ESLintUtils.RuleCreator.withoutDocs({
   defaultOptions: [],
 });
 
+export const validMdxCanonicalReferences = ESLintUtils.RuleCreator.withoutDocs({
+  create(context, optionsWithDefault) {
+    return {
+      JSXAttribute(node: AST.JSXAttribute) {
+        if (node.name.name == "canonicalReference") {
+          const ref =
+            node.value.type === "JSXExpressionContainer" ?
+              node.value.expression
+            : node.value;
+          if (!ref || ref.type !== "Literal" || typeof ref.value !== "string") {
+            context.report({
+              node: ref || node,
+              messageId: "shouldBeString",
+            });
+          } else if (!referenceSet.has(ref.value)) {
+            context.report({
+              node: ref,
+              messageId: "invalidCanonicalReference",
+            });
+          }
+        }
+      },
+    };
+  },
+  meta: {
+    messages: {
+      shouldBeString: "The canonicalReference value should be a string.",
+      invalidCanonicalReference: "Unknown canonical reference.",
+    },
+    type: "problem",
+    schema: [],
+  },
+  defaultOptions: [],
+});
+
 function locForMatch(
   source: SourceCode,
   node: AST.NodeOrTokenData,

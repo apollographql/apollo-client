@@ -4,7 +4,12 @@ import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 import { delay, Observable, of } from "rxjs";
 
-import type { DataValue, ObservableQuery } from "@apollo/client";
+import type {
+  ApolloCache,
+  DataValue,
+  ObservableQuery,
+  OperationVariables,
+} from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
@@ -3490,6 +3495,86 @@ describe("ApolloClient", () => {
           ).toEqualTypeOf<UnmaskedSubscription>();
         },
       });
+    });
+    test("ApolloClient and ApolloCache methods with the same name should have compatible signatures", <TData, TVariables extends
+      OperationVariables>() => {
+      // specific set of common methods
+      expectTypeOf<keyof ApolloClient & keyof ApolloCache>().toEqualTypeOf<
+        | "readQuery"
+        | "readFragment"
+        | "writeQuery"
+        | "writeFragment"
+        | "watchFragment"
+        | "extract"
+        | "restore"
+        | "getMemoryInternals"
+      >();
+      const client: ApolloClient = {} as any;
+      const cache: ApolloCache = {} as any;
+      type NonMaskingData = {
+        foo: string;
+        bar: {
+          baz: number;
+        };
+      };
+
+      // not testing `expectTypeOf...toEqualTypeOf` here, because these functions
+      // are not exactly equal - instead we use to more loose `satisfies` operator
+      // to test for assignability in both directions
+
+      client.readQuery<TData, TVariables> satisfies typeof cache.readQuery<
+        TData,
+        TVariables
+      >;
+      cache.readQuery<TData, TVariables> satisfies typeof client.readQuery<
+        TData,
+        TVariables
+      >;
+
+      client.readFragment<
+        TData,
+        TVariables
+      > satisfies typeof cache.readFragment<TData, TVariables>;
+      cache.readFragment<
+        TData,
+        TVariables
+      > satisfies typeof client.readFragment<TData, TVariables>;
+
+      client.writeQuery<TData, TVariables> satisfies typeof cache.writeQuery<
+        TData,
+        TVariables
+      >;
+      cache.writeQuery<TData, TVariables> satisfies typeof client.writeQuery<
+        TData,
+        TVariables
+      >;
+
+      client.writeFragment<
+        TData,
+        TVariables
+      > satisfies typeof cache.writeFragment<TData, TVariables>;
+      cache.writeFragment<
+        TData,
+        TVariables
+      > satisfies typeof client.writeFragment<TData, TVariables>;
+
+      // `watchFragment` on ApolloClient is masked, and not masked on ApolloCache so instead of the unresolved `TData` we have to use a specific type that won't be masked
+      cache.watchFragment<
+        NonMaskingData,
+        TVariables
+      > satisfies typeof client.watchFragment<NonMaskingData, TVariables>;
+      client.watchFragment<
+        NonMaskingData,
+        TVariables
+      > satisfies typeof cache.watchFragment<NonMaskingData, TVariables>;
+
+      client.extract satisfies typeof cache.extract;
+      cache.extract satisfies typeof client.extract;
+
+      client.restore satisfies typeof cache.restore;
+      cache.restore satisfies typeof client.restore;
+
+      // `getMemoryInternals` is different, that's okay
     });
   });
 });

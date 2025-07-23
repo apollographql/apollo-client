@@ -39,7 +39,7 @@ class TestCache extends ApolloCache {
   public read<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.ReadFnOptions<TData, TVariables>): Unmasked<TData> | null {
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     return null;
   }
 

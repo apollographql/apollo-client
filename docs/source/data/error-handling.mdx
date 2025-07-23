@@ -50,6 +50,7 @@ When a GraphQL error occurs, your server includes it in the `errors` array of it
   "data": null
 }
 ```
+
 </ExpansionPanel>
 
 In Apollo Client, GraphQL errors are represented by the [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors) error type. This is the most common error type you'll encounter in your application.
@@ -181,6 +182,7 @@ This example uses the `all` error policy to render both partial data and error i
 The way Apollo Client exposes errors and how you handle them depends on both the API type you're using and the configured [error policy](#graphql-error-policies).
 
 Apollo Client provides three types of APIs, each with different error handling characteristics:
+
 - **Promise-based APIs** (e.g. `client.query`, `client.mutate`) - Errors either reject the promise or are returned in the result as the `error` field.
 - **Observable-based APIs** (e.g. `client.watchQuery`) - Errors are emitted through observer callbacks
 - **React hooks** (e.g. `useQuery`, `useMutation`) - Errors are provided as part of the hook's return value
@@ -336,9 +338,12 @@ function MyComponent() {
 ```
 
 <Note>
-  Suspense hooks like `useSuspenseQuery` have different error handling behavior - they might throw errors to React error boundaries based on the configured `errorPolicy`, rather than returning them in the hook result. Learn more about error handling with Suspense hooks in the [Suspense documentation](./suspense#error-handling).
+  Suspense hooks, such as `useSuspenseQuery`, have different error handling
+  behavior - they might throw errors to React error boundaries based on the
+  configured `errorPolicy`, rather than returning them in the hook result. Learn
+  more about error handling with Suspense hooks in the [Suspense
+  documentation](./suspense#error-handling).
 </Note>
-
 
 ## Advanced error handling with Apollo Link
 
@@ -371,7 +376,7 @@ const errorLink = new ErrorLink(({ error }) => {
       )
     );
   } else {
-    console.error('[Network error]:', error);
+    console.error("[Network error]:", error);
   }
 });
 

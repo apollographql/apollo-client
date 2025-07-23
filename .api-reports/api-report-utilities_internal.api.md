@@ -162,7 +162,7 @@ export namespace DocumentationTypes {
         subscribe(observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)): Subscription;
     }
     // (undocumented)
-    export interface VariableOptions<TVariables> {
+    export interface VariableOptions<TVariables extends OperationVariables> {
         variables?: TVariables;
     }
 }

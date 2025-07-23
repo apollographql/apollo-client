@@ -6,7 +6,7 @@ interface ServerParseErrorOptions {
 }
 
 /**
- * Thrown when failing to parse the response as JSON from the server. This error
+ * Represents a failure to parse the response as JSON from the server. This error
  * helps debug issues where the server returns malformed JSON or non-JSON content.
  */
 export class ServerParseError extends Error {
@@ -15,15 +15,16 @@ export class ServerParseError extends Error {
     return isBranded(error, "ServerParseError");
   }
   /**
-   * The server response.
+   * The raw `Response` object returned by the Fetch API.
    */
   response: Response;
   /**
-   * The status code returned from the server.
+   * The status code returned from the server. This is provided as a shortcut
+   * for `serverParseError.response.status`.
    */
   statusCode: number;
   /**
-   * The raw body text returned in the server response.
+   * The raw response body text.
    */
   bodyText: string;
 

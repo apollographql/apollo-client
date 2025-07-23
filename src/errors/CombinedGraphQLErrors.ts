@@ -13,7 +13,7 @@ export declare namespace CombinedGraphQLErrors {
 
     /**
      * The default message formatter. Call this to get a string with the
-     * original formatted message.
+     * default formatted message.
      */
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
@@ -22,7 +22,7 @@ export declare namespace CombinedGraphQLErrors {
 
   /**
    * A function used to format the message string set on the
-   * `CombinedGraphQLErrors` instance. Override the static `formatMessage`
+   * `CombinedGraphQLErrors` object. Override the static `formatMessage`
    * method to provide a custom message formatter.
    *
    * @param errors - The array of GraphQL errors returned from the server in the

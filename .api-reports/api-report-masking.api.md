@@ -143,7 +143,7 @@ namespace Cache_2 {
     }
     // (undocumented)
     interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // @deprecated (undocumented)
+        // @deprecated
         canonizeResults?: boolean;
         // (undocumented)
         optimistic: boolean;

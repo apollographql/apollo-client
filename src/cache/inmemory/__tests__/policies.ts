@@ -661,6 +661,81 @@ describe("type policies", function () {
     ).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
   });
 
+  it("specific field policies will not override supertype policies", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Named: {
+          fields: Object.freeze({
+            name: Object.freeze({
+              read(existing: any) {
+                return existing + " (Named)";
+              },
+            }),
+          }),
+        },
+        Person: {
+          fields: {
+            name: {
+              read(existing) {
+                return existing + " (Person)";
+              },
+            },
+          },
+        },
+      },
+      possibleTypes: {
+        Named: ["Person", "Pet"],
+      },
+    });
+    const query = gql`
+      {
+        me {
+          __typename
+          id
+          name
+          pets {
+            __typename
+            id
+            name
+          }
+        }
+      }
+    `;
+    cache.writeQuery({
+      query,
+      data: {
+        me: {
+          __typename: "Person",
+          id: 23,
+          name: "John Doe",
+          pets: [
+            {
+              __typename: "Pet",
+              id: 1,
+              name: "Fido",
+            },
+            {
+              __typename: "Pet",
+              id: 2,
+              name: "Whiskers",
+            },
+          ],
+        },
+      },
+    });
+    expect(cache.readQuery({ query })).toEqual({
+      me: {
+        __typename: "Person",
+        id: 23,
+        name: "John Doe (Person)",
+        pets: [
+          { __typename: "Pet", id: 1, name: "Fido (Named)" },
+          { __typename: "Pet", id: 2, name: "Whiskers (Named)" },
+        ],
+      },
+    });
+  });
+
   it("typePolicies can be inherited from supertypes with fuzzy possibleTypes", () => {
     const cache = new InMemoryCache({
       possibleTypes: {

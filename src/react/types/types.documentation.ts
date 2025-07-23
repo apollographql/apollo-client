@@ -112,7 +112,7 @@ export interface QueryOptionsDocumentation {
    * The default value is `false`.
    *
    * @deprecated
-   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It might be removed in a future release.
+   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It will be removed in Apollo Client 4.0.
    */
   partialRefetch: unknown;
 
@@ -123,9 +123,8 @@ export interface QueryOptionsDocumentation {
    *
    * @deprecated
    * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
+   * recommend using this option. `canonizeResults` will be removed in
+   * Apollo Client 4.0.
    */
   canonizeResults: unknown;
 

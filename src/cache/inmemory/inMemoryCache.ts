@@ -34,6 +34,10 @@ import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import {
+  muteDeprecations,
+  warnRemovedOption,
+} from "../../utilities/deprecation/index.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -71,6 +75,22 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
+
+    if (__DEV__) {
+      warnRemovedOption(
+        config,
+        "addTypename",
+        "InMemoryCache",
+        "Please remove the `addTypename` option when initializing `InMemoryCache`."
+      );
+      warnRemovedOption(
+        config,
+        "canonizeResults",
+        "InMemoryCache",
+        "Please remove the `canonizeResults` option when initializing `InMemoryCache`."
+      );
+    }
+
     this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
 
@@ -106,6 +126,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
     const { fragments } = this.config;
+
+    this.addTypenameTransform.resetCache();
+    fragments?.resetCaches();
 
     // The StoreWriter is mostly stateless and so doesn't really need to be
     // reset, but it does need to have its writer.storeReader reference updated,
@@ -179,6 +202,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.read");
+    }
+
     const {
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
@@ -256,6 +283,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public diff<TData, TVariables extends OperationVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>
   ): Cache.DiffResult<TData> {
+    if (__DEV__) {
+      warnRemovedOption(options, "canonizeResults", "cache.diff");
+    }
+
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
@@ -305,12 +336,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // If resetResultCache is true, this.storeReader.canon will be preserved by
     // default, but can also be discarded by passing resetResultIdentities:true.
     // Defaults to false.
+    /**
+     * @deprecated `resetResultIdentities` is removed in Apollo Client 4.0.
+     *
+     * **Recommended now**
+     *
+     * Ensure all usages of `canonizeResults` are removed. Once
+     * `canonizeResults` is no longer used, remove this option.
+     */
     resetResultIdentities?: boolean;
   }) {
+    if (__DEV__) {
+      warnRemovedOption(
+        options || {},
+        "resetResultIdentities",
+        "cache.gc",
+        "First ensure all usages of `canonizeResults` are removed, then remove this option."
+      );
+    }
+
     canonicalStringify.reset();
     print.reset();
-    this.addTypenameTransform.resetCache();
-    this.config.fragments?.resetCaches();
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {
@@ -576,7 +622,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // object, and without having to enumerate the relevant properties (query,
     // variables, etc.) explicitly. There will be some additional properties
     // (lastDiff, callback, etc.), but cache.diff ignores them.
-    const diff = this.diff<any>(c);
+    const diff = muteDeprecations("canonizeResults", () => this.diff<any>(c));
 
     if (options) {
       if (c.optimistic && typeof options.optimistic === "string") {

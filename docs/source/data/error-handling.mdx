@@ -55,7 +55,10 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
 Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a `CombinedGraphQLErrors` error instance.
 
 <Note>
-If a GraphQL error prevents your server from executing your operation at all, your server may respond with a non-`2xx` status code. Apollo Client handles this according to the [GraphQL Over HTTP specification](https://graphql.github.io/graphql-over-http/draft/).
+  If a GraphQL error prevents your server from executing your operation at all,
+  your server may respond with a non-`2xx` status code. Apollo Client handles
+  this according to the [GraphQL Over HTTP
+  specification](https://graphql.github.io/graphql-over-http/draft/).
 </Note>
 
 #### Partial data with resolver errors
@@ -72,7 +75,7 @@ You can add retry logic and other advanced network error handling to your applic
 
 ## GraphQL error policies
 
-If a GraphQL operation produces one or more [resolver errors](#graphql-errors), your server's response might still include partial data in the `data` field:
+If a GraphQL operation produces one or more [GraphQL errors](#graphql-errors), your server's response might still include partial data in the `data` field:
 
 ```json
 {
@@ -89,15 +92,15 @@ If a GraphQL operation produces one or more [resolver errors](#graphql-errors), 
 }
 ```
 
-By default, Apollo Client throws away partial data and populates the `error` field of your `useQuery` call (or whichever hook you're using). You can instead _use_ these partial results by defining an **error policy** for your operation.
+By default, Apollo Client throws away partial data and populates the `error` field of the `useQuery` hook (or whichever hook you're using). You can instead _use_ these partial results by defining an **error policy** for your operation.
 
-Apollo Client supports the following error policies for an operation:
+Apollo Client supports the following error policies:
 
-| Policy   | Description                                                                                                                                                                                                                                                                                         |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `none`   | If the response includes GraphQL errors, they are returned in the `error` field and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
-| `ignore` | GraphQL errors are ignored (`error` is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred.                                                                                                                                                                   |
-| `all`    | Both `data` and `error` are populated, enabling you to render both partial results and error information.                                                                                                                                                                                           |
+| Policy   | Description                                                                                                                                                                                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `none`   | If the response includes errors, they are returned in the `error` field and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
+| `ignore` | Errors are ignored (`error` is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred. Note: `data` may also be `undefined` in the event a network error occurs.                                                                                         |
+| `all`    | Both `data` and `error` are populated and any returned `data` is cached, enabling you to render both partial results and error information.                                                                                                                                                 |
 
 ### Setting an error policy
 

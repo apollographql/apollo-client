@@ -350,23 +350,6 @@ class ApolloClient {
     writeQuery<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: ApolloClient.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApolloConsumer_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const ApolloConsumer: ReactTypes.FC<ApolloConsumer_2.Props>;
-
-// @public (undocumented)
-namespace ApolloConsumer_2 {
-    // (undocumented)
-    interface Props {
-        // (undocumented)
-        children: (client: ApolloClient) => ReactTypes.ReactNode;
-    }
-}
-
-// @public (undocumented)
-const ApolloConsumer: ReactTypes.FC<ApolloConsumer_2.Props>;
-
 // @public (undocumented)
 export interface ApolloContextValue {
     // (undocumented)

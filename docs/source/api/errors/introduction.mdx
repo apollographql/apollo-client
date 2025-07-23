@@ -7,7 +7,7 @@ description: Learn about Apollo Client's error classes, how to identify error ty
 
 Apollo Client provides a comprehensive set of error classes to help you identify and handle different types of errors that can occur during the lifecycle of a GraphQL application. All error classes extend the standard JavaScript `Error` class and provide additional context specific to their error type.
 
-These error classes are designed to give you precise information about what went wrong, whether it's a server-side GraphQL error, a network connectivity issue, etc.
+These error classes are designed to give you precise information about what went wrong, whether it's a server-side GraphQL error, a network connectivity issue, or some other reason for the error.
 
 ## Type checking with the `is` method
 
@@ -174,6 +174,7 @@ function MyComponent() {
     if (CombinedGraphQLErrors.is(error)) {
       return <div>Query failed: {error.errors[0].message}</div>;
     }
+
     return <div>Network error: {error.message}</div>;
   }
 

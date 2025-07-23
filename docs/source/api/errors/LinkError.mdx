@@ -7,7 +7,7 @@ description: API reference
 
 A facade error type that keeps a registry of errors emitted from the link chain. `LinkError` is not an error class itself but rather a utility to detect whether an error originated from the link chain.
 
-This can be useful in cases where an Apollo Client API is wrapped by your own custom handling, which may throw its own errors, and you want to retry an operation at the call site when the error originates from the link chain.
+This can be useful in cases where an Apollo Client API is wrapped by your own custom handling, which might throw its own errors, and you want to retry an operation at the call site when the error originates from the link chain.
 
 The following example creates a custom wrapped query function that detects whether the query includes an operation name and throws if not.
 

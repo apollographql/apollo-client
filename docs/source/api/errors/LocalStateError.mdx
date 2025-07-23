@@ -12,11 +12,11 @@ import { LocalStateError } from "@apollo/client/errors";
 
 // Check if an error is a LocalStateError instance
 if (LocalStateError.is(error)) {
-  console.log('Original error:', error.cause);
+  console.log("Original error:", error.cause);
 
   // Determine which field caused the error
   if (error.path) {
-    console.log('Error occurred at field path:', error.path.join("."));
+    console.log("Error occurred at field path:", error.path.join("."));
   }
 }
 ```
@@ -41,7 +41,9 @@ See the [additional properties](#additional-properties) for more details about t
 These properties are specific to the `LocalStateError` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
 
 <Tip>
-  Use the `cause` property to determine the original cause of the `LocalStateError` error when the error is thrown as a result of a downstream error.
+  Use the `cause` property to determine the original cause of the
+  `LocalStateError` error when the error is thrown as a result of a downstream
+  error.
 </Tip>
 
 <table class="field-table">

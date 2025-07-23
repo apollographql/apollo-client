@@ -16,10 +16,10 @@ import { LinkError } from "@apollo/client/errors";
 
 async function runQuery<TData>(query: TypedDocumentNode<TData>) {
   if (!hasOperationName(query)) {
-    throw new Error("Queries should have operation names.")
+    throw new Error("Queries should have operation names.");
   }
 
-  return client.watchQuery({ query })
+  return client.watchQuery({ query });
 }
 
 try {
@@ -27,7 +27,7 @@ try {
 } catch (error) {
   // Only log the error if the error wasn't our own custom thrown error
   if (LinkError.is(error)) {
-    console.log('Got network error:', error.message)
+    console.log("Got network error:", error.message);
   }
 }
 ```
@@ -43,6 +43,6 @@ A function guard that determines whether an error originated from the link chain
 ```ts
 if (Link.is(error)) {
   // The error originated from the link chain
-  console.log('Got network error:', error.message);
+  console.log("Got network error:", error.message);
 }
 ```

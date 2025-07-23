@@ -6,7 +6,8 @@ interface ServerParseErrorOptions {
 }
 
 /**
- * Thrown when failing to parse the response as JSON from the server.
+ * Thrown when failing to parse the response as JSON from the server. This error
+ * helps debug issues where the server returns malformed JSON or non-JSON content.
  */
 export class ServerParseError extends Error {
   /** Determine if an error is an `ServerParseError` instance */

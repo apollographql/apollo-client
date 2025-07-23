@@ -30,7 +30,8 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
 
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
- * GraphQL response.
+ * GraphQL response. This error type is used when your GraphQL operation returns
+ * errors in the `errors` field of the response.
  */
 export class CombinedGraphQLErrors extends Error {
   /** Determine if an error is a `CombinedGraphQLErrors` instance */

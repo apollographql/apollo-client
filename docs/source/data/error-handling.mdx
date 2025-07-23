@@ -272,3 +272,92 @@ function handleError(error: unknown) {
 }
 ```
 
+## Error classes
+
+Apollo Client provides several built-in error classes to help you identify and handle different types of errors:
+
+### CombinedGraphQLErrors
+
+Represents the combined list of GraphQL errors returned from the server in a GraphQL response. This error type is used when your GraphQL operation returns errors in the `errors` field of the response.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+if (CombinedGraphQLErrors.is(error)) {
+  // Access individual GraphQL errors
+  error.errors.forEach((graphQLError) => {
+    console.log(graphQLError.message);
+  });
+}
+```
+
+### CombinedProtocolErrors
+
+Fatal transport-level errors returned when executing a subscription using the multipart HTTP subscription protocol. These errors indicate issues with the subscription transport mechanism.
+
+```ts
+import { CombinedProtocolErrors } from "@apollo/client/errors";
+
+if (CombinedProtocolErrors.is(error)) {
+  // Handle protocol-level subscription errors
+  error.errors.forEach((protocolError) => {
+    console.log(protocolError.message, protocolError.extensions);
+  });
+}
+```
+
+### ServerError
+
+Thrown when a non-200 response is returned from the server. This error contains the full server response, including status code and body text.
+
+```ts
+import { ServerError } from "@apollo/client/errors";
+
+if (ServerError.is(error)) {
+  console.log(`Server returned status: ${error.statusCode}`);
+  console.log(`Response body: ${error.bodyText}`);
+
+  // Handle specific status codes
+  if (error.statusCode === 401) {
+    // Handle unauthorized
+  }
+}
+```
+
+### ServerParseError
+
+Thrown when failing to parse the response as JSON from the server. This error helps debug issues where the server returns malformed JSON or non-JSON content.
+
+```ts
+import { ServerParseError } from "@apollo/client/errors";
+
+if (ServerParseError.is(error)) {
+  console.log(`Failed to parse response from ${error.response.url}`);
+  console.log(`Raw response: ${error.bodyText}`);
+}
+```
+
+### LocalStateError
+
+Represents an error when executing `@client` fields from `LocalState`, typically to indicate a problem with the `LocalState` configuration. This error does not represent an error thrown in a local resolver.
+
+```ts
+import { LocalStateError } from "@apollo/client/errors";
+
+if (LocalStateError.is(error)) {
+  console.log(`Local state error at path: ${error.path}`);
+  console.log(`Original error: ${error.cause}`);
+}
+```
+
+### UnconventionalError
+
+A wrapper error type that represents a non-standard error thrown from a response, such as a symbol or plain object. This ensures all thrown values can be handled as an `ErrorLike` instance. Read the `cause` property to determine the original source of the error.
+
+```js
+import { UnconventionalError } from "@apollo/client/errors";
+
+if (UnconventionalError.is(error)) {
+  console.log('Non-standard error thrown:', error.cause);
+}
+

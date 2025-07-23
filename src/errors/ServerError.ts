@@ -8,7 +8,8 @@ export declare namespace ServerError {
 }
 
 /**
- * Thrown when a non-200 response is returned from the server.
+ * Thrown when a non-200 response is returned from the server. This error
+ * contains the full server response, including status code and body text.
  */
 export class ServerError extends Error {
   /** Determine if an error is a `ServerError` instance */

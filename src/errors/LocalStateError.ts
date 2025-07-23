@@ -8,7 +8,9 @@ export declare namespace LocalStateError {
 }
 
 /**
- * Represents an error when executing `@client` fields from `LocalState`.
+ * Represents a fatal error when executing `@client` fields from `LocalState`,
+ * typically to indicate a problem with the `LocalState` configuration. This
+ * error does not represent an error thrown in a local resolver.
  */
 export class LocalStateError extends Error {
   /** Determine if an error is a `LocalStateError` instance */

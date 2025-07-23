@@ -176,17 +176,22 @@ function ShowingSomeErrors() {
 
 This example uses the `all` error policy to render both partial data and error information whenever applicable.
 
-### Consuming errors based on the error policy
+### Error handling across API types
 
-Errors are consumed in different ways, depending on whether you're using a promise-based API, an observable-based API, or a React hook. The behavior varies based on the [error policy](#graphql-error-policies) you've configured.
+The way Apollo Client exposes errors and how you handle them depends on both the API type you're using and the configured [error policy](#graphql-error-policies).
+
+Apollo Client provides three types of APIs, each with different error handling characteristics:
+- **Promise-based APIs** (e.g. `client.query`, `client.mutate`) - Errors either reject the promise or are returned in the result as the `error` field.
+- **Observable-based APIs** (e.g. `client.watchQuery`) - Errors are emitted through observer callbacks
+- **React hooks** (e.g. `useQuery`, `useMutation`) - Errors are provided as part of the hook's return value
 
 #### Promise-based APIs
 
-Promises returned by promise-based APIs, like `client.query` and `client.mutate`, handle errors differently depending on the error policy:
+Promise-based APIs, like `client.query` and `client.mutate`, return promises that resolve or reject based on your error policy:
 
 ##### `errorPolicy: "none"`
 
-The promise rejects when an error occurs. Use try-catch or the `.catch` method to handle errors.
+With the default `none` error policy, an error causes the promise to reject. Use try-catch or the `.catch` method to prevent unhandled promise rejections.
 
 ```ts
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -207,7 +212,7 @@ try {
 
 ##### `errorPolicy: "all"`
 
-The promise resolves even when an error occurs, with the error available on the `error` property of the result.
+The `all` error policy allows promises to resolve successfully even when errors occur. Access the error in the `error` field on the returned result.
 
 ```ts
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -226,7 +231,7 @@ if (result.error && CombinedGraphQLErrors.is(result.error)) {
 
 ##### `errorPolicy: "ignore"`
 
-The promise resolves and the error is discarded. The `error` property is not set.
+The `ignore` error policy causes Apollo Client to discard errors entirely, treating operations as if they succeeded. The promise resolves with available data and no error information.
 
 ```ts
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -243,11 +248,11 @@ console.log("Data (errors ignored):", result.data);
 
 #### Observable-based APIs
 
-Observable-based APIs, like `client.watchQuery`, handle errors differently depending on the error policy:
+Observable-based APIs like `client.watchQuery` emit values and errors through the observer `next` callback. The error policy determines how the `data` and `error` properties are set:
 
 ##### `errorPolicy: "none"`
 
-The error is emitted in the observer's `error` callback when an error occurs.
+Errors are included as part of the result object emitted to the `next` callback through the `error` field, allowing the observable to continue receiving updates. `data` is always `undefined` when `error` is present.
 
 ```ts
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -255,28 +260,6 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 const observable = client.watchQuery({
   query: MY_QUERY,
   errorPolicy: "none", // default
-});
-
-observable.subscribe({
-  next(result) {
-    console.log("Result:", result.data);
-  },
-  error(error) {
-    if (CombinedGraphQLErrors.is(error)) {
-      console.log(`Got ${error.errors.length} GraphQL errors`);
-    }
-  },
-});
-```
-
-##### `errorPolicy: "all"`
-
-The error is added to the `error` property in the result emitted in the observer's `next` callback.
-
-```ts
-const observable = client.watchQuery({
-  query: MY_QUERY,
-  errorPolicy: "all",
 });
 
 observable.subscribe({
@@ -290,9 +273,31 @@ observable.subscribe({
 });
 ```
 
+##### `errorPolicy: "all"`
+
+Errors are included as part of the result object emitted to the `next` callback through the `error` field, allowing the observable to continue running while providing access to both partial data and error information.
+
+```ts
+const observable = client.watchQuery({
+  query: MY_QUERY,
+  errorPolicy: "all",
+});
+
+observable.subscribe({
+  next(result) {
+    if (result.error) {
+      console.log("Got error:", result.error.message);
+      console.log("Partial data", result.data);
+    } else {
+      console.log("Result:", result.data);
+    }
+  },
+});
+```
+
 ##### `errorPolicy: "ignore"`
 
-The result is emitted in the observer's `next` callback and the error is discarded. The `error` property is not set.
+Results are emitted to the `next` callback with GraphQL errors completely discarded. The observable continues running as if no errors occurred, which is useful for non-critical data that can be safely omitted when errors happen.
 
 ```ts
 const observable = client.watchQuery({
@@ -309,7 +314,7 @@ observable.subscribe({
 
 #### React hooks
 
-React hooks provide errors via the `error` property. `data` and `error` is set according to the query's `errorPolicy`.
+React hooks like `useQuery` and `useMutation` provide errors through the `error` property in their return value, regardless of error policy. The error policy affects whether `data` is populated alongside the error.
 
 ```ts
 import { useQuery, useMutation } from "@apollo/client";
@@ -331,7 +336,7 @@ function MyComponent() {
 ```
 
 <Note>
-  Suspense hooks might throw errors to React error boundaries depending on the configured `errorPolicy`. Learn more about error handling with Suspense hooks in the [Suspense documentation](./suspense#error-handling).
+  Suspense hooks like `useSuspenseQuery` have different error handling behavior - they might throw errors to React error boundaries based on the configured `errorPolicy`, rather than returning them in the hook result. Learn more about error handling with Suspense hooks in the [Suspense documentation](./suspense#error-handling).
 </Note>
 
 

@@ -131,7 +131,7 @@ const client = new ApolloClient({
 });
 ```
 
-To determine the ID of the entity, we pass the `__typename` and primary key fields of the object to the `cache.identify` method. The `cache.modify` method is used to update specific fields within a given entity object.
+To determine the ID of the entity, pass the `__typename` and primary key fields of the object to the `cache.identify` method. Use the `cache.modify` method to update specific fields within a given entity object.
 
 Once we toggle the `completed` field, since we don't plan on using the mutation's return result in our UI, we return `null` since all GraphQL types are nullable by default.
 
@@ -151,7 +151,7 @@ const localState = new LocalState<Resolvers>({
 });
 ```
 
-You may also pass a `ContextValue` generic used to ensure the `context` function returns the correct type. This type is inferred from your resolvers if not provided:
+You can also pass a `ContextValue` generic used to ensure the `context` function returns the correct type. This type is inferred from your resolvers if not provided:
 
 ```ts
 new LocalState<Resolvers, ContextValue>({

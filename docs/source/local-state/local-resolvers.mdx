@@ -181,7 +181,8 @@ npm install -D @apollo/client-graphql-codegen
 
 Add the local-state plugin to your `codegen.ts` configuration. It's recommended to use a separate schema file containing only your local fields to avoid generating resolver types for your entire remote schema:
 
-```ts title="codegen.ts"import type { CodegenConfig } from "@graphql-codegen/cli";
+```ts title="codegen.ts"
+import type { CodegenConfig } from "@graphql-codegen/cli";
 import type { LocalStatePluginConfig } from "@apollo/client-graphql-codegen/local-state";
 
 const config: CodegenConfig = {

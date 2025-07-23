@@ -665,13 +665,10 @@ type CombineByTypeName<T extends {
 
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
-    // (undocumented)
     export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
     export interface MessageFormatterOptions {
-        // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
-        // (undocumented)
         result: FetchResult<unknown>;
     }
 }
@@ -689,11 +686,9 @@ export class CombinedGraphQLErrors extends Error {
 
 // @public (undocumented)
 export namespace CombinedProtocolErrors {
-    // (undocumented)
     export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
     export interface MessageFormatterOptions {
-        // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
     }
 }
@@ -701,9 +696,7 @@ export namespace CombinedProtocolErrors {
 // @public
 export class CombinedProtocolErrors extends Error {
     constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
-    // (undocumented)
-    errors: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
+    readonly errors: ReadonlyArray<GraphQLFormattedError>;
     static formatMessage: CombinedProtocolErrors.MessageFormatter;
     static is(error: unknown): error is CombinedProtocolErrors;
 }

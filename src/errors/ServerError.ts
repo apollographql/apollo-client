@@ -8,8 +8,9 @@ export declare namespace ServerError {
 }
 
 /**
- * Thrown when a non-200 response is returned from the server. This error
- * contains the full server response, including status code and body text.
+ * Reprents an error when a non-200 HTTP status code is returned from the server.
+ * This error contains the full server response, including status code and body
+ * text.
  */
 export class ServerError extends Error {
   /** Determine if an error is a `ServerError` instance */
@@ -18,11 +19,12 @@ export class ServerError extends Error {
   }
 
   /**
-   * The server response.
+   * The raw `Response` object returned by the Fetch API.
    */
   response: Response;
   /**
-   * The status code returned from the server.
+   * The status code returned from the server. This is provided as a shortcut
+   * for `serverError.response.status`.
    */
   statusCode: number;
 

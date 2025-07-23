@@ -9,8 +9,6 @@ Represents an error when a non-200 HTTP status code is returned from the server 
 
 This error occurs when your GraphQL server responds with an HTTP status code other than 200 (such as 4xx or 5xx status codes) with any media type other than [`application/graphql-response+json`](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json). Unlike GraphQL errors which are returned in the response body, servers that return non-200 status codes are not guaranteed to contain a well-formed GraphQL response and may indicate issues at the HTTP level, such as authentication failures, server unavailability, or other HTTP-level problems.
 
-## Usage
-
 ```ts
 import { ServerError } from "@apollo/client/errors";
 

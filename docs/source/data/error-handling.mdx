@@ -1,14 +1,15 @@
 ---
 title: Handling operation errors
+description: Learn how to manage errors in your application
 ---
 
 {/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
-## Error types
+## Understanding errors
 
-Executing GraphQL operations on a remote server can result in [GraphQL errors](#graphql-errors) or [network errors](#network-errors).
+Errors in Apollo Client fall into two main categories: GraphQL errors and network errors. Each category has specific error classes that provide detailed information about what went wrong, enabling precise error identification and handling.
 
 ### GraphQL errors
 
@@ -20,9 +21,7 @@ These are errors related to the server-side execution of a GraphQL operation. Th
 
 If a syntax error or validation error occurs, your server doesn't execute the operation at all because it's invalid. If resolver errors occur, your server can still return [partial data](#partial-data-with-resolver-errors).
 
-> Learn more about GraphQL errors in the [Apollo Server documentation](/apollo-server/data/errors/).
-
-If a GraphQL error occurs, your server includes it in the `errors` array of its response to Apollo Client:
+When a GraphQL error occurs, your server includes it in the `errors` array of its response:
 
 <ExpansionPanel title="Example error response">
 
@@ -51,10 +50,11 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
   "data": null
 }
 ```
-
 </ExpansionPanel>
 
-Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors) error instance.
+In Apollo Client, GraphQL errors are represented by the [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors) error type. This is the most common error type you'll encounter in your application.
+
+Apollo Client adds these errors to the `error` field returned by hooks like `useQuery`, wrapped in the appropriate error instance.
 
 <Note>
   If a GraphQL error prevents your server from executing your operation at all,
@@ -69,23 +69,23 @@ An operation that produces resolver errors might _also_ return partial data. Thi
 
 ### Network errors
 
-These are errors encountered while attempting to communicate with your GraphQL server. The error may be a result of a `4xx` or `5xx` response status code, a failure to communicate with the server (such is when the network is unavailable), or a custom error thrown in an [Apollo Link request handler](../api/link/introduction#the-request-handler).
+These are errors encountered while attempting to communicate with your GraphQL server. The error may be a result of a `4xx` or `5xx` response status code, a failure to communicate with the server (such is when the network is unavailable), a failure to parse the response as valid JSON, or a custom error thrown in an [Apollo Link request handler](../api/link/introduction#the-request-handler).
+
+In Apollo Client, network errors are represented by these error types:
+
+- [`CombinedProtocolErrors`](../api/errors/CombinedProtocolErrors) - Represents fatal transport-level errors that occur during multipart HTTP subscription execution.
+- [`ServerError`](../api/errors/ServerError) - Occurs when the server responds with a non-200 HTTP status code
+- [`ServerParseError`](../api/errors/ServerParseError) - Occurs when the server response cannot be parsed as valid JSON
+- [`LocalStateError`](../api/errors/LocalStateError) - Represents errors in [local state](../local-state/local-state-management) configuration or execution
+- [`UnconventionalError`](../api/errors/UnconventionalError) - Wraps non-standard errors (e.g., thrown symbols or objects) to ensure consistent error handling
 
 When a network error occurs, Apollo Client adds it to the `error` field returned by the `useQuery` hook (or whichever operation hook you used) as the error that was returned by the link chain (typically an `Error` instance).
 
 You can add retry logic and other advanced network error handling to your application with [Apollo Link](#advanced-error-handling-with-apollo-link).
 
-## Error classes
+### Identifying error types
 
-Apollo Client provides a comprehensive set of error classes to help you identify and handle different types of errors that can occur during the lifecycle of a GraphQL application. These error classes help narrow down whether the error was a result of [GraphQL errors](#graphql-errors) or a [network error](#network-errors). All error classes extend the standard JavaScript `Error` class and provide additional context specific to their error type.
-
-These error classes are designed to give you precise information about what went wrong, whether it's a server-side GraphQL error, a network connectivity issue, or some other reason for the error.
-
-Learn more about individual error classes from [additional resources](#additional-resources).
-
-### Determing the error type with the `is` method
-
-Every error class provides a static `is` method that reliably determines whether an error is of that specific type. This method provides a more robust alternative to `instanceof` because it avoids false positives and negatives, such as errors constructed in another realm (see [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError) for more information.)
+Every Apollo Client error class provides a static `is` method that reliably determines whether an error is of that specific type. This method provides a more robust alternative to `instanceof` because it avoids false positives and negatives, such as errors constructed in another realm (see [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError) for more information).
 
 ```ts
 import {
@@ -97,7 +97,7 @@ import {
   UnconventionalError,
 } from "@apollo/client/errors";
 
-// In your error handling logic
+// Comprehensive error handling example.
 function handleError(error: unknown) {
   if (CombinedGraphQLErrors.is(error)) {
     // Handle GraphQL errors
@@ -108,7 +108,7 @@ function handleError(error: unknown) {
   } else if (ServerError.is(error)) {
     // Handle server HTTP errors
   } else if (ServerParseError.is(error)) {
-    // Handle parse errors
+    // Handle JSON parse errors
   } else if (UnconventionalError.is(error)) {
     // Handle errors thrown by irregular types
   } else {
@@ -116,6 +116,8 @@ function handleError(error: unknown) {
   }
 }
 ```
+
+All error classes extend the standard JavaScript `Error` class and provide additional properties specific to their error type. See the [individual error class references](#additional-resources) for detailed information about each error class.
 
 ## GraphQL error policies
 

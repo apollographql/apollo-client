@@ -162,7 +162,7 @@ export declare namespace Cache {
   > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
-     * string. The query will be used to determine the
+     * string tag. The query will be used to determine the
      * shape of the data to be read.
      */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -186,7 +186,7 @@ export declare namespace Cache {
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
      * this named option is provided, the optimistic parameter of the
-     * readQuery method can be omitted. 
+     * readQuery method can be omitted.
      * @defaultValue false
      */
     optimistic?: boolean;
@@ -207,7 +207,7 @@ export declare namespace Cache {
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
      * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to specify which 
+     * document then you must also specify `fragmentName` to specify which
      * fragment is the root fragment.
      */
     fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -232,7 +232,7 @@ export declare namespace Cache {
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
      * this named option is provided, the optimistic parameter of the
-     * readFragment method can be omitted. 
+     * readFragment method can be omitted.
      * @defaultValue false
      */
     optimistic?: boolean;
@@ -293,7 +293,7 @@ export declare namespace Cache {
      * A GraphQL document created using the `gql` template string
      * with one or more fragments which will be used to determine
      * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to specify specify which 
+     * document then you must also specify `fragmentName` to specify specify which
      * fragment is the root fragment.
      */
     fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;

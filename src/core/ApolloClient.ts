@@ -397,28 +397,29 @@ export declare namespace ApolloClient {
     > {
       /**
        * The GraphQL query shape to be used constructed using the `gql` template
-       * string tag from `graphql-tag`. The query will be used to determine the
+       * string tag. The query will be used to determine the
        * shape of the data to be read.
        */
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
       /**
        * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
-       * root query object. This property makes writeQuery capable of writing data
-       * to any object in the cache.
+       * root query object. This property makes `readQuery` capable of reading data
+       * from any object in the cache.
        */
       id?: string;
 
       /**
        * Whether to return incomplete data rather than null.
-       * Defaults to false.
+       * @defaultValue false
        */
       returnPartialData?: boolean;
 
       /**
-       * Whether to read from optimistic or non-optimistic cache data. If
-       * this named option is provided, the optimistic parameter of the
-       * readQuery method can be omitted. Defaults to false.
+       * Whether to read from optimistic or non-optimistic cache data.
+       * This option should be preferred over the `optimistic` parameter of the
+       * `readQuery` method.
+       * @defaultValue false
        */
       optimistic?: boolean;
     }
@@ -447,16 +448,17 @@ export declare namespace ApolloClient {
     > {
       /**
        * The root id to be used. This id should take the same form as the
-       * value returned by your `dataIdFromObject` function. If a value with your
+       * value returned by the `cache.identify` function. If a value with your
        * id does not exist in the store, `null` will be returned.
        */
       id?: string;
 
       /**
-       * A GraphQL document created using the `gql` template string tag from
-       * `graphql-tag` with one or more fragments which will be used to determine
+       * A GraphQL document created using the `gql` template string tag
+       * with one or more fragments which will be used to determine
        * the shape of data to read. If you provide more than one fragment in this
-       * document then you must also specify `fragmentName` to select a single.
+       * document then you must also specify `fragmentName` to specify which
+       * fragment is the root fragment.
        */
       fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -469,13 +471,14 @@ export declare namespace ApolloClient {
 
       /**
        * Whether to return incomplete data rather than null.
-       * Defaults to false.
+       * @defaultValue false
        */
       returnPartialData?: boolean;
       /**
-       * Whether to read from optimistic or non-optimistic cache data. If
-       * this named option is provided, the optimistic parameter of the
-       * readQuery method can be omitted. Defaults to false.
+       * Whether to read from optimistic or non-optimistic cache data.
+       * This option should be preferred over the `optimistic` parameter of the
+       * `readFragment` method.
+       * @defaultValue false
        */
       optimistic?: boolean;
     }
@@ -504,7 +507,7 @@ export declare namespace ApolloClient {
     > {
       /**
        * The GraphQL query shape to be used constructed using the `gql` template
-       * string tag from `graphql-tag`. The query will be used to determine the
+       * string tag. The query will be used to determine the
        * shape of the data to be read.
        */
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -516,16 +519,18 @@ export declare namespace ApolloClient {
        */
       id?: string;
       /**
-       * The data you will be writing to the store.
+       * The data to write to the store.
        */
       data: Unmasked<TData>;
       /**
-       * Whether to notify query watchers (default: true).
+       * Whether to notify query watchers.
+       * @defaultValue true
        */
       broadcast?: boolean;
       /**
        * When true, ignore existing field data rather than merging it with
-       * incoming data (default: false).
+       * incoming data.
+       * @defaultValue false
        */
       overwrite?: boolean;
     }
@@ -554,7 +559,7 @@ export declare namespace ApolloClient {
     > {
       /**
        * The root id to be used. This id should take the same form as the
-       * value returned by your `dataIdFromObject` function. If a value with your
+       * value returned by the `cache.identify` function. If a value with your
        * id does not exist in the store, `null` will be returned.
        */
       id?: string;
@@ -563,7 +568,8 @@ export declare namespace ApolloClient {
        * A GraphQL document created using the `gql` template string tag from
        * `graphql-tag` with one or more fragments which will be used to determine
        * the shape of data to read. If you provide more than one fragment in this
-       * document then you must also specify `fragmentName` to select a single.
+       * document then you must also specify `fragmentName` to specify which
+       * fragment is the root fragment.
        */
       fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -575,16 +581,18 @@ export declare namespace ApolloClient {
       fragmentName?: string;
 
       /**
-       * The data you will be writing to the store.
+       * The data to write to the store.
        */
       data: Unmasked<TData>;
       /**
-       * Whether to notify query watchers (default: true).
+       * Whether to notify query watchers.
+       * @defaultValue true
        */
       broadcast?: boolean;
       /**
        * When true, ignore existing field data rather than merging it with
-       * incoming data (default: false).
+       * incoming data.
+       * @defaultValue false
        */
       overwrite?: boolean;
     }
@@ -857,7 +865,7 @@ export class ApolloClient {
    *
    * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
    * first and last name and this person has a particular object identifier, provided by
-   * dataIdFromObject. Later, a different query fetches that same person's
+   * `cache.identify`. Later, a different query fetches that same person's
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
    *
@@ -1031,7 +1039,7 @@ export class ApolloClient {
   /**
    * Tries to read some data from the store in the shape of the provided
    * GraphQL query without making a network request. This method will start at
-   * the root query. To start at a specific id returned by `dataIdFromObject`
+   * the root query. To start at a specific id returned by `cache.identify`
    * use `readFragment`.
    *
    * @param optimistic - Set to `true` to allow `readQuery` to return
@@ -1142,7 +1150,7 @@ export class ApolloClient {
    *
    * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
-   */ 
+   */
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -1179,7 +1187,7 @@ export class ApolloClient {
   /**
    * Writes some data in the shape of the provided GraphQL query directly to
    * the store. This method will start at the root query. To start at a
-   * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   * specific id returned by `cache.identify` then use `writeFragment`.
    */
   public writeQuery<
     TData = unknown,

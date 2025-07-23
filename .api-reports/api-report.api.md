@@ -1621,15 +1621,12 @@ namespace LocalState {
     }
     // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MaybeRequireContextFunction" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     type Options<TResolvers extends Resolvers = Resolvers, TContext = DefaultContext> = {
         context?: ContextFunction<TContext>;
         resolvers?: TResolvers;
     } & MaybeRequireContextFunction<TContext>;
     // (undocumented)
     type Path = Array<string | number>;
-    // (undocumented)
     type Resolver<TResult = unknown, TParent = unknown, TContext = DefaultContext, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
         requestContext: TContext;
         client: ApolloClient;
@@ -1639,7 +1636,6 @@ namespace LocalState {
         fragmentMap: FragmentMap;
         path: Path;
     }) => TResult | Promise<TResult>;
-    // (undocumented)
     interface Resolvers<TContext = any> {
         // (undocumented)
         [typename: string]: {
@@ -1667,7 +1663,7 @@ namespace LocalState {
 
 // Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
@@ -1676,7 +1672,6 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
         resolvers: TResolvers;
     }
     ]);
-    // (undocumented)
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
     execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {
@@ -2817,9 +2812,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:147:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:199:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:240:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

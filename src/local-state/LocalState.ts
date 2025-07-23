@@ -133,6 +133,13 @@ export declare namespace LocalState {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
+
+  /**
+   * Configuration options for LocalState.
+   *
+   * @template TResolvers - The type of resolvers map to use for type checking
+   * @template TContext - The type of context value returned by the context function. Defaults to `DefaultContext` when not provided.
+   */
   export type Options<
     TResolvers extends Resolvers = Resolvers,
     TContext = DefaultContext,
@@ -169,12 +176,51 @@ export declare namespace LocalState {
     context: RootValueFunctionContext
   ) => TRootValue;
 
+  /**
+   * A map of GraphQL types to their field resolvers.
+   *
+   * @example
+   * ```ts
+   * const resolvers: Resolvers = {
+   *   Query: {
+   *     isLoggedIn: () => !!localStorage.getItem('token')
+   *   },
+   *   Mutation: {
+   *     login: (_, { token }) => {
+   *       localStorage.setItem('token', token);
+   *       return true;
+   *     }
+   *   }
+   * };
+   * ```
+   */
   export interface Resolvers<TContext = any> {
     [typename: string]: {
       [field: string]: Resolver<any, any, TContext, any>;
     };
   }
 
+  /**
+   * A function that resolves the value for a single GraphQL field marked with `@client`.
+   *
+   * Resolver functions receive four parameters:
+   * - `rootValue`: The parent object containing the result from the resolver on the parent field
+   * - `args`: Arguments passed to the field
+   * - `context`: Contains `requestContext`, `client`, and `phase` properties
+   * - `info`: Information about the field being resolved
+   *
+   * @template TResult - The type of value returned by the resolver
+   * @template TParent - The type of the parent object
+   * @template TContext - The type of the request context
+   * @template TArgs - The type of the field arguments
+   *
+   * @example
+   * ```ts
+   * const isLoggedInResolver: Resolver<boolean> = () => {
+   *   return !!localStorage.getItem('token');
+   * };
+   * ```
+   */
   export type Resolver<
     TResult = unknown,
     TParent = unknown,
@@ -198,6 +244,34 @@ export declare namespace LocalState {
   export type Path = Array<string | number>;
 }
 
+/**
+ * LocalState enables the use of `@client` fields in GraphQL operations.
+ *
+ * `@client` fields are resolved locally using resolver functions rather than
+ * being sent to the GraphQL server. This allows you to mix local and remote
+ * data in a single query.
+ *
+ * @example
+ * ```ts
+ * import { LocalState } from '@apollo/client/local-state';
+ *
+ * const localState = new LocalState({
+ *   resolvers: {
+ *     Query: {
+ *       isLoggedIn: () => !!localStorage.getItem('token')
+ *     }
+ *   }
+ * });
+ *
+ * const client = new ApolloClient({
+ *   cache: new InMemoryCache(),
+ *   localState
+ * });
+ * ```
+ *
+ * @template TResolvers - The type of resolvers map for type checking
+ * @template TContext - The type of context value for resolvers
+ */
 export class LocalState<
   TResolvers extends
     LocalState.Resolvers = LocalState.Resolvers<DefaultContext>,
@@ -226,6 +300,22 @@ export class LocalState<
     }
   }
 
+  /**
+   * Add resolvers to the local state. New resolvers will be merged with
+   * existing ones, with new resolvers taking precedence over existing ones
+   * for the same field.
+   *
+   * @param resolvers - The resolvers to add
+   *
+   * @example
+   * ```ts
+   * localState.addResolvers({
+   *   Query: {
+   *     newField: () => 'Hello World'
+   *   }
+   * });
+   * ```
+   */
   public addResolvers(resolvers: TResolvers) {
     this.resolvers = mergeDeep(this.resolvers, resolvers);
   }

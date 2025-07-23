@@ -8,12 +8,12 @@ Apollo Client uses the ultra flexible [Apollo Link](../api/link/introduction/) t
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, tell your network interface to send the cookie along with every request. Pass the credentials option e.g.  `credentials: 'same-origin'` if your backend server is the same domain, as shown below, or else `credentials: 'include'` if your backend is a different domain.
+If your app is browser based and you are using cookies for login and session management with a backend, tell your network interface to send the cookie along with every request. Pass the credentials option e.g. `credentials: 'same-origin'` if your backend server is the same domain, as shown below, or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
 const link = createHttpLink({
-  uri: '/graphql',
-  credentials: 'same-origin'
+  uri: "/graphql",
+  credentials: "same-origin",
 });
 
 const client = new ApolloClient({
@@ -29,8 +29,8 @@ Note: the backend must also allow credentials from the requested origin. e.g. if
 ```js
 // enable cors
 var corsOptions = {
-  origin: '<insert uri of front-end domain>',
-  credentials: true // <-- REQUIRED backend setting
+  origin: "<insert uri of front-end domain>",
+  credentials: true, // <-- REQUIRED backend setting
 };
 app.use(cors(corsOptions));
 ```
@@ -40,32 +40,35 @@ app.use(cors(corsOptions));
 Another common way to identify yourself when using HTTP is to send along an authorization header. Add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ReactJS example:
+
 ```js
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
+import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 
 const httpLink = createHttpLink({
-  uri: '/graphql',
+  uri: "/graphql",
 });
 
 const authLink = setContext((_, { headers }) => {
   // get the authentication token from local storage if it exists
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   // return the headers to the context so httpLink can read them
   return {
     headers: {
       ...headers,
       authorization: token ? `Bearer ${token}` : "",
-    }
-  }
+    },
+  };
 });
 
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
 });
 ```
+
 VueJS example:
+
 ```js
 import ApolloClient from "apollo-client";
 import { HttpLink } from "apollo-link-http";
@@ -77,7 +80,7 @@ const httpLink = new HttpLink({ uri: process.env.VUE_APP_API_TARGET });
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
-const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   operation.setContext({
     headers: {
       authorization: token ? `Bearer ${token}` : "",
@@ -89,8 +92,8 @@ export const apolloClient = new ApolloClient({
   link: concat(authMiddleware, httpLink),
   cache: new InMemoryCache(),
 });
-
 ```
+
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 
 ## Reset store on logout
@@ -110,10 +113,11 @@ const PROFILE_QUERY = gql`
 `;
 
 function Profile() {
-  const { client, loading, data: { currentUser } } = useQuery(
-    PROFILE_QUERY,
-    { fetchPolicy: "network-only" }
-  );
+  const {
+    client,
+    loading,
+    data: { currentUser },
+  } = useQuery(PROFILE_QUERY, { fetchPolicy: "network-only" });
 
   if (loading) {
     return <p className="navbar-text navbar-right">Loading...</p>;

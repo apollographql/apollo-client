@@ -16,12 +16,12 @@ npm install apollo-upload-client
 Basic setup for the Apollo Client:
 
 ```js
-const { ApolloClient } = require('apollo-client')
-const { InMemoryCache } = require('apollo-cache-inmemory')
-const { createUploadLink } = require('apollo-upload-client')
+const { ApolloClient } = require("apollo-client");
+const { InMemoryCache } = require("apollo-cache-inmemory");
+const { createUploadLink } = require("apollo-upload-client");
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: createUploadLink()
-})
+  link: createUploadLink(),
+});
 ```

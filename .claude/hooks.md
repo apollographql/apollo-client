@@ -12,7 +12,6 @@ while DocBlocks (with `/** ... */`) are part of the actual structure that is pre
 ```ts
 // A namespace with the hook's name that contains all types related to the hook
 export declare namespace useMyHook {
-
   // an `Options` interface
   export interface Options {
     // ...
@@ -30,7 +29,7 @@ export declare namespace useMyHook {
 
     // The function signature for documentation, which inherits documentation from the first signature of the actual hook
     /** {@inheritDoc @apollo/client!useMyHook:function(1)} */
-    export function useMyHook(options: useMyHook.Options): useMyHook.Result
+    export function useMyHook(options: useMyHook.Options): useMyHook.Result;
   }
 }
 
@@ -40,11 +39,15 @@ export declare namespace useMyHook {
 /**
  * Documentation for the hook.
  */
-function useMyHook(options: useMyHook.Options & SomeSpecifyingType): useMyHook.Result & SomeRestrictingType;
+function useMyHook(
+  options: useMyHook.Options & SomeSpecifyingType
+): useMyHook.Result & SomeRestrictingType;
 
 // The second and all subsequent signatures don't contain the full documentation, but only a DocBlock with a `@inheritDoc` tag.
 /** {@inheritDoc @apollo/client!useMyHook:function(1)} */
-function useMyHook(options: useMyHook.Options & SomeOtherSpecifyingType): useMyHook.Result & SomeOtherRestrictingType;
+function useMyHook(
+  options: useMyHook.Options & SomeOtherSpecifyingType
+): useMyHook.Result & SomeOtherRestrictingType;
 
 // The hook implementation at the bottom. This one doesn't have a DocBlock.
 export function useMyHook(options: useMyHook.Options): useMyHook.Result {
@@ -65,7 +68,8 @@ If the `Options` type would be more complicated, e.g.
 export namespace useMyHook {
   export type Options<T> = {
     commonProperty: string;
-  } & (T extends SomeType ? { someProperty: string } : { someProperty?: never } );
+  } & (T extends SomeType ? { someProperty: string }
+  : { someProperty?: never });
 }
 ```
 
@@ -139,7 +143,7 @@ export namespace useMyHook {
   // other types
 
   export namespace DocumentationTypes {
-    export function useMyHook(options: useMyHook.Options): useMyHook.Result
+    export function useMyHook(options: useMyHook.Options): useMyHook.Result;
   }
 }
 ```
@@ -156,7 +160,7 @@ Some hooks use a pattern where the exported function is a wrapper around an inte
 export function useMyHook(...args) {
   return wrapHook(
     "useMyHook",
-    useMyHook_, // Internal implementation function
+    useMyHook_ // Internal implementation function
     // ... other setup
   )(...args);
 }
@@ -172,6 +176,7 @@ Every hook using this pattern needs to be added to the `WrappableHooks` interfac
 ## Simple Hooks
 
 Not all hooks follow the complex namespace pattern. Simple hooks that take minimal parameters and return straightforward values (like `useApolloClient` or `useReactiveVar`) are implemented as plain functions without namespaces or complex type structures. This is appropriate when:
+
 - The hook has no or minimal configuration options
 - The return type is simple and can be described as a single interface or primitive type
 - There's no need for documentation type simplification
@@ -185,7 +190,7 @@ In some cases, a self-import pattern is allowed to access the outer `useMyHook` 
 ```ts
 export declare namespace useMyHook {
   import _self = useMyHook;
-  
+
   // Now can use _self.Options instead of useMyHook.Options
 }
 ```
@@ -211,7 +216,7 @@ Some hooks (like `useLazyQuery` and `useMutation`) return tuples instead of sing
 export declare namespace useMyHook {
   export type Result<TData, TVariables> = [
     executeFunction: (options?: Options) => Promise<TData>,
-    result: QueryResult<TData, TVariables>
+    result: QueryResult<TData, TVariables>,
   ];
 }
 ```
@@ -232,13 +237,13 @@ import type {
 
 export namespace useMyHook {
   // ... types ...
-  
+
   export namespace DocumentationTypes {
     namespace useMyHook {
       export interface Options<TVariables>
         extends Base.Options<TVariables>,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
-          
+
       export interface Result<TData, TVariables>
         extends Base.Result<TData, TVariables>,
           UtilityDocumentationTypes.DataState<TData> {}
@@ -248,6 +253,7 @@ export namespace useMyHook {
 ```
 
 Common utility documentation types include:
+
 - `VariableOptions<TVariables>` - For GraphQL variables options
 - `DataState<TData>` - For data state properties in query results
 - `ApolloQueryResult<TData>` - For complete query result types including loading, error, and data states

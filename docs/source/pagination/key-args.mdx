@@ -160,44 +160,44 @@ After setting `keyArgs` as shown, we end up with a _single_ cache entry for our 
 
 You can provide the following values for a field's `keyArgs`:
 
-* `false` (indicates that the field has _no_ key arguments)
-* [An array](#keyargs-array) of argument, directive, and variable names
-* [A function](#keyargs-function) (advanced)
+- `false` (indicates that the field has _no_ key arguments)
+- [An array](#keyargs-array) of argument, directive, and variable names
+- [A function](#keyargs-function) (advanced)
 
 ### `keyArgs` array
 
 A `keyArgs` array can include the types of values shown below. The storage key for a cached field uses the values of _all_ arguments, directives, and variables included in the array.
 
-* Argument names:
+- Argument names:
 
-    ```js
-    // Here, category and id are two arguments of the field
-    ["category", "id"]
-    ```
+  ```js
+  // Here, category and id are two arguments of the field
+  ["category", "id"];
+  ```
 
-* _Nested_ argument names for input types with subfields:
+- _Nested_ argument names for input types with subfields:
 
-    ```js
-    // Here, details is an input type argument
-    // with subfields name and date
-    ["details", ["name", "date"] ]
-    ```
+  ```js
+  // Here, details is an input type argument
+  // with subfields name and date
+  ["details", ["name", "date"]];
+  ```
 
-* Directive names (indicated with `@`), optionally with one or more of their arguments:
+- Directive names (indicated with `@`), optionally with one or more of their arguments:
 
-    ```js
-    // Here, @units is a directive that can be applied
-    // to the field, and it has a type argument
-    ["@units", ["type"] ]
-    ```
+  ```js
+  // Here, @units is a directive that can be applied
+  // to the field, and it has a type argument
+  ["@units", ["type"]];
+  ```
 
-* Variable names (indicated with `$`):
+- Variable names (indicated with `$`):
 
-    ```js
-    // Here, $userId is a variable that's provided to some
-    // operations that include the field
-    ["$userId"]
-    ```
+  ```js
+  // Here, $userId is a variable that's provided to some
+  // operations that include the field
+  ["$userId"];
+  ```
 
 ### `keyArgs` function (advanced)
 
@@ -275,12 +275,13 @@ const cache = new InMemoryCache({
         feed: {
           keyArgs: false,
 
-          read(existing = {}, { args: { offset, limit, category }}) {
+          read(existing = {}, { args: { offset, limit, category } }) {
             return existing[category]?.slice(offset, offset + limit);
           },
 
-          merge(existing = {}, incoming, { args: { category, offset = 0 }}) {
-            const merged = existing[category] ? existing[category].slice(0) : [];
+          merge(existing = {}, incoming, { args: { category, offset = 0 } }) {
+            const merged =
+              existing[category] ? existing[category].slice(0) : [];
             for (let i = 0; i < incoming.length; ++i) {
               merged[offset + i] = incoming[i];
             }
@@ -362,7 +363,7 @@ const cache = new InMemoryCache({
       },
     },
   },
-})
+});
 ```
 
 If the `Query.feed` field does not have an argument like `category` that you can use in `keyArgs: [...]`, then it might make sense to use the `@connection` directive after all:
@@ -398,7 +399,7 @@ const cache = new InMemoryCache({
       },
     },
   },
-})
+});
 ```
 
 With this configuration, your cache uses a `feed:{"@connection":{"key":...}}` key instead of just `feed` to store separate `{ edges, pageInfo }` objects within the `ROOT_QUERY` object:
@@ -412,7 +413,7 @@ expect(cache.extract()).toEqual({
     'feed:{"@connection":{"key":"yet another key"}}': { edges, pageInfo },
     // ...
   },
-})
+});
 ```
 
 The `["key"]` in `keyArgs: ["@connection", ["key"]]` means only the `key` argument to the `@connection` directive is considered, and any other arguments (like `filter`) are ignored. Passing just `key` to `@connection` is usually adequate, but if you want to pass a `filter: ["someArg", "anotherArg"]` argument as well, you should instead include those argument names directly in `keyArgs`:
@@ -428,7 +429,7 @@ const cache = new InMemoryCache({
       },
     },
   },
-})
+});
 ```
 
 If any of these arguments or directives are not provided for the current query, they're omitted from the field key automatically, without error. This means it's generally safe to include more arguments or directives in `keyArgs` than you expect to receive in all cases.
@@ -446,7 +447,7 @@ const cache = new InMemoryCache({
       },
     },
   },
-})
+});
 ```
 
 In the unlikely event that a `keyArgs` array is insufficient to capture the identity of a field, remember that you can pass a function for `keyArgs`, which allows you to serialize the `args` object however you want.

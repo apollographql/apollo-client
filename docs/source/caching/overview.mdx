@@ -64,8 +64,8 @@ Whenever the Apollo Client cache receives query response data, it does the follo
 
 First, the cache identifies all of the distinct objects included in a query response. In [the example above](#how-is-data-stored), there are two objects:
 
-* A `Person` with `id` `cGVvcGxlOjE=`
-* A `Planet` with `id` `cGxhbmV0czox`
+- A `Person` with `id` `cGVvcGxlOjE=`
+- A `Planet` with `id` `cGxhbmV0czox`
 
 #### 2. Generate cache IDs
 
@@ -73,12 +73,10 @@ After identifying all objects, the cache generates a **cache ID** for each one. 
 
 By default, an object's cache ID is the concatenation of the object's `__typename` and `id` (or `_id`) fields, separated by a colon (`:`).
 
-
-
 So, the default cache IDs for the objects in [the example above](#how-is-data-stored) are:
 
-* `Person:cGVvcGxlOjE=`
-* `Planet:cGxhbmV0czox`
+- `Person:cGVvcGxlOjE=`
+- `Planet:cGxhbmV0czox`
 
 > You can customize the cache ID format for a particular object type. See [Customizing cache IDs](./cache-configuration/#customizing-cache-ids).
 
@@ -128,8 +126,8 @@ Finally, the resulting objects are all stored in the cache's flat lookup table.
 
 Whenever an incoming object has the same cache ID as an _existing_ cached object, the fields of those objects are _merged:_
 
-* If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields.
-* Fields that appear in _only_ the existing object or _only_ the incoming object are preserved.
+- If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields.
+- Fields that appear in _only_ the existing object or _only_ the incoming object are preserved.
 
 Normalization constructs a partial copy of your graph on your client, in a format that's optimized for reading and updating as your app's state changes.
 
@@ -139,7 +137,11 @@ To help understand the structure of your cached data, we strongly recommend inst
 
 This browser extension includes an inspector that enables you to view all of the normalized objects contained in your cache:
 
-<img src="../img/cache-inspector.jpg" class="screenshot" alt="The Cache tab of the Apollo Client Devtools"></img>
+<img
+  src="../img/cache-inspector.jpg"
+  class="screenshot"
+  alt="The Cache tab of the Apollo Client Devtools"
+></img>
 
 ### Example
 
@@ -147,7 +149,8 @@ Let's say we use Apollo Client to run the following query on the [SWAPI demo API
 
 ```graphql
 query {
-  allPeople(first:3) { # Return the first 3 items
+  allPeople(first: 3) {
+    # Return the first 3 items
     people {
       id
       name
@@ -211,7 +214,11 @@ This query returns the following result of three `Person` objects, each with a c
 
 After the result is cached, we can view the state of our cache in the Apollo Client Devtools:
 
-<img src="../img/cache-inspector.jpg" class="screenshot" alt="The Cache tab of the Apollo Client Devtools"></img>
+<img
+  src="../img/cache-inspector.jpg"
+  class="screenshot"
+  alt="The Cache tab of the Apollo Client Devtools"
+></img>
 
 Our cache now contains five normalized objects (in addition to the `ROOT_QUERY` object): three `Person` objects and two `Planet` objects.
 

@@ -37,7 +37,7 @@ export const GET_DOG_QUERY = gql`
 
 export function Dog({ name }) {
   const { loading, error, data } = useQuery(GET_DOG_QUERY, {
-    variables: { name }
+    variables: { name },
   });
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error.message}</p>;
@@ -83,15 +83,15 @@ const mocks = [
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: "Buck"
-      }
+        name: "Buck",
+      },
     },
     result: {
       data: {
-        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
-      }
-    }
-  }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" },
+      },
+    },
+  },
 ];
 ```
 
@@ -128,15 +128,15 @@ const mocks = [
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: "Buck"
-      }
+        name: "Buck",
+      },
     },
     result: {
       data: {
-        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
-      }
-    }
-  }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" },
+      },
+    },
+  },
 ];
 
 it("renders without error", async () => {
@@ -165,16 +165,16 @@ const mocks = [
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: "Buck"
-      }
+        name: "Buck",
+      },
     },
     result: {
       data: {
-        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
-      }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" },
+      },
     },
     maxUsageCount: 2, // The mock can be used twice before it's removed, default is 1
-  }
+  },
 ];
 ```
 
@@ -193,11 +193,11 @@ import { MockedResponse } from "@apollo/client/testing";
 
 const dogMock: MockedResponse<Data, Variables> = {
   request: {
-    query: GET_DOG_QUERY
+    query: GET_DOG_QUERY,
   },
   variableMatcher: (variables) => true,
   result: {
-    data: { dog: { __typename: 'Dog', id: 1, name: 'Buck', breed: 'poodle' } },
+    data: { dog: { __typename: "Dog", id: 1, name: "Buck", breed: "poodle" } },
   },
 };
 ```
@@ -209,17 +209,19 @@ import { MockedResponse } from "@apollo/client/testing";
 
 const dogMock: MockedResponse<Data, Variables> = {
   request: {
-    query: GET_DOG_QUERY
+    query: GET_DOG_QUERY,
   },
   variableMatcher: jest.fn().mockReturnValue(true),
   result: {
-    data: { dog: { __typename: 'Dog', id: 1, name: 'Buck', breed: 'poodle' } },
+    data: { dog: { __typename: "Dog", id: 1, name: "Buck", breed: "poodle" } },
   },
 };
 
-expect(variableMatcher).toHaveBeenCalledWith(expect.objectContaining({
-  name: 'Buck'
-}));
+expect(variableMatcher).toHaveBeenCalledWith(
+  expect.objectContaining({
+    name: "Buck",
+  })
+);
 ```
 
 ## Testing the "loading" and "success" states
@@ -258,8 +260,8 @@ it("should render dog", async () => {
 
 Your component's error states are just as important to test as its success state, if not more so. You can use the `MockedProvider` component to simulate both network errors and GraphQL errors.
 
-* Network errors are errors that occur while your client attempts to communicate with your GraphQL server.
-* GraphQL errors are errors that occur while your GraphQL server attempts to resolve your client's operation.
+- Network errors are errors that occur while your client attempts to communicate with your GraphQL server.
+- GraphQL errors are errors that occur while your GraphQL server attempts to resolve your client's operation.
 
 ### Network errors
 
@@ -270,9 +272,9 @@ it("should show error UI", async () => {
   const dogMock = {
     request: {
       query: GET_DOG_QUERY,
-      variables: { name: "Buck" }
+      variables: { name: "Buck" },
     },
-    error: new Error("An error occurred")
+    error: new Error("An error occurred"),
   };
   render(
     <MockedProvider mocks={[dogMock]}>
@@ -341,9 +343,9 @@ export function DeleteButton() {
 We can test the initial rendering of this component just like we [tested our `Dog` component](#example):
 
 ```jsx title="delete-dog.test.js"
-import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
-import { render, screen } from '@testing-library/react';
+import "@testing-library/jest-dom";
+import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { DeleteButton, DELETE_DOG_MUTATION } from "./delete-dog";
 
@@ -367,10 +369,10 @@ it("should render loading and success states on delete", async () => {
     {
       request: {
         query: DELETE_DOG_MUTATION,
-        variables: { name: "Buck" }
+        variables: { name: "Buck" },
       },
-      result: { data: deleteDog }
-    }
+      result: { data: deleteDog },
+    },
   ];
 
   render(
@@ -462,14 +464,8 @@ In order to properly test local state using `MockedProvider`, you'll need to pas
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 
 ```jsx
-const {
-  mocks,
-  defaultOptions,
-  cache,
-  resolvers,
-  link,
-  showWarnings,
-} = this.props;
+const { mocks, defaultOptions, cache, resolvers, link, showWarnings } =
+  this.props;
 const client = new ApolloClient({
   cache: cache || new Cache(),
   defaultOptions,
@@ -498,10 +494,7 @@ If you're using Apollo Client 2.x [local resolvers](../local-state/local-resolve
 <MockedProvider mocks={mocks} cache={cache} resolvers={resolvers} ...
 ```
 
-
 This is necessary because otherwise, the `MockedProvider` component doesn't know how resolve [local-only fields](../local-state/managing-state-with-field-policies/) in your queries.
-
-
 
 ## Sandbox example
 

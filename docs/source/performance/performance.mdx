@@ -35,12 +35,12 @@ function Feed() {
           <Link
             to={{
               pathname: `/${data.breed}/${data.id}`,
-              state: { id: data.id }
+              state: { id: data.id },
             }}
             onMouseOver={() =>
               client.query({
                 query: GET_DOG,
-                variables: { breed: data.breed }
+                variables: { breed: data.breed },
               })
             }
             style={{ textDecoration: "none" }}
@@ -67,9 +67,9 @@ When the `GET_DOG` query completes, its result is stored in the Apollo Client ca
 
 In addition to a mouse hover, here are some other suggestions for situations when prefetching can be helpful:
 
-* During a multi-step flow (such as a wizard), you can preload each _next_ step's data during each _current_ step.
-* If your app's analytics indicate a frequent transition between two particular views, you can use prefetching to optimize for that path.
-* If a region of a page has multiple tabs or slides (such as a carousel), you can preload data for some or all of them to make transitions feel snappier.
+- During a multi-step flow (such as a wizard), you can preload each _next_ step's data during each _current_ step.
+- If your app's analytics indicate a frequent transition between two particular views, you can use prefetching to optimize for that path.
+- If a region of a page has multiple tabs or slides (such as a carousel), you can preload data for some or all of them to make transitions feel snappier.
 
 A special form of prefetching is [store hydration from the server](./server-side-rendering/#rehydrating-the-client-side-cache), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
 

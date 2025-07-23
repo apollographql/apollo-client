@@ -20,15 +20,15 @@ The schema link provides a [graphql execution environment](http://graphql.org/gr
 When performing SSR _on the same server_, you can use this library to avoid making network calls.
 
 ```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { SchemaLink } from '@apollo/client/link/schema';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { SchemaLink } from "@apollo/client/link/schema";
 
-import schema from './path/to/your/schema';
+import schema from "./path/to/your/schema";
 
 const graphqlClient = new ApolloClient({
   cache: new InMemoryCache(),
   ssrMode: true,
-  link: new SchemaLink({ schema })
+  link: new SchemaLink({ schema }),
 });
 ```
 
@@ -70,9 +70,9 @@ const graphqlClient = new ApolloClient({
 
 The `SchemaLink` constructor can be called with an object with the following properties:
 
-| Option | Description |
-| - | - |
-| `schema` | An executable graphql schema |
-| `rootValue` | The root value that is passed to the resolvers (i.e. the first parameter for the [rootQuery](http://graphql.org/learn/execution/#root-fields-resolvers)) |
-| `context` | An object passed to the resolvers, following the [graphql specification](http://graphql.org/learn/execution/#root-fields-resolvers) or a function that accepts the operation and returns the resolver context. The resolver context may contain all the data-fetching connectors for an operation. |
-| `validate` | Enable validation of incoming queries against the local schema before execution, returning validation errors in `result.errors`, just like a non-local GraphQL endpoint typically would. |
+| Option      | Description                                                                                                                                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`    | An executable graphql schema                                                                                                                                                                                                                                                                       |
+| `rootValue` | The root value that is passed to the resolvers (i.e. the first parameter for the [rootQuery](http://graphql.org/learn/execution/#root-fields-resolvers))                                                                                                                                           |
+| `context`   | An object passed to the resolvers, following the [graphql specification](http://graphql.org/learn/execution/#root-fields-resolvers) or a function that accepts the operation and returns the resolver context. The resolver context may contain all the data-fetching connectors for an operation. |
+| `validate`  | Enable validation of incoming queries against the local schema before execution, returning validation errors in `result.errors`, just like a non-local GraphQL endpoint typically would.                                                                                                           |

@@ -9,11 +9,11 @@ This article describes cache setup and configuration. To learn how to interact w
 Create an `InMemoryCache` object and provide it to the `ApolloClient` constructor, like so:
 
 ```ts
-import { InMemoryCache, ApolloClient } from '@apollo/client';
+import { InMemoryCache, ApolloClient } from "@apollo/client";
 
 const client = new ApolloClient({
   // ...other arguments...
-  cache: new InMemoryCache(options)
+  cache: new InMemoryCache(options),
 });
 ```
 
@@ -23,11 +23,11 @@ The `InMemoryCache` constructor accepts a variety of [configuration options](#co
 
 You can configure the cache's behavior to better suit your application. For example, you can:
 
-* Customize the format of a particular type's [cache ID](#customizing-cache-ids)
-* Customize the storage and retrieval of [individual fields](./cache-field-behavior/)
-* Define polymorphic type relationships for [fragment matching](#possibletypes)
-* Define patterns for [pagination](../pagination/overview/)
-* Manage client-side [local state](../local-state/local-state-management/)
+- Customize the format of a particular type's [cache ID](#customizing-cache-ids)
+- Customize the storage and retrieval of [individual fields](./cache-field-behavior/)
+- Define polymorphic type relationships for [fragment matching](#possibletypes)
+- Define patterns for [pagination](../pagination/overview/)
+- Manage client-side [local state](../local-state/local-state-management/)
 
 To customize cache behavior, you provide a configuration object to the `InMemoryCache` constructor. This object supports the following fields:
 
@@ -56,7 +56,6 @@ The default value is `true`.
 
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -164,37 +163,37 @@ const cache = new InMemoryCache({
     Store: {
       // If you need to disable normalization, set the keyFields to false
       // and the object will be embedded in the parent
-      keyFields: false
+      keyFields: false,
     },
     Location: {
       // You can also use a function to determine any of the values above.
       // The first argument is the reference to the record to be written, and the second is the runtime context
       keyFields: (location, context) => {
         if (context.readField("state")) {
-          return ["city", "state", "country"]
+          return ["city", "state", "country"];
         } else {
-          return ["city", "country"]
+          return ["city", "country"];
         }
-      }
-    }
+      },
+    },
   },
 });
 ```
 
 This example shows a variety of `typePolicies` with different `keyFields`:
 
-* The `Product` type uses its `upc` field as its identifying field.
-* The `Person` type uses the combination of both its `name` _and_ `email` fields.
-* The `Book` type includes a _subfield_ as part of its cache ID.
-    * The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the cache ID. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
-    * A valid cache ID for the `Book` type has the following structure:
-        ```
-        Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
-        ```
-* The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
-* The `Store` type provides an example of how you can [disable normalization](https://www.apollographql.com/docs/react/caching/cache-configuration/#disabling-normalization) by setting the keyFields to `false`
-* The `Location` type provides an example of using custom fuction given object and runtime context to calculate what fields should be used for the key field selection.
-  * Keep in mind that the first argument here is a reference to the record that will be written. As such, it does NOT include subselected fields, only scalar fields, and it contains aliases from the operation. If you need to read the real type you can use `context.storeObject`. To read even more indepth about how this function can work the best source will be our own [test cases for the cache policies](https://github.com/apollographql/apollo-client/blob/8bc7d4d406402962bf5151cdd2c5c75c9398d10c/src/cache/inmemory/__tests__/policies.ts#L5543-L5622)
+- The `Product` type uses its `upc` field as its identifying field.
+- The `Person` type uses the combination of both its `name` _and_ `email` fields.
+- The `Book` type includes a _subfield_ as part of its cache ID.
+  - The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the cache ID. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
+  - A valid cache ID for the `Book` type has the following structure:
+    ```
+    Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
+    ```
+- The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
+- The `Store` type provides an example of how you can [disable normalization](https://www.apollographql.com/docs/react/caching/cache-configuration/#disabling-normalization) by setting the keyFields to `false`
+- The `Location` type provides an example of using custom fuction given object and runtime context to calculate what fields should be used for the key field selection.
+  - Keep in mind that the first argument here is a reference to the record that will be written. As such, it does NOT include subselected fields, only scalar fields, and it contains aliases from the operation. If you need to read the real type you can use `context.storeObject`. To read even more indepth about how this function can work the best source will be our own [test cases for the cache policies](https://github.com/apollographql/apollo-client/blob/8bc7d4d406402962bf5151cdd2c5c75c9398d10c/src/cache/inmemory/__tests__/policies.ts#L5543-L5622)
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 
@@ -211,16 +210,19 @@ To help with this, you can use the `cache.identify` method to calculate the cach
 If you need to define a single fallback `keyFields` function that isn't specific to any particular `__typename`, you can use the `dataIdFromObject` function that was introduced in Apollo Client 2.x:
 
 ```ts
-import { defaultDataIdFromObject } from '@apollo/client';
+import { defaultDataIdFromObject } from "@apollo/client";
 
 const cache = new InMemoryCache({
   dataIdFromObject(responseObject) {
     switch (responseObject.__typename) {
-      case 'Product': return `Product:${responseObject.upc}`;
-      case 'Person': return `Person:${responseObject.name}:${responseObject.email}`;
-      default: return defaultDataIdFromObject(responseObject);
+      case "Product":
+        return `Product:${responseObject.upc}`;
+      case "Person":
+        return `Person:${responseObject.name}:${responseObject.email}`;
+      default:
+        return defaultDataIdFromObject(responseObject);
     }
-  }
+  },
 });
 ```
 
@@ -230,9 +232,9 @@ Notice that the above function still uses different logic to generate keys based
 
 This code also has the following drawbacks:
 
-* It's sensitive to aliasing mistakes.
-* It does nothing to protect against undefined object properties.
-* Accidentally using different key fields at different times can cause inconsistencies in the cache.
+- It's sensitive to aliasing mistakes.
+- It does nothing to protect against undefined object properties.
+- Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Customizing Type Policies
 
@@ -248,7 +250,7 @@ const cache = new InMemoryCache({
         name: {
           read(name = "UNKNOWN NAME") {
             return name.toUpperCase();
-          }
+          },
         },
       },
     },
@@ -299,15 +301,15 @@ type TypePolicy = {
   // If your schema uses a custom __typename for any of the root Query,
   // Mutation, and/or Subscription types (rare), set the corresponding
   // field below to true to indicate that this type serves as that type.
-  queryType?: true,
-  mutationType?: true,
-  subscriptionType?: true,
+  queryType?: true;
+  mutationType?: true;
+  subscriptionType?: true;
 
   fields?: {
     [fieldName: string]:
       | FieldPolicy<StoreValue>
       | FieldReadFunction<StoreValue>;
-  }
+  };
 };
 
 // Recursive type aliases are coming in TypeScript 3.7, so this isn't the
@@ -320,7 +322,7 @@ type KeyFieldsFunction = (
     typename: string;
     selectionSet?: SelectionSetNode;
     fragmentMap?: FragmentMap;
-  },
+  }
 ) => string | null | void;
 ```
 

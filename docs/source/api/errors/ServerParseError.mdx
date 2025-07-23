@@ -1,0 +1,105 @@
+---
+title: ServerParseError
+description: API reference
+---
+
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+Represents a failure to parse the response as JSON from the server. This error helps debug issues where the server returns malformed JSON or non-JSON content.
+
+This error occurs when Apollo Client receives a response from the server but cannot parse it as valid JSON. This typically happens when the server returns HTML error pages, plain text responses, or malformed JSON instead of the expected GraphQL JSON response format.
+
+```ts
+import { ServerParseError } from "@apollo/client/errors";
+
+// Check if an error is a ServerParseError instance
+if (ServerParseError.is(error)) {
+  console.log(`Failed to parse response from ${error.response.url}`);
+  console.log(`Raw response: ${error.bodyText}`);
+  console.log(`Status code: ${error.statusCode}`);
+
+  // Access the original parse error
+  console.log(`Parse error: ${error.cause}`);
+}
+```
+
+## Static methods
+
+### `is`
+
+A type guard that determines whether an error is a `ServerParseError` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
+
+```ts
+if (ServerParseError.is(error)) {
+  // TypeScript now knows `error` is a ServerParseError object
+  console.log(error.statusCode);
+}
+```
+
+See the [additional properties](#additional-properties) for more details about the available properties provided by the `ServerParseError` object.
+
+## Additional properties
+
+These properties are specific to the `ServerParseError` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
+
+<Tip>
+  Use the `cause` property to access the original parse error thrown by `JSON.parse()`.
+</Tip>
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `response`
+
+`Response`
+
+</td>
+<td>
+
+The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `statusCode`
+
+`number`
+
+</td>
+<td>
+
+The status code returned by the server in the response. This is provided as a shortcut for `serverParseError.response.status`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `bodyText`
+
+`string`
+
+</td>
+<td>
+
+The raw response body text.
+
+</td>
+</tr>
+
+</tbody>
+</table>

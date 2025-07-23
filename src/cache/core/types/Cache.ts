@@ -19,14 +19,7 @@ export declare namespace Cache {
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  /**
-   * @deprecated Use `Cache.ReadFnOptions` instead. Note that `TVariables` and `TData` are flipped.
-   */
   export interface ReadOptions<
-    TVariables extends OperationVariables = OperationVariables,
-    TData = unknown,
-  > extends ReadFnOptions<TData, TVariables> {}
-  export interface ReadFnOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   > {

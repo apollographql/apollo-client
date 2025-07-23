@@ -20,10 +20,7 @@ const cache = new InMemoryCache({
         feed: {
           keyArgs: ["type"],
 
-          merge(existing, incoming, {
-            args: { cursor },
-            readField,
-          }) {
+          merge(existing, incoming, { args: { cursor }, readField }) {
             const merged = existing ? existing.slice(0) : [];
             let offset = offsetFromCursor(merged, cursor, readField);
             // If we couldn't find the cursor, default to appending to
@@ -39,10 +36,10 @@ const cache = new InMemoryCache({
 
           // If you always want to return the whole list, you can omit
           // this read function.
-          read(existing, {
-            args: { cursor, limit = existing.length },
-            readField,
-          }) {
+          read(
+            existing,
+            { args: { cursor, limit = existing.length }, readField }
+          ) {
             if (existing) {
               let offset = offsetFromCursor(existing, cursor, readField);
               // If we couldn't find the cursor, default to reading the
@@ -101,7 +98,7 @@ const cache = new InMemoryCache({
           // merge function.
           merge(existing, incoming, { readField }) {
             const merged = { ...existing };
-            incoming.forEach(item => {
+            incoming.forEach((item) => {
               merged[readField("id", item)] = item;
             });
             return merged;
@@ -142,24 +139,22 @@ const MORE_COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const {
-    data,
-    loading,
-    fetchMore,
-  } = useQuery(MORE_COMMENTS_QUERY, {
+  const { data, loading, fetchMore } = useQuery(MORE_COMMENTS_QUERY, {
     variables: { limit: 10 },
   });
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
 
   return (
     <Comments
       entries={data.moreComments.comments || []}
-      onLoadMore={() => fetchMore({
-        variables: {
-          cursor: data.moreComments.cursor,
-        },
-      })}
+      onLoadMore={() =>
+        fetchMore({
+          variables: {
+            cursor: data.moreComments.cursor,
+          },
+        })
+      }
     />
   );
 }
@@ -176,7 +171,7 @@ const cache = new InMemoryCache({
           keyArgs: false,
           merge(existing, incoming, { readField }) {
             const comments = existing ? { ...existing.comments } : {};
-            incoming.comments.forEach(comment => {
+            incoming.comments.forEach((comment) => {
               comments[readField("id", comment)] = comment;
             });
             return {

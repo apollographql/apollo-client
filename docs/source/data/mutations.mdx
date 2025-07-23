@@ -3,7 +3,7 @@ title: Mutations in Apollo Client
 description: Modify data with the useMutation hook
 ---
 
-{/** @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 Now that we've [learned how to query data](queries/) from our backend with Apollo Client, the natural next step is to learn how to _modify_ back-end data with **mutations**.
 
@@ -25,8 +25,8 @@ The `useMutation` [React hook](https://react.dev/reference/react) is the primary
 To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
 ```jsx {13} title="my-component.jsx"
-import { gql } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 // Define mutation
 const INCREMENT_COUNTER = gql`
@@ -38,7 +38,8 @@ const INCREMENT_COUNTER = gql`
 
 function MyComponent() {
   // Pass mutation to useMutation
-  const [mutateFunction, { data, loading, error }] = useMutation(INCREMENT_COUNTER);
+  const [mutateFunction, { data, loading, error }] =
+    useMutation(INCREMENT_COUNTER);
 }
 ```
 
@@ -46,18 +47,18 @@ As shown above, you use the `gql` function to parse the mutation string into a G
 
 When your component renders, `useMutation` returns a tuple that includes:
 
-* A **mutate function** that you can call at any time to execute the mutation
-    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead, you call this mutate function.
-* An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
-    * This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
+- A **mutate function** that you can call at any time to execute the mutation
+  - Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead, you call this mutate function.
+- An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
+  - This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
 
 ### Example
 
 Let's say we're creating a to-do list application and we want the user to be able to add items to their list. First, we'll create a corresponding GraphQL mutation named `ADD_TODO`. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 ```jsx title="add-todo.jsx"
-import { gql } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -77,20 +78,20 @@ function AddTodo() {
   let input;
   const [addTodo, { data, loading, error }] = useMutation(ADD_TODO);
 
-  if (loading) return 'Submitting...';
+  if (loading) return "Submitting...";
   if (error) return `Submission error! ${error.message}`;
 
   return (
     <div>
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
           addTodo({ variables: { type: input.value } });
-          input.value = '';
+          input.value = "";
         }}
       >
         <input
-          ref={node => {
+          ref={(node) => {
             input = node;
           }}
         />
@@ -145,7 +146,7 @@ In addition to a mutate function, the `useMutation` hook returns an object that 
 [The example above](#example) destructures the `loading` and `error` fields from this object to render the `AddTodo` component differently depending on the mutation's current status:
 
 ```jsx
-if (loading) return 'Submitting...';
+if (loading) return "Submitting...";
 if (error) return `Submission error! ${error.message}`;
 ```
 
@@ -164,23 +165,22 @@ Call `reset` to reset the mutation's result to its initial state (i.e., _before_
 > Calling `reset` does _not_ remove any cached data returned by the mutation's execution. It only affects the state associated with the `useMutation` hook, causing the corresponding component to rerender.
 
 ```js {2,15}
-function LoginPage () {
+function LoginPage() {
   const [login, { error, reset }] = useMutation(LOGIN_MUTATION);
 
   return (
     <>
       <form>
-        <input class="login"/>
-        <input class="password"/>
+        <input class="login" />
+        <input class="password" />
         <button onclick={login}>Login</button>
       </form>
-      {
-        error &&
+      {error && (
         <LoginFailedMessageWindow
           message={error.message}
           onDismiss={() => reset()}
         />
-      }
+      )}
     </>
   );
 }
@@ -207,7 +207,7 @@ If you know that your app usually needs to refetch certain queries after a parti
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   refetchQueries: [
     GET_POST, // DocumentNode object parsed with gql
-    'GetComments' // Query name
+    "GetComments", // Query name
   ],
 });
 ```
@@ -216,9 +216,9 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 
 Each element in the `refetchQueries` array is one of the following:
 
-* A `DocumentNode` object parsed with the `gql` function
-* The name of a query you've previously executed, as a string (e.g., `GetComments`)
-  * To refer to queries by name, make sure each of your app's queries have a _unique_ name.
+- A `DocumentNode` object parsed with the `gql` function
+- The name of a query you've previously executed, as a string (e.g., `GetComments`)
+  - To refer to queries by name, make sure each of your app's queries have a _unique_ name.
 
 Each included query is executed with its most recently provided set of variables.
 
@@ -277,26 +277,26 @@ function AddTodo() {
                   id
                   type
                 }
-              `
+              `,
             });
             return [...existingTodos, newTodoRef];
-          }
-        }
+          },
+        },
       });
-    }
+    },
   });
 
   return (
     <div>
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
           addTodo({ variables: { type: input.value } });
           input.value = "";
         }}
       >
         <input
-          ref={node => {
+          ref={(node) => {
             input = node;
           }}
         />
@@ -339,7 +339,7 @@ addTodo({
       return observableQuery.refetch();
     }
   },
-})
+});
 ```
 
 After your `update` function completes, Apollo Client calls `onQueryUpdated` _once for each active query with cached fields that were updated_. Within `onQueryUpdated`, you can use any custom logic to determine whether you want to refetch the associated query.
@@ -360,7 +360,7 @@ addTodo({
     // If ReallyImportantQuery is active, it will be passed to onQueryUpdated.
     // If no query with that name is active, a warning will be logged.
   },
-})
+});
 ```
 
 If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` thanks to your `update` function, then it will only be passed once. Using `refetchQueries: ["ReallyImportantQuery"]` just guarantees the query will be included.
@@ -381,7 +381,10 @@ detail with usage examples, see the [API reference](../api/react/hooks/).
 
 The `useMutation` hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!useMutation.Options:interface" idPrefix="mutationhookoptions-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client!useMutation.Options:interface"
+  idPrefix="mutationhookoptions-interface"
+/>
 
 ### Result
 
@@ -389,7 +392,10 @@ The `useMutation` result is a tuple with a mutate function in the first position
 
 You call the mutate function to trigger the mutation from your UI.
 
-<PropertySignatureTable canonicalReference="@apollo/client!useMutation.Result:interface" idPrefix="mutationresult-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client!useMutation.Result:interface"
+  idPrefix="mutationresult-interface"
+/>
 
 ## Next steps
 

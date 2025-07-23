@@ -2,7 +2,7 @@
 title: Refetching queries in Apollo Client
 ---
 
-{/** @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 Apollo Client allows you to make local modifications to your GraphQL data by [updating the cache](./mutations/#updating-the-cache-directly), but sometimes it's more straightforward to update your client-side GraphQL data by refetching queries from the server.
 
@@ -63,12 +63,14 @@ await client.refetchQueries({
 <Note>
 
 The distinction between "active" and "inactive" queries:
+
 - **Active queries**: Have at least one subscriber and are not skipped or in `standby`
 - **Inactive queries**: Have a subscriber but are either skipped from a React hook or have a `fetchPolicy` of `standby`
 
 </Note>
 
 To refetch all _active_ queries, pass the `"active"` shorthand for `include`:
+
 ```ts
 await client.refetchQueries({
   include: "active",
@@ -79,7 +81,7 @@ Only queries with active subscribers are registered with the client. This means 
 
 `cache-only` queries are excluded from `refetchQueries` in all situations, including when affected by `updateCache` operations. A `cache-only` query _can_ be refetched however by providing an [`onQueryUpdated` function](#refetching-selectively).
 
-To refetch _all_ queries managed by Apollo Client, including inactive queries, pass `"all"` for  for `include`:
+To refetch _all_ queries managed by Apollo Client, including inactive queries, pass `"all"` for for `include`:
 
 ```ts
 await client.refetchQueries({
@@ -160,7 +162,7 @@ const results = await client.refetchQueries({
   },
 });
 
-results.forEach(result => {
+results.forEach((result) => {
   // These results will be ApolloQueryResult<any> objects, after all
   // results have been refetched from the network.
 });
@@ -177,11 +179,13 @@ await client.refetchQueries({
   },
 
   onQueryUpdated(observableQuery, { complete, result, missing }) {
-    console.log(`Examining ObservableQuery ${
-      observableQuery.queryName
-    } whose latest result is ${JSON.stringify(result)} which is ${
-      complete ? "complete" : "incomplete"
-    }`);
+    console.log(
+      `Examining ObservableQuery ${
+        observableQuery.queryName
+      } whose latest result is ${JSON.stringify(result)} which is ${
+        complete ? "complete" : "incomplete"
+      }`
+    );
 
     if (shouldIgnoreQuery(observableQuery)) {
       return false;
@@ -263,9 +267,9 @@ For refetching after a mutation, `client.mutate` supports [options](./mutations/
 
 For historical reasons, `client.mutate` options have slightly different names from the new `client.refetchQueries` options, but their internal implementation is substantially the same, so you can translate between them using the following table:
 
-| `client.mutate(options)` | | `client.refetchQueries(options)` |
-| - | - | - |
-| [`options.refetchQueries`](./mutations/#refetching-queries) | ⇔ | `options.include` |
-| [`options.update`](./mutations/#the-update-function) | ⇔ | `options.updateCache` |
-| [`options.onQueryUpdated`](./mutations/#refetching-after-update) | ⇔ | `options.onQueryUpdated` |
-| [`options.awaitRefetchQueries`](./mutations/#options) | ⇔ | Return a `Promise` from `onQueryUpdated` |
+| `client.mutate(options)`                                         |     | `client.refetchQueries(options)`         |
+| ---------------------------------------------------------------- | --- | ---------------------------------------- |
+| [`options.refetchQueries`](./mutations/#refetching-queries)      | ⇔   | `options.include`                        |
+| [`options.update`](./mutations/#the-update-function)             | ⇔   | `options.updateCache`                    |
+| [`options.onQueryUpdated`](./mutations/#refetching-after-update) | ⇔   | `options.onQueryUpdated`                 |
+| [`options.awaitRefetchQueries`](./mutations/#options)            | ⇔   | Return a `Promise` from `onQueryUpdated` |

@@ -11,11 +11,11 @@ The `setContext` function accepts a function that returns either an object or a 
 import { setContext } from "@apollo/client/link/context";
 
 const setAuthorizationLink = setContext((request, previousContext) => ({
-  headers: {authorization: "1234"}
+  headers: { authorization: "1234" },
 }));
 
 const asyncAuthLink = setContext(
-  request =>
+  (request) =>
     new Promise((success, fail) => {
       // do some async lookup here
       setTimeout(() => {
@@ -41,7 +41,7 @@ const withToken = setContext(() => {
   // if you have a cached value, return it immediately
   if (token) return { token };
 
-  return AsyncTokenLookup().then(userToken => {
+  return AsyncTokenLookup().then((userToken) => {
     token = userToken;
     return { token };
   });
@@ -50,7 +50,7 @@ const withToken = setContext(() => {
 const resetToken = onError(({ networkError }) => {
   if (
     networkError &&
-    networkError.name ==='ServerError' &&
+    networkError.name === "ServerError" &&
     networkError.statusCode === 401
   ) {
     // remove cached token on 401 from the server

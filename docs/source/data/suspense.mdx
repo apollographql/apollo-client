@@ -17,9 +17,9 @@ The `useSuspenseQuery` hook initiates a network request and causes the component
 Let's take a look at an example:
 
 ```tsx {5,38,40,45-47}
-import { Suspense } from 'react';
-import { gql, TypedDocumentNode } from '@apollo/client';
-import { useSuspenseQuery } from '@apollo/client/react';
+import { Suspense } from "react";
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useSuspenseQuery } from "@apollo/client/react";
 
 interface Data {
   dog: {
@@ -33,7 +33,7 @@ interface Variables {
 }
 
 interface DogProps {
-  id: string
+  id: string;
 }
 
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
@@ -90,10 +90,7 @@ In the previous example, we fetched the record for a single dog by passing a har
 Let's update our example:
 
 ```tsx {28-30,35,42,49-51}
-export const GET_DOG_QUERY: TypedDocumentNode<
-  DogData,
-  Variables
-> = gql`
+export const GET_DOG_QUERY: TypedDocumentNode<DogData, Variables> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
       id
@@ -103,10 +100,7 @@ export const GET_DOG_QUERY: TypedDocumentNode<
   }
 `;
 
-export const GET_DOGS_QUERY: TypedDocumentNode<
-  DogsData,
-  Variables
-> = gql`
+export const GET_DOGS_QUERY: TypedDocumentNode<DogsData, Variables> = gql`
   query GetDogs {
     dogs {
       id
@@ -117,17 +111,15 @@ export const GET_DOGS_QUERY: TypedDocumentNode<
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(
-    data.dogs[0].id
-  );
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
-      <select
-        onChange={(e) => setSelectedDog(e.target.value)}
-      >
+      <select onChange={(e) => setSelectedDog(e.target.value)}>
         {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>{name}</option>
+          <option key={id} value={id}>
+            {name}
+          </option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -166,9 +158,7 @@ import { useState, Suspense, startTransition } from "react";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(
-    data.dogs[0].id
-  );
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
@@ -180,7 +170,9 @@ function App() {
         }}
       >
         {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>{name}</option>
+          <option key={id} value={id}>
+            {name}
+          </option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -205,9 +197,7 @@ import { useState, Suspense, useTransition } from "react";
 function App() {
   const [isPending, startTransition] = useTransition();
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(
-    data.dogs[0].id
-  );
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
@@ -220,7 +210,9 @@ function App() {
         }}
       >
         {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>{name}</option>
+          <option key={id} value={id}>
+            {name}
+          </option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -251,10 +243,7 @@ interface PartialData {
   };
 }
 
-const PARTIAL_GET_DOG_QUERY: TypedDocumentNode<
-  PartialData,
-  Variables
-> = gql`
+const PARTIAL_GET_DOG_QUERY: TypedDocumentNode<PartialData, Variables> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
       id
@@ -352,24 +341,18 @@ Our example doesn't have an error boundary yet—let's add one!
 ```tsx {18-20,24}
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(
-    data.dogs[0].id
-  );
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
-      <select
-        onChange={(e) => setSelectedDog(e.target.value)}
-      >
+      <select onChange={(e) => setSelectedDog(e.target.value)}>
         {data.dogs.map(({ id, name }) => (
           <option key={id} value={id}>
             {name}
           </option>
         ))}
       </select>
-      <ErrorBoundary
-        fallback={<div>Something went wrong</div>}
-      >
+      <ErrorBoundary fallback={<div>Something went wrong</div>}>
         <Suspense fallback={<div>Loading...</div>}>
           <Dog id={selectedDog} />
         </Suspense>
@@ -404,7 +387,7 @@ import {
   useBackgroundQuery,
   useReadQuery,
   useSuspenseQuery,
-} from '@apollo/client/react';
+} from "@apollo/client/react";
 
 function App() {
   // We can start the request here, even though `Dog`
@@ -485,8 +468,8 @@ Let's update our example to start loading the dog's details as a result of selec
 ```tsx {3,8,13,22,29}
 import {
   // ...
-  useLoadableQuery
-} from '@apollo/client/react';
+  useLoadableQuery,
+} from "@apollo/client/react";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
@@ -494,9 +477,7 @@ function App() {
 
   return (
     <>
-      <select
-        onChange={(e) => loadDog({ id: e.target.value })}
-      >
+      <select onChange={(e) => loadDog({ id: e.target.value })}>
         {data.dogs.map(({ id, name }) => (
           <option key={id} value={id}>
             {name}
@@ -511,7 +492,7 @@ function App() {
 }
 
 function Dog({ queryRef }: DogProps) {
-  const { data } = useReadQuery(queryRef)
+  const { data } = useReadQuery(queryRef);
 
   return (
     <>
@@ -544,14 +525,13 @@ Consider exporting your preload function along with your `ApolloClient` instance
 
 The preload function returns a `queryRef` that is passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` ensures that your component is kept up-to-date with cache updates for the preloaded query.
 
-
 Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
 
 ```tsx {3,9-10,13,36,38}
 import {
   // ...
-  createQueryPreloader
-} from '@apollo/client/react';
+  createQueryPreloader,
+} from "@apollo/client/react";
 
 // This `preloadQuery` function does not have to be created each time you
 // need to preload a new query. You may prefer to export this function
@@ -561,15 +541,15 @@ const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
 
 function App() {
   const { data } = useReadQuery(preloadedQueryRef);
-  const [loadDog, queryRef] = useLoadableQuery(GET_DOG_QUERY)
+  const [loadDog, queryRef] = useLoadableQuery(GET_DOG_QUERY);
 
   return (
     <>
-      <select
-        onChange={(e) => loadDog({ id: e.target.value })}
-      >
+      <select onChange={(e) => loadDog({ id: e.target.value })}>
         {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>{name}</option>
+          <option key={id} value={id}>
+            {name}
+          </option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -579,7 +559,7 @@ function App() {
   );
 }
 
-const root = createRoot(document.getElementById('app'));
+const root = createRoot(document.getElementById("app"));
 
 root.render(
   <ApolloProvider client={client}>
@@ -692,15 +672,13 @@ import {
 
 function App() {
   const [isPending, startTransition] = useTransition();
-  const [queryRef, { refetch }] = useBackgroundQuery(
-    GET_BREEDS_QUERY
-  );
+  const [queryRef, { refetch }] = useBackgroundQuery(GET_BREEDS_QUERY);
 
   function handleRefetch() {
     startTransition(() => {
       refetch();
     });
-  };
+  }
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -714,12 +692,7 @@ function App() {
   );
 }
 
-function Dog({
-  id,
-  queryRef,
-  isPending,
-  onRefetch,
-}: DogProps) {
+function Dog({ id, queryRef, isPending, onRefetch }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { id },
   });
@@ -740,10 +713,7 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 
   return data.breeds.map(({ characteristics }) =>
     characteristics.map((characteristic) => (
-      <div
-        style={{ opacity: isPending ? 0.5 : 1 }}
-        key={characteristic}
-      >
+      <div style={{ opacity: isPending ? 0.5 : 1 }} key={characteristic}>
         {characteristic}
       </div>
     ))
@@ -778,15 +748,11 @@ function App() {
     startTransition(() => {
       refetch();
     });
-  };
+  }
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dog
-        id="3"
-        isPending={isPending}
-        onRefetch={handleRefetch}
-      />
+      <Dog id="3" isPending={isPending} onRefetch={handleRefetch} />
     </Suspense>
   );
 }
@@ -824,7 +790,7 @@ function Dog({ id, queryRef }: DogProps) {
     startTransition(() => {
       refetch();
     });
-  };
+  }
 
   return (
     <>
@@ -864,7 +830,7 @@ It should not be used in the long term.
 Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken):
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
-import { skipToken, useSuspenseQuery } from '@apollo/client/react';
+import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 const { data } = useSuspenseQuery(
   query,
   id ? { variables: { id } } : skipToken
@@ -872,7 +838,7 @@ const { data } = useSuspenseQuery(
 ```
 
 ```js title="Recommended usage of skipToken with useBackgroundQuery"
-import { skipToken, useBackgroundQuery } from '@apollo/client/react';
+import { skipToken, useBackgroundQuery } from "@apollo/client/react";
 const [queryRef] = useBackgroundQuery(
   query,
   id ? { variables: { id } } : skipToken

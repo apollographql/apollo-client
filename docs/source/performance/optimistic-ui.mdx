@@ -49,9 +49,9 @@ function CommentPageWithData() {
             updateComment: {
               id: commentId,
               __typename: "Comment",
-              content: commentContent
-            }
-          }
+              content: commentContent,
+            },
+          },
         })
       }
     />
@@ -67,7 +67,7 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 2. Apollo Client notifies all active queries that include the modified comment. Those queries automatically update, and their associated components re-render to reflect the optimistic data. Because this doesn't require any network requests, it's nearly instantaneous to the user.
 
-3. Eventually, our server responds with the mutation's _actual_ resulting  `Comment` object.
+3. Eventually, our server responds with the mutation's _actual_ resulting `Comment` object.
 
 4. The Apollo Client cache removes the optimistic version of the `Comment` object. It also overwrites the _canonical_ cached version with values returned from the server.
 
@@ -111,9 +111,9 @@ function CommentPageWithData() {
               updateComment: {
                 id: commentId,
                 __typename: "Comment",
-                content: commentContent
-              }
-            }
+                content: commentContent,
+              },
+            };
           },
         })
       }
@@ -147,7 +147,10 @@ When you execute the mutate function in this case, the Apollo Client cache store
 You can view a full to-do list example on CodeSandbox:
 
 <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/full-stack/todo-list/todo-list-client?fontsize=14&hidenavigation=1&theme=dark">
-  <img alt="Edit todo-list-client" src="https://codesandbox.io/static/img/play-codesandbox.svg"/>
+  <img
+    alt="Edit todo-list-client"
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+  />
 </a>
 
 > You can also run the example client and server locally by cloning the [`docs-examples` repo](https://github.com/apollographql/docs-examples/tree/main/full-stack/todo-list).

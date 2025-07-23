@@ -1,0 +1,194 @@
+---
+title: CombinedGraphQLErrors
+description: API reference
+---
+
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+Represents the combined list of GraphQL errors returned from the server in a GraphQL response. This error type is used when your GraphQL operation returns errors in the `errors` field of the response.
+
+When your GraphQL operation encounters errors on the server side (such as resolver errors, validation errors, or syntax errors), the server returns these errors in the `errors` array of the GraphQL response. Apollo Client wraps these errors in a `CombinedGraphQLErrors` object, which provides access to the individual errors while maintaining additional context about the response.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+// Check if an error is a CombinedGraphQLErrors object
+if (CombinedGraphQLErrors.is(error)) {
+  // Access individual GraphQL errors
+  error.errors.forEach((graphQLError) => {
+    console.log(graphQLError.message);
+    console.log(graphQLError.path);
+    console.log(graphQLError.locations);
+  });
+
+  // Access the original GraphQL result
+  console.log(error.result);
+}
+```
+
+## Providing a custom message formatter
+
+By default, `CombinedGraphQLErrors` formats the `message` property by joining each error's `message` field with a newline. If you'd like to customize the format of the `message`, such as changing the delimiter or adding a message prefix, override the static `formatMessage` method.
+
+The following example demonstrates how to format the error message by joining each error with a comma.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+CombinedGraphQLErrors.formatMessage = (errors) => {
+  return errors.map((error) => error.message).join(", ");
+};
+```
+
+See the [`formatMessage`](#formatmessage) section for details about the parameters provided to the `formatMessage` function.
+
+<Note>
+  The message formatter needs to be configured before any operation is executed
+  by Apollo Client, otherwise the default message formatter will be used. We
+  recommend configuring the message formatter before initializing your
+  `ApolloClient` instance.
+</Note>
+
+### Using the default message formatter
+
+In some cases, you might want to format part of the message using the default message formatter. To do so, call the `defaultFormatMessage` function provided to the `options` argument of your message formatter.
+
+The following example prepends a string to the message and uses the default message formatter to format the error messages.
+
+```ts
+CombinedGraphQLErrors.formatMessage = (errors, { defaultFormatMessage }) => {
+  return `[GraphQL errors]: ${defaultFormatMessage(errors)}`;
+};
+```
+
+## Static methods
+
+### `is`
+
+A type guard that determines whether an error is a `CombinedGraphQLErrors` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
+
+```ts
+if (CombinedGraphQLErrors.is(error)) {
+  // TypeScript now knows `error` is a CombinedGraphQLErrors object
+  console.log(error.errors);
+}
+```
+
+See the [additional properties](#additional-properties) for more details about the available properties provided by the `CombinedGraphQLErrors` object.
+
+### `formatMessage`
+
+The function called by the `CombinedGraphQLErrors` constructor to provide a formatted message as the `message` property of the `CombinedGraphQLErrors` object. Follow the ["Providing a custom message formatter" guide](#providing-a-custom-message-formatter) to modify the format of the `message` property.
+
+The message formatter is a function that takes the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `errors`
+
+`ReadonlyArray<GraphQLFormattedError>`
+
+</td>
+<td>
+
+The array of errors from the `errors` field in the response.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `options`
+
+[`CombinedGraphQLErrors.MessageFormatterOptions`](#combinedgraphqlerrors.messageformatteroptions)
+
+</td>
+<td>
+
+Additional context that could be useful when formatting the message.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client!CombinedGraphQLErrors.MessageFormatterOptions:interface"
+  headingLevel={4}
+  displayName="CombinedGraphQLErrors.MessageFormatterOptions"
+/>
+
+## Additional properties
+
+These properties are specific to the `CombinedGraphQLErrors` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `errors`
+
+`ReadonlyArray<GraphQLFormattedError>`
+
+</td>
+<td>
+
+The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `data`
+
+`Record<string, unknown> | null | undefined`
+
+</td>
+<td>
+
+Partial data returned in the `data` field of the GraphQL response.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `extensions`
+
+`Record<string, unknown> | undefined`
+
+</td>
+<td>
+
+Extensions returned by the `extensions` field in the GraphQL response.
+
+</td>
+</tr>
+
+</tbody>
+</table>

@@ -279,7 +279,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
-  "ApolloConsumer",
   "ApolloProvider",
   "createQueryPreloader",
   "getApolloContext",
@@ -303,7 +302,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react with conditions [react-server] 1`] = `
 Array [
-  "ApolloConsumer",
   "ApolloProvider",
   "createQueryPreloader",
   "getApolloContext",

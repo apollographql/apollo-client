@@ -1,7 +1,8 @@
 /* eslint-disable import/order */
 
-import type { QueryReference, ApolloConsumerProps } from "@apollo/client";
+import type { QueryReference, QueryHookOptions } from "@apollo/client";
 const queryRef: QueryReference = {} as any;
+const queryOptions: QueryHookOptions = {} as any;
 
 import type { ApolloProviderProps } from "@apollo/client/react";
 const providerProps: ApolloProviderProps = {} as any;

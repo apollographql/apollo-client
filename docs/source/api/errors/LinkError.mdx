@@ -7,7 +7,7 @@ description: API reference
 
 A facade error type that keeps a registry of errors emitted from the link chain. `LinkError` is not an error class itself but rather a utility to detect whether an error originated from the link chain.
 
-This can be useful in cases where an Apollo Client API is wrapped by your own custom handling, which might throw its own errors, and you want to retry an operation at the call site when the error originates from the link chain.
+Use `LinkError` to distinguish between errors from the link chain and custom errors. This is helpful for retrying an operation at the call site only when the error originates from the link chain.
 
 The following example creates a custom wrapped query function that detects whether the query includes an operation name and throws if not.
 
@@ -32,13 +32,13 @@ try {
 }
 ```
 
-Here `LinkError` is used to detect whether the caught `error` originated from the link chain to detect whether the error was the custom error thrown by `runQuery`. Without `LinkError`, it would be difficult to distinguish the error objects apart without more complex code, such as a custom error class.
+Here `LinkError` detects whether the caught `error` originated from the link chain or is the custom error thrown by `runQuery`. This avoids the need for more complex code, such as a custom error class, to distinguish between error types.
 
 ## Static methods
 
 ### `is`
 
-A function guard that determines whether an error originated from the link chain. `is` does not provide any type narrowing.
+A function that determines whether an error originated from the link chain. `is` does not provide any type narrowing.
 
 ```ts
 if (LinkError.is(error)) {

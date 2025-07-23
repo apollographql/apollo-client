@@ -28,7 +28,7 @@ if (CombinedGraphQLErrors.is(error)) {
 
 ## Providing a custom message formatter
 
-By default, `CombinedGraphQLErrors` formats the `message` property by joining each error's `message` field with a newline. If you'd like to customize the format of the `message`, such as changing the delimiter or adding a message prefix, override the static `formatMessage` method.
+By default, `CombinedGraphQLErrors` formats the `message` property by joining each error's `message` field with a newline. To customize the format of the `message`, such as changing the delimiter or adding a message prefix, override the static `formatMessage` method.
 
 The following example demonstrates how to format the error message by joining each error with a comma.
 
@@ -44,14 +44,14 @@ See the [`formatMessage`](#formatmessage) section for details about the paramete
 
 <Note>
   The message formatter needs to be configured before any operation is executed
-  by Apollo Client; otherwise, the default message formatter is used. We
+  by Apollo Client, otherwise the default message formatter is used. We
   recommend configuring the message formatter before initializing your
   `ApolloClient` instance.
 </Note>
 
 ### Using the default message formatter
 
-In some cases, you might want to format part of the message using the default message formatter. To do so, call the `defaultFormatMessage` function provided to the `options` argument of your message formatter.
+To format part of the message using the default message formatter, call the `defaultFormatMessage` function provided to the `options` argument of your message formatter.
 
 The following example prepends a string to the message and uses the default message formatter to format the error messages.
 
@@ -117,7 +117,7 @@ The array of errors from the `errors` field in the response.
 </td>
 <td>
 
-Additional context that could be useful when formatting the message.
+Provides additional context for formatting the message.
 
 </td>
 </tr>

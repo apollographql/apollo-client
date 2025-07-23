@@ -40,15 +40,12 @@ export namespace LocalState {
         variables: OperationVariables;
     }
     // Warning: (ae-forgotten-export) The symbol "MaybeRequireContextFunction" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     export type Options<TResolvers extends Resolvers = Resolvers, TContext = DefaultContext> = {
         context?: ContextFunction<TContext>;
         resolvers?: TResolvers;
     } & MaybeRequireContextFunction<TContext>;
     // (undocumented)
     export type Path = Array<string | number>;
-    // (undocumented)
     export type Resolver<TResult = unknown, TParent = unknown, TContext = DefaultContext, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
         requestContext: TContext;
         client: ApolloClient;
@@ -58,7 +55,6 @@ export namespace LocalState {
         fragmentMap: FragmentMap;
         path: Path;
     }) => TResult | Promise<TResult>;
-    // (undocumented)
     export interface Resolvers<TContext = any> {
         // (undocumented)
         [typename: string]: {
@@ -84,7 +80,7 @@ export namespace LocalState {
 
 // Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
@@ -93,7 +89,6 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         resolvers: TResolvers;
     }
     ]);
-    // (undocumented)
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
     execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {

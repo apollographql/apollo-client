@@ -9,7 +9,6 @@ import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { Operation } from '@apollo/client/link';
-import type { Prettify } from '@apollo/client/utilities/internal';
 
 // @public (undocumented)
 interface BaseOptions {
@@ -20,14 +19,6 @@ interface BaseOptions {
     // (undocumented)
     useGETForHashedQueries?: boolean;
 }
-
-// @public (undocumented)
-type CallbackOptions = {
-    error: ErrorLike;
-    operation: Operation;
-    meta: ErrorMeta;
-    result?: FormattedExecutionResult;
-};
 
 // @public @deprecated (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
@@ -44,7 +35,21 @@ type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<str
 // @public (undocumented)
 export namespace PersistedQueryLink {
     // (undocumented)
-    export type DisableFunctionOptions = Prettify<CallbackOptions>;
+    export interface CallbackOptions {
+        // (undocumented)
+        error: ErrorLike;
+        // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        meta: ErrorMeta;
+        // (undocumented)
+        operation: Operation;
+        // (undocumented)
+        result?: FormattedExecutionResult;
+    }
+    // (undocumented)
+    export interface DisableFunctionOptions extends CallbackOptions {
+    }
     // (undocumented)
     export interface GenerateHashOptions extends BaseOptions {
         // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
@@ -56,10 +61,9 @@ export namespace PersistedQueryLink {
     }
     // (undocumented)
     export type Options = SHA256Options | GenerateHashOptions;
-    // Warning: (ae-forgotten-export) The symbol "CallbackOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    export type RetryFunctionOptions = Prettify<CallbackOptions>;
+    export interface RetryFunctionOptions extends CallbackOptions {
+    }
     // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -71,7 +75,6 @@ export namespace PersistedQueryLink {
         // (undocumented)
         sha256: SHA256Function;
     }
-        {};
 }
 
 // @public (undocumented)
@@ -86,10 +89,6 @@ type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export const VERSION = 1;
-
-// Warnings were encountered during analysis:
-//
-// src/link/persisted-queries/index.ts:38:3 - (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

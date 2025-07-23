@@ -10,8 +10,7 @@ import type {
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
 } from "./internal/types.js";
-
-export namespace GraphQLCodegenDataMasking {
+export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
     Masked: HKTImplementation.Masked;
     MaskedDocumentNode: HKTImplementation.MaskedDocumentNode;

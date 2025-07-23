@@ -13,8 +13,8 @@ import { Observable } from "rxjs";
 
 import type {
   DataState,
-  OperationVariables,
   DataValue,
+  OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
 import {

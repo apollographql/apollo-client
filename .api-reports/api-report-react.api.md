@@ -704,7 +704,6 @@ namespace OverridableTypes {
         // (undocumented)
         return: this["arg1"];
     }
-        {};
 }
 
 export { PreloadedQueryRef }
@@ -1866,17 +1865,17 @@ type WatchQueryFetchPolicy_2 = FetchPolicy | "cache-and-network" | "standby";
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:174:5 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:177:5 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:177:5 - (ae-forgotten-export) The symbol "InternalRefetchQueriesInclude" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:187:5 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:190:5 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:193:5 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:199:5 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:236:5 - (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "WatchQueryFetchPolicy_2" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:360:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:372:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:172:5 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:175:5 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:175:5 - (ae-forgotten-export) The symbol "InternalRefetchQueriesInclude" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:185:5 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:188:5 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:191:5 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:197:5 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:234:5 - (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:355:5 - (ae-forgotten-export) The symbol "WatchQueryFetchPolicy_2" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:358:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:370:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:236:5 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts

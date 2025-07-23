@@ -41,6 +41,8 @@ const delModifier: Modifier<any> = () => DELETE;
 const INVALIDATE = {} as InvalidateModifier;
 
 export abstract class EntityStore implements NormalizedCache {
+  public declare static Root: typeof Root;
+
   protected data: NormalizedCacheObject = {};
 
   constructor(
@@ -695,45 +697,40 @@ export function maybeDependOnExistenceOfEntity(
   }
 }
 
-export namespace EntityStore {
-  // Refer to this class as EntityStore.Root outside this namespace.
-  export class Root extends EntityStore {
-    constructor({
-      policies,
-      resultCaching = true,
-      seed,
-    }: {
-      policies: Policies;
-      resultCaching?: boolean;
-      seed?: NormalizedCacheObject;
-    }) {
-      super(policies, new CacheGroup(resultCaching));
-      if (seed) this.replace(seed);
-    }
+class Root extends EntityStore {
+  constructor({
+    policies,
+    resultCaching = true,
+    seed,
+  }: {
+    policies: Policies;
+    resultCaching?: boolean;
+    seed?: NormalizedCacheObject;
+  }) {
+    super(policies, new CacheGroup(resultCaching));
+    if (seed) this.replace(seed);
+  }
 
-    public readonly stump = new Stump(this);
+  public readonly stump = new Stump(this);
 
-    public addLayer(
-      layerId: string,
-      replay: (layer: EntityStore) => any
-    ): Layer {
-      // Adding an optimistic Layer on top of the Root actually adds the Layer
-      // on top of the Stump, so the Stump always comes between the Root and
-      // any Layer objects that we've added.
-      return this.stump.addLayer(layerId, replay);
-    }
+  public addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer {
+    // Adding an optimistic Layer on top of the Root actually adds the Layer
+    // on top of the Stump, so the Stump always comes between the Root and
+    // any Layer objects that we've added.
+    return this.stump.addLayer(layerId, replay);
+  }
 
-    public removeLayer(): Root {
-      // Never remove the root layer.
-      return this;
-    }
+  public removeLayer(): Root {
+    // Never remove the root layer.
+    return this;
+  }
 
-    public readonly storageTrie = new Trie<StorageType>();
-    public getStorage(): StorageType {
-      return this.storageTrie.lookupArray(arguments);
-    }
+  public readonly storageTrie = new Trie<StorageType>();
+  public getStorage(): StorageType {
+    return this.storageTrie.lookupArray(arguments);
   }
 }
+EntityStore.Root = Root;
 
 // Not exported, since all Layer instances are created by the addLayer method
 // of the EntityStore.Root class.
@@ -840,7 +837,7 @@ class Layer extends EntityStore {
 // no optimistic layers are currently active. The stump.group CacheGroup object
 // is shared by any/all Layer objects added on top of the Stump.
 class Stump extends Layer {
-  constructor(root: EntityStore.Root) {
+  constructor(root: Root) {
     super(
       "EntityStore.Stump",
       root,

@@ -386,6 +386,10 @@ export abstract class EntityStore implements NormalizedCache {
     replace(newData: NormalizedCacheObject | null): void;
     // (undocumented)
     retain(rootId: string): number;
+    // Warning: (ae-forgotten-export) The symbol "Root" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    static Root: typeof Root;
     // (undocumented)
     get supportsResultCaching(): boolean;
     // (undocumented)
@@ -394,30 +398,6 @@ export abstract class EntityStore implements NormalizedCache {
     //
     // (undocumented)
     toReference: ToReferenceFunction;
-}
-
-// @public (undocumented)
-export namespace EntityStore {
-    // (undocumented)
-    export class Root extends EntityStore {
-        constructor({ policies, resultCaching, seed, }: {
-            policies: Policies;
-            resultCaching?: boolean;
-            seed?: NormalizedCacheObject;
-        });
-        // (undocumented)
-        addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
-        // (undocumented)
-        getStorage(): StorageType;
-        // (undocumented)
-        removeLayer(): Root;
-        // (undocumented)
-        readonly storageTrie: Trie<StorageType>;
-        // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        readonly stump: Stump;
-    }
 }
 
 // @public (undocumented)
@@ -874,6 +854,27 @@ export type ReadQueryOptions = {
 export { Reference }
 
 // @public (undocumented)
+class Root extends EntityStore {
+    constructor({ policies, resultCaching, seed, }: {
+        policies: Policies;
+        resultCaching?: boolean;
+        seed?: NormalizedCacheObject;
+    });
+    // (undocumented)
+    addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
+    // (undocumented)
+    getStorage(): StorageType;
+    // (undocumented)
+    removeLayer(): Root;
+    // (undocumented)
+    readonly storageTrie: Trie<StorageType>;
+    // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly stump: Stump;
+}
+
+// @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
@@ -890,7 +891,7 @@ export { StoreValue }
 
 // @public (undocumented)
 class Stump extends Layer {
-    constructor(root: EntityStore.Root);
+    constructor(root: Root);
     // (undocumented)
     merge(older: string | StoreObject, newer: string | StoreObject): void;
     // (undocumented)

@@ -6,7 +6,7 @@ import type { ApolloCache } from "../cache.js";
 import type { AllFieldsModifier, Modifiers } from "./common.js";
 import { DataProxy } from "./DataProxy.js";
 
-export namespace Cache {
+export declare namespace Cache {
   export type WatchCallback<TData = unknown> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>

@@ -11,7 +11,7 @@ import {
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export namespace ErrorLink {
+export declare namespace ErrorLink {
   /**
    * Callback to be triggered when an error occurs within the link stack.
    */

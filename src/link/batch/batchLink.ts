@@ -8,7 +8,7 @@ import { OperationBatcher } from "./batching.js";
 export type { BatchableRequest, BatchHandler } from "./batching.js";
 export { OperationBatcher } from "./batching.js";
 
-export namespace BatchLink {
+export declare namespace BatchLink {
   export interface Options {
     /**
      * The interval at which to batch, in milliseconds.

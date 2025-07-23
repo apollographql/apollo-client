@@ -880,6 +880,10 @@ abstract class EntityStore implements NormalizedCache {
     replace(newData: NormalizedCacheObject | null): void;
     // (undocumented)
     retain(rootId: string): number;
+    // Warning: (ae-forgotten-export) The symbol "Root" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    static Root: typeof Root;
     // (undocumented)
     get supportsResultCaching(): boolean;
     // (undocumented)
@@ -888,30 +892,6 @@ abstract class EntityStore implements NormalizedCache {
     //
     // (undocumented)
     toReference: ToReferenceFunction;
-}
-
-// @public (undocumented)
-namespace EntityStore {
-    // (undocumented)
-    class Root extends EntityStore {
-        constructor({ policies, resultCaching, seed, }: {
-            policies: Policies;
-            resultCaching?: boolean;
-            seed?: NormalizedCacheObject;
-        });
-        // (undocumented)
-        addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
-        // (undocumented)
-        getStorage(): StorageType;
-        // (undocumented)
-        removeLayer(): Root;
-        // (undocumented)
-        readonly storageTrie: Trie<StorageType>;
-        // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        readonly stump: Stump;
-    }
 }
 
 // @public
@@ -1219,7 +1199,6 @@ namespace GraphQLCodegenDataMasking {
     // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
     type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
-        {};
 }
 
 // @public (undocumented)
@@ -2123,7 +2102,6 @@ namespace OverridableTypes {
         // (undocumented)
         return: this["arg1"];
     }
-        {};
 }
 
 // @public (undocumented)
@@ -2447,6 +2425,27 @@ export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
 };
 
 // @public (undocumented)
+class Root extends EntityStore {
+    constructor({ policies, resultCaching, seed, }: {
+        policies: Policies;
+        resultCaching?: boolean;
+        seed?: NormalizedCacheObject;
+    });
+    // (undocumented)
+    addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
+    // (undocumented)
+    getStorage(): StorageType;
+    // (undocumented)
+    removeLayer(): Root;
+    // (undocumented)
+    readonly storageTrie: Trie<StorageType>;
+    // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly stump: Stump;
+}
+
+// @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
@@ -2538,7 +2537,7 @@ export type StoreValue = number | string | string[] | Reference | Reference[] | 
 
 // @public (undocumented)
 class Stump extends Layer {
-    constructor(root: EntityStore.Root);
+    constructor(root: Root);
     // (undocumented)
     merge(older: string | StoreObject, newer: string | StoreObject): void;
     // (undocumented)
@@ -2741,8 +2740,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:166:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:360:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:164:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:358:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:359:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

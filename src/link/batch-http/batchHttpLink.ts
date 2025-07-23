@@ -21,7 +21,7 @@ import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
-export namespace BatchHttpLink {
+export declare namespace BatchHttpLink {
   export type Options = Pick<
     BatchLink.Options,
     "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"

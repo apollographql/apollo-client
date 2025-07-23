@@ -71,9 +71,7 @@ export declare namespace ApolloClient {
 
   export interface Options {
     /**
-     * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
-     *
-     * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+     * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
      */
     link: ApolloLink;
     /**

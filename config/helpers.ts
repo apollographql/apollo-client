@@ -142,7 +142,7 @@ export async function withPseudoNodeModules<T>(fn: () => T) {
 export function frameComment(text: string) {
   const framed = text
     .split("\n")
-    .map((t) => t.trim())
+    .map((t) => (t.match(/\s+\*/) ? t.trim() : t))
     .map((t) => (!t.startsWith("*") ? "* " + t : t))
     .join("\n")
     .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");

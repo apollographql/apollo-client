@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import { join } from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
+import { format, join, parse } from "node:path";
 import { parseArgs } from "node:util";
 import * as path from "path";
 
@@ -84,10 +85,36 @@ try {
       })
     );
 
-    await buildReport("@apollo/client", entryPointFile, "docModel");
+    const result = await buildReport(
+      "@apollo/client",
+      entryPointFile,
+      "docModel"
+    );
     if (process.exitCode === 50) {
       process.exitCode = 0; // if there were only warnings, we still want to exit with 0
     }
+
+    console.log("Creating file with all possible canonical references...");
+    const canonicalReferences = new Set<string>();
+    const file = await readFile(result.extractorConfig.apiJsonFilePath, "utf8");
+    JSON.parse(file, (key, value) => {
+      if (
+        key === "canonicalReference" &&
+        typeof value === "string" &&
+        value.startsWith("@apollo/client")
+      ) {
+        canonicalReferences.add(value);
+      }
+      return undefined;
+    });
+    await writeFile(
+      format({
+        ...parse(result.extractorConfig.apiJsonFilePath),
+        base: "canonical-references.json",
+      }),
+      JSON.stringify([...canonicalReferences.values()], null, 2),
+      "utf8"
+    );
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
@@ -185,4 +212,5 @@ async function buildReport(
       );
     }
   }
+  return extractorResult;
 }

@@ -1,5 +1,6 @@
 import { Streaming } from "@apollo/client";
-import { HKT, DeepPartial } from "@apollo/client/utilities";
+import type { HKT } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 
 // This type override is used in tests only so we can differentiate between
 // `TData` and `Streaming<TData>` in our type tests. This file doesn't make it

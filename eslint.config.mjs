@@ -21,6 +21,7 @@ import js from "@eslint/js";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import _import from "eslint-plugin-import";
+import * as mdx from "eslint-plugin-mdx";
 import reactCompiler from "eslint-plugin-react-compiler";
 import globals from "globals";
 
@@ -39,15 +40,18 @@ const compat = new FlatCompat({
  */
 const runExtendedRules = !!process.env.EXTENDED_RULES;
 
+const tsPlugins = {
+  import: fixupPluginRules(_import),
+  "local-rules": {
+    rules: localRules,
+  },
+  "@typescript-eslint": typescriptEslint,
+};
+
 export default [
   {
-    plugins: {
-      "@typescript-eslint": typescriptEslint,
-      import: fixupPluginRules(_import),
-      "local-rules": {
-        rules: localRules,
-      },
-    },
+    files: ["**/*.ts", "**/*.tsx"],
+    plugins: tsPlugins,
     ignores: ["tests.codegen.ts"],
 
     languageOptions: {
@@ -139,6 +143,7 @@ export default [
 
     plugins: {
       "react-compiler": reactCompiler,
+      ...tsPlugins,
     },
 
     languageOptions: {
@@ -192,8 +197,8 @@ export default [
       ],
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
-
       "local-rules/require-using-disposable": "error",
+      "local-rules/valid-inherit-doc": "error",
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({
@@ -214,6 +219,7 @@ export default [
       "**/?(*.)+(test).[jt]sx",
     ],
 
+    plugins: tsPlugins,
     languageOptions: {
       ecmaVersion: 5,
       sourceType: "script",
@@ -255,5 +261,22 @@ export default [
     rules: {
       "local-rules/no-relative-imports": "off",
     },
+  },
+  {
+    basePath: "docs",
+    ...mdx.flat,
+    plugins: {
+      ...mdx.flat.plugins,
+      "local-rules": {
+        rules: localRules,
+      },
+    },
+    rules: {
+      "local-rules/mdx-valid-canonical-references": "error",
+    },
+  },
+  {
+    basePath: "docs",
+    ...mdx.flatCodeBlocks,
   },
 ];

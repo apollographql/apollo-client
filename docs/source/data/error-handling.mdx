@@ -52,7 +52,7 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
 
 </ExpansionPanel>
 
-Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a `CombinedGraphQLErrors` error instance.
+Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a [`CombinedGraphQLErrors`](#combinedgraphqlerrors) error instance.
 
 <Note>
   If a GraphQL error prevents your server from executing your operation at all,
@@ -72,6 +72,8 @@ These are errors encountered while attempting to communicate with your GraphQL s
 When a network error occurs, Apollo Client adds it to the `error` field returned by the `useQuery` hook (or whichever operation hook you used) as the error that was returned by the link chain (typically an `Error` instance).
 
 You can add retry logic and other advanced network error handling to your application with [Apollo Link](#advanced-error-handling-with-apollo-link).
+
+Learn more about the available errors in the ["Error classes"](#error-classes) section.
 
 ## GraphQL error policies
 
@@ -233,3 +235,40 @@ See the [documentation for `RetryLink`](../api/link/apollo-link-retry/).
 ### `ErrorLink` options
 
 See the [`ErrorLink` API reference](../api/link/apollo-link-error/).
+
+## Type checking errors
+
+All error classes provide a static `is()` method to determine if an error is
+that type of error. The `is()` method type narrows the error to allow access on
+additional properties for each error type in a type-safe way:
+
+```ts
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  LocalStateError,
+  ServerError,
+  ServerParseError,
+  UnconventionalError,
+} from "@apollo/client/errors";
+
+// In your error handling logic
+function handleError(error: unknown) {
+  if (CombinedGraphQLErrors.is(error)) {
+    // Handle GraphQL errors
+  } else if (CombinedProtocolErrors.is(error)) {
+    // Handle multipart subscription protocol errors
+  } else if (LocalStateError.is(error)) {
+    // Handle errors thrown by the `LocalState` class
+  } else if (ServerError.is(error)) {
+    // Handle server HTTP errors
+  } else if (ServerParseError.is(error)) {
+    // Handle parse errors
+  } else if (UnconventionalError.is(error)) {
+    // Handle errors thrown by irregular types
+  } else {
+    // Handle other errors
+  }
+}
+```
+

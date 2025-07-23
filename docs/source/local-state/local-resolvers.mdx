@@ -181,33 +181,29 @@ npm install -D @apollo/client-graphql-codegen
 
 Add the local-state plugin to your `codegen.ts` configuration. It's recommended to use a separate schema file containing only your local fields to avoid generating resolver types for your entire remote schema:
 
-```ts title="codegen.ts"
-import type { CodegenConfig } from '@graphql-codegen/cli';
-import type { LocalStatePluginConfig } from '@apollo/client-graphql-codegen/local-state';
+```ts title="codegen.ts"import type { CodegenConfig } from "@graphql-codegen/cli";
+import type { LocalStatePluginConfig } from "@apollo/client-graphql-codegen/local-state";
 
-  const config: CodegenConfig = {
+const config: CodegenConfig = {
   // ... your existing configuration
-    generates: {
+  generates: {
     // ... your existing generates
-    './src/__generated__/local-resolvers.ts': {
-      schema: ['./src/local-schema.graphql'],
-      plugins: [
-        'typescript',
-        '@apollo/client-graphql-codegen/local-state',
-        ],
-        config: {
-          // Ensures you return a `__typename` for any `@client` fields that
-          // return object or array types
-          nonOptionalTypename: true,
+    "./src/__generated__/local-resolvers.ts": {
+      schema: ["./src/local-schema.graphql"],
+      plugins: ["typescript", "@apollo/client-graphql-codegen/local-state"],
+      config: {
+        // Ensures you return a `__typename` for any `@client` fields that
+        // return object or array types
+        nonOptionalTypename: true,
         // Required if your local schema extends existing schema types
-        baseTypesPath: './src/__generated__/graphql',
-          // If you provide a `context` function to customize the context value,
+        baseTypesPath: "./src/__generated__/graphql",
+        // If you provide a `context` function to customize the context value,
         // provide the path or type here
-        contextType: './src/context#MyContextType',
-        } satisfies LocalStatePluginConfig,
-      },
+        contextType: "./src/context#MyContextType",
+      } satisfies LocalStatePluginConfig,
     },
-  };
+  },
+};
 
 export default config;
 ```
@@ -240,39 +236,36 @@ After running the code generator, you can use the generated `Resolvers` type wit
 import { LocalState } from "@apollo/client/local-state";
 import type { Resolvers } from "./src/__generated__/local-resolvers";
 
-const localState =
-  new LocalState() <
-  Resolvers >
-  {
-    resolvers: {
-      Query: {
-        isLoggedIn: () => {
-          return !!localStorage.getItem("token");
-        },
-        cartItems: () => {
-          return JSON.parse(localStorage.getItem("cart") || "[]");
-        },
+const localState = new LocalState<Resolvers>({
+  resolvers: {
+    Query: {
+      isLoggedIn: () => {
+        return !!localStorage.getItem("token");
       },
-      Mutation: {
-        login: (_, { token }) => {
-          localStorage.setItem("token", token);
-          return true;
-        },
-        addToCart: (_, { item }) => {
-          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-          cart.push(item);
-          localStorage.setItem("cart", JSON.stringify(cart));
-          return cart;
-        },
-      },
-      Product: {
-        isInCart: (product) => {
-          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-          return cart.includes(product.id);
-        },
+      cartItems: () => {
+        return JSON.parse(localStorage.getItem("cart") || "[]");
       },
     },
-  };
+    Mutation: {
+      login: (_, { token }) => {
+        localStorage.setItem("token", token);
+        return true;
+      },
+      addToCart: (_, { item }) => {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+        cart.push(item);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        return cart;
+      },
+    },
+    Product: {
+      isInCart: (product) => {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+        return cart.includes(product.id);
+      },
+    },
+  },
+});
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),

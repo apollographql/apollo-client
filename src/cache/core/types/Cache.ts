@@ -67,12 +67,14 @@ export declare namespace Cache {
     result: Unmasked<TData>;
 
     /**
-     * Whether to notify query watchers (default: true).
+     * Whether to notify query watchers.
+     * @defaultValue true
      */
     broadcast?: boolean;
     /**
      * When true, ignore existing field data rather than merging it with
-     * incoming data (default: false).
+     * incoming data.
+     * @defaultValue false
      */
     overwrite?: boolean;
   }
@@ -160,7 +162,7 @@ export declare namespace Cache {
   > {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
-     * string tag from `graphql-tag`. The query will be used to determine the
+     * string. The query will be used to determine the
      * shape of the data to be read.
      */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -172,19 +174,20 @@ export declare namespace Cache {
 
     /**
      * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
-     * root query object. This property makes writeQuery capable of writing data
-     * to any object in the cache.
+     * root query object. This property makes readQuery capable of reading data
+     * from any object in the cache.
      */
     id?: string;
     /**
      * Whether to return incomplete data rather than null.
-     * Defaults to false.
+     * @defaultValue false
      */
     returnPartialData?: boolean;
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
      * this named option is provided, the optimistic parameter of the
-     * readQuery method can be omitted. Defaults to false.
+     * readQuery method can be omitted. 
+     * @defaultValue false
      */
     optimistic?: boolean;
   }
@@ -195,7 +198,7 @@ export declare namespace Cache {
   > {
     /**
      * The root id to be used. This id should take the same form as the
-     * value returned by your `dataIdFromObject` function. If a value with your
+     * value returned by the `cache.identify` function. If a value with your
      * id does not exist in the store, `null` will be returned.
      */
     id?: string;
@@ -204,7 +207,8 @@ export declare namespace Cache {
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
      * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
+     * document then you must also specify `fragmentName` to specify which 
+     * fragment is the root fragment.
      */
     fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -222,13 +226,14 @@ export declare namespace Cache {
 
     /**
      * Whether to return incomplete data rather than null.
-     * Defaults to false.
+     * @defaultValue false
      */
     returnPartialData?: boolean;
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
      * this named option is provided, the optimistic parameter of the
-     * readQuery method can be omitted. Defaults to false.
+     * readFragment method can be omitted. 
+     * @defaultValue false
      */
     optimistic?: boolean;
   }
@@ -257,16 +262,18 @@ export declare namespace Cache {
     id?: string;
 
     /**
-     * The data you will be writing to the store.
+     * The data to write to the store.
      */
     data: Unmasked<TData>;
     /**
-     * Whether to notify query watchers (default: true).
+     * Whether to notify query watchers.
+     * @defaultValue true
      */
     broadcast?: boolean;
     /**
      * When true, ignore existing field data rather than merging it with
-     * incoming data (default: false).
+     * incoming data.
+     * @defaultValue false
      */
     overwrite?: boolean;
   }
@@ -277,16 +284,17 @@ export declare namespace Cache {
   > {
     /**
      * The root id to be used. This id should take the same form as the
-     * value returned by your `dataIdFromObject` function. If a value with your
+     * value returned by the `cache.identify` function. If a value with your
      * id does not exist in the store, `null` will be returned.
      */
     id?: string;
 
     /**
-     * A GraphQL document created using the `gql` template string tag from
-     * `graphql-tag` with one or more fragments which will be used to determine
+     * A GraphQL document created using the `gql` template string
+     * with one or more fragments which will be used to determine
      * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
+     * document then you must also specify `fragmentName` to specify specify which 
+     * fragment is the root fragment.
      */
     fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -302,16 +310,18 @@ export declare namespace Cache {
      */
     variables?: TVariables;
     /**
-     * The data you will be writing to the store.
+     * The data to write to the store.
      */
     data: Unmasked<TData>;
     /**
-     * Whether to notify query watchers (default: true).
+     * Whether to notify query watchers.
+     * @defaultValue true
      */
     broadcast?: boolean;
     /**
      * When true, ignore existing field data rather than merging it with
-     * incoming data (default: false).
+     * incoming data.
+     * @defaultValue false
      */
     overwrite?: boolean;
   }

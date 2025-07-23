@@ -1142,7 +1142,8 @@ export class ApolloClient {
    *
    * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
-   */ public readFragment<
+   */ 
+  public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(

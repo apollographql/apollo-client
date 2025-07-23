@@ -11,6 +11,7 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { Observable } from 'rxjs';
 import type { OperationTypeNode } from 'graphql';
+import type { OperationVariables } from '@apollo/client';
 
 // @public (undocumented)
 export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
@@ -75,7 +76,7 @@ export type FetchResult<TData = Record<string, any>, TExtensions = Record<string
 export const from: typeof ApolloLink.from;
 
 // @public (undocumented)
-export interface GraphQLRequest<TVariables = Record<string, any>> {
+export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
     // (undocumented)
     context?: DefaultContext;
     // (undocumented)

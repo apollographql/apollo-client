@@ -182,6 +182,7 @@ export declare namespace ObservableQuery {
   };
 
   export interface SubscribeToMoreOptions<
+    // eslint-disable-next-line local-rules/tdata-tvariables-order
     TData = unknown,
     TSubscriptionVariables extends OperationVariables = OperationVariables,
     TSubscriptionData = TData,

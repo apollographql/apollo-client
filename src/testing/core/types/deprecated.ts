@@ -1,13 +1,16 @@
+import type { OperationVariables } from "@apollo/client";
+
 import type { MockLink } from "../mocking/mockLink.js";
 
 /** @deprecated Use `MockLink.MockedRequest` instead */
-export type MockedRequest<TVariables = Record<string, any>> =
-  MockLink.MockedRequest<TVariables>;
+export type MockedRequest<
+  TVariables extends OperationVariables = Record<string, any>,
+> = MockLink.MockedRequest<TVariables>;
 
 /** @deprecated Use `MockLink.MockedResponse` instead */
 export type MockedResponse<
   TData = Record<string, any>,
-  TVariables = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
 > = MockLink.MockedResponse<TData, TVariables>;
 
 /** @deprecated Use `MockLink.Options` instead */

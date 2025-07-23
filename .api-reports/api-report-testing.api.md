@@ -9,6 +9,7 @@ import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
+import type { OperationVariables } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
 // @internal @deprecated (undocumented)
@@ -17,10 +18,10 @@ type CovariantUnaryFunction<out Arg, out Ret> = {
 }["fn"];
 
 // @public @deprecated (undocumented)
-export type MockedRequest<TVariables = Record<string, any>> = MockLink.MockedRequest<TVariables>;
+export type MockedRequest<TVariables extends OperationVariables = Record<string, any>> = MockLink.MockedRequest<TVariables>;
 
 // @public @deprecated (undocumented)
-export type MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> = MockLink.MockedResponse<TData, TVariables>;
+export type MockedResponse<TData = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> = MockLink.MockedResponse<TData, TVariables>;
 
 // @public (undocumented)
 export namespace MockLink {
@@ -34,7 +35,7 @@ export namespace MockLink {
     // (undocumented)
     export type DelayFunction = (operation: Operation) => number;
     // (undocumented)
-    export interface MockedRequest<TVariables = Record<string, any>> {
+    export interface MockedRequest<TVariables extends OperationVariables = OperationVariables> {
         // (undocumented)
         query: DocumentNode;
         // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
@@ -43,7 +44,7 @@ export namespace MockLink {
         variables?: TVariables | VariableMatcher<TVariables>;
     }
     // (undocumented)
-    export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
+    export interface MockedResponse<out TData = Record<string, any>, out TVariables extends OperationVariables = Record<string, any>> {
         // (undocumented)
         delay?: number | MockLink.DelayFunction;
         // (undocumented)

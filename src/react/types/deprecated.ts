@@ -105,10 +105,10 @@ export type OnSubscriptionDataOptions<TData = unknown> =
   useSubscription.OnSubscriptionDataOptions<TData>;
 
 /** @deprecated Use `useFragment.Options` instead */
-export type UseFragmentOptions<TData, TVariables> = useFragment.Options<
+export type UseFragmentOptions<
   TData,
-  TVariables
->;
+  TVariables extends OperationVariables,
+> = useFragment.Options<TData, TVariables>;
 
 /** @deprecated Use `useFragment.Result` instead */
 export type UseFragmentResult<TData> = useFragment.Result<TData>;

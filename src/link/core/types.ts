@@ -6,7 +6,11 @@ import type {
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { ApolloClient, DefaultContext } from "@apollo/client";
+import type {
+  ApolloClient,
+  DefaultContext,
+  OperationVariables,
+} from "@apollo/client";
 
 export type { DocumentNode };
 
@@ -20,7 +24,9 @@ export interface ApolloPayloadResult<
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
-export interface GraphQLRequest<TVariables = Record<string, any>> {
+export interface GraphQLRequest<
+  TVariables extends OperationVariables = Record<string, any>,
+> {
   query: DocumentNode;
   variables?: TVariables;
   operationName?: string;

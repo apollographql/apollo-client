@@ -322,7 +322,7 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 
 export type MutationUpdaterFunction<
   TData,
-  TVariables,
+  TVariables extends OperationVariables,
   TCache extends ApolloCache,
 > = (
   cache: TCache,

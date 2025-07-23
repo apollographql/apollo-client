@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
+import type { OperationVariables } from "@apollo/client";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
@@ -46,7 +47,9 @@ export declare namespace MockLink {
     delay?: MockLink.Delay;
   }
 
-  export interface MockedRequest<TVariables = Record<string, any>> {
+  export interface MockedRequest<
+    TVariables extends OperationVariables = OperationVariables,
+  > {
     query: DocumentNode;
     variables?: TVariables | VariableMatcher<TVariables>;
   }
@@ -54,7 +57,7 @@ export declare namespace MockLink {
   export interface MockedResponse<
     // @ts-ignore
     out TData = Record<string, any>,
-    out TVariables = Record<string, any>,
+    out TVariables extends OperationVariables = Record<string, any>,
   > {
     request: MockedRequest<TVariables>;
     maxUsageCount?: number;

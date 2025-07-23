@@ -25,10 +25,10 @@ import type { useSuspenseQuery } from '@apollo/client/react';
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function assertWrappedQueryRef<TData, TVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates>): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates>;
+export function assertWrappedQueryRef<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates>): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates>;
 
 // @public (undocumented)
-export function assertWrappedQueryRef<TData, TVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates> | undefined | null): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates> | undefined | null;
+export function assertWrappedQueryRef<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates> | undefined | null): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates> | undefined | null;
 
 // @public (undocumented)
 export type CacheKey = [
@@ -174,7 +174,7 @@ type ObservedOptions = Pick<ApolloClient.WatchQueryOptions, (typeof OBSERVED_CHA
 const PRELOADED_QUERY_REF_BRAND: unique symbol;
 
 // @public
-export interface PreloadedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
+export interface PreloadedQueryRef<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
     // @internal @deprecated (undocumented)
     [PRELOADED_QUERY_REF_BRAND]: typeof PRELOADED_QUERY_REF_BRAND;
 }
@@ -195,7 +195,7 @@ export interface QueryKey {
 }
 
 // @public
-export interface QueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> {
+export interface QueryRef<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> {
     // @internal @deprecated (undocumented)
     [QUERY_REF_BRAND]?(variables: TVariables): {
         data: TData;
@@ -265,7 +265,7 @@ interface WrappableHooks {
 }
 
 // @internal @deprecated
-interface WrappedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
+interface WrappedQueryRef<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
     // @deprecated (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData, TStates>;
     // @deprecated (undocumented)

@@ -528,7 +528,7 @@ export class QueryManager {
     return entry;
   }
 
-  public getVariables<TVariables>(
+  public getVariables<TVariables extends OperationVariables>(
     document: DocumentNode,
     variables?: TVariables
   ): TVariables {

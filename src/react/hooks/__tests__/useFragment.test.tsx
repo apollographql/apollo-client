@@ -23,6 +23,7 @@ import { Observable } from "rxjs";
 import type {
   DocumentNode,
   FetchResult,
+  OperationVariables,
   Reference,
   StoreObject,
   TypedDocumentNode,
@@ -2565,7 +2566,8 @@ describe.skip("Type Tests", () => {
     });
   });
 
-  test("UseFragmentOptions interface shape", <TData, TVariables>() => {
+  test("UseFragmentOptions interface shape", <TData, TVariables extends
+    OperationVariables>() => {
     expectTypeOf<
       useFragment.Options<TData, TVariables>
     >().branded.toEqualTypeOf<{

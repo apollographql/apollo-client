@@ -17,16 +17,6 @@ const transform: Transform = function transform(file, api) {
   );
 
   renameTypeSpecifierToNamespace(
-    "ApolloConsumerProps",
-    "ApolloConsumer.Props",
-    "@apollo/client"
-  );
-  renameTypeSpecifierToNamespace(
-    "ApolloConsumerProps",
-    "ApolloConsumer.Props",
-    "@apollo/client/react"
-  );
-  renameTypeSpecifierToNamespace(
     "ApolloProviderProps",
     "ApolloProvider.Props",
     "@apollo/client"

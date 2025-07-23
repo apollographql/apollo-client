@@ -167,17 +167,17 @@ export class InMemoryCache extends ApolloCache {
   }
 
   public read<TData = unknown>(
-    options: Cache.ReadFnOptions<TData, OperationVariables> & {
+    options: Cache.ReadOptions<TData, OperationVariables> & {
       returnPartialData: true;
     }
   ): TData | DeepPartial<TData> | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadFnOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables>
   ): TData | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadFnOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables>
   ): TData | DeepPartial<TData> | null {
     const {
       // Since read returns data or null, without any additional metadata

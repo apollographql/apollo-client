@@ -103,7 +103,7 @@ export abstract class ApolloCache {
   public abstract read<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.ReadFnOptions<TData, TVariables>): Unmasked<TData> | null;
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

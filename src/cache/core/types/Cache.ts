@@ -80,7 +80,7 @@ export declare namespace Cache {
   export interface DiffOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > extends Omit<ReadFnOptions<TData, TVariables>, "rootId"> {
+  > extends Omit<ReadOptions<TData, TVariables>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.

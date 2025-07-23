@@ -48,7 +48,7 @@ stringifiedVariables: string
 ];
 
 // @public (undocumented)
-interface FragmentKey {
+export interface FragmentKey {
     // (undocumented)
     __fragmentKey?: string;
 }
@@ -59,8 +59,6 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: string;
     }, options: FragmentReferenceOptions);
-    // Warning: (ae-forgotten-export) The symbol "FragmentKey" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     readonly key: FragmentKey;
     // Warning: (ae-forgotten-export) The symbol "Listener_2" needs to be exported by the entry point index.d.ts

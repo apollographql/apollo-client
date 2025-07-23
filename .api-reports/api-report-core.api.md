@@ -535,6 +535,11 @@ export type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Pr
 // @public (undocumented)
 export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClient.QueryOptions;
 
+// @public (undocumented)
+export namespace InternalTypes {
+    export type { NextFetchPolicyContext, QueryManager };
+}
+
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 

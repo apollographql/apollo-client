@@ -41,7 +41,7 @@ Here `LinkError` is used to detect whether the caught `error` originated from th
 A function guard that determines whether an error originated from the link chain. `is` does not provide any type narrowing.
 
 ```ts
-if (Link.is(error)) {
+if (LinkError.is(error)) {
   // The error originated from the link chain
   console.log("Got network error:", error.message);
 }

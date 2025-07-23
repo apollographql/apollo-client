@@ -40,7 +40,7 @@ This function is called after the GraphQL operation completes and execution is m
 
 ## Options
 
-The function you provide to the `ErrorLink` constructor is passed an object with the following fields:
+The function you provide to the `ErrorLink` constructor receives an object with the following fields:
 
 <InterfaceDetails
   canonicalReference="@apollo/client!ErrorLink.ErrorHandlerOptions:interface"
@@ -52,6 +52,6 @@ The function you provide to the `ErrorLink` constructor is passed an object with
 
 Errors are categorized based on their source:
 
-- **GraphQL errors**: When the server returns errors in the `errors` field of the response, they are wrapped in a `CombinedGraphQLErrors` instance. You can check for this using `CombinedGraphQLErrors.is(error)` and access the individual errors via `error.errors`.
+- **GraphQL errors**: When the server returns errors in the `errors` field of the response, they are wrapped in a `CombinedGraphQLErrors` instance. Check for this error type using `CombinedGraphQLErrors.is(error)` and access the individual errors via `error.errors`.
 
-- **Network errors**: When a link further down the chain calls the `error` callback on the observable (e.g., due to a network failure or a non-2xx HTTP response), the error is passed directly as the `error` parameter.
+- **Network errors**: When a link further down the chain calls the `error` callback on the observable (e.g., due to a network failure or a non-2xx HTTP response), the link passes the error directly as the `error` field.

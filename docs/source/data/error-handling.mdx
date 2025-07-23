@@ -2,6 +2,8 @@
 title: Handling operation errors
 ---
 
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
 ## Error types
@@ -52,7 +54,7 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
 
 </ExpansionPanel>
 
-Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a [`CombinedGraphQLErrors`](#combinedgraphqlerrors) error instance.
+Apollo Client then adds those errors to the `error` field returned by the `useQuery` hook (or whichever operation hook you used), wrapped as a [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors) error instance.
 
 <Note>
   If a GraphQL error prevents your server from executing your operation at all,
@@ -73,7 +75,47 @@ When a network error occurs, Apollo Client adds it to the `error` field returned
 
 You can add retry logic and other advanced network error handling to your application with [Apollo Link](#advanced-error-handling-with-apollo-link).
 
-Learn more about the available errors in the ["Error classes"](#error-classes) section.
+## Error classes
+
+Apollo Client provides a comprehensive set of error classes to help you identify and handle different types of errors that can occur during the lifecycle of a GraphQL application. These error classes help narrow down whether the error was a result of [GraphQL errors](#graphql-errors) or a [network error](#network-errors). All error classes extend the standard JavaScript `Error` class and provide additional context specific to their error type.
+
+These error classes are designed to give you precise information about what went wrong, whether it's a server-side GraphQL error, a network connectivity issue, or some other reason for the error.
+
+Learn more about individual error classes from [additional resources](#additional-resources).
+
+### Determing the error type with the `is` method
+
+Every error class provides a static `is` method that reliably determines whether an error is of that specific type. This method provides a more robust alternative to `instanceof` because it avoids false positives and negatives, such as errors constructed in another realm (see [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError) for more information.)
+
+```ts
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  LocalStateError,
+  ServerError,
+  ServerParseError,
+  UnconventionalError,
+} from "@apollo/client/errors";
+
+// In your error handling logic
+function handleError(error: unknown) {
+  if (CombinedGraphQLErrors.is(error)) {
+    // Handle GraphQL errors
+  } else if (CombinedProtocolErrors.is(error)) {
+    // Handle multipart subscription protocol errors
+  } else if (LocalStateError.is(error)) {
+    // Handle errors thrown by the `LocalState` class
+  } else if (ServerError.is(error)) {
+    // Handle server HTTP errors
+  } else if (ServerParseError.is(error)) {
+    // Handle parse errors
+  } else if (UnconventionalError.is(error)) {
+    // Handle errors thrown by irregular types
+  } else {
+    // Handle other errors
+  }
+}
+```
 
 ## GraphQL error policies
 
@@ -131,6 +173,165 @@ function ShowingSomeErrors() {
 ```
 
 This example uses the `all` error policy to render both partial data and error information whenever applicable.
+
+### Consuming errors based on the error policy
+
+Errors are consumed in different ways, depending on whether you're using a promise-based API, an observable-based API, or a React hook. The behavior varies based on the [error policy](#graphql-error-policies) you've configured.
+
+#### Promise-based APIs
+
+Promises returned by promise-based APIs, like `client.query` and `client.mutate`, handle errors differently depending on the error policy:
+
+##### `errorPolicy: "none"`
+
+The promise rejects when an error occurs. Use try-catch or the `.catch` method to handle errors.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+try {
+  const result = await client.query({
+    query: MY_QUERY,
+    errorPolicy: "none", // default
+  });
+  console.log(result.data);
+} catch (error) {
+  if (CombinedGraphQLErrors.is(error)) {
+    console.log("GraphQL errors:", error.errors);
+  }
+  // Network errors and other errors also reject the promise
+}
+```
+
+##### `errorPolicy: "all"`
+
+The promise resolves even when an error occurs, with the error available on the `error` property of the result.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+// With errorPolicy: "all" - returns both data and errors
+const result = await client.query({
+  query: MY_QUERY,
+  errorPolicy: "all",
+});
+
+if (result.error && CombinedGraphQLErrors.is(result.error)) {
+  console.log("GraphQL errors:", result.error.errors);
+  console.log("Partial data:", result.data); // May contain partial data
+}
+```
+
+##### `errorPolicy: "ignore"`
+
+The promise resolves and the error is discarded. The `error` property is not set.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+// With errorPolicy: "ignore" - returns data but ignores errors
+const result = await client.query({
+  query: MY_QUERY,
+  errorPolicy: "ignore",
+});
+
+// result.error will be undefined even if an error occurs
+console.log("Data (errors ignored):", result.data);
+```
+
+#### Observable-based APIs
+
+Observable-based APIs, like `client.watchQuery`, handle errors differently depending on the error policy:
+
+##### `errorPolicy: "none"`
+
+The error is emitted in the observer's `error` callback when an error occurs.
+
+```ts
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+const observable = client.watchQuery({
+  query: MY_QUERY,
+  errorPolicy: "none", // default
+});
+
+observable.subscribe({
+  next(result) {
+    console.log("Result:", result.data);
+  },
+  error(error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      console.log(`Got ${error.errors.length} GraphQL errors`);
+    }
+  },
+});
+```
+
+##### `errorPolicy: "all"`
+
+The error is added to the `error` property in the result emitted in the observer's `next` callback.
+
+```ts
+const observable = client.watchQuery({
+  query: MY_QUERY,
+  errorPolicy: "all",
+});
+
+observable.subscribe({
+  next(result) {
+    if (result.error) {
+      console.log("Got error:", result.error.message);
+    } else {
+      console.log("Result:", result.data);
+    }
+  },
+});
+```
+
+##### `errorPolicy: "ignore"`
+
+The result is emitted in the observer's `next` callback and the error is discarded. The `error` property is not set.
+
+```ts
+const observable = client.watchQuery({
+  query: MY_QUERY,
+  errorPolicy: "ignore",
+});
+
+observable.subscribe({
+  next(result) {
+    console.log("Result:", result.data);
+  },
+});
+```
+
+#### React hooks
+
+React hooks provide errors via the `error` property. `data` and `error` is set according to the query's `errorPolicy`.
+
+```ts
+import { useQuery, useMutation } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+
+function MyComponent() {
+  const { data, loading, error } = useQuery(MY_QUERY);
+
+  if (error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      return <div>Query failed: {error.errors[0].message}</div>;
+    }
+
+    return <div>Network error: {error.message}</div>;
+  }
+
+  return <div>{/* render data */}</div>;
+}
+```
+
+<Note>
+  Suspense hooks might throw errors to React error boundaries depending on the configured `errorPolicy`. Learn more about error handling with Suspense hooks in the [Suspense documentation](./suspense#error-handling).
+</Note>
+
 
 ## Advanced error handling with Apollo Link
 
@@ -226,138 +427,23 @@ new ErrorLink(({ error, operation, forward }) => {
 
 If you don't want to retry an operation, your `ErrorLink`'s error handler function should return nothing.
 
+See the [`ErrorLink` API reference](../api/link/apollo-link-error/) for more details.
+
 #### On network errors
 
 To retry operations that encounter a network error, we recommend adding a `RetryLink` to your link chain. This link enables you to configure retry logic like exponential backoff and total number of attempts.
 
-See the [documentation for `RetryLink`](../api/link/apollo-link-retry/).
+See the [`RetryLink` API reference](../api/link/apollo-link-retry/) for more details.
 
-### `ErrorLink` options
+## Additional resources
 
-See the [`ErrorLink` API reference](../api/link/apollo-link-error/).
-
-## Type checking errors
-
-All error classes provide a static `is()` method to determine if an error is
-that type of error. The `is()` method type narrows the error to allow access on
-additional properties for each error type in a type-safe way:
-
-```ts
-import {
-  CombinedGraphQLErrors,
-  CombinedProtocolErrors,
-  LocalStateError,
-  ServerError,
-  ServerParseError,
-  UnconventionalError,
-} from "@apollo/client/errors";
-
-// In your error handling logic
-function handleError(error: unknown) {
-  if (CombinedGraphQLErrors.is(error)) {
-    // Handle GraphQL errors
-  } else if (CombinedProtocolErrors.is(error)) {
-    // Handle multipart subscription protocol errors
-  } else if (LocalStateError.is(error)) {
-    // Handle errors thrown by the `LocalState` class
-  } else if (ServerError.is(error)) {
-    // Handle server HTTP errors
-  } else if (ServerParseError.is(error)) {
-    // Handle parse errors
-  } else if (UnconventionalError.is(error)) {
-    // Handle errors thrown by irregular types
-  } else {
-    // Handle other errors
-  }
-}
-```
-
-## Error classes
-
-Apollo Client provides several built-in error classes to help you identify and handle different types of errors:
-
-### CombinedGraphQLErrors
-
-Represents the combined list of GraphQL errors returned from the server in a GraphQL response. This error type is used when your GraphQL operation returns errors in the `errors` field of the response.
-
-```ts
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
-
-if (CombinedGraphQLErrors.is(error)) {
-  // Access individual GraphQL errors
-  error.errors.forEach((graphQLError) => {
-    console.log(graphQLError.message);
-  });
-}
-```
-
-### CombinedProtocolErrors
-
-Fatal transport-level errors returned when executing a subscription using the multipart HTTP subscription protocol. These errors indicate issues with the subscription transport mechanism.
-
-```ts
-import { CombinedProtocolErrors } from "@apollo/client/errors";
-
-if (CombinedProtocolErrors.is(error)) {
-  // Handle protocol-level subscription errors
-  error.errors.forEach((protocolError) => {
-    console.log(protocolError.message, protocolError.extensions);
-  });
-}
-```
-
-### ServerError
-
-Thrown when a non-200 response is returned from the server. This error contains the full server response, including status code and body text.
-
-```ts
-import { ServerError } from "@apollo/client/errors";
-
-if (ServerError.is(error)) {
-  console.log(`Server returned status: ${error.statusCode}`);
-  console.log(`Response body: ${error.bodyText}`);
-
-  // Handle specific status codes
-  if (error.statusCode === 401) {
-    // Handle unauthorized
-  }
-}
-```
-
-### ServerParseError
-
-Thrown when failing to parse the response as JSON from the server. This error helps debug issues where the server returns malformed JSON or non-JSON content.
-
-```ts
-import { ServerParseError } from "@apollo/client/errors";
-
-if (ServerParseError.is(error)) {
-  console.log(`Failed to parse response from ${error.response.url}`);
-  console.log(`Raw response: ${error.bodyText}`);
-}
-```
-
-### LocalStateError
-
-Represents an error when executing `@client` fields from `LocalState`, typically to indicate a problem with the `LocalState` configuration. This error does not represent an error thrown in a local resolver.
-
-```ts
-import { LocalStateError } from "@apollo/client/errors";
-
-if (LocalStateError.is(error)) {
-  console.log(`Local state error at path: ${error.path}`);
-  console.log(`Original error: ${error.cause}`);
-}
-```
-
-### UnconventionalError
-
-A wrapper error type that represents a non-standard error thrown from a response, such as a symbol or plain object. This ensures all thrown values can be handled as an `ErrorLike` instance. Read the `cause` property to determine the original source of the error.
-
-```js
-import { UnconventionalError } from "@apollo/client/errors";
-
-if (UnconventionalError.is(error)) {
-  console.log('Non-standard error thrown:', error.cause);
-}
-
+- [`ErrorLink` documentation](../link/apollo-link-error/)
+- [`RetryLink` documentation](../link/apollo-link-retry/)
+- Individual error class references:
+  - [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors/)
+  - [`CombinedProtocolErrors`](../api/errors/CombinedProtocolErrors/)
+  - [`LinkError`](../api/errors/LinkError/)
+  - [`ServerError`](../api/errors/ServerError/)
+  - [`ServerParseError`](../api/errors/ServerParseError/)
+  - [`LocalStateError`](../api/errors/LocalStateError/)
+  - [`UnconventionalError`](../api/errors/UnconventionalError/)

@@ -135,8 +135,6 @@ items:
             href: ./api/core/ObservableQuery
       - label: Errors
         children:
-          - label: Overview
-            href: ./api/errors/introduction
           - label: CombinedGraphQLErrors
             href: ./api/errors/CombinedGraphQLErrors
           - label: CombinedProtocolErrors

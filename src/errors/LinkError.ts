@@ -9,7 +9,7 @@ export function registerLinkError(error: ErrorLike) {
 
 /**
  * A facade error type that keeps a registry of errors emitted from the link
- * chain. Determine if an error is from the link chain using `NetworkError.is`.
+ * chain. Determine if an error is from the link chain using `LinkError.is`.
  */
 export const LinkError = {
   /**

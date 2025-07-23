@@ -101,7 +101,7 @@ fieldName: (obj, args, context, info) => result;
     }
     ```
     To access the cache, use `context.client.cache`.
-4. `info`: Information about the execution state of the query. You will probably never have to use this one.
+4. `info`: Information about the execution state of the query. You will rarely need to use this value.
 
 Let's take a look at an example of a resolver where we toggle a todo's completed status:
 
@@ -131,7 +131,7 @@ const client = new ApolloClient({
 });
 ```
 
-To determine the ID of the entity, we pass the `__typename` and primary key fields of the object to `cache.identify` method. The `cache.modify` is used to update specific fields within a given entity object.
+To determine the ID of the entity, we pass the `__typename` and primary key fields of the object to the `cache.identify` method. The `cache.modify` method is used to update specific fields within a given entity object.
 
 Once we toggle the `completed` field, since we don't plan on using the mutation's return result in our UI, we return `null` since all GraphQL types are nullable by default.
 
@@ -468,7 +468,7 @@ const GET_LAUNCH_DETAILS = gql`
 
 This query includes a mixture of both remote and local fields. `isInCart` is the only field marked with an `@client` directive, so it's the field we'll focus on. When Apollo Client executes this query and tries to find a result for the `isInCart` field, it runs through the following steps:
 
-1. Has a resolver function been set for the field name `isInCart`? If yes, run and return the result from the resolver function.
+1. Has a resolver function been set for the field name `isInCart` on the `Launch` type? If yes, run and return the result from the resolver function.
 2. If a matching resolver function can't be found, check the Apollo Client cache to see if a `isInCart` value can be found directly or read with a `read` field `TypePolicy`. If so, return that value.
 
 Let's look at both of these steps more closely.
@@ -531,13 +531,13 @@ const GET_LAUNCH_DETAILS = gql`
 
 Here when the `GET_LAUNCH_DETAILS` query is executed, Apollo Client looks for a local resolver associated with the `isInCart` field. Since we've defined a local resolver for the `isInCart` field in the `LocalState` instance, it finds a resolver it can use. This resolver function is run, then the result is calculated and merged in with the rest of the query result (if a local resolver can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](#local-data-query-flow) for more details).
 
-Setting resolvers through the `LocalState`'s `resolvers` option or through its `addResolvers` method adds resolvers to the internal resolver map (refer to the [Local resolvers](#local-resolvers) section for more details concerning the resolver map). In the above example we added a  `isInCart` resolver, for the `Launch` GraphQL object type, to the resolver map. Let's look at the `isInCart` resolver function more closely:
+Setting resolvers through the `LocalState`'s `resolvers` option or through its `addResolvers` method adds resolvers to the internal resolver map (refer to the [Local resolvers](#local-resolvers) section for more details concerning the resolver map). In the above example we added an `isInCart` resolver, for the `Launch` GraphQL object type, to the resolver map. Let's look at the `isInCart` resolver function more closely:
 
 ```js
   resolvers: {
     Launch: {
       isInCart: (launch, _args, { client }) => {
-        const { cartItems } = client.cache.readQuery({ query: GET_CART_ITEMS });
+        const { cartItems } = client.readQuery({ query: GET_CART_ITEMS });
         return cartItems.includes(launch.id);
       },
     },
@@ -1131,7 +1131,7 @@ In order to toggle our todo, we need the todo and its status from the cache, whi
 
 ### Code splitting
 
-Depending on the complexity and size of your local resolvers, you might not always want to define them up front, when you create your initial `ApolloClient` instance. If you have local resolvers that are only needed in a specific part of your application, you can dynamically call `client.localState.addResolvers` to dynamically add new resolvers. This can be really useful when leveraging techniques like route based code-splitting.
+Depending on the complexity and size of your local resolvers, you might not always want to define them up front, when you create your initial `ApolloClient` instance. If you have local resolvers that are only needed in a specific part of your application, you can call `client.localState.addResolvers` to dynamically add new resolvers. This can be really useful when leveraging techniques like route based code-splitting.
 
 Let's say we're building a messaging app and have a `/stats` route that is used to return the total number of messages stored locally. If we use `react-loadable` to load our `Stats` component like:
 

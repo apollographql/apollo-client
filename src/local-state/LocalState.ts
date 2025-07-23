@@ -138,7 +138,7 @@ export declare namespace LocalState {
    * Configuration options for LocalState.
    *
    * @template TResolvers - The type of resolvers map to use for type checking
-   * @template TContext - The type of context value returned by the context function
+   * @template TContext - The type of context value returned by the context function. Defaults to `DefaultContext` when not provided.
    */
   export type Options<
     TResolvers extends Resolvers = Resolvers,
@@ -245,7 +245,7 @@ export declare namespace LocalState {
 }
 
 /**
- * LocalState enables the use of `@client` fields in GraphQL queries and mutations.
+ * LocalState enables the use of `@client` fields in GraphQL operations.
  *
  * `@client` fields are resolved locally using resolver functions rather than
  * being sent to the GraphQL server. This allows you to mix local and remote

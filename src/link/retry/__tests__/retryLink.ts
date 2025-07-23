@@ -80,7 +80,7 @@ describe("RetryLink", () => {
         subscribe(observer: any) {
           resolve(); // Release hold on test.
 
-          Promise.resolve().then(() => {
+          void Promise.resolve().then(() => {
             observer.next(data);
             observer.complete();
           });

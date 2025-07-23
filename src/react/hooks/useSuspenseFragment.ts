@@ -11,14 +11,13 @@ import type {
 } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
-
-import type { FragmentKey } from "../internal/cache/types.js";
 
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";

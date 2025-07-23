@@ -7417,24 +7417,24 @@ describe.skip("type tests", () => {
 
     expectTypeOf(observable.variables).toEqualTypeOf<OperationVariables>();
 
-    observable.setVariables({});
-    observable.setVariables({ foo: "bar" });
-    observable.setVariables({ bar: "baz" });
+    void observable.setVariables({});
+    void observable.setVariables({ foo: "bar" });
+    void observable.setVariables({ bar: "baz" });
 
-    observable.refetch();
-    observable.refetch({});
-    observable.refetch({ foo: "bar" });
-    observable.refetch({ foo: "baz" });
+    void observable.refetch();
+    void observable.refetch({});
+    void observable.refetch({ foo: "bar" });
+    void observable.refetch({ foo: "baz" });
 
-    observable.reobserve();
-    observable.reobserve({ variables: {} });
-    observable.reobserve({ variables: { foo: "bar" } });
-    observable.reobserve({ variables: { foo: "baz" } });
+    void observable.reobserve();
+    void observable.reobserve({ variables: {} });
+    void observable.reobserve({ variables: { foo: "bar" } });
+    void observable.reobserve({ variables: { foo: "baz" } });
 
-    observable.fetchMore({});
-    observable.fetchMore({ variables: {} });
-    observable.fetchMore({ variables: { foo: "bar" } });
-    observable.fetchMore({ variables: { foo: "baz" } });
+    void observable.fetchMore({});
+    void observable.fetchMore({ variables: {} });
+    void observable.fetchMore({ variables: { foo: "bar" } });
+    void observable.fetchMore({ variables: { foo: "baz" } });
   });
 
   test("is invalid with variables as never", () => {
@@ -7450,34 +7450,34 @@ describe.skip("type tests", () => {
     expectTypeOf(observable.variables).toEqualTypeOf<never>();
 
     // @ts-expect-error
-    observable.setVariables({});
+    void observable.setVariables({});
     // @ts-expect-error
-    observable.setVariables({ foo: "bar" });
+    void observable.setVariables({ foo: "bar" });
 
-    observable.refetch();
+    void observable.refetch();
     // @ts-expect-error
-    observable.refetch({});
+    void observable.refetch({});
     // @ts-expect-error
-    observable.refetch({ foo: "bar" });
+    void observable.refetch({ foo: "bar" });
 
-    observable.reobserve();
-    observable.reobserve({
+    void observable.reobserve();
+    void observable.reobserve({
       // @ts-expect-error variables is never
       variables: {},
     });
-    observable.reobserve({ variables: undefined });
-    observable.reobserve({
+    void observable.reobserve({ variables: undefined });
+    void observable.reobserve({
       // @ts-expect-error
       variables: { foo: "bar" },
     });
 
-    observable.fetchMore({});
-    observable.fetchMore({
+    void observable.fetchMore({});
+    void observable.fetchMore({
       // @ts-expect-error unknown variables
       variables: {},
     });
-    observable.fetchMore({ variables: undefined });
-    observable.fetchMore({
+    void observable.fetchMore({ variables: undefined });
+    void observable.fetchMore({
       // @ts-expect-error variables is never
       variables: { foo: "bar" },
     });
@@ -7497,33 +7497,33 @@ describe.skip("type tests", () => {
 
     expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
 
-    observable.setVariables({});
-    observable.setVariables({
+    void observable.setVariables({});
+    void observable.setVariables({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.refetch();
-    observable.refetch({});
-    observable.refetch({
+    void observable.refetch();
+    void observable.refetch({});
+    void observable.refetch({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.reobserve();
-    observable.reobserve({ variables: {} });
-    observable.reobserve({
+    void observable.reobserve();
+    void observable.reobserve({ variables: {} });
+    void observable.reobserve({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
 
-    observable.fetchMore({});
-    observable.fetchMore({
+    void observable.fetchMore({});
+    void observable.fetchMore({
       variables: {},
     });
-    observable.fetchMore({
+    void observable.fetchMore({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
@@ -7543,41 +7543,41 @@ describe.skip("type tests", () => {
 
     expectTypeOf(observable.variables).toEqualTypeOf<{ limit?: number }>();
 
-    observable.setVariables({});
-    observable.setVariables({ limit: 10 });
-    observable.setVariables({
+    void observable.setVariables({});
+    void observable.setVariables({ limit: 10 });
+    void observable.setVariables({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.setVariables({
+    void observable.setVariables({
       limit: 10,
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.refetch();
-    observable.refetch({});
-    observable.refetch({ limit: 10 });
-    observable.refetch({
+    void observable.refetch();
+    void observable.refetch({});
+    void observable.refetch({ limit: 10 });
+    void observable.refetch({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.refetch({
+    void observable.refetch({
       limit: 10,
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.reobserve();
-    observable.reobserve({ variables: {} });
-    observable.reobserve({ variables: { limit: 10 } });
-    observable.reobserve({
+    void observable.reobserve();
+    void observable.reobserve({ variables: {} });
+    void observable.reobserve({ variables: { limit: 10 } });
+    void observable.reobserve({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.reobserve({
+    void observable.reobserve({
       variables: {
         limit: 10,
         // @ts-expect-error unknown variables
@@ -7585,16 +7585,16 @@ describe.skip("type tests", () => {
       },
     });
 
-    observable.fetchMore({});
-    observable.fetchMore({ variables: {} });
-    observable.fetchMore({ variables: { limit: 10 } });
-    observable.fetchMore({
+    void observable.fetchMore({});
+    void observable.fetchMore({ variables: {} });
+    void observable.fetchMore({ variables: { limit: 10 } });
+    void observable.fetchMore({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.fetchMore({
+    void observable.fetchMore({
       variables: {
         limit: 10,
         // @ts-expect-error unknown variables
@@ -7616,44 +7616,44 @@ describe.skip("type tests", () => {
     expectTypeOf(observable.variables).toEqualTypeOf<{ id: string }>();
 
     // @ts-expect-error missing required variable
-    observable.setVariables({});
-    observable.setVariables({ id: "1" });
-    observable.setVariables({
+    void observable.setVariables({});
+    void observable.setVariables({ id: "1" });
+    void observable.setVariables({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.setVariables({
+    void observable.setVariables({
       id: "1",
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.refetch();
-    observable.refetch({});
-    observable.refetch({ id: "1" });
-    observable.refetch({
+    void observable.refetch();
+    void observable.refetch({});
+    void observable.refetch({ id: "1" });
+    void observable.refetch({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.refetch({
+    void observable.refetch({
       id: "1",
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.reobserve();
-    observable.reobserve({
+    void observable.reobserve();
+    void observable.reobserve({
       // @ts-expect-error missing required variable
       variables: {},
     });
-    observable.reobserve({ variables: { id: "1" } });
-    observable.reobserve({
+    void observable.reobserve({ variables: { id: "1" } });
+    void observable.reobserve({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.reobserve({
+    void observable.reobserve({
       variables: {
         id: "1",
         // @ts-expect-error unknown variables
@@ -7661,16 +7661,16 @@ describe.skip("type tests", () => {
       },
     });
 
-    observable.fetchMore({});
-    observable.fetchMore({ variables: {} });
-    observable.fetchMore({ variables: { id: "1" } });
-    observable.fetchMore({
+    void observable.fetchMore({});
+    void observable.fetchMore({ variables: {} });
+    void observable.fetchMore({ variables: { id: "1" } });
+    void observable.fetchMore({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.fetchMore({
+    void observable.fetchMore({
       variables: {
         id: "1",
         // @ts-expect-error unknown variables
@@ -7697,73 +7697,73 @@ describe.skip("type tests", () => {
     }>();
 
     // @ts-expect-error missing required variable
-    observable.setVariables({});
-    observable.setVariables({ id: "1" });
+    void observable.setVariables({});
+    void observable.setVariables({ id: "1" });
     // @ts-expect-error missing required variable
-    observable.setVariables({ language: "en" });
-    observable.setVariables({ id: "1", language: "en" });
-    observable.setVariables({
+    void observable.setVariables({ language: "en" });
+    void observable.setVariables({ id: "1", language: "en" });
+    void observable.setVariables({
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.setVariables({
+    void observable.setVariables({
       id: "1",
       // @ts-expect-error unknown variables
       foo: "bar",
     });
-    observable.setVariables({
-      id: "1",
-      language: "en",
-      // @ts-expect-error unknown variables
-      foo: "bar",
-    });
-
-    observable.refetch();
-    observable.refetch({});
-    observable.refetch({ id: "1" });
-    observable.refetch({ language: "en" });
-    observable.refetch({ id: "1", language: "en" });
-    observable.refetch({
-      // @ts-expect-error unknown variables
-      foo: "bar",
-    });
-    observable.refetch({
-      id: "1",
-      // @ts-expect-error unknown variables
-      foo: "bar",
-    });
-    observable.refetch({
+    void observable.setVariables({
       id: "1",
       language: "en",
       // @ts-expect-error unknown variables
       foo: "bar",
     });
 
-    observable.reobserve();
-    observable.reobserve({
+    void observable.refetch();
+    void observable.refetch({});
+    void observable.refetch({ id: "1" });
+    void observable.refetch({ language: "en" });
+    void observable.refetch({ id: "1", language: "en" });
+    void observable.refetch({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    void observable.refetch({
+      id: "1",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    void observable.refetch({
+      id: "1",
+      language: "en",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    void observable.reobserve();
+    void observable.reobserve({
       // @ts-expect-error missing required variable
       variables: {},
     });
-    observable.reobserve({ variables: { id: "1" } });
-    observable.reobserve({
+    void observable.reobserve({ variables: { id: "1" } });
+    void observable.reobserve({
       // @ts-expect-error missing required variable
       variables: { language: "en" },
     });
-    observable.reobserve({ variables: { id: "1", language: "en" } });
-    observable.reobserve({
+    void observable.reobserve({ variables: { id: "1", language: "en" } });
+    void observable.reobserve({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.reobserve({
+    void observable.reobserve({
       variables: {
         id: "1",
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.reobserve({
+    void observable.reobserve({
       variables: {
         id: "1",
         language: "en",
@@ -7772,25 +7772,25 @@ describe.skip("type tests", () => {
       },
     });
 
-    observable.fetchMore({});
-    observable.fetchMore({ variables: {} });
-    observable.fetchMore({ variables: { id: "1" } });
-    observable.fetchMore({ variables: { language: "en" } });
-    observable.fetchMore({ variables: { id: "1", language: "en" } });
-    observable.fetchMore({
+    void observable.fetchMore({});
+    void observable.fetchMore({ variables: {} });
+    void observable.fetchMore({ variables: { id: "1" } });
+    void observable.fetchMore({ variables: { language: "en" } });
+    void observable.fetchMore({ variables: { id: "1", language: "en" } });
+    void observable.fetchMore({
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.fetchMore({
+    void observable.fetchMore({
       variables: {
         id: "1",
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    observable.fetchMore({
+    void observable.fetchMore({
       variables: {
         id: "1",
         language: "en",

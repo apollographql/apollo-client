@@ -5,7 +5,7 @@ import { CombinedGraphQLErrors, gql } from "@apollo/client";
 
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports
-import { equalByQuery } from "../equalByQuery.js";
+import { equalByQuery } from "../../utilities/internal/equalByQuery.js";
 
 describe("equalByQuery", () => {
   it("is importable and a function", () => {

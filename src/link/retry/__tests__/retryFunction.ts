@@ -34,7 +34,7 @@ describe("buildRetryFunction", () => {
     const retryFunction = buildRetryFunction({ max: 3, retryIf: stub });
 
     const error = { message: "bewm" };
-    retryFunction(1, operation, error);
+    void retryFunction(1, operation, error);
     expect(stub).toHaveBeenCalledWith(error, operation);
   });
 });

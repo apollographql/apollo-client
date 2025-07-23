@@ -10,6 +10,7 @@ import type {
   ErrorLike,
   ErrorPolicy,
   GetDataState,
+  InternalTypes,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
@@ -26,8 +27,6 @@ import type {
 } from "@apollo/client/utilities/internal";
 import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
 import { useRenderGuard } from "./internal/index.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -49,7 +48,7 @@ export declare namespace useLazyQuery {
       | ((
           this: ApolloClient.WatchQueryOptions<TData, TVariables>,
           currentFetchPolicy: WatchQueryFetchPolicy,
-          context: NextFetchPolicyContext<TData, TVariables>
+          context: InternalTypes.NextFetchPolicyContext<TData, TVariables>
         ) => WatchQueryFetchPolicy);
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */

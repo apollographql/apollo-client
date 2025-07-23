@@ -10,19 +10,17 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
+import type { ObservableQuery } from "@apollo/client";
+import type { OperationVariables } from "@apollo/client";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
-import {
-  createFragmentMap,
-  getFragmentDefinitions,
-  getFragmentFromSelection,
-  getMainDefinition,
-  isField,
-  resultKeyNameFromField,
-  shouldInclude,
-} from "@apollo/client/utilities/internal";
 
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { OperationVariables } from "./types.js";
+import { createFragmentMap } from "./createFragmentMap.js";
+import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
+import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
+import { getMainDefinition } from "./getMainDefinition.js";
+import { isField } from "./isField.js";
+import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
+import { shouldInclude } from "./shouldInclude.js";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.

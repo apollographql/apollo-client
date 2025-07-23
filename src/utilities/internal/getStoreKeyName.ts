@@ -1,5 +1,4 @@
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-import { canonicalStringify } from "../shared/canonicalStringify.js";
+import { canonicalStringify } from "./canonicalStringify.js";
 
 type Directives = {
   [directiveName: string]: {

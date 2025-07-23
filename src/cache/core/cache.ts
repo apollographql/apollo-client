@@ -18,13 +18,13 @@ import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
+  equalByQuery,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { equalByQuery } from "../../core/equalByQuery.js";
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import type { Cache } from "./types/Cache.js";

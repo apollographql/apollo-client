@@ -460,7 +460,7 @@ it("auto disposes of the queryRef if not used within timeout", async () => {
   const { result } = renderHook(() => useLoadableQuery(query, { client }));
   const [loadQuery] = result.current;
 
-  act(() => loadQuery());
+  void act(() => loadQuery());
   const [, queryRef] = result.current;
 
   expect(queryRef!).not.toBeDisposed();
@@ -500,7 +500,7 @@ it("auto disposes of the queryRef if not used within configured timeout", async 
   const { result } = renderHook(() => useLoadableQuery(query, { client }));
   const [loadQuery] = result.current;
 
-  act(() => loadQuery());
+  void act(() => loadQuery());
   const [, queryRef] = result.current;
 
   expect(queryRef!).not.toBeDisposed();

@@ -6,12 +6,30 @@ import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedGraphQLErrors {
   export interface MessageFormatterOptions {
+    /**
+     * The raw result returned from the server.
+     */
     result: FetchResult<unknown>;
+
+    /**
+     * The default message formatter. Call this to get a string with the
+     * original formatted message.
+     */
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
     ) => string;
   }
 
+  /**
+   * A function used to format the message string set on the
+   * `CombinedGraphQLErrors` instance. Override the static `formatMessage`
+   * method to provide a custom message formatter.
+   *
+   * @param errors - The array of GraphQL errors returned from the server in the
+   * `errors` field of the response.
+   * @param options - Additional context that could be useful when formatting
+   * the message.
+   */
   export type MessageFormatter = (
     errors: ReadonlyArray<GraphQLFormattedError>,
     options: MessageFormatterOptions
@@ -47,17 +65,17 @@ export class CombinedGraphQLErrors extends Error {
     defaultFormatMessage;
 
   /**
-   * The raw list of GraphQL errors returned in a GraphQL response.
+   * The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
    */
   readonly errors: ReadonlyArray<GraphQLFormattedError>;
 
   /**
-   * Partial data returned in the GraphQL response.
+   * Partial data returned in the `data` field of the GraphQL response.
    */
   readonly data: Record<string, unknown> | null | undefined;
 
   /**
-   * Extensions added to the result.
+   * Extensions returned by the `extensions` field in the GraphQL response.
    */
   readonly extensions: Record<string, unknown> | undefined;
 

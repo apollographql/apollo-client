@@ -4,11 +4,25 @@ import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedProtocolErrors {
   export interface MessageFormatterOptions {
+    /**
+     * The default message formatter. Call this to get a string with the
+     * default formatted message.
+     */
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
     ) => string;
   }
 
+  /**
+   * A function used to format the message string set on the
+   * `CombinedProtocolErrors` object. Override the static `formatMessage`
+   * method to provide a custom message formatter.
+   *
+   * @param errors - The array of GraphQL errors returned from the server in the
+   * `errors` field of the response.
+   * @param options - Additional context that could be useful when formatting
+   * the message.
+   */
   export type MessageFormatter = (
     errors: ReadonlyArray<GraphQLFormattedError>,
     options: MessageFormatterOptions
@@ -30,10 +44,18 @@ export class CombinedProtocolErrors extends Error {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
+  /**
+   * Formats the error message used for the error `message` property. Override
+   * to provide your own formatting.
+   */
   static formatMessage: CombinedProtocolErrors.MessageFormatter =
     defaultFormatMessage;
 
-  errors: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * The raw list of errors returned by the top-level `errors` field in the
+   * multipart HTTP subscription response.
+   */
+  readonly errors: ReadonlyArray<GraphQLFormattedError>;
 
   constructor(
     protocolErrors:

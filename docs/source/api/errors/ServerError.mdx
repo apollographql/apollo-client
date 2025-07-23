@@ -1,0 +1,104 @@
+---
+title: ServerError
+description: API reference
+---
+
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+Represents an error when a non-200 HTTP status code is returned from the server according to the [GraphQL Over HTTP specification](https://graphql.github.io/graphql-over-http/draft/). This error contains the full server response, including status code and body text.
+
+This error occurs when your GraphQL server responds with an HTTP status code other than 200 (such as 4xx or 5xx status codes) with any media type other than [`application/graphql-response+json`](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json). Unlike GraphQL errors which are returned in the response body, servers that return non-200 status codes are not guaranteed to contain a well-formed GraphQL response and may indicate issues at the HTTP level, such as authentication failures, server unavailability, or other HTTP-level problems.
+
+## Usage
+
+```ts
+import { ServerError } from "@apollo/client/errors";
+
+// Check if an error is a ServerError instance
+if (ServerError.is(error)) {
+  console.log(`Server returned status: ${error.statusCode}`);
+  console.log(`Response body: ${error.bodyText}`);
+
+  // Handle specific status codes
+  if (error.statusCode === 401) {
+    // Handle unauthorized access
+  }
+}
+```
+
+## Static methods
+
+### `is`
+
+A type guard that determines whether an error is a `ServerError` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
+
+```ts
+if (ServerError.is(error)) {
+  // TypeScript now knows `error` is a ServerError object
+  console.log(error.statusCode);
+}
+```
+
+See the [additional properties](#additional-properties) for more details about the available properties provided by the `ServerError` object.
+
+## Additional properties
+
+These properties are specific to the `ServerError` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `response`
+
+`Response`
+
+</td>
+<td>
+
+The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `statusCode`
+
+`number`
+
+</td>
+<td>
+
+The status code returned by the server in the response. This is provided as a shortcut for `serverError.response.status`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `bodyText`
+
+`string`
+
+</td>
+<td>
+
+The raw response body text.
+
+</td>
+</tr>
+
+</tbody>
+</table>

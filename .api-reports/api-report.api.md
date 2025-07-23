@@ -80,7 +80,7 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
-    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadFnOptions<TData, TVariables>): Unmasked<TData> | null;
+    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
@@ -471,7 +471,7 @@ namespace Cache_2 {
         update(cache: TCache): TUpdateResult;
     }
     // (undocumented)
-    interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadFnOptions<TData, TVariables>, "rootId"> {
+    interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadOptions<TData, TVariables>, "rootId"> {
     }
     // (undocumented)
     type DiffResult<TData> = {
@@ -511,7 +511,16 @@ namespace Cache_2 {
         optimistic?: boolean;
     }
     // (undocumented)
-    interface ReadFnOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+    interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
+        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        id?: string;
+        optimistic?: boolean;
+        returnPartialData?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface ReadOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         id?: string;
         // (undocumented)
         optimistic: boolean;
@@ -523,18 +532,6 @@ namespace Cache_2 {
         // (undocumented)
         rootId?: string;
         variables?: TVariables;
-    }
-    // (undocumented)
-    interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
-        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        fragmentName?: string;
-        id?: string;
-        optimistic?: boolean;
-        returnPartialData?: boolean;
-        variables?: TVariables;
-    }
-    // @deprecated (undocumented)
-    interface ReadOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> extends ReadFnOptions<TData, TVariables> {
     }
     // (undocumented)
     interface ReadQueryOptions<TData, TVariables extends OperationVariables> {
@@ -1469,11 +1466,11 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     readonly policies: Policies;
     // (undocumented)
-    read<TData = unknown>(options: Cache_2.ReadFnOptions<TData, OperationVariables> & {
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables> & {
         returnPartialData: true;
     }): TData | DeepPartial<TData> | null;
     // (undocumented)
-    read<TData = unknown>(options: Cache_2.ReadFnOptions<TData, OperationVariables>): TData | null;
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables>): TData | null;
     // (undocumented)
     release(rootId: string, optimistic?: boolean): number;
     // (undocumented)

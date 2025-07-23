@@ -3,7 +3,7 @@ title: Errors overview
 description: Learn about Apollo Client's error classes, how to identify error types, and best practices for comprehensive error handling.
 ---
 
-{/** @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 Apollo Client provides a comprehensive set of error classes to help you identify and handle different types of errors that can occur during the lifecycle of a GraphQL application. All error classes extend the standard JavaScript `Error` class and provide additional context specific to their error type.
 
@@ -46,12 +46,12 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 try {
   const result = await client.query({
     query: MY_QUERY,
-    errorPolicy: "none" // default
+    errorPolicy: "none", // default
   });
   console.log(result.data);
 } catch (error) {
   if (CombinedGraphQLErrors.is(error)) {
-    console.log('GraphQL errors:', error.errors);
+    console.log("GraphQL errors:", error.errors);
   }
   // Network errors and other errors also reject the promise
 }
@@ -67,12 +67,12 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 // With errorPolicy: "all" - returns both data and errors
 const result = await client.query({
   query: MY_QUERY,
-  errorPolicy: "all"
+  errorPolicy: "all",
 });
 
 if (result.error && CombinedGraphQLErrors.is(result.error)) {
-  console.log('GraphQL errors:', result.error.errors);
-  console.log('Partial data:', result.data); // May contain partial data
+  console.log("GraphQL errors:", result.error.errors);
+  console.log("Partial data:", result.data); // May contain partial data
 }
 ```
 
@@ -86,11 +86,11 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 // With errorPolicy: "ignore" - returns data but ignores errors
 const result = await client.query({
   query: MY_QUERY,
-  errorPolicy: "ignore"
+  errorPolicy: "ignore",
 });
 
 // result.error will be undefined even if errors occurred
-console.log('Data (errors ignored):', result.data);
+console.log("Data (errors ignored):", result.data);
 ```
 
 ### Observable-based APIs
@@ -106,18 +106,18 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 const observable = client.watchQuery({
   query: MY_QUERY,
-  errorPolicy: "none" // default
+  errorPolicy: "none", // default
 });
 
 observable.subscribe({
   next(result) {
-    console.log('Result:', result.data);
+    console.log("Result:", result.data);
   },
   error(error) {
     if (CombinedGraphQLErrors.is(error)) {
       console.log(`Got ${error.errors.length} GraphQL errors`);
     }
-  }
+  },
 });
 ```
 
@@ -128,7 +128,7 @@ The error is added to the `error` property in the result emitted in the observer
 ```ts
 const observable = client.watchQuery({
   query: MY_QUERY,
-  errorPolicy: "all"
+  errorPolicy: "all",
 });
 
 observable.subscribe({
@@ -136,7 +136,7 @@ observable.subscribe({
     if (result.error) {
       console.log("Got error:", result.error.message);
     } else {
-      console.log('Result:', result.data);
+      console.log("Result:", result.data);
     }
   },
 });
@@ -149,12 +149,12 @@ The result is emitted in the observer's `next` callback and the error is discard
 ```ts
 const observable = client.watchQuery({
   query: MY_QUERY,
-  errorPolicy: "ignore"
+  errorPolicy: "ignore",
 });
 
 observable.subscribe({
   next(result) {
-    console.log('Result:', result.data);
+    console.log("Result:", result.data);
   },
 });
 ```

@@ -29,7 +29,6 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";
-import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
@@ -96,17 +95,19 @@ export declare namespace ApolloCache {
       } & GetDataState<TData, "partial">);
 }
 
-export abstract class ApolloCache implements DataProxy {
+export abstract class ApolloCache {
   public readonly assumeImmutableResults: boolean = false;
 
   // required to implement
   // core API
-  public abstract read<TData = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, TData>
-  ): Unmasked<TData> | null;
-  public abstract write<TData = unknown, TVariables = OperationVariables>(
-    write: Cache.WriteOptions<TData, TVariables>
-  ): Reference | undefined;
+  public abstract read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+  public abstract write<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(write: Cache.WriteOptions<TData, TVariables>): Reference | undefined;
 
   /**
    * Returns data read from the cache for a given query along with information
@@ -123,9 +124,10 @@ export abstract class ApolloCache implements DataProxy {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
-  public abstract watch<TData = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<TData, TVariables>
-  ): () => void;
+  public abstract watch<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<TData, TVariables>): () => void;
 
   // Empty the cache and restart all current watches (unless
   // options.discardWatches is true).
@@ -246,7 +248,10 @@ export abstract class ApolloCache implements DataProxy {
   /**
    * Read data from the cache for the specified query.
    */
-  public readQuery<TData = unknown, TVariables = OperationVariables>({
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     // spread in type definitions for discoverability in the docs
     query,
     variables,
@@ -257,7 +262,10 @@ export abstract class ApolloCache implements DataProxy {
   /**
    * {@inheritDoc @apollo/client!ApolloCache#readQuery:member(1)}
    */
-  public readQuery<TData = unknown, TVariables = OperationVariables>(
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadQueryOptions<TData, TVariables>,
     /**
      * @deprecated Pass the `optimistic` argument as part of the first argument
@@ -265,7 +273,10 @@ export abstract class ApolloCache implements DataProxy {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
-  public readQuery<TData = unknown, TVariables = OperationVariables>(
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
@@ -322,7 +333,7 @@ export abstract class ApolloCache implements DataProxy {
       optimistic,
     };
 
-    let latestDiff: DataProxy.DiffResult<TData> | undefined;
+    let latestDiff: Cache.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
       return this.watch<TData, TVariables>({
@@ -360,7 +371,7 @@ export abstract class ApolloCache implements DataProxy {
             result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
+          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
           observer.next(result);
         },
       });
@@ -379,7 +390,10 @@ export abstract class ApolloCache implements DataProxy {
   /**
    * Read data from the cache for the specified fragment.
    */
-  public readFragment<TData = unknown, TVariables = OperationVariables>({
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     // spread in type definitions for discoverability in the docs
     fragment,
     variables,
@@ -388,7 +402,10 @@ export abstract class ApolloCache implements DataProxy {
     optimistic,
     returnPartialData,
   }: Cache.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
-  public readFragment<TData = unknown, TVariables = OperationVariables>(
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     /**
      * @deprecated Pass the `optimistic` argument as part of the first argument
@@ -396,7 +413,10 @@ export abstract class ApolloCache implements DataProxy {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
-  public readFragment<TData = unknown, TVariables = OperationVariables>(
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
@@ -413,7 +433,10 @@ export abstract class ApolloCache implements DataProxy {
    * the shape of the data you’re writing to the cache is the same as the shape of
    * the data required by the query. Great for prepping the cache with initial data.
    */
-  public writeQuery<TData = unknown, TVariables = OperationVariables>({
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     // spread in type definitions for discoverability in the docs
     data,
     query,
@@ -422,7 +445,10 @@ export abstract class ApolloCache implements DataProxy {
     id,
     broadcast,
   }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined;
-  public writeQuery<TData = unknown, TVariables = OperationVariables>({
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     id,
     data,
     ...options
@@ -440,7 +466,10 @@ export abstract class ApolloCache implements DataProxy {
    * fragment to validate that the shape of the data you’re writing to the cache
    * is the same as the shape of the data required by the fragment.
    */
-  public writeFragment<TData = unknown, TVariables = OperationVariables>({
+  public writeFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     // spread in type definitions for discoverability in the docs
     data,
     fragment,
@@ -450,7 +479,10 @@ export abstract class ApolloCache implements DataProxy {
     id,
     broadcast,
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-  public writeFragment<TData = unknown, TVariables = OperationVariables>({
+  public writeFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
     id,
     data,
     fragment,
@@ -466,7 +498,10 @@ export abstract class ApolloCache implements DataProxy {
     );
   }
 
-  public updateQuery<TData = unknown, TVariables = OperationVariables>(
+  public updateQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
@@ -481,7 +516,10 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
-  public updateFragment<TData = unknown, TVariables = OperationVariables>(
+  public updateFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {

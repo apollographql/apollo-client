@@ -66,7 +66,6 @@ export {
 export type {
   ApolloReducerConfig,
   Cache,
-  DataProxy,
   DiffQueryAgainstStoreOptions,
   FieldFunctionOptions,
   FieldMergeFunction,

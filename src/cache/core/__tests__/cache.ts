@@ -3,7 +3,7 @@ import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
 import { gql } from "graphql-tag";
 
 import type { OperationVariables, Unmasked } from "@apollo/client";
-import type { Cache, DataProxy } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { ApolloCache } from "@apollo/client/cache";
 
 import type { Reference } from "../../../utilities/graphql/storeUtils.js";
@@ -13,7 +13,7 @@ class TestCache extends ApolloCache {
     super();
   }
 
-  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+  public diff<T>(query: Cache.DiffOptions<T>): Cache.DiffResult<T> {
     return { result: null, complete: false };
   }
 
@@ -36,9 +36,10 @@ class TestCache extends ApolloCache {
     transaction(this);
   }
 
-  public read<T = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, T>
-  ): Unmasked<T> | null {
+  public read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     return null;
   }
 
@@ -57,15 +58,17 @@ class TestCache extends ApolloCache {
     return this;
   }
 
-  public watch<T = unknown, TVariables = OperationVariables>(
-    watch: Cache.WatchOptions<T, TVariables>
-  ): () => void {
+  public watch<
+    T = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<T, TVariables>): () => void {
     return function () {};
   }
 
-  public write<TResult = unknown, TVariables = OperationVariables>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
+  public write<
+    TResult = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(_: Cache.WriteOptions<TResult, TVariables>): Reference | undefined {
     return;
   }
 }

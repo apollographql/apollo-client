@@ -10,6 +10,7 @@ import { canonicalStringify } from '@apollo/client/utilities';
 import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
+import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
@@ -29,7 +30,6 @@ import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@apollo/client';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@graphql-typed-document-node/core';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -56,7 +56,7 @@ export namespace ApolloCache {
 }
 
 // @public (undocumented)
-export abstract class ApolloCache implements DataProxy {
+export abstract class ApolloCache {
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     // (undocumented)
@@ -80,13 +80,13 @@ export abstract class ApolloCache implements DataProxy {
     // (undocumented)
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
-    abstract read<TData = unknown, TVariables = OperationVariables>(query: Cache_2.ReadOptions<TVariables, TData>): Unmasked<TData> | null;
-    readFragment<TData = unknown, TVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
-    readFragment<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)
     recordOptimisticTransaction(transaction: Transaction, optimisticId: string): void;
@@ -100,16 +100,16 @@ export abstract class ApolloCache implements DataProxy {
     // (undocumented)
     transformForLink(document: DocumentNode): DocumentNode;
     // (undocumented)
-    updateFragment<TData = unknown, TVariables = OperationVariables>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    updateQuery<TData = unknown, TVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    abstract watch<TData = unknown, TVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
     // (undocumented)
-    abstract write<TData = unknown, TVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    writeFragment<TData = unknown, TVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -134,8 +134,20 @@ namespace Cache_2 {
         update(cache: TCache): TUpdateResult;
     }
     // (undocumented)
-    interface DiffOptions<TData = unknown, TVariables = OperationVariables> extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+    interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadOptions<TData, TVariables>, "rootId"> {
     }
+    // (undocumented)
+    type DiffResult<TData> = {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DataValue.Partial<TData> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+    };
     // (undocumented)
     interface EvictOptions {
         // (undocumented)
@@ -161,15 +173,35 @@ namespace Cache_2 {
         optimistic?: boolean;
     }
     // (undocumented)
-    interface ReadOptions<TVariables = OperationVariables, TData = unknown> extends DataProxy.Query<TVariables, TData> {
+    interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
+        fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        id?: string;
+        optimistic?: boolean;
+        returnPartialData?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface ReadOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        id?: string;
         // (undocumented)
         optimistic: boolean;
         // (undocumented)
         previousResult?: any;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
         returnPartialData?: boolean;
         // (undocumented)
         rootId?: string;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface ReadQueryOptions<TData, TVariables extends OperationVariables> {
+        id?: string;
+        optimistic?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        returnPartialData?: boolean;
+        variables?: TVariables;
     }
     // (undocumented)
     interface ResetOptions {
@@ -177,9 +209,15 @@ namespace Cache_2 {
         discardWatches?: boolean;
     }
     // (undocumented)
+    interface UpdateFragmentOptions<TData, TVariables extends OperationVariables> extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data"> {
+    }
+    // (undocumented)
+    interface UpdateQueryOptions<TData, TVariables extends OperationVariables> extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, "data"> {
+    }
+    // (undocumented)
     type WatchCallback<TData = unknown> = (diff: Cache_2.DiffResult<TData>, lastDiff?: Cache_2.DiffResult<TData>) => void;
     // (undocumented)
-    interface WatchOptions<TData = unknown, TVariables = OperationVariables> extends DiffOptions<TData, TVariables> {
+    interface WatchOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends DiffOptions<TData, TVariables> {
         // (undocumented)
         callback: WatchCallback<TData>;
         // (undocumented)
@@ -190,20 +228,35 @@ namespace Cache_2 {
         watcher?: object;
     }
     // (undocumented)
-    interface WriteOptions<TData = unknown, TVariables = OperationVariables> extends Omit<DataProxy.Query<TVariables, TData>, "id">, Omit<DataProxy.WriteOptions<TData>, "data"> {
+    interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
+        broadcast?: boolean;
+        data: Unmasked<TData>;
+        fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        id?: string;
+        overwrite?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface WriteOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        overwrite?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
         result: Unmasked<TData>;
+        variables?: TVariables;
     }
-    import DiffResult = DataProxy.DiffResult;
-    import ReadQueryOptions = DataProxy.ReadQueryOptions;
-    import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
-    import WriteQueryOptions = DataProxy.WriteQueryOptions;
-    import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
-    import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
-    import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
-    import Fragment = DataProxy.Fragment;
+    // (undocumented)
+    interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
+        broadcast?: boolean;
+        data: Unmasked<TData>;
+        id?: string;
+        overwrite?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        variables?: TVariables;
+    }
 }
 export { Cache_2 as Cache }
 
@@ -237,71 +290,6 @@ type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
 export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRegistryAPI;
-
-// @public (undocumented)
-export namespace DataProxy {
-    // (undocumented)
-    export type DiffResult<TData> = {
-        result: DataValue.Complete<TData>;
-        complete: true;
-        missing?: never;
-        fromOptimisticTransaction?: boolean;
-    } | {
-        result: DataValue.Partial<TData> | null;
-        complete: false;
-        missing?: MissingFieldError;
-        fromOptimisticTransaction?: boolean;
-    };
-    // (undocumented)
-    export interface Fragment<TVariables, TData> {
-        fragment: DocumentNode | TypedDocumentNode_2<TData, TVariables>;
-        fragmentName?: string;
-        id?: string;
-        variables?: TVariables;
-    }
-    // (undocumented)
-    export interface Query<TVariables, TData> {
-        id?: string;
-        query: DocumentNode | TypedDocumentNode_2<TData, TVariables>;
-        variables?: TVariables;
-    }
-    // (undocumented)
-    export interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
-        optimistic?: boolean;
-        returnPartialData?: boolean;
-    }
-    // (undocumented)
-    export interface ReadQueryOptions<TData, TVariables> extends Query<TVariables, TData> {
-        optimistic?: boolean;
-        returnPartialData?: boolean;
-    }
-    // (undocumented)
-    export interface UpdateFragmentOptions<TData, TVariables> extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data"> {
-    }
-    // (undocumented)
-    export interface UpdateQueryOptions<TData, TVariables> extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, "data"> {
-    }
-    // (undocumented)
-    export interface WriteFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData>, WriteOptions<TData> {
-    }
-    // (undocumented)
-    export interface WriteOptions<TData> {
-        broadcast?: boolean;
-        data: Unmasked<TData>;
-        overwrite?: boolean;
-    }
-    // (undocumented)
-    export interface WriteQueryOptions<TData, TVariables> extends Query<TVariables, TData>, WriteOptions<TData> {
-    }
-}
-
-// @public
-export interface DataProxy {
-    readFragment<TData = unknown, TVariables = OperationVariables>(options: DataProxy.ReadFragmentOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.ReadQueryOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
-    writeFragment<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
-}
 
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
 //
@@ -544,11 +532,11 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     readonly policies: Policies;
     // (undocumented)
-    read<TData = unknown>(options: Cache_2.ReadOptions<OperationVariables, TData> & {
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables> & {
         returnPartialData: true;
     }): TData | DeepPartial<TData> | null;
     // (undocumented)
-    read<TData = unknown>(options: Cache_2.ReadOptions<OperationVariables, TData>): TData | null;
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables>): TData | null;
     // (undocumented)
     release(rootId: string, optimistic?: boolean): number;
     // (undocumented)
@@ -562,9 +550,9 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
-    watch<TData = unknown, TVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
-    write<TData = unknown, TVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)

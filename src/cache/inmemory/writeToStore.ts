@@ -135,7 +135,10 @@ export class StoreWriter {
     private fragments?: InMemoryCacheConfig["fragments"]
   ) {}
 
-  public writeToStore<TData = unknown, TVariables = OperationVariables>(
+  public writeToStore<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     store: NormalizedCache,
     {
       query,

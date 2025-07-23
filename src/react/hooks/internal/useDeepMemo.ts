@@ -7,10 +7,8 @@ export function useDeepMemo<TValue>(
   deps: DependencyList
 ) {
   const ref = React.useRef<{ deps: DependencyList; value: TValue }>(void 0);
-
   if (!ref.current || !equal(ref.current.deps, deps)) {
     ref.current = { value: memoFn(), deps };
   }
-
   return ref.current.value;
 }

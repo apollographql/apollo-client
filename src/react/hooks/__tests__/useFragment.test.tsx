@@ -1737,7 +1737,7 @@ describe("useFragment", () => {
       age: number;
     }
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: TypedDocumentNode<Fragment, Record<string, never>> = gql`
       fragment UserFields on User {
         __typename
         id

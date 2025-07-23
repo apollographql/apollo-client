@@ -5,7 +5,6 @@ import { map } from "rxjs";
 
 import type {
   ApolloCache,
-  DataProxy,
   IgnoreModifier,
   Reference,
 } from "@apollo/client/cache";
@@ -390,6 +389,231 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   } & VariablesOption<NoInfer<TVariables>>;
+
+  namespace Base {
+    export interface ReadQueryOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > {
+      /**
+       * The GraphQL query shape to be used constructed using the `gql` template
+       * string tag. The query will be used to determine the
+       * shape of the data to be read.
+       */
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+      /**
+       * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+       * root query object. This property makes `readQuery` capable of reading data
+       * from any object in the cache.
+       */
+      id?: string;
+
+      /**
+       * Whether to return incomplete data rather than null.
+       * @defaultValue false
+       */
+      returnPartialData?: boolean;
+
+      /**
+       * Whether to read from optimistic or non-optimistic cache data.
+       * This option should be preferred over the `optimistic` parameter of the
+       * `readQuery` method.
+       * @defaultValue false
+       */
+      optimistic?: boolean;
+    }
+  }
+  export type ReadQueryOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.ReadQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
+
+  export namespace DocumentationTypes {
+    export interface ReadQueryOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.ReadQueryOptions<TData, TVariables> {
+      /**
+       * Any variables that the GraphQL query may depend on.
+       */
+      variables?: TVariables;
+    }
+  }
+
+  namespace Base {
+    export interface ReadFragmentOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > {
+      /**
+       * The root id to be used. This id should take the same form as the
+       * value returned by the `cache.identify` function. If a value with your
+       * id does not exist in the store, `null` will be returned.
+       */
+      id?: string;
+
+      /**
+       * A GraphQL document created using the `gql` template string tag
+       * with one or more fragments which will be used to determine
+       * the shape of data to read. If you provide more than one fragment in this
+       * document then you must also specify `fragmentName` to specify which
+       * fragment is the root fragment.
+       */
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+      /**
+       * The name of the fragment in your GraphQL document to be used. If you do
+       * not provide a `fragmentName` and there is only one fragment in your
+       * `fragment` document then that fragment will be used.
+       */
+      fragmentName?: string;
+
+      /**
+       * Whether to return incomplete data rather than null.
+       * @defaultValue false
+       */
+      returnPartialData?: boolean;
+      /**
+       * Whether to read from optimistic or non-optimistic cache data.
+       * This option should be preferred over the `optimistic` parameter of the
+       * `readFragment` method.
+       * @defaultValue false
+       */
+      optimistic?: boolean;
+    }
+  }
+  export type ReadFragmentOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+
+  export namespace DocumentationTypes {
+    export interface WriteQueryOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.WriteQueryOptions<TData, TVariables> {
+      /**
+       * Any variables that your GraphQL fragments depend on.
+       */
+      variables?: TVariables;
+    }
+  }
+
+  namespace Base {
+    export interface WriteQueryOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > {
+      /**
+       * The GraphQL query shape to be used constructed using the `gql` template
+       * string tag. The query will be used to determine the
+       * shape of the data to be read.
+       */
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+      /**
+       * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
+       * root query object. This property makes writeQuery capable of writing data
+       * to any object in the cache.
+       */
+      id?: string;
+      /**
+       * The data to write to the store.
+       */
+      data: Unmasked<TData>;
+      /**
+       * Whether to notify query watchers.
+       * @defaultValue true
+       */
+      broadcast?: boolean;
+      /**
+       * When true, ignore existing field data rather than merging it with
+       * incoming data.
+       * @defaultValue false
+       */
+      overwrite?: boolean;
+    }
+  }
+  export type WriteQueryOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.WriteQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
+
+  export namespace DocumentationTypes {
+    export interface WriteQueryOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.WriteQueryOptions<TData, TVariables> {
+      /**
+       * Any variables that the GraphQL query may depend on.
+       */
+      variables?: TVariables;
+    }
+  }
+
+  namespace Base {
+    export interface WriteFragmentOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > {
+      /**
+       * The root id to be used. This id should take the same form as the
+       * value returned by the `cache.identify` function. If a value with your
+       * id does not exist in the store, `null` will be returned.
+       */
+      id?: string;
+
+      /**
+       * A GraphQL document created using the `gql` template string tag from
+       * `graphql-tag` with one or more fragments which will be used to determine
+       * the shape of data to read. If you provide more than one fragment in this
+       * document then you must also specify `fragmentName` to specify which
+       * fragment is the root fragment.
+       */
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+      /**
+       * The name of the fragment in your GraphQL document to be used. If you do
+       * not provide a `fragmentName` and there is only one fragment in your
+       * `fragment` document then that fragment will be used.
+       */
+      fragmentName?: string;
+
+      /**
+       * The data to write to the store.
+       */
+      data: Unmasked<TData>;
+      /**
+       * Whether to notify query watchers.
+       * @defaultValue true
+       */
+      broadcast?: boolean;
+      /**
+       * When true, ignore existing field data rather than merging it with
+       * incoming data.
+       * @defaultValue false
+       */
+      overwrite?: boolean;
+    }
+  }
+  export type WriteFragmentOptions<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.WriteFragmentOptions<TData, TVariables> &
+    VariablesOption<TVariables>;
+
+  export namespace DocumentationTypes {
+    export interface WriteFragmentOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.WriteFragmentOptions<TData, TVariables> {
+      /**
+       * Any variables that your GraphQL fragments depend on.
+       */
+      variables?: TVariables;
+    }
+  }
 }
 
 /**
@@ -398,7 +622,7 @@ export declare namespace ApolloClient {
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient implements DataProxy {
+export class ApolloClient {
   public link: ApolloLink;
   public cache: ApolloCache;
   /**
@@ -641,7 +865,7 @@ export class ApolloClient implements DataProxy {
    *
    * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
    * first and last name and this person has a particular object identifier, provided by
-   * dataIdFromObject. Later, a different query fetches that same person's
+   * `cache.identify`. Later, a different query fetches that same person's
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
    *
@@ -815,14 +1039,42 @@ export class ApolloClient implements DataProxy {
   /**
    * Tries to read some data from the store in the shape of the provided
    * GraphQL query without making a network request. This method will start at
-   * the root query. To start at a specific id returned by `dataIdFromObject`
+   * the root query. To start at a specific id returned by `cache.identify`
    * use `readFragment`.
    *
    * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
-  public readQuery<TData = unknown, TVariables = OperationVariables>(
-    options: DataProxy.Query<TVariables, TData>,
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadQueryOptions<TData, TVariables>
+  ): Unmasked<TData> | null;
+
+  /**
+   * {@inheritDoc @apollo/client!ApolloClient#readQuery:member(1)}
+   *
+   * @deprecated Pass the `optimistic` argument as part of the first argument
+   * instead of passing it as a separate option.
+   */
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadQueryOptions<TData, TVariables>,
+    /**
+     * @deprecated Pass the `optimistic` argument as part of the first argument
+     * instead of passing it as a separate option.
+     */
+    optimistic: boolean
+  ): Unmasked<TData> | null;
+
+  public readQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean = false
   ): Unmasked<TData> | null {
     return this.cache.readQuery<TData, TVariables>(
@@ -899,11 +1151,34 @@ export class ApolloClient implements DataProxy {
    * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
-  public readFragment<T = unknown, TVariables = OperationVariables>(
-    options: DataProxy.Fragment<TVariables, T>,
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadFragmentOptions<TData, TVariables>
+  ): Unmasked<TData> | null;
+  /**
+   * {@inheritDoc @apollo/client!ApolloClient#readFragment:member(1)}
+   *
+   * @deprecated Pass the `optimistic` argument as part of the first argument
+   * instead of passing it as a separate option.
+   */
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadFragmentOptions<TData, TVariables>,
+    optimistic: boolean
+  ): Unmasked<TData> | null;
+
+  public readFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean = false
-  ): Unmasked<T> | null {
-    return this.cache.readFragment<T, TVariables>(
+  ): Unmasked<TData> | null {
+    return this.cache.readFragment<TData, TVariables>(
       { ...options, fragment: this.transform(options.fragment) },
       optimistic
     );
@@ -912,10 +1187,13 @@ export class ApolloClient implements DataProxy {
   /**
    * Writes some data in the shape of the provided GraphQL query directly to
    * the store. This method will start at the root query. To start at a
-   * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   * specific id returned by `cache.identify` then use `writeFragment`.
    */
-  public writeQuery<TData = unknown, TVariables = OperationVariables>(
-    options: DataProxy.WriteQueryOptions<TData, TVariables>
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WriteQueryOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeQuery<TData, TVariables>(options);
 
@@ -937,8 +1215,11 @@ export class ApolloClient implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment<TData = unknown, TVariables = OperationVariables>(
-    options: DataProxy.WriteFragmentOptions<TData, TVariables>
+  public writeFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WriteFragmentOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeFragment<TData, TVariables>(options);
 

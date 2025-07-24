@@ -1,5 +1,4 @@
 /** @import { TSESTree as AST } from '@typescript-eslint/types' */
-/** @import { transforms as commentTransforms } from 'comment-parser' */
 /** @import { Plugin, Printer } from 'prettier' */
 
 import * as prettier from "prettier";

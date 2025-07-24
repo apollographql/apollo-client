@@ -1,8 +1,8 @@
 /**
  * This build step will inline docblocks specified with `@inheritDoc` on build.
  *
- *
  * E.g. a in a dockblock like this:
+ *
  * ```js
  * /** {@inheritDoc @apollo/client!QueryOptions#query:member} *\/
  * ```
@@ -16,9 +16,11 @@
  * generally flattening types without repeating docs everywhere.
  *
  * You can get these "canonical ids" by running
+ *
  * ```sh
  * yarn docmodel
  * ```
+ *
  * and looking at the generated [`client.api.json`](../docs/shared/client.api.json) file.
  */
 /** End file docs */

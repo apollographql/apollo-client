@@ -132,6 +132,7 @@ export declare namespace useSubscription {
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
  *
  * @example
+ *
  * ```jsx
  * const COMMENTS_SUBSCRIPTION = gql`
  *   subscription OnCommentAdded($repoFullName: String!) {
@@ -150,7 +151,9 @@ export declare namespace useSubscription {
  *   return <h4>New comment: {!loading && commentAdded.content}</h4>;
  * }
  * ```
+ *
  * @remarks
+ *
  * #### Consider using `onData` instead of `useEffect`
  *
  * If you want to react to incoming data, please use the `onData` option instead of `useEffect`.
@@ -182,14 +185,11 @@ export declare namespace useSubscription {
  * ```jsx
  * export function Subscriptions() {
  *   const [accumulatedData, setAccumulatedData] = useState([]);
- *   const { data, error, loading } = useSubscription(
- *     query,
- *     {
- *       onData({ data }) {
- *         setAccumulatedData((prev) => [...prev, data])
- *       }
- *     }
- *   );
+ *   const { data, error, loading } = useSubscription(query, {
+ *     onData({ data }) {
+ *       setAccumulatedData((prev) => [...prev, data]);
+ *     },
+ *   });
  *
  *   return (
  *     <>

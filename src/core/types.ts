@@ -58,7 +58,8 @@ export declare namespace DataValue {
    * ```ts
    * import { HKT, DeepPartial } from "@apollo/client/utilities";
    *
-   * type CompleteOverride<TData> = TData extends { _complete?: infer _Complete } ? _Complete : TData;
+   * type CompleteOverride<TData> =
+   *   TData extends { _complete?: infer _Complete } ? _Complete : TData;
    *
    * interface CompleteOverrideHKT extends HKT {
    *   return: CompleteOverride<this["arg1"]>;
@@ -158,12 +159,14 @@ export interface DefaultContext extends Record<string, any> {
  *
  * Apollo Client uses several types of errors throughout the client which can be
  * narrowed using `instanceof`:
+ *
  * - `CombinedGraphQLErrors` - `errors` returned from a GraphQL result
  * - `CombinedProtocolErrors` - Transport-level errors from multipart subscriptions.
  * - `ServerParseError` - A JSON-parse error when parsing the server response.
  * - `ServerError` - A non-200 server response.
  *
  * @example
+ *
  * ```ts
  * import { CombinedGraphQLErrors } from "@apollo/client";
  *
@@ -172,7 +175,7 @@ export interface DefaultContext extends Record<string, any> {
  * } catch (error) {
  *   // Use `instanceof` to check for more specific types of errors.
  *   if (error instanceof CombinedGraphQLErrors) {
- *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *     error.errors.map((graphQLError) => console.log(graphQLError.message));
  *   } else {
  *     console.error(errors);
  *   }

@@ -7,6 +7,7 @@ import type { OperationVariables } from "./types.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
+ *
  * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
  * - cache-and-network: return result from cache first (if it exists), then return network result once it's available.
  * - cache-only: return result from cache if available, fail otherwise.
@@ -35,6 +36,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
+ *
  * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables

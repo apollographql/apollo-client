@@ -64,9 +64,10 @@ export declare namespace useReadQuery {
  * @returns An object containing the query result data, error, and network status.
  *
  * @example
+ *
  * ```jsx
- * import { Suspense } from 'react';
- * import { useBackgroundQuery, useReadQuery } from '@apollo/client';
+ * import { Suspense } from "react";
+ * import { useBackgroundQuery, useReadQuery } from "@apollo/client";
  *
  * function Parent() {
  *   const [queryRef] = useBackgroundQuery(query);

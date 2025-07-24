@@ -54,6 +54,7 @@ interface QueryManagerWithWrappers extends InternalTypes.QueryManager {
  * That means that the Apollo Client instance can expose a "wrapper" that will be
  * used to wrap the original hook implementation with additional logic.
  * @example
+ *
  * ```tsx
  * // this is already done in `@apollo/client` for all wrappable hooks (see `WrappableHooks`)
  * // following this pattern

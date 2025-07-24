@@ -253,6 +253,7 @@ const EAGER_METHODS = [
  * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
  *
  * @example
+ *
  * ```jsx
  * import { gql } from "@apollo/client";
  * import { useLazyQuery } from "@apollo/client/react";
@@ -266,13 +267,12 @@ const EAGER_METHODS = [
  * `;
  *
  * function Hello() {
- *   const [loadGreeting, { called, loading, data }] = useLazyQuery(
- *     GET_GREETING,
- *     { variables: { language: "english" } }
- *   );
- *   if (called && loading) return <p>Loading ...</p>
+ *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
+ *     variables: { language: "english" },
+ *   });
+ *   if (called && loading) return <p>Loading ...</p>;
  *   if (!called) {
- *     return <button onClick={() => loadGreeting()}>Load greeting</button>
+ *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
  *   }
  *   return <h1>Hello {data.greeting.message}!</h1>;
  * }

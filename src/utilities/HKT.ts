@@ -14,15 +14,16 @@
  * extra work updating.
  *
  * @example
- * ```ts
- *   interface Concat extends HKT {
- *     arg1: string;
- *     arg2: string;
- *     return: `${this["arg1"]}${this["arg2"]}`;
- *   }
  *
- *   type Result = ApplyHKT<Concat, "Hello, ", "world!">;
- *   // Result is "Hello, world!"
+ * ```ts
+ * interface Concat extends HKT {
+ *   arg1: string;
+ *   arg2: string;
+ *   return: `${this["arg1"]}${this["arg2"]}`;
+ * }
+ *
+ * type Result = ApplyHKT<Concat, "Hello, ", "world!">;
+ * // Result is "Hello, world!"
  * ```
  */
 export interface HKT {

@@ -33,39 +33,39 @@ export type UnwrapFragmentRefs<TData> =
   : never;
 
 /**
-```ts
-CombineIntersection<
-  | { foo: string }
-  | { __typename: "A"; a: string }
-  | { __typename: "B"; b1: number }
-  | { __typename: "B"; b2: string }
-> =>
-  | { foo: string }
-  | CombineByTypeName<
-    | { __typename: "A"; a: string }
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: string }
-  >
-```
+ * ```ts
+ * CombineIntersection<
+ *   | { foo: string }
+ *   | { __typename: "A"; a: string }
+ *   | { __typename: "B"; b1: number }
+ *   | { __typename: "B"; b2: string }
+ * > =>
+ *   | { foo: string }
+ *   | CombineByTypeName<
+ *     | { __typename: "A"; a: string }
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: string }
+ *   >
+ * ```
  */
 type CombineIntersection<T> =
   | Exclude<T, { __typename?: string }>
   | CombineByTypeName<Extract<T, { __typename?: string }>>;
 /**
-```ts
-  CombineByTypeName<
-    | { __typename: "A"; a: string }
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: string }
-  > =>
-  | CombineWithArrays<
-    | { __typename: "A"; a: string }
-  >
-  | CombineWithArrays<
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: number }
-  >
-```
+ * ```ts
+ *   CombineByTypeName<
+ *     | { __typename: "A"; a: string }
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: string }
+ *   > =>
+ *   | CombineWithArrays<
+ *     | { __typename: "A"; a: string }
+ *   >
+ *   | CombineWithArrays<
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: number }
+ *   >
+ * ```
  */
 type CombineByTypeName<T extends { __typename?: string }> = {
   [TypeName in NonNullable<T["__typename"]>]: Prettify<
@@ -74,48 +74,48 @@ type CombineByTypeName<T extends { __typename?: string }> = {
 }[NonNullable<T["__typename"]>];
 
 /**
-```ts
-CombineByTypeName<
-  | {
-      __typename: "Person" | "Animatronic" | "CartoonCharacter";
-      id: number;
-      name: string;
-    }
-  | {
-      __typename: "Person";
-      birthdate: string;
-    }
-  | {
-      __typename: "Animatronic";
-      manufacturer: string;
-      warrantyEndDate: string;
-    }
-  | {
-      __typename: "CartoonCharacter";
-      animator: string;
-      voiceActor: string;
-    }
->
-    =>
-{
-    id: number;
-    name: string;
-    __typename: "Person";
-    birthdate: string;
-} | {
-    id: number;
-    name: string;
-    __typename: "Animatronic";
-    manufacturer: string;
-    warrantyEndDate: string;
-} | {
-    id: number;
-    name: string;
-    __typename: "CartoonCharacter";
-    animator: string;
-    voiceActor: string;
-}
-```
+ * ```ts
+ * CombineByTypeName<
+ *   | {
+ *       __typename: "Person" | "Animatronic" | "CartoonCharacter";
+ *       id: number;
+ *       name: string;
+ *     }
+ *   | {
+ *       __typename: "Person";
+ *       birthdate: string;
+ *     }
+ *   | {
+ *       __typename: "Animatronic";
+ *       manufacturer: string;
+ *       warrantyEndDate: string;
+ *     }
+ *   | {
+ *       __typename: "CartoonCharacter";
+ *       animator: string;
+ *       voiceActor: string;
+ *     }
+ * >
+ *     =>
+ * {
+ *     id: number;
+ *     name: string;
+ *     __typename: "Person";
+ *     birthdate: string;
+ * } | {
+ *     id: number;
+ *     name: string;
+ *     __typename: "Animatronic";
+ *     manufacturer: string;
+ *     warrantyEndDate: string;
+ * } | {
+ *     id: number;
+ *     name: string;
+ *     __typename: "CartoonCharacter";
+ *     animator: string;
+ *     voiceActor: string;
+ * }
+ * ```
  */
 type ExtractByMatchingTypeNames<
   Union extends { __typename?: string },

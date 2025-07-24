@@ -13,10 +13,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND ONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,6 @@ import type {
  * You can use this plugin to generate simple resolvers signature based on your GraphQL types, or you can change its behavior be providing custom model types (mappers).
  *
  * You can find a blog post explaining the usage of this plugin here: https://the-guild.dev/blog/better-type-safety-for-resolvers-with-graphql-codegen
- *
  */
 export interface LocalStatePluginConfig extends RawConfig {
   /**
@@ -44,21 +43,22 @@ export interface LocalStatePluginConfig extends RawConfig {
    * definitions defines an extended type (i.e. `extend type User {...}`).
    *
    * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          baseTypesPath: "./relative/path/to/schema/types"
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * ```ts
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
+   *
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: ["typescript", "@apollo/client/local-state/codegen"],
+   *       config: {
+   *         baseTypesPath: "./relative/path/to/schema/types",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   baseTypesPath?: string;
@@ -69,21 +69,22 @@ export interface LocalStatePluginConfig extends RawConfig {
    * @defaultValue BaseSchemaTypes
    *
    * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          baseSchemaTypesImportName: "MyBaseSchemaTypes"
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * ```ts
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
+   *
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: ["typescript", "@apollo/client/local-state/codegen"],
+   *       config: {
+   *         baseSchemaTypesImportName: "MyBaseSchemaTypes",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   baseSchemaTypesImportName?: string;
@@ -94,50 +95,51 @@ export interface LocalStatePluginConfig extends RawConfig {
    * @defaultValue false
    *
    * @example
+   *
    * ## Override all definition types
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          avoidOptionals: true
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: ["typescript", "@apollo/client/local-state/codegen"],
+   *       config: {
+   *         avoidOptionals: true,
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    *
    * ## Override only specific definition types
    *
    * ```ts filename="codegen.ts"
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          avoidOptionals: {
-   *            field: true,
-   *            inputValue: true,
-   *            object: true,
-   *            defaultValue: true,
-   *            query: true,
-   *            mutation: true,
-   *            subscription: true,
-   *          }
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: ["typescript", "@apollo/client/local-state/codegen"],
+   *       config: {
+   *         avoidOptionals: {
+   *           field: true,
+   *           inputValue: true,
+   *           object: true,
+   *           defaultValue: true,
+   *           query: true,
+   *           mutation: true,
+   *           subscription: true,
+   *         },
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   avoidOptionals?: boolean | AvoidOptionalsConfig;
@@ -146,21 +148,22 @@ export interface LocalStatePluginConfig extends RawConfig {
    * Adds `_` to generated `Args` types in order to avoid duplicate identifiers.
    *
    * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          addUnderscoreToArgsType: true
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * ```ts
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
+   *
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         addUnderscoreToArgsType: true,
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   addUnderscoreToArgsType?: boolean;
@@ -171,23 +174,24 @@ export interface LocalStatePluginConfig extends RawConfig {
    * and add the required `import` statement, or you can use a `module#type` syntax.
    *
    * @example
+   *
    * ## Custom Context Type
    *
    * ```ts filename="codegen.ts"
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          contextType: 'MyContext'
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         contextType: "MyContext",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    *
    * ## Custom Context Type by Path
@@ -195,20 +199,20 @@ export interface LocalStatePluginConfig extends RawConfig {
    * Note that the path should be relative to the generated file.
    *
    * ```ts filename="codegen.ts"
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          contextType: './my-types#MyContext'
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         contextType: "./my-types#MyContext",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   contextType?: string;
@@ -216,21 +220,22 @@ export interface LocalStatePluginConfig extends RawConfig {
    * Adds a suffix to the imported names to prevent name clashes.
    *
    * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          mapperTypeSuffix: 'Model'
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * ```ts
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
+   *
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         mapperTypeSuffix: "Model",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   mapperTypeSuffix?: string;
@@ -240,26 +245,27 @@ export interface LocalStatePluginConfig extends RawConfig {
    * You can use both `module#type` and `module#namespace#type` syntax.
    *
    * @example
+   *
    * ## Custom Context Type
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          mappers: {
-   *            User: './my-models#UserDbObject',
-   *            Book: './my-models#Collections',
-   *          }
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         mappers: {
+   *           User: "./my-models#UserDbObject",
+   *           Book: "./my-models#Collections",
+   *         },
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   mappers?: {
@@ -271,42 +277,43 @@ export interface LocalStatePluginConfig extends RawConfig {
    * The default value of mappers is the TypeScript type generated by `typescript` package.
    *
    * @example
+   *
    * ## Replace with any
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          defaultMapper: 'any',
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         defaultMapper: "any",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    *
    * ## Custom Base Object
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          defaultMapper: './my-file#BaseObject',
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         defaultMapper: "./my-file#BaseObject",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    *
    * ## Wrap default types with Partial
@@ -314,40 +321,44 @@ export interface LocalStatePluginConfig extends RawConfig {
    * You can also specify a custom wrapper for the original type, without overriding the original generated types, use `{T}` to specify the identifier. (for flow, use `$Shape<{T}>`)
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          defaultMapper: 'Partial<{T}>',
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       // plugins...
+   *       config: {
+   *         defaultMapper: "Partial<{T}>",
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    *
    * ## Allow deep partial with `utility-types`
    *
    * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen', { add: { content: "import { DeepPartial } from 'utility-types';" } }],
-   *        config: {
-   *          defaultMapper: 'DeepPartial<{T}>',
-   *          avoidCheckingAbstractTypesRecursively: true // required if you have complex nested abstract types
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: [
+   *         "typescript",
+   *         "@apollo/client/local-state/codegen",
+   *         { add: { content: "import { DeepPartial } from 'utility-types';" } },
+   *       ],
+   *       config: {
+   *         defaultMapper: "DeepPartial<{T}>",
+   *         avoidCheckingAbstractTypesRecursively: true, // required if you have complex nested abstract types
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   defaultMapper?: string;
@@ -357,21 +368,22 @@ export interface LocalStatePluginConfig extends RawConfig {
    * @defaultValue true
    *
    * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
    *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          showUnusedMappers: true,
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
+   * ```ts
+   * import type { CodegenConfig } from "@graphql-codegen/cli";
+   *
+   * const config: CodegenConfig = {
+   *   // ...
+   *   generates: {
+   *     "path/to/file": {
+   *       plugins: ["typescript", "@apollo/client/local-state/codegen"],
+   *       config: {
+   *         showUnusedMappers: true,
+   *       },
+   *     },
+   *   },
+   * };
+   * export default config;
    * ```
    */
   showUnusedMappers?: boolean;

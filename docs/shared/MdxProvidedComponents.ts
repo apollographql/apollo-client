@@ -20,7 +20,7 @@ declare const DocBlock: React.FC<{
   remarks?: boolean;
   /** defaults to `false`, can be set to `true` to show the example section */
   example?: boolean;
-  /** defaults to `false`, can be set to `true` to make the `remarks` section collapsible*/
+  /** defaults to `false`, can be set to `true` to make the `remarks` section collapsible */
   remarksCollapsible?: boolean;
   /** defaults to `false`, can be set to `true` to information about deprecation status */
   deprecated?: boolean;
@@ -36,24 +36,26 @@ declare const Example: React.FC<{
   index?: number | undefined;
 }>;
 /**
-     *   This tag will create documentation like this:
-````md
-  ### getCurrentResult
-  <DocBlock deprecated remarks releaseTag />
-  #### Example (if available in the DocBlock)
-  ```ts
-  [example code here]
-  ```
-  #### Signature
-  ```ts
-  [the function signature here]
-  ```
-  #### Parameters
-  [a table of parameters with types and descriptions]
-  #### Result
-  [the type of the result]
-````
-     */
+ * This tag will create documentation like this:
+ *
+ * ````md
+ * ### getCurrentResult
+ *
+ *   <DocBlock deprecated remarks releaseTag />
+ *   #### Example (if available in the DocBlock)
+ *   ```ts
+ *   [example code here]
+ *   ```
+ *   #### Signature
+ *   ```ts
+ *   [the function signature here]
+ *   ```
+ *   #### Parameters
+ *   [a table of parameters with types and descriptions]
+ *   #### Result
+ *   [the type of the result]
+ * ````
+ */
 declare const FunctionDetails: React.FC<{
   /** canonical reference of the DocBlock to include. */
   canonicalReference: string;

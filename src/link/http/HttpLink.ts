@@ -84,7 +84,8 @@ export declare namespace HttpLink {
      * https://datatracker.ietf.org/doc/html/rfc7231#section-5.3.2
      *
      * @example
-     * ```javascript
+     *
+     * ```json
      * ["application/custom+json;q=1.0"]
      * ```
      */

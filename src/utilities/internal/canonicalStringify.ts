@@ -21,7 +21,7 @@ import { registerGlobalCache } from "./getMemoryInternals.js";
  * number of object shapes, and the cache will not grow beyond a certain point.
  * But in some edge cases, this could be a problem, so we provide
  * canonicalStringify.reset() as a way of clearing the cache.
- * */
+ */
 export const canonicalStringify = Object.assign(
   function canonicalStringify(value: any): string {
     return JSON.stringify(value, stableObjectReplacer);

@@ -26,13 +26,17 @@ export function registerGlobalCache(
 
 /**
  * Transformative helper type to turn a function of the form
+ *
  * ```ts
- * (this: any) => R
+ * (this: any) => R;
  * ```
+ *
  * into a function of the form
+ *
  * ```ts
- * () => R
+ * () => R;
  * ```
+ *
  * preserving the return type, but removing the `this` parameter.
  *
  * @remarks
@@ -58,7 +62,6 @@ export function registerGlobalCache(
  *
  * So in the end, we use this helper to remove the `this` annotation from the
  * exported function types, while keeping it in the internal implementation.
- *
  */
 type RemoveThis<T> = T extends (this: any) => infer R ? () => R : never;
 

@@ -15,7 +15,7 @@ export interface RetryFunctionOptions {
    * Note that this INCLUDES the initial request as part of the count.
    * E.g. maxTries of 1 indicates no retrying should occur.
    *
-   * Defaults to 5.  Pass Infinity for infinite retries.
+   * Defaults to 5. Pass Infinity for infinite retries.
    */
   max?: number;
 

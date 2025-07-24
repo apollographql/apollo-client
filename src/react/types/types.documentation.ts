@@ -236,7 +236,7 @@ export interface QueryResultDocumentation {
    * `.retain()` keeps the network operation running even if the `ObservableQuery`
    * no longer requires the result.
    *
-   *   @docGroup 3. Helper functions
+   * @docGroup 3. Helper functions
    */
   refetch: unknown;
   /**
@@ -272,14 +272,15 @@ export interface QueryResultDocumentation {
 
   /**
    * Describes the completeness of `data`.
+   *
    * - `empty`: No data could be fulfilled from the cache or the result is
    *   incomplete. `data` is `undefined`.
    * - `partial`: Some data could be fulfilled from the cache but `data` is
    *   incomplete. This is only possible when `returnPartialData` is `true`.
    * - `streaming`: `data` is incomplete as a result of a deferred query and
    *   the result is still streaming in.
-   *  - `complete`: `data` is a fully satisfied query result fulfilled
-   *  either from the cache or network.
+   * - `complete`: `data` is a fully satisfied query result fulfilled
+   *   either from the cache or network.
    *
    * @docGroup 1. Operation data
    */

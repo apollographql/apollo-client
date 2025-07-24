@@ -1779,8 +1779,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /**
    * @internal
    * Called from `clearStore`.
-   * * resets the query to its initial state
-   * * cancels all active operations and their subscriptions
+   *
+   * - resets the query to its initial state
+   * - cancels all active operations and their subscriptions
    */
   public reset() {
     // exception for cache-only queries - we reset them into a "ready" state

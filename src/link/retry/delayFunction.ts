@@ -12,7 +12,7 @@ export interface DelayFunctionOptions {
   /**
    * The number of milliseconds to wait before attempting the first retry.
    *
-   * Delays will increase exponentially for each attempt.  E.g. if this is
+   * Delays will increase exponentially for each attempt. E.g. if this is
    * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
    * until they reach maxDelay.
    *

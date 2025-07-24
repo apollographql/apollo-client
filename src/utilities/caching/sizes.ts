@@ -78,7 +78,7 @@ export interface CacheSizes {
    * Cache size for the `performWork` method of each [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts).
    *
    * No user-provided DocumentNode will actually be "the last one", as we run the
-   * `defaultDocumentTransform` before *and* after the user-provided transforms.
+   * `defaultDocumentTransform` before _and_ after the user-provided transforms.
    * For that reason, we need the extra `n` here - `n` for "before transformation"
    * plus the actual maximum cache size of the user-provided transform chain.
    *
@@ -86,7 +86,6 @@ export interface CacheSizes {
    * `QueryManager` with a user-provided DocumentNode.
    * It is also called with already-transformed DocumentNodes, assuming the
    * user provided additional transforms.
-   *
    */
   "documentTransform.cache": number;
   /**
@@ -147,7 +146,6 @@ export interface CacheSizes {
    * Cache size for the `transform` method of FragmentRegistry.
    * This function is called as part of the `defaultDocumentTransform` which will be called with
    * user-provided and already-transformed DocumentNodes.
-   *
    */
   "fragmentRegistry.transform": number;
   /**
@@ -266,7 +264,6 @@ export interface CacheSizes {
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
 /**
- *
  * The global cache size configuration for Apollo Client.
  *
  * @remarks
@@ -281,10 +278,11 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * you load the Apollo Client package:
  *
  * @example
+ *
  * ```ts
  * globalThis[Symbol.for("apollo.cacheSize")] = {
- *   print: 100
- * } satisfies Partial<CacheSizes> // the `satisfies` is optional if using TypeScript
+ *   print: 100,
+ * } satisfies Partial<CacheSizes>; // the `satisfies` is optional if using TypeScript
  * ```
  */
 export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };

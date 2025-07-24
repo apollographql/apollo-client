@@ -17,15 +17,25 @@ import {
  * So for example a document of:
  *
  * ```graphql
- * fragment foo on Foo { a b c }
+ * fragment foo on Foo {
+ *   a
+ *   b
+ *   c
+ * }
  * ```
  *
  * Turns into:
  *
  * ```graphql
- * { ...foo }
+ * {
+ *   ...foo
+ * }
  *
- * fragment foo on Foo { a b c }
+ * fragment foo on Foo {
+ *   a
+ *   b
+ *   c
+ * }
  * ```
  *
  * The target fragment will either be the only fragment in the document, or a

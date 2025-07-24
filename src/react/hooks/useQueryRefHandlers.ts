@@ -53,6 +53,7 @@ export declare namespace useQueryRefHandlers {
  * a different component are inaccessible.
  *
  * @example
+ *
  * ```tsx
  * const MyComponent({ queryRef }) {
  *   const { refetch, fetchMore } = useQueryRefHandlers(queryRef);
@@ -60,6 +61,7 @@ export declare namespace useQueryRefHandlers {
  *   // ...
  * }
  * ```
+ *
  * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<

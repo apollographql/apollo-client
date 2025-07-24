@@ -547,8 +547,10 @@ export abstract class EntityStore implements NormalizedCache {
     array: readonly any[],
     varString: string | undefined
   ): object;
-  /** @deprecated This is only meant for internal usage,
-   * in your own code please use a `Trie` instance instead. */
+  /**
+   * @deprecated This is only meant for internal usage,
+   * in your own code please use a `Trie` instance instead.
+   */
   public makeCacheKey(...args: any[]): object;
   public makeCacheKey() {
     return this.group.keyMaker.lookupArray(arguments);

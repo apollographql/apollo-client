@@ -70,10 +70,14 @@ export declare namespace useBackgroundQuery {
        * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
        *
        * @example Recommended usage of `skipToken`:
-       * ```ts
-       * import { skipToken, useBackgroundQuery } from '@apollo/client';
        *
-       * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
+       * ```ts
+       * import { skipToken, useBackgroundQuery } from "@apollo/client";
+       *
+       * const [queryRef] = useBackgroundQuery(
+       *   query,
+       *   id ? { variables: { id } } : skipToken
+       * );
        * ```
        */
       skip?: boolean;
@@ -145,18 +149,19 @@ export declare namespace useBackgroundQuery {
  * For a detailed explanation of useBackgroundQuery, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
  *
  * @returns A tuple containing:
- * 1. A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
- * 2. An object containing helper functions for the query:
- *    - `refetch`: A function to re-execute the query
- *    - `fetchMore`: A function to fetch more results for pagination
- *    - `subscribeToMore`: A function to subscribe to updates
+ *
+ * 1.  A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
+ * 2.  An object containing helper functions for the query:
+ *     - `refetch`: A function to re-execute the query
+ *     - `fetchMore`: A function to fetch more results for pagination
+ *     - `subscribeToMore`: A function to subscribe to updates
  *
  * @example
  *
  * ```jsx
- * import { Suspense } from 'react';
- * import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
- * import { useBackgroundQuery, useReadQuery } from '@apollo/client/react';
+ * import { Suspense } from "react";
+ * import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+ * import { useBackgroundQuery, useReadQuery } from "@apollo/client/react";
  *
  * const query = gql`
  *   foo {
@@ -166,7 +171,7 @@ export declare namespace useBackgroundQuery {
  *
  * const client = new ApolloClient({
  *   link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
- *   cache: new InMemoryCache()
+ *   cache: new InMemoryCache(),
  * });
  *
  * function SuspenseFallback() {

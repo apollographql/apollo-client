@@ -23,8 +23,8 @@ export declare namespace ClientAwarenessLink {
      * If `name` and `version` are not provided, this option will be ignored.
      * (These options can either be set as part of the Apollo Client constructor call or when manually constructing a `HttpLink`, `BatchHttpLink` or `ClientAwarenessLink`.)
      *
-     * * If set to `"headers"`, `name` and `version` will be sent in the request headers as `apollographql-client-name` and `apollographql-client-version`, respectively.
-     * * If set to `false`, `name` and `version` will not be included in outgoing requests.
+     * - If set to `"headers"`, `name` and `version` will be sent in the request headers as `apollographql-client-name` and `apollographql-client-version`, respectively.
+     * - If set to `false`, `name` and `version` will not be included in outgoing requests.
      *
      * @defaultValue "headers"
      */
@@ -34,8 +34,8 @@ export declare namespace ClientAwarenessLink {
     /**
      * Determines how the the version information of Apollo Client is sent in outgoing requests.
      *
-     * * If set to `"extensions"`, library `name` and `version` will be sent in an object in the request extensions as `clientLibrary`.
-     * * If set to `false`, library name and version will not be included in outgoing requests.
+     * - If set to `"extensions"`, library `name` and `version` will be sent in an object in the request extensions as `clientLibrary`.
+     * - If set to `false`, library name and version will not be included in outgoing requests.
      *
      * @defaultValue "extensions"
      */

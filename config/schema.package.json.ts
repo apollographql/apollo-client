@@ -109,7 +109,7 @@ export type JSONSchemaForNPMPackageJsonFiles = {
          */
         "."?: PackageExportsEntry | PackageExportsFallback;
         /**
-         * The module path prefix that is resolved when the module specifier starts with "name/", set to "./*" to allow external modules to import any subpath.
+         * The module path prefix that is resolved when the module specifier starts with "name/", set to "./\*" to allow external modules to import any subpath.
          *
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "^\./.+".
@@ -502,10 +502,10 @@ export type JSONSchemaForNPMPackageJsonFiles = {
     };
   };
   /**
-   * Any property starting with _ is valid.
+   * Any property starting with \_ is valid.
    *
    * This interface was referenced by `undefined`'s JSON-Schema definition
-   * via the `patternProperty` "^_".
+   * via the `patternProperty` "^\_".
    */
   [k: string]: any;
 };
@@ -36556,7 +36556,7 @@ export interface BestPractices {
    */
   "no-invalid-this"?: number | ("off" | "warn" | "error") | unknown[];
   /**
-   * Disallow the use of the __iterator__ property
+   * Disallow the use of the **iterator** property
    */
   "no-iterator"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -36609,7 +36609,7 @@ export interface BestPractices {
    */
   "no-param-reassign"?: number | ("off" | "warn" | "error") | unknown[];
   /**
-   * Disallow the use of the __proto__ property
+   * Disallow the use of the **proto** property
    */
   "no-proto"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -36760,7 +36760,7 @@ export interface Variables {
     | ("off" | "warn" | "error")
     | unknown[];
   /**
-   * Disallow the use of undeclared variables unless mentioned in /*global * / comments
+   * Disallow the use of undeclared variables unless mentioned in /_global _ / comments
    */
   "no-undef"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -36807,7 +36807,7 @@ export interface NodeAndCommonJs {
    */
   "no-new-require"?: number | ("off" | "warn" | "error") | unknown[];
   /**
-   * Disallow string concatenation with __dirname and __filename
+   * Disallow string concatenation with **dirname and **filename
    */
   "no-path-concat"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -37201,7 +37201,7 @@ export interface StylisticIssues {
     | ("off" | "warn" | "error")
     | unknown[];
   /**
-   * Enforce consistent spacing after the // or /* in a comment
+   * Enforce consistent spacing after the // or /\* in a comment
    */
   "spaced-comment"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -37252,7 +37252,7 @@ export interface EcmaScript6 {
    */
   "constructor-super"?: number | ("off" | "warn" | "error") | unknown[];
   /**
-   * Enforce consistent spacing around * operators in generator functions
+   * Enforce consistent spacing around \* operators in generator functions
    */
   "generator-star-spacing"?: number | ("off" | "warn" | "error") | unknown[];
   /**
@@ -37360,7 +37360,7 @@ export interface EcmaScript6 {
    */
   "template-curly-spacing"?: number | ("off" | "warn" | "error") | unknown[];
   /**
-   * Require or disallow spacing around the * in yield* expressions
+   * Require or disallow spacing around the _ in yield_ expressions
    */
   "yield-star-spacing"?: number | ("off" | "warn" | "error") | unknown[];
   [k: string]: unknown;
@@ -37407,7 +37407,7 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
       ];
   /**
    * Component selectors should follow given naming rules. See more at https://angular.dev/style-guide#style-02-07, https://angular.dev/style-guide#style-05-02
-   *       and https://angular.dev/style-guide#style-05-03.
+   * and https://angular.dev/style-guide#style-05-03.
    * https://github.com/angular-eslint/angular-eslint/blob/main/packages/eslint-plugin/docs/rules/component-selector.md
    */
   "@angular-eslint/component-selector"?:
@@ -38358,7 +38358,6 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
       ];
   /**
    * Forbid import statements with CommonJS module.exports.
-   *
    */
   "eslint-plugin-import/no-import-module-exports"?:
     | number
@@ -39485,119 +39484,102 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#import-index
    */
   "eslint-plugin-unicorn/import-index"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#no-array-instanceof
    */
   "eslint-plugin-unicorn/no-array-instanceof"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#no-fn-reference-in-iterator
    */
   "eslint-plugin-unicorn/no-fn-reference-in-iterator"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#no-reduce
    */
   "eslint-plugin-unicorn/no-reduce"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#no-unsafe-regex
    */
   "eslint-plugin-unicorn/no-unsafe-regex"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-dataset
    */
   "eslint-plugin-unicorn/prefer-dataset"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-event-key
    */
   "eslint-plugin-unicorn/prefer-event-key"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-exponentiation-operator
    */
   "eslint-plugin-unicorn/prefer-exponentiation-operator"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-flat-map
    */
   "eslint-plugin-unicorn/prefer-flat-map"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-node-append
    */
   "eslint-plugin-unicorn/prefer-node-append"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-node-remove
    */
   "eslint-plugin-unicorn/prefer-node-remove"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-object-has-own
    */
   "eslint-plugin-unicorn/prefer-object-has-own"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-replace-all
    */
   "eslint-plugin-unicorn/prefer-replace-all"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-starts-ends-with
    */
   "eslint-plugin-unicorn/prefer-starts-ends-with"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-text-content
    */
   "eslint-plugin-unicorn/prefer-text-content"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#prefer-trim-start-end
    */
   "eslint-plugin-unicorn/prefer-trim-start-end"?: {
     [k: string]: unknown;
   };
   /**
-   *
    * https://github.com/sindresorhus/eslint-plugin-unicorn/blob/v54.0.0/docs/deprecated-rules.md#regex-shorthand
    */
   "eslint-plugin-unicorn/regex-shorthand"?: {
@@ -40686,7 +40668,7 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
           attributes?: {
             /**
              * This interface was referenced by `undefined`'s JSON-Schema definition
-             * via the `patternProperty` "^(?:\S+|/.*\/[a-z]*)$".
+             * via the `patternProperty` "^(?:\S+|/._\/[a-z]_)$".
              */
             [k: string]: string[];
           };
@@ -41440,7 +41422,7 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
         },
       ];
   /**
-   * disallow target="_blank" attribute without rel="noopener noreferrer"
+   * disallow target="\_blank" attribute without rel="noopener noreferrer"
    * https://eslint.vuejs.org/rules/no-template-target-blank.html
    */
   "eslint-plugin-vue/no-template-target-blank"?:
@@ -41854,7 +41836,7 @@ export interface HttpsJsonSchemastoreOrgPartialEslintPluginsJson {
     [k: string]: unknown;
   };
   /**
-   * enforce import from 'vue' instead of import from '@vue/*'
+   * enforce import from 'vue' instead of import from '@vue/\*'
    * https://eslint.vuejs.org/rules/prefer-import-from-vue.html
    */
   "eslint-plugin-vue/prefer-import-from-vue"?: {
@@ -45216,7 +45198,7 @@ export interface JSONSchemaForTheStylelintConfigurationFiles {
       ]
   )[];
   /**
-   * Ignore stylelint-disable (e.g. /* stylelint-disable block-no-empty * /) comments.
+   * Ignore stylelint-disable (e.g. /_ stylelint-disable block-no-empty _ /) comments.
    */
   ignoreDisables?: boolean;
   ignoreFiles?: SimpleStringOrArrayStringRule2;
@@ -52193,7 +52175,7 @@ export interface HttpsJsonSchemastoreOrgJscpdJson {
    */
   path?: string[];
   /**
-   * glob pattern for files that should be included in duplicate detection (e.g., ** /*.txt); only used to filter directories configured via path option
+   * glob pattern for files that should be included in duplicate detection (e.g., \*_ /_.txt); only used to filter directories configured via path option
    */
   pattern?: string;
   /**

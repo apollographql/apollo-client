@@ -6,7 +6,7 @@ import { wrap } from "optimism";
 import { checkDocument } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { cacheSizes } from "../caching/index.js";
+import { cacheSizes } from "../caching/sizes.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 

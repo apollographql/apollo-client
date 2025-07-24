@@ -9,6 +9,7 @@ global.TextEncoder ??= TextEncoder;
 // @ts-ignore
 global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
 import "../../testing/matchers/index.js";
 import { setLogVerbosity } from "@apollo/client";
 import {

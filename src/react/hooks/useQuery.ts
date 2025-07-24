@@ -23,6 +23,7 @@ import type {
   ErrorLike,
   ErrorPolicy,
   GetDataState,
+  InternalTypes,
   ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
@@ -42,8 +43,6 @@ import {
   maybeDeepFreeze,
   mergeOptions,
 } from "@apollo/client/utilities/internal";
-
-import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -65,7 +64,7 @@ export declare namespace useQuery {
         | ((
             this: ApolloClient.WatchQueryOptions<TData, TVariables>,
             currentFetchPolicy: WatchQueryFetchPolicy,
-            context: NextFetchPolicyContext<TData, TVariables>
+            context: InternalTypes.NextFetchPolicyContext<TData, TVariables>
           ) => WatchQueryFetchPolicy);
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
 

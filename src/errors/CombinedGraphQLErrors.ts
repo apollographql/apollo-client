@@ -12,8 +12,24 @@ export declare namespace CombinedGraphQLErrors {
     result: FetchResult<unknown>;
 
     /**
-     * The default message formatter. Call this to get a string with the
-     * default formatted message.
+     * The default message formatter. Call this to get a string with the default
+     * formatted message.
+     *
+     * @remarks
+     * To format part of the message using the default message formatter, call
+     * the `defaultFormatMessage` function provided to the `options` argument of
+     * your message formatter.
+     *
+     * The following example prepends a string to the message and uses the
+     * default message formatter to format the error messages.
+     *
+     * @example
+     *
+     * ```ts
+     * CombinedGraphQLErrors.formatMessage = (errors, { defaultFormatMessage }) => {
+     *   return `[GraphQL errors]: ${defaultFormatMessage(errors)}`;
+     * };
+     * ```
      */
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
@@ -21,9 +37,30 @@ export declare namespace CombinedGraphQLErrors {
   }
 
   /**
-   * A function used to format the message string set on the
-   * `CombinedGraphQLErrors` object. Override the static `formatMessage`
-   * method to provide a custom message formatter.
+   * By default, `CombinedGraphQLErrors` formats the `message` property by
+   * joining each error's `message` field with a newline. To customize the
+   * format of the `message`, such as changing the delimiter or adding a message
+   * prefix, override the static `formatMessage` method.
+   *
+   * The following example demonstrates how to format the error message by
+   * joining each error with a comma.
+   *
+   * @example
+   *
+   * ```ts
+   * import { CombinedGraphQLErrors } from "@apollo/client/errors";
+   *
+   * CombinedGraphQLErrors.formatMessage = (errors) => {
+   *   return errors.map((error) => error.message).join(", ");
+   * };
+   * ```
+   *
+   * @remarks
+   *
+   * See the [`formatMessage`](https://www.apollographql.com/docs/react/api/errors/CombinedGraphQLErrors#formatmessage) docs for details about the parameters provided to the `formatMessage` function.
+   *
+   * > [!NOTE]
+   * > The message formatter needs to be configured before any operation is executed by Apollo Client, otherwise the default message formatter is used. We recommend configuring the message formatter before initializing your `ApolloClient` instance.
    *
    * @param errors - The array of GraphQL errors returned from the server in the
    * `errors` field of the response.

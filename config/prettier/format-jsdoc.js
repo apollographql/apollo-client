@@ -2,11 +2,9 @@
 /** @import { transforms as commentTransforms } from 'comment-parser' */
 /** @import { Plugin, Printer } from 'prettier' */
 
-import {parse as parseComment, stringify, transforms as commentTransforms} from 'comment-parser'
 import * as prettier from "prettier";
 import estree from "prettier/plugins/estree.js";
 import { parsers as tsParsers } from "prettier/plugins/typescript";
-
 
 /** @type {Plugin["languages"]} */
 export const languages = [
@@ -16,7 +14,7 @@ export const languages = [
   },
 ];
 /** @type {Plugin["parsers"]} */
-export const parsers= {
+export const parsers = {
   "typescript-with-jsdoc": {
     ...tsParsers.typescript,
     astFormat: "typescript-with-jsdoc",
@@ -32,33 +30,54 @@ export const printers = {
       return estreePrinter.print(path, options, print, args);
     },
     embed(path, options) {
-      if (path.node.comments){
+      if (path.node.comments) {
         return async (textToDocForEmbed, mainPrint, path, options) => {
-          const newComments = await Promise.all(path.node.comments.map(
-            async (/* @type {AST.Comment} */comment) => {
-             const doc = await textToDocForEmbed(
-                comment.value.split("\n").map(line => line.replace(/^\s*\*/g, "")).join("\n"),
-                {
-                  parser: "markdown"
-                },
-              );
-              const string = prettier.doc.printer.printDocToString(doc, options).formatted
-              if (string.trim().indexOf("\n") === -1) {
-                return `* ${string} `;
-              }
+          const newComments = await Promise.all(
+            Object.entries(path.node.comments)
+              .filter(
+                (/* @type {[string, AST.Comment]} */ [, comment]) =>
+                  comment.type === "Block"
+              )
+              .map(
+                async (/* @type {[string, AST.Comment]} */ [key, comment]) => {
+                  const doc = await textToDocForEmbed(
+                    comment.value
+                      .split("\n")
+                      .map((line) => line.replace(/^\s*\*/g, ""))
+                      .join("\n"),
+                    {
+                      parser: "markdown",
+                    }
+                  );
+                  const string = prettier.doc.printer.printDocToString(
+                    doc,
+                    options
+                  ).formatted;
+                  if (string.trim().indexOf("\n") === -1) {
+                    return [key, `* ${string} `];
+                  }
 
-              return "*\n"+string.split("\n").map(line => "* "+line).join("\n")+"\n"
-            }
-          ))
-          for (let i = 0; i < newComments.length; i++) {
+                  return [
+                    key,
+                    "*\n" +
+                      string
+                        .split("\n")
+                        .map((line) => "* " + line)
+                        .join("\n") +
+                      "\n",
+                  ];
+                }
+              )
+          );
+          for (const [i, newCommment] of newComments) {
             /* @type {AST.Comment} */
-            const nodeComent= path.node.comments[i]
-            nodeComent.value = newComments[i];
+            const nodeComent = path.node.comments[i];
+            nodeComent.value = newCommment;
           }
-           return mainPrint(path);
-        }
+          return mainPrint(path);
+        };
       }
-      return estreePrinter.embed(path, options);
+      return undefined;
     },
   },
 };

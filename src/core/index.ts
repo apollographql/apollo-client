@@ -189,3 +189,10 @@ export {
   resetCaches,
 } from "graphql-tag";
 export { build, version } from "../version.js";
+
+// internal types
+import type { QueryManager } from "./QueryManager.js";
+import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
+export declare namespace InternalTypes {
+  export type { NextFetchPolicyContext, QueryManager };
+}

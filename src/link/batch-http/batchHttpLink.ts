@@ -15,11 +15,10 @@ import {
   selectURI,
   serializeFetchParameter,
 } from "@apollo/client/link/http";
+import { filterOperationVariables } from "@apollo/client/link/utils";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
-
-import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 export declare namespace BatchHttpLink {
   export type Options = Pick<

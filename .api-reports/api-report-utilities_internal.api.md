@@ -60,6 +60,11 @@ export const AutoCleanedWeakCache: typeof WeakCache;
 // @internal @deprecated (undocumented)
 export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 
+// @public
+export const canonicalStringify: ((value: any) => string) & {
+    reset(): void;
+};
+
 // @internal @deprecated (undocumented)
 export const canUseDOM: boolean;
 
@@ -166,6 +171,9 @@ export namespace DocumentationTypes {
         variables?: TVariables;
     }
 }
+
+// @public (undocumented)
+export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
@@ -441,7 +449,7 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 
 // Warnings were encountered during analysis:
 //
-// src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/getStoreKeyName.ts:88:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

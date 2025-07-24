@@ -67,7 +67,7 @@ One of the key features that sets Apollo Client apart from other data management
 The Apollo Client cache is easy to get started with and [configure](./caching/cache-configuration) as you go:
 
 ```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -132,7 +132,7 @@ If we've run the above `GET_ALL_DOGS` query at any point, the data for our `GET_
 Below we define a custom [`FieldPolicy`](./caching/advanced-topics/#cache-redirects) that returns a reference to our previously cached `Dog` object data:
 
 ```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 const cache = new InMemoryCache({
   typePolicies: {
@@ -140,7 +140,7 @@ const cache = new InMemoryCache({
       fields: {
         dog(_, { args, toReference }) {
           return toReference({
-            __typename: 'Dog',
+            __typename: "Dog",
             id: args.id,
           });
         },

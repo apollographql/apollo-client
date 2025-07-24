@@ -9,15 +9,18 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 ## Common Development Commands
 
 ### Build Commands
+
 - `npm run build` - Build the entire project
 - `npm run build -w codegen` - Build specific workspace (e.g., codegen)
 
 ### Testing Commands
+
 - `npm test` - Run all tests with Jest
 - `npm run test:type-benches` - Run type benchmarks
 - `npm run test:memory` - Run memory tests
 
 ### Code Quality Commands
+
 - `npm run typecheck` - Run TypeScript type checking
 - `npm run lint` - Run ESLint with extended rules
 - `npm run format` - Format code with Prettier
@@ -26,11 +29,13 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 - `npm run madge` - Check for circular dependencies
 
 ### Documentation & API
+
 - `npm run extract-api` - Generate API documentation
 - `npm run typedoc` - Generate TypeDoc documentation
 - `npm run docmodel` - Generate API documentation model
 
 ### Release & Publishing
+
 - `npx changeset` - Create a changeset for your changes
 
 ## High-Level Architecture
@@ -38,15 +43,18 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 ### Core Modules
 
 1. **Core (`src/core/`)** - Main Apollo Client implementation
+
    - `ApolloClient.ts` - Main client class
    - `ObservableQuery.ts` - Observable query implementation
    - `QueryManager.ts` - Query lifecycle management
 
 2. **Cache (`src/cache/`)** - Caching layer
+
    - `inmemory/` - InMemoryCache implementation (default cache)
    - `core/` - Base cache abstractions
 
 3. **Link (`src/link/`)** - Network layer abstraction
+
    - `http/` - HTTP link for GraphQL over HTTP
    - `batch/` - Batch link for combining queries
    - `error/` - Error handling link
@@ -54,16 +62,19 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
    - `ws/` - WebSocket link for subscriptions
 
 4. **React Integration (`src/react/`)** - React hooks and components
+
    - `hooks/` - React hooks (useQuery, useMutation, etc.)
    - `ssr/` - Server-side rendering support
    - `context/` - React context providers
 
 5. **Utilities (`src/utilities/`)** - Shared utilities
+
    - `graphql/` - GraphQL document utilities
    - `internal/` - Internal utilities
    - `invariant/` - Error handling utilities
 
 6. **Testing (`src/testing/`)** - Testing utilities
+
    - `core/` - Core testing utilities
    - `react/` - React testing utilities (MockedProvider)
 
@@ -123,6 +134,6 @@ Apollo Client is a comprehensive caching GraphQL client for TypeScript/JavaScrip
 - Has extensive CI checks that must pass before merging
 
 ## Additional Instructions
+
 @.claude/documentation.md
 @.claude/hooks.md
-

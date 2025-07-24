@@ -3,7 +3,7 @@ title: Subscriptions
 description: Get real-time updates from your GraphQL server
 ---
 
-{/** @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 In addition to [queries](./queries/) and [mutations](./mutations/), GraphQL supports a third operation type: **subscriptions**.
 
@@ -17,9 +17,9 @@ In the majority of cases, your client should _not_ use subscriptions to stay up 
 
 You _should_ use subscriptions for the following:
 
-* **Small, incremental changes to large objects**. Repeatedly polling for a large object is expensive, especially when most of the object's fields rarely change. Instead, you can fetch the object's initial state with a query, and your server can proactively push updates to individual fields as they occur.
+- **Small, incremental changes to large objects**. Repeatedly polling for a large object is expensive, especially when most of the object's fields rarely change. Instead, you can fetch the object's initial state with a query, and your server can proactively push updates to individual fields as they occur.
 
-* **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
+- **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
 
 > **Note**: Subscriptions cannot be used to listen to local client events, like subscribing to changes in the cache. Subscriptions are intended to be used to subscribe to external data changes, and have those received changes be stored in the cache. You can then leverage Apollo Client's observability model to watch for changes in the cache, using [`client.watchQuery`](../api/core/ApolloClient#ApolloClient.watchQuery) or [`useQuery`](../api/react/hooks#usequery).
 
@@ -28,8 +28,8 @@ You _should_ use subscriptions for the following:
 The GraphQL spec does not define a specific protocol for sending subscription requests. Apollo Client supports the following protocols for subscriptions:
 
 - [**WebSocket**](#websocket-subprotocols), using one of the following subprotocols:
-    - [`graphql-ws`](https://github.com/enisdenjo/graphql-ws)
-    - [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) (⚠️ unmaintained)
+  - [`graphql-ws`](https://github.com/enisdenjo/graphql-ws)
+  - [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) (⚠️ unmaintained)
 - [**HTTP**](#http), using chunked multipart responses **(Apollo Client `3.7.11` and later)**
 
 > **You must use the same protocol as the GraphQL endpoint you're communicating with.**
@@ -157,12 +157,14 @@ Import and initialize a `GraphQLWsLink` object in the same project file where yo
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from 'graphql-ws';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:4000/subscriptions',
-}));
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:4000/subscriptions",
+  })
+);
 ```
 
 </MultiCodeBlock>
@@ -180,18 +182,20 @@ The following example expands on the previous one by initializing both a `GraphQ
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-import { split, HttpLink } from '@apollo/client';
-import { getMainDefinition } from '@apollo/client/utilities';
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from 'graphql-ws';
+import { split, HttpLink } from "@apollo/client";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:4000/graphql'
+  uri: "http://localhost:4000/graphql",
 });
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:4000/subscriptions',
-}));
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:4000/subscriptions",
+  })
+);
 
 // The split function takes three parameters:
 //
@@ -202,12 +206,12 @@ const splitLink = split(
   ({ query }) => {
     const definition = getMainDefinition(query);
     return (
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'subscription'
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
     );
   },
   wsLink,
-  httpLink,
+  httpLink
 );
 ```
 
@@ -222,24 +226,24 @@ After you define your link chain, you provide it to Apollo Client via the `link`
 <MultiCodeBlock>
 
 ```ts {6} title="index.ts"
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 // ...code from the above example goes here...
 
 const client = new ApolloClient({
   link: splitLink,
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
 });
 ```
 
 ```js {6} title="index.js"
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 // ...code from the above example goes here...
 
 const client = new ApolloClient({
   link: splitLink,
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
 });
 ```
 
@@ -254,27 +258,31 @@ It is often necessary to authenticate a client before allowing it to receive sub
 <MultiCodeBlock>
 
 ```ts {6-8}
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from 'graphql-ws';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:4000/subscriptions',
-  connectionParams: {
-    authToken: user.authToken,
-  },
-}));
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:4000/subscriptions",
+    connectionParams: {
+      authToken: user.authToken,
+    },
+  })
+);
 ```
 
 ```js {6-8}
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from 'graphql-ws';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:4000/subscriptions',
-  connectionParams: {
-    authToken: user.authToken,
-  },
-}));
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:4000/subscriptions",
+    connectionParams: {
+      authToken: user.authToken,
+    },
+  })
+);
 ```
 
 </MultiCodeBlock>
@@ -309,10 +317,9 @@ const COMMENTS_SUBSCRIPTION: TypedDocumentNode<
 `;
 
 function LatestComment({ postID }: LatestCommentProps) {
-  const { data, loading } = useSubscription(
-    COMMENTS_SUBSCRIPTION,
-    { variables: { postID } }
-  );
+  const { data, loading } = useSubscription(COMMENTS_SUBSCRIPTION, {
+    variables: { postID },
+  });
 
   return <h4>New comment: {!loading && data.commentAdded.content}</h4>;
 }
@@ -329,10 +336,9 @@ const COMMENTS_SUBSCRIPTION = gql`
 `;
 
 function LatestComment({ postID }) {
-  const { data, loading } = useSubscription(
-    COMMENTS_SUBSCRIPTION,
-    { variables: { postID } }
-  );
+  const { data, loading } = useSubscription(COMMENTS_SUBSCRIPTION, {
+    variables: { postID },
+  });
 
   return <h4>New comment: {!loading && data.commentAdded.content}</h4>;
 }
@@ -366,10 +372,9 @@ const COMMENTS_QUERY: TypedDocumentNode<
 `;
 
 function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
-  const result = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const result = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
   return <CommentsPage {...result} />;
 }
@@ -388,10 +393,9 @@ const COMMENTS_QUERY = gql`
 `;
 
 function CommentsPageWithData({ params }) {
-  const result = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const result = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
   return <CommentsPage {...result} />;
 }
@@ -506,9 +510,9 @@ function CommentsPageWithData({ params }) {
 
 In the example above, we pass three options to `subscribeToMore`:
 
-* `document` indicates the subscription to execute.
-* `variables` indicates the variables to include when executing the subscription.
-* `updateQuery` is a function that tells Apollo Client how to combine the query's currently cached result (`prev`) with the `subscriptionData` that's pushed by our GraphQL server. The return value of this function **completely replaces** the current cached result for the query.
+- `document` indicates the subscription to execute.
+- `variables` indicates the variables to include when executing the subscription.
+- `updateQuery` is a function that tells Apollo Client how to combine the query's currently cached result (`prev`) with the `subscriptionData` that's pushed by our GraphQL server. The return value of this function **completely replaces** the current cached result for the query.
 
 ## `useSubscription` API reference
 
@@ -518,13 +522,19 @@ In the example above, we pass three options to `subscribeToMore`:
 
 The `useSubscription` Hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!useSubscription.DocumentationTypes.useSubscription.Result:interface" idPrefix="subscriptionhookoptions-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client!useSubscription.DocumentationTypes.useSubscription.Result:interface"
+  idPrefix="subscriptionhookoptions-interface"
+/>
 
 ### Result
 
 After being called, the `useSubscription` Hook returns a result object with the following properties:
 
-<PropertySignatureTable canonicalReference="@apollo/client!useSubscription.Result:interface" idPrefix="subscriptionresult-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client!useSubscription.Result:interface"
+  idPrefix="subscriptionresult-interface"
+/>
 
 ## The older `subscriptions-transport-ws` library
 
@@ -532,27 +542,27 @@ If your server uses `subscriptions-transport-ws` instead of the newer `graphql-w
 
 1. Instead of `npm install graphql-ws`:
 
-    ```bash
-    npm install subscriptions-transport-ws
-    ```
+   ```bash
+   npm install subscriptions-transport-ws
+   ```
 
 2. Instead of `import { createClient } from 'graphql-ws'`:
 
-    ```js
-    import { SubscriptionClient } from 'subscriptions-transport-ws'
-    ```
+   ```js
+   import { SubscriptionClient } from "subscriptions-transport-ws";
+   ```
 
 3. Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`:
 
-    ```js
-    import { WebSocketLink } from '@apollo/client/link/ws'
-    ```
+   ```js
+   import { WebSocketLink } from "@apollo/client/link/ws";
+   ```
 
 4. The options you pass to `new SubscriptionClient` differ slightly from those passed to `createClient`:
 
-    * The first argument passed to the `SubscriptionClient` constructor is the URL for your subscription server.
-    * The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You can also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
-    * See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
+   - The first argument passed to the `SubscriptionClient` constructor is the URL for your subscription server.
+   - The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You can also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
+   - See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
 
 After you create your `wsLink`, everything else in this article still applies: `useSubscription`, `subscribeToMore`, and split links work exactly the same way for both implementations.
 
@@ -567,8 +577,8 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 const wsLink = new WebSocketLink(
   new SubscriptionClient("ws://localhost:4000/subscriptions", {
     connectionParams: {
-      authToken: user.authToken
-    }
+      authToken: user.authToken,
+    },
   })
 );
 ```

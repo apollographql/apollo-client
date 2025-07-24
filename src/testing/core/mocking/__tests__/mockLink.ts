@@ -170,8 +170,8 @@ test("returns matched mock", async () => {
 
   const stream = new ObservableStream(execute(link, { query }));
 
-  expect(stream).toEmitTypedValue({ data: { a: "a" } });
-  expect(stream).toComplete();
+  await expect(stream).toEmitTypedValue({ data: { a: "a" } });
+  await expect(stream).toComplete();
 });
 
 test("allows global default static delay to be defined for all instances of MockLink", async () => {
@@ -609,22 +609,22 @@ test("matches like mocks sequentially", async () => {
   {
     const stream = new ObservableStream(execute(link, { query }));
 
-    expect(stream).toEmitTypedValue({ data: { a: "a" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { a: "a" } });
+    await expect(stream).toComplete();
   }
 
   {
     const stream = new ObservableStream(execute(link, { query }));
 
-    expect(stream).toEmitTypedValue({ data: { a: "b" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { a: "b" } });
+    await expect(stream).toComplete();
   }
 
   {
     const stream = new ObservableStream(execute(link, { query }));
 
-    expect(stream).toEmitTypedValue({ data: { a: "c" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { a: "c" } });
+    await expect(stream).toComplete();
   }
 });
 
@@ -648,22 +648,22 @@ test("matches out-of-order queries", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: aQuery }));
 
-    expect(stream).toEmitTypedValue({ data: { a: "a" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { a: "a" } });
+    await expect(stream).toComplete();
   }
 
   {
     const stream = new ObservableStream(execute(link, { query: aQuery }));
 
-    expect(stream).toEmitTypedValue({ data: { a: "c" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { a: "c" } });
+    await expect(stream).toComplete();
   }
 
   {
     const stream = new ObservableStream(execute(link, { query: bQuery }));
 
-    expect(stream).toEmitTypedValue({ data: { b: "b" } });
-    expect(stream).toComplete();
+    await expect(stream).toEmitTypedValue({ data: { b: "b" } });
+    await expect(stream).toComplete();
   }
 });
 
@@ -758,10 +758,10 @@ test("returns matched mock with variables", async () => {
     execute(link, { query, variables: { id: 2 } })
   );
 
-  expect(stream).toEmitTypedValue({
+  await expect(stream).toEmitTypedValue({
     data: { user: { __typename: "User", name: "User 2" } },
   });
-  expect(stream).toComplete();
+  await expect(stream).toComplete();
 });
 
 test("matches variables with undefined values", async () => {
@@ -783,10 +783,10 @@ test("matches variables with undefined values", async () => {
     execute(link, { query, variables: { id: 1 } })
   );
 
-  expect(stream).toEmitTypedValue({
+  await expect(stream).toEmitTypedValue({
     data: { user: { __typename: "User", name: "User 1" } },
   });
-  expect(stream).toComplete();
+  await expect(stream).toComplete();
 });
 
 test("should fill in default variables if they are missing in mocked requests", async () => {

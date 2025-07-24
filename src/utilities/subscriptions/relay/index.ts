@@ -6,7 +6,9 @@ import { serializeFetchParameter } from "@apollo/client";
 import type { HttpLink } from "@apollo/client/link/http";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
+// eslint-disable-next-line local-rules/import-from-inside-other-export
 import { readMultipartBody } from "../../../link/http/parseAndCheckHttpResponse.js";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
 import { fallbackHttpConfig } from "../../../link/http/selectHttpOptionsAndBody.js";
 
 const backupFetch = maybe(() => fetch);

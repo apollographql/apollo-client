@@ -13,7 +13,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
-import { cacheSizes } from "../caching/index.js";
+import { cacheSizes } from "../caching/sizes.js";
 
 import { getOperationName } from "./getOperationName.js";
 

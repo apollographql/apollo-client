@@ -8327,20 +8327,20 @@ describe.skip("type tests", () => {
     client.watchQuery({ query, variables: { foo: "bar" } });
     client.watchQuery({ query, variables: { bar: "baz" } });
 
-    client.query({ query });
-    client.query({ query, variables: {} });
-    client.query({ query, variables: { foo: "bar" } });
-    client.query({ query, variables: { bar: "baz" } });
+    void client.query({ query });
+    void client.query({ query, variables: {} });
+    void client.query({ query, variables: { foo: "bar" } });
+    void client.query({ query, variables: { bar: "baz" } });
 
     client.subscribe({ query });
     client.subscribe({ query, variables: {} });
     client.subscribe({ query, variables: { foo: "bar" } });
     client.subscribe({ query, variables: { bar: "baz" } });
 
-    client.mutate({ mutation });
-    client.mutate({ mutation, variables: {} });
-    client.mutate({ mutation, variables: { foo: "bar" } });
-    client.mutate({ mutation, variables: { bar: "baz" } });
+    void client.mutate({ mutation });
+    void client.mutate({ mutation, variables: {} });
+    void client.mutate({ mutation, variables: { foo: "bar" } });
+    void client.mutate({ mutation, variables: { bar: "baz" } });
   });
 
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
@@ -8357,11 +8357,11 @@ describe.skip("type tests", () => {
     client.watchQuery({ query, variables: { foo: "bar" } });
     client.watchQuery({ query, variables: { bar: "baz" } });
 
-    client.query({ query });
-    client.query({ query, variables: {} });
-    client.query({ query, variables: undefined });
-    client.query({ query, variables: { foo: "bar" } });
-    client.query({ query, variables: { bar: "baz" } });
+    void client.query({ query });
+    void client.query({ query, variables: {} });
+    void client.query({ query, variables: undefined });
+    void client.query({ query, variables: { foo: "bar" } });
+    void client.query({ query, variables: { bar: "baz" } });
 
     client.subscribe({ query });
     client.subscribe({ query, variables: {} });
@@ -8369,11 +8369,11 @@ describe.skip("type tests", () => {
     client.subscribe({ query, variables: { foo: "bar" } });
     client.subscribe({ query, variables: { bar: "baz" } });
 
-    client.mutate({ mutation });
-    client.mutate({ mutation, variables: {} });
-    client.mutate({ mutation, variables: undefined });
-    client.mutate({ mutation, variables: { foo: "bar" } });
-    client.mutate({ mutation, variables: { bar: "baz" } });
+    void client.mutate({ mutation });
+    void client.mutate({ mutation, variables: {} });
+    void client.mutate({ mutation, variables: undefined });
+    void client.mutate({ mutation, variables: { foo: "bar" } });
+    void client.mutate({ mutation, variables: { bar: "baz" } });
   });
 
   test("variables are optional when TVariables are empty", () => {
@@ -8401,10 +8401,10 @@ describe.skip("type tests", () => {
       },
     });
 
-    client.query({ query });
-    client.query({ query, variables: {} });
-    client.query({ query, variables: undefined });
-    client.query({
+    void client.query({ query });
+    void client.query({ query, variables: {} });
+    void client.query({ query, variables: undefined });
+    void client.query({
       query,
       variables: {
         // @ts-expect-error unknown variables
@@ -8423,10 +8423,10 @@ describe.skip("type tests", () => {
       },
     });
 
-    client.mutate({ mutation });
-    client.mutate({ mutation, variables: {} });
-    client.mutate({ mutation, variables: undefined });
-    client.mutate({
+    void client.mutate({ mutation });
+    void client.mutate({ mutation, variables: {} });
+    void client.mutate({ mutation, variables: undefined });
+    void client.mutate({
       mutation,
       variables: {
         // @ts-expect-error unknown variables
@@ -8462,18 +8462,18 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error
-    client.query({ query });
-    client.query({
+    void client.query({ query });
+    void client.query({
       query,
       // @ts-expect-error
       variables: {},
     });
-    client.query({
+    void client.query({
       query,
       // @ts-expect-error
       variables: undefined,
     });
-    client.query({
+    void client.query({
       query,
       // @ts-expect-error unknown variables
       variables: { foo: "bar" },
@@ -8498,18 +8498,18 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error
-    client.mutate({ mutation });
-    client.mutate({
+    void client.mutate({ mutation });
+    void client.mutate({
       mutation,
       // @ts-expect-error
       variables: {},
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       // @ts-expect-error
       variables: undefined,
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       // @ts-expect-error unknown variables
       variables: { foo: "bar" },
@@ -8546,18 +8546,18 @@ describe.skip("type tests", () => {
       },
     });
 
-    client.query({ query });
-    client.query({ query, variables: {} });
-    client.query({ query, variables: undefined });
-    client.query({ query, variables: { limit: 10 } });
-    client.query({
+    void client.query({ query });
+    void client.query({ query, variables: {} });
+    void client.query({ query, variables: undefined });
+    void client.query({ query, variables: { limit: 10 } });
+    void client.query({
       query,
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    client.query({
+    void client.query({
       query,
       variables: {
         limit: 10,
@@ -8586,18 +8586,18 @@ describe.skip("type tests", () => {
       },
     });
 
-    client.mutate({ mutation });
-    client.mutate({ mutation, variables: {} });
-    client.mutate({ mutation, variables: undefined });
-    client.mutate({ mutation, variables: { limit: 10 } });
-    client.mutate({
+    void client.mutate({ mutation });
+    void client.mutate({ mutation, variables: {} });
+    void client.mutate({ mutation, variables: undefined });
+    void client.mutate({ mutation, variables: { limit: 10 } });
+    void client.mutate({
       mutation,
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       variables: {
         limit: 10,
@@ -8647,26 +8647,26 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error empty variables
-    client.query({ query });
-    client.query({
+    void client.query({ query });
+    void client.query({
       query,
       // @ts-expect-error empty variables
       variables: {},
     });
-    client.query({
+    void client.query({
       query,
       // @ts-expect-error empty variables
       variables: undefined,
     });
-    client.query({ query, variables: { id: "1" } });
-    client.query({
+    void client.query({ query, variables: { id: "1" } });
+    void client.query({
       query,
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    client.query({
+    void client.query({
       query,
       variables: {
         id: "1",
@@ -8705,26 +8705,26 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error empty variables
-    client.mutate({ mutation });
-    client.mutate({
+    void client.mutate({ mutation });
+    void client.mutate({
       mutation,
       // @ts-expect-error empty variables
       variables: {},
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       // @ts-expect-error empty variables
       variables: undefined,
     });
-    client.mutate({ mutation, variables: { id: "1" } });
-    client.mutate({
+    void client.mutate({ mutation, variables: { id: "1" } });
+    void client.mutate({
       mutation,
       variables: {
         // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       variables: {
         id: "1",
@@ -8786,25 +8786,25 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error empty variables
-    client.query({ query });
-    client.query({
+    void client.query({ query });
+    void client.query({
       query,
       // @ts-expect-error empty variables
       variables: {},
     });
-    client.query({
+    void client.query({
       query,
       // @ts-expect-error empty variables
       variables: undefined,
     });
-    client.query({ query, variables: { id: "1" } });
-    client.query({
+    void client.query({ query, variables: { id: "1" } });
+    void client.query({
       query,
       // @ts-expect-error missing required variables
       variables: { language: "en" },
     });
-    client.query({ query, variables: { id: "1", language: "en" } });
-    client.query({
+    void client.query({ query, variables: { id: "1", language: "en" } });
+    void client.query({
       query,
       variables: {
         id: "1",
@@ -8812,7 +8812,7 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
-    client.query({
+    void client.query({
       query,
       variables: {
         id: "1",
@@ -8860,25 +8860,25 @@ describe.skip("type tests", () => {
     });
 
     // @ts-expect-error empty variables
-    client.mutate({ mutation });
-    client.mutate({
+    void client.mutate({ mutation });
+    void client.mutate({
       mutation,
       // @ts-expect-error empty variables
       variables: {},
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       // @ts-expect-error empty variables
       variables: undefined,
     });
-    client.mutate({ mutation, variables: { id: "1" } });
-    client.mutate({
+    void client.mutate({ mutation, variables: { id: "1" } });
+    void client.mutate({
       mutation,
       // @ts-expect-error missing required variables
       variables: { language: "en" },
     });
-    client.mutate({ mutation, variables: { id: "1", language: "en" } });
-    client.mutate({
+    void client.mutate({ mutation, variables: { id: "1", language: "en" } });
+    void client.mutate({
       mutation,
       variables: {
         id: "1",
@@ -8886,7 +8886,7 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
-    client.mutate({
+    void client.mutate({
       mutation,
       variables: {
         id: "1",

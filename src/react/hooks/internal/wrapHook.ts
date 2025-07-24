@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { ApolloClient } from "@apollo/client";
+import type { ApolloClient, InternalTypes } from "@apollo/client";
 import type { ObservableQuery } from "@apollo/client";
 import type { createQueryPreloader } from "@apollo/client/react";
 import type {
@@ -13,7 +13,6 @@ import type {
   useSuspenseQuery,
 } from "@apollo/client/react";
 
-import type { QueryManager } from "../../../core/QueryManager.js";
 // direct import to avoid circular dependency
 import { getApolloContext } from "../../context/ApolloContext.js";
 
@@ -44,7 +43,7 @@ export type HookWrappers = {
   ) => WrappableHooks[K];
 };
 
-interface QueryManagerWithWrappers extends QueryManager {
+interface QueryManagerWithWrappers extends InternalTypes.QueryManager {
   [wrapperSymbol]?: HookWrappers;
 }
 

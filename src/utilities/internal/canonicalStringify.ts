@@ -1,10 +1,9 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
-import { cacheSizes, defaultCacheSizes } from "../caching/index.js";
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-import { AutoCleanedStrongCache } from "../internal/caches.js";
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-import { registerGlobalCache } from "../internal/getMemoryInternals.js";
+import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
+
+import { AutoCleanedStrongCache } from "./caches.js";
+import { registerGlobalCache } from "./getMemoryInternals.js";
 
 /**
  * Like JSON.stringify, but with object keys always sorted in the same order.

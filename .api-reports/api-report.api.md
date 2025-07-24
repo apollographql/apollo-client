@@ -1526,6 +1526,11 @@ export type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Pr
 export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClient.QueryOptions;
 
 // @public (undocumented)
+export namespace InternalTypes {
+    export type { NextFetchPolicyContext, QueryManager };
+}
+
+// @public (undocumented)
 interface InvalidateModifier {
     // (undocumented)
     [_invalidateModifier]: true;

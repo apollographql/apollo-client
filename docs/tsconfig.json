@@ -6,13 +6,9 @@
       {
         "name": "@mdx-js/typescript-plugin"
       }
-    ],
+    ]
   },
-  "include": [
-    "**/*.mdx",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": ["**/*.mdx", "**/*.ts", "**/*.tsx"],
   "mdx": {
     // Enable strict type checking in MDX files.
     "checkMdx": true

@@ -23,7 +23,10 @@ export {
   isQueryOperation,
   isSubscriptionOperation,
 } from "./graphql/operations.js";
-export { getMainDefinition } from "@apollo/client/utilities/internal";
+export {
+  canonicalStringify,
+  getMainDefinition,
+} from "@apollo/client/utilities/internal";
 
 export {
   concatPagination,
@@ -31,7 +34,6 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
-export { canonicalStringify } from "./shared/canonicalStringify.js";
 export { stripTypename } from "./common/stripTypename.js";
 
 export { cacheSizes } from "./caching/index.js";

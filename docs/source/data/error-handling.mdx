@@ -70,7 +70,7 @@ An operation that produces resolver errors might _also_ return partial data. Thi
 
 ### Network errors
 
-These are errors encountered while attempting to communicate with your GraphQL server. The error may be a result of a `4xx` or `5xx` response status code, a failure to communicate with the server (such is when the network is unavailable), a failure to parse the response as valid JSON, or a custom error thrown in an [Apollo Link request handler](../api/link/introduction#the-request-handler).
+These are errors encountered while attempting to communicate with your GraphQL server. The error may be a result of a `4xx` or `5xx` response status code, a failure to communicate with the server (such as when the network is unavailable), a failure to parse the response as valid JSON, or a custom error thrown in an [Apollo Link request handler](../api/link/introduction#the-request-handler).
 
 In Apollo Client, network errors are represented by these error types:
 

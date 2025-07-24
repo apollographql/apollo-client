@@ -87,6 +87,34 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  * Represents the combined list of GraphQL errors returned from the server in a
  * GraphQL response. This error type is used when your GraphQL operation returns
  * errors in the `errors` field of the response.
+ *
+ * @remarks
+ *
+ * When your GraphQL operation encounters errors on the server side (such as
+ * resolver errors, validation errors, or syntax errors), the server returns
+ * these errors in the `errors` array of the GraphQL response. Apollo Client
+ * wraps these errors in a `CombinedGraphQLErrors` object, which provides access
+ * to the individual errors while maintaining additional context about the
+ * response.
+ *
+ * @example
+ *
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client/errors";
+ *
+ * // Check if an error is a CombinedGraphQLErrors object
+ * if (CombinedGraphQLErrors.is(error)) {
+ *   // Access individual GraphQL errors
+ *   error.errors.forEach((graphQLError) => {
+ *     console.log(graphQLError.message);
+ *     console.log(graphQLError.path);
+ *     console.log(graphQLError.locations);
+ *   });
+ *
+ *   // Access the original GraphQL result
+ *   console.log(error.result);
+ * }
+ * ```
  */
 export class CombinedGraphQLErrors extends Error {
   /** Determine if an error is a `CombinedGraphQLErrors` instance */

@@ -4,6 +4,7 @@ import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
+import { WeakCache } from "@wry/caches";
 
 import type {
   Reference,
@@ -195,6 +196,7 @@ export class StoreReader {
         return this.execSelectionSetImpl(options);
       },
       {
+        cache: WeakCache,
         max:
           this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSelectionSet"] ||
@@ -224,6 +226,7 @@ export class StoreReader {
         return this.execSubSelectedArrayImpl(options);
       },
       {
+        cache: WeakCache,
         max:
           this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.executeSubSelectedArray"] ||

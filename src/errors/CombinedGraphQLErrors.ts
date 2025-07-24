@@ -117,14 +117,33 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  * ```
  */
 export class CombinedGraphQLErrors extends Error {
-  /** Determine if an error is a `CombinedGraphQLErrors` instance */
+  /**
+   * A method that determines whether an error is a `CombinedGraphQLErrors`
+   * object. This method enables TypeScript to narrow the error type.
+   *
+   * @example
+   *
+   * ```ts
+   * if (CombinedGraphQLErrors.is(error)) {
+   *   // TypeScript now knows `error` is a CombinedGraphQLErrors object
+   *   console.log(error.errors);
+   * }
+   * ```
+   */
   static is(error: unknown): error is CombinedGraphQLErrors {
     return isBranded(error, "CombinedGraphQLErrors");
   }
 
   /**
-   * Formats the error message used for the error `message` property. Override
-   * to provide your own formatting.
+   * A function that formats the error message used for the error's `message`
+   * property. Override this method to provide your own formatting.
+   *
+   * @remarks
+   *
+   * The `formatMessage` function is called by the `CombinedGraphQLErrors`
+   * constructor to provide a formatted message as the `message` property of the
+   * `CombinedGraphQLErrors` object. Follow the ["Providing a custom message
+   * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedGraphQLErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
    */
   static formatMessage: CombinedGraphQLErrors.MessageFormatter =
     defaultFormatMessage;

@@ -28,20 +28,19 @@ description: API reference
 
 ### `is`
 
-A type guard that determines whether an error is a `CombinedGraphQLErrors` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
-
-```ts
-if (CombinedGraphQLErrors.is(error)) {
-  // TypeScript now knows `error` is a CombinedGraphQLErrors object
-  console.log(error.errors);
-}
-```
+<DocBlock
+  canonicalReference="@apollo/client!CombinedGraphQLErrors.is:member(1)"
+  customOrder={["summary", "example"]}
+/>
 
 See the [additional properties](#additional-properties) for more details about the available properties provided by the `CombinedGraphQLErrors` object.
 
 ### `formatMessage`
 
-The function called by the `CombinedGraphQLErrors` constructor to provide a formatted message as the `message` property of the `CombinedGraphQLErrors` object. Follow the ["Providing a custom message formatter" guide](#providing-a-custom-message-formatter) to modify the format of the `message` property.
+<DocBlock
+  canonicalReference="@apollo/client!CombinedGraphQLErrors.formatMessage:member"
+  customOrder={["remarks"]}
+/>
 
 The message formatter is a function that takes the following parameters:
 
@@ -118,7 +117,7 @@ These properties are specific to the `CombinedGraphQLErrors` object. Standard er
 </td>
 <td>
 
-The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
+<DocBlock canonicalReference="@apollo/client!CombinedGraphQLErrors#errors:member" />
 
 </td>
 </tr>
@@ -133,7 +132,7 @@ The raw list of GraphQL errors returned by the `errors` field in the GraphQL res
 </td>
 <td>
 
-Partial data returned in the `data` field of the GraphQL response.
+<DocBlock canonicalReference="@apollo/client!CombinedGraphQLErrors#data:member" />
 
 </td>
 </tr>
@@ -148,7 +147,7 @@ Partial data returned in the `data` field of the GraphQL response.
 </td>
 <td>
 
-Extensions returned by the `extensions` field in the GraphQL response.
+<DocBlock canonicalReference="@apollo/client!CombinedGraphQLErrors#extensions:member" />
 
 </td>
 </tr>

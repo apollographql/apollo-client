@@ -229,8 +229,9 @@ export async function processInvariants(options: BuildStepOptions) {
   }
 
   /**
-   * wrapper around _isIdWithName that also checks for cjs-transpiled code-patterns:
+   * wrapper around \_isIdWithName that also checks for cjs-transpiled code-patterns:
    *
+   * ```
    * invariant(condition)
    * ^^^^^^^^^
    * in CJS:
@@ -238,6 +239,7 @@ export async function processInvariants(options: BuildStepOptions) {
    *                ^^^^^^^^^
    * or index_js_2.invariant.warn
    *               ^^^^^^^^^
+   * ```
    */
   function isIdWithName(node: Node | null | undefined, ...names: string[]) {
     return (

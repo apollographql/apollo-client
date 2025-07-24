@@ -80,14 +80,14 @@ query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   .split("\n")
   .map((line) => line.trim())
   .join("\n");
-  await prettier.format(``, {
-    parser: "jsdoc",
-      plugins: ["./format-jsdoc.js"],
-  })
+await prettier.format(``, {
+  parser: "jsdoc",
+  plugins: ["./format-jsdoc.js"],
+});
 
 const result = await prettier.format(code, {
   parser: "typescript-with-jsdoc",
   plugins: ["./format-jsdoc.js"],
 });
 
- console.log(result);
+console.log(result);

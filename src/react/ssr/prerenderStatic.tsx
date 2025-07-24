@@ -56,6 +56,7 @@ export declare namespace prerenderStatic {
      * throws an exception if the signal is aborted, so will `prerenderStatic`.
      *
      * @example
+     *
      * ```ts
      * const result = await prerenderStatic({
      *   tree: <App/>,
@@ -74,15 +75,16 @@ export declare namespace prerenderStatic {
     /**
      * The rendering function to use.
      * These functions are currently supported:
-     * * `prerender` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerender)
-     *   * recommended if you use Deno or a modern edge runtime with Web Streams
-     * * `prerenderToNodeStream` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerenderToNodeStream)
-     *   * recommended if you use Node.js
-     * * `renderToString` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToString)
-     *   * this API has no suspense support and will not work with hooks like `useSuspenseQuery`
-     * * `renderToStaticMarkup` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToStaticMarkup)
-     *   * slightly faster than `renderToString`, but the result cannot be hydrated
-     *   * this API has no suspense support and will not work with hooks like `useSuspenseQuery`
+     *
+     * - `prerender` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerender)
+     *   - recommended if you use Deno or a modern edge runtime with Web Streams
+     * - `prerenderToNodeStream` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerenderToNodeStream)
+     *   - recommended if you use Node.js
+     * - `renderToString` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToString)
+     *   - this API has no suspense support and will not work with hooks like `useSuspenseQuery`
+     * - `renderToStaticMarkup` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToStaticMarkup)
+     *   - slightly faster than `renderToString`, but the result cannot be hydrated
+     *   - this API has no suspense support and will not work with hooks like `useSuspenseQuery`
      */
     renderFunction:
       | RenderToString
@@ -334,11 +336,12 @@ you have an infinite render loop in your application.`,
        * The "web" `ReadableStream` consuming path.
        * This could also be done with the `AsyncIterable` branch, but we add this
        * code for two reasons:
-       * 1. potential performance benefits if we don't need to create an `AsyncIterator` on top
-       * 2. some browsers (looking at Safari) don't support `AsyncIterable` for `ReadableStream` yet
-       *    and we're not 100% sure how good this is covered on edge runtimes
        *
-       * The extra code here doesn't really matter, since *usually* this would not
+       * 1.  potential performance benefits if we don't need to create an `AsyncIterator` on top
+       * 2.  some browsers (looking at Safari) don't support `AsyncIterable` for `ReadableStream` yet
+       *     and we're not 100% sure how good this is covered on edge runtimes
+       *
+       * The extra code here doesn't really matter, since _usually_ this would not
        * be run in a browser, so we don't have to shave every single byte.
        */
       const reader = prelude.getReader();

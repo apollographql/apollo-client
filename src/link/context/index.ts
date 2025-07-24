@@ -29,7 +29,7 @@ export declare namespace SetContextLink {
  * ```ts
  * new SetContextLink((prevContext, operation) => {
  *   // ...
- * })
+ * });
  * ```
  */
 export function setContext(setter: SetContextLink.LegacyContextSetter) {

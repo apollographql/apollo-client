@@ -139,7 +139,8 @@ export class QueryInfo<
     }
   }
 
-  /** @internal
+  /**
+   * @internal
    * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
    * In the case of a standalone `QueryInfo`, we will keep a local version.
    */

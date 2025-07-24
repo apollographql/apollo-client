@@ -119,6 +119,7 @@ export declare namespace useLoadableQuery {
  * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
  *
  * @example
+ *
  * ```jsx
  * import { gql, useLoadableQuery } from "@apollo/client";
  *

@@ -177,13 +177,12 @@ export declare namespace useMutation {
 }
 
 /**
- *
- *
  * > Refer to the [Mutations](https://www.apollographql.com/docs/react/data/mutations/) section for a more in-depth overview of `useMutation`.
  *
  * @example
+ *
  * ```jsx
- * import { gql, useMutation } from '@apollo/client';
+ * import { gql, useMutation } from "@apollo/client";
  *
  * const ADD_TODO = gql`
  *   mutation AddTodo($type: String!) {
@@ -201,14 +200,14 @@ export declare namespace useMutation {
  *   return (
  *     <div>
  *       <form
- *         onSubmit={e => {
+ *         onSubmit={(e) => {
  *           e.preventDefault();
  *           addTodo({ variables: { type: input.value } });
- *           input.value = '';
+ *           input.value = "";
  *         }}
  *       >
  *         <input
- *           ref={node => {
+ *           ref={(node) => {
  *             input = node;
  *           }}
  *         />
@@ -218,6 +217,7 @@ export declare namespace useMutation {
  *   );
  * }
  * ```
+ *
  * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
  * @param options - Options to control how the mutation is executed.
  * @returns A tuple in the form of `[mutate, result]`

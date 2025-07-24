@@ -6,7 +6,8 @@ import type { FragmentMap } from "./types/FragmentMap.js";
  * Utility function that takes a list of fragment definitions and makes a hash out of them
  * that maps the name of the fragment to the fragment definition.
  *
- * @internal */
+ * @internal
+ */
 export function createFragmentMap(
   fragments: FragmentDefinitionNode[] = []
 ): FragmentMap {

@@ -20,7 +20,8 @@ import { getOperationName } from "./getOperationName.js";
 /**
  * Checks the document for errors and throws an exception if there is an error.
  *
- * @internal */
+ * @internal
+ */
 export const checkDocument: (
   doc: DocumentNode,
   expectedType?: OperationTypeNode

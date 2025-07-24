@@ -36,7 +36,7 @@ export const printers = {
             Object.entries(path.node.comments)
               .filter(
                 (/* @type {[string, AST.Comment]} */ [, comment]) =>
-                  comment.type === "Block"
+                  comment.type === "Block" && comment.value[0] === "*"
               )
               .map(
                 async (/* @type {[string, AST.Comment]} */ [key, comment]) => {
@@ -54,7 +54,11 @@ export const printers = {
                     proseWrap: "preserve",
                     trailingComma: "none",
                   }).formatted;
-                  if (string.trim().indexOf("\n") === -1) {
+                  // keep it single-line if it originally was single-line
+                  if (
+                    comment.value.trim().indexOf("\n") === -1 &&
+                    string.trim().indexOf("\n") === -1
+                  ) {
                     return [key, `* ${string} `];
                   }
 

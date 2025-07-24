@@ -1,10 +1,12 @@
 /**
- *  used via e.g.
-```sh
-node --experimental-transform-types --no-warnings --conditions 'react-server' config/listImports.ts @apollo/client/react
-```
-from `src/__tests__/exports.ts`
-*/
+ * used via e.g.
+ *
+ * ```sh
+ * node --experimental-transform-types --no-warnings --conditions 'react-server' config/listImports.ts @apollo/client/react
+ * ```
+ *
+ * from `src/__tests__/exports.ts`
+ */
 // @ts-ignore
 import { registerHooks } from "node:module";
 

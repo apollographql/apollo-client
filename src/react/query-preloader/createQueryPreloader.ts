@@ -49,6 +49,7 @@ export type PreloadQueryOptions<
  * outside of a React component.
  *
  * @example
+ *
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * const queryRef = preloadQuery(query, { variables, ...otherOptions });
@@ -122,6 +123,7 @@ export interface PreloadQueryFunction {
    *
    * @example
    * Here's an example using React Router's `loader` function:
+   *
    * ```ts
    * import { createQueryPreloader } from "@apollo/client";
    *
@@ -159,6 +161,7 @@ export interface PreloadQueryFunction {
  * @returns The `preloadQuery` function.
  *
  * @example
+ *
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * ```

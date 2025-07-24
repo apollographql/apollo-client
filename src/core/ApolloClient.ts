@@ -658,23 +658,24 @@ export class ApolloClient {
    * Constructs an instance of `ApolloClient`.
    *
    * @example
+   *
    * ```js
-   * import { ApolloClient, InMemoryCache } from '@apollo/client';
+   * import { ApolloClient, InMemoryCache } from "@apollo/client";
    *
    * const cache = new InMemoryCache();
    *
    * const client = new ApolloClient({
    *   // Provide required constructor fields
    *   cache: cache,
-   *   uri: 'http://localhost:4000/',
+   *   uri: "http://localhost:4000/",
    *
    *   // Provide some optional constructor fields
-   *   name: 'react-web-client',
-   *   version: '1.3',
+   *   name: "react-web-client",
+   *   version: "1.3",
    *   queryDeduplication: false,
    *   defaultOptions: {
    *     watchQuery: {
-   *       fetchPolicy: 'cache-and-network',
+   *       fetchPolicy: "cache-and-network",
    *     },
    *   },
    * });
@@ -847,6 +848,7 @@ export class ApolloClient {
    * to dispose of this `ApolloClient` instance.
    *
    * This method performs aggressive cleanup to prevent memory leaks:
+   *
    * - Unsubscribes all active `ObservableQuery` instances by emitting a `completed` event
    * - Rejects all currently running queries with "QueryManager stopped while query was in flight"
    * - Removes all queryRefs from the suspense cache
@@ -869,7 +871,7 @@ export class ApolloClient {
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
    *
-   * Note that if the cache does not change, the subscriber will *not* be notified.
+   * Note that if the cache does not change, the subscriber will _not_ be notified.
    *
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
@@ -1250,7 +1252,7 @@ export class ApolloClient {
    * user session, and you now want to make sure that any references to data you
    * might have fetched while the user session was active is gone.
    *
-   * It is important to remember that `resetStore()` *will* refetch any active
+   * It is important to remember that `resetStore()` _will_ refetch any active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
@@ -1314,7 +1316,7 @@ export class ApolloClient {
    *
    * `reFetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
    *
-   * It is important to remember that `reFetchObservableQueries()` *will* refetch any active
+   * It is important to remember that `reFetchObservableQueries()` _will_ refetch any active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
@@ -1334,7 +1336,7 @@ export class ApolloClient {
    *
    * `refetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
    *
-   * It is important to remember that `refetchObservableQueries()` *will* refetch any active
+   * It is important to remember that `refetchObservableQueries()` _will_ refetch any active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
@@ -1354,7 +1356,7 @@ export class ApolloClient {
    *
    * `refetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
    *
-   * It is important to remember that `refetchQueries()` *will* refetch specified active
+   * It is important to remember that `refetchQueries()` _will_ refetch specified active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
@@ -1466,75 +1468,78 @@ export class ApolloClient {
    * For more details, see [Memory Management](https://www.apollographql.com/docs/react/caching/memory-management/#measuring-cache-usage)
    *
    * @example
+   *
    * ```ts
-   * console.log(client.getMemoryInternals())
+   * console.log(client.getMemoryInternals());
    * ```
+   *
    * Logs output in the following JSON format:
    * @example
+   *
    * ```json
-   *{
-   *  limits:     {
-   *    canonicalStringify: 1000,
-   *    print: 2000,
-   *    'documentTransform.cache': 2000,
-   *    'queryManager.getDocumentInfo': 2000,
-   *    'PersistedQueryLink.persistedQueryHashes': 2000,
-   *    'fragmentRegistry.transform': 2000,
-   *    'fragmentRegistry.lookup': 1000,
-   *    'fragmentRegistry.findFragmentSpreads': 4000,
-   *    'cache.fragmentQueryDocuments': 1000,
-   *    'removeTypenameFromVariables.getVariableDefinitions': 2000,
-   *    'inMemoryCache.maybeBroadcastWatch': 5000,
-   *    'inMemoryCache.executeSelectionSet': 10000,
-   *    'inMemoryCache.executeSubSelectedArray': 5000
-   *  },
-   *  sizes: {
-   *    canonicalStringify: 4,
-   *    print: 14,
-   *    addTypenameDocumentTransform: [
-   *      {
-   *        cache: 14,
-   *      },
-   *    ],
-   *    queryManager: {
-   *      getDocumentInfo: 14,
-   *      documentTransforms: [
-   *        {
-   *          cache: 14,
-   *        },
-   *        {
-   *          cache: 14,
-   *        },
-   *      ],
-   *    },
-   *    fragmentRegistry: {
-   *      findFragmentSpreads: 34,
-   *      lookup: 20,
-   *      transform: 14,
-   *    },
-   *    cache: {
-   *      fragmentQueryDocuments: 22,
-   *    },
-   *    inMemoryCache: {
-   *      executeSelectionSet: 4345,
-   *      executeSubSelectedArray: 1206,
-   *      maybeBroadcastWatch: 32,
-   *    },
-   *    links: [
-   *      {
-   *        PersistedQueryLink: {
-   *          persistedQueryHashes: 14,
-   *        },
-   *      },
-   *      {
-   *        removeTypenameFromVariables: {
-   *          getVariableDefinitions: 14,
-   *        },
-   *      },
-   *    ],
-   *  },
+   * {
+   *   "limits": {
+   *     "canonicalStringify": 1000,
+   *     "print": 2000,
+   *     "documentTransform.cache": 2000,
+   *     "queryManager.getDocumentInfo": 2000,
+   *     "PersistedQueryLink.persistedQueryHashes": 2000,
+   *     "fragmentRegistry.transform": 2000,
+   *     "fragmentRegistry.lookup": 1000,
+   *     "fragmentRegistry.findFragmentSpreads": 4000,
+   *     "cache.fragmentQueryDocuments": 1000,
+   *     "removeTypenameFromVariables.getVariableDefinitions": 2000,
+   *     "inMemoryCache.maybeBroadcastWatch": 5000,
+   *     "inMemoryCache.executeSelectionSet": 10000,
+   *     "inMemoryCache.executeSubSelectedArray": 5000
+   *   },
+   *   "sizes": {
+   *     "canonicalStringify": 4,
+   *     "print": 14,
+   *     "addTypenameDocumentTransform": [
+   *       {
+   *         "cache": 14
+   *       }
+   *     ],
+   *     "queryManager": {
+   *       "getDocumentInfo": 14,
+   *       "documentTransforms": [
+   *         {
+   *           "cache": 14
+   *         },
+   *         {
+   *           "cache": 14
+   *         }
+   *       ]
+   *     },
+   *     "fragmentRegistry": {
+   *       "findFragmentSpreads": 34,
+   *       "lookup": 20,
+   *       "transform": 14
+   *     },
+   *     "cache": {
+   *       "fragmentQueryDocuments": 22
+   *     },
+   *     "inMemoryCache": {
+   *       "executeSelectionSet": 4345,
+   *       "executeSubSelectedArray": 1206,
+   *       "maybeBroadcastWatch": 32
+   *     },
+   *     "links": [
+   *       {
+   *         "PersistedQueryLink": {
+   *           "persistedQueryHashes": 14
+   *         }
+   *       },
+   *       {
+   *         "removeTypenameFromVariables": {
+   *           "getVariableDefinitions": 14
+   *         }
+   *       }
+   *     ]
+   *   }
    * }
-   *```
+   * ```
    */
   public getMemoryInternals?: typeof getApolloClientMemoryInternals;
 }

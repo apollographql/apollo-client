@@ -180,17 +180,18 @@ export declare namespace LocalState {
    * A map of GraphQL types to their field resolvers.
    *
    * @example
+   *
    * ```ts
    * const resolvers: Resolvers = {
    *   Query: {
-   *     isLoggedIn: () => !!localStorage.getItem('token')
+   *     isLoggedIn: () => !!localStorage.getItem("token"),
    *   },
    *   Mutation: {
    *     login: (_, { token }) => {
-   *       localStorage.setItem('token', token);
+   *       localStorage.setItem("token", token);
    *       return true;
-   *     }
-   *   }
+   *     },
+   *   },
    * };
    * ```
    */
@@ -204,6 +205,7 @@ export declare namespace LocalState {
    * A function that resolves the value for a single GraphQL field marked with `@client`.
    *
    * Resolver functions receive four parameters:
+   *
    * - `rootValue`: The parent object containing the result from the resolver on the parent field
    * - `args`: Arguments passed to the field
    * - `context`: Contains `requestContext`, `client`, and `phase` properties
@@ -215,9 +217,10 @@ export declare namespace LocalState {
    * @template TArgs - The type of the field arguments
    *
    * @example
+   *
    * ```ts
    * const isLoggedInResolver: Resolver<boolean> = () => {
-   *   return !!localStorage.getItem('token');
+   *   return !!localStorage.getItem("token");
    * };
    * ```
    */
@@ -252,20 +255,21 @@ export declare namespace LocalState {
  * data in a single query.
  *
  * @example
+ *
  * ```ts
- * import { LocalState } from '@apollo/client/local-state';
+ * import { LocalState } from "@apollo/client/local-state";
  *
  * const localState = new LocalState({
  *   resolvers: {
  *     Query: {
- *       isLoggedIn: () => !!localStorage.getItem('token')
- *     }
- *   }
+ *       isLoggedIn: () => !!localStorage.getItem("token"),
+ *     },
+ *   },
  * });
  *
  * const client = new ApolloClient({
  *   cache: new InMemoryCache(),
- *   localState
+ *   localState,
  * });
  * ```
  *
@@ -308,11 +312,12 @@ export class LocalState<
    * @param resolvers - The resolvers to add
    *
    * @example
+   *
    * ```ts
    * localState.addResolvers({
    *   Query: {
-   *     newField: () => 'Hello World'
-   *   }
+   *     newField: () => "Hello World",
+   *   },
    * });
    * ```
    */

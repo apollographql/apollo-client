@@ -10,7 +10,7 @@
  * watchQueryOptions
  * makeWatchQueryOptions
  */
-/** */
+/**  */
 import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
@@ -241,9 +241,10 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
  *
  * @example
+ *
  * ```jsx
- * import { gql } from '@apollo/client';
- * import { useQuery } from '@apollo/client/react';
+ * import { gql } from "@apollo/client";
+ * import { useQuery } from "@apollo/client/react";
  *
  * const GET_GREETING = gql`
  *   query GetGreeting($language: String!) {
@@ -255,12 +256,13 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  *
  * function Hello() {
  *   const { loading, error, data } = useQuery(GET_GREETING, {
- *     variables: { language: 'english' },
+ *     variables: { language: "english" },
  *   });
  *   if (loading) return <p>Loading ...</p>;
  *   return <h1>Hello {data.greeting.message}!</h1>;
  * }
  * ```
+ *
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Options to control how the query is executed.
  * @returns Query result object

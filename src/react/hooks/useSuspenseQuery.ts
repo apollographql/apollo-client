@@ -73,10 +73,14 @@ export declare namespace useSuspenseQuery {
        * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
        *
        * @example Recommended usage of `skipToken`:
-       * ```ts
-       * import { skipToken, useSuspenseQuery } from '@apollo/client';
        *
-       * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
+       * ```ts
+       * import { skipToken, useSuspenseQuery } from "@apollo/client";
+       *
+       * const { data } = useSuspenseQuery(
+       *   query,
+       *   id ? { variables: { id } } : skipToken
+       * );
        * ```
        */
       skip?: boolean;
@@ -162,9 +166,10 @@ export declare namespace useSuspenseQuery {
  * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
  *
  * @example
+ *
  * ```jsx
- * import { Suspense } from 'react';
- * import { useSuspenseQuery } from '@apollo/client';
+ * import { Suspense } from "react";
+ * import { useSuspenseQuery } from "@apollo/client";
  *
  * const listQuery = gql`
  *   query {
@@ -187,16 +192,16 @@ export declare namespace useSuspenseQuery {
  *
  *   return (
  *     <ol>
- *       {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+ *       {data.list.map((item) => (
+ *         <Item key={item.id} id={item.id} />
+ *       ))}
  *     </ol>
  *   );
  * }
- *
  * ```
  *
  * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options -  An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
-
+ * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
  */
 export function useSuspenseQuery<
   TData = unknown,

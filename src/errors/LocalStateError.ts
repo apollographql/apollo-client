@@ -9,18 +9,46 @@ export declare namespace LocalStateError {
 
 /**
  * Represents a fatal error when executing `@client` fields from `LocalState`,
- * typically to indicate a problem with the `LocalState` configuration. This
- * error does not represent an error thrown in a local resolver.
+ * typically to indicate a problem with the `LocalState` configuration or
+ * incorrect usage of a resolver function. This error does not represent user
+ * errors thrown in a local resolver when resolving `@client` fields.
+ *
+ * @example
+ *
+ * ```ts
+ * import { LocalStateError } from "@apollo/client/errors";
+ *
+ * // Check if an error is a LocalStateError instance
+ * if (LocalStateError.is(error)) {
+ *   console.log("Original error:", error.cause);
+ *
+ *   // Determine which field caused the error
+ *   if (error.path) {
+ *     console.log("Error occurred at field path:", error.path.join("."));
+ *   }
+ * }
+ * ```
  */
 export class LocalStateError extends Error {
-  /** Determine if an error is a `LocalStateError` instance */
+  /**
+   * A method that determines whether an error is a `LocalStateError`
+   * object. This method enables TypeScript to narrow the error type.
+   *
+   * @example
+   *
+   * ```ts
+   * if (LocalStateError.is(error)) {
+   *   // TypeScript now knows `error` is a LocalStateError object
+   *   console.log(error.path);
+   * }
+   * ```
+   */
   static is(error: unknown): error is LocalStateError {
     return isBranded(error, "LocalStateError");
   }
 
   /**
-   * The path to the field that caused the error, if the error is caused by a
-   * field.
+   * The path to the field that caused the error.
    */
   readonly path?: Array<string | number>;
 

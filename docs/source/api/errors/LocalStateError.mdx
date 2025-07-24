@@ -3,36 +3,21 @@ title: LocalStateError
 description: API reference
 ---
 
-{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
-Represents a fatal error when executing `@client` fields from `LocalState`, typically to indicate a problem with the `LocalState` configuration or incorrect usage of a resolver function. This error does not represent user errors thrown in a local resolver when resolving `@client` fields.
-
-```ts
-import { LocalStateError } from "@apollo/client/errors";
-
-// Check if an error is a LocalStateError instance
-if (LocalStateError.is(error)) {
-  console.log("Original error:", error.cause);
-
-  // Determine which field caused the error
-  if (error.path) {
-    console.log("Error occurred at field path:", error.path.join("."));
-  }
-}
-```
+<DocBlock
+  canonicalReference="@apollo/client!LocalStateError:class"
+  customOrder={["summary", "example"]}
+/>
 
 ## Static methods
 
 ### `is`
 
-A type guard that determines whether an error is a `LocalStateError` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
-
-```ts
-if (LocalStateError.is(error)) {
-  // TypeScript now knows `error` is a LocalStateError object
-  console.log(error.errors);
-}
-```
+<DocBlock
+  canonicalReference="@apollo/client!LocalStateError.is:member(1)"
+  customOrder={["summary", "example"]}
+/>
 
 See the [additional properties](#additional-properties) for more details about the available properties provided by the `LocalStateError` object.
 
@@ -66,7 +51,7 @@ These properties are specific to the `LocalStateError` object. Standard error [i
 </td>
 <td>
 
-The path to the field that caused the error.
+<DocBlock canonicalReference="@apollo/client!LocalStateError#path:member" />
 
 </td>
 </tr>

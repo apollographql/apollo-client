@@ -137,8 +137,6 @@ items:
         children:
           - label: ApolloProvider
             href: ./api/react/ApolloProvider
-          - label: ApolloConsumer
-            href: ./api/react/ApolloConsumer
           - label: useQuery
             href: ./api/react/useQuery
           - label: useLazyQuery

@@ -22,20 +22,20 @@ yarn add -D typescript graphql @graphql-codegen/cli @graphql-codegen/client-pres
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project:
 
 ```ts title="codegen.ts"
-import { CodegenConfig } from '@graphql-codegen/cli';
+import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: '<URL_OF_YOUR_GRAPHQL_API>',
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
   // this assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
-  documents: ['src/**/*.{ts,tsx}'],
+  documents: ["src/**/*.{ts,tsx}"],
   generates: {
-    './src/__generated__/': {
-      preset: 'client',
+    "./src/__generated__/": {
+      preset: "client",
       plugins: [],
       presetConfig: {
-        gqlTagName: 'gql',
-      }
-    }
+        gqlTagName: "gql",
+      },
+    },
   },
   ignoreNoDocuments: true,
 };
@@ -51,7 +51,7 @@ Finally, we'll add the following scripts to our `package.json` file:
 {
   "scripts": {
     "compile": "graphql-codegen",
-    "watch": "graphql-codegen -w",
+    "watch": "graphql-codegen -w"
   }
 }
 ```
@@ -73,10 +73,10 @@ GraphQL Code Generator automatically creates a `gql` function (from the `src/__g
 Below we use the `gql` function to define our query, which automatically generates types for our `useQuery` hook:
 
 ```tsx
-import React from 'react';
-import { useQuery } from '@apollo/client/react';
+import React from "react";
+import { useQuery } from "@apollo/client/react";
 
-import { gql } from '../src/__generated__/gql';
+import { gql } from "../src/__generated__/gql";
 
 const GET_ROCKET_INVENTORY = gql(/* GraphQL */ `
   query GetRocketInventory($year: Int!) {
@@ -99,10 +99,9 @@ export function RocketInventoryList() {
   return (
     <div>
       <h3>Available Inventory</h3>
-      {loading ? (
+      {loading ?
         <p>Loading ...</p>
-      ) : (
-        <table>
+      : <table>
           <thead>
             <tr>
               <th>Model</th>
@@ -110,15 +109,16 @@ export function RocketInventoryList() {
             </tr>
           </thead>
           <tbody>
-            {data && data.rocketInventory.map(inventory => (
-              <tr>
-                <td>{inventory.model}</td>
-                <td>{inventory.stock}</td>
-              </tr>
-            ))}
+            {data &&
+              data.rocketInventory.map((inventory) => (
+                <tr>
+                  <td>{inventory.model}</td>
+                  <td>{inventory.stock}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
-      )}
+      }
     </div>
   );
 }
@@ -131,6 +131,7 @@ The `useQuery` hook returns an instance of `QueryResult`, which includes the `fe
 By default, the type parameters for `fetchMore` are the same as those for `useQuery`. Because both `fetchMore` and `useQuery` encapsulate a query operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`.
 
 Expanding our previous example, notice that we don't explicitly type `fetchMore`, because it defaults to using the same type parameters as `useQuery`:
+
 ```tsx
 // ...
 export function RocketInventoryList() {
@@ -171,17 +172,16 @@ const ROCKET_STOCK_SUBSCRIPTION = gql(/* GraphQL */ `
 `);
 
 export function RocketInventoryList() {
-  const { subscribeToMore, loading, data } = useQuery(
-    GET_ROCKET_INVENTORY,
-    { variables: { year: 2019 } }
-  );
+  const { subscribeToMore, loading, data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: 2019 },
+  });
 
   React.useEffect(() => {
     subscribeToMore(
       // variables are typed!
       { document: ROCKET_STOCK_SUBSCRIPTION, variables: { year: 2019 } }
     );
-  }, [subscribeToMore])
+  }, [subscribeToMore]);
 
   // ...
 }
@@ -192,10 +192,10 @@ export function RocketInventoryList() {
 We can type `useMutation` hooks the same way we type `useQuery` hooks. Using the generated `gql` function to define our GraphQL mutations, we ensure that we type our mutation's variables and return data:
 
 ```tsx
-import React, { useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import React, { useState } from "react";
+import { useMutation } from "@apollo/client/react";
 
-import { gql } from '../src/__generated__/gql';
+import { gql } from "../src/__generated__/gql";
 
 const SAVE_ROCKET = gql(/* GraphQL */ `
   mutation saveRocket($rocket: RocketInput!) {
@@ -205,37 +205,37 @@ const SAVE_ROCKET = gql(/* GraphQL */ `
   }
 `);
 
-
 export function NewRocketForm() {
-  const [model, setModel] = useState('');
+  const [model, setModel] = useState("");
   const [year, setYear] = useState(0);
   const [stock, setStock] = useState(0);
 
   // our mutation's result, data, is typed!
   const [saveRocket, { error, data }] = useMutation(SAVE_ROCKET, {
     // variables are also typed!
-    variables: { rocket: { model, year: +year, stock: +stock } }
+    variables: { rocket: { model, year: +year, stock: +stock } },
   });
 
   return (
     <div>
       <h3>Add a Rocket</h3>
-      {error ? <p>Oh no! {error.message}</p> : null}
-      {data && data.saveRocket ? <p>Saved!</p> : null}
+      {error ?
+        <p>Oh no! {error.message}</p>
+      : null}
+      {data && data.saveRocket ?
+        <p>Saved!</p>
+      : null}
       <form>
         <p>
           <label>Model</label>
-          <input
-            name="model"
-            onChange={e => setModel(e.target.value)}
-          />
+          <input name="model" onChange={(e) => setModel(e.target.value)} />
         </p>
         <p>
           <label>Year</label>
           <input
             type="number"
             name="year"
-            onChange={e => setYear(+e.target.value)}
+            onChange={(e) => setYear(+e.target.value)}
           />
         </p>
         <p>
@@ -243,7 +243,7 @@ export function NewRocketForm() {
           <input
             type="number"
             name="stock"
-            onChange={e => setStock(e.target.value)}
+            onChange={(e) => setStock(e.target.value)}
           />
         </p>
         <button onClick={() => model && year && stock && saveRocket()}>
@@ -260,10 +260,10 @@ export function NewRocketForm() {
 We can type our `useSubscription` hooks the same way we typed our `useQuery` and `useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
 
 ```tsx
-import React from 'react';
-import { useSubscription } from '@apollo/client/react';
+import React from "react";
+import { useSubscription } from "@apollo/client/react";
 
-import { gql } from '../src/gql';
+import { gql } from "../src/gql";
 
 const LATEST_NEWS = gql(/* GraphQL */ `
   subscription getLatestNews {
@@ -279,9 +279,7 @@ export function LatestNews() {
   return (
     <div>
       <h5>Latest News</h5>
-      <p>
-        {loading ? 'Loading...' : data!.latestNews.content}
-      </p>
+      <p>{loading ? "Loading..." : data!.latestNews.content}</p>
     </div>
   );
 }
@@ -386,6 +384,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 ```
 
 > The following logic also works for query, mutation, and subscription higher-order components!
+
 ### Options
 
 Typically, our wrapper component's props pass in a query's variables. Wherever our application uses our wrapper component, we want to ensure that we correctly type those passed-in arguments.
@@ -444,7 +443,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import Character from "./Character";
 
 export const link = createHttpLink({
-  uri: "https://mpjk0plp9.lp.gql.zone/graphql"
+  uri: "https://mpjk0plp9.lp.gql.zone/graphql",
 });
 
 export const client = new ApolloClient({
@@ -452,11 +451,13 @@ export const client = new ApolloClient({
   link,
 });
 
-export default () =>
+export default () => (
   <ApolloProvider client={client}>
-    // $ExpectError property `episode`. Property not found in. See: src/Character.js:43
+    // $ExpectError property `episode`. Property not found in. See:
+    src/Character.js:43
     <Character />
-  </ApolloProvider>;
+  </ApolloProvider>
+);
 ```
 
 ### Props
@@ -515,15 +516,15 @@ export const withCharacter = graphql<
   Props
 >(HERO_QUERY, {
   options: ({ episode }) => ({
-    variables: { episode }
+    variables: { episode },
   }),
   props: ({ data, ownProps }) => ({
     ...data,
     // $ExpectError [string] This type cannot be compared to number
     episode: ownProps.episode > 1,
     // $ExpectError property `isHero`. Property not found on object type
-    isHero: data && data.hero && data.hero.isHero
-  })
+    isHero: data && data.hero && data.hero.isHero,
+  }),
 });
 ```
 
@@ -578,9 +579,9 @@ In TypeScript, all APIs that intake `DocumentNode` can alternatively take `Typed
 This technique enables us to modify the [`useQuery` example](#usequery) above to use a type inference:
 
 ```tsx
-import React from 'react';
-import { gql, TypedDocumentNode } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import React from "react";
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 interface RocketInventoryData {
   rocketInventory: RocketInventory[];
@@ -590,7 +591,10 @@ interface RocketInventoryVars {
   year: number;
 }
 
-const GET_ROCKET_INVENTORY: TypedDocumentNode<RocketInventoryData, RocketInventoryVars> = gql`
+const GET_ROCKET_INVENTORY: TypedDocumentNode<
+  RocketInventoryData,
+  RocketInventoryVars
+> = gql`
   query GetRocketInventory($year: Int!) {
     rocketInventory(year: $year) {
       id
@@ -602,17 +606,15 @@ const GET_ROCKET_INVENTORY: TypedDocumentNode<RocketInventoryData, RocketInvento
 `;
 
 export function RocketInventoryList() {
-  const { loading, data } = useQuery(
-    GET_ROCKET_INVENTORY,
-    { variables: { year: 2019 } }
-  );
+  const { loading, data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: 2019 },
+  });
   return (
     <div>
       <h3>Available Inventory</h3>
-      {loading ? (
+      {loading ?
         <p>Loading ...</p>
-      ) : (
-        <table>
+      : <table>
           <thead>
             <tr>
               <th>Model</th>
@@ -620,15 +622,16 @@ export function RocketInventoryList() {
             </tr>
           </thead>
           <tbody>
-            {data && data.rocketInventory.map(inventory => (
-              <tr>
-                <td>{inventory.model}</td>
-                <td>{inventory.stock}</td>
-              </tr>
-            ))}
+            {data &&
+              data.rocketInventory.map((inventory) => (
+                <tr>
+                  <td>{inventory.model}</td>
+                  <td>{inventory.stock}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
-      )}
+      }
     </div>
   );
 }

@@ -62,14 +62,13 @@ export default graphql(currentUserQuery)(Profile)
 [create-react-app](https://github.com/facebook/create-react-app/) can't use the Webpack loaders unless ejected. To make the same transformation work in `create-react-app` without ejecting, use [graphql.macro](https://github.com/evenchange4/graphql.macro).
 
 ```javascript
-import { loader } from 'graphql.macro';
-const currentUserQuery = loader('./currentUser.graphql');
+import { loader } from "graphql.macro";
+const currentUserQuery = loader("./currentUser.graphql");
 ```
 
 ## Fragments
 
 You can use and include fragments in .graphql files and have webpack include those dependencies for you, similar to how you would use fragments and queries with the gql tag in plain JS.
-
 
 ```graphql
 #import "./UserInfoFragment.graphql"

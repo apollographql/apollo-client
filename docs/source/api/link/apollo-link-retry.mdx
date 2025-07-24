@@ -23,17 +23,17 @@ The standard retry strategy provides exponential backoff with jittering, and tak
 
 ### options.delay
 
-| Option | Description |
-| - | - |
-| `delay.initial` | The number of milliseconds to wait before attempting the first retry. |
-| `delay.max` | The maximum number of milliseconds that the link should wait for any retry. |
-| `delay.jitter` | Whether delays between attempts should be randomized. |
+| Option          | Description                                                                 |
+| --------------- | --------------------------------------------------------------------------- |
+| `delay.initial` | The number of milliseconds to wait before attempting the first retry.       |
+| `delay.max`     | The maximum number of milliseconds that the link should wait for any retry. |
+| `delay.jitter`  | Whether delays between attempts should be randomized.                       |
 
 ### options.attempts
 
-| Option | Description |
-| - | - |
-| `attempts.max` | The max number of times to try a single operation before giving up. |
+| Option             | Description                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `attempts.max`     | The max number of times to try a single operation before giving up.                      |
 | `attempts.retryIf` | A predicate function that can determine whether a particular response should be retried. |
 
 ### Default configuration
@@ -45,12 +45,12 @@ new RetryLink({
   delay: {
     initial: 300,
     max: Infinity,
-    jitter: true
+    jitter: true,
   },
   attempts: {
     max: 5,
-    retryIf: (error, _operation) => !!error
-  }
+    retryIf: (error, _operation) => !!error,
+  },
 });
 ```
 
@@ -73,7 +73,7 @@ import { RetryLink } from "@apollo/client/link/retry";
 
 const link = new RetryLink({
   attempts: (count, operation, error) => {
-    return !!error && operation.operationName != 'specialCase';
+    return !!error && operation.operationName != "specialCase";
   },
   delay: (count, operation, error) => {
     return count * 1000 * Math.random();

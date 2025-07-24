@@ -60,13 +60,13 @@ function App() {
       Welcome, {data.firstName} {data.lastName}!
       <details>
         <summary>Friends list</summary>
-        {data.friends ? (
+        {data.friends ?
           <ul>
             {data.friends.map((id) => (
               <li>{id}</li>
             ))}
           </ul>
-        ) : null}
+        : null}
       </details>
     </>
   );

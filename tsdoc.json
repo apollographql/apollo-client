@@ -14,11 +14,17 @@
       "tagName": "@docGroup",
       "syntaxKind": "block",
       "allowMultiple": false
+    },
+    {
+      "tagName": "@template",
+      "syntaxKind": "block",
+      "allowMultiple": false
     }
   ],
 
   "supportForTags": {
     "@since": true,
-    "@docGroup": true
+    "@docGroup": true,
+    "@template": true
   }
 }

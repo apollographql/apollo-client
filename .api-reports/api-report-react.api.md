@@ -54,23 +54,6 @@ import type { VariablesOption } from '@apollo/client/utilities/internal';
 import type { WatchQueryFetchPolicy } from '@apollo/client';
 import type { wrapperSymbol } from '@apollo/client/react/internal';
 
-// Warning: (ae-forgotten-export) The symbol "ApolloConsumer_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const ApolloConsumer: ReactTypes.FC<ApolloConsumer_2.Props>;
-
-// @public (undocumented)
-namespace ApolloConsumer_2 {
-    // (undocumented)
-    interface Props {
-        // (undocumented)
-        children: (client: ApolloClient) => ReactTypes.ReactNode;
-    }
-}
-
-// @public (undocumented)
-const ApolloConsumer: ReactTypes.FC<ApolloConsumer_2.Props>;
-
 // @public (undocumented)
 export interface ApolloContextValue {
     // (undocumented)

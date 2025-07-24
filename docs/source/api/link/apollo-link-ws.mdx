@@ -16,6 +16,7 @@ The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link
 ```shell
 npm install subscriptions-transport-ws
 ```
+
 ## Constructor
 
 ```js
@@ -24,7 +25,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const link = new WebSocketLink(
   new SubscriptionClient("ws://localhost:4000/graphql", {
-    reconnect: true
+    reconnect: true,
   })
 );
 ```
@@ -48,6 +49,7 @@ The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an
 ###### `uri`
 
 `String`
+
 </td>
 <td>
 
@@ -62,6 +64,7 @@ The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an
 ###### `options`
 
 `Object`
+
 </td>
 <td>
 
@@ -78,6 +81,7 @@ Options for configuring the WebSocket connection.
 ###### `webSocketImpl`
 
 `Object`
+
 </td>
 <td>
 

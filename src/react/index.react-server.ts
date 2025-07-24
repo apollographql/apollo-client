@@ -21,8 +21,6 @@ function missingFeatureWarning(
 export type * from "./index.js";
 
 // prettier-ignore
-export const ApolloConsumer = missingFeatureWarning("component", "ApolloConsumer");
-// prettier-ignore
 export const ApolloProvider = missingFeatureWarning("component", "ApolloProvider");
 // prettier-ignore
 export const getApolloContext = missingFeatureWarning("function",  "getApolloContext");

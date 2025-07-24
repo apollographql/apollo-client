@@ -30,9 +30,10 @@ const cache = new InMemoryCache({
     Rocket: {
       fields: {
         description: {
-          read() { // Read function for Rocket.description
-            return 'Placeholder rocket description';
-          }
+          read() {
+            // Read function for Rocket.description
+            return "Placeholder rocket description";
+          },
         },
       },
     },
@@ -81,8 +82,8 @@ export const GET_LAUNCH_DETAILS = gql`
 
 Notice that this field includes the `@client` directive. This directive tells Apollo Client _not_ to include `description` in the query it sends to our server. This is important for two related reasons:
 
-* The `description` field is populated entirely locally, so including it in network requests isn't helpful.
-* The `description` field _isn't_ in our server-side schema yet, so including it will produce a GraphQL error.
+- The `description` field is populated entirely locally, so including it in network requests isn't helpful.
+- The `description` field _isn't_ in our server-side schema yet, so including it will produce a GraphQL error.
 
 We can now execute this query in a component with the `useQuery` hook as usual:
 
@@ -109,5 +110,5 @@ When your server's support for the `Rocket.description` field is ready, you can 
 
 For more information on the Apollo Client features used here, see the following:
 
-* [Local-only fields](../local-state/managing-state-with-field-policies/)
-* [The `read` function](../caching/cache-field-behavior/#the-read-function)
+- [Local-only fields](../local-state/managing-state-with-field-policies/)
+- [The `read` function](../caching/cache-field-behavior/#the-read-function)

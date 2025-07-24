@@ -12,7 +12,7 @@ patterndiff(){
   count=0
   while IFS= read -r -d '' file
   do
-    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w)"; then
+    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file"))"; then
       (( count++ ))
       echo "$file"
       if [[ "$file" == *.min.* ]]; then

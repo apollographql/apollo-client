@@ -49,10 +49,11 @@ export const printers = {
                       parser: "markdown",
                     }
                   );
-                  const string = prettier.doc.printer.printDocToString(
-                    doc,
-                    options
-                  ).formatted;
+                  const string = prettier.doc.printer.printDocToString(doc, {
+                    ...options,
+                    proseWrap: "preserve",
+                    trailingComma: "none",
+                  }).formatted;
                   if (string.trim().indexOf("\n") === -1) {
                     return [key, `* ${string} `];
                   }
@@ -74,7 +75,8 @@ export const printers = {
             const nodeComent = path.node.comments[i];
             nodeComent.value = newCommment;
           }
-          return mainPrint(path);
+
+          return mainPrint(path.node);
         };
       }
       return undefined;

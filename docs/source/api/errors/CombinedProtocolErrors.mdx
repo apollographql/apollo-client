@@ -3,78 +3,44 @@ title: CombinedProtocolErrors
 description: API reference
 ---
 
-{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
-Fatal transport-level errors returned when executing a subscription using the multipart HTTP subscription protocol. See the documentation on the [multipart HTTP protocol for GraphQL Subscriptions](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol) for more information on these errors.
-
-These errors indicate issues with the subscription transport itself, rather than GraphQL-level errors. They typically occur when there are problems communicating with subgraphs from the Apollo Router.
-
-```ts
-import { CombinedProtocolErrors } from "@apollo/client/errors";
-
-// Check if an error is a CombinedProtocolErrors instance
-if (CombinedProtocolErrors.is(error)) {
-  // Access individual protocol errors
-  error.errors.forEach((protocolError) => {
-    console.log(protocolError.message);
-    console.log(protocolError.extensions);
-  });
-}
-```
+<DocBlock
+  canonicalReference="@apollo/client!CombinedProtocolErrors:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
 
 ## Providing a custom message formatter
 
-By default, `CombinedProtocolErrors` formats the `message` property by joining each error's `message` field with a newline. To customize the format of the `message`, such as changing the delimiter or adding a message prefix, override the static `formatMessage` method.
-
-The following example demonstrates how to format the error message by joining each error with a comma.
-
-```ts
-import { CombinedProtocolErrors } from "@apollo/client/errors";
-
-CombinedProtocolErrors.formatMessage = (errors) => {
-  return errors.map((error) => error.message).join(", ");
-};
-```
-
-See the [`formatMessage`](#formatmessage) section for details about the parameters provided to the `formatMessage` function.
-
-<Note>
-  The message formatter needs to be configured before any operation is executed
-  by Apollo Client, otherwise the default message formatter is used. We
-  recommend configuring the message formatter before initializing your
-  `ApolloClient` instance.
-</Note>
+<DocBlock
+  canonicalReference="@apollo/client!CombinedProtocolErrors.MessageFormatter:type"
+  customOrder={["summary", "example", "remarks"]}
+/>
 
 ### Using the default message formatter
 
-To format part of the message using the default message formatter, call the `defaultFormatMessage` function provided to the `options` argument of your message formatter.
-
-The following example prepends a string to the message and uses the default message formatter to format the error messages.
-
-```ts
-CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) => {
-  return `[Protocol errors]: ${defaultFormatMessage(errors)}`;
-};
-```
+<DocBlock
+  canonicalReference="@apollo/client!CombinedProtocolErrors.MessageFormatterOptions#defaultFormatMessage:member"
+  customOrder={["remarks", "example"]}
+/>
 
 ## Static methods
 
 ### `is`
 
-A type guard that determines whether an error is a `CombinedProtocolErrors` object. This method provides reliable type checking and enables TypeScript to narrow the error type.
-
-```ts
-if (CombinedProtocolErrors.is(error)) {
-  // TypeScript now knows `error` is a CombinedProtocolErrors object
-  console.log(error.errors);
-}
-```
+<DocBlock
+  canonicalReference="@apollo/client!CombinedProtocolErrors.is:member(1)"
+  customOrder={["summary", "example"]}
+/>
 
 See the [additional properties](#additional-properties) for more details about the available properties provided by the `CombinedProtocolErrors` object.
 
 ### `formatMessage`
 
-The function called by the `CombinedProtocolErrors` constructor to provide a formatted message as the `message` property of the `CombinedProtocolErrors` object. Follow the ["Providing a custom message formatter" guide](#providing-a-custom-message-formatter) to modify the format of the `message` property.
+<DocBlock
+  canonicalReference="@apollo/client!CombinedProtocolErrors.formatMessage:member"
+  customOrder={["summary", "example"]}
+/>
 
 The message formatter is a function that takes the following parameters:
 
@@ -151,7 +117,7 @@ These properties are specific to the `CombinedProtocolErrors` object. Standard e
 </td>
 <td>
 
-The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
+<DocBlock canonicalReference="@apollo/client!CombinedProtocolErrors#errors:member" />
 
 </td>
 </tr>

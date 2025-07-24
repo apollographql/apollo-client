@@ -5,8 +5,24 @@ import { brand, isBranded } from "./utils.js";
 export declare namespace CombinedProtocolErrors {
   export interface MessageFormatterOptions {
     /**
-     * The default message formatter. Call this to get a string with the
-     * default formatted message.
+     * The default message formatter. Call this to get a string with the default
+     * formatted message.
+     *
+     * @remarks
+     * To format part of the message using the default message formatter, call
+     * the `defaultFormatMessage` function provided to the `options` argument of
+     * your message formatter.
+     *
+     * The following example prepends a string to the message and uses the
+     * default message formatter to format the error messages.
+     *
+     * @example
+     *
+     * ```ts
+     * CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) => {
+     *   return `[Protocol errors]: ${defaultFormatMessage(errors)}`;
+     * };
+     * ```
      */
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
@@ -14,9 +30,30 @@ export declare namespace CombinedProtocolErrors {
   }
 
   /**
-   * A function used to format the message string set on the
-   * `CombinedProtocolErrors` object. Override the static `formatMessage`
-   * method to provide a custom message formatter.
+   * By default, `CombinedProtocolErrors` formats the `message` property by
+   * joining each error's `message` field with a newline. To customize the
+   * format of the `message`, such as changing the delimiter or adding a message
+   * prefix, override the static `formatMessage` method.
+   *
+   * The following example demonstrates how to format the error message by
+   * joining each error with a comma.
+   *
+   * @remarks
+   *
+   * See the [`formatMessage`](https://www.apollographql.com/docs/react/api/errors/CombinedProtocolErrors) section for details about the parameters provided to the `formatMessage` function.
+   *
+   * > [!NOTE]
+   * > The message formatter needs to be configured before any operation is executed by Apollo Client, otherwise the default message formatter is used. We recommend configuring the message formatter before initializing your `ApolloClient` instance.
+   *
+   * @example
+   *
+   * ```ts
+   * import { CombinedProtocolErrors } from "@apollo/client/errors";
+   *
+   * CombinedProtocolErrors.formatMessage = (errors) => {
+   *   return errors.map((error) => error.message).join(", ");
+   * };
+   * ```
    *
    * @param errors - The array of GraphQL errors returned from the server in the
    * `errors` field of the response.
@@ -37,16 +74,55 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  * Fatal transport-level errors returned when executing a subscription using the
  * multipart HTTP subscription protocol. See the documentation on the
  * [multipart HTTP protocol for GraphQL Subscriptions](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol) for more information on these errors.
+ *
+ * @remarks
+ *
+ * These errors indicate issues with the subscription transport itself, rather
+ * than GraphQL-level errors. They typically occur when there are problems
+ * communicating with subgraphs from the Apollo Router.
+ *
+ * @example
+ *
+ * ```ts
+ * import { CombinedProtocolErrors } from "@apollo/client/errors";
+ *
+ * // Check if an error is a CombinedProtocolErrors instance
+ * if (CombinedProtocolErrors.is(error)) {
+ *   // Access individual protocol errors
+ *   error.errors.forEach((protocolError) => {
+ *     console.log(protocolError.message);
+ *     console.log(protocolError.extensions);
+ *   });
+ * }
+ * ```
  */
 export class CombinedProtocolErrors extends Error {
-  /** Determine if an error is a `CombinedProtocolErrors` instance */
+  /**
+   * A method that determines whether an error is a `CombinedProtocolErrors`
+   * object. This method enables TypeScript to narrow the error type.
+   *
+   * @example
+   *
+   * ```ts
+   * if (CombinedProtocolErrors.is(error)) {
+   *   // TypeScript now knows `error` is a CombinedProtocolErrors object
+   *   console.log(error.errors);
+   * }
+   * ```
+   */
   static is(error: unknown): error is CombinedProtocolErrors {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
   /**
-   * Formats the error message used for the error `message` property. Override
-   * to provide your own formatting.
+   * A function that formats the error message used for the error's `message`
+   * property. Override this method to provide your own formatting.
+   *
+   * @remarks
+   * The `formatMessage` function is called by the `CombinedProtocolErrors`
+   * constructor to provide a formatted message as the `message` property of the
+   * `CombinedProtocolErrors` object. Follow the ["Providing a custom message
+   * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedProtocolErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
    */
   static formatMessage: CombinedProtocolErrors.MessageFormatter =
     defaultFormatMessage;

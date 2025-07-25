@@ -5,6 +5,24 @@ export declare namespace ServerParseError {
     response: Response;
     bodyText: string;
   }
+
+  namespace DocumentationTypes {
+    interface InstanceProperties {
+      /**
+       * The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+       */
+      readonly response: Response;
+      /**
+       * The status code returned by the server in the response. This is provided
+       * as a shortcut for `response.status`.
+       */
+      readonly statusCode: number;
+      /**
+       * The raw response body text.
+       */
+      readonly bodyText: string;
+    }
+  }
 }
 
 /**
@@ -52,19 +70,14 @@ export class ServerParseError extends Error {
   static is(error: unknown): error is ServerParseError {
     return isBranded(error, "ServerParseError");
   }
-  /**
-   * The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
-   */
-  response: Response;
-  /**
-   * The status code returned by the server in the response. This is provided
-   * as a shortcut for `response.status`.
-   */
-  statusCode: number;
-  /**
-   * The raw response body text.
-   */
-  bodyText: string;
+  /** {@inheritDoc @apollo/client!ServerParseError.DocumentationTypes.InstanceProperties#response:member} */
+  readonly response: Response;
+
+  /** {@inheritDoc @apollo/client!ServerParseError.DocumentationTypes.InstanceProperties#statusCode:member} */
+  readonly statusCode: number;
+
+  /** {@inheritDoc @apollo/client!ServerParseError.DocumentationTypes.InstanceProperties#bodyText:member} */
+  readonly bodyText: string;
 
   constructor(originalParseError: unknown, options: ServerParseError.Options) {
     super(

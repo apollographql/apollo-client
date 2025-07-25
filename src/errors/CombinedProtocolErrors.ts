@@ -86,6 +86,14 @@ export declare namespace CombinedProtocolErrors {
       errors: ReadonlyArray<GraphQLFormattedError>,
       options: MessageFormatterOptions
     ): string;
+
+    interface InstanceProperties {
+      /**
+       * The raw list of errors returned by the top-level `errors` field in the
+       * multipart HTTP subscription response.
+       */
+      readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    }
   }
 }
 
@@ -141,10 +149,7 @@ export class CombinedProtocolErrors extends Error {
   static formatMessage: CombinedProtocolErrors.MessageFormatter =
     defaultFormatMessage;
 
-  /**
-   * The raw list of errors returned by the top-level `errors` field in the
-   * multipart HTTP subscription response.
-   */
+  /** {@inheritDoc @apollo/client!CombinedProtocolErrors.DocumentationTypes.InstanceProperties#errors:member} */
   readonly errors: ReadonlyArray<GraphQLFormattedError>;
 
   constructor(

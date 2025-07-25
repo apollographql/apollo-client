@@ -5,6 +5,25 @@ export declare namespace ServerError {
     response: Response;
     bodyText: string;
   }
+
+  namespace DocumentationTypes {
+    interface InstanceProperties {
+      /**
+       * The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+       */
+      readonly response: Response;
+      /**
+       * The status code returned by the server in the response. This is provided as
+       * a shortcut for `response.status`.
+       */
+      readonly statusCode: number;
+
+      /**
+       * The raw response body text.
+       */
+      readonly bodyText: string;
+    }
+  }
 }
 
 /**
@@ -58,19 +77,13 @@ export class ServerError extends Error {
     return isBranded(error, "ServerError");
   }
 
-  /**
-   * The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
-   */
+  /** {@inheritDoc @apollo/client!ServerError.DocumentationTypes.InstanceProperties#response:member} */
   readonly response: Response;
-  /**
-   * The status code returned by the server in the response. This is provided as
-   * a shortcut for `response.status`.
-   */
+
+  /** {@inheritDoc @apollo/client!ServerError.DocumentationTypes.InstanceProperties#statusCode:member} */
   readonly statusCode: number;
 
-  /**
-   * The raw response body text.
-   */
+  /** {@inheritDoc @apollo/client!ServerError.DocumentationTypes.InstanceProperties#bodyText:member} */
   readonly bodyText: string;
 
   constructor(message: string, options: ServerError.Options) {

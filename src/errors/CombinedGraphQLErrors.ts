@@ -93,6 +93,23 @@ export declare namespace CombinedGraphQLErrors {
       errors: ReadonlyArray<GraphQLFormattedError>,
       options: MessageFormatterOptions
     ): string;
+
+    interface InstanceProperties {
+      /**
+       * The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
+       */
+      readonly errors: ReadonlyArray<GraphQLFormattedError>;
+
+      /**
+       * Partial data returned in the `data` field of the GraphQL response.
+       */
+      readonly data: Record<string, unknown> | null | undefined;
+
+      /**
+       * Extensions returned by the `extensions` field in the GraphQL response.
+       */
+      readonly extensions: Record<string, unknown> | undefined;
+    }
   }
 }
 
@@ -161,19 +178,13 @@ export class CombinedGraphQLErrors extends Error {
   static formatMessage: CombinedGraphQLErrors.MessageFormatter =
     defaultFormatMessage;
 
-  /**
-   * The raw list of GraphQL errors returned by the `errors` field in the GraphQL response.
-   */
+  /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#errors:member} */
   readonly errors: ReadonlyArray<GraphQLFormattedError>;
 
-  /**
-   * Partial data returned in the `data` field of the GraphQL response.
-   */
+  /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#data:member} */
   readonly data: Record<string, unknown> | null | undefined;
 
-  /**
-   * Extensions returned by the `extensions` field in the GraphQL response.
-   */
+  /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#extensions:member} */
   readonly extensions: Record<string, unknown> | undefined;
 
   constructor(result: FormattedExecutionResult<any>);

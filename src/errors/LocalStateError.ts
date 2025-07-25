@@ -5,6 +5,13 @@ export declare namespace LocalStateError {
     path?: Array<string | number>;
     sourceError?: unknown;
   }
+
+  namespace DocumentationTypes {
+    interface InstanceProperties {
+      /** The path to the field that caused the error. */
+      readonly path?: Array<string | number>;
+    }
+  }
 }
 
 /**
@@ -47,9 +54,7 @@ export class LocalStateError extends Error {
     return isBranded(error, "LocalStateError");
   }
 
-  /**
-   * The path to the field that caused the error.
-   */
+  /** {@inheritDoc @apollo/client!LocalStateError.DocumentationTypes.InstanceProperties#path:member} */
   readonly path?: Array<string | number>;
 
   constructor(message: string, options: LocalStateError.Options = {}) {

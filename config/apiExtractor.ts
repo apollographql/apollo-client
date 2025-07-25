@@ -11,12 +11,15 @@ import {
   ExtractorConfig,
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
+import { TSDocParser } from "@microsoft/tsdoc";
 
 import pkg from "../dist/package.json" with { type: "json" };
 
 import type { ExportsCondition } from "./entryPoints.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
 import { withPseudoNodeModules } from "./helpers.ts";
+
+patchInternals();
 
 const parsed = parseArgs({
   options: {
@@ -213,4 +216,20 @@ async function buildReport(
     }
   }
   return extractorResult;
+}
+
+function patchInternals() {
+  // The TSDoc parser mangles some parts of DocBlocks in a way that's problematic
+  // for us.
+  // This code is used to keep the original DocComment intact, so that we can
+  // use it later in the API docs.
+
+  const orig_parseRange = TSDocParser.prototype.parseRange;
+  TSDocParser.prototype.parseRange = function (range) {
+    const parsed = orig_parseRange.call(this, range);
+    parsed.docComment.emitAsTsdoc = function () {
+      return range.toString();
+    };
+    return parsed;
+  };
 }

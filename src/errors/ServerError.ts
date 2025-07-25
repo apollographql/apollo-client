@@ -14,9 +14,10 @@ export declare namespace ServerError {
  * @remarks
  *
  * This error occurs when your GraphQL server responds with an HTTP status code
- * other than 200 (such as 4xx or 5xx status codes) with any media type other
- * than [`application/graphql-response+json`](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json). Unlike GraphQL errors which
- * are returned in the response body, servers that return non-200 status codes
+ * other than 200 (such as 4xx or 5xx status codes) with any content type other
+ * than [`application/graphql-response+json`](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json). 
+ *
+ * Servers that return non-200 status codes with other content types
  * are not guaranteed to contain a well-formed GraphQL response and may indicate
  * issues at the HTTP level, such as authentication failures, server
  * unavailability, or other HTTP-level problems.

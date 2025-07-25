@@ -71,6 +71,29 @@ export declare namespace CombinedGraphQLErrors {
     errors: ReadonlyArray<GraphQLFormattedError>,
     options: MessageFormatterOptions
   ) => string;
+
+  namespace DocumentationTypes {
+    /**
+     * A function that formats the error message used for the error's `message`
+     * property. Override this method to provide your own formatting.
+     *
+     * @remarks
+     *
+     * The `formatMessage` function is called by the `CombinedGraphQLErrors`
+     * constructor to provide a formatted message as the `message` property of the
+     * `CombinedGraphQLErrors` object. Follow the ["Providing a custom message
+     * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedGraphQLErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
+     *
+     * @param errors - The array of GraphQL errors returned from the server in
+     * the `errors` field of the response.
+     * @param options - Additional context that could be useful when formatting
+     * the message.
+     */
+    function formatMessage(
+      errors: ReadonlyArray<GraphQLFormattedError>,
+      options: MessageFormatterOptions
+    ): string;
+  }
 }
 
 function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
@@ -134,17 +157,7 @@ export class CombinedGraphQLErrors extends Error {
     return isBranded(error, "CombinedGraphQLErrors");
   }
 
-  /**
-   * A function that formats the error message used for the error's `message`
-   * property. Override this method to provide your own formatting.
-   *
-   * @remarks
-   *
-   * The `formatMessage` function is called by the `CombinedGraphQLErrors`
-   * constructor to provide a formatted message as the `message` property of the
-   * `CombinedGraphQLErrors` object. Follow the ["Providing a custom message
-   * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedGraphQLErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
-   */
+  /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.formatMessage:function(1)} */
   static formatMessage: CombinedGraphQLErrors.MessageFormatter =
     defaultFormatMessage;
 

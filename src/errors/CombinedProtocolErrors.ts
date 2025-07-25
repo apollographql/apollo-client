@@ -64,6 +64,29 @@ export declare namespace CombinedProtocolErrors {
     errors: ReadonlyArray<GraphQLFormattedError>,
     options: MessageFormatterOptions
   ) => string;
+
+  namespace DocumentationTypes {
+    /**
+     * A function that formats the error message used for the error's `message`
+     * property. Override this method to provide your own formatting.
+     *
+     * @remarks
+     *
+     * The `formatMessage` function is called by the `CombinedProtocolErrors`
+     * constructor to provide a formatted message as the `message` property of the
+     * `CombinedProtocolErrors` object. Follow the ["Providing a custom message
+     * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedProtocolErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
+     *
+     * @param errors - The array of GraphQL errors returned from the server in the
+     * `errors` field of the response.
+     * @param options - Additional context that could be useful when formatting
+     * the message.
+     */
+    function formatMessage(
+      errors: ReadonlyArray<GraphQLFormattedError>,
+      options: MessageFormatterOptions
+    ): string;
+  }
 }
 
 function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
@@ -114,17 +137,7 @@ export class CombinedProtocolErrors extends Error {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
-  /**
-   * A function that formats the error message used for the error's `message`
-   * property. Override this method to provide your own formatting.
-   *
-   * @remarks
-   *
-   * The `formatMessage` function is called by the `CombinedProtocolErrors`
-   * constructor to provide a formatted message as the `message` property of the
-   * `CombinedProtocolErrors` object. Follow the ["Providing a custom message
-   * formatter"](https://www.apollographql.com/docs/react/api/errors/CombinedProtocolErrors#providing-a-custom-message-formatter) guide to learn how to modify the message format.
-   */
+  /** {@inheritDoc @apollo/client!CombinedProtocolErrors.DocumentationTypes.formatMessage:function(1)} */
   static formatMessage: CombinedProtocolErrors.MessageFormatter =
     defaultFormatMessage;
 

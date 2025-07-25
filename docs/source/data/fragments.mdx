@@ -93,9 +93,7 @@ const GET_POST_DETAILS = gql`
 - We add our fragment definition to the `GET_POST_DETAILS` `gql` template literal via a placeholder (`${COMMENT_FRAGMENT}`)
 - We include the `CommentFragment` fragment in our query with standard `...` notation.
 
-<MinVersion version="3.7.0">
-  ## Registering named fragments using `createFragmentRegistry`
-</MinVersion>
+## Registering named fragments using `createFragmentRegistry`
 
 Registering fragments with your `InMemoryCache` instance lets you refer to them by name in queries and cache operations (for example, `cache.readFragment`, `cache.readQuery`, and `cache.watch`) without needing to interpolate their declarations.
 
@@ -475,21 +473,11 @@ const cache = new InMemoryCache({
 });
 ```
 
-<MinVersion version="3.8.0">
-
 ## `useFragment`
-
-</MinVersion>
 
 The `useFragment` hook represents a lightweight live binding into the Apollo Client Cache. It enables Apollo Client to broadcast specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
 **The `useQuery` hook remains the primary hook responsible for querying and populating data in the cache** ([see the API reference](../api/react/hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
-
-<Note>
-  `useFragment` was introduced as an experimental hook in version `3.7.0` under
-  the named export `useFragment_experimental`. Starting with `3.8.0-beta.0` and
-  greater the `_experimental` suffix was removed in its named export.
-</Note>
 
 ### Example
 
@@ -618,11 +606,9 @@ function Item(props) {
   docs](/react/data/directives#nonreactive).
 </Note>
 
-See the [API reference](../api/react/hooks#usefragment) for more details on the supported options.
+See the [API reference](../api/react/useFragment) for more details on the supported options.
 
-<MinVersion version="3.13.0">
-  ## `useSuspenseFragment`
-</MinVersion>
+## `useSuspenseFragment`
 
 For those that have integrated with React [Suspense](https://react.dev/reference/react/Suspense), `useSuspenseFragment` is available as a drop-in replacement for `useFragment`. `useSuspenseFragment` works identically to `useFragment` but will suspend while `data` is incomplete.
 
@@ -694,9 +680,7 @@ Our list will now render as soon as our list returns but before the data for `It
   option is identifiable by the cache.
 </Caution>
 
-<MinVersion version="3.12.0">
-  ## Data masking
-</MinVersion>
+## Data masking
 
 By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows, components that query your GraphQL data can become tightly coupled to their component subtrees. [Colocated fragments](#colocating-fragments) reduce the degree of coupling by moving components' data requirements into fragments. However, colocating fragments doesn't eliminate the issue.
 
@@ -1302,9 +1286,7 @@ To migrate from CodeGen's fragment masking feature to Apollo Client's data maski
 
 3. [Enable data masking](#enabling-data-masking) in Apollo Client.
 
-<MinVersion version="3.12.5">
-  #### Setting a types mode for masked types
-</MinVersion>
+#### Setting a types mode for masked types
 
 Apollo Client provides different modes to work with operation types throughout your application. You change the mode by modifying the `DataMasking` exported type from the `@apollo/client` package using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability. Specifying a mode is optional and only needed when you prefer to use a different mode other than the default.
 
@@ -1328,15 +1310,6 @@ declare module "@apollo/client" {
 </Note>
 
 ##### Modes
-
-<Note>
-  Prior to Apollo Client version 3.12.5, the default was to [unmask](#unmask)
-  the types. If you upgrade to 3.12.5 or later and wish to maintain the same
-  default as 3.12.4 or below, set the mode to [`unmask`](#unmask). See pull
-  request [#12252](https://github.com/apollographql/apollo-client/pull/12252)
-  for more details on this change, including a section on migrating from {"<="}{" "}
-  3.12.4.
-</Note>
 
 ###### `preserveTypes` (default)
 
@@ -1388,7 +1361,7 @@ When using [colocated fragments](#colocating-fragments) with your components, it
 
 Apollo Client provides the `FragmentType` helper type for this purpose. As an example, let's use the `PostDetails` fragment from previous sections.
 
-```tsx {1,14} title="PostDetails.tsx"
+```tsx {1,12} title="PostDetails.tsx"
 import type { FragmentType } from "@apollo/client";
 import type { PostDetailsFragment } from "./path/to/gql/types.ts";
 
@@ -1501,7 +1474,7 @@ Existing applications can take advantage of the data masking features through an
 
 #### 1. Apply the `@unmask` directive to all fragment spreads
 
-Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results to avoid breakages. We can use the `@unmask` directive to handle this.
+Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results to avoid breakages. You can use the `@unmask` directive to handle this.
 
 <Tip>
   We recommend using `@unmask` in migrate mode to enable development-only
@@ -1570,7 +1543,7 @@ new ApolloClient({
 });
 ```
 
-> Enabling data masking early in the adoption process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
+Enabling data masking early in the adoption process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
 
 #### 3. Generate masked types
 

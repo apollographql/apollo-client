@@ -9,7 +9,7 @@ Apollo Client can encounter a variety of errors when executing operations on you
 
 ## Understanding errors
 
-Errors in Apollo Client fall into two main categories: GraphQL errors and network errors. Each category has specific error classes that provide detailed information about what went wrong, enabling precise error identification and handling.
+Errors in Apollo Client fall into two main categories: GraphQL errors and network errors. Each category has specific error classes that provide detailed information about what went wrong. Apollo Client adds any encountered errors to the `error` field returned by hooks like `useQuery`, wrapped in the appropriate error instance.
 
 ### GraphQL errors
 
@@ -54,8 +54,6 @@ When a GraphQL error occurs, your server includes it in the `errors` array of it
 </ExpansionPanel>
 
 In Apollo Client, GraphQL errors are represented by the [`CombinedGraphQLErrors`](../api/errors/CombinedGraphQLErrors) error type. This is the most common error type you'll encounter in your application.
-
-Apollo Client adds these errors to the `error` field returned by hooks like `useQuery`, wrapped in the appropriate error instance.
 
 <Note>
   If a GraphQL error prevents your server from executing your operation at all,

@@ -1,0 +1,32 @@
+---
+title: UnconventionalError
+description: API reference
+---
+
+{/* * @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+<DocBlock
+  canonicalReference="@apollo/client!UnconventionalError:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
+
+## Common scenarios
+
+`UnconventionalError` is typically encountered when custom link implementations, provided either by third-party libraries or your own link implementations, throw symbols, arrays, or other non-Error objects.
+
+By wrapping these unconventional error types, Apollo Client ensures consistent error handling throughout the system while preserving the original error information.
+
+<Note>
+  Apollo Client itself does not throw or emit non-Error objects. Unless you're
+  using third-party packages integrated with Apollo Client, you will not
+  encounter this error type.
+</Note>
+
+## Static methods
+
+<FunctionDetails
+  canonicalReference="@apollo/client!UnconventionalError.is:member(1)"
+  headingLevel={3}
+  parameters={false}
+  result={false}
+/>

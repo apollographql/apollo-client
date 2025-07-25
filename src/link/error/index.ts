@@ -21,11 +21,28 @@ export declare namespace ErrorLink {
 
   export interface ErrorHandlerOptions {
     /**
-     * Error that caused the callback to be triggered.
+     * The error that occurred during the operation execution. This can be a
+     * `CombinedGraphQLErrors` instance (for GraphQL errors) or another error
+     * type (for network errors).
+     *
+     * Use `CombinedGraphQLErrors.is(error)` to check if it's a GraphQL error with an `errors` array.
      */
     error: ErrorLike;
+    /**
+     * The raw GraphQL result from the server (if available), which may include
+     * partial data alongside errors.
+     */
     result?: FetchResult;
+
+    /** The details of the GraphQL operation that produced an error. */
     operation: Operation;
+
+    /**
+     * A function that calls the next link in the link chain. Calling
+     * `return forward(operation)` in your `ErrorLink` callback
+     * [retries the operation](../../data/error-handling#retrying-operations), returning a new observable for the
+     * upstream link to subscribe to.
+     */
     forward: NextLink;
   }
 }

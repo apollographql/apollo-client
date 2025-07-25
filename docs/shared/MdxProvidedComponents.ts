@@ -26,6 +26,10 @@ declare const DocBlock: React.FC<{
   deprecated?: boolean;
   /** defaults to `false`, can be set to `true` to include a <MinVersion> tag */
   releaseTag?: boolean;
+  /** provides a custom order to render each section */
+  customOrder?: Array<
+    "summary" | "remarks" | "example" | "deprecated" | "releaseTag"
+  >;
 }>;
 declare const Example: React.FC<{
   /** canonical reference for the content displayed by this component */

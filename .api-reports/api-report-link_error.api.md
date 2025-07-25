@@ -25,11 +25,8 @@ export namespace ErrorLink {
     // (undocumented)
     export interface ErrorHandlerOptions {
         error: ErrorLike;
-        // (undocumented)
         forward: NextLink;
-        // (undocumented)
         operation: Operation;
-        // (undocumented)
         result?: FetchResult;
     }
 }

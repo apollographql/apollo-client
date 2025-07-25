@@ -77,6 +77,7 @@ In Apollo Client, network errors are represented by these error types:
 - [`ServerParseError`](../api/errors/ServerParseError) - Occurs when the server response cannot be parsed as valid JSON
 - [`LocalStateError`](../api/errors/LocalStateError) - Represents errors in [local state](../local-state/local-state-management) configuration or execution
 - [`UnconventionalError`](../api/errors/UnconventionalError) - Wraps non-standard errors (e.g., thrown symbols or objects) to ensure consistent error handling
+- Any other errors thrown inside the link chain (e.g. by browser APIs or other libraries) will be passed through as they are, as long as they are an object with at least a `message` property.
 
 When a network error occurs, Apollo Client adds it to the `error` field returned by the `useQuery` hook (or whichever operation hook you used) as the error that was returned by the link chain (typically an `Error` instance).
 

@@ -22,9 +22,20 @@ export const printers = {
   mdx3: {
     ...markdown.printers.mdast,
     embed(path, options) {
-      if (path.node.type === "jsx") {
+      const node = path.node;
+      if (node.type === "jsx") {
         // We will not format embedded JSX as Prettier gets the spacing wrong
-        return path.node.value;
+        return (
+          node.value
+            .split("\n")
+            // But we need to restore the original indentation
+            .map((line, idx) =>
+              idx === 0 ? line : (
+                " ".repeat(node.position.indent[idx - 1] - 1) + line
+              )
+            )
+            .join("\n")
+        );
       }
       return markdown.printers.mdast.embed(path, options);
     },

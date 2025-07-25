@@ -76,7 +76,7 @@ export interface PreloadedQueryRef<
 }
 
 interface InternalQueryReferenceOptions {
-  onDispose?: () => void;
+  onDispose: (ref: InternalQueryReference<any, any>) => void;
   autoDisposeTimeoutMs?: number;
 }
 
@@ -206,9 +206,10 @@ export class InternalQueryReference<
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
 
-    if (options.onDispose) {
-      this.onDispose = options.onDispose;
-    }
+    this.onDispose = () => {
+      clearTimeout(this.autoDisposeTimeoutId);
+      options.onDispose?.(this);
+    };
 
     this.setResult();
     this.subscribeToQuery();
@@ -348,7 +349,7 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 
-  private dispose() {
+  public dispose() {
     this.subscription.unsubscribe();
   }
 

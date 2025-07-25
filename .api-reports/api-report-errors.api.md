@@ -11,6 +11,16 @@ import type { GraphQLFormattedError } from 'graphql';
 
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        export function formatMessage(errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions): string;
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly data: Record<string, unknown> | null | undefined;
+            readonly errors: ReadonlyArray<GraphQLFormattedError>;
+            readonly extensions: Record<string, unknown> | undefined;
+        }
+    }
     export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
     export interface MessageFormatterOptions {
@@ -32,6 +42,14 @@ export class CombinedGraphQLErrors extends Error {
 
 // @public (undocumented)
 export namespace CombinedProtocolErrors {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        export function formatMessage(errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions): string;
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly errors: ReadonlyArray<GraphQLFormattedError>;
+        }
+    }
     export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
     export interface MessageFormatterOptions {
@@ -63,6 +81,13 @@ export const LinkError: {
 // @public (undocumented)
 export namespace LocalStateError {
     // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly path?: Array<string | number>;
+        }
+    }
+    // (undocumented)
     export interface Options {
         // (undocumented)
         path?: Array<string | number>;
@@ -87,6 +112,15 @@ export function registerLinkError(error: ErrorLike): void;
 // @public (undocumented)
 export namespace ServerError {
     // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly bodyText: string;
+            readonly response: Response;
+            readonly statusCode: number;
+        }
+    }
+    // (undocumented)
     export interface Options {
         // (undocumented)
         bodyText: string;
@@ -98,28 +132,39 @@ export namespace ServerError {
 // @public
 export class ServerError extends Error {
     constructor(message: string, options: ServerError.Options);
-    bodyText: string;
+    readonly bodyText: string;
     static is(error: unknown): error is ServerError;
-    response: Response;
-    statusCode: number;
+    readonly response: Response;
+    readonly statusCode: number;
+}
+
+// @public (undocumented)
+export namespace ServerParseError {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly bodyText: string;
+            readonly response: Response;
+            readonly statusCode: number;
+        }
+    }
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        bodyText: string;
+        // (undocumented)
+        response: Response;
+    }
 }
 
 // @public
 export class ServerParseError extends Error {
-    // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
-    constructor(originalParseError: unknown, options: ServerParseErrorOptions);
-    bodyText: string;
+    constructor(originalParseError: unknown, options: ServerParseError.Options);
+    readonly bodyText: string;
     static is(error: unknown): error is ServerParseError;
-    response: Response;
-    statusCode: number;
-}
-
-// @public (undocumented)
-interface ServerParseErrorOptions {
-    // (undocumented)
-    bodyText: string;
-    // (undocumented)
-    response: Response;
+    readonly response: Response;
+    readonly statusCode: number;
 }
 
 // @public (undocumented)

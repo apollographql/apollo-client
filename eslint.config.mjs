@@ -201,6 +201,7 @@ export default [
       "local-rules/valid-inherit-doc": "error",
       "local-rules/variables-should-extend-operation-variables": "error",
       "local-rules/tdata-tvariables-order": "error",
+      "local-rules/enforce-documentation-types": "error",
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({

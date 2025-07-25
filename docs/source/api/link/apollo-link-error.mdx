@@ -38,6 +38,8 @@ const errorLink = new ErrorLink(({ error, operation }) => {
 
 This function is called after the GraphQL operation completes and execution is moving back _up_ your [link chain](./introduction/#handling-a-response). The function should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-operations).
 
+For more information on the types of errors that might be encountered, see the guide on [error handling](../../data/error-handling).
+
 ## Options
 
 The function you provide to the `ErrorLink` constructor receives an object with the following fields:
@@ -47,11 +49,3 @@ The function you provide to the `ErrorLink` constructor receives an object with 
   headingLevel={3}
   displayName="ErrorLink.ErrorHandlerOptions"
 />
-
-## Error categorization
-
-Errors are categorized based on their source:
-
-- **GraphQL errors**: When the server returns errors in the `errors` field of the response, they are wrapped in a `CombinedGraphQLErrors` instance. Check for this error type using `CombinedGraphQLErrors.is(error)` and access the individual errors via `error.errors`.
-
-- **Network errors**: When a link further down the chain calls the `error` callback on the observable (e.g., due to a network failure or a non-2xx HTTP response), the link passes the error directly as the `error` field.

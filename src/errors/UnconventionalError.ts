@@ -2,12 +2,13 @@ import { brand, isBranded } from "./utils.js";
 
 /**
  * A wrapper error type that represents a non-standard error thrown from a
- * response, such as a symbol or plain object. Read the `cause` property to
+ * A wrapper error type that represents a non-error value thrown from the
+ * link chain, such as a symbol, primitive or plain object. Read the `cause` property to
  * determine the source of the error.
  *
  * @remarks
  *
- * This error is used to standardize error handling when non-Error objects are
+ * This error is used to standardize error handling when non-Error values are
  * thrown in the Apollo Client link chain or other parts of the system.
  * JavaScript allows throwing any value (not just Error instances), and this
  * wrapper ensures that all thrown values can be handled consistently as

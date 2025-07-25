@@ -134,7 +134,11 @@ await client.refetchQueries({
 });
 ```
 
-> Before `client.refetchQueries` was introduced, the `INVALIDATE` sentinel was [not very useful](https://github.com/apollographql/apollo-client/issues/7060#issuecomment-698026089), because invalidated queries with `fetchPolicy: "cache-first"` would typically re-read unchanged results, and therefore decide not to perform a network request. The `client.refetchQueries` method makes this invalidation system more accessible to application code, so you can control the refetching behavior of invalidated queries.
+<Note>
+
+Before `client.refetchQueries` was introduced, the `INVALIDATE` sentinel was [not very useful](https://github.com/apollographql/apollo-client/issues/7060#issuecomment-698026089), because invalidated queries with `fetchPolicy: "cache-first"` would typically re-read unchanged results, and therefore decide not to perform a network request. The `client.refetchQueries` method makes this invalidation system more accessible to application code, so you can control the refetching behavior of invalidated queries.
+
+</Note>
 
 In all of the examples above, whether we use `include` or `updateCache`, `client.refetchQueries` refetches affected queries from the network and includes the resulting `Promise<ApolloQueryResult<any>>` results in the `Promise<TResolved[]>` returned by `client.refetchQueries`.
 
@@ -259,7 +263,7 @@ const finalResults = await Promise.all(
 
 In the future, just as additional input options may be added to the `client.refetchQueries` method, additional properties may be added to its result object, supplementing its `Promise`-related properties and the `queries` and `results` arrays.
 
-If you discover that some specific additional `client.refetchQueries` input options or result properties would be useful, please feel free to [open an issue](https://github.com/apollographql/apollo-feature-requests/issues) or [start a discussion](https://github.com/apollographql/apollo-client/discussions) explaining your use case(s).
+If you discover that some specific additional `client.refetchQueries` input options or result properties would be useful, please feel free to [open an issue](https://github.com/apollographql/apollo-feature-requests/issues) explaining your use case(s).
 
 ### Corresponding `client.mutate` options
 

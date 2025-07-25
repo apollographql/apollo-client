@@ -183,8 +183,8 @@ The way Apollo Client exposes errors and how you handle them depends on both the
 Apollo Client provides three types of APIs, each with different error handling characteristics:
 
 - **Promise-based APIs** (e.g. `client.query`, `client.mutate`) - Errors either reject the promise or are returned in the result as the `error` field.
-- **Observable-based APIs** (e.g. `client.watchQuery`) - Errors are emitted through observer callbacks
-- **React hooks** (e.g. `useQuery`, `useMutation`) - Errors are provided as part of the hook's return value
+- **Observable-based APIs** (e.g. `client.watchQuery`) - Errors are emitted through the observer `next` callback.
+- **React hooks** (e.g. `useQuery`, `useMutation`) - Errors are provided as part of the hook's return value.
 
 #### Promise-based APIs
 

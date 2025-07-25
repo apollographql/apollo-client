@@ -1,93 +1,27 @@
 import * as prettier from "prettier";
 const code = `
+Notice that the \`Trail\` component isn't receiving the entire \`trail\` object via props, only the \`id\` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each \`Trail\` component to react to the cache updates for a single trail independently. Updates to a trail's \`status\` will not cause the parent \`App\` component to rerender since the \`@nonreactive\` directive is applied to the \`TrailFragment\` spread, a fragment that includes the \`status\` field.
 
+<MinVersion version="3.12.0">
+## \`@unmask\`
+</MinVersion>
 
-/**
- * A hook for executing queries in an Apollo application.
- *
- * To run a query within a React component, call \`useQuery\` and pass it a GraphQL query document.
- *
- * When your component renders, \`useQuery\` returns an object from Apollo Client that contains
- *
- * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of \`useQuery\`.
- *
- * @example
- * \`\`\`jsx
- * import { gql } from '@apollo/client';
- * import { useQuery } from '@apollo/client/react';
- *
- * const GET_GREETING = gql\`
- *   query GetGreeting($language: String!) {
- *     greeting(language: $language) {
- *       message
- *     }
- *   }
- * \`;
- *
- * function Hello() {
- *   const { loading, error, data } = useQuery(GET_GREETING, {
- *                 variables: { language: 'english' },
- *   });
- *   if (loading) return <p>Loading ...</p>;
- *   return <h1>Hello {data.greeting.message}!</h1>;
- * }
- * \`\`\`
- * @param query - A GraphQL query document parsed into an AST by \`gql\`.
- * @param options - Options to control how the query is executed.
- * @returns Query result object
- */
-export function useQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
+The \`@unmask\` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [incrementally adopt data masking in an existing application](./fragments#incremental-adoption-in-an-existing-application). It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
+
+\`\`\`graphql
+query GetPosts {
+  posts {
+    id
+    ...PostDetails @unmask
   }
-): useQuery.Result<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
+}
+\`\`\`
 
-/** {@inheritDoc @apollo/client!useQuery:function(1)} */
-export function useQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useQuery.Result<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!useQuery:function(1)} */
-export function useQuery<
-  TData = unknown,
-TVariables extends OperationVariables = OperationVariables,
->(
-query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-...[options]: {} extends TVariables ?
- [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-: [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
-
-`
-  .split("\n")
-  .map((line) => line.trim())
-  .join("\n");
-await prettier.format(``, {
-  parser: "jsdoc",
-  plugins: ["./format-jsdoc.js"],
-});
+`;
 
 const result = await prettier.format(code, {
-  parser: "typescript-with-jsdoc",
-  plugins: ["./format-jsdoc.js"],
+  parser: "mdx3",
+  plugins: ["./format-mdx3.js"],
 });
 
 console.log(result);

@@ -6,12 +6,21 @@
   "tabWidth": 2,
   "trailingComma": "es5",
   "experimentalTernaries": true,
-  "plugins": ["./config/prettier/format-jsdoc.js"],
+  "plugins": [
+    "./config/prettier/format-jsdoc.js",
+    "./config/prettier/format-mdx3.js"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
       "options": {
         "parser": "typescript-with-jsdoc"
+      }
+    },
+    {
+      "files": ["*.mdx"],
+      "options": {
+        "parser": "mdx3"
       }
     }
   ]

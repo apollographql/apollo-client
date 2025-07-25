@@ -193,16 +193,22 @@ To improve the performance of your [server-side response cache](/apollo-server/p
 
 ## Set your app's `name` and `version` for metrics reporting (paid)
 
-> This recommendation is _most_ pertinent to Studio organizations with a [paid plan](https://www.apollographql.com/pricing/), however it can be helpful for all apps.
+<Note>
 
-The constructor of `ApolloClient` accepts the `name` and `version` options:
+This recommendation is _most_ pertinent to Studio organizations with a [paid plan](https://www.apollographql.com/pricing/), however it can be helpful for all apps.
 
-```js {4-5}
+</Note>
+
+The constructor of `ApolloClient` accepts the `clientAwareness` option with `name` and `version` properties:
+
+```js {4-7}
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
   cache: new InMemoryCache(),
-  name: "MarketingSite",
-  version: "1.2",
+  clientAwareness: {
+    name: "MarketingSite",
+    version: "1.2",
+  },
 });
 ```
 

@@ -20,10 +20,10 @@ export declare namespace CombinedGraphQLErrors {
      * the `defaultFormatMessage` function provided to the `options` argument of
      * your message formatter.
      *
+     * @example
+     *
      * The following example prepends a string to the message and uses the
      * default message formatter to format the error messages.
-     *
-     * @example
      *
      * ```ts
      * CombinedGraphQLErrors.formatMessage = (errors, { defaultFormatMessage }) => {
@@ -42,10 +42,10 @@ export declare namespace CombinedGraphQLErrors {
    * format of the `message`, such as changing the delimiter or adding a message
    * prefix, override the static `formatMessage` method.
    *
+   * @example
+   *
    * The following example demonstrates how to format the error message by
    * joining each error with a comma.
-   *
-   * @example
    *
    * ```ts
    * import { CombinedGraphQLErrors } from "@apollo/client/errors";

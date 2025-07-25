@@ -13,10 +13,10 @@ export declare namespace CombinedProtocolErrors {
      * the `defaultFormatMessage` function provided to the `options` argument of
      * your message formatter.
      *
+     * @example
+     *
      * The following example prepends a string to the message and uses the
      * default message formatter to format the error messages.
-     *
-     * @example
      *
      * ```ts
      * CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) => {
@@ -35,9 +35,6 @@ export declare namespace CombinedProtocolErrors {
    * format of the `message`, such as changing the delimiter or adding a message
    * prefix, override the static `formatMessage` method.
    *
-   * The following example demonstrates how to format the error message by
-   * joining each error with a comma.
-   *
    * @remarks
    *
    * See the [`formatMessage`](https://www.apollographql.com/docs/react/api/errors/CombinedProtocolErrors) section for details about the parameters provided to the `formatMessage` function.
@@ -46,6 +43,9 @@ export declare namespace CombinedProtocolErrors {
    * > The message formatter needs to be configured before any operation is executed by Apollo Client, otherwise the default message formatter is used. We recommend configuring the message formatter before initializing your `ApolloClient` instance.
    *
    * @example
+   *
+   * The following example demonstrates how to format the error message by
+   * joining each error with a comma.
    *
    * ```ts
    * import { CombinedProtocolErrors } from "@apollo/client/errors";
@@ -119,6 +119,7 @@ export class CombinedProtocolErrors extends Error {
    * property. Override this method to provide your own formatting.
    *
    * @remarks
+   *
    * The `formatMessage` function is called by the `CombinedProtocolErrors`
    * constructor to provide a formatted message as the `message` property of the
    * `CombinedProtocolErrors` object. Follow the ["Providing a custom message

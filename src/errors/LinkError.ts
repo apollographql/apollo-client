@@ -18,10 +18,10 @@ export function registerLinkError(error: ErrorLike) {
  * errors. This is helpful for retrying an operation at the call site only when
  * the error originates from the link chain.
  *
+ * @example
+ *
  * The following example creates a custom wrapped query function that detects
  * whether the query includes an operation name and throws if not.
- *
- * @example
  *
  * ```ts
  * import { LinkError } from "@apollo/client/errors";

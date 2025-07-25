@@ -1,8 +1,10 @@
 import { brand, isBranded } from "./utils.js";
 
-interface ServerParseErrorOptions {
-  response: Response;
-  bodyText: string;
+export declare namespace ServerParseError {
+  export interface Options {
+    response: Response;
+    bodyText: string;
+  }
 }
 
 /**
@@ -64,7 +66,7 @@ export class ServerParseError extends Error {
    */
   bodyText: string;
 
-  constructor(originalParseError: unknown, options: ServerParseErrorOptions) {
+  constructor(originalParseError: unknown, options: ServerParseError.Options) {
     super(
       originalParseError instanceof Error ?
         originalParseError.message

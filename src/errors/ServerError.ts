@@ -61,17 +61,17 @@ export class ServerError extends Error {
   /**
    * The raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object provided by the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
    */
-  response: Response;
+  readonly response: Response;
   /**
    * The status code returned by the server in the response. This is provided as
    * a shortcut for `response.status`.
    */
-  statusCode: number;
+  readonly statusCode: number;
 
   /**
    * The raw response body text.
    */
-  bodyText: string;
+  readonly bodyText: string;
 
   constructor(message: string, options: ServerError.Options) {
     super(message);

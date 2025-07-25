@@ -427,6 +427,9 @@ new ErrorLink(({ error, operation, forward }) => {
 
   // Log the error for any unhandled GraphQL errors or network errors.
   console.log(`[Error]: ${error.message}`);
+
+  // If nothing is returned from the error handler callback, the error will be
+  // emitted from the link chain as normal.
 });
 ```
 

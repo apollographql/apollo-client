@@ -121,8 +121,6 @@ items:
     children:
       - label: Migrating to Apollo Client 3.0
         href: ./migrating/apollo-client-3-migration
-      - label: Hooks migration guide
-        href: ./migrating/hooks-migration
   - label: API Reference
     children:
       - label: Core

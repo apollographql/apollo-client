@@ -46,8 +46,6 @@ export function registerLinkError(error: ErrorLike) {
  */
 export const LinkError = {
   /**
-   * Determine if the error is an error emitted from the link chain.
-   *
    * A method that determines whether an error originated from the link chain.
    * `is` does not provide any type narrowing.
    *

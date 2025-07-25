@@ -26,9 +26,9 @@ See the [additional properties](#additional-properties) for more details about t
 These properties are specific to the `LocalStateError` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
 
 <Tip>
-  Use the `cause` property to determine the original cause of the
-  `LocalStateError` error when the error is thrown as a result of a downstream
-  error.
+  The `cause` property contains the original error thrown by local resolvers
+  when exporting variables for [`@export`](../../data/directives#export)
+  directive fields.
 </Tip>
 
 <table class="field-table">

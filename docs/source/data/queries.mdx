@@ -145,8 +145,8 @@ Let's add a button to our `DogPhoto` component that calls our query's
 `refetch` function whenever it's clicked.
 
 You can optionally provide a new `variables` object to the `refetch` function.
-If you avoid passing a `variables` object and use only `refetch()`, the query
-uses the same `variables` that it used in its previous execution.
+If you don't provide a `variables` object, the query uses the same `variables`
+object that it used in its previous execution.
 
 ```jsx {2,12} title="index.js"
 function DogPhoto({ breed }) {
@@ -281,15 +281,13 @@ function DelayedQuery() {
 
 The first item in `useLazyQuery`'s return tuple is the query function, and the second item is the same result object returned by `useQuery`.
 
-As shown above, you can pass options to the query function just like you pass them to `useLazyQuery` itself. If you pass a particular option to _both_, the value you pass to the query function takes precedence. This is a handy way to pass _default_ options to `useLazyQuery` and then customize those options in the query function.
-
-For a full list of supported options, see the [API reference](../api/react/hooks/#uselazyquery).
+For a full list of supported options, see the [API reference](../api/react/useLazyQuery).
 
 ## Setting a fetch policy
 
-By default, the `useQuery` hook checks the Apollo Client cache to see if all the data you requested is already available locally. If all data _is_ available locally, `useQuery` returns that data and _doesn't_ query your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
+By default, the `useQuery` hook checks the Apollo Client cache to see if all the data you requested is already available. If all of the data _is_ available in the cache, `useQuery` returns that data and _doesn't_ query your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
 
-You can specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
+You specify a fetch policy using the `fetchPolicy` option. For example, we can instruct `useQuery` to bypass the cache and fetch from the network by setting the `fetchPolicy` option to `network-only`:
 
 ```js {2}
 const { loading, error, data } = useQuery(GET_DOGS, {
@@ -297,13 +295,9 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 });
 ```
 
-<MinVersion version="3.1">
-
 ### `nextFetchPolicy`
 
-</MinVersion>
-
-You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
+You can _also_ specify a query's `nextFetchPolicy`. When provided, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 
 ```js {3}
 const { loading, error, data } = useQuery(GET_DOGS, {
@@ -425,6 +419,8 @@ In order to debug these `nextFetchPolicy` transitions, it can be useful to add `
 <td>
 
 ###### `cache-first`
+
+(default)
 
 </td>
 <td>

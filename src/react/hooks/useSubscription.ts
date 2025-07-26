@@ -96,6 +96,11 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
     error?: ErrorLike;
 
+    /**
+     * A function that when called will disconnect and reconnect the connection
+     * to the subscription. If the subscription is deduplicated, this will
+     * restart the connection for all deduplicated subscriptions.
+     */
     restart: () => void;
   }
 

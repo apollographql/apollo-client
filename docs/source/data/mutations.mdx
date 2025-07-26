@@ -48,7 +48,7 @@ As shown above, you use the `gql` function to parse the mutation string into a G
 When your component renders, `useMutation` returns a tuple that includes:
 
 - A **mutate function** that you can call at any time to execute the mutation
-  - Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead call the `mutate` function run execute the mutation.
+  - Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead call the `mutate` function to execute the mutation.
 - An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
   - This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
 

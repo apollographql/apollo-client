@@ -43,7 +43,12 @@ import { visit } from "recast";
 
 import type { BuildStep, BuildStepOptions } from "./build.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
-import { applyRecast, frameComment, withPseudoNodeModules } from "./helpers.ts";
+import {
+  applyRecast,
+  frameComment,
+  patchApiExtractorInternals,
+  withPseudoNodeModules,
+} from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
@@ -133,7 +138,9 @@ function loadApiModel(options: BuildStepOptions) {
       configObjectFullPath,
     });
 
+    const restore = patchApiExtractorInternals();
     Extractor.invoke(extractorConfig);
+    restore();
 
     const model = new ApiModel();
     model.loadPackage(tempModelFile);

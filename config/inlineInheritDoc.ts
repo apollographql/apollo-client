@@ -59,7 +59,11 @@ export const inlineInheritDoc: BuildStep = async (options) => {
   await processComments(model, options);
 };
 
-function getCommentFor(canonicalReference: string, model: ApiModel) {
+function getCommentFor(
+  canonicalReference: string,
+  variables: undefined | Record<string, string>,
+  model: ApiModel
+) {
   const apiItem = model.resolveDeclarationReference(
     DeclarationReference.parse(canonicalReference),
     undefined
@@ -70,7 +74,27 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
     );
   if (apiItem instanceof ApiDocumentedItem) {
     if (!apiItem.tsdocComment) return "";
-    return renderDocComment(apiItem.tsdocComment);
+    const unusedVariables = new Set(Object.keys(variables || {}));
+    let string = renderDocComment(apiItem.tsdocComment);
+
+    string = string.replaceAll(/\{\{(\w+)\}\}/g, (_, variable) => {
+      unusedVariables.delete(variable);
+      const value = variables?.[variable];
+      if (value === undefined) {
+        throw new Error(
+          `Variable "${variable}" is required but not defined for @inheritDoc "${canonicalReference}"`
+        );
+      }
+      return value;
+    });
+    if (unusedVariables.size > 0) {
+      throw new Error(
+        `Variables ${[...unusedVariables].join(
+          ", "
+        )} are defined but not used in @inheritDoc "${canonicalReference}"`
+      );
+    }
+    return string;
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -151,7 +175,8 @@ function loadApiModel(options: BuildStepOptions) {
 }
 
 function processComments(model: ApiModel, options: BuildStepOptions) {
-  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}(\s*$)?/;
+  const inheritDocRegex =
+    /\{\s*@inheritDoc\s+(\S+)(?:\s+(\{[^}]*\}))?\s*\}(?:\s*$)?/;
 
   return applyRecast({
     glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
@@ -173,10 +198,32 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
                 while (inheritDocRegex.test(newText)) {
                   newText = newText.replace(
                     inheritDocRegex,
-                    (_, canonicalReference) => {
-                      return getCommentFor(canonicalReference, model) || "";
+                    (_, canonicalReference, variables) => {
+                      try {
+                        return (
+                          getCommentFor(
+                            canonicalReference,
+                            variables ? JSON.parse(variables) : undefined,
+                            model
+                          ) || ""
+                        );
+                      } catch (e) {
+                        console.warn("\n\n" + e.message);
+                        process.exitCode = 1;
+                      }
                     }
                   );
+                }
+                if (newText.includes("@inheritDoc")) {
+                  console.warn(
+                    "\n\nFound @inheritDoc after processing, something went wrong.",
+                    {
+                      sourceName,
+                      originalText: comment.value,
+                      finalReplacement: newText,
+                    }
+                  );
+                  process.exitCode = 1;
                 }
                 if (comment.value !== newText) {
                   comment.value = frameComment(newText);

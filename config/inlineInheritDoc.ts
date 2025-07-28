@@ -223,6 +223,6 @@ function renderDocNode(node: DocComment): string {
   let text = range.toString();
   return text
     .split("\n")
-    .map((line) => line.replace(/^\s*\*/, ""))
+    .map((line) => line.replace(/^\s*\* ?/, ""))
     .join("\n");
 }

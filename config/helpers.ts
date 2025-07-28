@@ -5,10 +5,15 @@ import { relative } from "node:path";
 import * as path from "path";
 
 import { ApiModelGenerator } from "@microsoft/api-extractor/lib/generators/ApiModelGenerator.js";
-import type { ApiPackage } from "@microsoft/api-extractor-model";
-import { ApiEntryPoint, ApiNamespace } from "@microsoft/api-extractor-model";
+import type { ApiItem, ApiPackage } from "@microsoft/api-extractor-model";
+import {
+  ApiDeclaredItem,
+  ApiEntryPoint,
+  ApiNamespace,
+} from "@microsoft/api-extractor-model";
 import { apiItem_onParentChanged } from "@microsoft/api-extractor-model/lib/items/ApiItem.js";
 import { TSDocParser } from "@microsoft/tsdoc";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
 import * as tsParser from "recast/parsers/typescript.js";
@@ -199,6 +204,7 @@ export function patchApiExtractorInternals() {
   ApiModelGenerator.prototype.buildApiPackage = function (
     this: ApiModelGenerator
   ) {
+    const mappings: Record<string, string> = {};
     const apiPackage: ApiPackage = orig_buildApiPackage.call(this);
     const mainEntrypoint = apiPackage.entryPoints[0];
     for (const [index, namespace] of Object.entries(
@@ -219,6 +225,7 @@ export function patchApiExtractorInternals() {
           .replace(/_/g, "-"),
         members: [],
       });
+
       for (const member of namespace.members) {
         // this is an internal function call - the only way to "detach" an existing node
         // from its parent, so that it can be added to the new entry point
@@ -227,8 +234,41 @@ export function patchApiExtractorInternals() {
       }
 
       apiPackage.addMember(entryPoint);
-      mainEntrypoint.members.slice(+index, 1);
+
+      (mainEntrypoint.members as ApiItem[]).splice(+index, 1);
+
+      mappings[
+        namespace.canonicalReference.toString().slice(0, -":namespace".length)
+      ] = entryPoint.canonicalReference.toString();
     }
+
+    function fixup(item: ApiItem) {
+      item.members.forEach(fixup);
+      if (item instanceof ApiDeclaredItem) {
+        for (const excerpt of item.excerptTokens) {
+          const stringified = excerpt.canonicalReference?.toString();
+          if (stringified?.startsWith("@apollo/client!entrypoint_")) {
+            excerpt["_canonicalReference"] = DeclarationReference.parse(
+              stringified.replace(
+                /(@apollo\/client!entrypoint_[^.]+)[.:]/,
+                (_, start) => {
+                  if (!mappings[start]) {
+                    throw new Error(
+                      `No mapping found for ${start} in ${JSON.stringify(
+                        mappings
+                      )}`
+                    );
+                  }
+                  return mappings[start];
+                }
+              )
+            );
+          }
+        }
+      }
+    }
+
+    fixup(apiPackage);
     return apiPackage;
   };
 

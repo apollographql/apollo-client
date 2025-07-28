@@ -219,6 +219,8 @@ function renderDocComment(node: DocComment): string {
       line
         // remove leading ` *` or ` * `
         .replace(/^\s*\* ?/, "")
+        // remove singular trailing spaces, but preserve multiple trailing spaces as those have a meaning in markdown
+        .replace(/(?<! ) $/, "")
     )
     .join("\n");
 }

@@ -70,6 +70,22 @@ patterndiff "*.d.cts"
 
 cat <<EOF
 
+## DocModel differences
+
+<details>
+  <summary>
+
+### $(diff -qr "$comparison/docs/public" "docs/public" | wc -l) files with differences
+
+  </summary>
+
+\`\`\`diff
+
+$(diff -r "$comparison/docs/public" "docs/public")
+
+\`\`\`
+
+</details>
 
 ## differences in other files
 

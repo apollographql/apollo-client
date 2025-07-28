@@ -157,12 +157,7 @@ export declare namespace useMutation {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
-  > = Options<TData, TVariables, TCache> & {
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-    // TODO: Remove this option. We shouldn't allow the mutation to be overridden
-    // in the mutation function
-    mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  };
+  > = Options<TData, TVariables, TCache>;
 
   export namespace DocumentationTypes {
     /** {@inheritDoc @apollo/client!useMutation:function(1)} */

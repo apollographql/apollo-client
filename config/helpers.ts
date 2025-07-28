@@ -4,6 +4,10 @@ import { mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { relative } from "node:path";
 import * as path from "path";
 
+import { ApiModelGenerator } from "@microsoft/api-extractor/lib/generators/ApiModelGenerator.js";
+import type { ApiPackage } from "@microsoft/api-extractor-model";
+import { ApiEntryPoint, ApiNamespace } from "@microsoft/api-extractor-model";
+import { apiItem_onParentChanged } from "@microsoft/api-extractor-model/lib/items/ApiItem.js";
 import { TSDocParser } from "@microsoft/tsdoc";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
@@ -185,7 +189,51 @@ export function patchApiExtractorInternals() {
     };
     return parsed;
   };
+
+  /*
+    In `buildDocEntryPoints` we create a file with namespace re-exports for all sub-entrypoints.
+    We don't want to actually export these as namespaces, but instead want to turn them into additional `EntryPoint` objects.
+    API Extractor itself cannot load more than one entrypoint, although the file format supports it - so we patch the logic here to reorganize the structure before saving.
+    */
+  const orig_buildApiPackage = ApiModelGenerator.prototype.buildApiPackage;
+  ApiModelGenerator.prototype.buildApiPackage = function (
+    this: ApiModelGenerator
+  ) {
+    const apiPackage: ApiPackage = orig_buildApiPackage.call(this);
+    const mainEntrypoint = apiPackage.entryPoints[0];
+    for (const [index, namespace] of Object.entries(
+      mainEntrypoint.members
+      // we iterate backwards so that we can remove entries without affecting the indexes
+    ).reverse()) {
+      if (
+        !(namespace instanceof ApiNamespace) ||
+        !namespace.name.startsWith("entrypoint_")
+      ) {
+        continue;
+      }
+      // we want to turn namespaces into entry points
+      const entryPoint = new ApiEntryPoint({
+        name: namespace.name
+          .slice("entrypoint_".length)
+          .replace(/__/g, "/")
+          .replace(/_/g, "-"),
+        members: [],
+      });
+      for (const member of namespace.members) {
+        // this is an internal function call - the only way to "detach" an existing node
+        // from its parent, so that it can be added to the new entry point
+        member[apiItem_onParentChanged](undefined);
+        entryPoint.addMember(member);
+      }
+
+      apiPackage.addMember(entryPoint);
+      mainEntrypoint.members.slice(+index, 1);
+    }
+    return apiPackage;
+  };
+
   return () => {
     TSDocParser.prototype.parseRange = orig_parseRange;
+    ApiModelGenerator.prototype.buildApiPackage = orig_buildApiPackage;
   };
 }

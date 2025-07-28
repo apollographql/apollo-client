@@ -50,7 +50,7 @@ export declare namespace useReadQuery {
           UtilityDocumentationTypes.DataState<TData> {}
     }
 
-    /** {@inheritDoc @apollo/client!useReadQuery:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useReadQuery:function(1)} */
     export function useReadQuery<TData>(
       queryRef: QueryRef<TData>
     ): useReadQuery.Result<TData>;

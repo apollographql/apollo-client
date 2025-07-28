@@ -34,7 +34,7 @@ export declare namespace useQueryRefHandlers {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useQueryRefHandlers:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useQueryRefHandlers:function(1)} */
     export function useQueryRefHandlers<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,

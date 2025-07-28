@@ -192,7 +192,7 @@ export declare namespace useQuery {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useQuery:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
     export function useQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
@@ -281,7 +281,7 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -296,7 +296,7 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

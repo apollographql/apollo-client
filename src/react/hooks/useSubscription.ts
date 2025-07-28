@@ -106,7 +106,7 @@ export declare namespace useSubscription {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useSubscription:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useSubscription:function(1)} */
     export function useSubscription<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,

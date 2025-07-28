@@ -20,7 +20,10 @@ type EntryPoint = {
 };
 export const entryPoints = Object.entries(pkg.exports).map<EntryPoint>(
   ([key, value]) => ({
-    dirs: key.slice("./".length).split("/"),
+    dirs: key
+      .slice("./".length)
+      .split("/")
+      .filter((d) => d !== ""),
     key,
     value,
   })
@@ -30,7 +33,13 @@ export const buildDocEntryPoints = (
   options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt">
 ) => {
   const acc = entryPoints.map((entryPoint) => {
-    return `export * from "${path.join(
+    let identifier = "";
+    if (entryPoint.dirs.length) {
+      identifier =
+        `entrypoint_` + entryPoint.dirs.join("__").replace(/-/g, "_");
+    }
+    if (identifier === "core") return;
+    return `export * ${identifier ? `as ${identifier}` : ""} from "${path.join(
       "@apollo/client",
       ...entryPoint.dirs
     )}";`;

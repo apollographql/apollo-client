@@ -1,0 +1,37 @@
+---
+title: LocalStateError
+description: API reference
+---
+
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+<DocBlock
+  canonicalReference="@apollo/client!LocalStateError:class"
+  customOrder={["summary", "example"]}
+/>
+
+## Static methods
+
+<FunctionDetails
+  canonicalReference="@apollo/client!LocalStateError.is:member(1)"
+  headingLevel={3}
+  parameters={false}
+  result={false}
+/>
+
+See the [instance properties](#instance-properties) for more details about the available properties provided by the `LocalStateError` object.
+
+## Instance properties
+
+These properties are specific to the `LocalStateError` object. Standard error [instance properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#instance_properties) are also available.
+
+<Tip>
+  The `cause` property contains the original error thrown by local resolvers
+  when exporting variables for [`@export`](../../data/directives#export)
+  directive fields.
+</Tip>
+
+<PropertySignatureTable
+  canonicalReference="@apollo/client!LocalStateError.DocumentationTypes.InstanceProperties:interface"
+  idPrefix="instanceproperties"
+/>

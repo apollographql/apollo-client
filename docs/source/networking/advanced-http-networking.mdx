@@ -94,15 +94,22 @@ You can use Apollo Link to customize Apollo Client's behavior whenever it receiv
 The following example demonstrates using [`@apollo/client/link/error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
 ```js
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-import { onError } from "@apollo/client/link/error";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ServerError,
+} from "@apollo/client";
+import { ErrorLink } from "@apollo/client/link/error";
 
 import { logout } from "./logout";
 
 const httpLink = new HttpLink({ uri: "/graphql" });
 
-const logoutLink = onError(({ networkError }) => {
-  if (networkError.statusCode === 401) logout();
+const logoutLink = new ErrorLink(({ error }) => {
+  if (ServerError.is(error) && error.statusCode === 401) {
+    logout();
+  }
 });
 
 const client = new ApolloClient({

@@ -70,7 +70,7 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
     );
   if (apiItem instanceof ApiDocumentedItem) {
     if (!apiItem.tsdocComment) return "";
-    return renderDocNode(apiItem.tsdocComment);
+    return renderDocComment(apiItem.tsdocComment);
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -190,45 +190,30 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
   });
 }
 
-function renderDocNode(node: DocComment): string {
-  let pos = Number.MAX_SAFE_INTEGER;
-  let end = 0;
-  let sourceRange = undefined as TextRange | undefined;
-
+function renderDocComment(node: DocComment): string {
+  let commentRange: TextRange | undefined = undefined;
   function iterate(node: undefined | DocNode | readonly DocNode[]) {
-    if (!node) return;
+    if (!node) return; // no node
+    if (commentRange) return; // we already found what we're looking for
     if ("forEach" in node) {
       node.forEach(iterate);
       return;
     }
     if (node.kind === "Excerpt") {
       const excerptNode = node as DocExcerpt;
-      if (!sourceRange) {
-        sourceRange = excerptNode.content.parserContext.commentRange;
-      } else if (
-        sourceRange !== excerptNode.content.parserContext.commentRange
-      ) {
-        throw new Error("Should operate on the same source range");
-      }
-      const firstToken = excerptNode.content.tokens.at(0);
-      const lastToken = excerptNode.content.tokens.at(-1);
-      if (firstToken && lastToken) {
-        pos = Math.min(pos, firstToken.range.pos);
-        end = Math.max(pos, lastToken.range.pos);
-      }
-      return;
+      commentRange = excerptNode.content.parserContext.commentRange;
     }
     node.getChildNodes().forEach(iterate);
   }
   iterate(node);
 
-  if (pos >= end || !sourceRange) {
+  if (!commentRange) {
     return "";
   }
 
-  const range = TextRange.fromStringRange(sourceRange.buffer, pos, end);
-  let text = range.toString();
+  let text = commentRange.toString();
   return text
+    .slice(2, -2)
     .split("\n")
     .map((line) =>
       line

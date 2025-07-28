@@ -223,6 +223,12 @@ function renderDocNode(node: DocComment): string {
   let text = range.toString();
   return text
     .split("\n")
-    .map((line) => line.replace(/^\s*\* ?/, ""))
+    .map((line) =>
+      line
+        // remove leading ` *` or ` * `
+        .replace(/^\s*\* ?/, "")
+        // remove singular trailing spaces, but preserve multiple trailing spaces as those have a meaning in markdown
+        .replace(/(?<! ) $/, "")
+    )
     .join("\n");
 }

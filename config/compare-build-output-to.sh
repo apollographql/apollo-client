@@ -57,9 +57,11 @@ cd "$comparison" || { echo "checkout failed"; exit 1; }
 npm i >&2
 git status >&2
 npm run build >&2
+node config/apiExtractor.ts --main-only --generate docModel >&2
 cd "$root" || exit 1
 git status >&2
 npm run build >&2
+node config/apiExtractor.ts --main-only --generate docModel >&2
 
 set +e
 

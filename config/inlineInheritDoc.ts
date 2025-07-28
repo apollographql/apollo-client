@@ -36,7 +36,8 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import type { DocComment, DocExcerpt, DocNode } from "@microsoft/tsdoc";
+import { TextRange } from "@microsoft/tsdoc";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { visit } from "recast";
 
@@ -64,11 +65,7 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
     );
   if (apiItem instanceof ApiDocumentedItem) {
     if (!apiItem.tsdocComment) return "";
-    const stringBuilder = new StringBuilder();
-    const emitter = new TSDocEmitter();
-    emitter["_emitCommentFraming"] = false;
-    emitter["_renderCompleteObject"](stringBuilder, apiItem.tsdocComment);
-    return stringBuilder.toString();
+    return renderDocNode(apiItem.tsdocComment);
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -184,4 +181,48 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
       };
     },
   });
+}
+
+function renderDocNode(node: DocComment): string {
+  let pos = Number.MAX_SAFE_INTEGER;
+  let end = 0;
+  let sourceRange = undefined as TextRange | undefined;
+
+  function iterate(node: undefined | DocNode | readonly DocNode[]) {
+    if (!node) return;
+    if ("forEach" in node) {
+      node.forEach(iterate);
+      return;
+    }
+    if (node.kind === "Excerpt") {
+      const excerptNode = node as DocExcerpt;
+      if (!sourceRange) {
+        sourceRange = excerptNode.content.parserContext.commentRange;
+      } else if (
+        sourceRange !== excerptNode.content.parserContext.commentRange
+      ) {
+        throw new Error("Should operate on the same source range");
+      }
+      const firstToken = excerptNode.content.tokens.at(0);
+      const lastToken = excerptNode.content.tokens.at(-1);
+      if (firstToken && lastToken) {
+        pos = Math.min(pos, firstToken.range.pos);
+        end = Math.max(pos, lastToken.range.pos);
+      }
+      return;
+    }
+    node.getChildNodes().forEach(iterate);
+  }
+  iterate(node);
+
+  if (pos >= end || !sourceRange) {
+    return "";
+  }
+
+  const range = TextRange.fromStringRange(sourceRange.buffer, pos, end);
+  let text = range.toString();
+  return text
+    .split("\n")
+    .map((line) => line.replace(/^\s*\*/, ""))
+    .join("\n");
 }

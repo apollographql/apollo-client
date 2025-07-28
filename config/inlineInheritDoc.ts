@@ -151,7 +151,7 @@ function loadApiModel(options: BuildStepOptions) {
 }
 
 function processComments(model: ApiModel, options: BuildStepOptions) {
-  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
+  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}(\s*$)?/;
 
   return applyRecast({
     glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
@@ -234,8 +234,6 @@ function renderDocNode(node: DocComment): string {
       line
         // remove leading ` *` or ` * `
         .replace(/^\s*\* ?/, "")
-        // remove singular trailing spaces, but preserve multiple trailing spaces as those have a meaning in markdown
-        .replace(/(?<! ) $/, "")
     )
     .join("\n");
 }

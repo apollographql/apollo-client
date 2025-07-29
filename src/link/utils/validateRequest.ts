@@ -1,7 +1,7 @@
 import type { GraphQLRequest } from "@apollo/client/link";
 import { newInvariantError } from "@apollo/client/utilities/invariant";
 
-export function validateRequest(request: GraphQLRequest): GraphQLRequest {
+export function validateRequest(request: GraphQLRequest): void {
   const OPERATION_FIELDS = [
     "query",
     "operationName",
@@ -15,6 +15,4 @@ export function validateRequest(request: GraphQLRequest): GraphQLRequest {
       throw newInvariantError(`illegal argument: %s`, key);
     }
   }
-
-  return request;
 }

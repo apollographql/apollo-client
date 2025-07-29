@@ -160,11 +160,11 @@ You might want your link chain's execution to branch, depending on the details o
 
 `split` is comprised of three parts:
 
-| Name    | Description                                                                                                                                                                                            |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `test`  | A function that takes in the current `operation` and returns `true` or `false`. Returning `true` executes the `left` link. Returning `false` executes the `right` link.                                |
-| `left`  | The link passed as the second argument to `split`. This link executes when the `test` function returns `true`.                                                                                         |
-| `right` | An **optional** link passed as the third argument to `split`. This link executes when the `test` function returns `false`. If this is not provided, the request handler's `forward` parameter is used. |
+| Name    | Description                                                                                                                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test`  | A function that takes in the current `operation` and returns `true` or `false`. Returning `true` executes the `left` link. Returning `false` executes the `right` link.                            |
+| `left`  | The link passed as the second argument to `split`. This link executes when the `test` function returns `true`.                                                                                     |
+| `right` | An optional link passed as the third argument to `split`. This link executes when the `test` function returns `false`. If this is not provided, the request handler's `forward` parameter is used. |
 
 The following example uses `split` to create a link that routes to different `HttpLink` instances depending on the associated context's `version`:
 
@@ -234,7 +234,7 @@ A link object is an instance of the [`ApolloLink` class](https://github.com/apol
 
 ### The request handler
 
-Every link must define a **request handler**. The request handler is a method responsible for performing some logic and executing the request, either by [forwarding](#the-forward-function) the operation to the next link in the chain, or sending the operation to the destination that executes it, such as a GraphQL server.
+Every link must define a request handler. The request handler is a method responsible for performing some logic and executing the request, either by [forwarding](#the-forward-function) the operation to the next link in the chain, or sending the operation to the destination that executes it, such as a GraphQL server.
 
 This request handler is passed the following arguments:
 
@@ -302,7 +302,7 @@ The `forward` function returns an [`Observable`](https://rxjs.dev/guide/observab
 
 <Caution>
 
-A non-terminating custom link's request handler **must** call `forward(operation)`. If it doesn't, the link is treated as a [terminating link](#the-terminating-link) which could result in the associated GraphQL operation not executed and the request stuck pending indefinitely.
+A non-terminating custom link's request handler must call `forward(operation)`. If it doesn't, the link is treated as a [terminating link](#the-terminating-link) which could result in the associated GraphQL operation not executed and the request stuck pending indefinitely.
 
 </Caution>
 

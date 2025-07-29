@@ -1,11 +1,7 @@
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
-import {
-  createOperation,
-  transformOperation,
-  validateOperation,
-} from "@apollo/client/link/utils";
+import { createOperation, validateOperation } from "@apollo/client/link/utils";
 import {
   invariant,
   newInvariantError,

@@ -191,10 +191,10 @@ Each link instance also provides a `split` function. This is used to apply direc
 
 <ExpansionPanel title="Example">
 
-The following example adds directional composition to a `SetContextLink` to determine which `HttpLink` should be used as the terminating link.
+The following example adds directional composition to a `previousLink` to determine which `HttpLink` should be used as the terminating link.
 
 ```ts
-new SetContextLink(/* ... */).split(
+const link = previousLink.split(
   (operation) => operation.getContext().version === 1,
   new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
   new HttpLink({ uri: "http://localhost:4000/v2/graphql" })

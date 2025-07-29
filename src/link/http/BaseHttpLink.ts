@@ -1,5 +1,6 @@
 import { Observable } from "rxjs";
 
+import type { OperationContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import {
@@ -59,7 +60,7 @@ export class BaseHttpLink extends ApolloLink {
 
       const context = operation.getContext();
 
-      const http = (context.http ??= {});
+      const http = ((context as OperationContext).http ??= {});
       if (isSubscriptionOperation(operation.query)) {
         http.accept = [
           "multipart/mixed;boundary=graphql;subscriptionSpec=1.0",

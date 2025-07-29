@@ -168,7 +168,7 @@ You might want your link chain's execution to branch, depending on the details o
 
 The following example uses `split` to create a link that routes to different `HttpLink` instances depending on the associated context's `version`:
 
-```js
+```ts
 import { ApolloLink, HttpLink, split } from "@apollo/client";
 
 const link = split(
@@ -213,7 +213,7 @@ Other uses for the `split` method include:
 
 In the following example, all subscription operations are sent to `GraphQLWsLink`, with all other operations sent to `HttpLink`:
 
-```js
+```ts
 import { split, HttpLink } from "@apollo/client";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { OperationTypeNode } from "graphql";
@@ -334,7 +334,7 @@ Each link can perform custom logic on the result using [operators](https://rxjs.
 
 The following example uses the RxJS [`map` operator](https://rxjs.dev/api/index/function/map) to modify the result before returning it back up the chain:
 
-```js
+```ts
 import { map } from "rxjs";
 
 const link = new ApolloLink((operation, foward) => {
@@ -361,7 +361,7 @@ Links commonly perform side-effects when receiving responses instead of modifyin
 
 The following example uses the [`tap` operator](https://rxjs.dev/api/operators/tap) to estimate the round-trip time of an operation by defining a start time on the [request context](#managing-context) then logging the total time when the response is received.
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 import { tap } from "rxjs";
 
@@ -395,7 +395,7 @@ Most links perform the same logic for every operation they process and they don'
 
 Stateless links typically define request handlers by providing a callback function to the constructor of an `ApolloLink` object:
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 import { tap } from "rxjs";
 
@@ -411,7 +411,7 @@ const consoleLink = new ApolloLink((operation, forward) => {
 
 Stateless links are great for implementing middleware. The following link adds an `Authorization` header to every outgoing request:
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 
 const authLink = new ApolloLink((operation, forward) => {
@@ -428,7 +428,7 @@ const authLink = new ApolloLink((operation, forward) => {
 
 Stateless links compose nicely for customization using a function:
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 
 function reportErrors(errorCallback) {
@@ -462,7 +462,7 @@ You can also create stateless links by subclassing the `ApolloLink` class and ov
 
 Here's the same `reportErrors` link written as a subclass of `ApolloLink`:
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 import { tap } from "rxjs";
 
@@ -496,7 +496,7 @@ Links that maintain state between operations are called _stateful links_. You cr
 
 The following example maintains an operation counter using an instance variable. The counter is incremented for every request that passes through the link.
 
-```js
+```ts
 import { ApolloLink } from "@apollo/client";
 
 class OperationCountLink extends ApolloLink {

@@ -1,15 +1,16 @@
 import { gql } from "graphql-tag";
 
-import { validateOperation } from "@apollo/client/link/utils";
+// eslint-disable-next-line local-rules/no-relative-imports
+import { validateRequest } from "../validateRequest.js";
 
 describe("validateOperation", () => {
   it("should throw when invalid field in operation", () => {
-    expect(() => validateOperation(<any>{ qwerty: "" })).toThrow();
+    expect(() => validateRequest(<any>{ qwerty: "" })).toThrow();
   });
 
   it("should not throw when valid fields in operation", () => {
     expect(() =>
-      validateOperation({
+      validateRequest({
         query: gql`
           query SampleQuery {
             stub {

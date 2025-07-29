@@ -1,7 +1,7 @@
 import type { GraphQLRequest } from "@apollo/client/link";
 import { newInvariantError } from "@apollo/client/utilities/invariant";
 
-export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
+export function validateRequest(request: GraphQLRequest): GraphQLRequest {
   const OPERATION_FIELDS = [
     "query",
     "operationName",
@@ -10,11 +10,11 @@ export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
     "extensions",
     "context",
   ];
-  for (let key of Object.keys(operation)) {
+  for (let key of Object.keys(request)) {
     if (OPERATION_FIELDS.indexOf(key) < 0) {
       throw newInvariantError(`illegal argument: %s`, key);
     }
   }
 
-  return operation;
+  return request;
 }

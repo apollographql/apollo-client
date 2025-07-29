@@ -16,7 +16,7 @@ export function createOperation(
 ): Operation {
   validateRequest(request);
 
-  const operation: Operation = {
+  const operation = {
     query: request.query,
     variables: request.variables || {},
     extensions: request.extensions || {},

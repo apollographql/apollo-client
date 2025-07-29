@@ -13,7 +13,7 @@ export function createOperation(
 
   const setContext: Operation["setContext"] = (next) => {
     if (typeof next === "function") {
-      context = { ...context, ...next(context) };
+      context = { ...context, ...next({ ...context }) };
     } else {
       context = { ...context, ...next };
     }

@@ -74,10 +74,11 @@ export interface Operation {
    * A `DocumentNode` that describes the operation taking place.
    */
   query: DocumentNode;
+
   /**
    * A map of GraphQL variables being sent with the operation.
    */
-  variables: Record<string, any>;
+  variables: OperationVariables;
 
   /**
    * The string name of the GraphQL operation. If it is anonymous,

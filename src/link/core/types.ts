@@ -113,7 +113,7 @@ export interface Operation {
    * A function that gets the current context of the request. This can be used
    * by links to determine which actions to perform. See [managing context](https://apollographql.com/docs/react/api/link/introduction#managing-context)
    */
-  getContext: () => OperationContext;
+  getContext: () => Readonly<OperationContext>;
 
   /**
    * The Apollo Client instance executing the request.

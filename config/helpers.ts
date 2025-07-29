@@ -4,12 +4,14 @@ import { mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { relative } from "node:path";
 import * as path from "path";
 
+import { TSDocParser } from "@microsoft/tsdoc";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
 import * as tsParser from "recast/parsers/typescript.js";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
+
 import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
@@ -167,4 +169,23 @@ export async function updatePackageJson(
     packageJsonPath,
     JSON.stringify(newContents, replacer, 2) + "\n"
   );
+}
+
+export function patchApiExtractorInternals() {
+  // The TSDoc parser mangles some parts of DocBlocks in a way that's problematic
+  // for us.
+  // This code is used to keep the original DocComment intact, so that we can
+  // use it later in the API docs.
+
+  const orig_parseRange = TSDocParser.prototype.parseRange;
+  TSDocParser.prototype.parseRange = function (range) {
+    const parsed = orig_parseRange.call(this, range);
+    parsed.docComment.emitAsTsdoc = function () {
+      return range.toString();
+    };
+    return parsed;
+  };
+  return () => {
+    TSDocParser.prototype.parseRange = orig_parseRange;
+  };
 }

@@ -36,13 +36,19 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import type { DocComment, DocExcerpt, DocNode } from "@microsoft/tsdoc";
+import { TextRange } from "@microsoft/tsdoc";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { visit } from "recast";
 
 import type { BuildStep, BuildStepOptions } from "./build.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
-import { applyRecast, frameComment, withPseudoNodeModules } from "./helpers.ts";
+import {
+  applyRecast,
+  frameComment,
+  patchApiExtractorInternals,
+  withPseudoNodeModules,
+} from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
@@ -64,11 +70,7 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
     );
   if (apiItem instanceof ApiDocumentedItem) {
     if (!apiItem.tsdocComment) return "";
-    const stringBuilder = new StringBuilder();
-    const emitter = new TSDocEmitter();
-    emitter["_emitCommentFraming"] = false;
-    emitter["_renderCompleteObject"](stringBuilder, apiItem.tsdocComment);
-    return stringBuilder.toString();
+    return renderDocComment(apiItem.tsdocComment);
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -136,7 +138,9 @@ function loadApiModel(options: BuildStepOptions) {
       configObjectFullPath,
     });
 
+    const restore = patchApiExtractorInternals();
     Extractor.invoke(extractorConfig);
+    restore();
 
     const model = new ApiModel();
     model.loadPackage(tempModelFile);
@@ -147,7 +151,7 @@ function loadApiModel(options: BuildStepOptions) {
 }
 
 function processComments(model: ApiModel, options: BuildStepOptions) {
-  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
+  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}(\s*$)?/;
 
   return applyRecast({
     glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
@@ -184,4 +188,39 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
       };
     },
   });
+}
+
+function renderDocComment(node: DocComment): string {
+  let commentRange: TextRange | undefined = undefined;
+  function iterate(node: undefined | DocNode | readonly DocNode[]) {
+    if (!node) return; // no node
+    if (commentRange) return; // we already found what we're looking for
+    if ("forEach" in node) {
+      node.forEach(iterate);
+      return;
+    }
+    if (node.kind === "Excerpt") {
+      const excerptNode = node as DocExcerpt;
+      commentRange = excerptNode.content.parserContext.commentRange;
+    }
+    node.getChildNodes().forEach(iterate);
+  }
+  iterate(node);
+
+  if (!commentRange) {
+    return "";
+  }
+
+  let text = commentRange.toString();
+  return text
+    .slice(2, -2)
+    .split("\n")
+    .map((line) =>
+      line
+        // remove leading ` *` or ` * `
+        .replace(/^\s*\* ?/, "")
+        // remove singular trailing spaces, but preserve multiple trailing spaces as those have a meaning in markdown
+        .replace(/(?<! ) $/, "")
+    )
+    .join("\n");
 }

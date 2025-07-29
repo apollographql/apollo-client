@@ -158,7 +158,7 @@ The link chain created by the `from` and `concat` examples are functionally equi
 
 You might want your link chain's execution to branch, depending on the details of the operation being performed. You use the `split` function to create a link that conditionally routes to different sub-chains.
 
-`split` is comprised of three parts:
+The `split` function takes three arguments:
 
 | Name    | Description                                                                                                                                                                                        |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -230,18 +230,18 @@ const link = split(
 
 ## Creating a custom link
 
-A link object is an instance of the [`ApolloLink` class](https://github.com/apollographql/apollo-client/blob/main/src/link/core/ApolloLink.ts). Each link must define a [_request handler_](#the-request-handler) in order to handle the request.
+A link object is an instance of the [`ApolloLink` class](https://github.com/apollographql/apollo-client/blob/main/src/link/core/ApolloLink.ts). Each link must define a [_request handler_](#the-request-handler) to handle the request.
 
 ### The request handler
 
 Every link must define a request handler. The request handler is a method responsible for performing some logic and executing the request, either by [forwarding](#the-forward-function) the operation to the next link in the chain, or sending the operation to the destination that executes it, such as a GraphQL server.
 
-This request handler is passed the following arguments:
+This request handler receives the following arguments:
 
 - `operation`: The [operation object](#the-operation-object) that provides information about the currently executed GraphQL request passed through the link.
 - `forward`: A [function](#the-forward-function) called to execute the next link in the chain.
 
-Apollo Client executes a GraphQL operation by calling the request handler of the first link in the composed link chain. Each non-terminating link is then responsible for executing its logic and delegating execution down to the next link by calling the [`forward` function](#the-forward-function). Once the operation reaches the [terminating link](#the-terminating-link), the request handler sends the operation to the destination and reports the result back up through the chain.
+Apollo Client executes a GraphQL operation by calling the request handler of the first link in the composed link chain. Each non-terminating link is then responsible for executing its logic and delegating execution down to the next link by calling the [`forward` function](#the-forward-function). After the operation reaches the [terminating link](#the-terminating-link), the request handler sends the operation to the destination and reports the result back up through the chain.
 
 #### Define a request handler using a callback function
 
@@ -287,7 +287,7 @@ The `Operation` object includes the following fields:
 
 ### The `forward` function
 
-When your custom link's request handler is finished performing its logic, it should return a call to the `forward` function and provide the `operation` as an argument. Calling the `forward` function executes the next link in the chain.
+After your custom link's request handler is finished performing its logic, return a call to the `forward` function and provide the `operation` as an argument. Calling the `forward` function executes the next link in the chain.
 
 ```tsx {5}
 const link = new ApolloLink((operation, forward) => {
@@ -302,7 +302,7 @@ The `forward` function returns an [`Observable`](https://rxjs.dev/guide/observab
 
 <Caution>
 
-A non-terminating custom link's request handler must call `forward(operation)`. If it doesn't, the link is treated as a [terminating link](#the-terminating-link) which could result in the associated GraphQL operation not executed and the request stuck pending indefinitely.
+A non-terminating custom link's request handler must call `forward(operation)`. If it doesn't, the link is treated as a [terminating link](#the-terminating-link). This might result in the associated GraphQL operation not executed and the request remains pending indefinitely.
 
 </Caution>
 
@@ -330,14 +330,14 @@ flowchart LR
   class server secondary;
 ```
 
-Each link can perform custom logic on the result using [operators](https://rxjs.dev/guide/operators); special functions passed to an Observable's [`pipe`](https://rxjs.dev/guide/operators#piping) function.
+Each link can perform custom logic on the result using [operators](https://rxjs.dev/guide/operators). These are special functions passed to an Observable's [`pipe`](https://rxjs.dev/guide/operators#piping) function.
 
 The following example uses the RxJS [`map` operator](https://rxjs.dev/api/index/function/map) to modify the result before returning it back up the chain:
 
 ```ts
 import { map } from "rxjs";
 
-const link = new ApolloLink((operation, foward) => {
+const link = new ApolloLink((operation, forward) => {
   return forward(operation).pipe(
     map((result) => {
       // ...modify result as desired here...
@@ -347,11 +347,11 @@ const link = new ApolloLink((operation, foward) => {
 });
 ```
 
-This modification is seen by any _previous_ link in the chain since the result travels back _up_ the chain in reverse order.
+This modification is seen by any previous link in the chain because the result travels back up the chain in reverse order.
 
 <Note>
 
-The `map` function is the most common operator for performing modifications to the result. See the RxJS [operators](https://rxjs.dev/guide/operators) documentation for references to other operators that provide other functionality that you might need when building custom links.
+The `map` function is the most common operator for performing modifications to the result. See the RxJS [operators](https://rxjs.dev/guide/operators) documentation for references to other operators that provide other functionality that you can use when building custom links.
 
 </Note>
 
@@ -409,7 +409,7 @@ const consoleLink = new ApolloLink((operation, forward) => {
 });
 ```
 
-Stateless links are great for implementing middleware. The following link adds an `Authorization` header to every outgoing request:
+Stateless links are great for building middleware. The following link adds an `Authorization` header to every outgoing request:
 
 ```ts
 import { ApolloLink } from "@apollo/client";
@@ -426,7 +426,7 @@ const authLink = new ApolloLink((operation, forward) => {
 });
 ```
 
-Stateless links compose nicely for customization using a function:
+You can customize stateless links by wrapping them in a function:
 
 ```ts
 import { ApolloLink } from "@apollo/client";
@@ -486,7 +486,7 @@ const link = new ReportErrorLink(console.error);
 
 <Note>
 
-The `ReportErrorLink` link is still considered a stateless link despite being implemented as a subclass because it does not maintain state between requests.
+The `ReportErrorLink` link is still considered a stateless link despite being built as a subclass because it does not maintain state between requests.
 
 </Note>
 
@@ -515,7 +515,7 @@ const link = new OperationCountLink();
 
 ## Managing context
 
-As an operation moves along the link chain, it maintains a `context` that each link can read and modify. This allows both links and request-based APIs (such as [`useQuery`](../react/useQuery)) to pass metadata along the chain that _other_ links use in their execution logic. Context is not included in the terminating link's request to the GraphQL server or other destination.
+As an operation moves along the link chain, it maintains a `context` that each link can read and modify. This enables both links and request-based APIs (such as [`useQuery`](../react/useQuery)) to pass metadata along the chain that other links use in their execution logic. Context is not included in the terminating link's request to the GraphQL server or other destination.
 
 ### Reading context
 
@@ -531,7 +531,7 @@ const link = new ApolloLink((operation, forward) => {
 
 <Note>
 
-Mutating the `context` object returned from `operation.getContext()` is not persisted to the context object and will not be seen by downstream links. Use `operation.setContext()` to make modifications to context.
+Changes to the `context` object returned from `operation.getContext()` is not persisted, and downstream links won't see them. Use `operation.setContext()` to make modifications to context.
 
 </Note>
 
@@ -547,7 +547,7 @@ const timeStartLink = new ApolloLink((operation, forward) => {
 });
 ```
 
-It is common to read existing context in order to make modifications to it before writing it back. As a shortcut, you can provide a callback function to `operation.setContext()`. The callback function provides the previous context as an argument and expects the function to return the new context.
+It is common to read existing context to make modifications to it before writing it back. As a shortcut, you can provide a callback function to `operation.setContext()`. The callback function provides the previous context as an argument and expects the function to return the new context.
 
 ```ts {2-4}
 const counterLink = new ApolloLink((operation, forward) => {
@@ -563,7 +563,7 @@ const counterLink = new ApolloLink((operation, forward) => {
 
 Context is typically used to communicate between a request API (such as [`useQuery`](../react/useQuery)) and the links in the link chain. You provide context for a particular operation using the `context` option.
 
-The following example provides the initial context with [`useQuery`](../react/useQuery) to define the initial `count` as seen in the previous section's example.
+The following example provides the initial context with [`useQuery`](../react/useQuery) to define the initial `count` from the previous example.
 
 ```ts
 function MyComponent() {

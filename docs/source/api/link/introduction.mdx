@@ -236,7 +236,7 @@ A link object is an instance of the [`ApolloLink` class](https://github.com/apol
 
 ### The request handler
 
-Every link must define **request handler**. The request handler is a method responsible for performing some logic and executing the request, either by [forwarding](#the-forward-function) the operation to the next link in the link chain, or sending the operation to the destination that executes it, such as a GraphQL server.
+Every link must define a **request handler**. The request handler is a method responsible for performing some logic and executing the request, either by [forwarding](#the-forward-function) the operation to the next link in the link chain, or sending the operation to the destination that executes it, such as a GraphQL server.
 
 This request handler is passed the following arguments:
 
@@ -261,7 +261,7 @@ The callback function is called for each GraphQL operation sent through the link
 
 #### Define a request handler for an Apollo Link subclass
 
-You define a request handler for a subclass of `ApolloLink` by overridding the `request` method. Subclassing is typically used to create [stateful links](#stateful-links).
+You define a request handler for a subclass of `ApolloLink` by overriding the `request` method. Subclassing is typically used to create [stateful links](#stateful-links).
 
 ```ts {7-9}
 class MyCustomLink extends ApolloLink {
@@ -334,7 +334,7 @@ flowchart LR
 
 Each link can perform custom logic on the result using [operators](https://rxjs.dev/guide/operators); special functions passed to an Observable's [`pipe`](https://rxjs.dev/guide/operators#piping) function.
 
-The following example uses the RxJS [`map` operator](https://rxjs.dev/api/index/function/map) to modify the result before return it back up the link chain.
+The following example uses the RxJS [`map` operator](https://rxjs.dev/api/index/function/map) to modify the result before returning it back up the link chain.
 
 ```js
 import { map } from "rxjs";
@@ -462,7 +462,7 @@ const link = reportErrors(console.error);
 
 You can also create stateless links by subclassing the `ApolloLink` class and overriding the constructor and request handler.
 
-Here's the same `reportErrors` link written as an subclass of `ApolloLink`:
+Here's the same `reportErrors` link written as a subclass of `ApolloLink`:
 
 ```js
 import { ApolloLink } from "@apollo/client";
@@ -488,7 +488,7 @@ const link = new ReportErrorLink(console.error);
 
 <Note>
 
-The `ReportErrorLink` link is still considered a stateless link despite it implemented as a subclass because it does not maintain state between requests.
+The `ReportErrorLink` link is still considered a stateless link despite being implemented as a subclass because it does not maintain state between requests.
 
 </Note>
 

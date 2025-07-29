@@ -110,6 +110,21 @@ export declare namespace CombinedGraphQLErrors {
        */
       readonly extensions: Record<string, unknown> | undefined;
     }
+
+    /**
+     * A method that determines whether an error is a `{{errorClass}}`
+     * object. This method enables TypeScript to narrow the error type.
+     *
+     * @example
+     *
+     * ```ts
+     * if ({{errorClass}}.is(error)) {
+     *   // TypeScript now knows `error` is a `{{errorClass}}` object
+     *   console.log(error.errors);
+     * }
+     * ```
+     */
+    function is(error: unknown): boolean;
   }
 }
 
@@ -158,17 +173,7 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  */
 export class CombinedGraphQLErrors extends Error {
   /**
-   * A method that determines whether an error is a `CombinedGraphQLErrors`
-   * object. This method enables TypeScript to narrow the error type.
-   *
-   * @example
-   *
-   * ```ts
-   * if (CombinedGraphQLErrors.is(error)) {
-   *   // TypeScript now knows `error` is a CombinedGraphQLErrors object
-   *   console.log(error.errors);
-   * }
-   * ```
+   * {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.is:function(1) {"errorClass":"CombinedGraphQLErrors"}}
    */
   static is(error: unknown): error is CombinedGraphQLErrors {
     return isBranded(error, "CombinedGraphQLErrors");

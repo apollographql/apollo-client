@@ -98,6 +98,12 @@ for (const options of buildStepOptions) {
 
     console.log("--- Step %s: running ---", step);
     await buildStep({ ...options, first, last, rootDir, packageRoot: distDir });
+    if (process.exitCode) {
+      console.error(
+        `\n\nStep ${step} failed, exiting with code ${process.exitCode}`
+      );
+      process.exit();
+    }
     console.log("--- Step %s: done ---", step);
   }
 }

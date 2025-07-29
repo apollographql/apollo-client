@@ -674,6 +674,7 @@ export namespace CombinedGraphQLErrors {
             readonly errors: ReadonlyArray<GraphQLFormattedError>;
             readonly extensions: Record<string, unknown> | undefined;
         }
+        export function is(error: unknown): boolean;
     }
     export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)

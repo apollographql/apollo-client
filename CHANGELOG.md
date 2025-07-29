@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.13.9
+
+### Patch Changes
+
+- [#12804](https://github.com/apollographql/apollo-client/pull/12804) [`32c9aa9`](https://github.com/apollographql/apollo-client/commit/32c9aa9215fab72e9ab68ee71198ce242157f855) Thanks [@phryneas](https://github.com/phryneas)! - Fix a possible race condition on queries that were reobserved before they were subscribed to the first time.
+
 ## 3.13.8
 
 ### Patch Changes

@@ -17,7 +17,7 @@ describe("parseAndCheckResponse", () => {
     fetchMock.restore();
   });
 
-  const operations = [createOperation({}, { query })];
+  const operations = [createOperation({ query })];
 
   it("throws a Server error when response is > 300 with unparsable json", async () => {
     const status = 400;

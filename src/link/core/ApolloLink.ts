@@ -202,9 +202,7 @@ export class ApolloLink {
     request: GraphQLRequest,
     context: ExecuteContext
   ): Observable<FetchResult> {
-    return (
-      link.request(createOperation(request.context, request, context)) || EMPTY
-    );
+    return link.request(createOperation(request, context)) || EMPTY;
   }
 
   /**

@@ -22,9 +22,8 @@ export function executeWithDefaultContext(
 }
 
 export function createOperationWithDefaultContext(
-  context: any,
-  operation: GraphQLRequest,
+  request: GraphQLRequest,
   executeContext: ExecuteContext = createDefaultExecuteContext()
 ) {
-  return createOperation(context, operation, executeContext);
+  return createOperation(request, executeContext);
 }

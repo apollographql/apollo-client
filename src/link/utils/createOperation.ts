@@ -11,7 +11,6 @@ import {
 import { validateRequest } from "./validateRequest.js";
 
 export function createOperation(
-  starting: any,
   request: GraphQLRequest,
   { client }: ExecuteContext
 ): Operation {
@@ -29,7 +28,7 @@ export function createOperation(
     "client" | "getContext" | "setContext"
   > as Operation;
 
-  let context = { ...starting };
+  let context = { ...request.context };
 
   const setContext: Operation["setContext"] = (next) => {
     if (typeof next === "function") {

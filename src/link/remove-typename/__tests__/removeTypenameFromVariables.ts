@@ -24,7 +24,7 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
   }
 
   const { data } = (await firstValueFrom(
-    link.request(createOperation({}, operation), forward)!
+    link.request(createOperation(operation), forward)!
   )) as { data: FormattedExecutionResult };
 
   return data as Operation;

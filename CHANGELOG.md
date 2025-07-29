@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 4.0.0-rc.6
+
+### Major Changes
+
+- [#12787](https://github.com/apollographql/apollo-client/pull/12787) [`8ce31fa`](https://github.com/apollographql/apollo-client/commit/8ce31fae54b1ae76c557f361cc946858cb2ff66b) Thanks [@phryneas](https://github.com/phryneas)! - Remove `DataProxy` namespace and interface.
+
+- [#12788](https://github.com/apollographql/apollo-client/pull/12788) [`4179446`](https://github.com/apollographql/apollo-client/commit/417944677d2e79606b0f6cabd8d5d8b2063c876b) Thanks [@phryneas](https://github.com/phryneas)! - `TVariables` now always `extends OperationVariables` in all interfaces.
+
+- [#12802](https://github.com/apollographql/apollo-client/pull/12802) [`e2b51b3`](https://github.com/apollographql/apollo-client/commit/e2b51b30acbd360253100f9d2a91fe7e0c57be4c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Disallow the `mutation` option for the `mutate` function returned from `useMutation`.
+
+- [#12787](https://github.com/apollographql/apollo-client/pull/12787) [`8ce31fa`](https://github.com/apollographql/apollo-client/commit/8ce31fae54b1ae76c557f361cc946858cb2ff66b) Thanks [@phryneas](https://github.com/phryneas)! - Generic arguments for `Cache.ReadOptions` were flipped from `TVariables, TData` to `TData, TVariables`.
+
+- [#12793](https://github.com/apollographql/apollo-client/pull/12793) [`24e98a1`](https://github.com/apollographql/apollo-client/commit/24e98a16648d4c21f37ba51a678a8849f88174ea) Thanks [@phryneas](https://github.com/phryneas)! - `ApolloConsumer` has been removed - please use `useApolloClient` instead.
+
+### Patch Changes
+
+- [#12782](https://github.com/apollographql/apollo-client/pull/12782) [`742b3a0`](https://github.com/apollographql/apollo-client/commit/742b3a0ed65d28818974e56225c86ab7e350e677) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move `ApolloClient`, `ObservableQuery`, and `ApolloCache.watchFragment` method options and result types into namespaces. The old types are now exported as deprecated.
+
 ## 4.0.0-rc.5
 
 ### Major Changes

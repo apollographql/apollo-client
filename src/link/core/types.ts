@@ -46,7 +46,8 @@ export interface Operation {
   variables: Record<string, any>;
 
   /**
-   * The string name of the query if it is a named query, otherwise `null`.
+   * The string name of the query. If the query is anonymous, `operationName`
+   * will be `undefined.
    */
   operationName: string;
 

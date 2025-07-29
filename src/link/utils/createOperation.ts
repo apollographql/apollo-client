@@ -8,7 +8,7 @@ import {
   getOperationName,
 } from "@apollo/client/utilities/internal";
 
-import { validateRequest } from "./validateOperation.js";
+import { validateRequest } from "./validateRequest.js";
 
 export function createOperation(
   starting: any,

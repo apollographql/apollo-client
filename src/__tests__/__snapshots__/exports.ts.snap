@@ -252,8 +252,6 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "transformOperation",
-  "validateOperation",
 ]
 `;
 

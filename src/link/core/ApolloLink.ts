@@ -210,7 +210,7 @@ export class ApolloLink {
       link.request(
         createOperation(
           operation.context,
-          transformOperation(validateOperation(operation)),
+          validateOperation(operation),
           context
         )
       ) || EMPTY

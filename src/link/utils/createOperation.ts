@@ -3,12 +3,28 @@ import type {
   GraphQLRequest,
   Operation,
 } from "@apollo/client/link";
+import {
+  getOperationDefinition,
+  getOperationName,
+} from "@apollo/client/utilities/internal";
 
 export function createOperation(
   starting: any,
-  operation: GraphQLRequest,
+  request: GraphQLRequest,
   { client }: ExecuteContext
 ): Operation {
+  const operation: Operation = {
+    variables: request.variables || {},
+    extensions: request.extensions || {},
+    operationName: request.operationName || getOperationName(request.query),
+    operationType:
+      request.operationType || getOperationDefinition(request.query)!.operation,
+    query: request.query,
+  } satisfies Omit<
+    Operation,
+    "client" | "getContext" | "setContext"
+  > as Operation;
+
   let context = { ...starting };
 
   const setContext: Operation["setContext"] = (next) => {
@@ -35,5 +51,5 @@ export function createOperation(
     value: client,
   });
 
-  return operation as Operation;
+  return operation;
 }

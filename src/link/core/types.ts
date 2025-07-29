@@ -83,12 +83,12 @@ export interface Operation {
    * The string name of the GraphQL operation. If it is anonymous,
    * `operationName` will be `undefined`.
    */
-  operationName: string;
+  operationName: string | undefined;
 
   /**
    * The type of the GraphQL operation, such as query or mutation.
    */
-  operationType: OperationTypeNode | undefined;
+  operationType: OperationTypeNode;
 
   /**
    * A map that stores extensions data to be sent to the server.

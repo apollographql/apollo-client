@@ -31,7 +31,7 @@ export class ApolloLink {
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     static empty(): ApolloLink;
-    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
+    static execute(link: ApolloLink, request: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
@@ -91,9 +91,9 @@ export type NextLink = (operation: Operation) => Observable<FetchResult>;
 export interface Operation {
     readonly client: ApolloClient;
     extensions: Record<string, any>;
-    getContext: () => OperationContext;
-    operationName: string;
-    operationType: OperationTypeNode | undefined;
+    getContext: () => Readonly<OperationContext>;
+    operationName: string | undefined;
+    operationType: OperationTypeNode;
     query: DocumentNode;
     setContext: {
         (context: Partial<OperationContext>): void;

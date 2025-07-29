@@ -397,7 +397,7 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     static empty(): ApolloLink;
     // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
-    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
+    static execute(link: ApolloLink, request: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
@@ -2115,9 +2115,9 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 export interface Operation {
     readonly client: ApolloClient;
     extensions: Record<string, any>;
-    getContext: () => OperationContext;
-    operationName: string;
-    operationType: OperationTypeNode | undefined;
+    getContext: () => Readonly<OperationContext>;
+    operationName: string | undefined;
+    operationType: OperationTypeNode;
     query: DocumentNode;
     setContext: {
         (context: Partial<OperationContext>): void;

@@ -10,18 +10,12 @@ import type { GraphQLRequest } from '@apollo/client/link';
 import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
-export function createOperation(starting: any, operation: GraphQLRequest, { client }: ExecuteContext): Operation;
+export function createOperation(request: GraphQLRequest, { client }: ExecuteContext): Operation;
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {
     [x: string]: any;
 };
-
-// @public (undocumented)
-export function transformOperation(operation: GraphQLRequest): GraphQLRequest;
-
-// @public (undocumented)
-export function validateOperation(operation: GraphQLRequest): GraphQLRequest;
 
 // (No @packageDocumentation comment for this package)
 

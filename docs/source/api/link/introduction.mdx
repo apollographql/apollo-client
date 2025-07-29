@@ -3,8 +3,6 @@ title: Apollo Link overview
 description: Customize Apollo Client's data flow
 ---
 
-> If your application only needs to send conventional HTTP-based requests to a GraphQL server, you probably don't need to use the Apollo Link API. See [Basic HTTP networking](../../networking/basic-http-networking/).
-
 The **Apollo Link** library helps you customize the flow of data between Apollo Client and your GraphQL server. You can define your client's network behavior as a chain of **link** objects that execute in a sequence:
 
 ```mermaid
@@ -36,21 +34,12 @@ Each link should represent either a self-contained modification to a GraphQL ope
 3.  The final (terminating) link sends the operation to its destination (usually a GraphQL server over HTTP).
 4.  The server's response is passed back up each link in reverse order, enabling links to [modify the response](#handling-a-response) or take other actions before the data is cached.
 
-By default, Apollo Client uses Apollo Link's `HttpLink` to send GraphQL operations to a remote server over HTTP. Apollo Client takes care of creating this default link, and it covers many use cases without requiring additional customization.
-
-To extend or replace this default networking behavior, you can define _custom_ links and specify their order of execution in the `ApolloClient` constructor.
-
 ## Your first link chain
 
-The example below demonstrates a basic link chain with two Apollo-provided links:
+The following example demonstrates a basic link chain with two Apollo-provided links:
 
-- An `onError` link that checks for errors in the server's response. It logs the details of whichever error(s) it finds.
-- An `HttpLink` that sends each GraphQL operation to your server.
-  - _This is the chain's [terminating link](#the-terminating-link)._
-
-Note that if you provide a link chain to the `ApolloClient` constructor, you _don't_ provide the `uri` option. Instead, you provide your server's URL to your `HttpLink`.
-
-<ExpansionPanel title="Click to expand example">
+- An [`ErrorLink`](./apollo-link-error) link that checks for errors in the server's response. It logs the details of whichever error(s) it finds.
+- An [`HttpLink`](./apollo-link-http) that sends each GraphQL operation to your server. This is the chain's _[terminating link](#the-terminating-link)._
 
 ```js title="index.js"
 import {
@@ -60,13 +49,13 @@ import {
   HttpLink,
   from,
 } from "@apollo/client";
-import { onError } from "@apollo/client/link/error";
+import { ErrorLink } from "@apollo/client/link/error";
 
 const httpLink = new HttpLink({
   uri: "http://localhost:4000/graphql",
 });
 
-const errorLink = onError(({ error }) => {
+const errorLink = new ErrorLink(({ error }) => {
   if (CombinedGraphQLErrors.is(error)) {
     error.errors.forEach(({ message, locations, path }) =>
       console.log(
@@ -78,8 +67,6 @@ const errorLink = onError(({ error }) => {
   }
 });
 
-// If you provide a link chain to ApolloClient, you
-// don't provide the `uri` option.
 const client = new ApolloClient({
   // The `from` function combines an array of individual links
   // into a link chain
@@ -87,8 +74,6 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 ```
-
-</ExpansionPanel>
 
 ## Creating a custom link
 
@@ -138,7 +123,7 @@ When your custom link's request handler is done executing its logic, it should r
 
 > If a non-terminating custom link's request handler _doesn't_ `return forward(operation)`, the link chain ends and the associated GraphQL operation is not executed.
 
-The `forward` function's return type is an `Observable` provided by the [`zen-observable`](https://github.com/zenparsing/zen-observable) library. See the `zen-observable` documentation for details.
+The `forward` function's return type is an [`Observable`](https://rxjs.dev/guide/observable) provided by the [RxJS](https://rxjs.dev/) library. See the RxJS documentation for details.
 
 ### Handling a response
 
@@ -166,15 +151,15 @@ flowchart LR
 
 Each link can execute logic while the result is being passed back by modifying their request handler's `return` statement, like so:
 
-```js {4-8}
-// BEFORE (NO INTERACTION)
-return forward(operation);
+```js
+import { map } from "rxjs";
 
-// AFTER
-return forward(operation).map((data) => {
-  // ...modify result as desired here...
-  return data;
-});
+return forward(operation).pipe(
+  map((result) => {
+    // ...modify result as desired here...
+    return result;
+  })
+);
 ```
 
 Whatever the function provided to `map` returns is passed to the next link up the chain.
@@ -183,21 +168,29 @@ You can also perform logic here that has nothing to do with the result. This req
 
 ```js
 import { ApolloLink } from "@apollo/client";
+import { tap } from "rxjs";
 
 const roundTripLink = new ApolloLink((operation, forward) => {
   // Called before operation is sent to server
   operation.setContext({ start: new Date() });
 
-  return forward(operation).map((data) => {
-    // Called after server responds
-    const time = new Date() - operation.getContext().start;
-    console.log(
-      `Operation ${operation.operationName} took ${time} to complete`
-    );
-    return data;
-  });
+  return forward(operation).pipe(
+    tap(() => {
+      // Called after server responds
+      const time = new Date() - operation.getContext().start;
+      console.log(
+        `Operation ${operation.operationName} took ${time} to complete`
+      );
+    })
+  );
 });
 ```
+
+<Note>
+
+This example uses the [`tap` operator](https://rxjs.dev/api/index/function/tap) from RxJS. See the RxJS [operators](https://rxjs.dev/guide/operators) documentation for more details on the available operators.
+
+</Note>
 
 ## Composing a link chain
 
@@ -233,7 +226,7 @@ Note that no matter how your chain branches, each branch always ends in a [termi
 
 ### The terminating link
 
-The **terminating link** is the last link in a link chain. Instead of calling the `forward` function, the terminating link is responsible for sending your composed GraphQL operation to the destination that executes it (usually a GraphQL server) and returning an `ExecutionResult`.
+The _terminating link_ is the last link in a link chain. Instead of calling the `forward` function, the terminating link is responsible for sending your composed GraphQL operation to the destination that executes it (usually a GraphQL server) and returning an `ExecutionResult`.
 
 [`HttpLink`](./apollo-link-http/) and [`BatchHttpLink`](./apollo-link-batch-http/) are both examples of terminating links.
 
@@ -288,17 +281,13 @@ In the following example, all subscription operations are sent to `GraphQLWsLink
 
 ```js
 import { split, HttpLink } from "@apollo/client";
-import { getMainDefinition } from "@apollo/client/utilities";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { OperationTypeNode } from "graphql";
 import { createClient } from "graphql-ws";
 
 export const link = split(
-  ({ query }) => {
-    const definition = getMainDefinition(query);
-    return (
-      definition.kind === "OperationDefinition" &&
-      definition.operation === "subscription"
-    );
+  ({ operationType }) => {
+    return operationType === OperationTypeNode.SUBSCRIPTION;
   },
   new GraphQLWsLink(createClient({ url: "ws://localhost:3000/subscriptions" })),
   new HttpLink({ uri: "http://localhost:4000/graphql" })
@@ -335,13 +324,15 @@ You can define the request handler for a stateless link in the constructor of an
 
 ```js
 import { ApolloLink } from "@apollo/client";
+import { tap } from "rxjs";
 
 const consoleLink = new ApolloLink((operation, forward) => {
   console.log(`starting request for ${operation.operationName}`);
-  return forward(operation).map((data) => {
-    console.log(`ending request for ${operation.operationName}`);
-    return data;
-  });
+  return forward(operation).pipe(
+    tap(() => {
+      console.log(`ending request for ${operation.operationName}`);
+    })
+  );
 });
 ```
 
@@ -357,6 +348,7 @@ const authLink = new ApolloLink((operation, forward) => {
       ...headers,
     },
   }));
+
   return forward(operation);
 });
 ```
@@ -366,8 +358,8 @@ This style of link also composes well for customization using a function:
 ```js
 import { ApolloLink } from "@apollo/client";
 
-const reportErrors = (errorCallback) =>
-  new ApolloLink((operation, forward) => {
+function reportErrors(errorCallback) {
+  return new ApolloLink((operation, forward) => {
     return new Observable((observer) => {
       const observable = forward(operation);
       const subscription = observable.subscribe({
@@ -386,6 +378,7 @@ const reportErrors = (errorCallback) =>
       return () => subscription.unsubscribe();
     });
   });
+}
 
 const link = reportErrors(console.error);
 ```
@@ -396,6 +389,7 @@ You can also create a stateless link by extending the `ApolloLink` class and ove
 
 ```js
 import { ApolloLink } from "@apollo/client";
+import { tap } from "rxjs";
 
 class ReportErrorLink extends ApolloLink {
   constructor(errorCallback) {
@@ -403,10 +397,12 @@ class ReportErrorLink extends ApolloLink {
     this.errorCallback = errorCallback;
   }
   request(operation, forward) {
-    const observable = forward(operation);
-    // errors will be sent to the errorCallback
-    observable.subscribe({ error: this.errorCallback });
-    return observable;
+    return forward(operation).pipe(
+      tap({
+        // errors will be sent to the errorCallback
+        error: this.errorCallback,
+      })
+    );
   }
 }
 
@@ -451,6 +447,7 @@ Here's an example:
 
 ```js
 import { ApolloLink, from } from "@apollo/client";
+import { tap } from "rxjs";
 
 const timeStartLink = new ApolloLink((operation, forward) => {
   operation.setContext({ start: new Date() });
@@ -458,14 +455,15 @@ const timeStartLink = new ApolloLink((operation, forward) => {
 });
 
 const logTimeLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map((data) => {
-    // data from a previous link
-    const time = new Date() - operation.getContext().start;
-    console.log(
-      `operation ${operation.operationName} took ${time} to complete`
-    );
-    return data;
-  });
+  return forward(operation).pipe(
+    tap(() => {
+      // data from a previous link
+      const time = new Date() - operation.getContext().start;
+      console.log(
+        `operation ${operation.operationName} took ${time} to complete`
+      );
+    })
+  );
 });
 
 const additiveLink = from([timeStartLink, logTimeLink]);

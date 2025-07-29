@@ -2,4 +2,4 @@
 "@apollo/client": major
 ---
 
-`operation.getContext` now returns a `Readonly<OperationContext>`.
+`operation.getContext` now returns a `Readonly<OperationContext>` type.

@@ -2123,7 +2123,7 @@ export interface Operation {
         (context: Partial<OperationContext>): void;
         (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
-    variables: Record<string, any>;
+    variables: OperationVariables;
 }
 
 // @public

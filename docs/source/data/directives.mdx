@@ -52,7 +52,7 @@ query Feed($offset: Int, $limit: Int) {
 
 ## `@defer`
 
-Apollo Client provides support for the [`@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+The [`@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md) enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
 To use the `@defer` directive, we apply it to an inline or named fragment that contains all slow-resolving fields:
 

@@ -1,5 +1,5 @@
 import type { FormattedExecutionResult } from "graphql";
-import { print } from "graphql";
+import { OperationTypeNode, print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
@@ -302,9 +302,10 @@ describe("ApolloClient", () => {
 
         expect(str).toBe(
           JSON.stringify({
+            query: print(operation.query),
             variables: { id: 1 },
             extensions: { cache: true },
-            query: print(operation.query),
+            operationType: OperationTypeNode.QUERY,
           })
         );
         return EMPTY;
@@ -495,6 +496,7 @@ describe("ApolloClient", () => {
       expect(stub).toHaveBeenCalledWith({
         query: sampleQuery,
         operationName: "SampleQuery",
+        operationType: OperationTypeNode.QUERY,
         variables: {},
         extensions: {},
       });
@@ -509,12 +511,13 @@ describe("ApolloClient", () => {
           })
         ),
         new ApolloLink((op) => {
-          expect({
+          expect(op).toStrictEqualTyped({
             extensions: {},
             operationName: "SampleQuery",
+            operationType: OperationTypeNode.QUERY,
             query: sampleQuery,
             variables: {},
-          }).toEqual(op);
+          });
 
           return new Observable((observer) => {
             observer.complete();

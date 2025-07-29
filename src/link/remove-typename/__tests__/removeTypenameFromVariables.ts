@@ -1,4 +1,5 @@
 import type { FormattedExecutionResult } from "graphql";
+import { OperationTypeNode } from "graphql";
 import { firstValueFrom, of } from "rxjs";
 
 import { gql } from "@apollo/client";
@@ -74,10 +75,15 @@ test("does nothing when no variables are passed", async () => {
 
   const link = removeTypenameFromVariables();
 
-  const operation = { query };
-  const resultOperation = await execute(link, operation);
+  const resultOperation = await execute(link, { query });
 
-  expect(resultOperation).toBe(operation);
+  expect(resultOperation).toStrictEqualTyped({
+    query,
+    variables: {},
+    extensions: {},
+    operationName: "Test",
+    operationType: OperationTypeNode.QUERY,
+  });
 });
 
 test("does nothing when no variables are passed even if variables are declared in the document", async () => {
@@ -91,10 +97,15 @@ test("does nothing when no variables are passed even if variables are declared i
 
   const link = removeTypenameFromVariables();
 
-  const operation = { query };
-  const resultOperation = await execute(link, operation);
+  const resultOperation = await execute(link, { query });
 
-  expect(resultOperation).toBe(operation);
+  expect(resultOperation).toStrictEqualTyped({
+    query,
+    variables: {},
+    extensions: {},
+    operationName: "Test",
+    operationType: OperationTypeNode.QUERY,
+  });
 });
 
 test("keeps __typename for variables with types defined by `except`", async () => {

@@ -70,7 +70,7 @@ export type PreloadQueryOptions<
  * ```
  */
 export interface PreloadQueryFunction {
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -83,7 +83,7 @@ export interface PreloadQueryFunction {
     "complete" | "streaming" | "partial" | "empty"
   >;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -91,7 +91,7 @@ export interface PreloadQueryFunction {
     }
   ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -99,7 +99,7 @@ export interface PreloadQueryFunction {
     }
   ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial">;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: {} extends TVariables ?

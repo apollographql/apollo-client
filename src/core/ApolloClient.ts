@@ -111,9 +111,9 @@ export declare namespace ApolloClient {
      */
     assumeImmutableResults?: boolean;
     localState?: LocalState;
-    /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+    /** {@inheritDoc @apollo/client/link/client-awareness!ClientAwarenessLink.ClientAwarenessOptions:interface} */
     clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
-    /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+    /** {@inheritDoc @apollo/client/link/client-awareness!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     documentTransform?: DocumentTransform;
 

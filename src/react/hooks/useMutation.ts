@@ -160,7 +160,7 @@ export declare namespace useMutation {
   > = Options<TData, TVariables, TCache>;
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useMutation:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useMutation:function(1)} */
     export function useMutation<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,

@@ -88,15 +88,15 @@ export declare namespace useFragment {
   // fragment.
   export type Result<TData> =
     | ({
-        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
+        /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
         complete: true;
-        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
+        /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: never;
       } & GetDataState<MaybeMasked<TData>, "complete">)
     | ({
-        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
+        /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
         complete: false;
-        /** {@inheritDoc @apollo/client!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
+        /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: MissingTree;
       } & GetDataState<MaybeMasked<TData>, "partial">);
 
@@ -113,7 +113,7 @@ export declare namespace useFragment {
     }
   }
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useFragment:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
     export function useFragment<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,

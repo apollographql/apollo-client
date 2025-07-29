@@ -6348,8 +6348,8 @@ describe("custom document transforms", () => {
         requests.push(operation);
 
         return of({
-          data: operation.operationName
-            .split("")
+          data: operation
+            .operationName!.split("")
             .reduce<Record<string, string>>(
               (memo, letter) => ({
                 ...memo,
@@ -6433,8 +6433,8 @@ describe("custom document transforms", () => {
         requests.push(operation);
 
         return of({
-          data: operation.operationName
-            .split("")
+          data: operation
+            .operationName!.split("")
             .reduce<Record<string, string>>(
               (memo, letter) => ({
                 ...memo,
@@ -6525,8 +6525,8 @@ describe("custom document transforms", () => {
         requests.push(operation);
 
         return of({
-          data: operation.operationName
-            .split("")
+          data: operation
+            .operationName!.split("")
             .reduce<Record<string, string>>(
               (memo, letter) => ({
                 ...memo,
@@ -6599,8 +6599,8 @@ describe("custom document transforms", () => {
         requests.push(operation);
 
         return of({
-          data: operation.operationName
-            .split("")
+          data: operation
+            .operationName!.split("")
             .reduce<Record<string, string>>(
               (memo, letter) => ({
                 ...memo,

@@ -5778,7 +5778,7 @@ test("regression test for #10587", async () => {
   let observers: Record<string, Observer<FetchResult>> = {};
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
-      observers[operation.operationName] = observer;
+      observers[operation.operationName!] = observer;
     });
   });
 

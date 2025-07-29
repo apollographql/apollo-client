@@ -65,7 +65,7 @@ describe("client.refetchQueries", () => {
         (operation) =>
           new Observable((observer) => {
             const data: Record<string, string> = {};
-            operation.operationName.split("").forEach((letter) => {
+            operation.operationName!.split("").forEach((letter) => {
               data[letter.toLowerCase()] = letter.toUpperCase();
             });
             function finish(delay: number) {

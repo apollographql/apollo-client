@@ -108,14 +108,10 @@ Whenever Apollo Client prepares to execute a GraphQL operation, it calls the req
 
 The `Operation` object includes the following fields:
 
-| Name            | Description                                                                                                                                                            |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `query`         | A `DocumentNode` (parsed GraphQL operation) that describes the operation taking place.                                                                                 |
-| `variables`     | A map of GraphQL variables being sent with the operation.                                                                                                              |
-| `operationName` | A string name of the query if it is named, otherwise `null`.                                                                                                           |
-| `extensions`    | A map to store extensions data to be sent to the server.                                                                                                               |
-| `getContext`    | A function to return the context of the request. This context can be used by links to determine which actions to perform. See [Managing context](#managing-context).   |
-| `setContext`    | A function that takes either a new context object, or a function which takes in the previous context and returns a new one. See [Managing context](#managing-context). |
+<PropertySignatureTable
+  canonicalReference="@apollo/client!Operation:interface"
+  idPrefix="operation"
+/>
 
 #### The `forward` function
 

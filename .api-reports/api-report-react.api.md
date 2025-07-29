@@ -881,7 +881,6 @@ export namespace useSubscription {
         data?: MaybeMasked_2<TData>;
         error?: ErrorLike;
         loading: boolean;
-        // (undocumented)
         restart: () => void;
     }
 }

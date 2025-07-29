@@ -31,7 +31,7 @@ Each link should represent either a self-contained modification to a GraphQL ope
 
 1.  The first link might log the details of the operation for debugging purposes.
 2.  The second link might add an HTTP header to the outgoing operation request for authentication purposes.
-3.  The final link (called the [_terminating link_](#the-terminating-link)) sends the operation to its destination (usually a GraphQL server over HTTP).
+3.  The final link (called the [terminating link](#the-terminating-link)) sends the operation to its destination (usually a GraphQL server over HTTP).
 4.  The server's response is passed back up each link in reverse order, enabling links to [modify the response](#handling-a-response) or take other actions before the data is cached.
 
 ## Composing a link chain

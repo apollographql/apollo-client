@@ -424,18 +424,18 @@ describe("Link interactions", () => {
       query,
     });
     expect(Object.keys(operation)).toEqual([
+      "query",
       "variables",
       "extensions",
       "operationName",
       "operationType",
-      "query",
     ]);
     expect(Object.getOwnPropertyNames(operation)).toEqual([
+      "query",
       "variables",
       "extensions",
       "operationName",
       "operationType",
-      "query",
       "setContext",
       "getContext",
       "client",

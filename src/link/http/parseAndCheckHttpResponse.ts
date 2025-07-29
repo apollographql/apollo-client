@@ -69,7 +69,7 @@ async function* consumeMultipartBody(
       const searchFrom = buffer.length - boundary.length + 1;
       buffer += chunk;
       let bi = buffer.indexOf(boundary, searchFrom);
-      while (bi > -1) {
+      while (bi > -1 && !passedFinalBoundary()) {
         encounteredBoundary = true;
         let message: string;
         [message, buffer] = [
@@ -93,9 +93,6 @@ async function* consumeMultipartBody(
 
         if (body) {
           yield body;
-        }
-        if (passedFinalBoundary()) {
-          return;
         }
         bi = buffer.indexOf(boundary);
       }

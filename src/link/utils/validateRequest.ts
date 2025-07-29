@@ -1,5 +1,8 @@
 import type { GraphQLRequest } from "@apollo/client/link";
-import { newInvariantError } from "@apollo/client/utilities/invariant";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 export function validateRequest(request: GraphQLRequest): void {
   const OPERATION_FIELDS = [
@@ -15,4 +18,9 @@ export function validateRequest(request: GraphQLRequest): void {
       throw newInvariantError(`illegal argument: %s`, key);
     }
   }
+
+  invariant(
+    request.query && request.query.kind === "Document",
+    '`query` must be a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?'
+  );
 }

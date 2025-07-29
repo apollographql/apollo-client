@@ -100,7 +100,7 @@ async function* consumeMultipartBody(
         return;
       }
     }
-    throw new Error("Unexpected end of multipart data");
+    throw new Error("premature end of multipart body");
   } finally {
     reader.cancel();
   }

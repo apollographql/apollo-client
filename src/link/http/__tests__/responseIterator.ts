@@ -395,7 +395,7 @@ ${JSON.stringify(results[0])}
       await expect(observableStream).toEmitTypedValue(results[0]);
       await writer.close();
       await expect(observableStream).toEmitError(
-        new Error("Unexpected end of multipart data")
+        new Error("premature end of multipart body")
       );
     });
   });

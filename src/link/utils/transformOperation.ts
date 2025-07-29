@@ -1,5 +1,8 @@
 import type { GraphQLRequest } from "@apollo/client/link";
-import { getOperationName } from "@apollo/client/utilities/internal";
+import {
+  getOperationDefinition,
+  getOperationName,
+} from "@apollo/client/utilities/internal";
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {
@@ -10,12 +13,22 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
     query: operation.query,
   };
 
-  // Best guess at an operation name
+  // The following conditions are here to handle cases where `execute` might be
+  // called with a `GraphQLRequest` that doesn't set these properties, for
+  // example in tests. Apollo Client core will provide these, but these checks
+  // are useful to avoid end-users from having to pass these in when calling
+  // `execute`.
+
   if (!transformedOperation.operationName) {
-    transformedOperation.operationName =
-      typeof transformedOperation.query !== "string" ?
-        getOperationName(transformedOperation.query)
-      : "";
+    transformedOperation.operationName = getOperationName(
+      transformedOperation.query
+    );
+  }
+
+  if (!transformedOperation.operationType) {
+    transformedOperation.operationType = getOperationDefinition(
+      transformedOperation.query
+    )!.operation;
   }
 
   return transformedOperation;

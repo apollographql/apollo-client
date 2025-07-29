@@ -265,7 +265,7 @@ describe("happy path", () => {
       },
     }).concat(createHttpLink());
 
-    const observable = execute(link, { query, variables } as any);
+    const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
     const error = await stream.takeError();

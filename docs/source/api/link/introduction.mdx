@@ -36,7 +36,7 @@ Each link should represent either a self-contained modification to a GraphQL ope
 
 ## Composing a link chain
 
-A link chain consists of **one or more** link objects. Each link represents either a self-contained modification to a GraphQL operation or a side effect (such as logging). By composing these links into a chain, you can create an arbitrarily complex model for your client's data flow.
+A link chain consists of one or more link objects. Each link represents either a self-contained modification to a GraphQL operation or a side effect (such as logging). By composing these links into a chain, you can create an arbitrarily complex model for your client's data flow.
 
 When you compose multiple links together, the result is a single link object that represents the entire chain. You provide the composed link to your Apollo Client instance using the `link` option:
 

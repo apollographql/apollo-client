@@ -87,7 +87,7 @@ export declare namespace useSuspenseFragment {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
     export function useSuspenseFragment<
       TData,
       TVariables extends OperationVariables = OperationVariables,
@@ -112,7 +112,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<TData>;
 
-/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -122,7 +122,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<null>;
 
-/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
@@ -132,7 +132,7 @@ export function useSuspenseFragment<
   }
 ): useSuspenseFragment.Result<TData | null>;
 
-/** {@inheritDoc @apollo/client!useSuspenseFragment:function(1)} */
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,

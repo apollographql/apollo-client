@@ -131,7 +131,7 @@ export declare namespace useBackgroundQuery {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
     export function useBackgroundQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
@@ -221,7 +221,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -236,7 +236,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -251,7 +251,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -265,7 +265,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -280,7 +280,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -295,7 +295,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -309,7 +309,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -323,7 +323,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -337,7 +337,7 @@ export function useBackgroundQuery<
   useBackgroundQuery.Result<TData, TVariables>,
 ];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -346,7 +346,7 @@ export function useBackgroundQuery<
   options: SkipToken
 ): [undefined, useBackgroundQuery.Result<TData, TVariables>];
 
-/** {@inheritDoc @apollo/client!useBackgroundQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useBackgroundQuery:function(1)} */
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

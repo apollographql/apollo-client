@@ -225,7 +225,7 @@ export declare namespace useLazyQuery {
   }
 
   namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
     export function useLazyQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
@@ -296,7 +296,7 @@ export function useLazyQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
 export function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -311,7 +311,7 @@ export function useLazyQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client!useLazyQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
 export function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

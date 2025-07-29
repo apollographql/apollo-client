@@ -36,13 +36,19 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import type { DocComment, DocExcerpt, DocNode } from "@microsoft/tsdoc";
+import { TextRange } from "@microsoft/tsdoc";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { visit } from "recast";
 
 import type { BuildStep, BuildStepOptions } from "./build.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
-import { applyRecast, frameComment, withPseudoNodeModules } from "./helpers.ts";
+import {
+  applyRecast,
+  frameComment,
+  patchApiExtractorInternals,
+  withPseudoNodeModules,
+} from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
@@ -53,7 +59,11 @@ export const inlineInheritDoc: BuildStep = async (options) => {
   await processComments(model, options);
 };
 
-function getCommentFor(canonicalReference: string, model: ApiModel) {
+function getCommentFor(
+  canonicalReference: string,
+  variables: undefined | Record<string, string>,
+  model: ApiModel
+) {
   const apiItem = model.resolveDeclarationReference(
     DeclarationReference.parse(canonicalReference),
     undefined
@@ -64,11 +74,27 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
     );
   if (apiItem instanceof ApiDocumentedItem) {
     if (!apiItem.tsdocComment) return "";
-    const stringBuilder = new StringBuilder();
-    const emitter = new TSDocEmitter();
-    emitter["_emitCommentFraming"] = false;
-    emitter["_renderCompleteObject"](stringBuilder, apiItem.tsdocComment);
-    return stringBuilder.toString();
+    const unusedVariables = new Set(Object.keys(variables || {}));
+    let string = renderDocComment(apiItem.tsdocComment);
+
+    string = string.replaceAll(/\{\{(\w+)\}\}/g, (_, variable) => {
+      unusedVariables.delete(variable);
+      const value = variables?.[variable];
+      if (value === undefined) {
+        throw new Error(
+          `Variable "${variable}" is required but not defined for @inheritDoc "${canonicalReference}"`
+        );
+      }
+      return value;
+    });
+    if (unusedVariables.size > 0) {
+      throw new Error(
+        `Variables ${[...unusedVariables].join(
+          ", "
+        )} are defined but not used in @inheritDoc "${canonicalReference}"`
+      );
+    }
+    return string;
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -136,7 +162,9 @@ function loadApiModel(options: BuildStepOptions) {
       configObjectFullPath,
     });
 
+    const restore = patchApiExtractorInternals();
     Extractor.invoke(extractorConfig);
+    restore();
 
     const model = new ApiModel();
     model.loadPackage(tempModelFile);
@@ -147,7 +175,8 @@ function loadApiModel(options: BuildStepOptions) {
 }
 
 function processComments(model: ApiModel, options: BuildStepOptions) {
-  const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
+  const inheritDocRegex =
+    /\{\s*@inheritDoc\s+(\S+)(?:\s+(\{[^}]*\}))?\s*\}(?:\s*$)?/;
 
   return applyRecast({
     glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
@@ -169,10 +198,32 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
                 while (inheritDocRegex.test(newText)) {
                   newText = newText.replace(
                     inheritDocRegex,
-                    (_, canonicalReference) => {
-                      return getCommentFor(canonicalReference, model) || "";
+                    (_, canonicalReference, variables) => {
+                      try {
+                        return (
+                          getCommentFor(
+                            canonicalReference,
+                            variables ? JSON.parse(variables) : undefined,
+                            model
+                          ) || ""
+                        );
+                      } catch (e) {
+                        console.warn("\n\n" + e.message);
+                        process.exitCode = 1;
+                      }
                     }
                   );
+                }
+                if (newText.includes("@inheritDoc")) {
+                  console.warn(
+                    "\n\nFound @inheritDoc after processing, something went wrong.",
+                    {
+                      sourceName,
+                      originalText: comment.value,
+                      finalReplacement: newText,
+                    }
+                  );
+                  process.exitCode = 1;
                 }
                 if (comment.value !== newText) {
                   comment.value = frameComment(newText);
@@ -184,4 +235,39 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
       };
     },
   });
+}
+
+function renderDocComment(node: DocComment): string {
+  let commentRange: TextRange | undefined = undefined;
+  function iterate(node: undefined | DocNode | readonly DocNode[]) {
+    if (!node) return; // no node
+    if (commentRange) return; // we already found what we're looking for
+    if ("forEach" in node) {
+      node.forEach(iterate);
+      return;
+    }
+    if (node.kind === "Excerpt") {
+      const excerptNode = node as DocExcerpt;
+      commentRange = excerptNode.content.parserContext.commentRange;
+    }
+    node.getChildNodes().forEach(iterate);
+  }
+  iterate(node);
+
+  if (!commentRange) {
+    return "";
+  }
+
+  let text = commentRange.toString();
+  return text
+    .slice(2, -2)
+    .split("\n")
+    .map((line) =>
+      line
+        // remove leading ` *` or ` * `
+        .replace(/^\s*\* ?/, "")
+        // remove singular trailing spaces, but preserve multiple trailing spaces as those have a meaning in markdown
+        .replace(/(?<! ) $/, "")
+    )
+    .join("\n");
 }

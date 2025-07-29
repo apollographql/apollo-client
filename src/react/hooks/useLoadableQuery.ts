@@ -101,7 +101,7 @@ export declare namespace useLoadableQuery {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client!useLoadableQuery:function(1)} */
+    /** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
     export function useLoadableQuery<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
@@ -172,7 +172,7 @@ export function useLoadableQuery<
   "complete" | "streaming" | "partial" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -187,7 +187,7 @@ export function useLoadableQuery<
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -202,7 +202,7 @@ export function useLoadableQuery<
   "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

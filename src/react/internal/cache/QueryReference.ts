@@ -64,7 +64,7 @@ interface WrappedQueryRef<
 }
 
 /**
- * {@inheritDoc @apollo/client!QueryRef:interface}
+ * {@inheritDoc @apollo/client/react!QueryRef:interface}
  */
 export interface PreloadedQueryRef<
   TData = unknown,

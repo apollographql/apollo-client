@@ -47,7 +47,7 @@ export interface Operation {
 
   /**
    * The string name of the query. If the query is anonymous, `operationName`
-   * will be `undefined.
+   * will be `undefined`.
    */
   operationName: string;
 

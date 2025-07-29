@@ -61,7 +61,7 @@ export interface Operation {
   extensions: Record<string, any>;
 
   /**
-   * A function that takes either a new context object, or a functio nwhich
+   * A function that takes either a new context object, or a function which
    * takes in the previous context and returns a new one. See [managing
    * context](https://apollographql.com/docs/react/api/link/introduction#managing-context).
    */

@@ -187,27 +187,29 @@ items:
         children:
           - label: Overview
             href: ./api/link/introduction
-          - label: HTTP
+          - label: ApolloLink
+            href: ./api/link/apollo-link
+          - label: HttpLink
             href: ./api/link/apollo-link-http
-          - label: HTTP Batch
+          - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
-          - label: Context
+          - label: SetContextLink
             href: ./api/link/apollo-link-context
-          - label: Error
+          - label: ErrorLink
             href: ./api/link/apollo-link-error
-          - label: Persisted Queries
+          - label: PersistedQueryLink
             href: ./api/link/persisted-queries
-          - label: Remove Typename
+          - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
-          - label: REST
+          - label: RestLink
             href: ./api/link/apollo-link-rest
-          - label: Retry
+          - label: RetryLink
             href: ./api/link/apollo-link-retry
-          - label: Schema
+          - label: SchemaLink
             href: ./api/link/apollo-link-schema
-          - label: Subscriptions (newer protocol)
+          - label: GraphQLWsLink (newer protocol)
             href: ./api/link/apollo-link-subscriptions
-          - label: WebSocket (older protocol)
+          - label: WebSocketLink (older protocol)
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links

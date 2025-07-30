@@ -395,9 +395,7 @@ export class ApolloLink {
     left: ApolloLink | ApolloLink.RequestHandler,
     right?: ApolloLink | ApolloLink.RequestHandler
   ): ApolloLink {
-    return this.concat(
-      ApolloLink.split(test, left, right || new ApolloLink(passthrough))
-    );
+    return this.concat(ApolloLink.split(test, left, right));
   }
 
   /**

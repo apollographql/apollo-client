@@ -21,7 +21,7 @@ export interface AdditionalApolloLinkResultTypes<TData = Record<string, any>, TE
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
+        export function RequestHandler(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
     }
     // (undocumented)
     export interface ExecuteContext {

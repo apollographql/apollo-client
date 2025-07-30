@@ -164,7 +164,7 @@ export declare namespace ApolloLink {
      * chain.
      */
     export function RequestHandler(
-      operation: Operation,
+      operation: ApolloLink.Operation,
       forward: ApolloLink.ForwardFunction
     ): Observable<ApolloLink.Result> | null;
   }

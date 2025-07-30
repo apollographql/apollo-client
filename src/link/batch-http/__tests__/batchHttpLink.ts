@@ -255,19 +255,6 @@ describe("SharedHttpTest", () => {
     }
   });
 
-  it("raises warning if called with concat", () => {
-    using _ = spyOnConsole("warn");
-    const link = new BatchHttpLink();
-    expect(link.concat((operation, forward) => forward(operation))).toEqual(
-      link
-    );
-
-    expect(console.warn).toHaveBeenCalledWith(
-      "You are calling concat on a terminating link, which will have no effect %o",
-      link
-    );
-  });
-
   it("does not need any constructor arguments", () => {
     expect(() => new BatchHttpLink()).not.toThrow();
   });

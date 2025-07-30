@@ -1,6 +1,5 @@
 import { Observable } from "rxjs";
 
-import type { OperationContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import {

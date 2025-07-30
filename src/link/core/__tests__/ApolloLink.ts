@@ -902,6 +902,8 @@ describe("ApolloLink", () => {
     });
 
     it("should allow default right to be empty or passthrough when forward available", async () => {
+      // Silence warning about `right` link calling forward
+      using _ = spyOnConsole("warn");
       let context = { test: true };
       const start = new SetContextLink(() => context);
       const link = start.split(
@@ -951,6 +953,8 @@ describe("ApolloLink", () => {
     });
 
     it("should create filter when single link passed in", async () => {
+      // Silence warning about `right` link calling forward
+      using _ = spyOnConsole("warn");
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
         (operation, forward) => of({ data: { count: 1 } })

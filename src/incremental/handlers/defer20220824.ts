@@ -44,7 +44,7 @@ export declare namespace Defer20220824Handler {
 }
 
 declare module "@apollo/client/link" {
-  export interface AdditionalFetchResultTypes {
+  export interface AdditionalApolloLinkResultTypes {
     Defer20220824Handler: Defer20220824Handler.Chunk<Record<string, unknown>>;
   }
 }

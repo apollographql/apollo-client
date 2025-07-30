@@ -6,7 +6,7 @@ export { execute } from "./core/execute.js";
 export { ApolloLink } from "./core/ApolloLink.js";
 
 export type {
-  AdditionalFetchResultTypes,
+  AdditionalApolloLinkResultTypes,
   ApolloPayloadResult,
   DocumentNode,
 } from "./core/types.js";

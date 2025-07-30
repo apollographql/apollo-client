@@ -17,7 +17,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { AdditionalFetchResultTypes } from "./types.js";
+import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
 function passthrough(
   op: ApolloLink.Operation,
@@ -85,10 +85,10 @@ export declare namespace ApolloLink {
     TExtensions = Record<string, any>,
   > =
     | FormattedExecutionResult<TData, TExtensions>
-    | AdditionalFetchResultTypes<
+    | AdditionalApolloLinkResultTypes<
         TData,
         TExtensions
-      >[keyof AdditionalFetchResultTypes<TData, TExtensions>];
+      >[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
 
   /**
    * The currently executed operation object provided to a `RequestHandler` for

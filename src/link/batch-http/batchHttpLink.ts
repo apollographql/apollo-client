@@ -39,10 +39,10 @@ export class BatchHttpLink extends ApolloLink {
   constructor(
     options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
   ) {
-    const { left, right, request } = ApolloLink.concat(
+    const { left, right, request } = ApolloLink.from([
       new ClientAwarenessLink(options),
-      new BaseBatchHttpLink(options)
-    );
+      new BaseBatchHttpLink(options),
+    ]);
     super(request);
     Object.assign(this, { left, right });
   }

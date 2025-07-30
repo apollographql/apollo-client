@@ -173,10 +173,10 @@ export declare namespace HttpLink {
 
 export class HttpLink extends ApolloLink {
   constructor(options: HttpLink.Options & ClientAwarenessLink.Options = {}) {
-    const { left, right, request } = ApolloLink.concat(
+    const { left, right, request } = ApolloLink.from([
       new ClientAwarenessLink(options),
-      new BaseHttpLink(options)
-    );
+      new BaseHttpLink(options),
+    ]);
     super(request);
     Object.assign(this, { left, right });
   }

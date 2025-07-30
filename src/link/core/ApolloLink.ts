@@ -449,8 +449,9 @@ export class ApolloLink {
    * Runs the request handler for the provided operation.
    *
    * > [!NOTE]
-   * > This is called by the `execute` function for you and should not be called
-   * > directly. Prefer using `ApolloLink.execute` to make the request instead.
+   * > This is called by the `ApolloLink.execute` function for you and should
+   * > not be called directly. Prefer using `ApolloLink.execute` to make the
+   * > request instead.
    */
   public request(
     operation: ApolloLink.Operation,

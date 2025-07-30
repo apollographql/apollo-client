@@ -21,6 +21,8 @@ interface MockedResponse {
   maxUsageCount?: number;
 }
 
+const EMPTY_FORWARD: ApolloLink.ForwardFunction = () => EMPTY;
+
 function createOperation(
   starting: any,
   operation: ApolloLink.Request
@@ -166,6 +168,7 @@ describe("OperationBatcher", () => {
 
     const request: BatchableRequest = {
       operation: createOperation({}, { query }),
+      forward: EMPTY_FORWARD,
     };
 
     expect(batcher["batchesByKey"].get("")).toBeUndefined();
@@ -208,7 +211,10 @@ describe("OperationBatcher", () => {
         batchHandler,
       });
 
-      const observable = myBatcher.enqueueRequest({ operation });
+      const observable = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
       const stream = new ObservableStream(observable);
 
       const observables: (Observable<ApolloLink.Result> | undefined)[] =
@@ -244,8 +250,14 @@ describe("OperationBatcher", () => {
         batchMax: 10,
         batchHandler: BH,
       });
-      const observable1 = myBatcher.enqueueRequest({ operation });
-      const observable2 = myBatcher.enqueueRequest({ operation: request2 });
+      const observable1 = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
+      const observable2 = myBatcher.enqueueRequest({
+        operation: request2,
+        forward: EMPTY_FORWARD,
+      });
 
       const stream1 = new ObservableStream(observable1);
       const stream2 = new ObservableStream(observable2);
@@ -295,8 +307,14 @@ describe("OperationBatcher", () => {
         batchKey,
       });
 
-      const observable1 = myBatcher.enqueueRequest({ operation });
-      const observable2 = myBatcher.enqueueRequest({ operation: request2 });
+      const observable1 = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
+      const observable2 = myBatcher.enqueueRequest({
+        operation: request2,
+        forward: EMPTY_FORWARD,
+      });
 
       const stream1 = new ObservableStream(observable1);
       const stream2 = new ObservableStream(observable2);
@@ -316,7 +334,10 @@ describe("OperationBatcher", () => {
         batchInterval: 10,
         batchHandler: BH,
       });
-      const observable = myBatcher.enqueueRequest({ operation });
+      const observable = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
       const stream = new ObservableStream(observable);
 
       myBatcher.consumeQueue();
@@ -333,9 +354,15 @@ describe("OperationBatcher", () => {
       });
 
       // 1. Queue up 3 requests
-      myBatcher.enqueueRequest({ operation }).subscribe({});
-      myBatcher.enqueueRequest({ operation }).subscribe({});
-      myBatcher.enqueueRequest({ operation }).subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(3);
 
       // 2. Run the timer halfway.
@@ -343,7 +370,9 @@ describe("OperationBatcher", () => {
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(3);
 
       // 3. Queue a 4th request, causing the timer to reset.
-      myBatcher.enqueueRequest({ operation }).subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(4);
 
       // 4. Run the timer to batchInterval + 1, at this point, if debounce were
@@ -383,7 +412,7 @@ describe("OperationBatcher", () => {
     `;
     const operation = createOperation({}, { query });
 
-    batcher.enqueueRequest({ operation }).subscribe({});
+    batcher.enqueueRequest({ operation, forward: EMPTY_FORWARD }).subscribe({});
     expect(batcher["batchesByKey"].get("")!.size).toBe(1);
 
     const promise = wait(20);
@@ -420,6 +449,7 @@ describe("OperationBatcher", () => {
     batcher
       .enqueueRequest({
         operation: createOperation({}, { query }),
+        forward: EMPTY_FORWARD,
       })
       .subscribe(() => {
         throw new Error("next should never be called");
@@ -452,7 +482,10 @@ describe("OperationBatcher", () => {
     `;
     const operation = createOperation({}, { query });
 
-    const observable = batcher.enqueueRequest({ operation });
+    const observable = batcher.enqueueRequest({
+      operation,
+      forward: EMPTY_FORWARD,
+    });
 
     const checkQueuedRequests = (expectedSubscriberCount: number) => {
       const batch = batcher["batchesByKey"].get("");
@@ -507,6 +540,7 @@ describe("OperationBatcher", () => {
     const subscription = batcher
       .enqueueRequest({
         operation: createOperation({}, { query }),
+        forward: EMPTY_FORWARD,
       })
       .subscribe(() => {
         throw new Error("next should never be called");
@@ -544,13 +578,17 @@ describe("OperationBatcher", () => {
     const operation2 = createOperation({}, { query });
     const operation3 = createOperation({}, { query });
 
-    batcher.enqueueRequest({ operation }).subscribe({});
-    batcher.enqueueRequest({ operation: operation2 }).subscribe({});
+    batcher.enqueueRequest({ operation, forward: EMPTY_FORWARD }).subscribe({});
+    batcher
+      .enqueueRequest({ operation: operation2, forward: EMPTY_FORWARD })
+      .subscribe({});
     expect(batcher["batchesByKey"].get("")!.size).toBe(2);
 
     setTimeout(() => {
       // The batch shouldn't be fired yet, so we can add one more request.
-      batcher.enqueueRequest({ operation: operation3 }).subscribe({});
+      batcher
+        .enqueueRequest({ operation: operation3, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(batcher["batchesByKey"].get("")!.size).toBe(3);
     }, 5);
 
@@ -590,17 +628,21 @@ describe("OperationBatcher", () => {
     const operation2 = createOperation({}, { query });
     const operation3 = createOperation({}, { query });
 
-    const sub1 = batcher.enqueueRequest({ operation }).subscribe(() => {
-      throw new Error("next should never be called");
-    });
-    batcher.enqueueRequest({ operation: operation2 }).subscribe((result) => {
-      expect((result as FormattedExecutionResult).data).toBe(data2);
+    const sub1 = batcher
+      .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+      .subscribe(() => {
+        throw new Error("next should never be called");
+      });
+    batcher
+      .enqueueRequest({ operation: operation2, forward: EMPTY_FORWARD })
+      .subscribe((result) => {
+        expect((result as FormattedExecutionResult).data).toBe(data2);
 
-      // The batch should've been fired by now.
-      expect(batcher["batchesByKey"].get("")).toBeUndefined();
+        // The batch should've been fired by now.
+        expect(batcher["batchesByKey"].get("")).toBeUndefined();
 
-      done();
-    });
+        done();
+      });
 
     expect(batcher["batchesByKey"].get("")!.size).toBe(2);
 
@@ -610,7 +652,7 @@ describe("OperationBatcher", () => {
     setTimeout(() => {
       // The batch shouldn't be fired yet, so we can add one more request.
       const sub3 = batcher
-        .enqueueRequest({ operation: operation3 })
+        .enqueueRequest({ operation: operation3, forward: EMPTY_FORWARD })
         .subscribe(() => {
           throw new Error("next should never be called");
         });
@@ -643,7 +685,10 @@ describe("OperationBatcher", () => {
       batchHandler: BH,
     });
 
-    const observable = batcher.enqueueRequest({ operation });
+    const observable = batcher.enqueueRequest({
+      operation,
+      forward: EMPTY_FORWARD,
+    });
     const stream = new ObservableStream(observable);
     batcher.consumeQueue();
 

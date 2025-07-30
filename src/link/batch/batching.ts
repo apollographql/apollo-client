@@ -10,7 +10,7 @@ export type BatchHandler = (
 
 export interface BatchableRequest {
   operation: ApolloLink.Operation;
-  forward?: ApolloLink.ForwardFunction;
+  forward: ApolloLink.ForwardFunction;
 }
 
 type QueuedRequest = BatchableRequest & {

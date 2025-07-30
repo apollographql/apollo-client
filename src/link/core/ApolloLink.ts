@@ -385,7 +385,7 @@ export class ApolloLink {
   }
 
   /**
-   * Combines the link with another link into a single composed link.
+   * Combines the link with other links into a single composed link.
    *
    * @example
    *
@@ -399,6 +399,8 @@ export class ApolloLink {
    * });
    *
    * const link = previousLink.concat(
+   *   link1,
+   *   link2,
    *   new HttpLink({ uri: "http://localhost:4000/graphql" })
    * );
    * ```

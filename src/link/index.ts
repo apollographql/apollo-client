@@ -9,7 +9,6 @@ export type {
   AdditionalFetchResultTypes,
   ApolloPayloadResult,
   DocumentNode,
-  ExecuteContext,
   FetchResult,
 } from "./core/types.js";
 

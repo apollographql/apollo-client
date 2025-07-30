@@ -1,5 +1,4 @@
 import { ApolloClient, execute, InMemoryCache } from "@apollo/client";
-import type { ExecuteContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { createOperation } from "@apollo/client/link/utils";
 
@@ -15,14 +14,14 @@ function createDefaultExecuteContext() {
 export function executeWithDefaultContext(
   link: ApolloLink,
   request: ApolloLink.Request,
-  context: ExecuteContext = createDefaultExecuteContext()
+  context: ApolloLink.ExecuteContext = createDefaultExecuteContext()
 ) {
   return execute(link, request, context);
 }
 
 export function createOperationWithDefaultContext(
   request: ApolloLink.Request,
-  executeContext: ExecuteContext = createDefaultExecuteContext()
+  executeContext: ApolloLink.ExecuteContext = createDefaultExecuteContext()
 ) {
   return createOperation(request, executeContext);
 }

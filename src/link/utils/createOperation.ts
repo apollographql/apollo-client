@@ -1,4 +1,4 @@
-import type { ApolloLink, ExecuteContext } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import {
   getOperationDefinition,
   getOperationName,
@@ -6,7 +6,7 @@ import {
 
 export function createOperation(
   request: ApolloLink.Request,
-  { client }: ExecuteContext
+  { client }: ApolloLink.ExecuteContext
 ): ApolloLink.Operation {
   const operation = {
     query: request.query,

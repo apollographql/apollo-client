@@ -13,7 +13,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { ExecuteContext, FetchResult } from "./types.js";
+import type { FetchResult } from "./types.js";
 
 function passthrough(
   op: ApolloLink.Operation,
@@ -31,6 +31,13 @@ function isTerminating(link: ApolloLink): boolean {
 }
 
 export declare namespace ApolloLink {
+  export interface ExecuteContext {
+    /**
+     * The Apollo Client instance that executed the GraphQL request.
+     */
+    client: ApolloClient;
+  }
+
   export type ForwardFunction = (
     operation: ApolloLink.Operation
   ) => Observable<FetchResult>;
@@ -305,7 +312,7 @@ export class ApolloLink {
   public static execute(
     link: ApolloLink,
     request: ApolloLink.Request,
-    context: ExecuteContext
+    context: ApolloLink.ExecuteContext
   ): Observable<FetchResult> {
     return link.request(createOperation(request, context)) || EMPTY;
   }

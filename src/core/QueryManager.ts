@@ -34,7 +34,7 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { Incremental } from "@apollo/client/incremental";
-import type { ExecuteContext, FetchResult } from "@apollo/client/link";
+import type { ApolloLink, FetchResult } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -878,7 +878,7 @@ export class QueryManager {
       this.getDocumentInfo(query);
 
     const operationName = getOperationName(query);
-    const executeContext: ExecuteContext = {
+    const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
 

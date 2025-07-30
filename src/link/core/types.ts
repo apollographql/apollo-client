@@ -1,8 +1,6 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 
-import type { ApolloClient } from "@apollo/client";
-
 export type { DocumentNode };
 
 export interface ApolloPayloadResult<
@@ -13,13 +11,6 @@ export interface ApolloPayloadResult<
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
   errors?: ReadonlyArray<GraphQLFormattedError>;
-}
-
-export interface ExecuteContext {
-  /**
-   * The Apollo Client instance that executed the GraphQL request.
-   */
-  client: ApolloClient;
 }
 
 export type FetchResult<

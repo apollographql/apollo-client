@@ -345,8 +345,8 @@ export class ApolloLink {
    * @param links - The links to concatenate into a single link. Each link will
    * execute in serial order.
    *
-   * @deprecated Use `ApolloLink.from(links)` instead. `ApolloLink.concat` will
-   * be removed in a future major version.
+   * @deprecated Use `ApolloLink.from` instead. `ApolloLink.concat` will be
+   * removed in a future major version.
    */
   public static concat(
     ...links: Array<ApolloLink | ApolloLink.RequestHandler>

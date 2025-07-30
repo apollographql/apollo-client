@@ -18,29 +18,29 @@ export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtens
 }
 
 // @public (undocumented)
+export namespace ApolloLink {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        export function RequestHandler(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
+    }
+}
+
+// @public
 export class ApolloLink {
     constructor(request?: RequestHandler);
-    // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     concat(next: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     static empty(): ApolloLink;
-    // (undocumented)
     static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
-    // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    // (undocumented)
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
 }
 
@@ -65,7 +65,6 @@ export const execute: typeof ApolloLink.execute;
 
 // @public (undocumented)
 export interface ExecuteContext {
-    // (undocumented)
     client: ApolloClient;
 }
 
@@ -75,26 +74,20 @@ export type FetchResult<TData = Record<string, any>, TExtensions = Record<string
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
 
-// @public (undocumented)
+// @public
 export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
-    // (undocumented)
     context?: DefaultContext;
-    // (undocumented)
     extensions?: Record<string, any>;
-    // (undocumented)
     operationName?: string;
-    // (undocumented)
     operationType?: OperationTypeNode;
-    // (undocumented)
     query: DocumentNode;
-    // (undocumented)
     variables?: TVariables;
 }
 
 // @public (undocumented)
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 
-// @public (undocumented)
+// @public
 export interface Operation {
     readonly client: ApolloClient;
     extensions: Record<string, any>;
@@ -109,11 +102,11 @@ export interface Operation {
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
+// @public
 export interface OperationContext extends DefaultContext {
 }
 
-// @public (undocumented)
+// @public
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 // @public (undocumented)

@@ -53,6 +53,33 @@ export declare namespace ApolloLink {
   }
 }
 
+/**
+ * The base class for all links in Apollo Client. A link represents either a
+ * self-contained modification to a GraphQL operation or a side effect (such as
+ * logging).
+ *
+ * @remarks
+ *
+ * Links enable you to customize Apollo Client's request flow by composing
+ * together different pieces of functionality into a chain of links. Each
+ * link represents a specific capability, such as adding authentication headers,
+ * retrying failed requests, batching operations, or sending requests to a
+ * GraphQL server.
+ *
+ * Every link must define a request handler via its constructor or by extending
+ * this class and implementing the `request` method.
+ *
+ * @example
+ *
+ * ```ts
+ * import { ApolloLink } from "@apollo/client";
+ *
+ * const link = new ApolloLink((operation, forward) => {
+ *   console.log("Operation:", operation.operationName);
+ *   return forward(operation);
+ * });
+ * ```
+ */
 export class ApolloLink {
   /**
    * Creates a link that does not emit a result and immediately completes.

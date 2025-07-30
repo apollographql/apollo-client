@@ -11,7 +11,6 @@ export type {
   DocumentNode,
   ExecuteContext,
   FetchResult,
-  ForwardFunction,
   RequestHandler,
 } from "./core/types.js";
 

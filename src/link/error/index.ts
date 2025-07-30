@@ -8,7 +8,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   toErrorLike,
 } from "@apollo/client/errors";
-import type { FetchResult, ForwardFunction } from "@apollo/client/link";
+import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace ErrorLink {
@@ -43,7 +43,7 @@ export declare namespace ErrorLink {
      * [retries the operation](../../data/error-handling#retrying-operations), returning a new observable for the
      * upstream link to subscribe to.
      */
-    forward: ForwardFunction;
+    forward: ApolloLink.ForwardFunction;
   }
 }
 

@@ -40,12 +40,8 @@ export interface AdditionalFetchResultTypes<
   TExtensions = Record<string, any>,
 > {}
 
-export type ForwardFunction = (
-  operation: ApolloLink.Operation
-) => Observable<FetchResult>;
-
 /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
 export type RequestHandler = (
   operation: ApolloLink.Operation,
-  forward: ForwardFunction
+  forward: ApolloLink.ForwardFunction
 ) => Observable<FetchResult> | null;

@@ -6,7 +6,6 @@ import { map, of } from "rxjs";
 import type { Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { ForwardFunction } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
@@ -34,7 +33,7 @@ describe("Link interactions", () => {
 
     const evictionLink = (
       operation: ApolloLink.Operation,
-      forward: ForwardFunction
+      forward: ApolloLink.ForwardFunction
     ) => {
       const { client } = operation;
       expect(client).toBeDefined();
@@ -236,7 +235,7 @@ describe("Link interactions", () => {
 
     const evictionLink = (
       operation: ApolloLink.Operation,
-      forward: ForwardFunction
+      forward: ApolloLink.ForwardFunction
     ) => {
       const { client } = operation;
       expect(client).toBeDefined();
@@ -268,7 +267,7 @@ describe("Link interactions", () => {
 
     const evictionLink = (
       operation: ApolloLink.Operation,
-      forward: ForwardFunction
+      forward: ApolloLink.ForwardFunction
     ) => {
       const { planet } = operation.getContext();
       expect(planet).toBe("Tatooine");

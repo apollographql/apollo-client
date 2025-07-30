@@ -80,7 +80,7 @@ export interface Operation {
   variables: Record<string, any>;
 
   /**
-   * The string name of the GraphQL operation. If the query is anonymous,
+   * The string name of the GraphQL operation. If it is anonymous,
    * `operationName` will be `undefined`.
    */
   operationName: string;

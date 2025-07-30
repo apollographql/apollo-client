@@ -36,11 +36,36 @@ export interface GraphQLRequest<
 }
 
 export interface Operation {
+  /**
+   * A `DocumentNode` that describes the operation taking place.
+   */
   query: DocumentNode;
+  /**
+   * A map of GraphQL variables being sent with the operation.
+   */
   variables: Record<string, any>;
+
+  /**
+   * The string name of the query. If the query is anonymous, `operationName`
+   * will be `undefined`.
+   */
   operationName: string;
+
+  /**
+   * The type of the operation, such as query or mutation.
+   */
   operationType: OperationTypeNode | undefined;
+
+  /**
+   * A map that stores extensions data to be sent to the server.
+   */
   extensions: Record<string, any>;
+
+  /**
+   * A function that takes either a new context object, or a function which
+   * takes in the previous context and returns a new one. See [managing
+   * context](https://apollographql.com/docs/react/api/link/introduction#managing-context).
+   */
   setContext: {
     (context: Partial<OperationContext>): void;
     (
@@ -49,7 +74,16 @@ export interface Operation {
       ) => Partial<OperationContext>
     ): void;
   };
+
+  /**
+   * A function that gets the current context of the request. This can be used
+   * by links to determine which actions to perform. See [managing context](https://apollographql.com/docs/react/api/link/introduction#managing-context)
+   */
   getContext: () => OperationContext;
+
+  /**
+   * The Apollo Client instance executing the request.
+   */
   readonly client: ApolloClient;
 }
 

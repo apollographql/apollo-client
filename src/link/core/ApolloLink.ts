@@ -27,10 +27,6 @@ function toLink(handler: ApolloLink.RequestHandler | ApolloLink) {
   return typeof handler === "function" ? new ApolloLink(handler) : handler;
 }
 
-function isTerminating(link: ApolloLink): boolean {
-  return link.request.length <= 1;
-}
-
 export declare namespace ApolloLink {
   export interface ExecuteContext {
     /**

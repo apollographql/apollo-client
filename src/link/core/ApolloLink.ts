@@ -333,10 +333,9 @@ export class ApolloLink {
    * link chain.
    */
   public static concat(
-    first: ApolloLink | ApolloLink.RequestHandler,
-    second: ApolloLink | ApolloLink.RequestHandler
+    ...links: Array<ApolloLink | ApolloLink.RequestHandler>
   ) {
-    return toLink(first).concat(second);
+    return ApolloLink.from(links);
   }
 
   constructor(request?: ApolloLink.RequestHandler) {

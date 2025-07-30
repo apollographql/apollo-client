@@ -233,7 +233,7 @@ export class ApolloLink {
    * are executed in serial order.
    */
   public static from(
-    links: (ApolloLink | ApolloLink.RequestHandler)[]
+    links: Array<ApolloLink | ApolloLink.RequestHandler>
   ): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
 

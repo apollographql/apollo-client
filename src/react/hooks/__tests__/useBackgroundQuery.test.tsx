@@ -1499,20 +1499,23 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     });
   }
 
-  link.simulateResult({
-    result: {
-      incremental: [
-        {
-          data: {
-            recipient: { name: "Alice", __typename: "Person" },
-            __typename: "Greeting",
+  link.simulateResult(
+    {
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: "Alice", __typename: "Person" },
+              __typename: "Greeting",
+            },
+            path: ["greeting"],
           },
-          path: ["greeting"],
-        },
-      ],
-      hasNext: false,
+        ],
+        hasNext: false,
+      },
     },
-  });
+    true
+  );
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();

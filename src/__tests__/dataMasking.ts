@@ -2121,20 +2121,23 @@ describe("client.watchQuery", () => {
       partial: true,
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
             },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     // Even though `data` didn't change, the `dataState` is updated to reflect
     // that the full result has been stremed in so we expect another render
@@ -2228,21 +2231,24 @@ describe("client.watchQuery", () => {
       });
     }
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              sentAt: "2024-01-01",
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                sentAt: "2024-01-01",
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
             },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     {
       const { data } = await stream.takeNext();

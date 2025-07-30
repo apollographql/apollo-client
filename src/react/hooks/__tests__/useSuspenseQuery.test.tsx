@@ -7183,20 +7183,23 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
             },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({
@@ -7289,20 +7292,23 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      link.simulateResult({
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-                __typename: "Greeting",
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  recipient: { name: "Alice", __typename: "Person" },
+                  __typename: "Greeting",
+                },
+                path: ["greeting"],
               },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
+            ],
+            hasNext: false,
+          },
         },
-      });
+        true
+      );
 
       await waitFor(() => {
         expect(result.current).toStrictEqualTyped({
@@ -7483,20 +7489,23 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              __typename: "Greeting",
-              recipient: { name: "Alice", __typename: "Person" },
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                __typename: "Greeting",
+                recipient: { name: "Alice", __typename: "Person" },
+              },
+              path: ["greeting"],
             },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({
@@ -7627,20 +7636,23 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
             },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({
@@ -7784,20 +7796,23 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              __typename: "Greeting",
-              recipient: { __typename: "Person", name: "Bob" },
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                __typename: "Greeting",
+                recipient: { __typename: "Person", name: "Bob" },
+              },
+              path: ["greetings", 1],
             },
-            path: ["greetings", 1],
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({
@@ -9172,33 +9187,36 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            path: ["hero", "heroFriends", 0],
-            errors: [
-              new GraphQLError(
-                "homeWorld for character with ID 1000 could not be fetched.",
-                { path: ["hero", "heroFriends", 0, "homeWorld"] }
-              ),
-            ],
-            data: {
-              homeWorld: null,
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              path: ["hero", "heroFriends", 0],
+              errors: [
+                new GraphQLError(
+                  "homeWorld for character with ID 1000 could not be fetched.",
+                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                ),
+              ],
+              data: {
+                homeWorld: null,
+              },
             },
-          },
-          // This chunk is ignored since errorPolicy `none` throws away partial
-          // data
-          {
-            path: ["hero", "heroFriends", 1],
-            data: {
-              homeWorld: "Alderaan",
+            // This chunk is ignored since errorPolicy `none` throws away partial
+            // data
+            {
+              path: ["hero", "heroFriends", 1],
+              data: {
+                homeWorld: "Alderaan",
+              },
             },
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(renders.errorCount).toBe(1);
@@ -9328,33 +9346,36 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            path: ["hero", "heroFriends", 0],
-            errors: [
-              new GraphQLError(
-                "homeWorld for character with ID 1000 could not be fetched.",
-                { path: ["hero", "heroFriends", 0, "homeWorld"] }
-              ),
-            ],
-            data: {
-              homeWorld: null,
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              path: ["hero", "heroFriends", 0],
+              errors: [
+                new GraphQLError(
+                  "homeWorld for character with ID 1000 could not be fetched.",
+                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                ),
+              ],
+              data: {
+                homeWorld: null,
+              },
             },
-          },
-          // Unlike the default (errorPolicy = `none`), this data will be
-          // added to the final result
-          {
-            path: ["hero", "heroFriends", 1],
-            data: {
-              homeWorld: "Alderaan",
+            // Unlike the default (errorPolicy = `none`), this data will be
+            // added to the final result
+            {
+              path: ["hero", "heroFriends", 1],
+              data: {
+                homeWorld: "Alderaan",
+              },
             },
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({
@@ -9546,31 +9567,34 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            path: ["hero", "heroFriends", 0],
-            errors: [
-              new GraphQLError(
-                "homeWorld for character with ID 1000 could not be fetched.",
-                { path: ["hero", "heroFriends", 0, "homeWorld"] }
-              ),
-            ],
-            data: {
-              homeWorld: null,
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              path: ["hero", "heroFriends", 0],
+              errors: [
+                new GraphQLError(
+                  "homeWorld for character with ID 1000 could not be fetched.",
+                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                ),
+              ],
+              data: {
+                homeWorld: null,
+              },
             },
-          },
-          {
-            path: ["hero", "heroFriends", 1],
-            data: {
-              homeWorld: "Alderaan",
+            {
+              path: ["hero", "heroFriends", 1],
+              data: {
+                homeWorld: "Alderaan",
+              },
             },
-          },
-        ],
-        hasNext: false,
+          ],
+          hasNext: false,
+        },
       },
-    });
+      true
+    );
 
     await waitFor(() => {
       expect(result.current).toStrictEqualTyped({

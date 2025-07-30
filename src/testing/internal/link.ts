@@ -15,10 +15,10 @@ function createDefaultExecuteContext() {
 
 export function executeWithDefaultContext(
   link: ApolloLink,
-  operation: GraphQLRequest,
+  request: GraphQLRequest,
   context: ExecuteContext = createDefaultExecuteContext()
 ) {
-  return execute(link, operation, context);
+  return execute(link, request, context);
 }
 
 export function createOperationWithDefaultContext(

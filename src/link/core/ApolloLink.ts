@@ -12,10 +12,7 @@ import type {
   OperationVariables,
 } from "@apollo/client";
 import { createOperation } from "@apollo/client/link/utils";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
+import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
@@ -351,28 +348,16 @@ export class ApolloLink {
     second: ApolloLink | ApolloLink.RequestHandler
   ) {
     const firstLink = toLink(first);
-    if (isTerminating(firstLink)) {
-      return firstLink;
-    }
     const nextLink = toLink(second);
 
-    let ret: ApolloLink;
-    if (isTerminating(nextLink)) {
-      ret = new ApolloLink(
-        (operation) =>
-          firstLink.request(operation, (op) => nextLink.request(op) || EMPTY) ||
-          EMPTY
+    const link = new ApolloLink((operation, forward) => {
+      return (
+        firstLink.request(operation, (op) => {
+          return nextLink.request(op, forward) || EMPTY;
+        }) || EMPTY
       );
-    } else {
-      ret = new ApolloLink((operation, forward) => {
-        return (
-          firstLink.request(operation, (op) => {
-            return nextLink.request(op, forward) || EMPTY;
-          }) || EMPTY
-        );
-      });
-    }
-    return Object.assign(ret, { left: firstLink, right: nextLink });
+    });
+    return Object.assign(link, { left: firstLink, right: nextLink });
   }
 
   constructor(request?: ApolloLink.RequestHandler) {

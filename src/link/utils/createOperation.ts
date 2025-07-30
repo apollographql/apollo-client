@@ -8,14 +8,10 @@ import {
   getOperationName,
 } from "@apollo/client/utilities/internal";
 
-import { validateRequest } from "./validateRequest.js";
-
 export function createOperation(
   request: GraphQLRequest,
   { client }: ExecuteContext
 ): Operation {
-  validateRequest(request);
-
   const operation = {
     query: request.query,
     variables: request.variables || {},

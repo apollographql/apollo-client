@@ -117,7 +117,6 @@ export type {
   FetchResult,
   ForwardFunction,
   GraphQLRequest,
-  NextLink,
   Operation,
   OperationContext,
   RequestHandler,

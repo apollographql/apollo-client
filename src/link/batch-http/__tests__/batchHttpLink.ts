@@ -21,7 +21,6 @@ import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
-  spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 

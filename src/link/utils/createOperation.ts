@@ -1,6 +1,6 @@
 import type {
+  ApolloLink,
   ExecuteContext,
-  GraphQLRequest,
   Operation,
 } from "@apollo/client/link";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@apollo/client/utilities/internal";
 
 export function createOperation(
-  request: GraphQLRequest,
+  request: ApolloLink.Request,
   { client }: ExecuteContext
 ): Operation {
   const operation = {

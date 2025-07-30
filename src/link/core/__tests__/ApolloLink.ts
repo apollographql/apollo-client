@@ -8,7 +8,7 @@ import type { ForwardFunction } from "@apollo/client/link";
 import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { FetchResult, GraphQLRequest, Operation } from "../types.js";
+import type { FetchResult, Operation } from "../types.js";
 
 class SetContextLink extends ApolloLink {
   constructor(
@@ -428,7 +428,7 @@ describe("ApolloClient", () => {
   });
 
   describe("from", () => {
-    const uniqueOperation: GraphQLRequest = {
+    const uniqueOperation: ApolloLink.Request = {
       query: sampleQuery,
       context: { name: "uniqueName" },
       extensions: {},

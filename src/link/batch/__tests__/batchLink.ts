@@ -11,22 +11,21 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-import type {
-  FetchResult,
-  GraphQLRequest,
-  Operation,
-} from "../../core/types.js";
+import type { FetchResult, Operation } from "../../core/types.js";
 import type { BatchableRequest, BatchHandler } from "../batchLink.js";
 
 interface MockedResponse {
-  request: GraphQLRequest;
+  request: ApolloLink.Request;
   result?: FetchResult;
   error?: Error;
   delay?: number;
   maxUsageCount?: number;
 }
 
-function createOperation(starting: any, operation: GraphQLRequest): Operation {
+function createOperation(
+  starting: any,
+  operation: ApolloLink.Request
+): Operation {
   let context = { ...starting };
   const setContext = (next: any) => {
     if (typeof next === "function") {
@@ -50,7 +49,7 @@ function createOperation(starting: any, operation: GraphQLRequest): Operation {
   return operation as Operation;
 }
 
-function requestToKey(request: GraphQLRequest): string {
+function requestToKey(request: ApolloLink.Request): string {
   const queryString =
     typeof request.query === "string" ? request.query : print(request.query);
 

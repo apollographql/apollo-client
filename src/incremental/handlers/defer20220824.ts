@@ -4,7 +4,7 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "@apollo/client";
+import type { ApolloLink, FetchResult } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
@@ -158,7 +158,7 @@ export class Defer20220824Handler
     }
   }
 
-  prepareRequest(request: GraphQLRequest): GraphQLRequest {
+  prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
     if (hasDirectives(["defer"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});

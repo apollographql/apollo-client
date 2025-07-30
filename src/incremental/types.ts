@@ -4,7 +4,7 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "@apollo/client";
+import type { ApolloLink, FetchResult } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
 
 export declare namespace Incremental {
@@ -15,7 +15,7 @@ export declare namespace Incremental {
     Chunk extends Record<string, unknown> = Record<string, unknown>,
   > {
     isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
-    prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+    prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
     extractErrors: (
       result: FetchResult<any>
     ) => readonly GraphQLFormattedError[] | undefined | void;

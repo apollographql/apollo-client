@@ -13,7 +13,6 @@ import type {
   ExecuteContext,
   FetchResult,
   ForwardFunction,
-  GraphQLRequest,
   Operation,
   RequestHandler,
 } from "./types.js";
@@ -230,7 +229,7 @@ export class ApolloLink {
    */
   public static execute(
     link: ApolloLink,
-    request: GraphQLRequest,
+    request: ApolloLink.Request,
     context: ExecuteContext
   ): Observable<FetchResult> {
     return link.request(createOperation(request, context)) || EMPTY;

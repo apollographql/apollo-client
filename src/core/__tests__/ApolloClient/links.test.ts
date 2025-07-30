@@ -3,9 +3,10 @@ import { gql } from "graphql-tag";
 import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
 
-import type { NextLink, Operation, Reference } from "@apollo/client";
+import type { Operation, Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import type { ForwardFunction } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
@@ -31,7 +32,7 @@ describe("Link interactions", () => {
       },
     };
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
       const { client } = operation;
       expect(client).toBeDefined();
       return (forward(operation) as Observable<FormattedExecutionResult>).pipe(
@@ -230,7 +231,7 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
       const { client } = operation;
       expect(client).toBeDefined();
       done();
@@ -259,7 +260,7 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
       const { planet } = operation.getContext();
       expect(planet).toBe("Tatooine");
       done();

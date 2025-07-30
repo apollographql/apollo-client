@@ -10,13 +10,13 @@ import {
 import type {
   ExecuteContext,
   FetchResult,
+  ForwardFunction,
   GraphQLRequest,
-  NextLink,
   Operation,
   RequestHandler,
 } from "./types.js";
 
-function passthrough(op: Operation, forward: NextLink) {
+function passthrough(op: Operation, forward: ForwardFunction) {
   return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
 }
 
@@ -44,7 +44,7 @@ export declare namespace ApolloLink {
      */
     export function RequestHandler(
       operation: Operation,
-      forward: NextLink
+      forward: ForwardFunction
     ): Observable<FetchResult> | null;
   }
 }
@@ -331,7 +331,7 @@ export class ApolloLink {
    */
   public request(
     operation: Operation,
-    forward?: NextLink
+    forward?: ForwardFunction
   ): Observable<FetchResult> | null {
     throw newInvariantError("request is not implemented");
   }

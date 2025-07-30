@@ -39,6 +39,7 @@ import { FieldMergeFunction } from '@apollo/client/cache';
 import { FieldPolicy } from '@apollo/client/cache';
 import { FieldReadFunction } from '@apollo/client/cache';
 import type { FormattedExecutionResult } from 'graphql';
+import { ForwardFunction } from '@apollo/client/link';
 import { FragmentType } from '@apollo/client/masking';
 import { from } from '@apollo/client/link';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
@@ -489,6 +490,8 @@ export { FieldMergeFunction }
 export { FieldPolicy }
 
 export { FieldReadFunction }
+
+export { ForwardFunction }
 
 export { FragmentType }
 

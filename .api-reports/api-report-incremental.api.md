@@ -99,7 +99,7 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
     // (undocumented)
     isIncrementalResult(_: any): _ is never;
     // (undocumented)
-    prepareRequest(request: GraphQLRequest): GraphQLRequest<Record<string, any>>;
+    prepareRequest(request: GraphQLRequest): GraphQLRequest;
     // (undocumented)
     startRequest: any;
 }

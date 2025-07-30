@@ -11,6 +11,7 @@ export type {
   DocumentNode,
   ExecuteContext,
   FetchResult,
+  ForwardFunction,
   GraphQLRequest,
   NextLink,
   Operation,

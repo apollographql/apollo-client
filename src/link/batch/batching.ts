@@ -1,16 +1,20 @@
 import type { Subscription } from "rxjs";
 import { EMPTY, Observable } from "rxjs";
 
-import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
+import type {
+  FetchResult,
+  ForwardFunction,
+  Operation,
+} from "@apollo/client/link";
 
 export type BatchHandler = (
   operations: Operation[],
-  forward?: (NextLink | undefined)[]
+  forward?: (ForwardFunction | undefined)[]
 ) => Observable<FetchResult[]> | null;
 
 export interface BatchableRequest {
   operation: Operation;
-  forward?: NextLink;
+  forward?: ForwardFunction;
 }
 
 type QueuedRequest = BatchableRequest & {

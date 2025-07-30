@@ -6,20 +6,20 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { FetchResult } from '@apollo/client/link';
-import type { NextLink } from '@apollo/client/link';
+import type { ForwardFunction } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export interface BatchableRequest {
     // (undocumented)
-    forward?: NextLink;
+    forward?: ForwardFunction;
     // (undocumented)
     operation: Operation;
 }
 
 // @public (undocumented)
-export type BatchHandler = (operations: Operation[], forward?: (NextLink | undefined)[]) => Observable<FetchResult[]> | null;
+export type BatchHandler = (operations: Operation[], forward?: (ForwardFunction | undefined)[]) => Observable<FetchResult[]> | null;
 
 // @public (undocumented)
 export namespace BatchLink {
@@ -37,7 +37,7 @@ export namespace BatchLink {
 export class BatchLink extends ApolloLink {
     constructor(fetchParams?: BatchLink.Options);
     // (undocumented)
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
 }
 
 // @public (undocumented)

@@ -386,7 +386,7 @@ export type ApolloClientOptions = ApolloClient.Options;
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
+        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<FetchResult> | null;
     }
 }
 
@@ -403,7 +403,7 @@ export class ApolloLink {
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
@@ -1096,6 +1096,9 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
+// @public (undocumented)
+export type ForwardFunction = (operation: Operation) => Observable<FetchResult>;
+
 // @internal @deprecated
 interface FragmentMap {
     // (undocumented)
@@ -1285,13 +1288,13 @@ namespace GraphQLCodegenDataMasking {
 }
 
 // @public
-export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
+export interface GraphQLRequest {
     context?: DefaultContext;
     extensions?: Record<string, any>;
     operationName?: string;
     operationType?: OperationTypeNode;
     query: DocumentNode;
-    variables?: TVariables;
+    variables?: OperationVariables;
 }
 
 // @beta
@@ -1928,8 +1931,8 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     reason: "after-fetch" | "variables-changed";
 }
 
-// @public (undocumented)
-export type NextLink = (operation: Operation) => Observable<FetchResult>;
+// @public @deprecated (undocumented)
+export type NextLink = ForwardFunction;
 
 // @public @deprecated
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
@@ -2487,7 +2490,7 @@ type RemoveIndexSignature<T> = {
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
 // @public
-export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
+export type RequestHandler = (operation: Operation, forward: ForwardFunction) => Observable<FetchResult> | null;
 
 export { resetCaches }
 

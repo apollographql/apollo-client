@@ -4,15 +4,11 @@ import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloClient, InMemoryCache } from "@apollo/client";
+import type { ForwardFunction } from "@apollo/client/link";
 import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import type {
-  FetchResult,
-  GraphQLRequest,
-  NextLink,
-  Operation,
-} from "../types.js";
+import type { FetchResult, GraphQLRequest, Operation } from "../types.js";
 
 class SetContextLink extends ApolloLink {
   constructor(
@@ -25,7 +21,7 @@ class SetContextLink extends ApolloLink {
 
   public request(
     operation: Operation,
-    forward: NextLink
+    forward: ForwardFunction
   ): Observable<FetchResult> {
     operation.setContext(this.setContext(operation.getContext()));
     return forward(operation);
@@ -607,12 +603,14 @@ describe("ApolloClient", () => {
     });
 
     it("should chain together a function with links", async () => {
-      const add1 = new ApolloLink((operation: Operation, forward: NextLink) => {
-        operation.setContext((context: { num: number }) => ({
-          num: context.num + 1,
-        }));
-        return forward(operation);
-      });
+      const add1 = new ApolloLink(
+        (operation: Operation, forward: ForwardFunction) => {
+          operation.setContext((context: { num: number }) => ({
+            num: context.num + 1,
+          }));
+          return forward(operation);
+        }
+      );
       const add1Link = new ApolloLink((operation, forward) => {
         operation.setContext((context: { num: number }) => ({
           num: context.num + 1,

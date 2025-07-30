@@ -148,10 +148,13 @@ export interface AdditionalFetchResultTypes<
   TExtensions = Record<string, any>,
 > {}
 
-export type NextLink = (operation: Operation) => Observable<FetchResult>;
+export type ForwardFunction = (operation: Operation) => Observable<FetchResult>;
+
+/** @deprecated Use the `ForwardFunction` type instead */
+export type NextLink = ForwardFunction;
 
 /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
 export type RequestHandler = (
   operation: Operation,
-  forward: NextLink
+  forward: ForwardFunction
 ) => Observable<FetchResult> | null;

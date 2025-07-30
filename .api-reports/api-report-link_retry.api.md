@@ -6,7 +6,7 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { FetchResult } from '@apollo/client/link';
-import type { NextLink } from '@apollo/client/link';
+import type { ForwardFunction } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
 
@@ -52,7 +52,7 @@ export namespace RetryLink {
 export class RetryLink extends ApolloLink {
     constructor(options?: RetryLink.Options);
     // (undocumented)
-    request(operation: Operation, nextLink: NextLink): Observable<FetchResult>;
+    request(operation: Operation, forward: ForwardFunction): Observable<FetchResult>;
 }
 
 // (No @packageDocumentation comment for this package)

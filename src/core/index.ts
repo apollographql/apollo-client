@@ -115,6 +115,7 @@ export type {
   ApolloPayloadResult,
   DocumentNode,
   FetchResult,
+  ForwardFunction,
   GraphQLRequest,
   NextLink,
   Operation,

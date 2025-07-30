@@ -21,7 +21,7 @@ export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtens
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
+        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<FetchResult> | null;
     }
 }
 
@@ -37,7 +37,7 @@ export class ApolloLink {
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
@@ -72,20 +72,23 @@ export interface ExecuteContext {
 export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
 
 // @public (undocumented)
+export type ForwardFunction = (operation: Operation) => Observable<FetchResult>;
+
+// @public (undocumented)
 export const from: typeof ApolloLink.from;
 
 // @public
-export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
+export interface GraphQLRequest {
     context?: DefaultContext;
     extensions?: Record<string, any>;
     operationName?: string;
     operationType?: OperationTypeNode;
     query: DocumentNode;
-    variables?: TVariables;
+    variables?: OperationVariables;
 }
 
-// @public (undocumented)
-export type NextLink = (operation: Operation) => Observable<FetchResult>;
+// @public @deprecated (undocumented)
+export type NextLink = ForwardFunction;
 
 // @public
 export interface Operation {
@@ -107,7 +110,7 @@ export interface OperationContext extends DefaultContext {
 }
 
 // @public
-export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
+export type RequestHandler = (operation: Operation, forward: ForwardFunction) => Observable<FetchResult> | null;
 
 // @public (undocumented)
 export const split: typeof ApolloLink.split;

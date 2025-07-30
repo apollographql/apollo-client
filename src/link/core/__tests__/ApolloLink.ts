@@ -5,7 +5,10 @@ import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink, execute } from "@apollo/client/link";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 class SetContextLink extends ApolloLink {
   constructor(
@@ -43,6 +46,27 @@ const defaultExecuteContext = {
 };
 
 describe("ApolloLink", () => {
+  test("warns if the link provided to execute calls forward", async () => {
+    using _ = spyOnConsole("warn");
+
+    const link = new ApolloLink((operation, forward) => {
+      return forward(operation);
+    });
+
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery }, defaultExecuteContext)
+    );
+
+    await expect(stream).toComplete();
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "The terminating link provided to `ApolloLink.execute`"
+      )
+    );
+  });
+
   describe("context", () => {
     it("should merge context when using a function", async () => {
       const returnOne = new SetContextLink(setContext);
@@ -561,13 +585,16 @@ describe("ApolloLink", () => {
       const chain = ApolloLink.from([new ApolloLink(stub)]);
       ApolloLink.execute(chain, astOperation, defaultExecuteContext);
 
-      expect(stub).toHaveBeenCalledWith({
-        query: sampleQuery,
-        operationName: "SampleQuery",
-        operationType: OperationTypeNode.QUERY,
-        variables: {},
-        extensions: {},
-      });
+      expect(stub).toHaveBeenCalledWith(
+        {
+          query: sampleQuery,
+          operationName: "SampleQuery",
+          operationType: OperationTypeNode.QUERY,
+          variables: {},
+          extensions: {},
+        },
+        expect.any(Function)
+      );
     });
 
     it("should pass operation from one link to next with modifications", async () => {

@@ -12,7 +12,11 @@ import type {
   OperationVariables,
 } from "@apollo/client";
 import { createOperation } from "@apollo/client/link/utils";
-import { newInvariantError } from "@apollo/client/utilities/invariant";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
@@ -314,7 +318,19 @@ export class ApolloLink {
     request: ApolloLink.Request,
     context: ApolloLink.ExecuteContext
   ): Observable<ApolloLink.Result> {
-    return link.request(createOperation(request, context)) || EMPTY;
+    return (
+      link.request(createOperation(request, context), () => {
+        if (__DEV__) {
+          invariant.warn(
+            "The terminating link provided to `ApolloLink.execute` called `forward` instead of handling the request. " +
+              "This results in an observable that immediately completes and does not emit a value. " +
+              "Please provide a terminating link that properly handles the request.\n\n" +
+              "If you are using a split link, ensure each branch contains a terminating link that handles the request."
+          );
+        }
+        return EMPTY;
+      }) || EMPTY
+    );
   }
 
   /**
@@ -438,7 +454,7 @@ export class ApolloLink {
    */
   public request(
     operation: ApolloLink.Operation,
-    forward?: ApolloLink.ForwardFunction
+    forward: ApolloLink.ForwardFunction
   ): Observable<ApolloLink.Result> | null {
     throw newInvariantError("request is not implemented");
   }

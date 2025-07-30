@@ -42,7 +42,7 @@ const defaultExecuteContext = {
   }),
 };
 
-describe("ApolloClient", () => {
+describe("ApolloLink", () => {
   describe("context", () => {
     it("should merge context when using a function", async () => {
       const returnOne = new SetContextLink(setContext);

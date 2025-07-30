@@ -276,7 +276,18 @@ export class ApolloLink {
     const rightLink = toLink(right || new ApolloLink(passthrough));
 
     const link = new ApolloLink((operation, forward) => {
-      return test(operation) ?
+      const result = test(operation);
+
+      if (__DEV__) {
+        if (typeof result !== "boolean") {
+          invariant.warn(
+            "[ApolloLink.split]: The test function returned a non-boolean value which could result in subtle bugs (e.g. such as using an `async` function which always returns a truthy value). Got `%o`.",
+            result
+          );
+        }
+      }
+
+      return result ?
           leftLink.request(operation, forward) || EMPTY
         : rightLink.request(operation, forward) || EMPTY;
     });

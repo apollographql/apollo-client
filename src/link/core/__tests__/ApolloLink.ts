@@ -1129,5 +1129,46 @@ describe("ApolloLink", () => {
         await expect(stream).toComplete();
       }
     });
+
+    test("warns when `split` test function returns non-boolean value", async () => {
+      using consoleSpy = spyOnConsole("warn");
+
+      const empty = new ApolloLink(() => of());
+
+      [undefined, "truthy", 0].forEach((value) => {
+        consoleSpy.warn.mockClear();
+        const link = ApolloLink.split(() => value as any, empty, empty);
+
+        execute(link, { query: sampleQuery }, defaultExecuteContext);
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          "[ApolloLink.split]: The test function returned a non-boolean value which could result in subtle bugs (e.g. such as using an `async` function which always returns a truthy value). Got `%o`.",
+          value
+        );
+      });
+    });
+
+    test("warns when `split` test function uses async function", async () => {
+      using _ = spyOnConsole("warn");
+
+      const left = new ApolloLink(() => of({ data: { link: "left" } }));
+      const right = new ApolloLink(() => of({ data: { link: "right" } }));
+      const link = ApolloLink.split((async () => false) as any, left, right);
+
+      const stream = new ObservableStream(
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
+      );
+
+      // This demonstrates that the "left" link is used because of the async
+      // function even though it seems like it should use the "right" link
+      await expect(stream).toEmitTypedValue({ data: { link: "left" } });
+      await expect(stream).toComplete();
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        "[ApolloLink.split]: The test function returned a non-boolean value which could result in subtle bugs (e.g. such as using an `async` function which always returns a truthy value). Got `%o`.",
+        expect.anything()
+      );
+    });
   });
 });

@@ -32,6 +32,27 @@ function isTerminating(link: ApolloLink): boolean {
   return link.request.length <= 1;
 }
 
+export declare namespace ApolloLink {
+  export namespace DocumentationTypes {
+    /**
+     * A request handler is responsible for performing some logic and executing the
+     * request, either by [forwarding](https://apollographql.com/docs/react/api/link/introduction#the-request-handler) the operation to the next link in the
+     * chain, or sending the operation to the destination that executes it, such as
+     * a GraphQL server.
+     *
+     * @param operation - The `Operation` object that provides information about the
+     * currently executed GraphQL request.
+     *
+     * @param forward - A function that is called to execute the next link in the
+     * chain.
+     */
+    export function RequestHandler(
+      operation: Operation,
+      forward: NextLink
+    ): Observable<FetchResult> | null;
+  }
+}
+
 export class ApolloLink {
   /**
    * Creates a link that does not emit a result and immediately completes.

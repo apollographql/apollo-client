@@ -24,17 +24,51 @@ export interface ApolloPayloadResult<
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
+/**
+ * The input object used to `execute` a GraphQL request against the link chain.
+ */
 export interface GraphQLRequest<
   TVariables extends OperationVariables = Record<string, any>,
 > {
+  /**
+   * The parsed GraphQL document that will be sent with the GraphQL request to
+   * the server.
+   */
   query: DocumentNode;
+
+  /**
+   * The variables provided for the query.
+   */
   variables?: TVariables;
+
+  /**
+   * The string name of the GraphQL operation.
+   */
   operationName?: string;
+
+  /**
+   * The type of the GraphQL operation, such as query or mutation.
+   */
   operationType?: OperationTypeNode;
+
+  /**
+   * Context provided to the link chain. Context is not sent to the server and
+   * is used to communicate additional metadata from a request to individual
+   * links in the link chain.
+   */
   context?: DefaultContext;
+
+  /**
+   * A map of extensions that will be sent with the GraphQL request to the
+   * server.
+   */
   extensions?: Record<string, any>;
 }
 
+/**
+ * The currently executed operation object provided to a `RequestHandler` for
+ * each link in the link chain.
+ */
 export interface Operation {
   /**
    * A `DocumentNode` that describes the operation taking place.
@@ -46,13 +80,13 @@ export interface Operation {
   variables: Record<string, any>;
 
   /**
-   * The string name of the query. If the query is anonymous, `operationName`
-   * will be `undefined`.
+   * The string name of the GraphQL operation. If it is anonymous,
+   * `operationName` will be `undefined`.
    */
   operationName: string;
 
   /**
-   * The type of the operation, such as query or mutation.
+   * The type of the GraphQL operation, such as query or mutation.
    */
   operationType: OperationTypeNode | undefined;
 
@@ -88,9 +122,16 @@ export interface Operation {
 }
 
 export interface ExecuteContext {
+  /**
+   * The Apollo Client instance that executed the GraphQL request.
+   */
   client: ApolloClient;
 }
 
+/**
+ * The `context` object that can be read and modified by links using the
+ * `operation.getContext()` and `operation.setContext()` methods.
+ */
 export interface OperationContext extends DefaultContext {}
 
 export type FetchResult<
@@ -110,6 +151,7 @@ export interface AdditionalFetchResultTypes<
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 
+/** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
 export type RequestHandler = (
   operation: Operation,
   forward: NextLink

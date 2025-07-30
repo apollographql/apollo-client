@@ -187,6 +187,8 @@ items:
         children:
           - label: Overview
             href: ./api/link/introduction
+          - label: ApolloLink
+            href: ./api/link/apollo-link
           - label: HttpLink
             href: ./api/link/apollo-link-http
           - label: BatchHttpLink

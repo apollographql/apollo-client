@@ -232,6 +232,19 @@ export class ApolloLink {
    * @param links - An array of `ApolloLink` instances or request handlers that
    * are executed in serial order.
    */
+  public static from(links: Array<ApolloLink>): ApolloLink;
+
+  /**
+   * {@inheritDoc @apollo/client/link!ApolloLink.from:member(1)}
+   *
+   * @deprecated
+   * `from` no longer supports plain request handler functions in the list of
+   * links. Please wrap the request handler in an `ApolloLink` instance.
+   */
+  public static from(
+    links: Array<ApolloLink | ApolloLink.RequestHandler>
+  ): ApolloLink;
+
   public static from(
     links: Array<ApolloLink | ApolloLink.RequestHandler>
   ): ApolloLink {

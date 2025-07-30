@@ -26,8 +26,6 @@ interface MockedResponse {
   maxUsageCount?: number;
 }
 
-const delay = (time: number) => new Promise((r) => setTimeout(r, time));
-
 function createOperation(starting: any, operation: GraphQLRequest): Operation {
   let context = { ...starting };
   const setContext = (next: any) => {
@@ -831,7 +829,7 @@ describe("BatchLink", () => {
       });
 
       const delayedBatchInterval = async () => {
-        await delay(batchInterval);
+        await wait(batchInterval);
 
         const checkCalls = mock.mock.calls.slice(0, -1);
         expect(checkCalls.length).toBe(2);

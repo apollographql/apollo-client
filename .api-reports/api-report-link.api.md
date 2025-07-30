@@ -14,34 +14,65 @@ import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
 
 // @public (undocumented)
-export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
+export interface AdditionalApolloLinkResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
 }
 
 // @public (undocumented)
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<FetchResult> | null;
+        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<ApolloLink.Result> | null;
     }
+    // (undocumented)
+    export interface ExecuteContext {
+        client: ApolloClient;
+    }
+    // (undocumented)
+    export type ForwardFunction = (operation: ApolloLink.Operation) => Observable<ApolloLink.Result>;
+    export interface Operation {
+        readonly client: ApolloClient;
+        extensions: Record<string, any>;
+        getContext: () => Readonly<ApolloLink.OperationContext>;
+        operationName: string | undefined;
+        operationType: OperationTypeNode;
+        query: DocumentNode;
+        setContext: {
+            (context: Partial<ApolloLink.OperationContext>): void;
+            (updateContext: (previousContext: ApolloLink.OperationContext) => Partial<ApolloLink.OperationContext>): void;
+        };
+        variables: OperationVariables;
+    }
+    export interface OperationContext extends DefaultContext {
+    }
+    export interface Request {
+        context?: DefaultContext;
+        extensions?: Record<string, any>;
+        query: DocumentNode;
+        variables?: OperationVariables;
+    }
+    export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result> | null;
+    // (undocumented)
+    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalApolloLinkResultTypes<TData, TExtensions>[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
 }
 
 // @public
 export class ApolloLink {
-    constructor(request?: RequestHandler);
-    static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    concat(next: ApolloLink | RequestHandler): ApolloLink;
+    constructor(request?: ApolloLink.RequestHandler);
+    // @deprecated
+    static concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
+    concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
     static empty(): ApolloLink;
-    static execute(link: ApolloLink, request: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
-    static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    static execute(link: ApolloLink, request: ApolloLink.Request, context: ApolloLink.ExecuteContext): Observable<ApolloLink.Result>;
+    static from(links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
+    static split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
+    split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
 }
 
 // @public (undocumented)
@@ -52,67 +83,33 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     payload: FormattedExecutionResult<TData, TExtensions> | null;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const concat: typeof ApolloLink.concat;
 
 export { DocumentNode }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const empty: typeof ApolloLink.empty;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
-// @public (undocumented)
-export interface ExecuteContext {
-    client: ApolloClient;
-}
-
-// @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
-
-// @public (undocumented)
-export type ForwardFunction = (operation: Operation) => Observable<FetchResult>;
-
-// @public (undocumented)
-export const from: typeof ApolloLink.from;
-
-// @public
-export interface GraphQLRequest {
-    context?: DefaultContext;
-    extensions?: Record<string, any>;
-    operationName?: string;
-    operationType?: OperationTypeNode;
-    query: DocumentNode;
-    variables?: OperationVariables;
-}
+// @public @deprecated (undocumented)
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ApolloLink.Result<TData, TExtensions>;
 
 // @public @deprecated (undocumented)
-export type NextLink = ForwardFunction;
+export const from: typeof ApolloLink.from;
 
-// @public
-export interface Operation {
-    readonly client: ApolloClient;
-    extensions: Record<string, any>;
-    getContext: () => Readonly<OperationContext>;
-    operationName: string | undefined;
-    operationType: OperationTypeNode;
-    query: DocumentNode;
-    setContext: {
-        (context: Partial<OperationContext>): void;
-        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
-    };
-    variables: OperationVariables;
-}
+// @public @deprecated (undocumented)
+export type GraphQLRequest = ApolloLink.Request;
 
-// @public
-export interface OperationContext extends DefaultContext {
-}
+// @public @deprecated (undocumented)
+export type Operation = ApolloLink.Operation;
 
-// @public
-export type RequestHandler = (operation: Operation, forward: ForwardFunction) => Observable<FetchResult> | null;
+// @public @deprecated (undocumented)
+export type RequestHandler = ApolloLink.RequestHandler;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const split: typeof ApolloLink.split;
 
 // (No @packageDocumentation comment for this package)

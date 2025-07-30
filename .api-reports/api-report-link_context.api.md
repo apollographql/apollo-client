@@ -5,8 +5,6 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { Operation } from '@apollo/client/link';
-import type { OperationContext } from '@apollo/client/link';
 
 // @public @deprecated (undocumented)
 export function setContext(setter: SetContextLink.LegacyContextSetter): SetContextLink;
@@ -14,11 +12,11 @@ export function setContext(setter: SetContextLink.LegacyContextSetter): SetConte
 // @public (undocumented)
 export namespace SetContextLink {
     // (undocumented)
-    export type ContextSetter = (prevContext: OperationContext, operation: SetContextOperation) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    export type ContextSetter = (prevContext: ApolloLink.OperationContext, operation: SetContextOperation) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
     // (undocumented)
-    export type LegacyContextSetter = (operation: SetContextOperation, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    export type LegacyContextSetter = (operation: SetContextOperation, prevContext: ApolloLink.OperationContext) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
     // (undocumented)
-    export type SetContextOperation = Omit<Operation, "getContext" | "setContext">;
+    export type SetContextOperation = Omit<ApolloLink.Operation, "getContext" | "setContext">;
 }
 
 // @public (undocumented)

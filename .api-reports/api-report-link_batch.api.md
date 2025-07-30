@@ -5,21 +5,18 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
-import type { ForwardFunction } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export interface BatchableRequest {
     // (undocumented)
-    forward?: ForwardFunction;
+    forward: ApolloLink.ForwardFunction;
     // (undocumented)
-    operation: Operation;
+    operation: ApolloLink.Operation;
 }
 
 // @public (undocumented)
-export type BatchHandler = (operations: Operation[], forward?: (ForwardFunction | undefined)[]) => Observable<FetchResult[]> | null;
+export type BatchHandler = (operations: ApolloLink.Operation[], forward?: (ApolloLink.ForwardFunction | undefined)[]) => Observable<ApolloLink.Result[]> | null;
 
 // @public (undocumented)
 export namespace BatchLink {
@@ -28,7 +25,7 @@ export namespace BatchLink {
         batchDebounce?: boolean;
         batchHandler?: BatchHandler;
         batchInterval?: number;
-        batchKey?: (operation: Operation) => string;
+        batchKey?: (operation: ApolloLink.Operation) => string;
         batchMax?: number;
     }
 }
@@ -37,7 +34,7 @@ export namespace BatchLink {
 export class BatchLink extends ApolloLink {
     constructor(fetchParams?: BatchLink.Options);
     // (undocumented)
-    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
 }
 
 // @public (undocumented)
@@ -47,12 +44,12 @@ export class OperationBatcher {
         batchInterval?: number;
         batchMax?: number;
         batchHandler: BatchHandler;
-        batchKey?: (operation: Operation) => string;
+        batchKey?: (operation: ApolloLink.Operation) => string;
     });
     // (undocumented)
-    consumeQueue(key?: string): (Observable<FetchResult> | undefined)[] | undefined;
+    consumeQueue(key?: string): (Observable<ApolloLink.Result> | undefined)[] | undefined;
     // (undocumented)
-    enqueueRequest(request: BatchableRequest): Observable<FetchResult>;
+    enqueueRequest(request: BatchableRequest): Observable<ApolloLink.Result>;
 }
 
 // (No @packageDocumentation comment for this package)

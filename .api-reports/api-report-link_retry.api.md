@@ -5,15 +5,12 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
-import type { ForwardFunction } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
 // @public
 interface DelayFunction {
     // (undocumented)
-    (count: number, operation: Operation, error: any): number;
+    (count: number, operation: ApolloLink.Operation, error: any): number;
 }
 
 // @public (undocumented)
@@ -26,13 +23,13 @@ interface DelayFunctionOptions {
 // @public
 interface RetryFunction {
     // (undocumented)
-    (count: number, operation: Operation, error: any): boolean | Promise<boolean>;
+    (count: number, operation: ApolloLink.Operation, error: any): boolean | Promise<boolean>;
 }
 
 // @public (undocumented)
 interface RetryFunctionOptions {
     max?: number;
-    retryIf?: (error: any, operation: Operation) => boolean | Promise<boolean>;
+    retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
 }
 
 // @public (undocumented)
@@ -52,7 +49,7 @@ export namespace RetryLink {
 export class RetryLink extends ApolloLink {
     constructor(options?: RetryLink.Options);
     // (undocumented)
-    request(operation: Operation, forward: ForwardFunction): Observable<FetchResult>;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
 }
 
 // (No @packageDocumentation comment for this package)

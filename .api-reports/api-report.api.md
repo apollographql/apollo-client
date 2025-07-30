@@ -28,6 +28,10 @@ import type { Subscription } from 'rxjs';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
+// @public (undocumented)
+interface AdditionalApolloLinkResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
+}
+
 // Warning: (ae-forgotten-export) The symbol "Modifier" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
 //
@@ -326,7 +330,7 @@ export class ApolloClient {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<FetchResult<unknown>>;
+    __requestRaw(request: ApolloLink.Request): Observable<ApolloLink.Result<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -386,28 +390,60 @@ export type ApolloClientOptions = ApolloClient.Options;
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<FetchResult> | null;
+        export function RequestHandler(operation: Operation, forward: ForwardFunction): Observable<ApolloLink.Result> | null;
     }
+    // (undocumented)
+    export interface ExecuteContext {
+        client: ApolloClient;
+    }
+    // (undocumented)
+    export type ForwardFunction = (operation: ApolloLink.Operation) => Observable<ApolloLink.Result>;
+    export interface Operation {
+        readonly client: ApolloClient;
+        extensions: Record<string, any>;
+        getContext: () => Readonly<ApolloLink.OperationContext>;
+        operationName: string | undefined;
+        operationType: OperationTypeNode;
+        query: DocumentNode;
+        setContext: {
+            (context: Partial<ApolloLink.OperationContext>): void;
+            (updateContext: (previousContext: ApolloLink.OperationContext) => Partial<ApolloLink.OperationContext>): void;
+        };
+        variables: OperationVariables;
+    }
+    export interface OperationContext extends DefaultContext {
+    }
+    export interface Request {
+        context?: DefaultContext;
+        extensions?: Record<string, any>;
+        query: DocumentNode;
+        variables?: OperationVariables;
+    }
+    export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result> | null;
+    // Warning: (ae-forgotten-export) The symbol "AdditionalApolloLinkResultTypes" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalApolloLinkResultTypes<TData, TExtensions>[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
 }
 
 // @public
 export class ApolloLink {
-    constructor(request?: RequestHandler);
-    static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    concat(next: ApolloLink | RequestHandler): ApolloLink;
+    constructor(request?: ApolloLink.RequestHandler);
+    // @deprecated
+    static concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
+    concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
     static empty(): ApolloLink;
-    // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
-    static execute(link: ApolloLink, request: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
-    static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    static execute(link: ApolloLink, request: ApolloLink.Request, context: ApolloLink.ExecuteContext): Observable<ApolloLink.Result>;
+    static from(links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    request(operation: Operation, forward?: ForwardFunction): Observable<FetchResult> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
+    static split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
+    split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
 }
 
 // @public (undocumented)
@@ -679,14 +715,14 @@ export namespace CombinedGraphQLErrors {
     // (undocumented)
     export interface MessageFormatterOptions {
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
-        result: FetchResult<unknown>;
+        result: ApolloLink.Result<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FormattedExecutionResult<any>);
-    constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
+    constructor(result: ApolloLink.Result<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     readonly extensions: Record<string, unknown> | undefined;
@@ -728,7 +764,7 @@ type CombineIntersection<T> = Exclude<T, {
     __typename?: string;
 }>>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const concat: typeof ApolloLink.concat;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
@@ -893,7 +929,7 @@ interface DocumentTransformOptions {
     getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const empty: typeof ApolloLink.empty;
 
 export { enableExperimentalFragmentVariables }
@@ -997,11 +1033,6 @@ type Exact<in out T> = (x: T) => T;
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
-// @public (undocumented)
-interface ExecuteContext {
-    client: ApolloClient;
-}
-
 // @public
 type ExtractByMatchingTypeNames<Union extends {
     __typename?: string;
@@ -1024,8 +1055,8 @@ export const fallbackHttpConfig: {
 // @public
 export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
-// @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
+// @public @deprecated (undocumented)
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ApolloLink.Result<TData, TExtensions>;
 
 // @public (undocumented)
 export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> {
@@ -1096,9 +1127,6 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
-// @public (undocumented)
-export type ForwardFunction = (operation: Operation) => Observable<FetchResult>;
-
 // @internal @deprecated
 interface FragmentMap {
     // (undocumented)
@@ -1125,7 +1153,7 @@ interface FragmentRegistryAPI {
 // @public (undocumented)
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", DefaultImplementation, TData>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;
 
 // @internal @deprecated
@@ -1287,15 +1315,8 @@ namespace GraphQLCodegenDataMasking {
     type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
 }
 
-// @public
-export interface GraphQLRequest {
-    context?: DefaultContext;
-    extensions?: Record<string, any>;
-    operationName?: string;
-    operationType?: OperationTypeNode;
-    query: DocumentNode;
-    variables?: OperationVariables;
-}
+// @public @deprecated (undocumented)
+export type GraphQLRequest = ApolloLink.Request;
 
 // @beta
 interface HKT {
@@ -1366,7 +1387,7 @@ export namespace HttpLink {
     // (undocumented)
     export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
     // (undocumented)
-    export type UriFunction = (operation: Operation) => string;
+    export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
 // @public (undocumented)
@@ -1401,11 +1422,11 @@ namespace Incremental {
     // @internal @deprecated (undocumented)
     interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        extractErrors: (result: FetchResult<any>) => readonly GraphQLFormattedError[] | undefined | void;
+        extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
-        isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
+        isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
         // (undocumented)
-        prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+        prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
@@ -1931,9 +1952,6 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     reason: "after-fetch" | "variables-changed";
 }
 
-// @public @deprecated (undocumented)
-export type NextLink = ForwardFunction;
-
 // @public @deprecated
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
@@ -2114,24 +2132,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
-// @public
-export interface Operation {
-    readonly client: ApolloClient;
-    extensions: Record<string, any>;
-    getContext: () => Readonly<OperationContext>;
-    operationName: string | undefined;
-    operationType: OperationTypeNode;
-    query: DocumentNode;
-    setContext: {
-        (context: Partial<OperationContext>): void;
-        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
-    };
-    variables: OperationVariables;
-}
-
-// @public
-export interface OperationContext extends DefaultContext {
-}
+// @public @deprecated (undocumented)
+export type Operation = ApolloLink.Operation;
 
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
@@ -2184,7 +2186,7 @@ namespace OverridableTypes {
 }
 
 // @public (undocumented)
-export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
+export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
 class Policies {
@@ -2297,7 +2299,7 @@ class QueryManager {
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable<FetchResult<any>>;
+        observable?: Observable<ApolloLink.Result<any>>;
         restart?: () => void;
     }>;
     // (undocumented)
@@ -2489,8 +2491,8 @@ type RemoveIndexSignature<T> = {
 // @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
-// @public
-export type RequestHandler = (operation: Operation, forward: ForwardFunction) => Observable<FetchResult> | null;
+// @public @deprecated (undocumented)
+export type RequestHandler = ApolloLink.RequestHandler;
 
 export { resetCaches }
 
@@ -2530,19 +2532,19 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
+export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
     body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
     body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export const selectURI: (operation: Operation, fallbackURI?: string | ((operation: Operation) => string)) => any;
+export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
 
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;
@@ -2610,7 +2612,7 @@ export class ServerParseError extends Error {
 // @public (undocumented)
 export function setLogVerbosity(level: VerbosityLevel): VerbosityLevel;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const split: typeof ApolloLink.split;
 
 // @public (undocumented)
@@ -2839,8 +2841,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:163:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:159:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:147:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

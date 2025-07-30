@@ -27,9 +27,7 @@ export interface ApolloPayloadResult<
 /**
  * The input object used to `execute` a GraphQL request against the link chain.
  */
-export interface GraphQLRequest<
-  TVariables extends OperationVariables = Record<string, any>,
-> {
+export interface GraphQLRequest {
   /**
    * The parsed GraphQL document that will be sent with the GraphQL request to
    * the server.
@@ -39,7 +37,7 @@ export interface GraphQLRequest<
   /**
    * The variables provided for the query.
    */
-  variables?: TVariables;
+  variables?: OperationVariables;
 
   /**
    * The string name of the GraphQL operation.

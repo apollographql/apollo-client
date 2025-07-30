@@ -40,16 +40,6 @@ export interface GraphQLRequest {
   variables?: OperationVariables;
 
   /**
-   * The string name of the GraphQL operation.
-   */
-  operationName?: string;
-
-  /**
-   * The type of the GraphQL operation, such as query or mutation.
-   */
-  operationType?: OperationTypeNode;
-
-  /**
    * Context provided to the link chain. Context is not sent to the server and
    * is used to communicate additional metadata from a request to individual
    * links in the link chain.

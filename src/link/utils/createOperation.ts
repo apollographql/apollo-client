@@ -16,9 +16,8 @@ export function createOperation(
     query: request.query,
     variables: request.variables || {},
     extensions: request.extensions || {},
-    operationName: request.operationName || getOperationName(request.query),
-    operationType:
-      request.operationType || getOperationDefinition(request.query)!.operation,
+    operationName: getOperationName(request.query),
+    operationType: getOperationDefinition(request.query)!.operation,
   } satisfies Omit<
     Operation,
     "client" | "getContext" | "setContext"

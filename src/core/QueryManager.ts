@@ -889,8 +889,6 @@ export class QueryManager {
         const operation = this.incrementalHandler.prepareRequest({
           query: serverQuery,
           variables,
-          operationName,
-          operationType,
           context: {
             ...this.defaultContext,
             ...context,

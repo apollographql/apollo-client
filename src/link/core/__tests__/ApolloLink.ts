@@ -431,7 +431,6 @@ describe("ApolloClient", () => {
     const uniqueOperation: GraphQLRequest = {
       query: sampleQuery,
       context: { name: "uniqueName" },
-      operationName: "SampleQuery",
       extensions: {},
     };
 

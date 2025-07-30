@@ -1,10 +1,7 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
-import type { Observable } from "rxjs";
 
 import type { ApolloClient } from "@apollo/client";
-
-import type { ApolloLink } from "./ApolloLink.js";
 
 export type { DocumentNode };
 
@@ -39,9 +36,3 @@ export interface AdditionalFetchResultTypes<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
 > {}
-
-/** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
-export type RequestHandler = (
-  operation: ApolloLink.Operation,
-  forward: ApolloLink.ForwardFunction
-) => Observable<FetchResult> | null;

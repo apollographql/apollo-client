@@ -11,7 +11,10 @@ export type {
   DocumentNode,
   ExecuteContext,
   FetchResult,
-  RequestHandler,
 } from "./core/types.js";
 
-export type { GraphQLRequest, Operation } from "./core/deprecated.js";
+export type {
+  GraphQLRequest,
+  Operation,
+  RequestHandler,
+} from "./core/deprecated.js";

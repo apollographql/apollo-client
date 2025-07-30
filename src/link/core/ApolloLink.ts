@@ -13,7 +13,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { ExecuteContext, FetchResult, RequestHandler } from "./types.js";
+import type { ExecuteContext, FetchResult } from "./types.js";
 
 function passthrough(
   op: ApolloLink.Operation,
@@ -22,7 +22,7 @@ function passthrough(
   return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
 }
 
-function toLink(handler: RequestHandler | ApolloLink) {
+function toLink(handler: ApolloLink.RequestHandler | ApolloLink) {
   return typeof handler === "function" ? new ApolloLink(handler) : handler;
 }
 
@@ -62,6 +62,12 @@ export declare namespace ApolloLink {
      */
     extensions?: Record<string, any>;
   }
+
+  /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
+  export type RequestHandler = (
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ) => Observable<FetchResult> | null;
 
   /**
    * The currently executed operation object provided to a `RequestHandler` for
@@ -208,7 +214,9 @@ export class ApolloLink {
    * @param links - An array of `ApolloLink` instances or request handlers that
    * are executed in serial order.
    */
-  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
+  public static from(
+    links: (ApolloLink | ApolloLink.RequestHandler)[]
+  ): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
     return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
   }
@@ -241,8 +249,8 @@ export class ApolloLink {
    */
   public static split(
     test: (op: ApolloLink.Operation) => boolean,
-    left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler
+    left: ApolloLink | ApolloLink.RequestHandler,
+    right?: ApolloLink | ApolloLink.RequestHandler
   ): ApolloLink {
     const leftLink = toLink(left);
     const rightLink = toLink(right || new ApolloLink(passthrough));
@@ -318,8 +326,8 @@ export class ApolloLink {
    * link chain.
    */
   public static concat(
-    first: ApolloLink | RequestHandler,
-    second: ApolloLink | RequestHandler
+    first: ApolloLink | ApolloLink.RequestHandler,
+    second: ApolloLink | ApolloLink.RequestHandler
   ) {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
@@ -350,7 +358,7 @@ export class ApolloLink {
     return Object.assign(ret, { left: firstLink, right: nextLink });
   }
 
-  constructor(request?: RequestHandler) {
+  constructor(request?: ApolloLink.RequestHandler) {
     if (request) this.request = request;
   }
 
@@ -388,8 +396,8 @@ export class ApolloLink {
    */
   public split(
     test: (op: ApolloLink.Operation) => boolean,
-    left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler
+    left: ApolloLink | ApolloLink.RequestHandler,
+    right?: ApolloLink | ApolloLink.RequestHandler
   ): ApolloLink {
     return this.concat(
       ApolloLink.split(test, left, right || new ApolloLink(passthrough))
@@ -415,7 +423,7 @@ export class ApolloLink {
    * );
    * ```
    */
-  public concat(next: ApolloLink | RequestHandler): ApolloLink {
+  public concat(next: ApolloLink | ApolloLink.RequestHandler): ApolloLink {
     return ApolloLink.concat(this, next);
   }
 

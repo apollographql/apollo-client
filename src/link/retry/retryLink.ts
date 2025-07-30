@@ -6,11 +6,7 @@ import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
-import type {
-  FetchResult,
-  ForwardFunction,
-  Operation,
-} from "@apollo/client/link";
+import type { FetchResult, ForwardFunction } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
@@ -42,7 +38,7 @@ class RetryableOperation {
 
   constructor(
     private observer: Observer<FetchResult>,
-    private operation: Operation,
+    private operation: ApolloLink.Operation,
     private forward: ForwardFunction,
     private delayFor: DelayFunction,
     private retryIf: RetryFunction
@@ -123,7 +119,7 @@ export class RetryLink extends ApolloLink {
   }
 
   public request(
-    operation: Operation,
+    operation: ApolloLink.Operation,
     forward: ForwardFunction
   ): Observable<FetchResult> {
     return new Observable((observer) => {

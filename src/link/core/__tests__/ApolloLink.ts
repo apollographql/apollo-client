@@ -8,7 +8,7 @@ import type { ForwardFunction } from "@apollo/client/link";
 import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { FetchResult, Operation } from "../types.js";
+import type { FetchResult } from "../types.js";
 
 class SetContextLink extends ApolloLink {
   constructor(
@@ -20,7 +20,7 @@ class SetContextLink extends ApolloLink {
   }
 
   public request(
-    operation: Operation,
+    operation: ApolloLink.Operation,
     forward: ForwardFunction
   ): Observable<FetchResult> {
     operation.setContext(this.setContext(operation.getContext()));
@@ -407,7 +407,7 @@ describe("ApolloClient", () => {
             }
           `,
         };
-        const link = new ApolloLink((op: Operation) => {
+        const link = new ApolloLink((op: ApolloLink.Operation) => {
           expect((operation as any)["operationName"]).toBeUndefined();
           expect((operation as any)["variables"]).toBeUndefined();
           expect((operation as any)["context"]).toBeUndefined();
@@ -603,7 +603,7 @@ describe("ApolloClient", () => {
 
     it("should chain together a function with links", async () => {
       const add1 = new ApolloLink(
-        (operation: Operation, forward: ForwardFunction) => {
+        (operation: ApolloLink.Operation, forward: ForwardFunction) => {
           operation.setContext((context: { num: number }) => ({
             num: context.num + 1,
           }));

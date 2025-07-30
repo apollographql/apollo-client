@@ -1,8 +1,12 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
-import type { DefaultContext, OperationVariables } from "@apollo/client";
+import type {
+  ApolloClient,
+  DefaultContext,
+  OperationVariables,
+} from "@apollo/client";
 import { createOperation } from "@apollo/client/link/utils";
 import {
   invariant,
@@ -13,11 +17,11 @@ import type {
   ExecuteContext,
   FetchResult,
   ForwardFunction,
-  Operation,
+  OperationContext,
   RequestHandler,
 } from "./types.js";
 
-function passthrough(op: Operation, forward: ForwardFunction) {
+function passthrough(op: ApolloLink.Operation, forward: ForwardFunction) {
   return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
 }
 
@@ -57,6 +61,63 @@ export declare namespace ApolloLink {
      * server.
      */
     extensions?: Record<string, any>;
+  }
+
+  /**
+   * The currently executed operation object provided to a `RequestHandler` for
+   * each link in the link chain.
+   */
+  export interface Operation {
+    /**
+     * A `DocumentNode` that describes the operation taking place.
+     */
+    query: DocumentNode;
+
+    /**
+     * A map of GraphQL variables being sent with the operation.
+     */
+    variables: OperationVariables;
+
+    /**
+     * The string name of the GraphQL operation. If it is anonymous,
+     * `operationName` will be `undefined`.
+     */
+    operationName: string | undefined;
+
+    /**
+     * The type of the GraphQL operation, such as query or mutation.
+     */
+    operationType: OperationTypeNode;
+
+    /**
+     * A map that stores extensions data to be sent to the server.
+     */
+    extensions: Record<string, any>;
+
+    /**
+     * A function that takes either a new context object, or a function which
+     * takes in the previous context and returns a new one. See [managing
+     * context](https://apollographql.com/docs/react/api/link/introduction#managing-context).
+     */
+    setContext: {
+      (context: Partial<OperationContext>): void;
+      (
+        updateContext: (
+          previousContext: OperationContext
+        ) => Partial<OperationContext>
+      ): void;
+    };
+
+    /**
+     * A function that gets the current context of the request. This can be used
+     * by links to determine which actions to perform. See [managing context](https://apollographql.com/docs/react/api/link/introduction#managing-context)
+     */
+    getContext: () => Readonly<OperationContext>;
+
+    /**
+     * The Apollo Client instance executing the request.
+     */
+    readonly client: ApolloClient;
   }
 
   export namespace DocumentationTypes {
@@ -173,7 +234,7 @@ export class ApolloLink {
    * the next link in the chain.
    */
   public static split(
-    test: (op: Operation) => boolean,
+    test: (op: ApolloLink.Operation) => boolean,
     left: ApolloLink | RequestHandler,
     right?: ApolloLink | RequestHandler
   ): ApolloLink {
@@ -320,7 +381,7 @@ export class ApolloLink {
    * the next link in the chain.
    */
   public split(
-    test: (op: Operation) => boolean,
+    test: (op: ApolloLink.Operation) => boolean,
     left: ApolloLink | RequestHandler,
     right?: ApolloLink | RequestHandler
   ): ApolloLink {
@@ -360,7 +421,7 @@ export class ApolloLink {
    * > directly. Prefer using `ApolloLink.execute` to make the request instead.
    */
   public request(
-    operation: Operation,
+    operation: ApolloLink.Operation,
     forward?: ForwardFunction
   ): Observable<FetchResult> | null {
     throw newInvariantError("request is not implemented");

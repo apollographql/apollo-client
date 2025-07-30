@@ -1,4 +1,4 @@
-import type { Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 
 import type { HttpLink } from "./HttpLink.js";
@@ -47,7 +47,7 @@ export const fallbackHttpConfig = {
 export const defaultPrinter: HttpLink.Printer = (ast, printer) => printer(ast);
 
 export function selectHttpOptionsAndBody(
-  operation: Operation,
+  operation: ApolloLink.Operation,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
 ) {
@@ -60,7 +60,7 @@ export function selectHttpOptionsAndBody(
 }
 
 export function selectHttpOptionsAndBodyInternal(
-  operation: Operation,
+  operation: ApolloLink.Operation,
   printer: HttpLink.Printer,
   ...configs: HttpConfig[]
 ) {

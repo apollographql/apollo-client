@@ -1,8 +1,4 @@
-import type {
-  ApolloLink,
-  ExecuteContext,
-  Operation,
-} from "@apollo/client/link";
+import type { ApolloLink, ExecuteContext } from "@apollo/client/link";
 import {
   getOperationDefinition,
   getOperationName,
@@ -11,7 +7,7 @@ import {
 export function createOperation(
   request: ApolloLink.Request,
   { client }: ExecuteContext
-): Operation {
+): ApolloLink.Operation {
   const operation = {
     query: request.query,
     variables: request.variables || {},
@@ -19,20 +15,20 @@ export function createOperation(
     operationName: getOperationName(request.query),
     operationType: getOperationDefinition(request.query)!.operation,
   } satisfies Omit<
-    Operation,
+    ApolloLink.Operation,
     "client" | "getContext" | "setContext"
-  > as Operation;
+  > as ApolloLink.Operation;
 
   let context = { ...request.context };
 
-  const setContext: Operation["setContext"] = (next) => {
+  const setContext: ApolloLink.Operation["setContext"] = (next) => {
     if (typeof next === "function") {
       context = { ...context, ...next({ ...context }) };
     } else {
       context = { ...context, ...next };
     }
   };
-  const getContext: Operation["getContext"] = () => ({ ...context });
+  const getContext: ApolloLink.Operation["getContext"] = () => ({ ...context });
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,

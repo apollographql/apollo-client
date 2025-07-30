@@ -12,7 +12,7 @@ import {
   ServerError,
   toErrorLike,
 } from "@apollo/client/errors";
-import type { FetchResult, Operation } from "@apollo/client/link";
+import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 import {
@@ -50,7 +50,7 @@ interface BaseOptions {
 export declare namespace PersistedQueryLink {
   interface CallbackOptions {
     error: ErrorLike;
-    operation: Operation;
+    operation: ApolloLink.Operation;
     meta: ErrorMeta;
     result?: FormattedExecutionResult;
   }
@@ -105,7 +105,7 @@ const defaultOptions: Required<BaseOptions> = {
   useGETForHashedQueries: false,
 };
 
-function operationDefinesMutation(operation: Operation) {
+function operationDefinesMutation(operation: ApolloLink.Operation) {
   return operation.query.definitions.some(
     (d) => d.kind === "OperationDefinition" && d.operation === "mutation"
   );

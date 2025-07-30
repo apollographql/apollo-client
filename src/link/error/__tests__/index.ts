@@ -9,7 +9,7 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import type { FetchResult, Operation } from "@apollo/client/link";
+import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 import {
@@ -563,7 +563,8 @@ describe("error handling", () => {
       }),
     });
 
-    const operation = callback.mock.calls[0][0].operation as Operation;
+    const operation = callback.mock.calls[0][0]
+      .operation as ApolloLink.Operation;
     expect(operation.getContext().bar).toBe(true);
   });
 });

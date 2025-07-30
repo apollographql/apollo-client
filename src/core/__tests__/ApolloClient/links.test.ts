@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
 
-import type { Operation, Reference } from "@apollo/client";
+import type { Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { ForwardFunction } from "@apollo/client/link";
@@ -32,7 +32,10 @@ describe("Link interactions", () => {
       },
     };
 
-    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
+    const evictionLink = (
+      operation: ApolloLink.Operation,
+      forward: ForwardFunction
+    ) => {
       const { client } = operation;
       expect(client).toBeDefined();
       return (forward(operation) as Observable<FormattedExecutionResult>).pipe(
@@ -231,7 +234,10 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
+    const evictionLink = (
+      operation: ApolloLink.Operation,
+      forward: ForwardFunction
+    ) => {
       const { client } = operation;
       expect(client).toBeDefined();
       done();
@@ -260,7 +266,10 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: ForwardFunction) => {
+    const evictionLink = (
+      operation: ApolloLink.Operation,
+      forward: ForwardFunction
+    ) => {
       const { planet } = operation.getContext();
       expect(planet).toBe("Tatooine");
       done();
@@ -349,7 +358,7 @@ describe("Link interactions", () => {
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
-    const result: { current: Operation | undefined } = {
+    const result: { current: ApolloLink.Operation | undefined } = {
       current: undefined,
     };
 
@@ -398,7 +407,7 @@ describe("Link interactions", () => {
   });
 
   it("passes all expected properties into links", async () => {
-    let operation!: Operation;
+    let operation!: ApolloLink.Operation;
     const link = new ApolloLink((op) => {
       operation = op;
       return of({ data: { hello: "world" } });

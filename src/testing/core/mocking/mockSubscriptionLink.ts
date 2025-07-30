@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-import type { FetchResult, Operation } from "@apollo/client/link";
+import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace MockSubscriptionLink {
@@ -14,7 +14,7 @@ export declare namespace MockSubscriptionLink {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
-  public operation?: Operation;
+  public operation?: ApolloLink.Operation;
 
   private observers: any[] = [];
 
@@ -22,7 +22,7 @@ export class MockSubscriptionLink extends ApolloLink {
     super();
   }
 
-  public request(operation: Operation) {
+  public request(operation: ApolloLink.Operation) {
     this.operation = operation;
     return new Observable<FetchResult>((observer) => {
       this.setups.forEach((x) => x());

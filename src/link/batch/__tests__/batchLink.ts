@@ -11,7 +11,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-import type { FetchResult, Operation } from "../../core/types.js";
+import type { FetchResult } from "../../core/types.js";
 import type { BatchableRequest, BatchHandler } from "../batchLink.js";
 
 interface MockedResponse {
@@ -25,7 +25,7 @@ interface MockedResponse {
 function createOperation(
   starting: any,
   operation: ApolloLink.Request
-): Operation {
+): ApolloLink.Operation {
   let context = { ...starting };
   const setContext = (next: any) => {
     if (typeof next === "function") {
@@ -46,7 +46,7 @@ function createOperation(
     value: getContext,
   });
 
-  return operation as Operation;
+  return operation as ApolloLink.Operation;
 }
 
 function requestToKey(request: ApolloLink.Request): string {
@@ -62,7 +62,9 @@ function requestToKey(request: ApolloLink.Request): string {
 function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
   const mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
-  const mockBatchHandler: BatchHandler = (operations: Operation[]) => {
+  const mockBatchHandler: BatchHandler = (
+    operations: ApolloLink.Operation[]
+  ) => {
     return new Observable((observer) => {
       const results = operations.map((operation) => {
         const key = requestToKey(operation);
@@ -194,7 +196,7 @@ describe("OperationBatcher", () => {
       result: { data },
       maxUsageCount: Number.POSITIVE_INFINITY,
     });
-    const operation: Operation = createOperation(
+    const operation = createOperation(
       {},
       {
         query,
@@ -220,7 +222,7 @@ describe("OperationBatcher", () => {
     });
 
     it("should be able to consume from a queue containing multiple queries", async () => {
-      const request2: Operation = createOperation(
+      const request2 = createOperation(
         {},
         {
           query,
@@ -263,7 +265,7 @@ describe("OperationBatcher", () => {
       // NOTE: this test was added to ensure that queries don't "hang" when consumed by BatchLink.
       // "Hanging" in this case results in this test never resolving.  So
       // if this test times out it's probably a real issue and not a flake
-      const request2: Operation = createOperation(
+      const request2 = createOperation(
         {},
         {
           query,
@@ -380,7 +382,7 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
 
     batcher.enqueueRequest({ operation }).subscribe({});
     expect(batcher["batchesByKey"].get("")!.size).toBe(1);
@@ -449,7 +451,7 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
 
     const observable = batcher.enqueueRequest({ operation });
 
@@ -539,9 +541,9 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
-    const operation2: Operation = createOperation({}, { query });
-    const operation3: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
+    const operation2 = createOperation({}, { query });
+    const operation3 = createOperation({}, { query });
 
     batcher.enqueueRequest({ operation }).subscribe({});
     batcher.enqueueRequest({ operation: operation2 }).subscribe({});
@@ -585,9 +587,9 @@ describe("OperationBatcher", () => {
       }
     `;
 
-    const operation: Operation = createOperation({}, { query });
-    const operation2: Operation = createOperation({}, { query });
-    const operation3: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
+    const operation2 = createOperation({}, { query });
+    const operation3 = createOperation({}, { query });
 
     const sub1 = batcher.enqueueRequest({ operation }).subscribe(() => {
       throw new Error("next should never be called");
@@ -631,7 +633,7 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
     const error = new Error("Network error");
     const BH = createMockBatchHandler({
       request: { query },

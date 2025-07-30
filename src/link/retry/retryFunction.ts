@@ -1,11 +1,15 @@
-import type { Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 
 /**
  * Advanced mode: a function that determines both whether a particular
  * response should be retried.
  */
 export interface RetryFunction {
-  (count: number, operation: Operation, error: any): boolean | Promise<boolean>;
+  (
+    count: number,
+    operation: ApolloLink.Operation,
+    error: any
+  ): boolean | Promise<boolean>;
 }
 
 export interface RetryFunctionOptions {
@@ -27,7 +31,10 @@ export interface RetryFunctionOptions {
    *
    * By default, all errors are retried.
    */
-  retryIf?: (error: any, operation: Operation) => boolean | Promise<boolean>;
+  retryIf?: (
+    error: any,
+    operation: ApolloLink.Operation
+  ) => boolean | Promise<boolean>;
 }
 
 export function buildRetryFunction(

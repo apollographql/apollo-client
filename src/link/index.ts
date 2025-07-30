@@ -12,9 +12,8 @@ export type {
   ExecuteContext,
   FetchResult,
   ForwardFunction,
-  Operation,
   OperationContext,
   RequestHandler,
 } from "./core/types.js";
 
-export type { GraphQLRequest } from "./core/deprecated.js";
+export type { GraphQLRequest, Operation } from "./core/deprecated.js";

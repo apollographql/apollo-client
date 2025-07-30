@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-import type { Operation, OperationContext } from "@apollo/client/link";
+import type { OperationContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace SetContextLink {
@@ -15,7 +15,7 @@ export declare namespace SetContextLink {
   ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
 
   export type SetContextOperation = Omit<
-    Operation,
+    ApolloLink.Operation,
     "getContext" | "setContext"
   >;
 }

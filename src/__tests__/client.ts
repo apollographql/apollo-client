@@ -13,7 +13,6 @@ import { Observable, of } from "rxjs";
 import type {
   FetchPolicy,
   ObservableQuery,
-  Operation,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
@@ -1039,7 +1038,7 @@ describe("client", () => {
   it("removes @client fields from the query before it reaches the link", async () => {
     // Silence warning for unconfigured local resolvers
     using _ = spyOnConsole("warn");
-    const result: { current: Operation | undefined } = {
+    const result: { current: ApolloLink.Operation | undefined } = {
       current: undefined,
     };
 
@@ -4561,7 +4560,7 @@ describe("custom document transforms", () => {
       }
     `;
 
-    const requests: Operation[] = [];
+    const requests: ApolloLink.Operation[] = [];
 
     const documentTransform = new DocumentTransform((document) => {
       return removeDirectivesFromDocument([{ name: "custom" }], document)!;
@@ -6335,7 +6334,7 @@ describe("custom document transforms", () => {
       }
     `;
 
-    const requests: Operation[] = [];
+    const requests: ApolloLink.Operation[] = [];
 
     const documentTransform = new DocumentTransform((document) => {
       return removeDirectivesFromDocument([{ name: "custom" }], document)!;
@@ -6420,7 +6419,7 @@ describe("custom document transforms", () => {
       }
     `;
 
-    const requests: Operation[] = [];
+    const requests: ApolloLink.Operation[] = [];
 
     const documentTransform = new DocumentTransform((document) => {
       return removeDirectivesFromDocument([{ name: "custom" }], document)!;
@@ -6512,7 +6511,7 @@ describe("custom document transforms", () => {
       }
     `;
 
-    const requests: Operation[] = [];
+    const requests: ApolloLink.Operation[] = [];
 
     const documentTransform = new DocumentTransform((document) => {
       return removeDirectivesFromDocument([{ name: "custom" }], document)!;
@@ -6586,7 +6585,7 @@ describe("custom document transforms", () => {
       }
     `;
 
-    const requests: Operation[] = [];
+    const requests: ApolloLink.Operation[] = [];
 
     const documentTransform = new DocumentTransform((document) => {
       return removeDirectivesFromDocument([{ name: "custom" }], document)!;

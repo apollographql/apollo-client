@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 import type { Subscriber } from "rxjs";
 
-import type { FetchResult, Operation, TypedDocumentNode } from "@apollo/client";
+import type { FetchResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -674,7 +674,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    let lastOperation!: Operation;
+    let lastOperation!: ApolloLink.Operation;
     const observers = new Set<Subscriber<FetchResult>>();
     const link = new ApolloLink((operation) => {
       return new Observable((observer) => {

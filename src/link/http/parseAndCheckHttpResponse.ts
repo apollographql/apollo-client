@@ -4,7 +4,7 @@ import {
   ServerError,
   ServerParseError,
 } from "@apollo/client/errors";
-import type { ApolloPayloadResult, Operation } from "@apollo/client/link";
+import type { ApolloLink, ApolloPayloadResult } from "@apollo/client/link";
 import { isNonNullObject } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -167,7 +167,9 @@ function parseResponse(response: Response, bodyText: string) {
   return parseJsonEncoding(response, bodyText);
 }
 
-export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
+export function parseAndCheckHttpResponse(
+  operations: ApolloLink.Operation | ApolloLink.Operation[]
+) {
   return (response: Response) =>
     response.text().then((bodyText) => {
       const result = parseResponse(response, bodyText);

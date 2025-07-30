@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
-import type { FetchResult, Operation } from "@apollo/client/link";
+import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
@@ -41,7 +41,7 @@ type UnmatchedVariables = Array<
 >;
 
 export declare namespace MockLink {
-  export type DelayFunction = (operation: Operation) => number;
+  export type DelayFunction = (operation: ApolloLink.Operation) => number;
   export type Delay = number | DelayFunction;
   export interface DefaultOptions {
     delay?: MockLink.Delay;
@@ -89,7 +89,7 @@ export function realisticDelay({
 }
 
 export class MockLink extends ApolloLink {
-  public operation!: Operation;
+  public operation!: ApolloLink.Operation;
   public showWarnings: boolean = true;
 
   private defaultDelay: MockLink.Delay;
@@ -126,7 +126,9 @@ export class MockLink extends ApolloLink {
     this.getMockedResponses(normalized.request).push(normalized);
   }
 
-  public request(operation: Operation): Observable<FetchResult> | null {
+  public request(
+    operation: ApolloLink.Operation
+  ): Observable<FetchResult> | null {
     this.operation = operation;
     const unmatchedVars: UnmatchedVariables = [];
     const mocks = this.getMockedResponses(operation);
@@ -260,7 +262,7 @@ export class MockLink extends ApolloLink {
 }
 
 function getErrorMessage(
-  operation: Operation,
+  operation: ApolloLink.Operation,
   unmatchedVars: UnmatchedVariables
 ) {
   return `No more mocked responses for the query:
@@ -332,7 +334,7 @@ export function stringifyMockedResponse(
 }
 
 export interface MockApolloLink extends ApolloLink {
-  operation?: Operation;
+  operation?: ApolloLink.Operation;
 }
 
 // This is similiar to the stringifyForDisplay utility we ship, but includes

@@ -352,10 +352,6 @@ export class ApolloLink {
   ) {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
-      invariant.warn(
-        `You are calling concat on a terminating link, which will have no effect %o`,
-        firstLink
-      );
       return firstLink;
     }
     const nextLink = toLink(second);

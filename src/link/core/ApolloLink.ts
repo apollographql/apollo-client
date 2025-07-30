@@ -165,7 +165,7 @@ export declare namespace ApolloLink {
      */
     export function RequestHandler(
       operation: Operation,
-      forward: ForwardFunction
+      forward: ApolloLink.ForwardFunction
     ): Observable<ApolloLink.Result> | null;
   }
 }

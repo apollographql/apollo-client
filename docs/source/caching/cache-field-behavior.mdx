@@ -570,22 +570,44 @@ const cache = new InMemoryCache({
 });
 ```
 
-### Disabling `merge` functions
+### Using `merge: false` to disable `merge`-related warnings
 
-In some cases, you might want to completely disable merge functions for certain fields. To do so, pass `merge: false` like so:
+You might encounter console warnings like "Cache data may be lost when...", even when the default behavior (incoming data replacing existing data) is desirable. In this case, you can disable the warning by passing `merge: false` to a field's `FieldPolicy` like so:
 
-```ts {13}
+```ts {6}
 const cache = new InMemoryCache({
   typePolicies: {
-    Book: {
+    Author: {
       fields: {
-        // No longer necessary!
-        // author: {
-        //   merge: true,
-        // },
-      },
-    },
+        books: {
+          merge: false,
+        }
+      }
+    }
+  },
+});
+```
 
+In some cases, you might want the same behavior for all occurrences of a particular type. To do so, pass `merge: false` to the type policy for that type like so:
+
+```ts {19}
+const cache = new InMemoryCache({
+  typePolicies: {
+    // No longer necessary!
+    // Article: {
+    //   fields: {
+    //     author: {
+    //       merge: false,
+    //     },
+    //   },
+    // },
+    // Book: {
+    //   fields: {
+    //     author: {
+    //       merge: false,
+    //     },
+    //   },
+    // },
     Author: {
       merge: false,
     },

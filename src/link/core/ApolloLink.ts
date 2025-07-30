@@ -232,7 +232,9 @@ export class ApolloLink {
     links: (ApolloLink | ApolloLink.RequestHandler)[]
   ): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
-    return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
+
+    const [first, ...rest] = links;
+    return toLink(first).concat(...rest);
   }
 
   /**

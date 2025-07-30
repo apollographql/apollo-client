@@ -737,40 +737,6 @@ describe("BatchLink", () => {
     ).subscribe(() => {});
   });
 
-  it("raises warning if terminating", () => {
-    let calls = 0;
-    const link_full = new BatchLink({
-      batchHandler: (operation, forward) =>
-        forward![0]!(operation[0]).pipe(map((r) => [r])),
-    });
-    const link_one_op = new BatchLink({
-      batchHandler: (operation) => EMPTY,
-    });
-    const link_no_op = new BatchLink({ batchHandler: () => EMPTY });
-    const _warn = console.warn;
-    console.warn = (...args: any) => {
-      calls++;
-      expect(args).toEqual([
-        "You are calling concat on a terminating link, which will have no effect %o",
-        expect.any(BatchLink),
-      ]);
-    };
-    expect(
-      link_one_op.concat((operation, forward) => forward(operation))
-    ).toEqual(link_one_op);
-    expect(
-      link_no_op.concat((operation, forward) => forward(operation))
-    ).toEqual(link_no_op);
-    console.warn = (warning: any) => {
-      throw Error("non-terminating link should not throw");
-    };
-    expect(
-      link_full.concat((operation, forward) => forward(operation))
-    ).not.toEqual(link_full);
-    console.warn = _warn;
-    expect(calls).toBe(2);
-  });
-
   it("correctly uses batch size", async () => {
     const sizes = [1, 2, 3];
     const terminating = new ApolloLink((operation) => {

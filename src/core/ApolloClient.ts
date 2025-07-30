@@ -1237,9 +1237,9 @@ export class ApolloClient {
   }
 
   public __requestRaw(
-    payload: GraphQLRequest
+    request: GraphQLRequest
   ): Observable<FetchResult<unknown>> {
-    return execute(this.link, payload, { client: this });
+    return execute(this.link, request, { client: this });
   }
 
   /**

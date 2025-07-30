@@ -2,7 +2,7 @@ import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { ApolloClient, DefaultContext } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
 
 import type { ApolloLink } from "./ApolloLink.js";
 
@@ -24,12 +24,6 @@ export interface ExecuteContext {
    */
   client: ApolloClient;
 }
-
-/**
- * The `context` object that can be read and modified by links using the
- * `operation.getContext()` and `operation.setContext()` methods.
- */
-export interface OperationContext extends DefaultContext {}
 
 export type FetchResult<
   TData = Record<string, any>,

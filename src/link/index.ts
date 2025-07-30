@@ -12,7 +12,6 @@ export type {
   ExecuteContext,
   FetchResult,
   ForwardFunction,
-  OperationContext,
   RequestHandler,
 } from "./core/types.js";
 

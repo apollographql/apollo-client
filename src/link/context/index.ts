@@ -1,18 +1,21 @@
 import { Observable } from "rxjs";
 
-import type { OperationContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace SetContextLink {
   export type ContextSetter = (
-    prevContext: OperationContext,
+    prevContext: ApolloLink.OperationContext,
     operation: SetContextOperation
-  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+  ) =>
+    | Promise<Partial<ApolloLink.OperationContext>>
+    | Partial<ApolloLink.OperationContext>;
 
   export type LegacyContextSetter = (
     operation: SetContextOperation,
-    prevContext: OperationContext
-  ) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
+    prevContext: ApolloLink.OperationContext
+  ) =>
+    | Promise<Partial<ApolloLink.OperationContext>>
+    | Partial<ApolloLink.OperationContext>;
 
   export type SetContextOperation = Omit<
     ApolloLink.Operation,

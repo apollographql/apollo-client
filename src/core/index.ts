@@ -118,7 +118,6 @@ export type {
   ForwardFunction,
   GraphQLRequest,
   Operation,
-  OperationContext,
   RequestHandler,
 } from "@apollo/client/link";
 

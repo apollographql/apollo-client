@@ -63,11 +63,6 @@ export class BatchLink extends ApolloLink {
       batchHandler,
       batchKey,
     });
-
-    //make this link terminating
-    if (fetchParams!.batchHandler!.length <= 1) {
-      this.request = (operation) => this.batcher.enqueueRequest({ operation });
-    }
   }
 
   public request(

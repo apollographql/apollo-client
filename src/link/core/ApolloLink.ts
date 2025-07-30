@@ -1,6 +1,8 @@
+import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
+import type { DefaultContext, OperationVariables } from "@apollo/client";
 import { createOperation } from "@apollo/client/link/utils";
 import {
   invariant,
@@ -29,6 +31,35 @@ function isTerminating(link: ApolloLink): boolean {
 }
 
 export declare namespace ApolloLink {
+  /**
+   * The input object used to `execute` a GraphQL request against the link chain.
+   */
+  export interface Request {
+    /**
+     * The parsed GraphQL document that will be sent with the GraphQL request to
+     * the server.
+     */
+    query: DocumentNode;
+
+    /**
+     * The variables provided for the query.
+     */
+    variables?: OperationVariables;
+
+    /**
+     * Context provided to the link chain. Context is not sent to the server and
+     * is used to communicate additional metadata from a request to individual
+     * links in the link chain.
+     */
+    context?: DefaultContext;
+
+    /**
+     * A map of extensions that will be sent with the GraphQL request to the
+     * server.
+     */
+    extensions?: Record<string, any>;
+  }
+
   export namespace DocumentationTypes {
     /**
      * A request handler is responsible for performing some logic and executing the

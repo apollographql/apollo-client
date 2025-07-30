@@ -25,35 +25,6 @@ export interface ApolloPayloadResult<
 }
 
 /**
- * The input object used to `execute` a GraphQL request against the link chain.
- */
-export interface GraphQLRequest {
-  /**
-   * The parsed GraphQL document that will be sent with the GraphQL request to
-   * the server.
-   */
-  query: DocumentNode;
-
-  /**
-   * The variables provided for the query.
-   */
-  variables?: OperationVariables;
-
-  /**
-   * Context provided to the link chain. Context is not sent to the server and
-   * is used to communicate additional metadata from a request to individual
-   * links in the link chain.
-   */
-  context?: DefaultContext;
-
-  /**
-   * A map of extensions that will be sent with the GraphQL request to the
-   * server.
-   */
-  extensions?: Record<string, any>;
-}
-
-/**
  * The currently executed operation object provided to a `RequestHandler` for
  * each link in the link chain.
  */

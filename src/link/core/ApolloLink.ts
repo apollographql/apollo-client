@@ -318,19 +318,19 @@ export class ApolloLink {
   }
 
   /**
-   * Combines two links into a single composed link.
+   * Combines multiple links into a single composed link.
    *
    * @example
    *
    * ```ts
-   * const link = ApolloLink.concat(firstLink, secondLink);
+   * const link = ApolloLink.concat(firstLink, secondLink, thirdLink);
    * ```
    *
-   * @param first - The first link or request handler that will execute in the
-   * link chain.
+   * @param links - The links to concatenate into a single link. Each link will
+   * execute in serial order.
    *
-   * @param second - The next link or request handler that will execute in the
-   * link chain.
+   * @deprecated Use `ApolloLink.from(links)` instead. `ApolloLink.concat` will
+   * be removed in a future major version.
    */
   public static concat(
     ...links: Array<ApolloLink | ApolloLink.RequestHandler>

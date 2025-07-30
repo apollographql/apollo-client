@@ -10,7 +10,6 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockLink } from "@apollo/client/testing";
@@ -42,7 +41,7 @@ describe("ApolloClient", () => {
     variables?: Object;
     queryOptions?: Object;
     error?: Error;
-    result?: FetchResult;
+    result?: ApolloLink.Result;
     delay?: number;
   }) => {
     const client = new ApolloClient({
@@ -3022,7 +3021,7 @@ describe("ApolloClient", () => {
       cache,
       link: new ApolloLink(
         () =>
-          new Observable((observer: Observer<FetchResult>) => {
+          new Observable((observer: Observer<ApolloLink.Result>) => {
             setTimeout(() => {
               observer.next!({ data: { info: { c: "see" } } });
               observer.complete!();

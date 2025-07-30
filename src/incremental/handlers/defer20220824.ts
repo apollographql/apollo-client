@@ -4,7 +4,7 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import type { ApolloLink, FetchResult } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
@@ -136,7 +136,7 @@ export class Defer20220824Handler
     return "hasNext" in result;
   }
 
-  extractErrors(result: FetchResult<any>) {
+  extractErrors(result: ApolloLink.Result<any>) {
     const acc: GraphQLFormattedError[] = [];
     const push = ({
       errors,

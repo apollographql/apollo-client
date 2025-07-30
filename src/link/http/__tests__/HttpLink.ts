@@ -8,7 +8,6 @@ import type { Observer, Subscription } from "rxjs";
 import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
-import type { FetchResult } from "@apollo/client";
 import {
   ApolloClient,
   InMemoryCache,
@@ -1158,7 +1157,7 @@ describe("HttpLink", () => {
         return instances;
       }
 
-      const failingObserver: Observer<FetchResult> = {
+      const failingObserver: Observer<ApolloLink.Result> = {
         next: () => {
           fail("result should not have been called");
         },
@@ -2248,7 +2247,7 @@ describe("HttpLink", () => {
 });
 
 function pipeLinkToObservableStream(link: ApolloLink) {
-  const sink = new Subject<FetchResult>();
+  const sink = new Subject<ApolloLink.Result>();
   const observableStream = new ObservableStream(sink);
   const pipedLink = new ApolloLink((operation, forward) =>
     forward(operation).pipe(

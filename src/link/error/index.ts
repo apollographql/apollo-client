@@ -8,7 +8,6 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   toErrorLike,
 } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace ErrorLink {
@@ -16,7 +15,7 @@ export declare namespace ErrorLink {
    * Callback to be triggered when an error occurs within the link stack.
    */
   export interface ErrorHandler {
-    (options: ErrorHandlerOptions): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
   }
 
   export interface ErrorHandlerOptions {
@@ -32,7 +31,7 @@ export declare namespace ErrorLink {
      * The raw GraphQL result from the server (if available), which may include
      * partial data alongside errors.
      */
-    result?: FetchResult;
+    result?: ApolloLink.Result;
 
     /** The details of the GraphQL operation that produced an error. */
     operation: ApolloLink.Operation;

@@ -5,7 +5,6 @@ import { cloneDeep } from "lodash";
 import type { Subscription } from "rxjs";
 import { firstValueFrom, from, Observable } from "rxjs";
 
-import type { FetchResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -1904,7 +1903,7 @@ describe("mutation results", () => {
         cache: new InMemoryCache(),
         link: new ApolloLink(
           () =>
-            new Observable<FetchResult<{ foo: string }>>((observer) => {
+            new Observable<ApolloLink.Result<{ foo: string }>>((observer) => {
               observer.next({
                 errors: [new GraphQLError("Oops")],
               });

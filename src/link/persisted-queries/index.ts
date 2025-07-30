@@ -12,7 +12,6 @@ import {
   ServerError,
   toErrorLike,
 } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 import {
@@ -238,7 +237,7 @@ export class PersistedQueryLink extends ApolloLink {
           cb();
         }
 
-        const handler: Observer<FetchResult> = {
+        const handler: Observer<ApolloLink.Result> = {
           next: (result) => {
             if (!isFormattedExecutionResult(result) || !result.errors) {
               return observer.next(result);

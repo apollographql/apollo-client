@@ -1,12 +1,12 @@
 import type { Subscription } from "rxjs";
 import { EMPTY, Observable } from "rxjs";
 
-import type { ApolloLink, FetchResult } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 
 export type BatchHandler = (
   operations: ApolloLink.Operation[],
   forward?: (ApolloLink.ForwardFunction | undefined)[]
-) => Observable<FetchResult[]> | null;
+) => Observable<ApolloLink.Result[]> | null;
 
 export interface BatchableRequest {
   operation: ApolloLink.Operation;
@@ -14,8 +14,8 @@ export interface BatchableRequest {
 }
 
 type QueuedRequest = BatchableRequest & {
-  observable?: Observable<FetchResult>;
-  next: Array<(result: FetchResult) => void>;
+  observable?: Observable<ApolloLink.Result>;
+  next: Array<(result: ApolloLink.Result) => void>;
   error: Array<(error: Error) => void>;
   complete: Array<() => void>;
   subscribers: Set<object>;
@@ -66,7 +66,9 @@ export class OperationBatcher {
     this.batchKey = batchKey || (() => "");
   }
 
-  public enqueueRequest(request: BatchableRequest): Observable<FetchResult> {
+  public enqueueRequest(
+    request: BatchableRequest
+  ): Observable<ApolloLink.Result> {
     const requestCopy: QueuedRequest = {
       ...request,
       next: [],
@@ -78,7 +80,7 @@ export class OperationBatcher {
     const key = this.batchKey(request.operation);
 
     if (!requestCopy.observable) {
-      requestCopy.observable = new Observable<FetchResult>((observer) => {
+      requestCopy.observable = new Observable<ApolloLink.Result>((observer) => {
         let batch = this.batchesByKey.get(key)!;
         if (!batch) this.batchesByKey.set(key, (batch = new Set()));
 
@@ -139,7 +141,7 @@ export class OperationBatcher {
   // Returns a list of promises (one for each query).
   public consumeQueue(
     key: string = ""
-  ): (Observable<FetchResult> | undefined)[] | undefined {
+  ): (Observable<ApolloLink.Result> | undefined)[] | undefined {
     const batch = this.batchesByKey.get(key);
     // Delete this batch and process it below.
     this.batchesByKey.delete(key);

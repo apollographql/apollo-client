@@ -33,7 +33,6 @@ import type { Client, Sink } from "graphql-ws";
 import { Observable } from "rxjs";
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 import { isNonNullObject } from "@apollo/client/utilities/internal";
@@ -53,9 +52,11 @@ export class GraphQLWsLink extends ApolloLink {
     super();
   }
 
-  public request(operation: ApolloLink.Operation): Observable<FetchResult> {
+  public request(
+    operation: ApolloLink.Operation
+  ): Observable<ApolloLink.Result> {
     return new Observable((observer) => {
-      return this.client.subscribe<FetchResult>(
+      return this.client.subscribe<ApolloLink.Result>(
         { ...operation, query: print(operation.query) },
         {
           next: observer.next.bind(observer),

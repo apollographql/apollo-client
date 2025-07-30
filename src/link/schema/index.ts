@@ -2,7 +2,6 @@ import type { GraphQLSchema } from "graphql";
 import { execute, validate } from "graphql";
 import { Observable } from "rxjs";
 
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace SchemaLink {
@@ -49,8 +48,10 @@ export class SchemaLink extends ApolloLink {
     this.validate = !!options.validate;
   }
 
-  public request(operation: ApolloLink.Operation): Observable<FetchResult> {
-    return new Observable<FetchResult>((observer) => {
+  public request(
+    operation: ApolloLink.Operation
+  ): Observable<ApolloLink.Result> {
+    return new Observable<ApolloLink.Result>((observer) => {
       new Promise<SchemaLink.ResolverContext>((resolve) =>
         resolve(
           typeof this.context === "function" ?

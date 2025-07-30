@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 import type { Subscriber } from "rxjs";
 
-import type { FetchResult, TypedDocumentNode } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -613,7 +613,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const observers = new Set<Subscriber<FetchResult>>();
+    const observers = new Set<Subscriber<ApolloLink.Result>>();
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);
@@ -675,7 +675,7 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     let lastOperation!: ApolloLink.Operation;
-    const observers = new Set<Subscriber<FetchResult>>();
+    const observers = new Set<Subscriber<ApolloLink.Result>>();
     const link = new ApolloLink((operation) => {
       return new Observable((observer) => {
         lastOperation = operation;
@@ -726,7 +726,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const observers = new Set<Subscriber<FetchResult>>();
+    const observers = new Set<Subscriber<ApolloLink.Result>>();
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);
@@ -807,7 +807,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const observers = new Set<Subscriber<FetchResult>>();
+    const observers = new Set<Subscriber<ApolloLink.Result>>();
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);

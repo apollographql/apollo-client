@@ -2,7 +2,6 @@ import type { Observable } from "rxjs";
 import type { ClientOptions } from "subscriptions-transport-ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace WebSocketLink {
@@ -51,9 +50,9 @@ export class WebSocketLink extends ApolloLink {
 
   public request(
     operation: ApolloLink.Operation
-  ): Observable<FetchResult> | null {
+  ): Observable<ApolloLink.Result> | null {
     return this.subscriptionClient.request(
       operation
-    ) as Observable<FetchResult>;
+    ) as Observable<ApolloLink.Result>;
   }
 }

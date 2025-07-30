@@ -9,7 +9,6 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 import {
@@ -806,10 +805,10 @@ describe("support for request retrying", () => {
   `;
   const ERROR_RESPONSE = {
     errors: [{ message: "resolver blew up" }],
-  } satisfies FetchResult;
+  } satisfies ApolloLink.Result;
   const GOOD_RESPONSE = {
     data: { foo: true },
-  } satisfies FetchResult;
+  } satisfies ApolloLink.Result;
   const NETWORK_ERROR = new Error("some other error");
 
   it("returns the retried request when forward(operation) is called", async () => {

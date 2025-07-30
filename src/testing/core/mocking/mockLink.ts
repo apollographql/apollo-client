@@ -3,7 +3,6 @@ import type { DocumentNode } from "graphql";
 import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
@@ -31,7 +30,7 @@ interface NormalizedMockedResponse {
   request: MockLink.MockedRequest;
   variablesWithDefaults: Record<string, any>;
   maxUsageCount: number;
-  result?: FetchResult | MockLink.ResultFunction<FetchResult, any>;
+  result?: ApolloLink.Result | MockLink.ResultFunction<ApolloLink.Result, any>;
   error?: Error;
   delay: number | MockLink.DelayFunction;
 }
@@ -62,8 +61,8 @@ export declare namespace MockLink {
     request: MockedRequest<TVariables>;
     maxUsageCount?: number;
     result?:
-      | FetchResult<Unmasked<TData>>
-      | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
+      | ApolloLink.Result<Unmasked<TData>>
+      | ResultFunction<ApolloLink.Result<Unmasked<TData>>, TVariables>;
     error?: Error;
     delay?: number | MockLink.DelayFunction;
   }
@@ -128,7 +127,7 @@ export class MockLink extends ApolloLink {
 
   public request(
     operation: ApolloLink.Operation
-  ): Observable<FetchResult> | null {
+  ): Observable<ApolloLink.Result> | null {
     this.operation = operation;
     const unmatchedVars: UnmatchedVariables = [];
     const mocks = this.getMockedResponses(operation);

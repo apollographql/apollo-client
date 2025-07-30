@@ -10,7 +10,7 @@ import type {
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import { NotImplementedHandler } from "@apollo/client/incremental";
-import type { ApolloLink, FetchResult } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
@@ -1234,7 +1234,7 @@ export class ApolloClient {
 
   public __requestRaw(
     request: ApolloLink.Request
-  ): Observable<FetchResult<unknown>> {
+  ): Observable<ApolloLink.Result<unknown>> {
     return execute(this.link, request, { client: this });
   }
 

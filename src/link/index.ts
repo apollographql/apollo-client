@@ -9,10 +9,10 @@ export type {
   AdditionalFetchResultTypes,
   ApolloPayloadResult,
   DocumentNode,
-  FetchResult,
 } from "./core/types.js";
 
 export type {
+  FetchResult,
   GraphQLRequest,
   Operation,
   RequestHandler,

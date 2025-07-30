@@ -11,12 +11,11 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-import type { FetchResult } from "../../core/types.js";
 import type { BatchableRequest, BatchHandler } from "../batchLink.js";
 
 interface MockedResponse {
   request: ApolloLink.Request;
-  result?: FetchResult;
+  result?: ApolloLink.Result;
   error?: Error;
   delay?: number;
   maxUsageCount?: number;
@@ -212,7 +211,7 @@ describe("OperationBatcher", () => {
       const observable = myBatcher.enqueueRequest({ operation });
       const stream = new ObservableStream(observable);
 
-      const observables: (Observable<FetchResult> | undefined)[] =
+      const observables: (Observable<ApolloLink.Result> | undefined)[] =
         myBatcher.consumeQueue()!;
 
       expect(observables.length).toBe(1);
@@ -252,7 +251,7 @@ describe("OperationBatcher", () => {
       const stream2 = new ObservableStream(observable2);
 
       expect(myBatcher["batchesByKey"].get("")!.size).toBe(2);
-      const observables: (Observable<FetchResult> | undefined)[] =
+      const observables: (Observable<ApolloLink.Result> | undefined)[] =
         myBatcher.consumeQueue()!;
       expect(myBatcher["batchesByKey"].get("")).toBeUndefined();
       expect(observables.length).toBe(2);

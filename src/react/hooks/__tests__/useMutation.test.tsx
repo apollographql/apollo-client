@@ -27,7 +27,6 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
@@ -4623,7 +4622,7 @@ describe.skip("Type Tests", () => {
     });
 
     expectTypeOf(data).toMatchTypeOf<any>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<ApolloLink.Result<any>>>();
   });
 
   test("uses TData type when using plain TypedDocumentNode", () => {
@@ -4690,7 +4689,9 @@ describe.skip("Type Tests", () => {
     });
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    expectTypeOf(mutate()).toMatchTypeOf<
+      Promise<ApolloLink.Result<Mutation>>
+    >();
   });
 
   test("uses masked/unmasked type when using Masked<TData>", async () => {
@@ -4774,7 +4775,7 @@ describe.skip("Type Tests", () => {
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
     expectTypeOf(mutate({ variables: { id: "1" } })).toMatchTypeOf<
-      Promise<FetchResult<Mutation>>
+      Promise<ApolloLink.Result<Mutation>>
     >();
   });
 

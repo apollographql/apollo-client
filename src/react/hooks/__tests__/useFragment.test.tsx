@@ -22,7 +22,6 @@ import { Observable } from "rxjs";
 
 import type {
   DocumentNode,
-  FetchResult,
   OperationVariables,
   Reference,
   StoreObject,
@@ -2243,7 +2242,7 @@ describe("has the same timing as `useQuery`", () => {
       }
       ${itemFragment}
     `;
-    let observer: Observer<FetchResult>;
+    let observer: Observer<ApolloLink.Result>;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,

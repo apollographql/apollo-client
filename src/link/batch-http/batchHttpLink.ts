@@ -1,6 +1,5 @@
 import { Observable, throwError } from "rxjs";
 
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
@@ -210,7 +209,7 @@ export class BaseBatchHttpLink extends ApolloLink {
 
   public request(
     operation: ApolloLink.Operation
-  ): Observable<FetchResult> | null {
+  ): Observable<ApolloLink.Result> | null {
     return this.batcher.request(operation);
   }
 }

@@ -1,4 +1,8 @@
-import type { DocumentNode, OperationTypeNode } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  OperationTypeNode,
+} from "graphql";
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
@@ -13,13 +17,13 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { FetchResult } from "./types.js";
+import type { AdditionalFetchResultTypes } from "./types.js";
 
 function passthrough(
   op: ApolloLink.Operation,
   forward: ApolloLink.ForwardFunction
 ) {
-  return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
+  return (forward ? forward(op) : EMPTY) as Observable<ApolloLink.Result>;
 }
 
 function toLink(handler: ApolloLink.RequestHandler | ApolloLink) {
@@ -40,7 +44,7 @@ export declare namespace ApolloLink {
 
   export type ForwardFunction = (
     operation: ApolloLink.Operation
-  ) => Observable<FetchResult>;
+  ) => Observable<ApolloLink.Result>;
   /**
    * The input object used to `execute` a GraphQL request against the link chain.
    */
@@ -74,7 +78,17 @@ export declare namespace ApolloLink {
   export type RequestHandler = (
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ) => Observable<FetchResult> | null;
+  ) => Observable<ApolloLink.Result> | null;
+
+  export type Result<
+    TData = Record<string, any>,
+    TExtensions = Record<string, any>,
+  > =
+    | FormattedExecutionResult<TData, TExtensions>
+    | AdditionalFetchResultTypes<
+        TData,
+        TExtensions
+      >[keyof AdditionalFetchResultTypes<TData, TExtensions>];
 
   /**
    * The currently executed operation object provided to a `RequestHandler` for
@@ -155,7 +169,7 @@ export declare namespace ApolloLink {
     export function RequestHandler(
       operation: Operation,
       forward: ForwardFunction
-    ): Observable<FetchResult> | null;
+    ): Observable<ApolloLink.Result> | null;
   }
 }
 
@@ -313,7 +327,7 @@ export class ApolloLink {
     link: ApolloLink,
     request: ApolloLink.Request,
     context: ApolloLink.ExecuteContext
-  ): Observable<FetchResult> {
+  ): Observable<ApolloLink.Result> {
     return link.request(createOperation(request, context)) || EMPTY;
   }
 
@@ -444,7 +458,7 @@ export class ApolloLink {
   public request(
     operation: ApolloLink.Operation,
     forward?: ApolloLink.ForwardFunction
-  ): Observable<FetchResult> | null {
+  ): Observable<ApolloLink.Result> | null {
     throw newInvariantError("request is not implemented");
   }
 

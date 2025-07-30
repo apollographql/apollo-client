@@ -1,5 +1,5 @@
-import type { FetchResult } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type { ApolloLink } from "@apollo/client/link";
 
 const defaultFormatMessage = CombinedGraphQLErrors.formatMessage;
 
@@ -46,7 +46,7 @@ Error message not found."
 
 test("allows message formatter to be overwritten", () => {
   const errors = [{ message: "Email already taken" }];
-  const result: FetchResult = { data: { registerUser: null }, errors };
+  const result: ApolloLink.Result = { data: { registerUser: null }, errors };
 
   {
     const formatMessage = jest.fn(() => "Errors happened");

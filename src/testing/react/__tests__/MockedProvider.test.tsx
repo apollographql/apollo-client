@@ -5,7 +5,6 @@ import React from "react";
 import type { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { useQuery } from "@apollo/client/react";
 import { MockLink } from "@apollo/client/testing";
@@ -67,7 +66,7 @@ interface Variables {
 
 let errorThrown = false;
 const errorLink = new ApolloLink((operation, forward) => {
-  let observer: Observable<FetchResult> | null = null;
+  let observer: Observable<ApolloLink.Result> | null = null;
   try {
     observer = forward(operation);
   } catch (error) {

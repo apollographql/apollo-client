@@ -13,16 +13,6 @@ export interface ApolloPayloadResult<
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
-export type FetchResult<
-  TData = Record<string, any>,
-  TExtensions = Record<string, any>,
-> =
-  | FormattedExecutionResult<TData, TExtensions>
-  | AdditionalFetchResultTypes<
-      TData,
-      TExtensions
-    >[keyof AdditionalFetchResultTypes<TData, TExtensions>];
-
 export interface AdditionalFetchResultTypes<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,

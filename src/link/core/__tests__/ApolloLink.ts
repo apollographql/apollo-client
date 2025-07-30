@@ -7,8 +7,6 @@ import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { FetchResult } from "../types.js";
-
 class SetContextLink extends ApolloLink {
   constructor(
     private setContext: (
@@ -21,7 +19,7 @@ class SetContextLink extends ApolloLink {
   public request(
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ): Observable<FetchResult> {
+  ): Observable<ApolloLink.Result> {
     operation.setContext(this.setContext(operation.getContext()));
     return forward(operation);
   }
@@ -458,7 +456,7 @@ describe("ApolloClient", () => {
     });
 
     it("should receive result of one link", async () => {
-      const data: FetchResult = {
+      const data: ApolloLink.Result = {
         data: {
           hello: "world",
         },
@@ -529,7 +527,7 @@ describe("ApolloClient", () => {
     });
 
     it("should pass result of one link to another with forward", async () => {
-      const data: FetchResult = {
+      const data: ApolloLink.Result = {
         data: {
           hello: "world",
         },
@@ -553,7 +551,7 @@ describe("ApolloClient", () => {
     });
 
     it("should receive final result of two link chain", async () => {
-      const data: FetchResult = {
+      const data: ApolloLink.Result = {
         data: {
           hello: "world",
         },

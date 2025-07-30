@@ -273,21 +273,12 @@ export class ApolloLink {
     const leftLink = toLink(left);
     const rightLink = toLink(right || new ApolloLink(passthrough));
 
-    let ret: ApolloLink;
-    if (isTerminating(leftLink) && isTerminating(rightLink)) {
-      ret = new ApolloLink((operation) => {
-        return test(operation) ?
-            leftLink.request(operation) || EMPTY
-          : rightLink.request(operation) || EMPTY;
-      });
-    } else {
-      ret = new ApolloLink((operation, forward) => {
-        return test(operation) ?
-            leftLink.request(operation, forward) || EMPTY
-          : rightLink.request(operation, forward) || EMPTY;
-      });
-    }
-    return Object.assign(ret, { left: leftLink, right: rightLink });
+    const link = new ApolloLink((operation, forward) => {
+      return test(operation) ?
+          leftLink.request(operation, forward) || EMPTY
+        : rightLink.request(operation, forward) || EMPTY;
+    });
+    return Object.assign(link, { left: leftLink, right: rightLink });
   }
 
   /**

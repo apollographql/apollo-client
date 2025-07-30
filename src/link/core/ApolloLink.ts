@@ -24,7 +24,7 @@ function passthrough(
   op: ApolloLink.Operation,
   forward: ApolloLink.ForwardFunction
 ) {
-  return (forward ? forward(op) : EMPTY) as Observable<ApolloLink.Result>;
+  return forward(op);
 }
 
 function toLink(handler: ApolloLink.RequestHandler | ApolloLink) {

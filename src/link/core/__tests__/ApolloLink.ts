@@ -264,6 +264,44 @@ describe("ApolloClient", () => {
         await expect(stream).toComplete();
       }
     });
+
+    it("can provide multiple links to concat", async () => {
+      const add1 = new ApolloLink((operation, forward) => {
+        operation.setContext({
+          add: operation.getContext().add + 1,
+        });
+        return forward(operation);
+      });
+      const add2 = new ApolloLink((operation, forward) => {
+        operation.setContext({
+          add: operation.getContext().add + 2,
+        });
+        return forward(operation);
+      });
+      const add3 = new ApolloLink((operation, forward) => {
+        operation.setContext({
+          add: operation.getContext().add + 3,
+        });
+        return forward(operation);
+      });
+
+      const calculate = new ApolloLink((operation) =>
+        of({ data: { count: operation.getContext().add } })
+      );
+
+      const link = add1.concat(add2, add3, calculate);
+
+      const stream = new ObservableStream(
+        execute(
+          link,
+          { query: sampleQuery, context: { add: 0 } },
+          defaultExecuteContext
+        )
+      );
+
+      await expect(stream).toEmitTypedValue({ data: { count: 6 } });
+      await expect(stream).toComplete();
+    });
   });
 
   describe("empty", () => {

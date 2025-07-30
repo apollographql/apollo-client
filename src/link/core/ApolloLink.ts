@@ -402,17 +402,28 @@ export class ApolloLink {
    * );
    * ```
    */
-  public concat(next: ApolloLink | ApolloLink.RequestHandler): ApolloLink {
-    const nextLink = toLink(next);
+  public concat(
+    ...links: Array<ApolloLink | ApolloLink.RequestHandler>
+  ): ApolloLink {
+    if (links.length === 0) {
+      return this;
+    }
 
+    return links
+      .map(toLink)
+      .reduce((left, right) => this.combine(left, right), this);
+  }
+
+  private combine(left: ApolloLink, right: ApolloLink) {
     const link = new ApolloLink((operation, forward) => {
       return (
-        this.request(operation, (op) => {
-          return nextLink.request(op, forward) || EMPTY;
+        left.request(operation, (op) => {
+          return right.request(op, forward) || EMPTY;
         }) || EMPTY
       );
     });
-    return Object.assign(link, { left: this, right: nextLink });
+
+    return Object.assign(link, { left, right });
   }
 
   /**

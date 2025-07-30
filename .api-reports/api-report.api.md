@@ -2121,24 +2121,16 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 
 // @public (undocumented)
 export interface Operation {
-    // (undocumented)
     readonly client: ApolloClient;
-    // (undocumented)
     extensions: Record<string, any>;
-    // (undocumented)
     getContext: () => OperationContext;
-    // (undocumented)
     operationName: string;
-    // (undocumented)
     operationType: OperationTypeNode | undefined;
-    // (undocumented)
     query: DocumentNode;
-    // (undocumented)
     setContext: {
         (context: Partial<OperationContext>): void;
         (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
-    // (undocumented)
     variables: Record<string, any>;
 }
 

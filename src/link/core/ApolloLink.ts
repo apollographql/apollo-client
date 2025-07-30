@@ -334,17 +334,7 @@ export class ApolloLink {
     first: ApolloLink | ApolloLink.RequestHandler,
     second: ApolloLink | ApolloLink.RequestHandler
   ) {
-    const firstLink = toLink(first);
-    const nextLink = toLink(second);
-
-    const link = new ApolloLink((operation, forward) => {
-      return (
-        firstLink.request(operation, (op) => {
-          return nextLink.request(op, forward) || EMPTY;
-        }) || EMPTY
-      );
-    });
-    return Object.assign(link, { left: firstLink, right: nextLink });
+    return toLink(first).concat(second);
   }
 
   constructor(request?: ApolloLink.RequestHandler) {
@@ -413,7 +403,16 @@ export class ApolloLink {
    * ```
    */
   public concat(next: ApolloLink | ApolloLink.RequestHandler): ApolloLink {
-    return ApolloLink.concat(this, next);
+    const nextLink = toLink(next);
+
+    const link = new ApolloLink((operation, forward) => {
+      return (
+        this.request(operation, (op) => {
+          return nextLink.request(op, forward) || EMPTY;
+        }) || EMPTY
+      );
+    });
+    return Object.assign(link, { left: this, right: nextLink });
   }
 
   /**

@@ -14,7 +14,7 @@ import { Observable } from 'rxjs';
 export class BaseBatchHttpLink extends ApolloLink {
     constructor(fetchParams?: BatchHttpLink.Options);
     // (undocumented)
-    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
 }
 
 // @public (undocumented)

@@ -34,7 +34,7 @@ export namespace BatchLink {
 export class BatchLink extends ApolloLink {
     constructor(fetchParams?: BatchLink.Options);
     // (undocumented)
-    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
 }
 
 // @public (undocumented)

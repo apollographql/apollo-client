@@ -407,7 +407,7 @@ export namespace ApolloLink {
         query: DocumentNode;
         setContext: {
             (context: Partial<ApolloLink.OperationContext>): void;
-            (updateContext: (previousContext: ApolloLink.OperationContext) => Partial<ApolloLink.OperationContext>): void;
+            (updateContext: (previousContext: Readonly<ApolloLink.OperationContext>) => Partial<ApolloLink.OperationContext>): void;
         };
         variables: OperationVariables;
     }
@@ -419,7 +419,7 @@ export namespace ApolloLink {
         query: DocumentNode;
         variables?: OperationVariables;
     }
-    export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result> | null;
+    export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result>;
     // Warning: (ae-forgotten-export) The symbol "AdditionalApolloLinkResultTypes" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -430,20 +430,20 @@ export namespace ApolloLink {
 export class ApolloLink {
     constructor(request?: ApolloLink.RequestHandler);
     // @deprecated
-    static concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
-    concat(...links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
+    static concat(...links: ApolloLink[]): ApolloLink;
+    concat(...links: ApolloLink[]): ApolloLink;
     static empty(): ApolloLink;
     static execute(link: ApolloLink, request: ApolloLink.Request, context: ApolloLink.ExecuteContext): Observable<ApolloLink.Result>;
-    static from(links: Array<ApolloLink | ApolloLink.RequestHandler>): ApolloLink;
+    static from(links: ApolloLink[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    static split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
-    split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink | ApolloLink.RequestHandler, right?: ApolloLink | ApolloLink.RequestHandler): ApolloLink;
+    static split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink, right?: ApolloLink): ApolloLink;
+    split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink, right?: ApolloLink): ApolloLink;
 }
 
 // @public (undocumented)

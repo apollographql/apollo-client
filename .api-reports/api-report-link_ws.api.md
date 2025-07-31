@@ -22,7 +22,7 @@ export namespace WebSocketLink {
 export class WebSocketLink extends ApolloLink {
     constructor(paramsOrClient: WebSocketLink.Configuration | SubscriptionClient);
     // (undocumented)
-    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result> | null;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
 }
 
 export interface WebSocketParams {

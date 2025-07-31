@@ -77,7 +77,7 @@ export class MockLink extends ApolloLink {
     // (undocumented)
     operation: ApolloLink.Operation;
     // (undocumented)
-    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result> | null;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
     // (undocumented)
     showWarnings: boolean;
 }

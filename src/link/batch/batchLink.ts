@@ -6,6 +6,17 @@ import { ApolloLink } from "@apollo/client/link";
 import { OperationBatcher } from "./batching.js";
 
 export declare namespace BatchLink {
+  export namespace DocumentationTypes {
+    interface Options {
+      /**
+       * The maximum number of operations to include in a single batch.
+       *
+       * @defaultValue {{defaultValue}}
+       */
+      batchMax?: number;
+    }
+  }
+
   export type BatchHandler = (
     operations: ApolloLink.Operation[],
     forward: ApolloLink.ForwardFunction[]
@@ -15,7 +26,7 @@ export declare namespace BatchLink {
     /**
      * The interval at which to batch, in milliseconds.
      *
-     * Defaults to 10.
+     * @defaultValue 10
      */
     batchInterval?: number;
 
@@ -26,11 +37,7 @@ export declare namespace BatchLink {
      */
     batchDebounce?: boolean;
 
-    /**
-     * The maximum number of operations to include in one fetch.
-     *
-     * Defaults to 0 (infinite operations within the interval).
-     */
+    /** {@inheritDoc @apollo/client/link/batch!BatchLink.DocumentationTypes.Options#batchMax:member {"defaultValue": 0}} */
     batchMax?: number;
 
     /**
@@ -39,7 +46,7 @@ export declare namespace BatchLink {
     batchHandler?: BatchLink.BatchHandler;
 
     /**
-     * creates the key for a batch
+     * Creates the key for a batch
      */
     batchKey?: (operation: ApolloLink.Operation) => string;
   }

@@ -8,7 +8,11 @@ description: API reference
   customOrder={["summary", "remarks", "example"]}
 />
 
-## Configuring with Apollo Client
+## Configuring client awareness
+
+Client awareness can be configured in various ways throughout the client.
+
+### Configuring with Apollo Client
 
 You can configure client awareness when initializing your Apollo Client instance using the `clientAwareness` and `enhancedClientAwareness` options. Options configured with the `ClientAwarenessLink` constructor, `HttpLink` constructor, or [request context](./introduction#managing-context) take precedence.
 
@@ -26,7 +30,7 @@ new ApolloClient({
 });
 ```
 
-## Configuring with `HttpLink`
+### Configuring with `HttpLink`
 
 You can configure client awareness when initializing an `HttpLink` using the `clientAwareness` and `enhancedClientAwareness` options. These options take precedence over options provided to the `ApolloClient` constructor but can be overridden by [request context](./introduction#managing-context).
 
@@ -55,7 +59,7 @@ If you are using `BaseHttpLink` and want client awareness functionality, you wil
 
 </Note>
 
-## Configuring with request context
+### Configuring with request context
 
 You can configure client awareness using request context. Provide the `clientAwareness` and `enhancedClientAwareness` fields in `context`. These values take precedence over all other configurations.
 

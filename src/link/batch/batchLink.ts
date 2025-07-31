@@ -1,4 +1,5 @@
 import type { Observable } from "rxjs";
+import { EMPTY } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 
@@ -52,7 +53,7 @@ export class BatchLink extends ApolloLink {
       batchDebounce,
       batchInterval = 10,
       batchMax = 0,
-      batchHandler = () => null,
+      batchHandler = () => EMPTY,
       batchKey = () => "",
     } = fetchParams || {};
 

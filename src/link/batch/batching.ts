@@ -1,12 +1,12 @@
 import type { Subscription } from "rxjs";
-import { EMPTY, Observable } from "rxjs";
+import { Observable } from "rxjs";
 
 import type { ApolloLink } from "@apollo/client/link";
 
 export type BatchHandler = (
   operations: ApolloLink.Operation[],
-  forward?: (ApolloLink.ForwardFunction | undefined)[]
-) => Observable<ApolloLink.Result[]> | null;
+  forward: ApolloLink.ForwardFunction[]
+) => Observable<ApolloLink.Result[]>;
 
 export interface BatchableRequest {
   operation: ApolloLink.Operation;
@@ -169,7 +169,7 @@ export class OperationBatcher {
       completes.push(request.complete);
     });
 
-    const batchedObservable = this.batchHandler(operations, forwards) || EMPTY;
+    const batchedObservable = this.batchHandler(operations, forwards);
 
     const onError = (error: Error) => {
       //each callback list in batch

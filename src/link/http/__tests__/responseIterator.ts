@@ -285,7 +285,7 @@ ${JSON.stringify(results[0])}
       await expect(observableStream).not.toEmitAnything();
       void writer.write("-");
       await expect(observableStream).toComplete();
-      // writer has forcilby been closed by `reader.cancel`
+      // writer has forcibly been closed by `reader.cancel`
       await expect(writer.closed).rejects.toBe(undefined);
     });
 

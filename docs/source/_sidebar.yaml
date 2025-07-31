@@ -197,6 +197,8 @@ items:
             href: ./api/link/apollo-link-context
           - label: ErrorLink
             href: ./api/link/apollo-link-error
+          - label: ClientAwarenessLink
+            href: ./api/link/apollo-link-client-awareness
           - label: PersistedQueryLink
             href: ./api/link/persisted-queries
           - label: RemoveTypenameFromVariablesLink

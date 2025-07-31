@@ -49,17 +49,48 @@ export declare namespace ClientAwarenessLink {
      * and Apollo Server logs (and other monitoring or analytics tools) by adding
      * information about the your application to outgoing requests.
      */
-    clientAwareness?: ClientAwarenessOptions;
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     /**
      * Configures the "enhanced client awareness" feature.
      * This feature allows you to identify the version of the Apollo Client library
      * used in your application in Apollo Studio (and other monitoring or analytics tools)
      * by adding information about the Apollo Client library to outgoing requests.
      */
-    enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
   }
 }
 
+/**
+ * `ClientAwarenessLink` provides support for providing client awareness
+ * features.
+ *
+ * @remarks
+ *
+ * Client awareness adds identifying information about the client to HTTP
+ * requests for use with metrics reporting tools, such as the [Apollo GraphOS](https://apollographql.com/docs/graphos/platform).
+ * It is included in the functionality of [`HttpLink`](https://apollographql.com/docs/react/api/link/apollo-link-http) by default.
+ *
+ * Client awareness distinguishes between user-provided client awareness
+ * (provided by the `clientAwareness` option) and enhanced client awareness
+ * (provided by the `enhancedClientAwareness` option). User-provided client
+ * awareness enables you to set a customized client name and version for
+ * identification in metrics reporting tools. Enhanced client awareness enables
+ * the identification of the Apollo Client package name and version.
+ *
+ * @example
+ *
+ * ```ts
+ * const link = new ClientAwarenessLink({
+ *   clientAwareness: {
+ *     name: "My Client",
+ *     version: "1",
+ *   },
+ *   enhancedClientAwareness: {
+ *     transport: "extensions",
+ *   },
+ * });
+ * ```
+ */
 export class ClientAwarenessLink extends ApolloLink {
   constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
     super((operation, forward) => {

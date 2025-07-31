@@ -208,17 +208,14 @@ export declare namespace HttpLink {
 
 /**
  * `HttpLink` is a terminating link that sends a GraphQL operation to a remote
- * endpoint over HTTP.
+ * endpoint over HTTP. It combines the functionality of `BaseHttpLink` and
+ * `ClientAwarenessLink` into a single link.
  *
  * @remarks
  *
  * `HttpLink` supports both POST and GET requests, and you can configure HTTP
  * options on a per-operation basis. You can use these options for
  * authentication, persisted queries, dynamic URIs, and other granular updates.
- *
- * `HttpLink` combines the functionality of `BaseHttpLink` and
- * `ClientAwarenessLink` into a single link. If you prefer to use `HttpLink`
- * without the `ClientAwarenessLink` functionality, use `BaseHttpLink` instead.
  *
  * @example
  *

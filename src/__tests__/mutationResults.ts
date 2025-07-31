@@ -1356,39 +1356,41 @@ describe("mutation results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.from([
-        ({ variables }: any) =>
-          new Observable((observer) => {
-            switch (count++) {
-              case 0:
-                expect(variables).toEqual({ a: 1, b: 2 });
-                observer.next({ data: { result: "hello" } });
-                observer.complete();
-                return;
-              case 1:
-                expect(variables).toEqual({ a: 1, c: 3 });
-                observer.next({ data: { result: "world" } });
-                observer.complete();
-                return;
-              case 2:
-                expect(variables).toEqual({
-                  a: undefined,
-                  b: 2,
-                  c: 3,
-                });
-                observer.next({ data: { result: "goodbye" } });
-                observer.complete();
-                return;
-              case 3:
-                expect(variables).toEqual({});
-                observer.next({ data: { result: "moon" } });
-                observer.complete();
-                return;
-              default:
-                observer.error(new Error("Too many network calls."));
-                return;
-            }
-          }),
-      ] as any),
+        new ApolloLink(
+          ({ variables }) =>
+            new Observable((observer) => {
+              switch (count++) {
+                case 0:
+                  expect(variables).toEqual({ a: 1, b: 2 });
+                  observer.next({ data: { result: "hello" } });
+                  observer.complete();
+                  return;
+                case 1:
+                  expect(variables).toEqual({ a: 1, c: 3 });
+                  observer.next({ data: { result: "world" } });
+                  observer.complete();
+                  return;
+                case 2:
+                  expect(variables).toEqual({
+                    a: undefined,
+                    b: 2,
+                    c: 3,
+                  });
+                  observer.next({ data: { result: "goodbye" } });
+                  observer.complete();
+                  return;
+                case 3:
+                  expect(variables).toEqual({});
+                  observer.next({ data: { result: "moon" } });
+                  observer.complete();
+                  return;
+                default:
+                  observer.error(new Error("Too many network calls."));
+                  return;
+              }
+            })
+        ),
+      ]),
     });
 
     const mutation = gql`
@@ -1433,41 +1435,43 @@ describe("mutation results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.from([
-        ({ variables }: any) =>
-          new Observable((observer) => {
-            switch (count++) {
-              case 0:
-                expect(variables).toEqual({
-                  a: 1,
-                  b: "water",
-                });
-                observer.next({ data: { result: "hello" } });
-                observer.complete();
-                return;
-              case 1:
-                expect(variables).toEqual({
-                  a: 2,
-                  b: "cheese",
-                  c: 3,
-                });
-                observer.next({ data: { result: "world" } });
-                observer.complete();
-                return;
-              case 2:
-                expect(variables).toEqual({
-                  a: 1,
-                  b: "cheese",
-                  c: 3,
-                });
-                observer.next({ data: { result: "goodbye" } });
-                observer.complete();
-                return;
-              default:
-                observer.error(new Error("Too many network calls."));
-                return;
-            }
-          }),
-      ] as any),
+        new ApolloLink(
+          ({ variables }) =>
+            new Observable((observer) => {
+              switch (count++) {
+                case 0:
+                  expect(variables).toEqual({
+                    a: 1,
+                    b: "water",
+                  });
+                  observer.next({ data: { result: "hello" } });
+                  observer.complete();
+                  return;
+                case 1:
+                  expect(variables).toEqual({
+                    a: 2,
+                    b: "cheese",
+                    c: 3,
+                  });
+                  observer.next({ data: { result: "world" } });
+                  observer.complete();
+                  return;
+                case 2:
+                  expect(variables).toEqual({
+                    a: 1,
+                    b: "cheese",
+                    c: 3,
+                  });
+                  observer.next({ data: { result: "goodbye" } });
+                  observer.complete();
+                  return;
+                default:
+                  observer.error(new Error("Too many network calls."));
+                  return;
+              }
+            })
+        ),
+      ]),
     });
 
     const mutation = gql`
@@ -1508,42 +1512,44 @@ describe("mutation results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.from([
-        ({ variables }: any) =>
-          new Observable((observer) => {
-            switch (count++) {
-              case 0:
-                expect(variables).toEqual({
-                  a: 1,
-                  b: 2,
-                  c: null,
-                });
-                observer.next({ data: { result: "hello" } });
-                observer.complete();
-                return;
-              case 1:
-                expect(variables).toEqual({
-                  a: 1,
-                  b: null,
-                  c: 3,
-                });
-                observer.next({ data: { result: "world" } });
-                observer.complete();
-                return;
-              case 2:
-                expect(variables).toEqual({
-                  a: null,
-                  b: null,
-                  c: null,
-                });
-                observer.next({ data: { result: "moon" } });
-                observer.complete();
-                return;
-              default:
-                observer.error(new Error("Too many network calls."));
-                return;
-            }
-          }),
-      ] as any),
+        new ApolloLink(
+          ({ variables }) =>
+            new Observable((observer) => {
+              switch (count++) {
+                case 0:
+                  expect(variables).toEqual({
+                    a: 1,
+                    b: 2,
+                    c: null,
+                  });
+                  observer.next({ data: { result: "hello" } });
+                  observer.complete();
+                  return;
+                case 1:
+                  expect(variables).toEqual({
+                    a: 1,
+                    b: null,
+                    c: 3,
+                  });
+                  observer.next({ data: { result: "world" } });
+                  observer.complete();
+                  return;
+                case 2:
+                  expect(variables).toEqual({
+                    a: null,
+                    b: null,
+                    c: null,
+                  });
+                  observer.next({ data: { result: "moon" } });
+                  observer.complete();
+                  return;
+                default:
+                  observer.error(new Error("Too many network calls."));
+                  return;
+              }
+            })
+        ),
+      ]),
     });
 
     const mutation = gql`

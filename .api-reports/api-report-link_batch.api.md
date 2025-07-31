@@ -16,7 +16,7 @@ export interface BatchableRequest {
 }
 
 // @public (undocumented)
-export type BatchHandler = (operations: ApolloLink.Operation[], forward?: (ApolloLink.ForwardFunction | undefined)[]) => Observable<ApolloLink.Result[]> | null;
+export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
 
 // @public (undocumented)
 export namespace BatchLink {

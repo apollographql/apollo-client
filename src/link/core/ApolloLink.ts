@@ -21,6 +21,10 @@ import {
 import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
 export declare namespace ApolloLink {
+  /**
+   * Context provided for link execution, such as the client executing the
+   * request. It is separate from the request operation context.
+   */
   export interface ExecuteContext {
     /**
      * The Apollo Client instance that executed the GraphQL request.
@@ -28,11 +32,14 @@ export declare namespace ApolloLink {
     client: ApolloClient;
   }
 
+  /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.ForwardFunction:function(1)} */
   export type ForwardFunction = (
     operation: ApolloLink.Operation
   ) => Observable<ApolloLink.Result>;
+
   /**
-   * The input object used to `execute` a GraphQL request against the link chain.
+   * The input object provided to `ApolloLink.execute` to send a GraphQL request through
+   * the link chain.
    */
   export interface Request {
     /**
@@ -77,8 +84,8 @@ export declare namespace ApolloLink {
       >[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
 
   /**
-   * The currently executed operation object provided to a `RequestHandler` for
-   * each link in the link chain.
+   * The currently executed operation object provided to an `ApolloLink.RequestHandler`
+   * for each link in the link chain.
    */
   export interface Operation {
     /**
@@ -155,7 +162,17 @@ export declare namespace ApolloLink {
     export function RequestHandler(
       operation: ApolloLink.Operation,
       forward: ApolloLink.ForwardFunction
-    ): Observable<ApolloLink.Result> | null;
+    ): Observable<ApolloLink.Result>;
+
+    /**
+     * A function that when called will execute the next link in the link chain.
+     *
+     * @param operation - The current `ApolloLink.Operation` object for the
+     * request.
+     */
+    export function ForwardFunction(
+      operation: ApolloLink.Operation
+    ): Observable<ApolloLink.Result>;
   }
 }
 
@@ -188,7 +205,7 @@ export declare namespace ApolloLink {
  */
 export class ApolloLink {
   /**
-   * Creates a link that does not emit a result and immediately completes.
+   * Creates a link that completes immediately and does not emit a result.
    *
    * @example
    *

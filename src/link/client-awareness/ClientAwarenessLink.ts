@@ -80,6 +80,8 @@ export declare namespace ClientAwarenessLink {
  * @example
  *
  * ```ts
+ * import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+ *
  * const link = new ClientAwarenessLink({
  *   clientAwareness: {
  *     name: "My Client",

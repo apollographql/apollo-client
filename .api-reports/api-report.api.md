@@ -383,31 +383,30 @@ export class ApolloClient {
 export type ApolloClientOptions = ApolloClient.Options;
 
 // @public (undocumented)
+export namespace ApolloLink {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        export function RequestHandler(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
+    }
+}
+
+// @public
 export class ApolloLink {
     constructor(request?: RequestHandler);
-    // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     concat(next: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     static empty(): ApolloLink;
     // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
-    // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    // (undocumented)
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
     split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
 }
 
@@ -1000,7 +999,6 @@ export const execute: typeof ApolloLink.execute;
 
 // @public (undocumented)
 interface ExecuteContext {
-    // (undocumented)
     client: ApolloClient;
 }
 
@@ -1286,19 +1284,13 @@ namespace GraphQLCodegenDataMasking {
     type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
 }
 
-// @public (undocumented)
+// @public
 export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
-    // (undocumented)
     context?: DefaultContext;
-    // (undocumented)
     extensions?: Record<string, any>;
-    // (undocumented)
     operationName?: string;
-    // (undocumented)
     operationType?: OperationTypeNode;
-    // (undocumented)
     query: DocumentNode;
-    // (undocumented)
     variables?: TVariables;
 }
 
@@ -2119,30 +2111,22 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
-// @public (undocumented)
+// @public
 export interface Operation {
-    // (undocumented)
     readonly client: ApolloClient;
-    // (undocumented)
     extensions: Record<string, any>;
-    // (undocumented)
     getContext: () => OperationContext;
-    // (undocumented)
     operationName: string;
-    // (undocumented)
     operationType: OperationTypeNode | undefined;
-    // (undocumented)
     query: DocumentNode;
-    // (undocumented)
     setContext: {
         (context: Partial<OperationContext>): void;
         (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
-    // (undocumented)
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
+// @public
 export interface OperationContext extends DefaultContext {
 }
 
@@ -2502,7 +2486,7 @@ type RemoveIndexSignature<T> = {
 // @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
-// @public (undocumented)
+// @public
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 export { resetCaches }

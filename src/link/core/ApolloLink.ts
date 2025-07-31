@@ -27,10 +27,6 @@ function passthrough(
   return forward(op);
 }
 
-function toLink(handler: ApolloLink.RequestHandler | ApolloLink) {
-  return typeof handler === "function" ? new ApolloLink(handler) : handler;
-}
-
 export declare namespace ApolloLink {
   export interface ExecuteContext {
     /**
@@ -232,13 +228,11 @@ export class ApolloLink {
    * @param links - An array of `ApolloLink` instances or request handlers that
    * are executed in serial order.
    */
-  public static from(
-    links: Array<ApolloLink | ApolloLink.RequestHandler>
-  ): ApolloLink {
+  public static from(links: ApolloLink[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
 
     const [first, ...rest] = links;
-    return toLink(first).concat(...rest);
+    return first.concat(...rest);
   }
 
   /**
@@ -269,12 +263,9 @@ export class ApolloLink {
    */
   public static split(
     test: (op: ApolloLink.Operation) => boolean,
-    left: ApolloLink | ApolloLink.RequestHandler,
-    right?: ApolloLink | ApolloLink.RequestHandler
+    left: ApolloLink,
+    right: ApolloLink = new ApolloLink(passthrough)
   ): ApolloLink {
-    const leftLink = toLink(left);
-    const rightLink = toLink(right || new ApolloLink(passthrough));
-
     const link = new ApolloLink((operation, forward) => {
       const result = test(operation);
 
@@ -288,10 +279,10 @@ export class ApolloLink {
       }
 
       return result ?
-          leftLink.request(operation, forward) || EMPTY
-        : rightLink.request(operation, forward) || EMPTY;
+          left.request(operation, forward) || EMPTY
+        : right.request(operation, forward) || EMPTY;
     });
-    return Object.assign(link, { left: leftLink, right: rightLink });
+    return Object.assign(link, { left, right });
   }
 
   /**
@@ -359,9 +350,7 @@ export class ApolloLink {
    * @deprecated Use `ApolloLink.from` instead. `ApolloLink.concat` will be
    * removed in a future major version.
    */
-  public static concat(
-    ...links: Array<ApolloLink | ApolloLink.RequestHandler>
-  ) {
+  public static concat(...links: ApolloLink[]) {
     return ApolloLink.from(links);
   }
 
@@ -403,8 +392,8 @@ export class ApolloLink {
    */
   public split(
     test: (op: ApolloLink.Operation) => boolean,
-    left: ApolloLink | ApolloLink.RequestHandler,
-    right?: ApolloLink | ApolloLink.RequestHandler
+    left: ApolloLink,
+    right?: ApolloLink
   ): ApolloLink {
     return this.concat(ApolloLink.split(test, left, right));
   }
@@ -430,15 +419,13 @@ export class ApolloLink {
    * );
    * ```
    */
-  public concat(
-    ...links: Array<ApolloLink | ApolloLink.RequestHandler>
-  ): ApolloLink {
+  public concat(...links: ApolloLink[]): ApolloLink {
     if (links.length === 0) {
       return this;
     }
 
     return links.reduce<ApolloLink>(
-      (left, right) => this.combine(left, toLink(right)),
+      (left, right) => this.combine(left, right),
       this
     );
   }

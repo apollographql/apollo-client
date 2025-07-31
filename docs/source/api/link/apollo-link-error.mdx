@@ -3,46 +3,29 @@ title: Error Link
 description: Handle and inspect errors in your GraphQL network stack.
 ---
 
-> We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
+<DocBlock
+  canonicalReference="@apollo/client/link/error!ErrorLink:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
 
-Use the `ErrorLink` to perform custom logic when a [GraphQL or network error](../../data/error-handling/) occurs. You create an instance of `ErrorLink` with a function that's executed if an operation returns one or more errors:
+## Constructor signature
 
-```js
-import { ErrorLink } from "@apollo/client/link/error";
-import {
-  CombinedGraphQLErrors,
-  CombinedProtocolErrors,
-} from "@apollo/client/errors";
+{/* TODO: Remove the custom signature once documentation supports rendering constructor functions */}
 
-// Log any GraphQL errors, protocol errors, or network error that occurred
-const errorLink = new ErrorLink(({ error, operation }) => {
-  if (CombinedGraphQLErrors.is(error)) {
-    error.errors.forEach(({ message, locations, path }) =>
-      console.log(
-        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-      )
-    );
-  } else if (CombinedProtocolErrors.is(error)) {
-    error.errors.forEach(({ message, extensions }) =>
-      console.log(
-        `[Protocol error]: Message: ${message}, Extensions: ${JSON.stringify(
-          extensions
-        )}`
-      )
-    );
-  } else {
-    console.error(`[Network error]: ${error}`);
-  }
-});
+```ts
+constructor(
+  errorHandler: ErrorLink.ErrorHandler
+): ErrorLink
 ```
 
-This function is called after the GraphQL operation completes and execution is moving back _up_ your [link chain](./introduction/#handling-a-response). The function should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-operations).
+## Types
 
-For more information on the types of errors that might be encountered, see the guide on [error handling](../../data/error-handling).
-
-## Options
-
-The function you provide to the `ErrorLink` constructor receives an object with the following fields:
+<FunctionDetails
+  canonicalReference="@apollo/client/link/error!ErrorLink.ErrorLinkDocumentationTypes.ErrorHandler:function(1)"
+  headingLevel={3}
+  result={false}
+  displayName="ApolloLink.ErrorHandler"
+/>
 
 <InterfaceDetails
   canonicalReference="@apollo/client/link/error!ErrorLink.ErrorHandlerOptions:interface"

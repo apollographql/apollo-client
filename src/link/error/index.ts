@@ -11,13 +11,29 @@ import {
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace ErrorLink {
-  /**
-   * Callback to be triggered when an error occurs within the link stack.
-   */
+  // Using a different namespace name to avoid clash with
+  // `ApolloLink.DocumentaitonTypes`
+  export namespace ErrorLinkDocumentationTypes {
+    /**
+     * Callback that is called by `ErrorLink` when an error occurs from a
+     * downstream link in link chain.
+     *
+     * @param options - The options object provided by ErrorLink` to the error
+     * handler when an error occurs.
+     */
+    export function ErrorHandler(
+      options: ErrorHandlerOptions
+    ): Observable<ApolloLink.Result> | void;
+  }
+
+  /** {@inheritDoc @apollo/client/link/error!ErrorLink.ErrorLinkDocumentationTypes.ErrorHandler:function(1)} */
   export interface ErrorHandler {
     (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
   }
 
+  /**
+   * The object provided to the `ErrorHandler` callback function.
+   */
   export interface ErrorHandlerOptions {
     /**
      * The error that occurred during the operation execution. This can be a
@@ -54,6 +70,50 @@ export function onError(errorHandler: ErrorLink.ErrorHandler) {
   return new ErrorLink(errorHandler);
 }
 
+/**
+ * Use the `ErrorLink` to perform custom logic when a [GraphQL or network error](../../data/error-handling/)
+ * occurs. You create an instance of `ErrorLink` with a function that's executed
+ * if an operation returns one or more errors:
+ *
+ * @remarks
+ *
+ * This link is used after the GraphQL operation completes and execution is
+ * moving back _up_ your [link chain](./introduction/#handling-a-response). The function should
+ * not return a value unless you want to [retry the operation](https://apollographql.com/docs/react/data/error-handling#retrying-operations).
+ *
+ * For more information on the types of errors that might be encountered, see the guide on [error handling](https://apollographql.com/docs/react/data/error-handling).
+ *
+ * @example
+ *
+ * ```ts
+ * import { ErrorLink } from "@apollo/client/link/error";
+ * import {
+ *   CombinedGraphQLErrors,
+ *   CombinedProtocolErrors,
+ * } from "@apollo/client/errors";
+ *
+ * // Log any GraphQL errors, protocol errors, or network error that occurred
+ * const errorLink = new ErrorLink(({ error, operation }) => {
+ *   if (CombinedGraphQLErrors.is(error)) {
+ *     error.errors.forEach(({ message, locations, path }) =>
+ *       console.log(
+ *         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+ *       )
+ *     );
+ *   } else if (CombinedProtocolErrors.is(error)) {
+ *     error.errors.forEach(({ message, extensions }) =>
+ *       console.log(
+ *         `[Protocol error]: Message: ${message}, Extensions: ${JSON.stringify(
+ *           extensions
+ *         )}`
+ *       )
+ *     );
+ *   } else {
+ *     console.error(`[Network error]: ${error}`);
+ *   }
+ * });
+ * ```
+ */
 export class ErrorLink extends ApolloLink {
   constructor(errorHandler: ErrorLink.ErrorHandler) {
     super((operation, forward) => {

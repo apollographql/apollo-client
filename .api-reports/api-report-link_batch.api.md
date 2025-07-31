@@ -12,6 +12,13 @@ export namespace BatchLink {
     // (undocumented)
     export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
     // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface Options {
+            batchMax?: number;
+        }
+    }
+    // (undocumented)
     export interface Options {
         batchDebounce?: boolean;
         batchHandler?: BatchLink.BatchHandler;

@@ -20,12 +20,12 @@ export namespace ClientAwarenessLink {
     }
     // (undocumented)
     export interface Options {
-        clientAwareness?: ClientAwarenessOptions;
-        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+        enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     }
 }
 
-// @public (undocumented)
+// @public
 export class ClientAwarenessLink extends ApolloLink {
     constructor(constructorOptions?: ClientAwarenessLink.Options);
 }

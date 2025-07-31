@@ -667,14 +667,12 @@ namespace ClientAwarenessLink {
     }
     // (undocumented)
     interface Options {
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        clientAwareness?: ClientAwarenessOptions;
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+        enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     }
 }
 
-// @public (undocumented)
+// @public
 class ClientAwarenessLink extends ApolloLink {
     constructor(constructorOptions?: ClientAwarenessLink.Options);
 }
@@ -1354,7 +1352,7 @@ export namespace HttpLink {
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
         http?: HttpLink.HttpOptions;
-        uri?: string | UriFunction;
+        uri?: string | HttpLink.UriFunction;
     }
     export interface HttpOptions {
         accept?: string[];
@@ -1370,8 +1368,8 @@ export namespace HttpLink {
         includeExtensions?: boolean;
         includeUnusedVariables?: boolean;
         preserveHeaderCase?: boolean;
-        print?: Printer;
-        uri?: string | UriFunction;
+        print?: HttpLink.Printer;
+        uri?: string | HttpLink.UriFunction;
         useGETForQueries?: boolean;
     }
     // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
@@ -1382,7 +1380,7 @@ export namespace HttpLink {
     export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
-// @public (undocumented)
+// @public
 export class HttpLink extends ApolloLink {
     constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
 }

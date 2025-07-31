@@ -189,16 +189,16 @@ items:
             href: ./api/link/introduction
           - label: ApolloLink
             href: ./api/link/apollo-link
-          - label: HttpLink
-            href: ./api/link/apollo-link-http
           - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
-          - label: SetContextLink
-            href: ./api/link/apollo-link-context
-          - label: ErrorLink
-            href: ./api/link/apollo-link-error
           - label: ClientAwarenessLink
             href: ./api/link/apollo-link-client-awareness
+          - label: ErrorLink
+            href: ./api/link/apollo-link-error
+          - label: GraphQLWsLink (newer protocol)
+            href: ./api/link/apollo-link-subscriptions
+          - label: HttpLink
+            href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
             href: ./api/link/persisted-queries
           - label: RemoveTypenameFromVariablesLink
@@ -209,8 +209,8 @@ items:
             href: ./api/link/apollo-link-retry
           - label: SchemaLink
             href: ./api/link/apollo-link-schema
-          - label: GraphQLWsLink (newer protocol)
-            href: ./api/link/apollo-link-subscriptions
+          - label: SetContextLink
+            href: ./api/link/apollo-link-context
           - label: WebSocketLink (older protocol)
             href: ./api/link/apollo-link-ws
           - label: Community links

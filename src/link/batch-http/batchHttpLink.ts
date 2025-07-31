@@ -18,20 +18,53 @@ import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 export declare namespace BatchHttpLink {
-  export type Options = Pick<
-    BatchLink.Options,
-    "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
-  > &
-    Omit<HttpLink.Options, "useGETForQueries">;
+  /**
+   * Options provided to the `BatchHttpLink` constructor.
+   */
+  export interface Options
+    extends Pick<
+        BatchLink.Options,
+        "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
+      >,
+      Omit<HttpLink.Options, "useGETForQueries"> {}
 
+  /**
+   * Options passed to `BatchHttpLink` through [request context](https://apollographql.com/docs/react/api/link/introduction#managing-context). Previous
+   * non-terminating links in the link chain also can set these values to
+   * customize the behavior of `BatchHttpLink` for each operation.
+   *
+   * > [!NOTE]
+   * > Some of these values can also be provided to the `BatchHttpLink` constructor.
+   * > If a value is provided to both, the value in `context` takes precedence.
+   */
   export type ContextOptions = HttpLink.ContextOptions;
 }
 
 const backupFetch = maybe(() => fetch);
 
 /**
- * Transforms Operation for into HTTP results.
- * context can include the headers property, which will be passed to the fetch function
+ * `BatchHttpLink` is a terminating link that batches array of individual
+ * GraphQL operations into a single HTTP request that's sent to a single GraphQL
+ * endpoint. It combines the functionality of `BaseBatchHttpLink` and
+ * `ClientAwarenessLink` into a single link.
+ *
+ * @remarks
+ *
+ * If you use `BatchHttpLink` instead of `HttpLink` as your terminating link,
+ * Apollo Client automatically batches executed GraphQL operations and transmits
+ * them to your server according to the batching options you provide.
+ *
+ * @example
+ *
+ * ```ts
+ * import { BatchHttpLink } from "@apollo/client/link/batch-http";
+ *
+ * const link = new BatchHttpLink({
+ *   uri: "http://localhost:4000/graphql",
+ *   batchMax: 5, // No more than 5 operations per batch
+ *   batchInterval: 20, // Wait no more than 20ms after first batched operation
+ * });
+ * ```
  */
 export class BatchHttpLink extends ApolloLink {
   constructor(

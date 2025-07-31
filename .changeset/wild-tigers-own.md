@@ -16,4 +16,4 @@ class CustomLink extends ApolloLink {
 }
 ```
 
-As a result of this change, `ApolloLink` no longer detects terminating links by checking function arity on the request handler and as such using methods such as `concat` on a terminating link no longer emit a warning. If the terminating link calls the `forward` function, a warning is emitted instead and an observable that immediately completes is returned.
+As a result of this change, `ApolloLink` no longer detects terminating links by checking function arity on the request handler. This means using methods such as `concat` on a terminating link no longer emit a warning. On the flip side, if the terminating link calls the `forward` function, a warning is emitted and an observable that immediately completes is returned which will result in an error from Apollo Client.

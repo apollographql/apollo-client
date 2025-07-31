@@ -2,7 +2,7 @@
 "@apollo/client": minor
 ---
 
-`ApolloLink`'s `concat` instance method now accepts multiple links to concatenate together.
+`ApolloLink`'s `concat` method now accepts multiple links to concatenate together.
 
 ```ts
 const first = new ApolloLink();

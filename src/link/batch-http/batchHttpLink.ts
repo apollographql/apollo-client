@@ -21,12 +21,11 @@ export declare namespace BatchHttpLink {
   /**
    * Options provided to the `BatchHttpLink` constructor.
    */
-  export interface Options
-    extends Pick<
-        BatchLink.Options,
-        "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
-      >,
-      Omit<HttpLink.Options, "useGETForQueries"> {}
+  export type Options = Pick<
+    BatchLink.Options,
+    "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
+  > &
+    Omit<HttpLink.Options, "useGETForQueries">;
 
   /**
    * Options passed to `BatchHttpLink` through [request context](https://apollographql.com/docs/react/api/link/introduction#managing-context). Previous

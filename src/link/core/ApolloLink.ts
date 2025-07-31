@@ -437,9 +437,10 @@ export class ApolloLink {
       return this;
     }
 
-    return links
-      .map(toLink)
-      .reduce((left, right) => this.combine(left, right), this);
+    return links.reduce<ApolloLink>(
+      (left, right) => this.combine(left, toLink(right)),
+      this
+    );
   }
 
   private combine(left: ApolloLink, right: ApolloLink) {

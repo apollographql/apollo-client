@@ -37,7 +37,7 @@ export declare namespace BatchHttpLink {
    * > Some of these values can also be provided to the `BatchHttpLink` constructor.
    * > If a value is provided to both, the value in `context` takes precedence.
    */
-  export type ContextOptions = HttpLink.ContextOptions;
+  export interface ContextOptions extends HttpLink.ContextOptions {}
 }
 
 const backupFetch = maybe(() => fetch);

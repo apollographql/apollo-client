@@ -8,6 +8,16 @@ description: Batch multiple operations into a single HTTP request
   customOrder={["summary", "example", "remarks"]}
 />
 
+## Constructor signature
+
+{/* TODO: Remove the custom signature once documentation supports rendering constructor functions */}
+
+```ts
+constructor(
+  options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
+): BatchHttpLink
+```
+
 ## Context
 
 The batch HTTP link currently uses the context in two different ways, per batch and per query. The context fields below are used per batch and taken from the first operation in the batch.

@@ -8,6 +8,14 @@ description: Get GraphQL results over a network using HTTP fetch.
   customOrder={["summary", "remarks", "example"]}
 />
 
+{/* TODO: Remove the custom signature once documentation supports rendering constructor functions */}
+
+```ts
+constructor(
+  options: HttpLink.Options & ClientAwarenessLink.Options = {}
+): HttpLink
+```
+
 ## Handling errors
 
 `HttpLink` distinguishes between client errors, server errors, and GraphQL errors. You can add the [`ErrorLink`](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#options).
@@ -83,4 +91,10 @@ const link = new HttpLink({ fetch: customFetch });
   canonicalReference="@apollo/client/link/http!HttpLink.HttpOptions:interface"
   headingLevel={3}
   displayName="HttpLink.HttpOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.Options:interface"
+  headingLevel={3}
+  displayName="ClientAwarenessLink.Options"
 />

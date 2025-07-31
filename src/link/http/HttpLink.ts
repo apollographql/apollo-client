@@ -216,6 +216,10 @@ export declare namespace HttpLink {
  * options on a per-operation basis. You can use these options for
  * authentication, persisted queries, dynamic URIs, and other granular updates.
  *
+ * `HttpLink` combines the functionality of `BaseHttpLink` and
+ * `ClientAwarenessLink` into a single link. If you prefer to use `HttpLink`
+ * without the `ClientAwarenessLink` functionality, use `BaseHttpLink` instead.
+ *
  * @example
  *
  * ```ts

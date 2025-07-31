@@ -116,7 +116,7 @@ export declare namespace ApolloLink {
       (context: Partial<ApolloLink.OperationContext>): void;
       (
         updateContext: (
-          previousContext: ApolloLink.OperationContext
+          previousContext: Readonly<ApolloLink.OperationContext>
         ) => Partial<ApolloLink.OperationContext>
       ): void;
     };

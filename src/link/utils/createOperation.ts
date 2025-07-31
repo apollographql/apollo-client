@@ -23,12 +23,13 @@ export function createOperation(
 
   const setContext: ApolloLink.Operation["setContext"] = (next) => {
     if (typeof next === "function") {
-      context = { ...context, ...next({ ...context }) };
+      context = { ...context, ...next(getContext()) };
     } else {
       context = { ...context, ...next };
     }
   };
-  const getContext: ApolloLink.Operation["getContext"] = () => ({ ...context });
+  const getContext: ApolloLink.Operation["getContext"] = () =>
+    Object.freeze({ ...context });
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,

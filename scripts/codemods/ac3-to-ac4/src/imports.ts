@@ -1,5 +1,10 @@
+import { randomUUID } from "node:crypto";
+
 import type { namedTypes } from "ast-types";
 import type { ASTPath, Collection, Transform } from "jscodeshift";
+
+import type { IdentifierRename } from "./renames.js";
+import { renames } from "./renames.js";
 
 type ImportKind = "type" | "value";
 
@@ -7,6 +12,148 @@ const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
   const combined: Record<string, boolean> = {};
+
+  function findImportSpecifiersFor(
+    description: IdentifierRename["from"] & IdentifierRename["to"],
+    importKind: ImportKind = "value"
+  ) {
+    return findImportDeclarationFor(description, importKind).find(
+      j.ImportSpecifier,
+      (node) => {
+        return (
+          node.imported.name ===
+            (description.namespace || description.identifier) &&
+          (importKind === "type" || (node as any).importKind !== "type")
+        );
+      }
+    );
+  }
+
+  function findImportDeclarationFor(
+    description: IdentifierRename["from"] & IdentifierRename["to"],
+    importKind: ImportKind = "value"
+  ) {
+    return source.find(j.ImportDeclaration, (node) => {
+      const moduleMatches =
+        description.module == "" + node.source.value ||
+        description.alternativeModules?.includes("" + node.source.value) ||
+        false;
+      const isValidImportKind =
+        importKind === "type" || node.importKind !== "type";
+      return moduleMatches && isValidImportKind;
+    });
+  }
+
+  function getUnusedIdentifer() {
+    let identifier: string;
+    do {
+      identifier = randomUUID().replace(/-/g, "_");
+    } while (source.find(j.Identifier, { name: identifier }).size() > 0);
+    return identifier;
+  }
+
+  for (const rename of renames) {
+    if (!("importType" in rename)) {
+      moveAllSpecifiersToEntrypoint(rename.from.module, rename.to.module);
+      continue;
+    }
+    const { from, to, importType } = rename;
+    const final = { ...from, ...to };
+
+    findImportSpecifiersFor(from, importType).forEach((specifierPath) => {
+      if (from.namespace && to.namespace) {
+        throw new Error(
+          "This case is not supported yet: " + JSON.stringify(rename)
+        );
+      } else if (from.namespace) {
+        throw new Error(
+          "This case is not supported yet: " + JSON.stringify(rename)
+        );
+      }
+
+      const originalNode = JSON.parse(JSON.stringify(specifierPath.value));
+      const importDeclaration = j(specifierPath).closest(j.ImportDeclaration);
+
+      // create a temporary const definition with the original "local name" of the import
+      const tempId = getUnusedIdentifer();
+      const tempDeclaration = j.variableDeclaration("const", [
+        j.variableDeclarator(
+          j.identifier("" + (originalNode.local || originalNode.imported).name)
+        ),
+      ]);
+      // insert the temporary declaration in the source
+      importDeclaration.insertAfter(tempDeclaration);
+      // find the inserted variable declaration from the source (required to be able to rename it)
+      const tempVariable = source
+        .find(j.VariableDeclaration, tempDeclaration)
+        .find(j.VariableDeclarator);
+      // rename the temporary variable to a temporary unique identifier
+      tempVariable.renameTo(tempId);
+      // and remove it
+      tempVariable.remove();
+
+      // undo accidental rename of the imported variable
+      specifierPath.replace(originalNode);
+
+      // replace the unique identifier with the new correct variable access
+      source
+        .find(j.Identifier, {
+          name: tempId,
+        })
+        .replaceWith(
+          final.namespace ?
+            j.memberExpression(
+              j.identifier(final.namespace),
+              j.identifier(final.identifier)
+            )
+          : j.identifier(final.identifier)
+        );
+
+      if (findImportSpecifiersFor(final, importType).size() > 0) {
+        // if the target import specifier already exists, we can just remove this one
+        specifierPath.replace();
+      } else {
+        const targetDeclaration = findImportDeclarationFor(
+          final,
+          importType
+        ).nodes()[0];
+        const newImportName = j.identifier(
+          to.namespace || to.identifier || from.identifier
+        );
+        if (targetDeclaration === specifierPath.parent) {
+          // specifierPath should have been removed anyways, so we just reuse it in the existing position
+          specifierPath.node.name = newImportName;
+          specifierPath.node.local = undefined;
+        } else {
+          // remove the specifier, we create a new one in a different import declaration
+          specifierPath.replace();
+          if (targetDeclaration) {
+            const specifier = j.importSpecifier(newImportName);
+            if (
+              importType === "type" &&
+              targetDeclaration.importKind !== "type"
+            ) {
+              (specifier as any).importKind = "type";
+            }
+            (targetDeclaration.specifiers ??= []).push(specifier);
+          } else {
+            importDeclaration.insertAfter(
+              j.importDeclaration(
+                [j.importSpecifier(newImportName)],
+                j.literal(to.module || from.module),
+                importType
+              )
+            );
+          }
+        }
+      }
+      if (importDeclaration.size() === 0) {
+        importDeclaration.remove();
+      }
+    });
+  }
+
+  return source.toSource();
 
   renameTypeSpecifier("QueryReference", "QueryRef", "@apollo/client");
   renameTypeSpecifier("QueryReference", "QueryRef", "@apollo/client/react");

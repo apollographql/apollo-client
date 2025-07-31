@@ -13,3 +13,17 @@ const link = new ApolloLink((operation, forward) => {
 + return EMPTY;
 });
 ```
+
+If you have a custom link that overrides the `request` method, remove `null` from the return signature:
+
+```diff
+class MyCustomLink extends ApolloLink {
+  request(
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction,
+- ): Observable<ApolloLink.Result> | null {
++ ): Observable<ApolloLink.Result> {
+    // implementation
+  }
+}
+```

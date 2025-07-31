@@ -20,13 +20,6 @@ import {
 
 import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
-function passthrough(
-  op: ApolloLink.Operation,
-  forward: ApolloLink.ForwardFunction
-) {
-  return forward(op);
-}
-
 export declare namespace ApolloLink {
   export interface ExecuteContext {
     /**
@@ -264,7 +257,7 @@ export class ApolloLink {
   public static split(
     test: (op: ApolloLink.Operation) => boolean,
     left: ApolloLink,
-    right: ApolloLink = new ApolloLink(passthrough)
+    right: ApolloLink = new ApolloLink((op, forward) => forward(op))
   ): ApolloLink {
     const link = new ApolloLink((operation, forward) => {
       const result = test(operation);

@@ -8,52 +8,29 @@ description: Get GraphQL results over a network using HTTP fetch.
   customOrder={["summary", "remarks", "example"]}
 />
 
+## Handling errors
+
+`HttpLink` distinguishes between client errors, server errors, and GraphQL errors. You can add the [`ErrorLink`](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#options).
+
+The following types of errors can occur:
+
+| Error          | Description                                                                                                            | Callback | Error Type                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- | :------: | ---------------------------------------------------------- |
+| Client Parse   | The request body is not serializable, for example due to a circular reference.                                         | `error`  | `ClientParseError`                                         |
+| Server Parse   | The server's response cannot be parsed ([response.json()](https://developer.mozilla.org/en-US/docs/Web/API/Body/json)) | `error`  | [`ServerParseError`](../errors/ServerParseError)           |
+| Server Network | The server responded with a non-2xx HTTP code.                                                                         | `error`  | [`ServerError`](../errors/ServerError)                     |
+| Server Data    | The server's response didn't contain `data` or `errors`.                                                               | `error`  | [`ServerError`](../errors/ServerError)                     |
+| GraphQL Error  | Resolving the GraphQL operation resulted in at least one error, which is present in the `errors` field.                |  `next`  | [`CombinedGraphQLErrors`](../errors/CombinedGraphQLErrors) |
+
+See the documentation on [Identifying error types](../../data/error-handling#identifying-error-types) to learn how to distinguish between the different error types.
+
 ## Operation results
 
 After your GraphQL endpoint (successfully) responds with the result of the sent operation, `HttpLink` sets it as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response before it's returned.
 
-## Handling errors
-
-`HttpLink` distinguishes between client errors, server errors, and GraphQL errors. You can add the [`onError` link](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#options).
-
-The following types of errors can occur:
-
-| Error          | Description                                                                                                            | Callback | Error Type         |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------- | :------: | ------------------ |
-| Client Parse   | The request body is not serializable, for example due to a circular reference.                                         | `error`  | `ClientParseError` |
-| Server Parse   | The server's response cannot be parsed ([response.json()](https://developer.mozilla.org/en-US/docs/Web/API/Body/json)) | `error`  | `ServerParseError` |
-| Server Network | The server responded with a non-2xx HTTP code.                                                                         | `error`  | `ServerError`      |
-| Server Data    | The server's response didn't contain `data` or `errors`.                                                               | `error`  | `ServerError`      |
-| GraphQL Error  | Resolving the GraphQL operation resulted in at least one error, which is present in the `errors` field.                |  `next`  | `Object`           |
-
-Because many server implementations can return a valid GraphQL result on a server network error, the thrown `Error` object contains the parsed server result. A server data error also receives the parsed result.
-
-All error types inherit the `name`, `message`, and nullable `stack` properties from the generic javascript [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error):
-
-```js
-//type ClientParseError
-{
-  parseError: Error;                // Error returned from response.json()
-};
-
-//type ServerParseError
-{
-  response: Response;               // Object returned from fetch()
-  statusCode: number;               // HTTP status code
-  bodyText: string                  // text that was returned from server
-};
-
-//type ServerError
-{
-  result: Record<string, any>;      // Parsed object from server response
-  response: Response;               // Object returned from fetch()
-  statusCode: number;               // HTTP status code
-};
-```
-
 ## Customizing `fetch`
 
-You can provide the [`fetch` option](#fetch) to the `HttpLink` constructor to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
+You can provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
 
 If you're targeting an environment that doesn't provide the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) (such as older browsers or the server) you can provide a different implementation of `fetch`. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for running in Node.
 

@@ -167,6 +167,17 @@ export declare namespace ApolloLink {
     /**
      * A function that when called will execute the next link in the link chain.
      *
+     * @example
+     *
+     * ```ts
+     * const link = new ApolloLink((operation, forward) => {
+     *   // process the request
+     *
+     *   // Call `forward` to execute the next link in the chain
+     *   return forward(operation);
+     * });
+     * ```
+     *
      * @param operation - The current `ApolloLink.Operation` object for the
      * request.
      */

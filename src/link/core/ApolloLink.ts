@@ -415,10 +415,7 @@ export class ApolloLink {
       return this;
     }
 
-    return links.reduce<ApolloLink>(
-      (left, right) => this.combine(left, right),
-      this
-    );
+    return links.reduce(this.combine.bind(this), this);
   }
 
   private combine(left: ApolloLink, right: ApolloLink) {

@@ -127,7 +127,7 @@ export class MockLink extends ApolloLink {
 
   public request(
     operation: ApolloLink.Operation
-  ): Observable<ApolloLink.Result> | null {
+  ): Observable<ApolloLink.Result> {
     this.operation = operation;
     const unmatchedVars: UnmatchedVariables = [];
     const mocks = this.getMockedResponses(operation);

@@ -68,10 +68,7 @@ export class BatchLink extends ApolloLink {
   public request(
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ): Observable<ApolloLink.Result> | null {
-    return this.batcher.enqueueRequest({
-      operation,
-      forward,
-    });
+  ): Observable<ApolloLink.Result> {
+    return this.batcher.enqueueRequest({ operation, forward });
   }
 }

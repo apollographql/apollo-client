@@ -50,7 +50,7 @@ export class WebSocketLink extends ApolloLink {
 
   public request(
     operation: ApolloLink.Operation
-  ): Observable<ApolloLink.Result> | null {
+  ): Observable<ApolloLink.Result> {
     return this.subscriptionClient.request(
       operation
     ) as Observable<ApolloLink.Result>;

@@ -722,7 +722,7 @@ describe("BatchLink", () => {
       }),
       new ApolloLink((operation) => {
         expect(operation.query).toEqual(query);
-        return null;
+        return EMPTY;
       }),
     ]);
 

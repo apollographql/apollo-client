@@ -210,7 +210,7 @@ export class BaseBatchHttpLink extends ApolloLink {
   public request(
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ): Observable<ApolloLink.Result> | null {
+  ): Observable<ApolloLink.Result> {
     return this.batcher.request(operation, forward);
   }
 }

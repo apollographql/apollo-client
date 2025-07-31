@@ -51,43 +51,58 @@ async function* consumeMultipartBody(
     "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
   );
 
-  const reader = response.body.getReader();
+  const stream = response.body;
+  const reader = stream.getReader();
   let done = false;
+  let encounteredBoundary = false;
   let value: Uint8Array<ArrayBufferLike> | string | undefined;
 
-  while (!done) {
-    ({ value, done } = await reader.read());
-    const chunk = typeof value === "string" ? value : decoder.decode(value);
-    const searchFrom = buffer.length - boundary.length + 1;
-    buffer += chunk;
-    let bi = buffer.indexOf(boundary, searchFrom);
+  // check to see if we received the final boundary, which is a normal boundary followed by "--"
+  // as described in https://www.rfc-editor.org/rfc/rfc2046#section-5.1.1
+  const passedFinalBoundary = () =>
+    encounteredBoundary && buffer[0] == "-" && buffer[1] == "-";
 
-    while (bi > -1) {
-      let message: string;
-      [message, buffer] = [
-        buffer.slice(0, bi),
-        buffer.slice(bi + boundary.length),
-      ];
-      const i = message.indexOf("\r\n\r\n");
-      const headers = parseHeaders(message.slice(0, i));
-      const contentType = headers["content-type"];
-      if (
-        contentType &&
-        contentType.toLowerCase().indexOf("application/json") === -1
-      ) {
-        throw new Error(
-          "Unsupported patch content type: application/json is required."
-        );
-      }
-      // nb: Technically you'd want to slice off the beginning "\r\n" but since
-      // this is going to be `JSON.parse`d there is no need.
-      const body = message.slice(i);
+  try {
+    while (!done) {
+      ({ value, done } = await reader.read());
+      const chunk = typeof value === "string" ? value : decoder.decode(value);
+      const searchFrom = buffer.length - boundary.length + 1;
+      buffer += chunk;
+      let bi = buffer.indexOf(boundary, searchFrom);
+      while (bi > -1 && !passedFinalBoundary()) {
+        encounteredBoundary = true;
+        let message: string;
+        [message, buffer] = [
+          buffer.slice(0, bi),
+          buffer.slice(bi + boundary.length),
+        ];
+        const i = message.indexOf("\r\n\r\n");
+        const headers = parseHeaders(message.slice(0, i));
+        const contentType = headers["content-type"];
+        if (
+          contentType &&
+          contentType.toLowerCase().indexOf("application/json") === -1
+        ) {
+          throw new Error(
+            "Unsupported patch content type: application/json is required."
+          );
+        }
+        // nb: Technically you'd want to slice off the beginning "\r\n" but since
+        // this is going to be `JSON.parse`d there is no need.
+        const body = message.slice(i);
 
-      if (body) {
-        yield body;
+        if (body) {
+          yield body;
+        }
+        bi = buffer.indexOf(boundary);
       }
-      bi = buffer.indexOf(boundary);
+      if (passedFinalBoundary()) {
+        return;
+      }
     }
+    throw new Error("premature end of multipart body");
+  } finally {
+    reader.cancel();
   }
 }
 

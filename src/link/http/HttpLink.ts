@@ -208,8 +208,7 @@ export declare namespace HttpLink {
 
 /**
  * `HttpLink` is a terminating link that sends a GraphQL operation to a remote
- * endpoint over HTTP. Apollo Client uses `HttpLink` by default when you provide
- * the `uri` option to the `ApolloClient` constructor.
+ * endpoint over HTTP.
  *
  * @remarks
  *

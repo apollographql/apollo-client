@@ -340,17 +340,6 @@ describe("ApolloLink", () => {
         console.warn = _warn;
       });
 
-      it("should return an empty observable when a link returns null", async () => {
-        const link = new ApolloLink();
-        link.request = () => null;
-
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toComplete();
-      });
-
       it("should return an empty observable when a link is empty", async () => {
         const stream = new ObservableStream(
           execute(
@@ -361,45 +350,6 @@ describe("ApolloLink", () => {
         );
 
         await expect(stream).toComplete();
-      });
-
-      it("should return an empty observable when a concat'd link returns null", async () => {
-        const link = new ApolloLink((operation, forward) => {
-          return forward(operation);
-        }).concat(new ApolloLink(() => null));
-
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toComplete();
-      });
-
-      it("should return an empty observable when a split link returns null", async () => {
-        let context = { test: true };
-        const link = new SetContextLink(() => context).split(
-          (op) => op.getContext().test,
-          new ApolloLink(() => EMPTY),
-          new ApolloLink(() => null)
-        );
-
-        {
-          const stream = new ObservableStream(
-            execute(link, { query: sampleQuery }, defaultExecuteContext)
-          );
-
-          await expect(stream).toComplete();
-        }
-
-        context.test = false;
-
-        {
-          const stream = new ObservableStream(
-            execute(link, { query: sampleQuery }, defaultExecuteContext)
-          );
-
-          await expect(stream).toComplete();
-        }
       });
 
       it("should set a default context, variable, and query on a copy of operation", async () => {

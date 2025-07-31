@@ -71,7 +71,7 @@ export declare namespace ApolloLink {
   export type RequestHandler = (
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ) => Observable<ApolloLink.Result> | null;
+  ) => Observable<ApolloLink.Result>;
 
   export type Result<
     TData = Record<string, any>,
@@ -279,8 +279,8 @@ export class ApolloLink {
       }
 
       return result ?
-          left.request(operation, forward) || EMPTY
-        : right.request(operation, forward) || EMPTY;
+          left.request(operation, forward)
+        : right.request(operation, forward);
     });
     return Object.assign(link, { left, right });
   }
@@ -320,19 +320,17 @@ export class ApolloLink {
     request: ApolloLink.Request,
     context: ApolloLink.ExecuteContext
   ): Observable<ApolloLink.Result> {
-    return (
-      link.request(createOperation(request, context), () => {
-        if (__DEV__) {
-          invariant.warn(
-            "The terminating link provided to `ApolloLink.execute` called `forward` instead of handling the request. " +
-              "This results in an observable that immediately completes and does not emit a value. " +
-              "Please provide a terminating link that properly handles the request.\n\n" +
-              "If you are using a split link, ensure each branch contains a terminating link that handles the request."
-          );
-        }
-        return EMPTY;
-      }) || EMPTY
-    );
+    return link.request(createOperation(request, context), () => {
+      if (__DEV__) {
+        invariant.warn(
+          "The terminating link provided to `ApolloLink.execute` called `forward` instead of handling the request. " +
+            "This results in an observable that immediately completes and does not emit a value. " +
+            "Please provide a terminating link that properly handles the request.\n\n" +
+            "If you are using a split link, ensure each branch contains a terminating link that handles the request."
+        );
+      }
+      return EMPTY;
+    });
   }
 
   /**
@@ -432,11 +430,7 @@ export class ApolloLink {
 
   private combine(left: ApolloLink, right: ApolloLink) {
     const link = new ApolloLink((operation, forward) => {
-      return (
-        left.request(operation, (op) => {
-          return right.request(op, forward) || EMPTY;
-        }) || EMPTY
-      );
+      return left.request(operation, (op) => right.request(op, forward));
     });
 
     return Object.assign(link, { left, right });
@@ -453,7 +447,7 @@ export class ApolloLink {
   public request(
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
-  ): Observable<ApolloLink.Result> | null {
+  ): Observable<ApolloLink.Result> {
     throw newInvariantError("request is not implemented");
   }
 

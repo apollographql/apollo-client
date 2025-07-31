@@ -68,30 +68,7 @@ describe("ApolloLink", () => {
   });
 
   describe("context", () => {
-    it("should merge context when using a function", async () => {
-      const returnOne = new SetContextLink(setContext);
-      const mock = new ApolloLink((op, forward) => {
-        op.setContext((context: { add: number }) => ({ add: context.add + 2 }));
-        op.setContext(() => ({ substract: 1 }));
-
-        return forward(op);
-      });
-      const link = returnOne.concat(mock).concat((op) => {
-        expect(op.getContext()).toEqual({
-          add: 3,
-          substract: 1,
-        });
-        return of({ data: { count: op.getContext().add } });
-      });
-      const stream = new ObservableStream(
-        execute(link, { query: sampleQuery }, defaultExecuteContext)
-      );
-
-      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
-      await expect(stream).toComplete();
-    });
-
-    it("should merge context when not using a function", async () => {
+    it("merges context", async () => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
         op.setContext({ add: 3 });
@@ -99,13 +76,15 @@ describe("ApolloLink", () => {
 
         return forward(op);
       });
-      const link = returnOne.concat(mock).concat((op) => {
-        expect(op.getContext()).toEqual({
-          add: 3,
-          substract: 1,
-        });
-        return of({ data: { count: op.getContext().add } });
-      });
+      const link = returnOne.concat(mock).concat(
+        new ApolloLink((op) => {
+          expect(op.getContext()).toEqual({
+            add: 3,
+            substract: 1,
+          });
+          return of({ data: { count: op.getContext().add } });
+        })
+      );
       const stream = new ObservableStream(
         execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
@@ -116,20 +95,7 @@ describe("ApolloLink", () => {
   });
 
   describe("concat", () => {
-    it("should concat a function", async () => {
-      const returnOne = new SetContextLink(setContext);
-      const link = returnOne.concat((operation, forward) => {
-        return of({ data: { count: operation.getContext().add } });
-      });
-      const stream = new ObservableStream(
-        execute(link, { query: sampleQuery }, defaultExecuteContext)
-      );
-
-      await expect(stream).toEmitTypedValue({ data: { count: 1 } });
-      await expect(stream).toComplete();
-    });
-
-    it("should concat a Link", async () => {
+    it("concats a Link", async () => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op) =>
         of({ data: { count: op.getContext().add } })
@@ -164,67 +130,7 @@ describe("ApolloLink", () => {
       await expect(stream).toEmitError(error);
     });
 
-    it("should concat a Link and function", async () => {
-      const returnOne = new SetContextLink(setContext);
-      const mock = new ApolloLink((op, forward) => {
-        op.setContext((context: { add: number }) => ({ add: context.add + 2 }));
-        return forward(op);
-      });
-      const link = returnOne.concat(mock).concat((op) => {
-        return of({ data: { count: op.getContext().add } });
-      });
-
-      const stream = new ObservableStream(
-        execute(link, { query: sampleQuery }, defaultExecuteContext)
-      );
-
-      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
-      await expect(stream).toComplete();
-    });
-
-    it("should concat a function and Link", async () => {
-      const returnOne = new SetContextLink(setContext);
-      const mock = new ApolloLink((op, forward) =>
-        of({ data: { count: op.getContext().add } })
-      );
-
-      const link = returnOne
-        .concat((operation, forward) => {
-          operation.setContext({
-            add: operation.getContext().add + 2,
-          });
-          return forward(operation);
-        })
-        .concat(mock);
-
-      const stream = new ObservableStream(
-        execute(link, { query: sampleQuery }, defaultExecuteContext)
-      );
-
-      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
-      await expect(stream).toComplete();
-    });
-
-    it("should concat two functions", async () => {
-      const returnOne = new SetContextLink(setContext);
-      const link = returnOne
-        .concat((operation, forward) => {
-          operation.setContext({
-            add: operation.getContext().add + 2,
-          });
-          return forward(operation);
-        })
-        .concat((op, forward) => of({ data: { count: op.getContext().add } }));
-
-      const stream = new ObservableStream(
-        execute(link, { query: sampleQuery }, defaultExecuteContext)
-      );
-
-      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
-      await expect(stream).toComplete();
-    });
-
-    it("should concat two Links", async () => {
+    it("concats multiple links when chaining concat calls", async () => {
       const returnOne = new SetContextLink(setContext);
       const mock1 = new ApolloLink((operation, forward) => {
         operation.setContext({
@@ -232,7 +138,7 @@ describe("ApolloLink", () => {
         });
         return forward(operation);
       });
-      const mock2 = new ApolloLink((op, forward) =>
+      const mock2 = new ApolloLink((op) =>
         of({ data: { count: op.getContext().add } })
       );
 
@@ -246,7 +152,7 @@ describe("ApolloLink", () => {
       await expect(stream).toComplete();
     });
 
-    it("should return an link that can be concat'd multiple times", async () => {
+    it("returns a link that can be concat'd multiple times", async () => {
       const returnOne = new SetContextLink(setContext);
       const mock1 = new ApolloLink((operation, forward) => {
         operation.setContext({
@@ -254,10 +160,10 @@ describe("ApolloLink", () => {
         });
         return forward(operation);
       });
-      const mock2 = new ApolloLink((op, forward) =>
+      const mock2 = new ApolloLink((op) =>
         of({ data: { count: op.getContext().add + 2 } })
       );
-      const mock3 = new ApolloLink((op, forward) =>
+      const mock3 = new ApolloLink((op) =>
         of({ data: { count: op.getContext().add + 3 } })
       );
       const link = returnOne.concat(mock1);
@@ -381,7 +287,7 @@ describe("ApolloLink", () => {
   });
 
   describe("execute", () => {
-    it("transforms an opearation with context into something serlizable", async () => {
+    it("transforms an operation with context into something serlizable", async () => {
       const query = gql`
         {
           id
@@ -460,7 +366,7 @@ describe("ApolloLink", () => {
       it("should return an empty observable when a concat'd link returns null", async () => {
         const link = new ApolloLink((operation, forward) => {
           return forward(operation);
-        }).concat(() => null);
+        }).concat(new ApolloLink(() => null));
 
         const stream = new ObservableStream(
           execute(link, { query: sampleQuery }, defaultExecuteContext)
@@ -473,8 +379,8 @@ describe("ApolloLink", () => {
         let context = { test: true };
         const link = new SetContextLink(() => context).split(
           (op) => op.getContext().test,
-          () => EMPTY,
-          () => null
+          new ApolloLink(() => EMPTY),
+          new ApolloLink(() => null)
         );
 
         {
@@ -743,43 +649,7 @@ describe("ApolloLink", () => {
   });
 
   describe("split", () => {
-    it("should split two functions", async () => {
-      const context = { add: 1 };
-      const returnOne = new SetContextLink(() => context);
-      const link1 = returnOne.concat((operation, forward) =>
-        of({ data: { count: operation.getContext().add + 1 } })
-      );
-      const link2 = returnOne.concat((operation, forward) =>
-        of({ data: { count: operation.getContext().add + 2 } })
-      );
-      const link = returnOne.split(
-        (operation) => operation.getContext().add === 1,
-        link1,
-        link2
-      );
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
-        await expect(stream).toComplete();
-      }
-
-      context.add = 2;
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 4 } });
-        await expect(stream).toComplete();
-      }
-    });
-
-    it("should split two Links", async () => {
+    it("conditionally routes request to the proper link", async () => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat(
@@ -819,65 +689,29 @@ describe("ApolloLink", () => {
       }
     });
 
-    it("should split a link and a function", async () => {
-      const context = { add: 1 };
-      const returnOne = new SetContextLink(() => context);
-      const link1 = returnOne.concat((operation, forward) =>
-        of({ data: { count: operation.getContext().add + 1 } })
-      );
-      const link2 = returnOne.concat(
-        new ApolloLink((operation, forward) =>
-          of({ data: { count: operation.getContext().add + 2 } })
-        )
-      );
-      const link = returnOne.split(
-        (operation) => operation.getContext().add === 1,
-        link1,
-        link2
-      );
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
-        await expect(stream).toComplete();
-      }
-
-      context.add = 2;
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 4 } });
-        await expect(stream).toComplete();
-      }
-    });
-
-    it("should allow concat after split to be join", async () => {
+    it("allows concat after split to be joined", async () => {
       const context = { test: true, add: 1 };
       const start = new SetContextLink(() => ({ ...context }));
       const link = start
         .split(
           (operation) => operation.getContext().test,
-          (operation, forward) => {
+          new ApolloLink((operation, forward) => {
             operation.setContext((context: { add: number }) => ({
               add: context.add + 1,
             }));
             return forward(operation);
-          },
-          (operation, forward) => {
+          }),
+          new ApolloLink((operation, forward) => {
             operation.setContext((context: { add: number }) => ({
               add: context.add + 2,
             }));
             return forward(operation);
-          }
+          })
         )
-        .concat((operation) =>
-          of({ data: { count: operation.getContext().add } })
+        .concat(
+          new ApolloLink((operation) =>
+            of({ data: { count: operation.getContext().add } })
+          )
         );
 
       {
@@ -908,19 +742,22 @@ describe("ApolloLink", () => {
       const start = new SetContextLink(() => context);
       const link = start.split(
         (operation) => operation.getContext().test,
-        (operation) =>
+        new ApolloLink(() =>
           of({
             data: {
               count: 1,
             },
           })
+        )
       );
-      const concat = link.concat((operation) =>
-        of({
-          data: {
-            count: 2,
-          },
-        })
+      const concat = link.concat(
+        new ApolloLink(() =>
+          of({
+            data: {
+              count: 2,
+            },
+          })
+        )
       );
 
       {
@@ -957,7 +794,7 @@ describe("ApolloLink", () => {
       using _ = spyOnConsole("warn");
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => of({ data: { count: 1 } })
+        new ApolloLink(() => of({ data: { count: 1 } }))
       );
 
       let context = { test: true };
@@ -978,36 +815,6 @@ describe("ApolloLink", () => {
           execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
-        await expect(stream).toComplete();
-      }
-    });
-
-    it("should split two functions", async () => {
-      const link = ApolloLink.split(
-        (operation) => operation.getContext().test,
-        (operation, forward) => of({ data: { count: 1 } }),
-        (operation, forward) => of({ data: { count: 2 } })
-      );
-
-      let context = { test: true };
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
-        await expect(stream).toComplete();
-      }
-
-      context.test = false;
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
     });
@@ -1015,38 +822,8 @@ describe("ApolloLink", () => {
     it("should split two Links", async () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => of({ data: { count: 1 } }),
-        new ApolloLink((operation, forward) => of({ data: { count: 2 } }))
-      );
-
-      let context = { test: true };
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
-        await expect(stream).toComplete();
-      }
-
-      context.test = false;
-
-      {
-        const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
-        );
-
-        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
-        await expect(stream).toComplete();
-      }
-    });
-
-    it("should split a link and a function", async () => {
-      const link = ApolloLink.split(
-        (operation) => operation.getContext().test,
-        (operation, forward) => of({ data: { count: 1 } }),
-        new ApolloLink((operation, forward) => of({ data: { count: 2 } }))
+        new ApolloLink(() => of({ data: { count: 1 } })),
+        new ApolloLink(() => of({ data: { count: 2 } }))
       );
 
       let context = { test: true };
@@ -1076,7 +853,7 @@ describe("ApolloLink", () => {
       const context = { test: true };
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) =>
+        new ApolloLink((operation, forward) =>
           (
             forward(operation) as Observable<FormattedExecutionResult<any>>
           ).pipe(
@@ -1084,7 +861,8 @@ describe("ApolloLink", () => {
               data: { count: data.data!.count + 1 },
             }))
           )
-      ).concat(() => of({ data: { count: 1 } }));
+        )
+      ).concat(new ApolloLink(() => of({ data: { count: 1 } })));
 
       {
         const stream = new ObservableStream(
@@ -1110,8 +888,8 @@ describe("ApolloLink", () => {
       const context = { test: true };
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation) => of({ data: { count: 2 } })
-      ).concat((operation) => of({ data: { count: 1 } }));
+        new ApolloLink(() => of({ data: { count: 2 } }))
+      ).concat(new ApolloLink(() => of({ data: { count: 1 } })));
 
       {
         const stream = new ObservableStream(

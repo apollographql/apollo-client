@@ -152,7 +152,7 @@ describe("client", () => {
 
     const variables = { first: 1 };
 
-    const link = ApolloLink.from([() => of({ data })]);
+    const link = ApolloLink.from([new ApolloLink(() => of({ data }))]);
 
     const client = new ApolloClient({
       link,
@@ -621,11 +621,11 @@ describe("client", () => {
     ];
 
     const link = ApolloLink.from([
-      () => {
+      new ApolloLink(() => {
         return new Observable((observer) => {
           observer.next({ data, errors });
         });
-      },
+      }),
     ]);
 
     const client = new ApolloClient({
@@ -652,11 +652,11 @@ describe("client", () => {
     const networkError = new Error("Some kind of network error.");
 
     const link = ApolloLink.from([
-      () => {
+      new ApolloLink(() => {
         return new Observable((_) => {
           throw networkError;
         });
-      },
+      }),
     ]);
 
     const client = new ApolloClient({
@@ -688,7 +688,9 @@ describe("client", () => {
       },
     };
 
-    const link = ApolloLink.from([() => of({ data }, { data })]);
+    const link = ApolloLink.from([
+      new ApolloLink(() => of({ data }, { data })),
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -1447,10 +1449,10 @@ describe("client", () => {
       fortuneCookie: "The waiter spit in your food",
     };
     const link = ApolloLink.from([
-      (request) => {
-        expect(request.operationName).toBe("myQueryName");
+      new ApolloLink((operation) => {
+        expect(operation.operationName).toBe("myQueryName");
         return of({ data });
-      },
+      }),
     ]);
     const client = new ApolloClient({
       link,
@@ -1472,10 +1474,10 @@ describe("client", () => {
       fortuneCookie: "The waiter spit in your food",
     };
     const link = ApolloLink.from([
-      (request) => {
-        expect(request.operationName).toBe("myMutationName");
+      new ApolloLink((operation) => {
+        expect(operation.operationName).toBe("myMutationName");
         return of({ data });
-      },
+      }),
     ]);
     const client = new ApolloClient({
       link,
@@ -2711,11 +2713,13 @@ describe("client", () => {
 
   it("should propagate errors from network interface to observers", async () => {
     const link = ApolloLink.from([
-      () =>
-        new Observable((x) => {
-          x.error(new Error("Uh oh!"));
-          return;
-        }),
+      new ApolloLink(
+        () =>
+          new Observable((x) => {
+            x.error(new Error("Uh oh!"));
+            return;
+          })
+      ),
     ]);
 
     const client = new ApolloClient({

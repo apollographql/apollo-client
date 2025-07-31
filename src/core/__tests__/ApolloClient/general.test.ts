@@ -4286,11 +4286,13 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -4858,12 +4860,14 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            return;
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              return;
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -4908,12 +4912,14 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              observer.complete();
+            })
+        ),
       ]);
 
       const client = new ApolloClient({

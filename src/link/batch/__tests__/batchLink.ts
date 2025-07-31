@@ -819,7 +819,7 @@ describe("BatchLink", () => {
           batchMax: 0,
           batchHandler,
         }),
-        () => of(42) as any,
+        new ApolloLink(() => of(42) as any),
       ]);
 
       execute(

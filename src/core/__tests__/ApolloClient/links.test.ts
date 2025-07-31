@@ -31,16 +31,16 @@ describe("Link interactions", () => {
       },
     };
 
-    const evictionLink = (
-      operation: ApolloLink.Operation,
-      forward: ApolloLink.ForwardFunction
-    ) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { client } = operation;
       expect(client).toBeDefined();
       return (forward(operation) as Observable<FormattedExecutionResult>).pipe(
         map((result) => {
           setTimeout(() => {
-            const cacheResult = client.cache.read({ query, optimistic: true });
+            const cacheResult = client.cache.read({
+              query,
+              optimistic: true,
+            });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
             if (count === 2) {
@@ -50,7 +50,7 @@ describe("Link interactions", () => {
           return result;
         })
       );
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
@@ -233,15 +233,12 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (
-      operation: ApolloLink.Operation,
-      forward: ApolloLink.ForwardFunction
-    ) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { client } = operation;
       expect(client).toBeDefined();
       done();
       return forward(operation);
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
@@ -265,15 +262,12 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (
-      operation: ApolloLink.Operation,
-      forward: ApolloLink.ForwardFunction
-    ) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { planet } = operation.getContext();
       expect(planet).toBe("Tatooine");
       done();
       return forward(operation);
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);

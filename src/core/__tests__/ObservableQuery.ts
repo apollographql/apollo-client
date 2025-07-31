@@ -1067,13 +1067,15 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-          }),
+      const link = ApolloLink.from([
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              observer.complete();
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -1132,8 +1134,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             setTimeout(() => {
               timesFired += 1;
@@ -1141,7 +1143,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             });
           });
-        },
+        }),
       ]);
 
       const client = new ApolloClient({
@@ -1204,8 +1206,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             timesFired += 1;
             setTimeout(() => {
@@ -1213,7 +1215,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             }, 20);
           });
-        },
+        }),
       ]);
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -1269,8 +1271,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             timesFired += 1;
             setTimeout(() => {
@@ -1278,7 +1280,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             }, 20);
           });
-        },
+        }),
       ]);
       const client = new ApolloClient({
         cache: new InMemoryCache(),

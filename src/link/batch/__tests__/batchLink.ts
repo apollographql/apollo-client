@@ -131,7 +131,7 @@ describe("OperationBatcher", () => {
     expect(() => {
       const querySched = new OperationBatcher({
         batchInterval: 10,
-        batchHandler: () => null,
+        batchHandler: () => EMPTY,
       });
       querySched.consumeQueue("");
     }).not.toThrow();
@@ -140,7 +140,7 @@ describe("OperationBatcher", () => {
   it("should not do anything when faced with an empty queue", () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => null,
+      batchHandler: () => EMPTY,
       batchKey: () => "yo",
     });
 
@@ -154,7 +154,7 @@ describe("OperationBatcher", () => {
   it("should be able to add to the queue", () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => null,
+      batchHandler: () => EMPTY,
     });
 
     const query = gql`

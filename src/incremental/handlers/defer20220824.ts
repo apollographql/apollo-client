@@ -4,7 +4,7 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "@apollo/client";
+import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
@@ -44,7 +44,7 @@ export declare namespace Defer20220824Handler {
 }
 
 declare module "@apollo/client/link" {
-  export interface AdditionalFetchResultTypes {
+  export interface AdditionalApolloLinkResultTypes {
     Defer20220824Handler: Defer20220824Handler.Chunk<Record<string, unknown>>;
   }
 }
@@ -136,7 +136,7 @@ export class Defer20220824Handler
     return "hasNext" in result;
   }
 
-  extractErrors(result: FetchResult<any>) {
+  extractErrors(result: ApolloLink.Result<any>) {
     const acc: GraphQLFormattedError[] = [];
     const push = ({
       errors,
@@ -158,7 +158,7 @@ export class Defer20220824Handler
     }
   }
 
-  prepareRequest(request: GraphQLRequest): GraphQLRequest {
+  prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
     if (hasDirectives(["defer"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});

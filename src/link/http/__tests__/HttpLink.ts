@@ -8,7 +8,6 @@ import type { Observer, Subscription } from "rxjs";
 import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
-import type { FetchResult } from "@apollo/client";
 import {
   ApolloClient,
   InMemoryCache,
@@ -30,7 +29,6 @@ import {
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
-  spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 
@@ -426,19 +424,6 @@ describe("HttpLink", () => {
       expect(error.message).toMatch(/Extensions map is not serializable/);
       expect(error.parseError.message).toMatch(
         /Converting circular structure to JSON/
-      );
-    });
-
-    it("raises warning if called with concat", () => {
-      using _ = spyOnConsole("warn");
-      const link = createHttpLink();
-
-      expect(link.concat((operation, forward) => forward(operation))).toEqual(
-        link
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        "You are calling concat on a terminating link, which will have no effect %o",
-        link
       );
     });
 
@@ -1158,7 +1143,7 @@ describe("HttpLink", () => {
         return instances;
       }
 
-      const failingObserver: Observer<FetchResult> = {
+      const failingObserver: Observer<ApolloLink.Result> = {
         next: () => {
           fail("result should not have been called");
         },
@@ -2248,7 +2233,7 @@ describe("HttpLink", () => {
 });
 
 function pipeLinkToObservableStream(link: ApolloLink) {
-  const sink = new Subject<FetchResult>();
+  const sink = new Subject<ApolloLink.Result>();
   const observableStream = new ObservableStream(sink);
   const pipedLink = new ApolloLink((operation, forward) =>
     forward(operation).pipe(

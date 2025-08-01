@@ -17,7 +17,6 @@ import { defer, delay, of } from "rxjs";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
@@ -1289,7 +1288,7 @@ describe("Combining client and server state/operations", () => {
       }
     `;
 
-    const link = new ApolloLink((operation: Operation): Observable<{}> => {
+    const link = new ApolloLink((operation): Observable<{}> => {
       if (operation.operationName === "SampleQuery") {
         return of({
           data: { user: { __typename: "User", firstName: "John" } },

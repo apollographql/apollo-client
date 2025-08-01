@@ -1,8 +1,8 @@
-import type { Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 
 export const selectURI = (
-  operation: Operation,
-  fallbackURI?: string | ((operation: Operation) => string)
+  operation: ApolloLink.Operation,
+  fallbackURI?: string | ((operation: ApolloLink.Operation) => string)
 ) => {
   const context = operation.getContext();
   const contextURI = context.uri;

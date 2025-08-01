@@ -1,6 +1,6 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
-import type { FetchResult } from "@apollo/client";
+import type { ApolloLink } from "@apollo/client/link";
 
 import { brand, isBranded } from "./utils.js";
 
@@ -9,7 +9,7 @@ export declare namespace CombinedGraphQLErrors {
     /**
      * The raw result returned from the server.
      */
-    result: FetchResult<unknown>;
+    result: ApolloLink.Result<unknown>;
 
     /**
      * The default message formatter. Call this to get a string with the default
@@ -194,12 +194,12 @@ export class CombinedGraphQLErrors extends Error {
 
   constructor(result: FormattedExecutionResult<any>);
   constructor(
-    result: FetchResult<any>,
+    result: ApolloLink.Result<any>,
     errors: ReadonlyArray<GraphQLFormattedError>
   );
 
   constructor(
-    result: FetchResult<any> | FormattedExecutionResult<any>,
+    result: ApolloLink.Result<any> | FormattedExecutionResult<any>,
     errors = (result as FormattedExecutionResult<any>).errors || []
   ) {
     super(

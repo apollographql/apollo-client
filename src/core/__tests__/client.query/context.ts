@@ -1,6 +1,5 @@
 import { of } from "rxjs";
 
-import type { Operation } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 
 test("can get the client from the operation", async () => {
@@ -9,7 +8,7 @@ test("can get the client from the operation", async () => {
       greeting
     }
   `;
-  const request = jest.fn((_: Operation) => {
+  const request = jest.fn((_: ApolloLink.Operation) => {
     return of({ data: { greeting: "Hello" } });
   });
 
@@ -30,7 +29,7 @@ test("allows custom context", async () => {
       greeting
     }
   `;
-  const request = jest.fn((_: Operation) => {
+  const request = jest.fn((_: ApolloLink.Operation) => {
     return of({ data: { greeting: "Hello" } });
   });
 
@@ -54,7 +53,7 @@ test("uses context from defaultContext", async () => {
       greeting
     }
   `;
-  const request = jest.fn((_: Operation) => {
+  const request = jest.fn((_: ApolloLink.Operation) => {
     return of({ data: { greeting: "Hello" } });
   });
 
@@ -81,7 +80,7 @@ test("can override global default", async () => {
       greeting
     }
   `;
-  const request = jest.fn((_: Operation) => {
+  const request = jest.fn((_: ApolloLink.Operation) => {
     return of({ data: { greeting: "Hello" } });
   });
 

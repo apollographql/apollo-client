@@ -6,28 +6,25 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { ErrorLike } from '@apollo/client';
-import type { FetchResult } from '@apollo/client/link';
-import type { NextLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
 export interface ErrorHandler {
     // (undocumented)
-    (options: ErrorHandlerOptions): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
 }
 
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
-        (options: ErrorHandlerOptions): Observable<FetchResult> | void;
+        (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
     }
     // (undocumented)
     export interface ErrorHandlerOptions {
         error: ErrorLike;
-        forward: NextLink;
-        operation: Operation;
-        result?: FetchResult;
+        forward: ApolloLink.ForwardFunction;
+        operation: ApolloLink.Operation;
+        result?: ApolloLink.Result;
     }
 }
 

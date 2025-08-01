@@ -5,10 +5,8 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
 import type { GraphQLSchema } from 'graphql';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export namespace SchemaLink {
@@ -22,7 +20,7 @@ export namespace SchemaLink {
     // (undocumented)
     export type ResolverContext = Record<string, any>;
     // (undocumented)
-    export type ResolverContextFunction = (operation: Operation) => ResolverContext | PromiseLike<ResolverContext>;
+    export type ResolverContextFunction = (operation: ApolloLink.Operation) => ResolverContext | PromiseLike<ResolverContext>;
 }
 
 // @public (undocumented)
@@ -31,7 +29,7 @@ export class SchemaLink extends ApolloLink {
     // (undocumented)
     context: SchemaLink.Options["context"];
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
     // (undocumented)
     rootValue: SchemaLink.Options["rootValue"];
     // (undocumented)

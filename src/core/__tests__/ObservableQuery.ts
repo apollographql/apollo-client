@@ -15,7 +15,6 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
@@ -1068,13 +1067,15 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-          }),
+      const link = ApolloLink.from([
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              observer.complete();
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -1133,8 +1134,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             setTimeout(() => {
               timesFired += 1;
@@ -1142,7 +1143,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             });
           });
-        },
+        }),
       ]);
 
       const client = new ApolloClient({
@@ -1205,8 +1206,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             timesFired += 1;
             setTimeout(() => {
@@ -1214,7 +1215,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             }, 20);
           });
-        },
+        }),
       ]);
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -1270,8 +1271,8 @@ describe("ObservableQuery", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () => {
+      const link = ApolloLink.from([
+        new ApolloLink(() => {
           return new Observable((observer) => {
             timesFired += 1;
             setTimeout(() => {
@@ -1279,7 +1280,7 @@ describe("ObservableQuery", () => {
               observer.complete();
             }, 20);
           });
-        },
+        }),
       ]);
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -1990,7 +1991,7 @@ describe("ObservableQuery", () => {
     });
 
     it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
-      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
+      const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink((operation, forward) => {
@@ -2041,7 +2042,7 @@ describe("ObservableQuery", () => {
     });
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
-      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
+      const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink((operation, forward) => {
@@ -2114,7 +2115,7 @@ describe("ObservableQuery", () => {
     });
 
     it("if an ObservableQuery is unsubscribed while `refetch` is running, the promise returned by `refetch` rejects with an `AbortError`.", async () => {
-      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
+      const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink((operation, forward) => {
@@ -5207,7 +5208,7 @@ describe("ObservableQuery", () => {
               hello
             }
           `;
-          let subject = new Subject<FetchResult>();
+          let subject = new Subject<ApolloLink.Result>();
           const link = new ApolloLink(() => subject);
           const cache = new InMemoryCache({});
           cache.writeQuery({ query, data: cacheValues.initial });
@@ -5775,10 +5776,10 @@ describe("ObservableQuery", () => {
 });
 
 test("regression test for #10587", async () => {
-  let observers: Record<string, Observer<FetchResult>> = {};
+  let observers: Record<string, Observer<ApolloLink.Result>> = {};
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
-      observers[operation.operationName] = observer;
+      observers[operation.operationName!] = observer;
     });
   });
 

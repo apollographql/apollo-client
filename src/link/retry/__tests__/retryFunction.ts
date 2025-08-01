@@ -1,10 +1,11 @@
-import type { Operation } from "../../core/types.js";
+import type { ApolloLink } from "@apollo/client/link";
+
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports
 import { buildRetryFunction } from "../retryFunction.js";
 
 describe("buildRetryFunction", () => {
-  const operation = { operationName: "foo" } as Operation;
+  const operation = { operationName: "foo" } as ApolloLink.Operation;
 
   it("stops after hitting maxTries", () => {
     const retryFunction = buildRetryFunction({ max: 3 });

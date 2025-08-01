@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 import fetchMock from "fetch-mock";
-import { print } from "graphql";
+import { OperationTypeNode, print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";
 import { firstValueFrom, Observable, of, throwError } from "rxjs";
@@ -259,14 +259,18 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({
+      sha256: () => {
+        throw new Error("Could not create sha256");
+      },
+    }).concat(createHttpLink());
 
-    const observable = execute(link, { query: "1234", variables } as any);
+    const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
     const error = await stream.takeError();
 
-    expect(error.message).toMatch(/Invalid AST Node/);
+    expect(error.message).toBe("Could not create sha256");
   });
 
   it("unsubscribes correctly", async () => {
@@ -1033,6 +1037,7 @@ test("calls `disable` with error emitted from link chain", async () => {
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
@@ -1073,6 +1078,7 @@ test("calls `disable` with ServerError when response has non-2xx status code", a
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         clientLibrary: { name: "@apollo/client", version },
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
@@ -1109,6 +1115,7 @@ test("calls `disable` with GraphQL errors when returned in response", async () =
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
@@ -1159,6 +1166,7 @@ test("calls `disable` with GraphQL errors when parsed from non-2xx response", as
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         clientLibrary: { name: "@apollo/client", version },
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
@@ -1384,6 +1392,7 @@ test("calls `retry` with error emitted from link chain", async () => {
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
@@ -1424,6 +1433,7 @@ test("calls `retry` with ServerError when response has non-2xx status code", asy
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         clientLibrary: { name: "@apollo/client", version },
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
@@ -1460,6 +1470,7 @@ test("calls `retry` with GraphQL errors when returned in response", async () => 
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
@@ -1510,6 +1521,7 @@ test("calls `retry` with GraphQL errors when parsed from non-2xx response", asyn
       query,
       variables,
       operationName: "Test",
+      operationType: OperationTypeNode.QUERY,
       extensions: {
         clientLibrary: { name: "@apollo/client", version },
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },

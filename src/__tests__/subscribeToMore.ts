@@ -3,7 +3,6 @@ import { gql } from "graphql-tag";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -12,7 +11,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-const isSub = (operation: Operation) =>
+const isSub = (operation: ApolloLink.Operation) =>
   (operation.query as DocumentNode).definitions
     .filter(
       (x): x is OperationDefinitionNode => x.kind === "OperationDefinition"
@@ -35,7 +34,7 @@ describe("subscribeToMore", () => {
     },
   };
 
-  const req1 = { request: { query } as Operation, result };
+  const req1 = { request: { query } as ApolloLink.Operation, result };
 
   const results = ["Dahivat Pandya", "Amanda Liu"].map((name) => ({
     result: { data: { name } },
@@ -57,7 +56,7 @@ describe("subscribeToMore", () => {
       entry: [{ value: "1" }, { value: "2" }],
     },
   };
-  const req4 = { request: { query } as Operation, result: result4 };
+  const req4 = { request: { query } as ApolloLink.Operation, result: result4 };
 
   interface SubscriptionData {
     name: string;
@@ -355,7 +354,7 @@ describe("subscribeToMore", () => {
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 
   it("allows specification of custom types for variables and payload (#4246)", async () => {
-    interface TypedOperation extends Operation {
+    interface TypedOperation extends ApolloLink.Operation {
       variables: {
         someNumber: number;
       };

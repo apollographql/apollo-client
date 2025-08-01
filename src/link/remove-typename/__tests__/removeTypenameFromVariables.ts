@@ -1,32 +1,33 @@
 import type { FormattedExecutionResult } from "graphql";
+import { OperationTypeNode } from "graphql";
 import { firstValueFrom, of } from "rxjs";
 
 import { gql } from "@apollo/client";
-import type { ApolloLink, Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import {
   KEEP,
   removeTypenameFromVariables,
 } from "@apollo/client/link/remove-typename";
 import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
-type PartialOperation = Partial<Pick<Operation, "variables">> &
-  Pick<Operation, "query">;
+type PartialOperation = Partial<Pick<ApolloLink.Operation, "variables">> &
+  Pick<ApolloLink.Operation, "query">;
 
 // Since this link modifies the `operation` and we only care to test against
 // the changed operation, we use a custom `execute` helper here instead of the
 // version exported by the `core` module, which expects a well-formed response.
 async function execute(link: ApolloLink, operation: PartialOperation) {
-  function forward(operation: Operation) {
+  function forward(operation: ApolloLink.Operation) {
     // use the `data` key to satisfy the TypeScript types required by
     // `forward`'s' return value
     return of({ data: operation });
   }
 
   const { data } = (await firstValueFrom(
-    link.request(createOperation({}, operation), forward)!
+    link.request(createOperation(operation), forward)!
   )) as { data: FormattedExecutionResult };
 
-  return data as Operation;
+  return data as ApolloLink.Operation;
 }
 
 test("strips all __typename keys by default", async () => {
@@ -74,10 +75,15 @@ test("does nothing when no variables are passed", async () => {
 
   const link = removeTypenameFromVariables();
 
-  const operation = { query };
-  const resultOperation = await execute(link, operation);
+  const resultOperation = await execute(link, { query });
 
-  expect(resultOperation).toBe(operation);
+  expect(resultOperation).toStrictEqualTyped({
+    query,
+    variables: {},
+    extensions: {},
+    operationName: "Test",
+    operationType: OperationTypeNode.QUERY,
+  });
 });
 
 test("does nothing when no variables are passed even if variables are declared in the document", async () => {
@@ -91,10 +97,15 @@ test("does nothing when no variables are passed even if variables are declared i
 
   const link = removeTypenameFromVariables();
 
-  const operation = { query };
-  const resultOperation = await execute(link, operation);
+  const resultOperation = await execute(link, { query });
 
-  expect(resultOperation).toBe(operation);
+  expect(resultOperation).toStrictEqualTyped({
+    query,
+    variables: {},
+    extensions: {},
+    operationName: "Test",
+    operationType: OperationTypeNode.QUERY,
+  });
 });
 
 test("keeps __typename for variables with types defined by `except`", async () => {

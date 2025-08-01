@@ -1,11 +1,10 @@
 import { Observable } from "rxjs";
 
-import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace MockSubscriptionLink {
   export interface Result {
-    result?: FetchResult;
+    result?: ApolloLink.Result;
     error?: Error;
     delay?: number;
   }
@@ -14,7 +13,7 @@ export declare namespace MockSubscriptionLink {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
-  public operation?: Operation;
+  public operation?: ApolloLink.Operation;
 
   private observers: any[] = [];
 
@@ -22,9 +21,9 @@ export class MockSubscriptionLink extends ApolloLink {
     super();
   }
 
-  public request(operation: Operation) {
+  public request(operation: ApolloLink.Operation) {
     this.operation = operation;
-    return new Observable<FetchResult>((observer) => {
+    return new Observable<ApolloLink.Result>((observer) => {
       this.setups.forEach((x) => x());
       this.observers.push(observer);
       return () => {

@@ -8,7 +8,6 @@ import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
-import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 interface BaseOptions {
@@ -43,7 +42,7 @@ export namespace PersistedQueryLink {
         // (undocumented)
         meta: ErrorMeta;
         // (undocumented)
-        operation: Operation;
+        operation: ApolloLink.Operation;
         // (undocumented)
         result?: FormattedExecutionResult;
     }

@@ -1,6 +1,6 @@
 import type { Observable } from "rxjs";
+import { EMPTY } from "rxjs";
 
-import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
 import type { BatchHandler } from "./batching.js";
@@ -39,7 +39,7 @@ export declare namespace BatchLink {
     /**
      * creates the key for a batch
      */
-    batchKey?: (operation: Operation) => string;
+    batchKey?: (operation: ApolloLink.Operation) => string;
   }
 }
 
@@ -53,7 +53,7 @@ export class BatchLink extends ApolloLink {
       batchDebounce,
       batchInterval = 10,
       batchMax = 0,
-      batchHandler = () => null,
+      batchHandler = () => EMPTY,
       batchKey = () => "",
     } = fetchParams || {};
 
@@ -64,20 +64,12 @@ export class BatchLink extends ApolloLink {
       batchHandler,
       batchKey,
     });
-
-    //make this link terminating
-    if (fetchParams!.batchHandler!.length <= 1) {
-      this.request = (operation) => this.batcher.enqueueRequest({ operation });
-    }
   }
 
   public request(
-    operation: Operation,
-    forward?: NextLink
-  ): Observable<FetchResult> | null {
-    return this.batcher.enqueueRequest({
-      operation,
-      forward,
-    });
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ): Observable<ApolloLink.Result> {
+    return this.batcher.enqueueRequest({ operation, forward });
   }
 }

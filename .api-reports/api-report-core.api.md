@@ -65,7 +65,6 @@ import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
-import { NextLink } from '@apollo/client/link';
 import type { NextNotification } from 'rxjs';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
@@ -74,7 +73,6 @@ import { Observable as Observable_2 } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
-import { OperationContext } from '@apollo/client/link';
 import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
@@ -319,7 +317,7 @@ export class ApolloClient {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable_2<FetchResult<unknown>>;
+    __requestRaw(request: ApolloLink.Request): Observable_2<ApolloLink.Result<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -649,8 +647,6 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     reason: "after-fetch" | "variables-changed";
 }
 
-export { NextLink }
-
 export { NormalizedCache }
 
 export { NormalizedCacheObject }
@@ -791,8 +787,6 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 
 export { Operation }
 
-export { OperationContext }
-
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
 
@@ -893,7 +887,7 @@ class QueryManager {
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable_2<FetchResult<any>>;
+        observable?: Observable_2<ApolloLink.Result<any>>;
         restart?: () => void;
     }>;
     // (undocumented)
@@ -1153,7 +1147,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

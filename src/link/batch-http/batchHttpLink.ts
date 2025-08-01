@@ -1,6 +1,5 @@
 import { Observable, throwError } from "rxjs";
 
-import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
@@ -40,10 +39,10 @@ export class BatchHttpLink extends ApolloLink {
   constructor(
     options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
   ) {
-    const { left, right, request } = ApolloLink.concat(
+    const { left, right, request } = ApolloLink.from([
       new ClientAwarenessLink(options),
-      new BaseBatchHttpLink(options)
-    );
+      new BaseBatchHttpLink(options),
+    ]);
     super(request);
     Object.assign(this, { left, right });
   }
@@ -185,7 +184,7 @@ export class BaseBatchHttpLink extends ApolloLink {
 
     batchKey =
       batchKey ||
-      ((operation: Operation) => {
+      ((operation: ApolloLink.Operation) => {
         const context = operation.getContext();
 
         const contextConfig = {
@@ -208,7 +207,10 @@ export class BaseBatchHttpLink extends ApolloLink {
     });
   }
 
-  public request(operation: Operation): Observable<FetchResult> | null {
-    return this.batcher.request(operation);
+  public request(
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ): Observable<ApolloLink.Result> {
+    return this.batcher.request(operation, forward);
   }
 }

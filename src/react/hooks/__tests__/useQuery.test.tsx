@@ -17,7 +17,7 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { ReactNode } from "react";
 import React, { Fragment, useEffect, useState } from "react";
-import { asapScheduler, Observable, observeOn, of } from "rxjs";
+import { asapScheduler, EMPTY, Observable, observeOn, of } from "rxjs";
 
 import type {
   DataValue,
@@ -7777,7 +7777,7 @@ describe("useQuery Hook", () => {
       const linkFn = jest.fn();
       const link = new ApolloLink((o, f) => {
         linkFn();
-        return f ? f(o) : null;
+        return f ? f(o) : EMPTY;
       }).concat(new MockLink(mocks));
       const client = new ApolloClient({
         link,

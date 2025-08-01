@@ -665,7 +665,7 @@ describe("fetchMore on an observable query", () => {
               } = operation;
 
               linkRequests.push({
-                operationName: operation.operationName,
+                operationName: operation.operationName!,
                 offset,
                 limit,
               });

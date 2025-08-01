@@ -28,20 +28,6 @@ type Query {
 const schema = makeExecutableSchema({ typeDefs });
 
 describe("SchemaLink", () => {
-  it("raises warning if called with concat", () => {
-    const link = new SchemaLink({ schema });
-    const _warn = console.warn;
-    console.warn = (...args) =>
-      expect(args).toEqual([
-        "You are calling concat on a terminating link, which will have no effect %o",
-        link,
-      ]);
-    expect(link.concat((operation, forward) => forward(operation))).toEqual(
-      link
-    );
-    console.warn = _warn;
-  });
-
   it("throws if no arguments given", () => {
     expect(() => new (SchemaLink as any)()).toThrow();
   });

@@ -1,6 +1,4 @@
-import type { GraphQLRequest } from "@apollo/client";
 import { ApolloClient, execute, InMemoryCache } from "@apollo/client";
-import type { ExecuteContext } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { createOperation } from "@apollo/client/link/utils";
 
@@ -15,16 +13,15 @@ function createDefaultExecuteContext() {
 
 export function executeWithDefaultContext(
   link: ApolloLink,
-  operation: GraphQLRequest,
-  context: ExecuteContext = createDefaultExecuteContext()
+  request: ApolloLink.Request,
+  context: ApolloLink.ExecuteContext = createDefaultExecuteContext()
 ) {
-  return execute(link, operation, context);
+  return execute(link, request, context);
 }
 
 export function createOperationWithDefaultContext(
-  context: any,
-  operation: GraphQLRequest,
-  executeContext: ExecuteContext = createDefaultExecuteContext()
+  request: ApolloLink.Request,
+  executeContext: ApolloLink.ExecuteContext = createDefaultExecuteContext()
 ) {
-  return createOperation(context, operation, executeContext);
+  return createOperation(request, executeContext);
 }

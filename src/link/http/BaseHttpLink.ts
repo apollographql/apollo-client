@@ -59,7 +59,7 @@ export class BaseHttpLink extends ApolloLink {
 
       const context = operation.getContext();
 
-      const http = (context.http ??= {});
+      const http = { ...context.http };
       if (isSubscriptionOperation(operation.query)) {
         http.accept = [
           "multipart/mixed;boundary=graphql;subscriptionSpec=1.0",
@@ -68,7 +68,7 @@ export class BaseHttpLink extends ApolloLink {
       }
 
       const contextConfig = {
-        http: context.http,
+        http,
         options: context.fetchOptions,
         credentials: context.credentials,
         headers: context.headers,

@@ -4,12 +4,11 @@
 
 ```ts
 
+import type { ApolloLink } from '@apollo/client/link';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import type { GraphQLRequest } from '@apollo/client';
 
 // @public (undocumented)
 namespace Defer20220824Handler {
@@ -43,11 +42,11 @@ namespace Defer20220824Handler {
 // @public
 class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk<any>> {
     // (undocumented)
-    extractErrors(result: FetchResult<any>): GraphQLFormattedError[] | undefined;
+    extractErrors(result: ApolloLink.Result<any>): GraphQLFormattedError[] | undefined;
     // (undocumented)
     isIncrementalResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult | Defer20220824Handler.InitialResult;
     // (undocumented)
-    prepareRequest(request: GraphQLRequest): GraphQLRequest;
+    prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -71,11 +70,11 @@ export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        extractErrors: (result: FetchResult<any>) => readonly GraphQLFormattedError[] | undefined | void;
+        extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
-        isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
+        isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
         // (undocumented)
-        prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+        prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // (undocumented)
         startRequest: <TData extends Record<string, unknown>>(request: {
             query: DocumentNode;
@@ -99,7 +98,7 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
     // (undocumented)
     isIncrementalResult(_: any): _ is never;
     // (undocumented)
-    prepareRequest(request: GraphQLRequest): GraphQLRequest<Record<string, any>>;
+    prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
     // (undocumented)
     startRequest: any;
 }

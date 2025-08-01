@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React, { useContext } from "react";
+import { EMPTY } from "rxjs";
 
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
@@ -11,12 +12,12 @@ import type { ApolloContextValue } from "../ApolloContext.js";
 describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({
     cache: new Cache(),
-    link: new ApolloLink((o, f) => (f ? f(o) : null)),
+    link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
   });
 
   const anotherClient = new ApolloClient({
     cache: new Cache(),
-    link: new ApolloLink((o, f) => (f ? f(o) : null)),
+    link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
   });
 
   it("should render children components", () => {
@@ -101,7 +102,7 @@ describe("<ApolloProvider /> Component", () => {
 
     const newClient = new ApolloClient({
       cache: new Cache(),
-      link: new ApolloLink((o, f) => (f ? f(o) : null)),
+      link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
     });
     clientToCheck = newClient;
     rerender(

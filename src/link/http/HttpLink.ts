@@ -1,6 +1,5 @@
 import type { ASTNode } from "graphql";
 
-import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { print } from "@apollo/client/utilities";
@@ -169,15 +168,15 @@ export declare namespace HttpLink {
   }
 
   type Printer = (node: ASTNode, originalPrint: typeof print) => string;
-  type UriFunction = (operation: Operation) => string;
+  type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
 export class HttpLink extends ApolloLink {
   constructor(options: HttpLink.Options & ClientAwarenessLink.Options = {}) {
-    const { left, right, request } = ApolloLink.concat(
+    const { left, right, request } = ApolloLink.from([
       new ClientAwarenessLink(options),
-      new BaseHttpLink(options)
-    );
+      new BaseHttpLink(options),
+    ]);
     super(request);
     Object.assign(this, { left, right });
   }

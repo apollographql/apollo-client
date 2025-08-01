@@ -1,38 +1,151 @@
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  OperationTypeNode,
+} from "graphql";
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
-import {
-  createOperation,
-  transformOperation,
-  validateOperation,
-} from "@apollo/client/link/utils";
+import type {
+  ApolloClient,
+  DefaultContext,
+  OperationVariables,
+} from "@apollo/client";
+import { createOperation } from "@apollo/client/link/utils";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type {
-  ExecuteContext,
-  FetchResult,
-  GraphQLRequest,
-  NextLink,
-  Operation,
-  RequestHandler,
-} from "./types.js";
-
-function passthrough(op: Operation, forward: NextLink) {
-  return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
-}
-
-function toLink(handler: RequestHandler | ApolloLink) {
-  return typeof handler === "function" ? new ApolloLink(handler) : handler;
-}
-
-function isTerminating(link: ApolloLink): boolean {
-  return link.request.length <= 1;
-}
+import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
 export declare namespace ApolloLink {
+  /**
+   * Context provided for link execution, such as the client executing the
+   * request. It is separate from the request operation context.
+   */
+  export interface ExecuteContext {
+    /**
+     * The Apollo Client instance that executed the GraphQL request.
+     */
+    client: ApolloClient;
+  }
+
+  /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.ForwardFunction:function(1)} */
+  export type ForwardFunction = (
+    operation: ApolloLink.Operation
+  ) => Observable<ApolloLink.Result>;
+
+  /**
+   * The input object provided to `ApolloLink.execute` to send a GraphQL request through
+   * the link chain.
+   */
+  export interface Request {
+    /**
+     * The parsed GraphQL document that will be sent with the GraphQL request to
+     * the server.
+     */
+    query: DocumentNode;
+
+    /**
+     * The variables provided for the query.
+     */
+    variables?: OperationVariables;
+
+    /**
+     * Context provided to the link chain. Context is not sent to the server and
+     * is used to communicate additional metadata from a request to individual
+     * links in the link chain.
+     */
+    context?: DefaultContext;
+
+    /**
+     * A map of extensions that will be sent with the GraphQL request to the
+     * server.
+     */
+    extensions?: Record<string, any>;
+  }
+
+  /** {@inheritDoc @apollo/client/link!ApolloLink.DocumentationTypes.RequestHandler:function(1)} */
+  export type RequestHandler = (
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ) => Observable<ApolloLink.Result>;
+
+  export type Result<
+    TData = Record<string, any>,
+    TExtensions = Record<string, any>,
+  > =
+    | FormattedExecutionResult<TData, TExtensions>
+    | AdditionalApolloLinkResultTypes<
+        TData,
+        TExtensions
+      >[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
+
+  /**
+   * The currently executed operation object provided to an `ApolloLink.RequestHandler`
+   * for each link in the link chain.
+   */
+  export interface Operation {
+    /**
+     * A `DocumentNode` that describes the operation taking place.
+     */
+    query: DocumentNode;
+
+    /**
+     * A map of GraphQL variables being sent with the operation.
+     */
+    variables: OperationVariables;
+
+    /**
+     * The string name of the GraphQL operation. If it is anonymous,
+     * `operationName` will be `undefined`.
+     */
+    operationName: string | undefined;
+
+    /**
+     * The type of the GraphQL operation, such as query or mutation.
+     */
+    operationType: OperationTypeNode;
+
+    /**
+     * A map that stores extensions data to be sent to the server.
+     */
+    extensions: Record<string, any>;
+
+    /**
+     * A function that takes either a new context object, or a function which
+     * takes in the previous context and returns a new one. See [managing
+     * context](https://apollographql.com/docs/react/api/link/introduction#managing-context).
+     */
+    setContext: {
+      (context: Partial<ApolloLink.OperationContext>): void;
+      (
+        updateContext: (
+          previousContext: Readonly<ApolloLink.OperationContext>
+        ) => Partial<ApolloLink.OperationContext>
+      ): void;
+    };
+
+    /**
+     * A function that gets the current context of the request. This can be used
+     * by links to determine which actions to perform. See [managing context](https://apollographql.com/docs/react/api/link/introduction#managing-context)
+     */
+    getContext: () => Readonly<ApolloLink.OperationContext>;
+
+    /**
+     * The Apollo Client instance executing the request.
+     */
+    readonly client: ApolloClient;
+  }
+
+  /**
+   * The `context` object that can be read and modified by links using the
+   * `operation.getContext()` and `operation.setContext()` methods.
+   */
+  export interface OperationContext extends DefaultContext {}
+
   export namespace DocumentationTypes {
     /**
      * A request handler is responsible for performing some logic and executing the
@@ -47,9 +160,30 @@ export declare namespace ApolloLink {
      * chain.
      */
     export function RequestHandler(
-      operation: Operation,
-      forward: NextLink
-    ): Observable<FetchResult> | null;
+      operation: ApolloLink.Operation,
+      forward: ApolloLink.ForwardFunction
+    ): Observable<ApolloLink.Result>;
+
+    /**
+     * A function that when called will execute the next link in the link chain.
+     *
+     * @example
+     *
+     * ```ts
+     * const link = new ApolloLink((operation, forward) => {
+     *   // process the request
+     *
+     *   // Call `forward` to execute the next link in the chain
+     *   return forward(operation);
+     * });
+     * ```
+     *
+     * @param operation - The current `ApolloLink.Operation` object for the
+     * request.
+     */
+    export function ForwardFunction(
+      operation: ApolloLink.Operation
+    ): Observable<ApolloLink.Result>;
   }
 }
 
@@ -82,7 +216,7 @@ export declare namespace ApolloLink {
  */
 export class ApolloLink {
   /**
-   * Creates a link that does not emit a result and immediately completes.
+   * Creates a link that completes immediately and does not emit a result.
    *
    * @example
    *
@@ -115,9 +249,11 @@ export class ApolloLink {
    * @param links - An array of `ApolloLink` instances or request handlers that
    * are executed in serial order.
    */
-  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
+  public static from(links: ApolloLink[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
-    return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
+
+    const [first, ...rest] = links;
+    return first.concat(...rest);
   }
 
   /**
@@ -147,28 +283,27 @@ export class ApolloLink {
    * the next link in the chain.
    */
   public static split(
-    test: (op: Operation) => boolean,
-    left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler
+    test: (op: ApolloLink.Operation) => boolean,
+    left: ApolloLink,
+    right: ApolloLink = new ApolloLink((op, forward) => forward(op))
   ): ApolloLink {
-    const leftLink = toLink(left);
-    const rightLink = toLink(right || new ApolloLink(passthrough));
+    const link = new ApolloLink((operation, forward) => {
+      const result = test(operation);
 
-    let ret: ApolloLink;
-    if (isTerminating(leftLink) && isTerminating(rightLink)) {
-      ret = new ApolloLink((operation) => {
-        return test(operation) ?
-            leftLink.request(operation) || EMPTY
-          : rightLink.request(operation) || EMPTY;
-      });
-    } else {
-      ret = new ApolloLink((operation, forward) => {
-        return test(operation) ?
-            leftLink.request(operation, forward) || EMPTY
-          : rightLink.request(operation, forward) || EMPTY;
-      });
-    }
-    return Object.assign(ret, { left: leftLink, right: rightLink });
+      if (__DEV__) {
+        if (typeof result !== "boolean") {
+          invariant.warn(
+            "[ApolloLink.split]: The test function returned a non-boolean value which could result in subtle bugs (e.g. such as using an `async` function which always returns a truthy value). Got `%o`.",
+            result
+          );
+        }
+      }
+
+      return result ?
+          left.request(operation, forward)
+        : right.request(operation, forward);
+    });
+    return Object.assign(link, { left, right });
   }
 
   /**
@@ -203,69 +338,42 @@ export class ApolloLink {
    */
   public static execute(
     link: ApolloLink,
-    operation: GraphQLRequest,
-    context: ExecuteContext
-  ): Observable<FetchResult> {
-    return (
-      link.request(
-        createOperation(
-          operation.context,
-          transformOperation(validateOperation(operation)),
-          context
-        )
-      ) || EMPTY
-    );
+    request: ApolloLink.Request,
+    context: ApolloLink.ExecuteContext
+  ): Observable<ApolloLink.Result> {
+    return link.request(createOperation(request, context), () => {
+      if (__DEV__) {
+        invariant.warn(
+          "The terminating link provided to `ApolloLink.execute` called `forward` instead of handling the request. " +
+            "This results in an observable that immediately completes and does not emit a value. " +
+            "Please provide a terminating link that properly handles the request.\n\n" +
+            "If you are using a split link, ensure each branch contains a terminating link that handles the request."
+        );
+      }
+      return EMPTY;
+    });
   }
 
   /**
-   * Combines two links into a single composed link.
+   * Combines multiple links into a single composed link.
    *
    * @example
    *
    * ```ts
-   * const link = ApolloLink.concat(firstLink, secondLink);
+   * const link = ApolloLink.concat(firstLink, secondLink, thirdLink);
    * ```
    *
-   * @param first - The first link or request handler that will execute in the
-   * link chain.
+   * @param links - The links to concatenate into a single link. Each link will
+   * execute in serial order.
    *
-   * @param second - The next link or request handler that will execute in the
-   * link chain.
+   * @deprecated Use `ApolloLink.from` instead. `ApolloLink.concat` will be
+   * removed in a future major version.
    */
-  public static concat(
-    first: ApolloLink | RequestHandler,
-    second: ApolloLink | RequestHandler
-  ) {
-    const firstLink = toLink(first);
-    if (isTerminating(firstLink)) {
-      invariant.warn(
-        `You are calling concat on a terminating link, which will have no effect %o`,
-        firstLink
-      );
-      return firstLink;
-    }
-    const nextLink = toLink(second);
-
-    let ret: ApolloLink;
-    if (isTerminating(nextLink)) {
-      ret = new ApolloLink(
-        (operation) =>
-          firstLink.request(operation, (op) => nextLink.request(op) || EMPTY) ||
-          EMPTY
-      );
-    } else {
-      ret = new ApolloLink((operation, forward) => {
-        return (
-          firstLink.request(operation, (op) => {
-            return nextLink.request(op, forward) || EMPTY;
-          }) || EMPTY
-        );
-      });
-    }
-    return Object.assign(ret, { left: firstLink, right: nextLink });
+  public static concat(...links: ApolloLink[]) {
+    return ApolloLink.from(links);
   }
 
-  constructor(request?: RequestHandler) {
+  constructor(request?: ApolloLink.RequestHandler) {
     if (request) this.request = request;
   }
 
@@ -302,17 +410,15 @@ export class ApolloLink {
    * the next link in the chain.
    */
   public split(
-    test: (op: Operation) => boolean,
-    left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler
+    test: (op: ApolloLink.Operation) => boolean,
+    left: ApolloLink,
+    right?: ApolloLink
   ): ApolloLink {
-    return this.concat(
-      ApolloLink.split(test, left, right || new ApolloLink(passthrough))
-    );
+    return this.concat(ApolloLink.split(test, left, right));
   }
 
   /**
-   * Combines the link with another link into a single composed link.
+   * Combines the link with other links into a single composed link.
    *
    * @example
    *
@@ -326,25 +432,40 @@ export class ApolloLink {
    * });
    *
    * const link = previousLink.concat(
+   *   link1,
+   *   link2,
    *   new HttpLink({ uri: "http://localhost:4000/graphql" })
    * );
    * ```
    */
-  public concat(next: ApolloLink | RequestHandler): ApolloLink {
-    return ApolloLink.concat(this, next);
+  public concat(...links: ApolloLink[]): ApolloLink {
+    if (links.length === 0) {
+      return this;
+    }
+
+    return links.reduce(this.combine.bind(this), this);
+  }
+
+  private combine(left: ApolloLink, right: ApolloLink) {
+    const link = new ApolloLink((operation, forward) => {
+      return left.request(operation, (op) => right.request(op, forward));
+    });
+
+    return Object.assign(link, { left, right });
   }
 
   /**
    * Runs the request handler for the provided operation.
    *
    * > [!NOTE]
-   * > This is called by the `execute` function for you and should not be called
-   * > directly. Prefer using `ApolloLink.execute` to make the request instead.
+   * > This is called by the `ApolloLink.execute` function for you and should
+   * > not be called directly. Prefer using `ApolloLink.execute` to make the
+   * > request instead.
    */
   public request(
-    operation: Operation,
-    forward?: NextLink
-  ): Observable<FetchResult> | null {
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ): Observable<ApolloLink.Result> {
     throw newInvariantError("request is not implemented");
   }
 

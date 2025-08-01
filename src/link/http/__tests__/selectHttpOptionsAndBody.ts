@@ -19,7 +19,7 @@ const query = gql`
 
 describe("selectHttpOptionsAndBody", () => {
   it("includeQuery allows the query to be ignored", () => {
-    const { body } = selectHttpOptionsAndBody(createOperation({}, { query }), {
+    const { body } = selectHttpOptionsAndBody(createOperation({ query }), {
       http: { includeQuery: false },
     });
     expect(body).not.toHaveProperty("query");
@@ -28,7 +28,7 @@ describe("selectHttpOptionsAndBody", () => {
   it("includeExtensions allows the extensions to be added", () => {
     const extensions = { yo: "what up" };
     const { body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       { http: { includeExtensions: true } }
     );
     expect(body).toHaveProperty("extensions");
@@ -47,7 +47,7 @@ describe("selectHttpOptionsAndBody", () => {
 
     const extensions = { yo: "what up" };
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       fallbackHttpConfig
     );
 
@@ -77,7 +77,7 @@ describe("selectHttpOptionsAndBody", () => {
     const extensions = { yo: "what up" };
 
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       fallbackHttpConfig,
       config
     );
@@ -104,7 +104,7 @@ describe("selectHttpOptionsAndBody", () => {
     const extensions = { yo: "what up" };
 
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       fallbackHttpConfig,
       {
         headers,
@@ -131,7 +131,7 @@ describe("selectHttpOptionsAndBody", () => {
     };
 
     const { body } = selectHttpOptionsAndBodyInternal(
-      createOperation({}, { query }),
+      createOperation({ query }),
       customPrinter,
       fallbackHttpConfig
     );

@@ -4,7 +4,7 @@ import type { DocumentNode, FormattedExecutionResult } from "graphql";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
-import type { FetchResult } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
@@ -178,7 +178,7 @@ export class QueryInfo<
 
   private maybeHandleIncrementalResult(
     cacheData: TData | DeepPartial<TData> | undefined | null,
-    incoming: FetchResult<TData>,
+    incoming: ApolloLink.Result<TData>,
     query: DocumentNode
   ): FormattedExecutionResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>
@@ -201,7 +201,7 @@ export class QueryInfo<
   }
 
   public markQueryResult(
-    incoming: FetchResult<TData>,
+    incoming: ApolloLink.Result<TData>,
     {
       document: query,
       variables,
@@ -329,7 +329,7 @@ export class QueryInfo<
   }
 
   public markMutationResult(
-    incoming: FetchResult<TData>,
+    incoming: ApolloLink.Result<TData>,
     mutation: OperationInfo<
       TData,
       TVariables,

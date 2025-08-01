@@ -1,11 +1,11 @@
-import type { Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 
 /**
  * Advanced mode: a function that implements the strategy for calculating delays
  * for particular responses.
  */
 export interface DelayFunction {
-  (count: number, operation: Operation, error: any): number;
+  (count: number, operation: ApolloLink.Operation, error: any): number;
 }
 
 export interface DelayFunctionOptions {

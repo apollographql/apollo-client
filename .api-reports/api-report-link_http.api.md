@@ -8,7 +8,6 @@ import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { InvariantError } from '@apollo/client/utilities/invariant';
-import type { Operation } from '@apollo/client/link';
 import type { print as print_2 } from '@apollo/client/utilities';
 
 // @public (undocumented)
@@ -104,7 +103,7 @@ export namespace HttpLink {
     // (undocumented)
     export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
     // (undocumented)
-    export type UriFunction = (operation: Operation) => string;
+    export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
 // @public (undocumented)
@@ -113,7 +112,7 @@ export class HttpLink extends ApolloLink {
 }
 
 // @public (undocumented)
-export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
+export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
@@ -127,19 +126,19 @@ export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
+export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
     body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
     body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export const selectURI: (operation: Operation, fallbackURI?: string | ((operation: Operation) => string)) => any;
+export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
 
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;

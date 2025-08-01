@@ -2,9 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import type { Transform } from "jscodeshift";
 
-import type { IdentifierRename } from "./renames.js";
+import type { IdentifierRename, ModuleRename } from "./renames.js";
 import { renames } from "./renames.js";
-import { spec } from "node:test/reporters";
 
 type ImportKind = "type" | "value";
 
@@ -65,44 +64,17 @@ const transform: Transform = function transform(file, api) {
     return identifier;
   }
 
+  let modified = false;
   for (const rename of renames) {
     if (!("importType" in rename)) {
-      source
-        .find(
-          j.ImportDeclaration,
-          (node) =>
-            !node.specifiers ||
-            node.specifiers.some(
-              (specifier) => specifier.type === "ImportNamespaceSpecifier"
-            )
-        )
-        .forEach((sourcePath) => {
-          sourcePath.value.source.value = rename.to.module;
-        });
-
-      findImportDeclarationFor(rename.from).forEach((sourcePath) => {
-        const sourceImport = j(sourcePath);
-        let targetImport = findImportDeclarationFor(rename.to)
-          .filter(
-            (declaration) =>
-              declaration.value.importKind === sourcePath.value.importKind
-          )
-          .nodes()[0];
-        if (!targetImport) {
-          targetImport = j.importDeclaration(
-            [],
-            j.literal(rename.to.module),
-            sourcePath.value.importKind
-          );
-          sourceImport.insertAfter(targetImport);
-        }
-        sourceImport.find(j.ImportSpecifier).forEach((specifierPath) => {
-          (targetImport.specifiers ??= []).push(specifierPath.value);
-        });
-        sourceImport.remove();
-      });
+      handleModuleRename(rename);
       continue;
     }
+    handleIdentiferRename(rename);
+  }
+  return modified ? source.toSource() : undefined;
+
+  function handleIdentiferRename(rename: IdentifierRename) {
     const { from, to, importType } = rename;
     const final = { ...from, ...to };
 
@@ -116,6 +88,8 @@ const transform: Transform = function transform(file, api) {
           "This case is not supported yet: " + JSON.stringify(rename)
         );
       }
+
+      modified = true;
 
       const localName = specifierPath.value.local?.name;
       const importedName = specifierPath.value.imported.name;
@@ -203,7 +177,52 @@ const transform: Transform = function transform(file, api) {
     });
   }
 
-  return source.toSource();
+  function handleModuleRename(rename: ModuleRename) {
+    renameNamespaceOrSideEffectImports();
+    mergeIntoExistingOrRenameImport();
+
+    function renameNamespaceOrSideEffectImports() {
+      source
+        .find(
+          j.ImportDeclaration,
+          (node) =>
+            node.source.value === rename.from.module &&
+            (!node.specifiers ||
+              node.specifiers.some(
+                (specifier) => specifier.type === "ImportNamespaceSpecifier"
+              ))
+        )
+        .forEach((sourcePath) => {
+          modified = true;
+          sourcePath.value.source.value = rename.to.module;
+        });
+    }
+
+    function mergeIntoExistingOrRenameImport() {
+      findImportDeclarationFor(rename.from).forEach((sourcePath) => {
+        modified = true;
+        const sourceImport = j(sourcePath);
+        let targetImport = findImportDeclarationFor(rename.to)
+          .filter(
+            (declaration) =>
+              declaration.value.importKind === sourcePath.value.importKind
+          )
+          .nodes()[0];
+        if (!targetImport) {
+          targetImport = j.importDeclaration(
+            [],
+            j.literal(rename.to.module),
+            sourcePath.value.importKind
+          );
+          sourceImport.insertAfter(targetImport);
+        }
+        sourceImport.find(j.ImportSpecifier).forEach((specifierPath) => {
+          (targetImport.specifiers ??= []).push(specifierPath.value);
+        });
+        sourceImport.remove();
+      });
+    }
+  }
 };
 
 export default transform;

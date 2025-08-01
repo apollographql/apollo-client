@@ -38,4 +38,5 @@ cat <<'EOF'
 }
 EOF
 }
-node ./dist/cli.js --parser babylon --parser-config=<(babelconfig) ../../../src/$1
+
+node ./dist/cli.js --parser babylon --parser-config=<(babelconfig) ../../../${1:-src}

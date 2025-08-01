@@ -12,7 +12,7 @@ import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace ErrorLink {
   // Using a different namespace name to avoid clash with
-  // `ApolloLink.DocumentaitonTypes`
+  // `ApolloLink.DocumentationTypes`
   export namespace ErrorLinkDocumentationTypes {
     /**
      * Callback that is called by `ErrorLink` when an error occurs from a

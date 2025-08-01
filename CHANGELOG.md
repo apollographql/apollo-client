@@ -1,5 +1,140 @@
 # @apollo/client
 
+## 4.0.0-rc.7
+
+### Major Changes
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `operation.getContext` now returns a `Readonly<OperationContext>` type.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `ApolloLink.Request` (i.e. `GraphQLRequest`) passed to `ApolloLink.execute` no longer accepts `operationName` and `operationType` options. These properties are derived from the `query` and set on the returned `ApolloLink.Operation` type.
+
+- [#12808](https://github.com/apollographql/apollo-client/pull/12808) [`8e31a23`](https://github.com/apollographql/apollo-client/commit/8e31a2303b18f6fc4d8ec1cf4c01bf26b90f3f0b) Thanks [@phryneas](https://github.com/phryneas)! - HTTP Multipart handling will now throw an error if the connection closed before the final boundary has been received.
+  Data after the final boundary will be ignored.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `operation.operationType` is now a non-null `OperationTypeNode`. It is now safe to compare this value without having to check for `undefined`.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `operation.operationName` is now set as `string | undefined` where `undefined` represents an anonymous query. Previously `operationName` would return an empty string as the `operationName` for anonymous queries.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `concat`, `from`, and `split` functions on `ApollLink` no longer support a plain request handler function. Please wrap the request handler with `new ApolloLink`.
+
+  ```diff
+  const link = new ApolloLink(/* ... */);
+
+  link.concat(
+  - (operation, forward) => forward(operation),
+  + new ApolloLink((operation, forward) => forward(operation)),
+  );
+  ```
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `transformOperation` and `validateOperation` have been removed and are no longer exported from `@apollo/client/link/utils`. These utilities have been merged into the implementation of `createOperation`. As a result, `createOperation` now returns a well-formed `Operation` object. Previously `createOperation` relied on an external call to `transformOperation` to provide a well-formed `Operation` type. If you use `createOperation` directly, remove the calls to `transformOperation` and `validateOperation` and pass the request directly.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The request handler provided to `ApolloLink` must now return an `Observable`. `null` is no longer supported as a valid return value. If you rely on `null` so that `ApolloLink` provides an empty observable, use the `EMPTY` observable from RxJS instead:
+
+  ```diff
+  import { ApolloLink } from "@apollo/client";
+  + import { EMPTY } from "rxjs";
+
+  const link = new ApolloLink((operation, forward) => {
+  - return null;
+  + return EMPTY;
+  });
+  ```
+
+  If you have a custom link that overrides the `request` method, remove `null` from the return signature:
+
+  ```diff
+  class MyCustomLink extends ApolloLink {
+    request(
+      operation: ApolloLink.Operation,
+      forward: ApolloLink.ForwardFunction,
+  - ): Observable<ApolloLink.Result> | null {
+  + ): Observable<ApolloLink.Result> {
+      // implementation
+    }
+  }
+  ```
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `createOperation` no longer accepts `context` as the first argument. Instead make sure `context` is set as the `context` property on the request passed to `createOperation`.
+
+  ```diff
+  createOperation(
+  - startingContext,
+  - { query },
+  + { query, context: startingContext },
+    { client }
+  );
+  ```
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `TVariables` generic argument on the `GraphQLRequest` type.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The context object returned from `operation.getContext()` is now frozen to prevent mutable changes to the object which could result in subtle bugs. This applies to the `previousContext` object passed to the `operation.setContext()` callback as well.
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `forward` function passed to the request handler is now always provided to `request` and no longer optional. If you create custom links by subclassing `ApolloLink`, the `forward` function no longer needs to be optional:
+
+  ```ts
+  class CustomLink extends ApolloLink {
+    request(
+      operation: ApolloLink.Operation,
+      // This no longer needs to be typed as optional
+      forward: ApolloLink.ForwardFunction
+    ) {
+      // ...
+    }
+  }
+  ```
+
+  As a result of this change, `ApolloLink` no longer detects terminating links by checking function arity on the request handler. This means using methods such as `concat` on a terminating link no longer emit a warning. On the flip side, if the terminating link calls the `forward` function, a warning is emitted and an observable that immediately completes is returned which will result in an error from Apollo Client.
+
+### Minor Changes
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ApolloLink`'s `concat` method now accepts multiple links to concatenate together.
+
+  ```ts
+  const first = new ApolloLink();
+
+  const link = first.concat(second, third, fouth);
+  ```
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Many of the types exported from `@apollo/client/link` now live on the `ApolloLink` namespace. The old types are now deprecated in favor of the namespaced types.
+
+  - `FetchResult` -> `ApolloLink.Result`
+  - `GraphQLRequest` -> `ApolloLink.Request`
+  - `NextLink` -> `ApolloLink.ForwardFunction`
+  - `Operation` -> `ApolloLink.Operation`
+  - `RequestHandler` -> `ApolloLink.RequestHandler`
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The static `ApolloLink.concat` method is now deprecated in favor of `ApolloLink.from`. `ApolloLink.concat` is now an alias for `ApolloLink.from` so prefer `ApolloLink.from` instead.
+
+### Patch Changes
+
+- [#12809](https://github.com/apollographql/apollo-client/pull/12809) [`e2a0be8`](https://github.com/apollographql/apollo-client/commit/e2a0be8c3f8b242706f90e0dcc022628992a8ae8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The individual `empty`, `concat`, `from` and `split` functions exported from `@apollo/client/link` are now deprecated in favor of using the static functions instead.
+
+  ```diff
+  import {
+    ApolloLink,
+  - concat,
+  - empty,
+  - from,
+  - split,
+  } from "@apollo/client/link";
+
+  - concat(first, second);
+  + ApolloLink.concat(first, second);
+
+  - empty();
+  + ApolloLink.empty();
+
+  - from([first, second]);
+  + ApolloLink.from([first, second]);
+
+  - split(
+  + ApolloLink.split(
+    (operation) => /* */,
+    first,
+    second
+  );
+  ```
+
 ## 4.0.0-rc.6
 
 ### Major Changes

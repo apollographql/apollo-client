@@ -3496,8 +3496,8 @@ describe("ApolloClient", () => {
         },
       });
     });
-    test("ApolloClient and ApolloCache methods with the same name should have compatible signatures", <TData, TVariables extends
-      OperationVariables>() => {
+    test("ApolloClient and ApolloCache methods with the same name should have compatible signatures", function <TData, TVariables extends
+      OperationVariables>() {
       // specific set of common methods
       expectTypeOf<keyof ApolloClient & keyof ApolloCache>().toEqualTypeOf<
         | "readQuery"

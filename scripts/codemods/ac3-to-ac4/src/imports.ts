@@ -54,7 +54,9 @@ const transform: Transform = function transform(file, api) {
 
   for (const rename of renames) {
     if (!("importType" in rename)) {
-      moveAllSpecifiersToEntrypoint(rename.from.module, rename.to.module);
+      // TODO
+      // cannot deal with `ImportNamespaceSpecifier`
+      // moveAllSpecifiersToEntrypoint(rename.from.module, rename.to.module);
       continue;
     }
     const { from, to, importType } = rename;

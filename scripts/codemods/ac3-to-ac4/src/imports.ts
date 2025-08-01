@@ -4,6 +4,7 @@ import type { Transform } from "jscodeshift";
 
 import type { IdentifierRename } from "./renames.js";
 import { renames } from "./renames.js";
+import { spec } from "node:test/reporters";
 
 type ImportKind = "type" | "value";
 
@@ -66,6 +67,19 @@ const transform: Transform = function transform(file, api) {
 
   for (const rename of renames) {
     if (!("importType" in rename)) {
+      source
+        .find(
+          j.ImportDeclaration,
+          (node) =>
+            !node.specifiers ||
+            node.specifiers.some(
+              (specifier) => specifier.type === "ImportNamespaceSpecifier"
+            )
+        )
+        .forEach((sourcePath) => {
+          sourcePath.value.source.value = rename.to.module;
+        });
+
       findImportDeclarationFor(rename.from).forEach((sourcePath) => {
         const sourceImport = j(sourcePath);
         let targetImport = findImportDeclarationFor(rename.to)

@@ -18,58 +18,15 @@ import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 export declare namespace BatchHttpLink {
-  export namespace DocumentationTypes {
-    /**
-     * Options provided to the `BatchHttpLink` constructor.
-     */
-    interface Options {
-      /** {@inheritDoc @apollo/client/link/batch!BatchLink.Options#batchDebounce:member} */
-      batchDebounce?: boolean;
-
-      /** {@inheritDoc @apollo/client/link/batch!BatchLink.Options#batchInterval:member} */
-      batchInterval?: number;
-
-      /** {@inheritDoc @apollo/client/link/batch!BatchLink.Options#batchKey:member} */
-      batchKey?: (operation: ApolloLink.Operation) => string;
-
-      /** {@inheritDoc @apollo/client/link/batch!BatchLink.DocumentationTypes.Options#batchMax:member {"defaultValue": 10}} */
-      batchMax?: number;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#uri:member} */
-      uri?: string | HttpLink.UriFunction;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#includeExtensions:member} */
-      includeExtensions?: boolean;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#fetch:member} */
-      fetch?: typeof fetch;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#headers:member} */
-      headers?: Record<string, string>;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#preserveHeaderCase:member} */
-      preserveHeaderCase?: boolean;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#preserveHeaderCase:member} */
-      credentials?: string;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#fetchOptions:member} */
-      fetchOptions?: any;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#includeUnusedVariables:member} */
-      includeUnusedVariables?: boolean;
-
-      /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#print:member} */
-      print?: HttpLink.Printer;
-    }
+  /**
+   * Options provided to the `BatchHttpLink` constructor.
+   */
+  export interface Options
+    extends BatchLink.Shared.Options,
+      HttpLink.Shared.Options {
+    /** {@inheritDoc @apollo/client/link/batch!BatchLink.Shared.Options#batchMax:member {"defaultValue": 10}} */
+    batchMax?: number;
   }
-
-  /** {@inheritDoc @apollo/client/link/batch-http!BatchHttpLink.DocumentationTypes.Options:interface} */
-  export type Options = Pick<
-    BatchLink.Options,
-    "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
-  > &
-    Omit<HttpLink.Options, "useGETForQueries">;
 
   /**
    * Options passed to `BatchHttpLink` through [request context](https://apollographql.com/docs/react/api/link/introduction#managing-context). Previous

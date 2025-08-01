@@ -17,16 +17,16 @@ export declare namespace HttpLink {
    * > If a value is provided to both, the value in `context` takes precedence.
    */
   interface ContextOptions {
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#uri:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#uri:member} */
     uri?: string | HttpLink.UriFunction;
 
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#headers:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#headers:member} */
     headers?: Record<string, string>;
 
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#credentials:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#credentials:member} */
     credentials?: RequestCredentials;
 
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#fetchOptions:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#fetchOptions:member} */
     fetchOptions?: RequestInit;
 
     /**
@@ -41,7 +41,7 @@ export declare namespace HttpLink {
    * context.
    */
   export interface HttpOptions {
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#includeExtensions:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#includeExtensions:member} */
     includeExtensions?: boolean;
 
     /**
@@ -52,7 +52,7 @@ export declare namespace HttpLink {
      */
     includeQuery?: boolean;
 
-    /** {@inheritDoc @apollo/client/link/http!HttpLink.Options#preserveHeaderCase:member} */
+    /** {@inheritDoc @apollo/client/link/http!HttpLink.Shared.Options#preserveHeaderCase:member} */
     preserveHeaderCase?: boolean;
 
     /**
@@ -68,6 +68,117 @@ export declare namespace HttpLink {
     accept?: string[];
   }
 
+  export namespace Shared {
+    /** These options are shared between `HttpLink` and `BatchHttpLink` */
+    export interface Options {
+      /**
+       * The URL of the GraphQL endpoint to send requests to. Can also be a
+       * function that accepts an `ApolloLink.Operation` object and returns the
+       * string URL to use for that operation.
+       *
+       * @defaultValue "/graphql"
+       */
+      uri?: string | HttpLink.UriFunction;
+
+      /**
+       * If `true`, includes the `extensions` field in operations sent to your
+       * GraphQL endpoint.
+       *
+       * @defaultValue true
+       */
+      includeExtensions?: boolean;
+
+      /**
+       * A function to use instead of calling the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) directly
+       * when sending HTTP requests to your GraphQL endpoint. The function must
+       * conform to the signature of `fetch`.
+       *
+       * By default, the Fetch API is used unless it isn't available in your
+       * runtime environment.
+       *
+       * See [Customizing `fetch`](https://apollographql.com/docs/react/api/link/introduction#customizing-fetch).
+       */
+      fetch?: typeof fetch;
+
+      /**
+       * An object representing headers to include in every HTTP request.
+       *
+       * @example
+       *
+       * ```json
+       * {
+       *   "Authorization": "Bearer 1234"
+       * }
+       * ```
+       */
+      headers?: Record<string, string>;
+
+      /**
+       * If `true`, header names won't be automatically normalized to lowercase.
+       * This allows for non-http-spec-compliant servers that might expect
+       * capitalized header names.
+       *
+       * @defaultValue false
+       */
+      preserveHeaderCase?: boolean;
+
+      /**
+       * The credentials policy to use for each `fetch` call.
+       */
+      credentials?: RequestCredentials;
+
+      /**
+       * Any overrides of the fetch options argument to pass to the fetch call.
+       *
+       * An object containing options to use for each call to `fetch`. If a
+       * particular option is not included in this object, the default value of
+       * that option is used.
+       *
+       * > [!NOTE]
+       * > If you set `fetchOptions.method` to `GET`, `HttpLink` follows [standard
+       * > GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request).
+       *
+       * See [available options](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
+       */
+      fetchOptions?: RequestInit;
+
+      /**
+       * If `true`, unused variables from the operation will not be stripped from
+       * the request and will instead be sent to the GraphQL endpoint.
+       *
+       * @remarks
+       * Unused variables are likely to trigger server-side validation errors,
+       * per https://spec.graphql.org/draft/#sec-All-Variables-Used.
+       * `includeUnusedVariables` can be useful if your server deviates
+       * from the GraphQL specification by not strictly enforcing that rule.
+       *
+       * @defaultValue false
+       */
+      includeUnusedVariables?: boolean;
+      /**
+       * A function to use when transforming a GraphQL document into a string. It
+       * accepts an `ASTNode` (typically a `DocumentNode`) and the original `print`
+       * function as arguments, and is expected to return a string. This option
+       * enables you to, for example, use `stripIgnoredCharacters` to remove
+       * whitespace from queries.
+       *
+       * By default the [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) is used.
+       *
+       * @example
+       *
+       * ```ts
+       * import { stripIgnoredCharacters } from "graphql";
+       *
+       * const httpLink = new HttpLink({
+       *   uri: "/graphql",
+       *   print: (ast, originalPrint) => stripIgnoredCharacters(originalPrint(ast)),
+       * });
+       * ```
+       */
+      print?: HttpLink.Printer;
+    }
+  }
+
   /**
    * Options provided to the `HttpLink` constructor.
    *
@@ -77,78 +188,7 @@ export declare namespace HttpLink {
    * > these options as default values that are used when the request context
    * > does not override the value.
    */
-  export interface Options {
-    /**
-     * The URL of the GraphQL endpoint to send requests to. Can also be a
-     * function that accepts an `ApolloLink.Operation` object and returns the
-     * string URL to use for that operation.
-     *
-     * @defaultValue "/graphql"
-     */
-    uri?: string | HttpLink.UriFunction;
-
-    /**
-     * If `true`, includes the `extensions` field in operations sent to your
-     * GraphQL endpoint.
-     *
-     * @defaultValue true
-     */
-    includeExtensions?: boolean;
-
-    /**
-     * A function to use instead of calling the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) directly
-     * when sending HTTP requests to your GraphQL endpoint. The function must
-     * conform to the signature of `fetch`.
-     *
-     * By default, the Fetch API is used unless it isn't available in your
-     * runtime environment.
-     *
-     * See [Customizing `fetch`](https://apollographql.com/docs/react/api/link/introduction#customizing-fetch).
-     */
-    fetch?: typeof fetch;
-
-    /**
-     * An object representing headers to include in every HTTP request.
-     *
-     * @example
-     *
-     * ```json
-     * {
-     *   "Authorization": "Bearer 1234"
-     * }
-     * ```
-     */
-    headers?: Record<string, string>;
-
-    /**
-     * If `true`, header names won't be automatically normalized to lowercase.
-     * This allows for non-http-spec-compliant servers that might expect
-     * capitalized header names.
-     *
-     * @defaultValue false
-     */
-    preserveHeaderCase?: boolean;
-
-    /**
-     * The credentials policy to use for each `fetch` call.
-     */
-    credentials?: RequestCredentials;
-
-    /**
-     * Any overrides of the fetch options argument to pass to the fetch call.
-     *
-     * An object containing options to use for each call to `fetch`. If a
-     * particular option is not included in this object, the default value of
-     * that option is used.
-     *
-     * > [!NOTE]
-     * > If you set `fetchOptions.method` to `GET`, `HttpLink` follows [standard
-     * > GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request).
-     *
-     * See [available options](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
-     */
-    fetchOptions?: RequestInit;
-
+  interface Options extends Shared.Options {
     /**
      * If `true`, the link uses an HTTP `GET` request when sending query
      * operations to your GraphQL endpoint. Mutation operations continue to use
@@ -158,41 +198,6 @@ export declare namespace HttpLink {
      * @defaultValue false
      */
     useGETForQueries?: boolean;
-
-    /**
-     * If `true`, unused variables from the operation will not be stripped from
-     * the request and will instead be sent to the GraphQL endpoint.
-     *
-     * @remarks
-     * Unused variables are likely to trigger server-side validation errors,
-     * per https://spec.graphql.org/draft/#sec-All-Variables-Used.
-     * `includeUnusedVariables` can be useful if your server deviates
-     * from the GraphQL specification by not strictly enforcing that rule.
-     *
-     * @defaultValue false
-     */
-    includeUnusedVariables?: boolean;
-    /**
-     * A function to use when transforming a GraphQL document into a string. It
-     * accepts an `ASTNode` (typically a `DocumentNode`) and the original `print`
-     * function as arguments, and is expected to return a string. This option
-     * enables you to, for example, use `stripIgnoredCharacters` to remove
-     * whitespace from queries.
-     *
-     * By default the [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) is used.
-     *
-     * @example
-     *
-     * ```ts
-     * import { stripIgnoredCharacters } from "graphql";
-     *
-     * const httpLink = new HttpLink({
-     *   uri: "/graphql",
-     *   print: (ast, originalPrint) => stripIgnoredCharacters(originalPrint(ast)),
-     * });
-     * ```
-     */
-    print?: HttpLink.Printer;
   }
 
   interface Body {

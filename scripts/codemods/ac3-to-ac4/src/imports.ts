@@ -75,10 +75,10 @@ const transform: Transform = function transform(file, api) {
   return modified ? source.toSource() : undefined;
 
   function handleIdentiferRename(rename: IdentifierRename) {
-    const { from, to, importType } = rename;
+    const { from, to } = rename;
     const final = { ...from, ...to };
 
-    findImportSpecifiersFor(from, importType).forEach((specifierPath) => {
+    findImportSpecifiersFor(from).forEach((specifierPath) => {
       if (from.namespace && to.namespace) {
         throw new Error(
           "This case is not supported yet: " + JSON.stringify(rename)
@@ -94,6 +94,13 @@ const transform: Transform = function transform(file, api) {
       const localName = specifierPath.value.local?.name;
       const importedName = specifierPath.value.imported.name;
       const importDeclaration = j(specifierPath).closest(j.ImportDeclaration);
+      const importType =
+        specifierPath.value.importKind ||
+        importDeclaration.nodes()[0].importKind ||
+        rename.importType;
+      if (importType === "typeof") {
+        return; // typeof imports are not supported
+      }
 
       // create a temporary const definition with the original "local name" of the import
       const tempId = getUnusedIdentifer();

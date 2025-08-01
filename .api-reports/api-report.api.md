@@ -390,13 +390,12 @@ export type ApolloClientOptions = ApolloClient.Options;
 export namespace ApolloLink {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function RequestHandler(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result> | null;
+        export function ForwardFunction(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
+        export function RequestHandler(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
     }
-    // (undocumented)
     export interface ExecuteContext {
         client: ApolloClient;
     }
-    // (undocumented)
     export type ForwardFunction = (operation: ApolloLink.Operation) => Observable<ApolloLink.Result>;
     export interface Operation {
         readonly client: ApolloClient;

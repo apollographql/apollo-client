@@ -67,7 +67,7 @@ export declare namespace ClientAwarenessLink {
  * @remarks
  *
  * Client awareness adds identifying information about the client to HTTP
- * requests for use with metrics reporting tools, such as the [Apollo GraphOS](https://apollographql.com/docs/graphos/platform).
+ * requests for use with metrics reporting tools, such as [Apollo GraphOS](https://apollographql.com/docs/graphos/platform).
  * It is included in the functionality of [`HttpLink`](https://apollographql.com/docs/react/api/link/apollo-link-http) by default.
  *
  * Client awareness distinguishes between user-provided client awareness

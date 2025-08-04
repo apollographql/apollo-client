@@ -18,22 +18,6 @@ constructor(
 ): HttpLink
 ```
 
-## Handling errors
-
-`HttpLink` distinguishes between client errors, server errors, and GraphQL errors. You can add the [`ErrorLink`](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#options).
-
-The following types of errors can occur:
-
-| Error          | Description                                                                                                            | Callback | Error Type                                                 |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------- | :------: | ---------------------------------------------------------- |
-| Client Parse   | The request body is not serializable, for example due to a circular reference.                                         | `error`  | `ClientParseError`                                         |
-| Server Parse   | The server's response cannot be parsed ([response.json()](https://developer.mozilla.org/en-US/docs/Web/API/Body/json)) | `error`  | [`ServerParseError`](../errors/ServerParseError)           |
-| Server Network | The server responded with a non-2xx HTTP code.                                                                         | `error`  | [`ServerError`](../errors/ServerError)                     |
-| Server Data    | The server's response didn't contain `data` or `errors`.                                                               | `error`  | [`ServerError`](../errors/ServerError)                     |
-| GraphQL Error  | Resolving the GraphQL operation resulted in at least one error, which is present in the `errors` field.                |  `next`  | [`CombinedGraphQLErrors`](../errors/CombinedGraphQLErrors) |
-
-See the documentation on [Identifying error types](../../data/error-handling#identifying-error-types) to learn how to distinguish between the different error types.
-
 ## Operation results
 
 After your GraphQL endpoint (successfully) responds with the result of the sent operation, `HttpLink` sets it as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response before it's returned.

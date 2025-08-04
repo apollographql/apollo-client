@@ -203,8 +203,6 @@ items:
             href: ./api/link/persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
-          - label: RestLink
-            href: ./api/link/apollo-link-rest
           - label: RetryLink
             href: ./api/link/apollo-link-retry
           - label: SchemaLink

@@ -1360,22 +1360,27 @@ export namespace HttpLink {
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;
     }
-    export interface Options {
-        credentials?: RequestCredentials;
-        fetch?: typeof fetch;
-        fetchOptions?: RequestInit;
-        headers?: Record<string, string>;
-        includeExtensions?: boolean;
-        includeUnusedVariables?: boolean;
-        preserveHeaderCase?: boolean;
-        print?: HttpLink.Printer;
-        uri?: string | HttpLink.UriFunction;
+    export interface Options extends Shared.Options {
         useGETForQueries?: boolean;
     }
     // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    export namespace Shared {
+        export interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: HttpLink.Printer;
+            uri?: string | HttpLink.UriFunction;
+        }
+    }
     // (undocumented)
     export type UriFunction = (operation: ApolloLink.Operation) => string;
 }

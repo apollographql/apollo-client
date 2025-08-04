@@ -28,9 +28,15 @@ constructor(
 
 ### Options
 
-The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
+The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` [`createClient`](https://the-guild.dev/graphql/ws/docs/client/functions/createClient) function. The `createClient` function requires the `url` option, which is the URL to your WebSocket server (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively.)
 
-The `createClient` function can take many options, described in the [`graphql-ws` docs for `ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions). The `url` option is required, which is the URL to your WebSocket server (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively.)
+See the [`ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions) documentation for more details on the supported options provided to the `createClient` function.
+
+#### Retrying failed connections
+
+See the [`graphql-ws` recipes](https://the-guild.dev/graphql/ws/recipes) for strategies on retrying failed connections from the client. We recommend this approach as it provides more detailed information on the reason the connection failed.
+
+You can also handle retries in the link chain in a more generic manner using the [`RetryLink`](./apollo-link-retry) to resend the operation to the terminating link.
 
 ## Usage
 

@@ -80,7 +80,7 @@ export declare namespace RetryLink {
      * @defaultValue `() => true`
      */
     retryIf?: (
-      error: any,
+      error: ErrorLike,
       operation: ApolloLink.Operation
     ) => boolean | Promise<boolean>;
   }

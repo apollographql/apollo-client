@@ -8,17 +8,55 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 
-import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
 import { buildDelayFunction } from "./delayFunction.js";
 import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 
 export declare namespace RetryLink {
+  export type DelayFunction = (
+    count: number,
+    operation: ApolloLink.Operation,
+    error: any
+  ) => number;
+
+  export interface DelayOptions {
+    /**
+     * The number of milliseconds to wait before attempting the first retry.
+     *
+     * Delays will increase exponentially for each attempt. E.g. if this is
+     * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
+     * until they reach maxDelay.
+     *
+     * Note that if jittering is enabled, this is the _average_ delay.
+     *
+     * Defaults to 300.
+     */
+    initial?: number;
+
+    /**
+     * The maximum number of milliseconds that the link should wait for any
+     * retry.
+     *
+     * Defaults to Infinity.
+     */
+    max?: number;
+
+    /**
+     * Whether delays between attempts should be randomized.
+     *
+     * This helps avoid thundering herd type situations by better distributing
+     * load during major outages.
+     *
+     * Defaults to true.
+     */
+    jitter?: boolean;
+  }
+
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.
      */
-    delay?: DelayFunctionOptions | DelayFunction;
+    delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
 
     /**
      * Configuration for the retry strategy to use, or a custom retry strategy.
@@ -39,7 +77,7 @@ class RetryableOperation {
     private observer: Observer<ApolloLink.Result>,
     private operation: ApolloLink.Operation,
     private forward: ApolloLink.ForwardFunction,
-    private delayFor: DelayFunction,
+    private delayFor: RetryLink.DelayFunction,
     private retryIf: RetryFunction
   ) {
     this.try();
@@ -105,7 +143,7 @@ class RetryableOperation {
 }
 
 export class RetryLink extends ApolloLink {
-  private delayFor: DelayFunction;
+  private delayFor: RetryLink.DelayFunction;
   private retryIf: RetryFunction;
 
   constructor(options?: RetryLink.Options) {

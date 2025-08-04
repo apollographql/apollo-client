@@ -150,7 +150,6 @@ class RetryableOperation {
     this.retryCount += 1;
     const errorLike = toErrorLike(error);
 
-    // Should we retry?
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,

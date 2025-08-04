@@ -104,7 +104,7 @@ export declare namespace RetryLink {
 class RetryableOperation {
   private retryCount: number = 0;
   private currentSubscription: Subscription | null = null;
-  private timerId: number | undefined;
+  private timerId: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private observer: Observer<ApolloLink.Result>,
@@ -174,7 +174,7 @@ class RetryableOperation {
     this.timerId = setTimeout(() => {
       this.timerId = undefined;
       this.try();
-    }, delay) as any as number;
+    }, delay);
   }
 }
 

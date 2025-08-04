@@ -29,868 +29,284 @@
 
 export const renames: Array<IdentifierRename | ModuleRename> = [
   {
-    from: {
-      module: "@apollo/client/core",
-    },
-    to: {
-      module: "@apollo/client",
-    },
+    from: { module: "@apollo/client/core" },
+    to: { module: "@apollo/client" },
+  },
+  {
+    from: { module: "@apollo/client/link/core" },
+    to: { module: "@apollo/client/link" },
+  },
+  {
+    from: { module: "@apollo/client/react/context" },
+    to: { module: "@apollo/client/react" },
+  },
+  {
+    from: { module: "@apollo/client/react/hooks" },
+    to: { module: "@apollo/client/react" },
+  },
+  {
+    from: { module: "@apollo/client/testing/core" },
+    to: { module: "@apollo/client/testing" },
   },
   {
     from: {
-      module: "@apollo/client/link/core",
-    },
-    to: {
-      module: "@apollo/client/link",
-    },
-  },
-  {
-    from: {
-      module: "@apollo/client/react/context",
+      module: "@apollo/client/react",
+      alternativeModules: ["@apollo/client", "@apollo/client/react/internal"],
+      identifier: "QueryReference",
     },
     to: {
       module: "@apollo/client/react",
-    },
-  },
-  {
-    from: {
-      module: "@apollo/client/react/hooks",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-  },
-  {
-    from: {
-      module: "@apollo/client/testing/core",
-    },
-    to: {
-      module: "@apollo/client/testing",
-    },
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "ApolloConsumer",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "ApolloProvider",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "createQueryPreloader",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "getApolloContext",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "skipToken",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useApolloClient",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useBackgroundQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useFragment",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useLazyQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useLoadableQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useMutation",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useQueryRefHandlers",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useReactiveVar",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useReadQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useSubscription",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useSuspenseFragment",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "useSuspenseQuery",
-    },
-    to: {
-      module: "@apollo/client/react",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "ApolloClientOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "Options",
+      alternativeModules: [],
+      identifier: "QueryRef",
     },
     importType: "type",
   },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "ApolloQueryResult",
-    },
-    to: {
-      namespace: "ObservableQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "concat",
-    },
-    to: {
-      alternativeModules: ["@apollo/client"],
-      namespace: "ApolloLink",
-      identifier: "from",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "DefaultOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "DefaultOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "DevtoolsOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "DevtoolsOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "empty",
-    },
-    to: {
-      alternativeModules: ["@apollo/client"],
-      namespace: "ApolloLink",
-      identifier: "empty",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "from",
-    },
-    to: {
-      alternativeModules: ["@apollo/client"],
-      namespace: "ApolloLink",
-      identifier: "from",
-    },
-    importType: "value",
-  },
+  ...[
+    // move to the `@apollo/client/react` entry point
+    { from: "ApolloProvider" },
+    { from: "createQueryPreloader" },
+    { from: "getApolloContext" },
+    { from: "skipToken" },
+    { from: "useApolloClient" },
+    { from: "useBackgroundQuery" },
+    { from: "useFragment" },
+    { from: "useLazyQuery" },
+    { from: "useLoadableQuery" },
+    { from: "useMutation" },
+    { from: "useQuery" },
+    { from: "useQueryRefHandlers" },
+    { from: "useSubscription" },
+    { from: "useSuspenseFragment" },
+    { from: "useSuspenseQuery" },
+    { from: "useReactiveVar" },
+    { from: "useReadQuery" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client" },
+      to: { module: "@apollo/client/react" },
+      importType: "value",
+    })
+  ),
+  ...[
+    // move into `ApolloClient` type namespace
+    { from: "ApolloClientOptions", to: "Options" },
+    { from: "DefaultOptions" },
+    { from: "DevtoolsOptions" },
+    { from: "MutateResult" },
+    { from: "MutationOptions", to: "MutateOptions" },
+    // TODO: signature changed!
+    { from: "QueryOptions" },
+    { from: "RefetchQueriesOptions" },
+    { from: "RefetchQueriesResult" },
+    // TODO: signature changed!
+    { from: "SubscriptionOptions", to: "SubscribeOptions" },
+    // TODO: signature changed!
+    { from: "WatchQueryOptions" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client" },
+      to: { namespace: "ApolloClient" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // move into `ObservableQuery` type namespace
+    { from: "ApolloQueryResult", to: "Result" },
+    { from: "SubscribeToMoreOptions" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client" },
+      to: { namespace: "ObservableQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // move into `ApolloCache` type namespace
+    { from: "WatchFragmentOptions" },
+    { from: "WatchFragmentResult" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/cache" },
+      to: { namespace: "ApolloCache" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // move into `ApolloLink` runtime namespace
+    { from: "from" },
+    { from: "empty" },
+    { from: "concat" },
+    { from: "split" },
+  ].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ApolloLink" },
+      importType: "value",
+    })
+  ),
+  ...[
+    // move into `ApolloLink` type namespace
+    { from: "FetchResult", to: "Result" },
+    { from: "GraphQLRequest", to: "Request" },
+    { from: "Operation" },
+    { from: "RequestHandler" },
+  ].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ApolloLink" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "BackgroundQueryHookFetchPolicy", to: "FetchPolicy" },
+    // TODO: signature changed!
+    { from: "BackgroundQueryHookOptions", to: "Options" },
+    { from: "UseBackgroundQueryResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useBackgroundQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "LazyQueryExecFunction", to: "ExecFunction" },
+    { from: "LazyQueryHookExecOptions", to: "ExecOptions" },
+    { from: "LazyQueryHookOptions", to: "Options" },
+    { from: "LazyQueryResult", to: "Result" },
+    { from: "LazyQueryResultTuple", to: "ResultTuple" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useLazyQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "LoadableQueryFetchPolicy", to: "FetchPolicy" },
+    { from: "LoadableQueryHookOptions", to: "Options" },
+    { from: "LoadQueryFunction" },
+    { from: "UseLoadableQueryResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useLoadableQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // TODO: signature changed!
+    { from: "MutationFunctionOptions" },
+    // TODO: signature changed!
+    { from: "MutationHookOptions", to: "Options" },
+    { from: "MutationResult", to: "Result" },
+    // TODO: signature changed!
+    { from: "MutationTuple", to: "ResultTuple" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useMutation" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "OnDataOptions" },
+    { from: "OnSubscriptionDataOptions" },
+    { from: "SubscriptionHookOptions", to: "Options" },
+    // TODO: signature changed!
+    { from: "SubscriptionResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useSubscription" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "QueryHookOptions", to: "Options" },
+    { from: "QueryResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "SuspenseQueryHookFetchPolicy", to: "FetchPolicy" },
+    // TODO: signature changed!
+    { from: "SuspenseQueryHookOptions", to: "Options" },
+    { from: "UseSuspenseQueryResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useSuspenseQuery" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "UseQueryRefHandlersResult", to: "Result" }].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useQueryRefHandlers" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "UseFragmentOptions", to: "Options" },
+    { from: "UseFragmentResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useFragment" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "UseReadQueryResult", to: "Result" }].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useReadQuery" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "UseSuspenseFragmentOptions", to: "Options" },
+    { from: "UseSuspenseFragmentResult", to: "Result" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { namespace: "useSuspenseFragment" },
+      importType: "type",
+    })
+  ),
   {
     from: {
       module: "@apollo/client/testing",
       identifier: "MockedProvider",
     },
     to: {
-      module: "@apollo/client/testing",
+      module: "@apollo/client/testing/react",
       identifier: "MockedProvider",
     },
     importType: "value",
   },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "MutateResult",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "MutateResult",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "MutationOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "MutateOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "QueryOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "QueryOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "RefetchQueriesOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "RefetchQueriesOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "RefetchQueriesResult",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "RefetchQueriesResult",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "split",
-    },
-    to: {
-      alternativeModules: ["@apollo/client"],
-      namespace: "ApolloLink",
-      identifier: "split",
-    },
-    importType: "value",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "SubscribeToMoreOptions",
-    },
-    to: {
-      namespace: "ObservableQuery",
-      identifier: "SubscribeToMoreOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "SubscriptionOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "SubscribeOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client",
-      identifier: "WatchQueryOptions",
-    },
-    to: {
-      namespace: "ApolloClient",
-      identifier: "WatchQueryOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/cache",
-      identifier: "WatchFragmentOptions",
-    },
-    to: {
-      namespace: "ApolloCache",
-      identifier: "WatchFragmentOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/cache",
-      identifier: "WatchFragmentResult",
-    },
-    to: {
-      namespace: "ApolloCache",
-      identifier: "WatchFragmentResult",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "FetchResult",
-    },
-    to: {
-      alternativeModules: ["@apollo/client"],
-      namespace: "ApolloLink",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "GraphQLRequest",
-    },
-    to: {
-      namespace: "ApolloLink",
-      identifier: "Request",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "Operation",
-    },
-    to: {
-      namespace: "ApolloLink",
-      identifier: "Operation",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/link",
-      identifier: "RequestHandler",
-    },
-    to: {
-      namespace: "ApolloLink",
-      identifier: "RequestHandler",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "BackgroundQueryHookFetchPolicy",
-    },
-    to: {
-      namespace: "useBackgroundQuery",
-      identifier: "FetchPolicy",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "BackgroundQueryHookOptions",
-    },
-    to: {
-      namespace: "useBackgroundQuery",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LazyQueryExecFunction",
-    },
-    to: {
-      namespace: "useLazyQuery",
-      identifier: "ExecOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LazyQueryHookExecOptions",
-    },
-    to: {
-      namespace: "useLazyQuery",
-      identifier: "ExecOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LazyQueryHookOptions",
-    },
-    to: {
-      namespace: "useLazyQuery",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LazyQueryResult",
-    },
-    to: {
-      namespace: "useLazyQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LazyQueryResultTuple",
-    },
-    to: {
-      namespace: "useLazyQuery",
-      identifier: "ResultTuple",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LoadableQueryFetchPolicy",
-    },
-    to: {
-      namespace: "useLoadableQuery",
-      identifier: "FetchPolicy",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LoadableQueryHookOptions",
-    },
-    to: {
-      namespace: "useLoadableQuery",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "LoadQueryFunction",
-    },
-    to: {
-      namespace: "useLoadableQuery",
-      identifier: "LoadQueryFunction",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "MutationFunctionOptions",
-    },
-    to: {
-      namespace: "useMutation",
-      identifier: "MutationFunctionOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "MutationHookOptions",
-    },
-    to: {
-      namespace: "useMutation",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "MutationResult",
-    },
-    to: {
-      namespace: "useMutation",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "MutationTuple",
-    },
-    to: {
-      namespace: "useMutation",
-      identifier: "ResultTuple",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "OnDataOptions",
-    },
-    to: {
-      namespace: "useSubscription",
-      identifier: "OnDataOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "OnSubscriptionDataOptions",
-    },
-    to: {
-      namespace: "useSubscription",
-      identifier: "OnSubscriptionDataOptions",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "QueryHookOptions",
-    },
-    to: {
-      namespace: "useQuery",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "QueryResult",
-    },
-    to: {
-      namespace: "useQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "SubscriptionHookOptions",
-    },
-    to: {
-      namespace: "useSubscription",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "SubscriptionResult",
-    },
-    to: {
-      namespace: "useSubscription",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "SuspenseQueryHookFetchPolicy",
-    },
-    to: {
-      namespace: "useSuspenseQuery",
-      identifier: "FetchPolicy",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "SuspenseQueryHookOptions",
-    },
-    to: {
-      namespace: "useSuspenseQuery",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseBackgroundQueryResult",
-    },
-    to: {
-      namespace: "useBackgroundQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseFragmentOptions",
-    },
-    to: {
-      namespace: "useFragment",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseFragmentResult",
-    },
-    to: {
-      namespace: "useFragment",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseLoadableQueryResult",
-    },
-    to: {
-      namespace: "useLoadableQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseQueryRefHandlersResult",
-    },
-    to: {
-      namespace: "useQueryRefHandlers",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseReadQueryResult",
-    },
-    to: {
-      namespace: "useReadQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseSuspenseFragmentOptions",
-    },
-    to: {
-      namespace: "useSuspenseFragment",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseSuspenseFragmentResult",
-    },
-    to: {
-      namespace: "useSuspenseFragment",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/react",
-      identifier: "UseSuspenseQueryResult",
-    },
-    to: {
-      namespace: "useSuspenseQuery",
-      identifier: "Result",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/testing",
-      identifier: "MockedRequest",
-    },
-    to: {
-      namespace: "MockLink",
-      identifier: "MockedRequest",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/testing",
-      identifier: "MockedResponse",
-    },
-    to: {
-      namespace: "MockLink",
-      identifier: "MockedResponse",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/testing",
-      identifier: "MockLinkOptions",
-    },
-    to: {
-      namespace: "MockLink",
-      identifier: "Options",
-    },
-    importType: "type",
-  },
-  {
-    from: {
-      module: "@apollo/client/testing",
-      identifier: "ResultFunction",
-    },
-    to: {
-      namespace: "MockLink",
-      identifier: "ResultFunction",
-    },
-    importType: "type",
-  },
+  ...[
+    { from: "MockedRequest" },
+    { from: "MockedResponse" },
+    { from: "MockLinkOptions", to: "Options" },
+    { from: "ResultFunction" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/testing" },
+      to: { namespace: "MockLink" },
+      importType: "type",
+    })
+  ),
 ];
 
 // Function to class transformations that require special handling
@@ -982,6 +398,12 @@ export interface IdentifierRename {
   importType: "type" | "value";
 }
 
+export interface IdentifierRenameCommon extends Omit<IdentifierRename, "from"> {
+  from: Omit<IdentifierRename["from"], "identifier"> & {
+    identifier?: string;
+  };
+}
+
 export interface ModuleRename {
   from: {
     module: string;
@@ -993,4 +415,18 @@ export interface ModuleRename {
     identifier?: never;
     namespace?: never;
   };
+}
+
+function moveInto(common: IdentifierRenameCommon) {
+  return ({
+    from,
+    to = from,
+  }: {
+    from: string;
+    to?: string;
+  }): IdentifierRename => ({
+    ...common,
+    from: { ...common.from, identifier: from },
+    to: { ...common.to, identifier: to },
+  });
 }

@@ -1,6 +1,9 @@
+import assert from "node:assert";
 import { randomUUID } from "node:crypto";
 
+import type { namedTypes } from "ast-types";
 import type { Transform } from "jscodeshift";
+import type * as j from "jscodeshift";
 
 import type { IdentifierRename, ModuleRename } from "./renames.js";
 import { renames } from "./renames.js";
@@ -22,15 +25,15 @@ const transform: Transform = function transform(file, api) {
 
   function findImportSpecifiersFor(
     description: IdentifierRename["from"] & IdentifierRename["to"],
-    importKind: ImportKind = "value"
+    compatibleWith: ImportKind = "value"
   ) {
-    return findImportDeclarationFor(description, importKind).find(
+    return findImportDeclarationFor(description, compatibleWith).find(
       j.ImportSpecifier,
       (node) => {
         return (
           node.imported.name ===
             (description.namespace || description.identifier) &&
-          (importKind === "type" || node.importKind !== "type")
+          (compatibleWith === "type" || node.importKind !== "type")
         );
       }
     );
@@ -41,26 +44,48 @@ const transform: Transform = function transform(file, api) {
       IdentifierRename["from"] & IdentifierRename["to"],
       "module" | "alternativeModules"
     >,
-    importKind: ImportKind = "value"
+    compatibleWith: ImportKind = "value"
   ) {
-    return source.find(j.ImportDeclaration, (node) => {
-      const moduleMatches =
-        description.module == "" + node.source.value ||
-        description.alternativeModules?.includes("" + node.source.value) ||
-        false;
+    const test = (node: namedTypes.ImportDeclaration) => {
       const isValidImportKind =
-        importKind === "type" || node.importKind !== "type";
+        compatibleWith === "type" || node.importKind !== "type";
       const hasNamespaceImport =
         j(node).find(j.ImportNamespaceSpecifier).size() > 0;
-      return moduleMatches && isValidImportKind && !hasNamespaceImport;
-    });
+      return isValidImportKind && !hasNamespaceImport;
+    };
+    const perfectMatch = source.find(
+      j.ImportDeclaration,
+      (node) => test(node) && description.module == "" + node.source.value
+    );
+    const alternativeMatches = source.find(
+      j.ImportDeclaration,
+      (node) =>
+        (test(node) &&
+          description.alternativeModules?.includes("" + node.source.value)) ||
+        false
+    );
+    return j(perfectMatch.paths().concat(...alternativeMatches.paths()));
+    /**
+     * {
+     * const moduleMatches =
+     * description.module == "" + node.source.value ||
+     * description.alternativeModules?.includes("" + node.source.value) ||
+     * false;
+     */
   }
 
-  function getUnusedIdentifer() {
-    let identifier: string;
-    do {
-      identifier = randomUUID().replace(/-/g, "_");
-    } while (source.find(j.Identifier, { name: identifier }).size() > 0);
+  function getUnusedIdentifer(similarTo?: string) {
+    let identifier = similarTo;
+    let counter = 0;
+    while (
+      !identifier ||
+      source.find(j.Identifier, { name: identifier }).size() > 0
+    ) {
+      identifier =
+        similarTo ?
+          `${similarTo}_${++counter}`
+        : `_${randomUUID().replace(/-/g, "_")}`;
+    }
     return identifier;
   }
 
@@ -79,68 +104,56 @@ const transform: Transform = function transform(file, api) {
     const final = { ...from, ...to };
 
     findImportSpecifiersFor(from).forEach((specifierPath) => {
-      if (from.namespace && to.namespace) {
-        throw new Error(
-          "This case is not supported yet: " + JSON.stringify(rename)
-        );
-      } else if (from.namespace) {
-        throw new Error(
-          "This case is not supported yet: " + JSON.stringify(rename)
-        );
-      }
+      assert(
+        !from.namespace,
+        "This case is not supported yet: " + JSON.stringify(rename)
+      );
 
       modified = true;
 
-      const localName = specifierPath.value.local?.name;
-      const importedName = specifierPath.value.imported.name;
-      const importDeclaration = j(specifierPath).closest(j.ImportDeclaration);
+      const specifier = specifierPath.value;
+      const localName = specifier.local?.name;
+      const importedName = specifier.imported.name;
+      const importDeclarations = j(specifierPath).closest(j.ImportDeclaration);
+      const importDeclarationPath = importDeclarations.paths()[0];
+      const importDeclaration = importDeclarationPath.value;
+      const importedFrom = importDeclaration.source.value;
       const importType =
-        specifierPath.value.importKind ||
-        importDeclaration.nodes()[0].importKind ||
+        specifier.importKind ||
+        importDeclaration.importKind ||
         rename.importType;
       if (importType === "typeof") {
-        return; // typeof imports are not supported
+        return; // typeof imports are not supported, skip
+      }
+      const renameFrom = getLocalName(specifier);
+      let importAs = getUnusedIdentifer(final.namespace || final.identifier);
+      console.log(final);
+      const alreadyImported = findImportSpecifiersFor(final, importType);
+      if (alreadyImported.size() > 0) {
+        importAs = getLocalName(alreadyImported.nodes()[0]);
       }
 
-      // create a temporary const definition with the original "local name" of the import
-      const tempId = getUnusedIdentifer();
-      const tempDeclaration = j.variableDeclaration("const", [
-        j.variableDeclarator(j.identifier("" + (localName || importedName))),
-      ]);
-      // insert the temporary declaration in the source
-      importDeclaration.insertAfter(tempDeclaration);
-      // find the inserted variable declaration from the source (required to be able to rename it)
-      const tempVariable = source
-        .find(j.VariableDeclaration, tempDeclaration)
-        .find(j.VariableDeclarator);
-      // rename the temporary variable to a temporary unique identifier
-      tempVariable.renameTo(tempId);
-      // and remove it
-      tempVariable.remove();
+      if (
+        from.namespace === final.namespace &&
+        localName !== importedName &&
+        importedFrom === final.module
+      ) {
+        // simple case - we just need to rename the import, everything else stays the same
+        specifier.imported.name = final.identifier;
+        return;
+      }
 
-      // undo accidental rename of the imported variable
-      specifierPath.replace(
-        j.importSpecifier(
-          j.identifier("" + importedName),
-          localName ? j.identifier("" + localName) : undefined
-        )
-      );
-
-      // replace the unique identifier with the new correct variable access
-      source
-        .find(j.Identifier, {
-          name: tempId,
-        })
-        .replaceWith(
-          final.namespace ?
-            j.memberExpression(
-              j.identifier(final.namespace),
-              j.identifier(final.identifier)
-            )
-          : j.identifier(final.identifier)
+      if (final.namespace) {
+        moveGlobalIdentifierToNamespaceAccess(
+          renameFrom,
+          importAs,
+          final.identifier
         );
+      } else if (renameFrom !== importAs) {
+        renameGlobalIdentifier(renameFrom, importAs);
+      }
 
-      if (findImportSpecifiersFor(final, importType).size() > 0) {
+      if (alreadyImported.size() > 0) {
         // if the target import specifier already exists, we can just remove this one
         specifierPath.replace();
       } else {
@@ -148,29 +161,19 @@ const transform: Transform = function transform(file, api) {
           final,
           importType
         ).nodes()[0];
-        const newImportName = j.identifier(
-          to.namespace || to.identifier || from.identifier
-        );
-        if (targetDeclaration === specifierPath.parent) {
-          // specifierPath should have been removed anyways, so we just reuse it in the existing position
-          specifierPath.node.name = newImportName;
-          specifierPath.node.local = undefined;
-        } else {
+        // specifier should have been removed anyways, so we just reuse it in the existing position
+        specifier.imported = j.identifier(final.namespace || final.identifier);
+        specifier.local = j.identifier(importAs);
+
+        if (targetDeclaration !== specifierPath.parent) {
           // remove the specifier, we create a new one in a different import declaration
           specifierPath.replace();
           if (targetDeclaration) {
-            const specifier = j.importSpecifier(newImportName);
-            if (
-              importType === "type" &&
-              targetDeclaration.importKind !== "type"
-            ) {
-              specifier.importKind = "type";
-            }
             (targetDeclaration.specifiers ??= []).push(specifier);
           } else {
-            importDeclaration.insertAfter(
+            importDeclarations.insertAfter(
               j.importDeclaration(
-                [j.importSpecifier(newImportName)],
+                [specifier],
                 j.literal(to.module || from.module),
                 importType
               )
@@ -178,10 +181,44 @@ const transform: Transform = function transform(file, api) {
           }
         }
       }
-      if (importDeclaration.size() === 0) {
-        importDeclaration.remove();
+      if (importDeclaration.specifiers?.length === 0) {
+        importDeclarationPath.replace();
       }
     });
+  }
+
+  function renameGlobalIdentifier(identifierName: string, newName: string) {
+    // create a temporary const definition with the original "local name" of the import
+    const tempDeclaration = j.variableDeclaration("const", [
+      j.variableDeclarator(j.identifier(identifierName)),
+    ]);
+    // insert the temporary declaration in the source
+    source.find(j.Program).nodes()[0].body.unshift(tempDeclaration);
+    // find the inserted variable declaration from the source (required to be able to rename it)
+    const tempVariable = source
+      .find(j.VariableDeclaration, tempDeclaration)
+      .find(j.VariableDeclarator);
+    // rename the temporary variable to a temporary unique identifier
+    tempVariable.renameTo(newName);
+    // and remove it
+    tempVariable.remove();
+  }
+
+  function moveGlobalIdentifierToNamespaceAccess(
+    globalIdentifer: string,
+    namespace: string,
+    namespaceProp: string
+  ) {
+    const tempId = getUnusedIdentifer();
+    renameGlobalIdentifier(globalIdentifer, tempId);
+    source
+      .find(j.Identifier, { name: tempId })
+      .filter((node) => {
+        return node.parentPath.value.type !== "ImportSpecifier";
+      })
+      .replaceWith(
+        j.memberExpression(j.identifier(namespace), j.identifier(namespaceProp))
+      );
   }
 
   function handleModuleRename(rename: ModuleRename) {
@@ -231,5 +268,9 @@ const transform: Transform = function transform(file, api) {
     }
   }
 };
+
+function getLocalName(spec: j.ImportSpecifier): string {
+  return "" + (spec.local?.name || spec.imported.name);
+}
 
 export default transform;

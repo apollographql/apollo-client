@@ -132,7 +132,11 @@ class RetryableOperation {
     this.currentSubscription = this.forward(this.operation).subscribe({
       next: (result) => {
         if (graphQLResultHasProtocolErrors(result)) {
-          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL]);
+          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL], () =>
+            // Pretend like we never encountered this error and move the result
+            // along for Apollo Client core to handle this error.
+            this.observer.next(result)
+          );
           // Unsubscribe from the current subscription to prevent the `complete`
           // handler to be called as a result of the stream closing.
           this.currentSubscription?.unsubscribe();
@@ -141,12 +145,12 @@ class RetryableOperation {
 
         this.observer.next(result);
       },
-      error: this.onError,
+      error: (error) => this.onError(error, () => this.observer.error(error)),
       complete: this.observer.complete.bind(this.observer),
     });
   }
 
-  private onError = async (error: unknown) => {
+  private onError = async (error: unknown, onContinue: () => void) => {
     this.retryCount += 1;
     const errorLike = toErrorLike(error);
 
@@ -162,7 +166,7 @@ class RetryableOperation {
       return;
     }
 
-    this.observer.error(error);
+    onContinue();
   };
 
   private scheduleRetry(delay: number) {

@@ -26,7 +26,7 @@ export declare namespace BatchLink {
       /**
        * The maximum number of operations to include in a single batch.
        *
-       * @defaultValue {{defaultValue}}
+       * @defaultValue \{\{defaultValue\}\}
        */
       batchMax?: number;
 

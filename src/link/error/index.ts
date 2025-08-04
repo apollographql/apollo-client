@@ -18,7 +18,7 @@ export declare namespace ErrorLink {
      * Callback that is called by `ErrorLink` when an error occurs from a
      * downstream link in link chain.
      *
-     * @param options - The options object provided by ErrorLink` to the error
+     * @param options - The options object provided by `ErrorLink` to the error
      * handler when an error occurs.
      */
     export function ErrorHandler(

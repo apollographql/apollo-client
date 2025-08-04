@@ -33,10 +33,10 @@ export import WebSocketParams = WebSocketLink.Configuration;
 
 /**
  * @deprecated `WebSocketLink` uses the deprecated and unmaintained
- * `subscriptions-transport-ws` library. We recommend switching to
- * `GraphQLWsLink`, which uses the [`graphql-ws` library](https://the-guild.dev/graphql/ws) to provide
- * support for sending GraphQL operations through WebSocket connections.
- * `WebSocketLink` will be removed in a future major version of Apollo Client.
+ * `subscriptions-transport-ws` library. This link is no longer maintained and
+ * will be removed in a future major version of Apollo Client. We recommend
+ * switching to `GraphQLWsLink`, which uses the [`graphql-ws` library](https://the-guild.dev/graphql/ws) to
+ * send GraphQL operations through WebSocket connections.
  */
 export class WebSocketLink extends ApolloLink {
   private subscriptionClient: SubscriptionClient;

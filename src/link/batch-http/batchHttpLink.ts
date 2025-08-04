@@ -12,7 +12,6 @@ import {
   parseAndCheckHttpResponse,
   selectHttpOptionsAndBodyInternal,
   selectURI,
-  serializeFetchParameter,
 } from "@apollo/client/link/http";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -132,7 +131,7 @@ export class BaseBatchHttpLink extends ApolloLink {
       }
 
       try {
-        (options as any).body = serializeFetchParameter(loadedBody, "Payload");
+        (options as any).body = JSON.stringify(loadedBody);
       } catch (parseError) {
         return throwError(() => parseError);
       }

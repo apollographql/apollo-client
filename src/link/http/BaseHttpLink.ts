@@ -23,7 +23,6 @@ import {
   selectHttpOptionsAndBodyInternal,
 } from "./selectHttpOptionsAndBody.js";
 import { selectURI } from "./selectURI.js";
-import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 const backupFetch = maybe(() => fetch);
 
@@ -108,7 +107,7 @@ export class BaseHttpLink extends ApolloLink {
           }
           chosenURI = newURI;
         } else {
-          options.body = serializeFetchParameter(body, "Payload");
+          options.body = JSON.stringify(body);
         }
         // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
         // fall back to the *current* global window.fetch function (see issue

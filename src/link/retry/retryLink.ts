@@ -2,9 +2,11 @@ import type { Subscription } from "rxjs";
 import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
+import type { ErrorLike } from "@apollo/client";
 import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  toErrorLike,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 
@@ -15,7 +17,7 @@ export declare namespace RetryLink {
   export type DelayFunction = (
     count: number,
     operation: ApolloLink.Operation,
-    error: any
+    error: ErrorLike
   ) => number;
 
   export interface DelayOptions {
@@ -54,7 +56,7 @@ export declare namespace RetryLink {
   export type AttemptsFunction = (
     count: number,
     operation: ApolloLink.Operation,
-    error: any
+    error: ErrorLike
   ) => boolean | Promise<boolean>;
 
   export interface AttemptsOptions {
@@ -144,17 +146,20 @@ class RetryableOperation {
     });
   }
 
-  private onError = async (error: any) => {
+  private onError = async (error: unknown) => {
     this.retryCount += 1;
+    const errorLike = toErrorLike(error);
 
     // Should we retry?
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,
-      error
+      errorLike
     );
     if (shouldRetry) {
-      this.scheduleRetry(this.delayFor(this.retryCount, this.operation, error));
+      this.scheduleRetry(
+        this.delayFor(this.retryCount, this.operation, errorLike)
+      );
       return;
     }
 

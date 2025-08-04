@@ -719,7 +719,7 @@ describe("SharedHttpTest", () => {
     const variables = { params: "stub" };
     const link = new BatchHttpLink({
       uri: "/data",
-      credentials: "same-team-yo",
+      credentials: "include",
     });
 
     const stream = new ObservableStream(
@@ -730,19 +730,19 @@ describe("SharedHttpTest", () => {
     await expect(stream).toComplete();
 
     const creds = fetchMock.lastCall()![1]!.credentials;
-    expect(creds).toBe("same-team-yo");
+    expect(creds).toBe("include");
   });
 
   it("prioritizes creds from the context over the setup", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
-        credentials: "same-team-yo",
+        credentials: "omit",
       });
       return forward(operation);
     });
     const link = middleware.concat(
-      new BatchHttpLink({ uri: "/data", credentials: "error" })
+      new BatchHttpLink({ uri: "/data", credentials: "include" })
     );
 
     const stream = new ObservableStream(
@@ -753,7 +753,7 @@ describe("SharedHttpTest", () => {
     await expect(stream).toComplete();
 
     const creds = fetchMock.lastCall()![1]!.credentials;
-    expect(creds).toBe("same-team-yo");
+    expect(creds).toBe("omit");
   });
 
   it("adds uri to the request from the context", async () => {
@@ -801,7 +801,7 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      new BatchHttpLink({ uri: "/data", credentials: "error" })
+      new BatchHttpLink({ uri: "/data", credentials: "include" })
     );
 
     const stream = new ObservableStream(
@@ -839,7 +839,7 @@ describe("SharedHttpTest", () => {
     const variables = { params: "stub" };
     const link = new BatchHttpLink({
       uri: "/data",
-      fetchOptions: { someOption: "foo", mode: "no-cors" },
+      fetchOptions: { mode: "no-cors" },
     });
 
     const stream = new ObservableStream(
@@ -849,8 +849,7 @@ describe("SharedHttpTest", () => {
     await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
-    const { someOption, mode, headers } = fetchMock.lastCall()![1]! as any;
-    expect(someOption).toBe("foo");
+    const { mode, headers } = fetchMock.lastCall()![1]! as any;
     expect(mode).toBe("no-cors");
     expect(headers["content-type"]).toBe("application/json");
   });
@@ -902,13 +901,13 @@ describe("SharedHttpTest", () => {
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
         fetchOptions: {
-          someOption: "foo",
+          mode: "cors",
         },
       });
       return forward(operation);
     });
     const link = middleware.concat(
-      new BatchHttpLink({ uri: "/data", fetchOptions: { someOption: "bar" } })
+      new BatchHttpLink({ uri: "/data", fetchOptions: { mode: "no-cors" } })
     );
 
     const stream = new ObservableStream(
@@ -918,8 +917,8 @@ describe("SharedHttpTest", () => {
     await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
-    const { someOption } = fetchMock.lastCall()![1]! as any;
-    expect(someOption).toBe("foo");
+    const { mode } = fetchMock.lastCall()![1]! as any;
+    expect(mode).toBe("cors");
   });
 
   it("allows for not sending the query with the request", async () => {

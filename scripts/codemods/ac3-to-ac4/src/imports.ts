@@ -1,5 +1,4 @@
 import assert from "node:assert";
-import { randomUUID } from "node:crypto";
 
 import type { namedTypes } from "ast-types";
 import type { Transform } from "jscodeshift";
@@ -7,6 +6,8 @@ import type * as j from "jscodeshift";
 
 import type { IdentifierRename, ModuleRename } from "./renames.js";
 import { renames } from "./renames.js";
+import { findReferences } from "./util/findReferences.js";
+import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 
 type ImportKind = "type" | "value";
 
@@ -21,7 +22,16 @@ declare module "ast-types" {
 const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
-  const combined: Record<string, boolean> = {};
+
+  let modified = false;
+  for (const rename of renames) {
+    if (!("importType" in rename)) {
+      handleModuleRename(rename);
+      continue;
+    }
+    handleIdentiferRename(rename);
+  }
+  return modified ? source.toSource() : undefined;
 
   function findImportSpecifiersFor(
     description: IdentifierRename["from"] & IdentifierRename["to"],
@@ -74,30 +84,17 @@ const transform: Transform = function transform(file, api) {
      */
   }
 
-  function getUnusedIdentifer(similarTo?: string) {
+  function getUnusedIdentifer(similarTo: string) {
     let identifier = similarTo;
     let counter = 0;
     while (
       !identifier ||
       source.find(j.Identifier, { name: identifier }).size() > 0
     ) {
-      identifier =
-        similarTo ?
-          `${similarTo}_${++counter}`
-        : `_${randomUUID().replace(/-/g, "_")}`;
+      identifier = `${similarTo}_${++counter}`;
     }
     return identifier;
   }
-
-  let modified = false;
-  for (const rename of renames) {
-    if (!("importType" in rename)) {
-      handleModuleRename(rename);
-      continue;
-    }
-    handleIdentiferRename(rename);
-  }
-  return modified ? source.toSource() : undefined;
 
   function handleIdentiferRename(rename: IdentifierRename) {
     const { from, to } = rename;
@@ -145,7 +142,7 @@ const transform: Transform = function transform(file, api) {
 
       if (final.namespace) {
         moveGlobalIdentifierToNamespaceAccess(
-          renameFrom,
+          specifierPath.get("local") || specifierPath.get("imported"),
           importAs,
           final.identifier
         );
@@ -156,6 +153,12 @@ const transform: Transform = function transform(file, api) {
       if (alreadyImported.size() > 0) {
         // if the target import specifier already exists, we can just remove this one
         specifierPath.replace();
+        rename.postProcess?.({
+          j,
+          namespace: final.namespace ? importAs : undefined,
+          identifier: final.namespace ? final.identifier : importAs,
+          renamedSpecifierPath: alreadyImported.paths()[0],
+        });
       } else {
         const targetDeclaration = findImportDeclarationFor(
           final,
@@ -180,6 +183,12 @@ const transform: Transform = function transform(file, api) {
             );
           }
         }
+        rename.postProcess?.({
+          j,
+          namespace: final.namespace ? importAs : undefined,
+          identifier: final.namespace ? final.identifier : importAs,
+          renamedSpecifierPath: j(specifier).paths()[0],
+        });
       }
       if (importDeclaration.specifiers?.length === 0) {
         importDeclarationPath.replace();
@@ -205,20 +214,39 @@ const transform: Transform = function transform(file, api) {
   }
 
   function moveGlobalIdentifierToNamespaceAccess(
-    globalIdentifer: string,
+    globalIdentifer: j.ASTPath<namedTypes.Identifier>,
     namespace: string,
     namespaceProp: string
   ) {
-    const tempId = getUnusedIdentifer();
-    renameGlobalIdentifier(globalIdentifer, tempId);
-    source
-      .find(j.Identifier, { name: tempId })
+    findReferences({
+      j,
+      identifier: globalIdentifer.node.name,
+      scope: globalIdentifer.scope,
+    })
       .filter((node) => {
         return node.parentPath.value.type !== "ImportSpecifier";
       })
-      .replaceWith(
-        j.memberExpression(j.identifier(namespace), j.identifier(namespaceProp))
-      );
+      .forEach((node) => {
+        if (j(node).closest(j.TSTypeReference).size() > 0) {
+          node.replace(
+            j.tsQualifiedName(
+              j.identifier(namespace),
+              j.identifier(namespaceProp)
+            )
+          );
+        } else {
+          node.replace(
+            j.memberExpression(
+              j.identifier(namespace),
+              j.identifier(namespaceProp)
+            )
+          );
+        }
+      });
+
+    // const tempId = getUnusedIdentifer();
+    // renameGlobalIdentifier(globalIdentifer, tempId);
+    // source.find(j.Identifier, { name: tempId });
   }
 
   function handleModuleRename(rename: ModuleRename) {

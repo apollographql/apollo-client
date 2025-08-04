@@ -1,3 +1,6 @@
+import type { namedTypes } from "ast-types";
+import type * as j from "jscodeshift";
+import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 // {
 //   // completely removed in AC4
 //   from: { module: "@apollo/client/react/components" },
@@ -94,14 +97,18 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "DevtoolsOptions" },
     { from: "MutateResult" },
     { from: "MutationOptions", to: "MutateOptions" },
-    // TODO: signature changed!
-    { from: "QueryOptions" },
+    {
+      from: "QueryOptions",
+      postProcess: reorderGenerics([1, 0]),
+    },
     { from: "RefetchQueriesOptions" },
     { from: "RefetchQueriesResult" },
-    // TODO: signature changed!
-    { from: "SubscriptionOptions", to: "SubscribeOptions" },
-    // TODO: signature changed!
-    { from: "WatchQueryOptions" },
+    {
+      from: "SubscriptionOptions",
+      to: "SubscribeOptions",
+      postProcess: reorderGenerics([1, 0]),
+    },
+    { from: "WatchQueryOptions", postProcess: reorderGenerics([1, 0]) },
   ].map(
     moveInto({
       from: { module: "@apollo/client" },
@@ -165,8 +172,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     { from: "BackgroundQueryHookFetchPolicy", to: "FetchPolicy" },
-    // TODO: signature changed!
-    { from: "BackgroundQueryHookOptions", to: "Options" },
+    {
+      from: "BackgroundQueryHookOptions",
+      to: "Options",
+      postProcess: reorderGenerics([1]),
+    },
     { from: "UseBackgroundQueryResult", to: "Result" },
   ].map(
     moveInto({
@@ -201,13 +211,21 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
-    // TODO: signature changed!
-    { from: "MutationFunctionOptions" },
-    // TODO: signature changed!
-    { from: "MutationHookOptions", to: "Options" },
+    {
+      from: "MutationFunctionOptions",
+      postProcess: reorderGenerics([0, 1, 3]),
+    },
+    {
+      from: "MutationHookOptions",
+      to: "Options",
+      postProcess: reorderGenerics([0, 1, 3]),
+    },
     { from: "MutationResult", to: "Result" },
-    // TODO: signature changed!
-    { from: "MutationTuple", to: "ResultTuple" },
+    {
+      from: "MutationTuple",
+      to: "ResultTuple",
+      postProcess: reorderGenerics([0, 1, 3]),
+    },
   ].map(
     moveInto({
       from: { module: "@apollo/client/react" },
@@ -219,8 +237,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "OnDataOptions" },
     { from: "OnSubscriptionDataOptions" },
     { from: "SubscriptionHookOptions", to: "Options" },
-    // TODO: signature changed!
-    { from: "SubscriptionResult", to: "Result" },
+    {
+      from: "SubscriptionResult",
+      to: "Result",
+      postProcess: reorderGenerics([0]),
+    },
   ].map(
     moveInto({
       from: { module: "@apollo/client/react" },
@@ -240,8 +261,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     { from: "SuspenseQueryHookFetchPolicy", to: "FetchPolicy" },
-    // TODO: signature changed!
-    { from: "SuspenseQueryHookOptions", to: "Options" },
+    {
+      from: "SuspenseQueryHookOptions",
+      to: "Options",
+      postProcess: reorderGenerics([1]),
+    },
     { from: "UseSuspenseQueryResult", to: "Result" },
   ].map(
     moveInto({
@@ -396,6 +420,12 @@ export interface IdentifierRename {
     namespace?: string;
   };
   importType: "type" | "value";
+  postProcess?(args: {
+    j: j.JSCodeshift;
+    namespace?: string;
+    identifier: string;
+    renamedSpecifierPath: j.ASTPath<namedTypes.ImportSpecifier>;
+  }): void;
 }
 
 export interface IdentifierRenameCommon extends Omit<IdentifierRename, "from"> {
@@ -417,15 +447,37 @@ export interface ModuleRename {
   };
 }
 
+function reorderGenerics(
+  newOrder: number[]
+): (args: {
+  j: j.JSCodeshift;
+  namespace?: string;
+  identifier: string;
+  renamedSpecifierPath: j.ASTPath<namedTypes.ImportSpecifier>;
+}) => void {
+  return ({ j, identifier, namespace, renamedSpecifierPath }) => {
+    reorderGenericArguments({
+      j,
+      namespace,
+      identifier,
+      scope: renamedSpecifierPath.scope,
+      newOrder,
+    });
+  };
+}
+
 function moveInto(common: IdentifierRenameCommon) {
   return ({
     from,
     to = from,
+    postProcess = common.postProcess,
   }: {
     from: string;
     to?: string;
+    postProcess?: IdentifierRename["postProcess"];
   }): IdentifierRename => ({
     ...common,
+    postProcess,
     from: { ...common.from, identifier: from },
     to: { ...common.to, identifier: to },
   });

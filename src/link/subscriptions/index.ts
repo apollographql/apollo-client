@@ -53,9 +53,9 @@ function isLikeErrorEvent(err: unknown): err is Event {
  * commonly with GraphQL [subscriptions](https://apollographql.com/docs/react/data/subscriptions/),
  *
  * > [!NOTE]
- * > This link works with the newer `graphql-ws` library. If your server uses
- * > the older `subscriptions-transport-ws` library, you should use the
- * > [`WebSocketLink`](https://apollographql.com/docs/react/api/link/apollo-link-ws) link from `@apollo/client/link/ws` instead.
+ * > This link works with the `graphql-ws` library. If your server uses
+ * > the deprecated `subscriptions-transport-ws` library, use the deprecated
+ * > [`WebSocketLink`](https://apollographql.com/docs/react/api/link/apollo-link-ws) link instead.
  *
  * @example
  *

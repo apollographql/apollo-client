@@ -24,7 +24,7 @@ export declare namespace SchemaLink {
     /**
      * A context to provide to resolvers declared within the schema.
      */
-    context?: ResolverContext | ResolverContextFunction;
+    context?: SchemaLink.ResolverContext | SchemaLink.ResolverContextFunction;
 
     /**
      * Validate incoming queries against the given schema, returning

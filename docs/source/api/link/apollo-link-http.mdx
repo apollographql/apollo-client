@@ -24,40 +24,7 @@ After your GraphQL endpoint (successfully) responds with the result of the sent 
 
 ## Customizing `fetch`
 
-You can provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
-
-If you're targeting an environment that doesn't provide the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) (such as older browsers or the server) you can provide a different implementation of `fetch`. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for running in Node.
-
-### Custom auth
-
-This example adds a custom `Authorization` header to every request before calling `fetch`:
-
-```js
-const customFetch = (uri, options) => {
-  const { header } = Hawk.client.header(
-    "http://example.com:8000/resource/1?b=1&a=2",
-    "POST",
-    { credentials: credentials, ext: "some-app-data" }
-  );
-  options.headers.Authorization = header;
-  return fetch(uri, options);
-};
-
-const link = new HttpLink({ fetch: customFetch });
-```
-
-### Dynamic URI
-
-This example customizes the endpoint URL's query parameters before calling `fetch`:
-
-```js
-const customFetch = (uri, options) => {
-  const { operationName } = JSON.parse(options.body);
-  return fetch(`${uri}/graph/graphql?opname=${operationName}`, options);
-};
-
-const link = new HttpLink({ fetch: customFetch });
-```
+You can provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor if you need fine-grained customization to the underlying `fetch` call. The function should behave identically to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch).
 
 ## Types
 

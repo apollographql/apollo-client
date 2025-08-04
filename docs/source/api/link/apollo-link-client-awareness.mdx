@@ -55,17 +55,17 @@ const client = new ApolloClient({
 
 <Note>
 
-If you are using `BaseHttpLink` and want client awareness functionality, you will need to add `ClientAwarenessLink` to your link chain manually. `HttpLink` includes `ClientAwarenessLink` by default.
+If you use `BaseHttpLink`, add `ClientAwarenessLink` to your link chain manually to enable client awareness. `HttpLink` includes `ClientAwarenessLink` by default.
 
 </Note>
 
 ### Configuring with request context
 
-You can configure client awareness using request context. Provide the `clientAwareness` field in `context`. These values take precedence over all other configurations.
+Configure client awareness on a per-request basis by providing the `clientAwareness` field in the request's `context`. These values take precedence over all other configurations.
 
 <Note>
 
-The `enhancedClientAwareness` field is not supported in request context. This feature should either be fully opted in or out of.
+The `enhancedClientAwareness` field is not supported in request context. Configure this feature at the client or link level instead.
 
 </Note>
 

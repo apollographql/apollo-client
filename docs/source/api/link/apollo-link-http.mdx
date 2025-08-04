@@ -20,11 +20,11 @@ constructor(
 
 ## Operation results
 
-After your GraphQL endpoint (successfully) responds with the result of the sent operation, `HttpLink` sets it as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response before it's returned.
+After your GraphQL endpoint successfully responds with the result of an operation, `HttpLink` sets the `Response` object as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response.
 
 ## Customizing `fetch`
 
-You can provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor if you need fine-grained customization to the underlying `fetch` call. The function should behave identically to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch).
+Provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor if you need fine-grained control over the underlying `fetch` call. The function should behave identically to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch).
 
 ## Types
 

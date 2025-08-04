@@ -6,7 +6,6 @@ import { ApolloLink } from "@apollo/client/link";
 import type { BatchHandler } from "./batching.js";
 import { OperationBatcher } from "./batching.js";
 export type { BatchableRequest, BatchHandler } from "./batching.js";
-export { OperationBatcher } from "./batching.js";
 
 export declare namespace BatchLink {
   export interface Options {

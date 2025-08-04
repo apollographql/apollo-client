@@ -37,13 +37,6 @@ interface BaseOptions {
 }
 
 export declare namespace PersistedQueryLink {
-  interface CallbackOptions {
-    error: ErrorLike;
-    operation: ApolloLink.Operation;
-    meta: PersistedQueryLink.ErrorMeta;
-    result?: FormattedExecutionResult;
-  }
-
   export interface ErrorMeta {
     persistedQueryNotSupported: boolean;
     persistedQueryNotFound: boolean;
@@ -71,8 +64,15 @@ export declare namespace PersistedQueryLink {
     | PersistedQueryLink.SHA256Options
     | PersistedQueryLink.GenerateHashOptions;
 
-  export interface RetryFunctionOptions extends CallbackOptions {}
-  export interface DisableFunctionOptions extends CallbackOptions {}
+  export interface RetryFunctionOptions {
+    error: ErrorLike;
+    operation: ApolloLink.Operation;
+    meta: PersistedQueryLink.ErrorMeta;
+    result?: FormattedExecutionResult;
+  }
+
+  export interface DisableFunctionOptions
+    extends PersistedQueryLink.RetryFunctionOptions {}
 }
 
 function processErrors(

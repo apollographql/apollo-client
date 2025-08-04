@@ -31,6 +31,10 @@ The batch HTTP link currently uses the context in two different ways, per batch 
 
 For each query, the `http` field is used to modify each individual query in the batch, such as persisted queries (see below).
 
+## Operation results
+
+After your GraphQL endpoint (successfully) responds with the result of the sent operation, `BatchHttpLink` sets it as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response before it's returned.
+
 ## Custom fetching
 
 See [Customizing `fetch`](apollo-link-http/#customizing-fetch).

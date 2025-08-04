@@ -61,7 +61,13 @@ If you are using `BaseHttpLink` and want client awareness functionality, you wil
 
 ### Configuring with request context
 
-You can configure client awareness using request context. Provide the `clientAwareness` and `enhancedClientAwareness` fields in `context`. These values take precedence over all other configurations.
+You can configure client awareness using request context. Provide the `clientAwareness` field in `context`. These values take precedence over all other configurations.
+
+<Note>
+
+The `enhancedClientAwareness` field is not supported in request context. This feature should either be fully opted in or out of.
+
+</Note>
 
 ```ts
 const client = new ApolloClient(/* ... */);

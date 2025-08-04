@@ -129,12 +129,12 @@ export declare namespace HttpLink {
     /**
      * The credentials policy you want to use for the fetch call.
      */
-    credentials?: string;
+    credentials?: RequestCredentials;
 
     /**
      * Any overrides of the fetch options argument to pass to the fetch call.
      */
-    fetchOptions?: any;
+    fetchOptions?: RequestInit;
 
     /**
      * If set to true, use the HTTP GET method for query operations. Mutations

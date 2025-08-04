@@ -9,7 +9,6 @@ import {
 import { ApolloLink } from "@apollo/client/link";
 
 import { buildDelayFunction } from "./delayFunction.js";
-import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 
 export declare namespace RetryLink {
@@ -52,6 +51,37 @@ export declare namespace RetryLink {
     jitter?: boolean;
   }
 
+  export type RetryFunction = (
+    count: number,
+    operation: ApolloLink.Operation,
+    error: any
+  ) => boolean | Promise<boolean>;
+
+  export interface RetryOptions {
+    /**
+     * The max number of times to try a single operation before giving up.
+     *
+     * Note that this INCLUDES the initial request as part of the count.
+     * E.g. maxTries of 1 indicates no retrying should occur.
+     *
+     * Defaults to 5. Pass Infinity for infinite retries.
+     */
+    max?: number;
+
+    /**
+     * Predicate function that determines whether a particular error should
+     * trigger a retry.
+     *
+     * For example, you may want to not retry 4xx class HTTP errors.
+     *
+     * By default, all errors are retried.
+     */
+    retryIf?: (
+      error: any,
+      operation: ApolloLink.Operation
+    ) => boolean | Promise<boolean>;
+  }
+
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.
@@ -61,7 +91,7 @@ export declare namespace RetryLink {
     /**
      * Configuration for the retry strategy to use, or a custom retry strategy.
      */
-    attempts?: RetryFunctionOptions | RetryFunction;
+    attempts?: RetryLink.RetryOptions | RetryLink.RetryFunction;
   }
 }
 
@@ -78,7 +108,7 @@ class RetryableOperation {
     private operation: ApolloLink.Operation,
     private forward: ApolloLink.ForwardFunction,
     private delayFor: RetryLink.DelayFunction,
-    private retryIf: RetryFunction
+    private retryIf: RetryLink.RetryFunction
   ) {
     this.try();
   }
@@ -144,7 +174,7 @@ class RetryableOperation {
 
 export class RetryLink extends ApolloLink {
   private delayFor: RetryLink.DelayFunction;
-  private retryIf: RetryFunction;
+  private retryIf: RetryLink.RetryFunction;
 
   constructor(options?: RetryLink.Options) {
     super();

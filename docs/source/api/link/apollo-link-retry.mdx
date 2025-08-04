@@ -30,6 +30,19 @@ Instead of the options object, you may pass a function for `delay` and/or `attem
 
 The `attempts` function should return a `boolean` (or a `Promise` which resolves to a `boolean`) indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
 
+```ts
+import { RetryLink } from "@apollo/client/link/retry";
+
+const link = new RetryLink({
+  attempts: (count, operation, error) => {
+    return !!error && operation.operationName != "specialCase";
+  },
+  delay: (count, operation, error) => {
+    return count * 1000 * Math.random();
+  },
+});
+```
+
 ## Types
 
 <InterfaceDetails

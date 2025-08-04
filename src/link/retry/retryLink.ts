@@ -85,6 +85,9 @@ export declare namespace RetryLink {
     ) => boolean | Promise<boolean>;
   }
 
+  /**
+   * Options provided to the `RetryLink` constructor.
+   */
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.
@@ -181,6 +184,31 @@ class RetryableOperation {
   }
 }
 
+/**
+ * `RetryLink` is a non-terminating link that attempts to retry operations that
+ * fail due to network errors. It enables resilient GraphQL operations by
+ * automatically retrying failed requests with configurable delay and retry
+ * strategies.
+ *
+ * @remarks
+ *
+ * `RetryLink` is particularly useful for handling unreliable network conditions
+ * where you would rather wait longer than explicitly fail an operation. It
+ * provides exponential backoff and jitters delays between attempts by default.
+ *
+ * > [!NOTE]
+ * > This link does not handle retries for GraphQL errors in the response. Use
+ * > `ErrorLink` to retry an operation after a GraphQL error. For more
+ * > information, see the [Error handling documentation](https://apollographql.com/docs/react/data/error-handling#on-graphql-errors).
+ *
+ * @example
+ *
+ * ```ts
+ * import { RetryLink } from "@apollo/client/link/retry";
+ *
+ * const link = new RetryLink();
+ * ```
+ */
 export class RetryLink extends ApolloLink {
   private delayFor: RetryLink.DelayFunction;
   private retryIf: RetryLink.AttemptsFunction;

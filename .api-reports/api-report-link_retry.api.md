@@ -7,41 +7,27 @@
 import { ApolloLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 
-// @public
-interface DelayFunction {
-    // (undocumented)
-    (count: number, operation: ApolloLink.Operation, error: any): number;
-}
-
-// @public (undocumented)
-interface DelayFunctionOptions {
-    initial?: number;
-    jitter?: boolean;
-    max?: number;
-}
-
-// @public
-interface RetryFunction {
-    // (undocumented)
-    (count: number, operation: ApolloLink.Operation, error: any): boolean | Promise<boolean>;
-}
-
-// @public (undocumented)
-interface RetryFunctionOptions {
-    max?: number;
-    retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
-}
-
 // @public (undocumented)
 export namespace RetryLink {
     // (undocumented)
+    export type AttemptsFunction = (count: number, operation: ApolloLink.Operation, error: any) => boolean | Promise<boolean>;
+    // (undocumented)
+    export interface AttemptsOptions {
+        max?: number;
+        retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
+    }
+    // (undocumented)
+    export type DelayFunction = (count: number, operation: ApolloLink.Operation, error: any) => number;
+    // (undocumented)
+    export interface DelayOptions {
+        initial?: number;
+        jitter?: boolean;
+        max?: number;
+    }
+    // (undocumented)
     export interface Options {
-        // Warning: (ae-forgotten-export) The symbol "RetryFunctionOptions" needs to be exported by the entry point index.d.ts
-        // Warning: (ae-forgotten-export) The symbol "RetryFunction" needs to be exported by the entry point index.d.ts
-        attempts?: RetryFunctionOptions | RetryFunction;
-        // Warning: (ae-forgotten-export) The symbol "DelayFunctionOptions" needs to be exported by the entry point index.d.ts
-        // Warning: (ae-forgotten-export) The symbol "DelayFunction" needs to be exported by the entry point index.d.ts
-        delay?: DelayFunctionOptions | DelayFunction;
+        attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
+        delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
     }
 }
 

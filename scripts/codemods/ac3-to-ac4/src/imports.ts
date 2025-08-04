@@ -7,7 +7,6 @@ import type * as j from "jscodeshift";
 import type { IdentifierRename, ModuleRename } from "./renames.js";
 import { renames } from "./renames.js";
 import { findReferences } from "./util/findReferences.js";
-import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 
 type ImportKind = "type" | "value";
 
@@ -54,8 +53,8 @@ const transform: Transform = function transform(file, api) {
       IdentifierRename["from"] & IdentifierRename["to"],
       "module" | "alternativeModules"
     >,
-    compatibleWith: ImportKind = "value"
-  ) {
+    compatibleWith: ImportKind = "type"
+  ): j.Collection<namedTypes.ImportDeclaration> {
     const test = (node: namedTypes.ImportDeclaration) => {
       const isValidImportKind =
         compatibleWith === "type" || node.importKind !== "type";
@@ -84,13 +83,10 @@ const transform: Transform = function transform(file, api) {
      */
   }
 
-  function getUnusedIdentifer(similarTo: string) {
+  function getUnusedIdentifier(similarTo: string) {
     let identifier = similarTo;
     let counter = 0;
-    while (
-      !identifier ||
-      source.find(j.Identifier, { name: identifier }).size() > 0
-    ) {
+    while (source.find(j.Identifier, { name: identifier }).size() > 0) {
       identifier = `${similarTo}_${++counter}`;
     }
     return identifier;
@@ -123,11 +119,12 @@ const transform: Transform = function transform(file, api) {
         return; // typeof imports are not supported, skip
       }
       const renameFrom = getLocalName(specifier);
-      let importAs = getUnusedIdentifer(final.namespace || final.identifier);
-      console.log(final);
       const alreadyImported = findImportSpecifiersFor(final, importType);
+      let importAs = final.namespace || final.identifier;
       if (alreadyImported.size() > 0) {
         importAs = getLocalName(alreadyImported.nodes()[0]);
+      } else if (getLocalName(specifier) !== importAs) {
+        getUnusedIdentifier(importAs);
       }
 
       if (
@@ -136,7 +133,8 @@ const transform: Transform = function transform(file, api) {
         importedFrom === final.module
       ) {
         // simple case - we just need to rename the import, everything else stays the same
-        specifier.imported.name = final.identifier;
+        specifierPath.get("imported").replace(j.identifier(final.identifier));
+
         return;
       }
 
@@ -165,8 +163,10 @@ const transform: Transform = function transform(file, api) {
           importType
         ).nodes()[0];
         // specifier should have been removed anyways, so we just reuse it in the existing position
-        specifier.imported = j.identifier(final.namespace || final.identifier);
-        specifier.local = j.identifier(importAs);
+        specifierPath
+          .get("imported")
+          .replace(j.identifier(final.namespace || final.identifier));
+        specifierPath.get("local").replace(j.identifier(importAs));
 
         if (targetDeclaration !== specifierPath.parent) {
           // remove the specifier, we create a new one in a different import declaration
@@ -243,10 +243,6 @@ const transform: Transform = function transform(file, api) {
           );
         }
       });
-
-    // const tempId = getUnusedIdentifer();
-    // renameGlobalIdentifier(globalIdentifer, tempId);
-    // source.find(j.Identifier, { name: tempId });
   }
 
   function handleModuleRename(rename: ModuleRename) {
@@ -266,7 +262,9 @@ const transform: Transform = function transform(file, api) {
         )
         .forEach((sourcePath) => {
           modified = true;
-          sourcePath.value.source.value = rename.to.module;
+          sourcePath
+            .get("value", "source")
+            .replace(j.literal(rename.to.module));
         });
     }
 

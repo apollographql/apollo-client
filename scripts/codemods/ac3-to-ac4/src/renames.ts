@@ -1,5 +1,6 @@
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
+
 import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 // {
 //   // completely removed in AC4
@@ -180,8 +181,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "UseBackgroundQueryResult", to: "Result" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useBackgroundQuery" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useBackgroundQuery", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -193,8 +197,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "LazyQueryResultTuple", to: "ResultTuple" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useLazyQuery" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useLazyQuery", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -205,8 +212,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "UseLoadableQueryResult", to: "Result" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useLoadableQuery" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useLoadableQuery", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -228,8 +238,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useMutation" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useMutation", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -244,8 +257,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useSubscription" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useSubscription", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -254,16 +270,24 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "QueryResult", to: "Result" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useQuery" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useQuery", alternativeModules: [] },
       importType: "type",
     })
   ),
   ...[
-    { from: "SuspenseQueryHookFetchPolicy", to: "FetchPolicy" },
+    {
+      from: "SuspenseQueryHookFetchPolicy",
+      to: "FetchPolicy",
+      alternativeModules: ["@apollo/client"],
+    },
     {
       from: "SuspenseQueryHookOptions",
       to: "Options",
+      alternativeModules: [],
       postProcess: reorderGenerics([1]),
     },
     { from: "UseSuspenseQueryResult", to: "Result" },
@@ -276,8 +300,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[{ from: "UseQueryRefHandlersResult", to: "Result" }].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useQueryRefHandlers" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useQueryRefHandlers", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -286,15 +313,21 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "UseFragmentResult", to: "Result" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useFragment" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useFragment", alternativeModules: [] },
       importType: "type",
     })
   ),
   ...[{ from: "UseReadQueryResult", to: "Result" }].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useReadQuery" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useReadQuery", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -303,8 +336,11 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "UseSuspenseFragmentResult", to: "Result" },
   ].map(
     moveInto({
-      from: { module: "@apollo/client/react" },
-      to: { namespace: "useSuspenseFragment" },
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "useSuspenseFragment", alternativeModules: [] },
       importType: "type",
     })
   ),

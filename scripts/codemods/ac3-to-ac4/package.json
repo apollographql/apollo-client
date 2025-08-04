@@ -38,8 +38,9 @@
     "build": "tsc -p tsconfig.build.json",
     "prepack": "npm run build",
     "publint": "publint run --strict .",
-    "test": "vitest run",
-    "test:watch": "vitest watch"
+    "test": "NODE_OPTIONS='--import ./src/devLoader.js' vitest run",
+    "test:watch": "NODE_OPTIONS='--import ./src/devLoader.js' vitest watch",
+    "local:cli": "node --import ./src/devLoader.js src/cli.ts"
   },
   "dependencies": {
     "jscodeshift": "17.3.0"

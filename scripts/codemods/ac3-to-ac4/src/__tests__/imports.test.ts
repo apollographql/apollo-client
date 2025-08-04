@@ -10,5 +10,5 @@ defineInlineTest(
   imports,
   {},
   ts`import {useQuery} from '@apollo/client'`,
-  ts`import {useQuery} from "@apollo/client/react"`
+  ts`import { useQuery } from "@apollo/client/react";`
 );

@@ -17,7 +17,6 @@ export function reorderGenericArguments(args: {
   const { j, namespace, newOrder } = args;
   findReferences(args).forEach((path) => {
     j(path).closest(j.TSTypeReference);
-    console.log(j(path.parent).toSource());
     const parentPath = namespace ? path.parent.parent : path.parent;
     const parentNode = parentPath.node;
     if (

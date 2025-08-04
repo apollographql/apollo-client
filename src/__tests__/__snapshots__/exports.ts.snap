@@ -165,7 +165,6 @@ Array [
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
 Array [
   "BatchLink",
-  "OperationBatcher",
 ]
 `;
 

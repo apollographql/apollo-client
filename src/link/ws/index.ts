@@ -29,6 +29,12 @@ export declare namespace WebSocketLink {
 // For backwards compatibility.
 export import WebSocketParams = WebSocketLink.Configuration;
 
+/**
+ * @deprecated `WebSocketLink` uses the deprecated and unmaintained
+ * `subscriptions-transport-ws` library. We recommend switching to
+ * `GraphQLWsLink`, which uses the [`graphql-ws` library](https://the-guild.dev/graphql/ws) to provide
+ * support for sending GraphQL operations through WebSocket connections.
+ */
 export class WebSocketLink extends ApolloLink {
   private subscriptionClient: SubscriptionClient;
 

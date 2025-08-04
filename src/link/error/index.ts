@@ -72,8 +72,7 @@ export function onError(errorHandler: ErrorLink.ErrorHandler) {
 
 /**
  * Use the `ErrorLink` to perform custom logic when a [GraphQL or network error](https://apollographql.com/docs/react/data/error-handling)
- * occurs. You create an instance of `ErrorLink` with a function that's executed
- * if an operation returns one or more errors.
+ * occurs.
  *
  * @remarks
  *

@@ -15,7 +15,7 @@ export namespace RetryLink {
     // (undocumented)
     export interface AttemptsOptions {
         max?: number;
-        retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
+        retryIf?: (error: ErrorLike, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
     }
     // (undocumented)
     export type DelayFunction = (count: number, operation: ApolloLink.Operation, error: ErrorLike) => number;

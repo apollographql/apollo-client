@@ -46,14 +46,11 @@ export declare namespace ErrorLink {
   }
 }
 
-// For backwards compatibility.
-export import ErrorHandler = ErrorLink.ErrorHandler;
-
 /**
  * @deprecated
  * Use `ErrorLink` from `@apollo/client/link/error` instead.
  */
-export function onError(errorHandler: ErrorHandler) {
+export function onError(errorHandler: ErrorLink.ErrorHandler) {
   return new ErrorLink(errorHandler);
 }
 
@@ -63,7 +60,7 @@ export class ErrorLink extends ApolloLink {
       return new Observable((observer) => {
         let sub: Subscription | undefined;
         let retriedSub: Subscription | undefined;
-        let retriedResult: ReturnType<ErrorHandler>;
+        let retriedResult: ReturnType<ErrorLink.ErrorHandler>;
 
         try {
           sub = forward(operation).subscribe({

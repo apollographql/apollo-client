@@ -20,13 +20,16 @@ export declare namespace RetryLink {
     error: ErrorLike
   ) => number;
 
+  /**
+   * Configuration options for the standard retry delay strategy.
+   */
   export interface DelayOptions {
     /**
      * The number of milliseconds to wait before attempting the first retry.
      *
      * Delays will increase exponentially for each attempt. E.g. if this is
      * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
-     * until they reach maxDelay.
+     * until they reach the maximum delay.
      *
      * Note that if jittering is enabled, this is the _average_ delay.
      *
@@ -45,8 +48,10 @@ export declare namespace RetryLink {
     /**
      * Whether delays between attempts should be randomized.
      *
-     * This helps avoid thundering herd type situations by better distributing
-     * load during major outages.
+     * This helps avoid [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem)
+     * type situations by better distributing load during major outages. Without
+     * these strategies, when your server comes back up it will be hit by all
+     * of your clients at once, possibly causing it to go down again.
      *
      * @defaultValue `true`
      */
@@ -59,13 +64,18 @@ export declare namespace RetryLink {
     error: ErrorLike
   ) => boolean | Promise<boolean>;
 
+  /**
+   * Configuration options for the standard retry attempt strategy.
+   */
   export interface AttemptsOptions {
     /**
-     * The max number of times to try a single operation before giving up. Pass
-     * `Infinity` for infinite retries.
+     * The max number of times to try a single operation before giving up.
      *
+     * @remarks
      * Note that this INCLUDES the initial request as part of the count.
-     * E.g. maxTries of 1 indicates no retrying should occur.
+     * E.g. `max` of 1 indicates no retrying should occur.
+     *
+     * Pass `Infinity` for infinite retries.
      *
      * @defaultValue `5`
      */

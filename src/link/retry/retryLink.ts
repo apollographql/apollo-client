@@ -51,13 +51,13 @@ export declare namespace RetryLink {
     jitter?: boolean;
   }
 
-  export type RetryFunction = (
+  export type AttemptsFunction = (
     count: number,
     operation: ApolloLink.Operation,
     error: any
   ) => boolean | Promise<boolean>;
 
-  export interface RetryOptions {
+  export interface AttemptsOptions {
     /**
      * The max number of times to try a single operation before giving up.
      *
@@ -91,7 +91,7 @@ export declare namespace RetryLink {
     /**
      * Configuration for the retry strategy to use, or a custom retry strategy.
      */
-    attempts?: RetryLink.RetryOptions | RetryLink.RetryFunction;
+    attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
   }
 }
 
@@ -108,7 +108,7 @@ class RetryableOperation {
     private operation: ApolloLink.Operation,
     private forward: ApolloLink.ForwardFunction,
     private delayFor: RetryLink.DelayFunction,
-    private retryIf: RetryLink.RetryFunction
+    private retryIf: RetryLink.AttemptsFunction
   ) {
     this.try();
   }
@@ -174,7 +174,7 @@ class RetryableOperation {
 
 export class RetryLink extends ApolloLink {
   private delayFor: RetryLink.DelayFunction;
-  private retryIf: RetryLink.RetryFunction;
+  private retryIf: RetryLink.AttemptsFunction;
 
   constructor(options?: RetryLink.Options) {
     super();

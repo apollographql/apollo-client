@@ -195,7 +195,7 @@ items:
             href: ./api/link/apollo-link-client-awareness
           - label: ErrorLink
             href: ./api/link/apollo-link-error
-          - label: GraphQLWsLink (newer protocol)
+          - label: GraphQLWsLink
             href: ./api/link/apollo-link-subscriptions
           - label: HttpLink
             href: ./api/link/apollo-link-http
@@ -211,7 +211,7 @@ items:
             href: ./api/link/apollo-link-schema
           - label: SetContextLink
             href: ./api/link/apollo-link-context
-          - label: WebSocketLink (older protocol)
+          - label: WebSocketLink (deprecated)
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links

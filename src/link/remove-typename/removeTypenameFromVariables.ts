@@ -88,13 +88,9 @@ export declare namespace RemoveTypenameFromVariablesLink {
      * Configuration that determines which input types should retain `__typename`
      * fields.
      *
-     * @remarks
      * Maps GraphQL input type names to configurations. Each configuration can
      * either be the `KEEP` sentinel, to preserve all `__typename` fields, or
      * a nested object that specifies which fields should retain `__typename`.
-     *
-     * This is particularly useful for JSON scalar fields where `__typename`
-     * might be required, or when reusing query results as mutation inputs.
      *
      * @example
      *

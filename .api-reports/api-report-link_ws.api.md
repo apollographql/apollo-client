@@ -18,7 +18,7 @@ export namespace WebSocketLink {
     }
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export class WebSocketLink extends ApolloLink {
     constructor(paramsOrClient: WebSocketLink.Configuration | SubscriptionClient);
     // (undocumented)

@@ -103,7 +103,6 @@ export declare namespace RetryLink {
     /**
      * The max number of times to try a single operation before giving up.
      *
-     * @remarks
      * Note that this INCLUDES the initial request as part of the count.
      * E.g. `max` of 1 indicates no retrying should occur.
      *

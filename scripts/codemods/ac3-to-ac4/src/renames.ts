@@ -93,6 +93,132 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
+    // move to the `@apollo/client/react` entry point
+    { from: "ApolloContextValue" },
+    { from: "QueryRef" },
+    { from: "SkipToken" },
+    { from: "PreloadQueryFetchPolicy" },
+    { from: "PreloadQueryFunction" },
+    { from: "PreloadQueryOptions" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client" },
+      to: { module: "@apollo/client/react" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // move to the `@apollo/client/react` entry point
+    { from: "QueryRef" },
+    { from: "PreloadedQueryRef" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/react/internal" },
+      to: { module: "@apollo/client/react" },
+      importType: "type",
+    })
+  ),
+  ...[
+    // move to the `@apollo/client/utilities/internal` entry point
+    { from: "AutoCleanedStrongCache" },
+    { from: "AutoCleanedWeakCache" },
+    { from: "argumentsObjectFromField" },
+    { from: "canUseDOM" },
+    { from: "checkDocument" },
+    { from: "cloneDeep" },
+    { from: "compact" },
+    { from: "createFragmentMap" },
+    { from: "createFulfilledPromise" },
+    { from: "createRejectedPromise" },
+    { from: "dealias" },
+    { from: "decoratePromise" },
+    { from: "DeepMerger" },
+    { from: "getDefaultValues" },
+    { from: "getFragmentFromSelection" },
+    { from: "getFragmentQueryDocument" },
+    { from: "getFragmentDefinition" },
+    { from: "getFragmentDefinitions" },
+    { from: "getGraphQLErrorsFromResult" },
+    { from: "getOperationDefinition" },
+    { from: "getOperationName" },
+    { from: "getQueryDefinition" },
+    { from: "getStoreKeyName" },
+    { from: "graphQLResultHasError" },
+    { from: "hasDirectives" },
+    { from: "hasForcedResolvers" },
+    { from: "isArray" },
+    { from: "isDocumentNode" },
+    { from: "isField" },
+    { from: "isNonEmptyArray" },
+    { from: "isNonNullObject" },
+    { from: "isPlainObject" },
+    { from: "makeReference" },
+    { from: "makeUniqueId" },
+    { from: "maybeDeepFreeze" },
+    { from: "mergeDeep" },
+    { from: "mergeDeepArray" },
+    { from: "mergeOptions" },
+    { from: "omitDeep" },
+    { from: "preventUnhandledRejection" },
+    { from: "removeDirectivesFromDocument" },
+    { from: "resultKeyNameFromField" },
+    { from: "shouldInclude" },
+    { from: "storeKeyNameFromField" },
+    { from: "stringifyForDisplay" },
+    { from: "toQueryResult" },
+    { from: "filterMap" },
+    { from: "getApolloCacheMemoryInternals" },
+    { from: "getApolloClientMemoryInternals" },
+    { from: "getInMemoryCacheMemoryInternals" },
+    { from: "registerGlobalCache" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/utilities" },
+      to: { module: "@apollo/client/utilities/internal" },
+      importType: "value",
+    })
+  ),
+  ...[
+    // move to the `@apollo/client/utilities/internal` entry point
+    { from: "DecoratedPromise" },
+    { from: "DeepOmit" },
+    { from: "FragmentMap" },
+    { from: "FragmentMapFunction" },
+    { from: "FulfilledPromise" },
+    { from: "IsAny" },
+    { from: "NoInfer" },
+    { from: "PendingPromise" },
+    { from: "Prettify" },
+    { from: "Primitive" },
+    { from: "RejectedPromise" },
+    { from: "RemoveIndexSignature" },
+    { from: "VariablesOption" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/utilities" },
+      to: { module: "@apollo/client/utilities/internal" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "__DEV__" }].map(
+    moveInto({
+      from: { module: "@apollo/client/utilities/global" },
+      to: { module: "@apollo/client/utilities/environment" },
+      importType: "value",
+    })
+  ),
+  ...[
+    { from: "invariant" },
+    { from: "newInvariantError" },
+    { from: "InvariantError" },
+  ].map(
+    moveInto({
+      from: { module: "@apollo/client/utilities/global" },
+      to: { module: "@apollo/client/utilities/invariant" },
+      importType: "value",
+    })
+  ),
+  ...[
     // move into `ApolloClient` type namespace
     { from: "ApolloClientOptions", to: "Options" },
     { from: "DefaultOptions" },
@@ -169,6 +295,16 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
         alternativeModules: ["@apollo/client"],
       },
       to: { namespace: "ApolloLink" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ApolloProviderProps", to: "Props" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/react",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ApolloProvider", alternativeModules: [] },
       importType: "type",
     })
   ),
@@ -352,9 +488,18 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     },
     to: {
       module: "@apollo/client/testing/react",
-      identifier: "MockedProvider",
     },
     importType: "value",
+  },
+  {
+    from: {
+      module: "@apollo/client/testing",
+      identifier: "MockedProviderProps",
+    },
+    to: {
+      module: "@apollo/client/testing/react",
+    },
+    importType: "type",
   },
   ...[
     { from: "MockedRequest" },
@@ -365,6 +510,36 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     moveInto({
       from: { module: "@apollo/client/testing" },
       to: { namespace: "MockLink" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ErrorResponse", to: "ErrorHandlerOptions" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/error",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ErrorLink", alternativeModules: [] },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ErrorResponse", to: "DisableFunctionOptions" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/persisted-queries",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "PersistedQueryLink", alternativeModules: [] },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ContextSetter", to: "LegacyContextSetter" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/context",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "SetContextLink", alternativeModules: [] },
       importType: "type",
     })
   ),

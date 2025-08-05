@@ -26,6 +26,48 @@ import { selectURI } from "./selectURI.js";
 
 const backupFetch = maybe(() => fetch);
 
+export declare namespace BaseHttpLink {
+  /**
+   * Configuration options for creating a `BaseHttpLink` instance.
+   *
+   * `BaseHttpLink` accepts the same options as `HttpLink`. The options
+   * allow you to configure the HTTP transport behavior, including the
+   * endpoint URI, headers, credentials, and fetch customization.
+   *
+   * Most options can be overridden on a per-operation basis using
+   * operation context.
+   */
+  export interface Options extends HttpLink.Options {}
+}
+
+/**
+ * `BaseHttpLink` is a terminating link that sends a GraphQL operation to a
+ * remote endpoint over HTTP. It serves as a base link to `HttpLink`.
+ *
+ * @remarks
+ *
+ * `BaseHttpLink` supports both POST and GET requests, and you can configure
+ * HTTP options on a per-operation basis. You can use these options for
+ * authentication, persisted queries, dynamic URIs, and other granular updates.
+ *
+ * > [!NOTE]
+ * > Prefer using `HttpLink` over `BaseHttpLink`. `BaseHttpLink` is useful when
+ * > you need to disable client awareness features and would like to tree-shake
+ * > the implementation of `ClientAwarenessLink` out of your app bundle.
+ *
+ * @example
+ *
+ * ```ts
+ * import { BaseHttpLink } from "@apollo/client/link/http";
+ *
+ * const link = new BaseHttpLink({
+ *   uri: "http://localhost:4000/graphql",
+ *   headers: {
+ *     authorization: `Bearer ${token}`,
+ *   },
+ * });
+ * ```
+ */
 export class BaseHttpLink extends ApolloLink {
   constructor(options: BaseHttpLink.Options = {}) {
     let {

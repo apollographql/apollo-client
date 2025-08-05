@@ -189,6 +189,8 @@ items:
             href: ./api/link/introduction
           - label: ApolloLink
             href: ./api/link/apollo-link
+          - label: BaseHttpLink
+            href: ./api/link/apollo-link-base-http
           - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
           - label: ClientAwarenessLink

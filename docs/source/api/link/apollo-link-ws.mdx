@@ -3,11 +3,13 @@ title: WebSocket Link
 description: Execute subscriptions (or other operations) over WebSocket with the subscriptions-transport-ws library
 ---
 
-> ⚠️ **We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. To execute subscriptions, We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions).
->
-> Whichever library you use, make sure you use the _same_ library in your server and any clients you support. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
+<Caution>
 
-> We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
+**We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. To execute subscriptions, We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions).
+
+Whichever library you use, make sure you use the _same_ library in your server and any clients you support. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
+
+</Caution>
 
 The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
 

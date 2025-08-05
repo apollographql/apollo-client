@@ -2,6 +2,7 @@ import { gql } from "graphql-tag";
 import { Observable, of, throwError } from "rxjs";
 
 import { CombinedProtocolErrors } from "@apollo/client";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { RetryLink } from "@apollo/client/link/retry";
 import {
@@ -270,5 +271,46 @@ describe("RetryLink", () => {
         },
       ])
     );
+  });
+
+  it("calls observer.next when not retrying a protocol error", async () => {
+    const subscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const retryLink = new RetryLink({
+      delay: { initial: 1 },
+      attempts: {
+        retryIf: () => false,
+      },
+    });
+
+    const { httpLink, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+    const link = ApolloLink.from([retryLink, httpLink]);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitTypedValue({
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+          {
+            message: "Error field",
+            extensions: { code: "INTERNAL_SERVER_ERROR" },
+          },
+        ]),
+      } as any,
+    });
   });
 });

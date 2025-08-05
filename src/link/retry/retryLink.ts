@@ -2,9 +2,11 @@ import type { Subscription } from "rxjs";
 import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
+import type { ErrorLike } from "@apollo/client";
 import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  toErrorLike,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 
@@ -15,7 +17,7 @@ export declare namespace RetryLink {
   export type DelayFunction = (
     count: number,
     operation: ApolloLink.Operation,
-    error: any
+    error: ErrorLike
   ) => number;
 
   export interface DelayOptions {
@@ -54,7 +56,7 @@ export declare namespace RetryLink {
   export type AttemptsFunction = (
     count: number,
     operation: ApolloLink.Operation,
-    error: any
+    error: ErrorLike
   ) => boolean | Promise<boolean>;
 
   export interface AttemptsOptions {
@@ -78,7 +80,7 @@ export declare namespace RetryLink {
      * @defaultValue `() => true`
      */
     retryIf?: (
-      error: any,
+      error: ErrorLike,
       operation: ApolloLink.Operation
     ) => boolean | Promise<boolean>;
   }
@@ -102,7 +104,7 @@ export declare namespace RetryLink {
 class RetryableOperation {
   private retryCount: number = 0;
   private currentSubscription: Subscription | null = null;
-  private timerId: number | undefined;
+  private timerId: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private observer: Observer<ApolloLink.Result>,
@@ -130,7 +132,11 @@ class RetryableOperation {
     this.currentSubscription = this.forward(this.operation).subscribe({
       next: (result) => {
         if (graphQLResultHasProtocolErrors(result)) {
-          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL]);
+          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL], () =>
+            // Pretend like we never encountered this error and move the result
+            // along for Apollo Client core to handle this error.
+            this.observer.next(result)
+          );
           // Unsubscribe from the current subscription to prevent the `complete`
           // handler to be called as a result of the stream closing.
           this.currentSubscription?.unsubscribe();
@@ -139,26 +145,28 @@ class RetryableOperation {
 
         this.observer.next(result);
       },
-      error: this.onError,
+      error: (error) => this.onError(error, () => this.observer.error(error)),
       complete: this.observer.complete.bind(this.observer),
     });
   }
 
-  private onError = async (error: any) => {
+  private onError = async (error: unknown, onContinue: () => void) => {
     this.retryCount += 1;
+    const errorLike = toErrorLike(error);
 
-    // Should we retry?
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,
-      error
+      errorLike
     );
     if (shouldRetry) {
-      this.scheduleRetry(this.delayFor(this.retryCount, this.operation, error));
+      this.scheduleRetry(
+        this.delayFor(this.retryCount, this.operation, errorLike)
+      );
       return;
     }
 
-    this.observer.error(error);
+    onContinue();
   };
 
   private scheduleRetry(delay: number) {
@@ -169,7 +177,7 @@ class RetryableOperation {
     this.timerId = setTimeout(() => {
       this.timerId = undefined;
       this.try();
-    }, delay) as any as number;
+    }, delay);
   }
 }
 

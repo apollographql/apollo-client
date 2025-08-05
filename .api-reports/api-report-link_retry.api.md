@@ -5,19 +5,20 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
+import type { ErrorLike } from '@apollo/client';
 import { Observable } from 'rxjs';
 
 // @public (undocumented)
 export namespace RetryLink {
     // (undocumented)
-    export type AttemptsFunction = (count: number, operation: ApolloLink.Operation, error: any) => boolean | Promise<boolean>;
+    export type AttemptsFunction = (count: number, operation: ApolloLink.Operation, error: ErrorLike) => boolean | Promise<boolean>;
     // (undocumented)
     export interface AttemptsOptions {
         max?: number;
-        retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
+        retryIf?: (error: ErrorLike, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
     }
     // (undocumented)
-    export type DelayFunction = (count: number, operation: ApolloLink.Operation, error: any) => number;
+    export type DelayFunction = (count: number, operation: ApolloLink.Operation, error: ErrorLike) => number;
     // (undocumented)
     export interface DelayOptions {
         initial?: number;

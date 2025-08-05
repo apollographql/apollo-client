@@ -28,7 +28,7 @@ export declare namespace RetryLink {
      *
      * Note that if jittering is enabled, this is the _average_ delay.
      *
-     * Defaults to 300.
+     * @defaultValue `300`
      */
     initial?: number;
 
@@ -36,7 +36,7 @@ export declare namespace RetryLink {
      * The maximum number of milliseconds that the link should wait for any
      * retry.
      *
-     * Defaults to Infinity.
+     * @defaultValue `Infinity`
      */
     max?: number;
 
@@ -46,7 +46,7 @@ export declare namespace RetryLink {
      * This helps avoid thundering herd type situations by better distributing
      * load during major outages.
      *
-     * Defaults to true.
+     * @defaultValue `true`
      */
     jitter?: boolean;
   }
@@ -59,12 +59,13 @@ export declare namespace RetryLink {
 
   export interface AttemptsOptions {
     /**
-     * The max number of times to try a single operation before giving up.
+     * The max number of times to try a single operation before giving up. Pass
+     * `Infinity` for infinite retries.
      *
      * Note that this INCLUDES the initial request as part of the count.
      * E.g. maxTries of 1 indicates no retrying should occur.
      *
-     * Defaults to 5. Pass Infinity for infinite retries.
+     * @defalutValue `5`
      */
     max?: number;
 
@@ -74,7 +75,7 @@ export declare namespace RetryLink {
      *
      * For example, you may want to not retry 4xx class HTTP errors.
      *
-     * By default, all errors are retried.
+     * @defaultValue `() => true`
      */
     retryIf?: (
       error: any,

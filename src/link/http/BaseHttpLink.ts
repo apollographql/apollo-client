@@ -27,7 +27,7 @@ import { selectURI } from "./selectURI.js";
 const backupFetch = maybe(() => fetch);
 
 export class BaseHttpLink extends ApolloLink {
-  constructor(linkOptions: HttpLink.Options = {}) {
+  constructor(options: BaseHttpLink.Options = {}) {
     let {
       uri = "/graphql",
       // use default global fetch if nothing passed in
@@ -38,7 +38,7 @@ export class BaseHttpLink extends ApolloLink {
       useGETForQueries,
       includeUnusedVariables = false,
       ...requestOptions
-    } = linkOptions;
+    } = options;
 
     if (__DEV__) {
       // Make sure at least one of preferredFetch, window.fetch, or backupFetch is

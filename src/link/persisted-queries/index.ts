@@ -101,10 +101,11 @@ export declare namespace PersistedQueryLink {
       /**
        * Whether to use HTTP GET for hashed queries (excluding mutations).
        *
-       * When enabled, queries sent with just a hash will use GET requests.
-       * This can improve caching but is not compatible with batching.
-       *
-       * Note: Mutations always use POST regardless of this setting.
+       * > [!NOTE]
+       * > If you want to use `GET` for non-mutation queries whether or not they
+       * > are hashed, pass `useGETForQueries: true` option to `HttpLink`
+       * > instead. If you want to use GET for all requests, pass `fetchOptions: {method: 'GET'}`
+       * > to `HttpLink`.
        *
        * @defaultValue `false`
        */

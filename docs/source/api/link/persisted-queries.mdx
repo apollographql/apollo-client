@@ -201,9 +201,9 @@ const client = new ApolloClient({
 
 Thats it! By including the persisted queries link in your client instantiation, your client sends operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
 
-#### `createPersistedQueryLink` Options
+#### `PersistedQueryLink` options
 
-The `createPersistedQueryLink` function takes a configuration object:
+The `PersistedQueryLink` class takes a configuration object:
 
 - `sha256`: a SHA-256 hashing function. Can be sync or async. Providing a SHA-256 hashing function is required, unless you're defining a fully custom hashing approach via `generateHash`.
 - `generateHash`: an optional function that takes the query document and returns the hash. If provided this custom function will override the default hashing approach that uses the supplied `sha256` function. If not provided, the persisted queries link will use a fallback hashing approach leveraging the `sha256` function.
@@ -310,7 +310,7 @@ _Missing hash path_
 
 If you want to avoid hashing in the browser, you can use a build script to include the hash as part of the request, then pass a function to retrieve that hash when the operation is run. This works well with projects like [GraphQL Persisted Document Loader](https://github.com/leoasis/graphql-persisted-document-loader) which uses webpack to generate hashes at build time.
 
-If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `createPersistedQueryLink` call.
+If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `PersistedQueryLink` class.
 
 ## Types
 

@@ -83,9 +83,9 @@ export namespace HttpLink {
         preserveHeaderCase?: boolean;
     }
     export interface Options {
-        credentials?: string;
+        credentials?: RequestCredentials;
         fetch?: typeof fetch;
-        fetchOptions?: any;
+        fetchOptions?: RequestInit;
         headers?: Record<string, string>;
         includeExtensions?: boolean;
         includeUnusedVariables?: boolean;

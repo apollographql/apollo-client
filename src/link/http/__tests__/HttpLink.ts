@@ -32,8 +32,6 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-import type { ClientParseError } from "../serializeFetchParameter.js";
-
 import { voidFetchDuringEachTest } from "./helpers.js";
 
 const sampleQuery = gql`
@@ -395,10 +393,7 @@ describe("HttpLink", () => {
 
       const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Variables map is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     it("throws for GET if the extensions can't be stringified", async () => {
@@ -421,10 +416,7 @@ describe("HttpLink", () => {
 
       const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Extensions map is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     it("does not need any constructor arguments", () => {
@@ -1114,12 +1106,9 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      const error: ClientParseError = await stream.takeError();
+      const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Payload is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     describe("AbortController", () => {

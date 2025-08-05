@@ -679,13 +679,6 @@ class ClientAwarenessLink extends ApolloLink {
     constructor(constructorOptions?: ClientAwarenessLink.Options);
 }
 
-// Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type ClientParseError = InvariantError & {
-    parseError: Error;
-};
-
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
@@ -1565,11 +1558,6 @@ interface InvalidateModifier {
 
 // @public (undocumented)
 const _invalidateModifier: unique symbol;
-
-// @public (undocumented)
-class InvariantError extends Error {
-    constructor(message?: string);
-}
 
 // @internal @deprecated (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -2544,9 +2532,6 @@ export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation
 
 // @public (undocumented)
 export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
-
-// @public (undocumented)
-export const serializeFetchParameter: (p: any, label: string) => string;
 
 // @public (undocumented)
 export namespace ServerError {

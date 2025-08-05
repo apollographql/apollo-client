@@ -1,5 +1,5 @@
 ---
-title: Persisted Queries Link
+title: PersistedQueryLink
 description: Secure your graph while minimizing request latency.
 ---
 
@@ -303,3 +303,42 @@ _Missing hash path_
 If you want to avoid hashing in the browser, you can use a build script to include the hash as part of the request, then pass a function to retrieve that hash when the operation is run. This works well with projects like [GraphQL Persisted Document Loader](https://github.com/leoasis/graphql-persisted-document-loader) which uses webpack to generate hashes at build time.
 
 If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `createPersistedQueryLink` call.
+
+## Types
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.DisableFunctionOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.DisableFunctionOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.ErrorMeta:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.ErrorMeta"
+/>
+
+<FunctionDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.PersistedQueryLinkDocumentationTypes.GenerateHashFunction:function(1)"
+  headingLevel={3}
+  result={false}
+  displayName="PersistedQueryLink.GenerateHashFunction"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.GenerateHashOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.GenerateHashOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.RetryFunctionOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.RetryFunctionOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.SHA256Options:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.SHA256Options"
+/>

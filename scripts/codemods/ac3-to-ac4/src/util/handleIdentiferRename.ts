@@ -123,7 +123,7 @@ export function handleIdentiferRename({
             }
           }
         }
-        if (importDeclaration.specifiers?.length === 0) {
+        if (importDeclarations.find(j.ImportSpecifier).size() === 0) {
           importDeclarationPath.replace(
             // when removing the import declaration, try to keep comments
             // in place - we don't know if they really were attached

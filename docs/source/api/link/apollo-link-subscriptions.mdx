@@ -34,7 +34,7 @@ See the [`ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interface
 
 #### Retrying failed connections
 
-See the [`graphql-ws` recipes](https://the-guild.dev/graphql/ws/recipes) for strategies on retrying failed connections from the client. We recommend this approach because it provides more detailed information on why the connection failed.
+See the [`graphql-ws` recipes](https://the-guild.dev/graphql/ws/recipes) for strategies on retrying failed connections from the client. We generally recommend this approach over retrying failed connections from the link chain or your components because it provides more detailed information on why the connection failed.
 
 Alternatively, you can handle retries more generically within the link chain by using [`RetryLink`](./apollo-link-retry). This link resends the operation to the terminating link upon failure.
 

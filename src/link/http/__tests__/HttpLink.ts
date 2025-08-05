@@ -32,8 +32,6 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 
-import type { ClientParseError } from "../serializeFetchParameter.js";
-
 import { voidFetchDuringEachTest } from "./helpers.js";
 
 const sampleQuery = gql`
@@ -395,10 +393,7 @@ describe("HttpLink", () => {
 
       const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Variables map is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     it("throws for GET if the extensions can't be stringified", async () => {
@@ -421,10 +416,7 @@ describe("HttpLink", () => {
 
       const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Extensions map is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     it("does not need any constructor arguments", () => {
@@ -709,7 +701,7 @@ describe("HttpLink", () => {
 
     it("adds creds to the request from the setup", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "data", credentials: "same-team-yo" });
+      const link = createHttpLink({ uri: "data", credentials: "include" });
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -717,19 +709,19 @@ describe("HttpLink", () => {
       await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
-      expect(creds).toBe("same-team-yo");
+      expect(creds).toBe("include");
     });
 
     it("prioritizes creds from the context over the setup", async () => {
       const variables = { params: "stub" };
       const middleware = new ApolloLink((operation, forward) => {
         operation.setContext({
-          credentials: "same-team-yo",
+          credentials: "omit",
         });
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", credentials: "error" })
+        createHttpLink({ uri: "data", credentials: "include" })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -738,7 +730,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
-      expect(creds).toBe("same-team-yo");
+      expect(creds).toBe("omit");
     });
 
     it("adds uri to the request from the context", async () => {
@@ -782,7 +774,7 @@ describe("HttpLink", () => {
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", credentials: "error" })
+        createHttpLink({ uri: "data", credentials: "include" })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -817,7 +809,7 @@ describe("HttpLink", () => {
       const variables = { params: "stub" };
       const link = createHttpLink({
         uri: "data",
-        fetchOptions: { someOption: "foo", mode: "no-cors" },
+        fetchOptions: { mode: "no-cors" },
       });
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -825,8 +817,7 @@ describe("HttpLink", () => {
 
       await expect(stream).toEmitTypedValue(data);
 
-      const { someOption, mode, headers } = fetchMock.lastCall()![1] as any;
-      expect(someOption).toBe("foo");
+      const { mode, headers } = fetchMock.lastCall()![1] as any;
       expect(mode).toBe("no-cors");
       expect(headers["content-type"]).toBe("application/json");
     });
@@ -914,13 +905,13 @@ describe("HttpLink", () => {
       const middleware = new ApolloLink((operation, forward) => {
         operation.setContext({
           fetchOptions: {
-            someOption: "foo",
+            mode: "cors",
           },
         });
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", fetchOptions: { someOption: "bar" } })
+        createHttpLink({ uri: "data", fetchOptions: { mode: "no-cors" } })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -928,8 +919,8 @@ describe("HttpLink", () => {
 
       await expect(stream).toEmitTypedValue(data);
 
-      const { someOption } = fetchMock.lastCall()![1] as any;
-      expect(someOption).toBe("foo");
+      const { mode } = fetchMock.lastCall()![1] as any;
+      expect(mode).toBe("cors");
     });
 
     it("allows for not sending the query with the request", async () => {
@@ -1115,12 +1106,9 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      const error: ClientParseError = await stream.takeError();
+      const error = await stream.takeError();
 
-      expect(error.message).toMatch(/Payload is not serializable/);
-      expect(error.parseError.message).toMatch(
-        /Converting circular structure to JSON/
-      );
+      expect(error.message).toMatch(/Converting circular structure to JSON/);
     });
 
     describe("AbortController", () => {

@@ -43,7 +43,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
   "split",
   "version",
@@ -110,7 +109,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
   "split",
   "version",
@@ -209,7 +207,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
 ]
 `;
 

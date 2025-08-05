@@ -12,7 +12,6 @@ import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
 import { concat } from '@apollo/client/link';
@@ -88,7 +87,6 @@ import { rewriteURIForGET } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBodyInternal } from '@apollo/client/link/http';
 import { selectURI } from '@apollo/client/link/http';
-import { serializeFetchParameter } from '@apollo/client/link/http';
 import { ServerError } from '@apollo/client/errors';
 import { ServerParseError } from '@apollo/client/errors';
 import { setVerbosity as setLogVerbosity } from '@apollo/client/utilities/invariant';
@@ -387,8 +385,6 @@ export const build: "source" | "esm" | "cjs";
 export { Cache_2 as Cache }
 
 export { checkFetcher }
-
-export { ClientParseError }
 
 export { CombinedGraphQLErrors }
 
@@ -1030,8 +1026,6 @@ export { selectHttpOptionsAndBody }
 export { selectHttpOptionsAndBodyInternal }
 
 export { selectURI }
-
-export { serializeFetchParameter }
 
 export { ServerError }
 

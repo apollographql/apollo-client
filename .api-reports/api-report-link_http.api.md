@@ -7,7 +7,6 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import type { InvariantError } from '@apollo/client/utilities/invariant';
 import type { print as print_2 } from '@apollo/client/utilities';
 
 // @public (undocumented)
@@ -17,11 +16,6 @@ export class BaseHttpLink extends ApolloLink {
 
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
-
-// @public (undocumented)
-export type ClientParseError = InvariantError & {
-    parseError: Error;
-};
 
 // @public @deprecated (undocumented)
 export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
@@ -89,9 +83,9 @@ export namespace HttpLink {
         preserveHeaderCase?: boolean;
     }
     export interface Options {
-        credentials?: string;
+        credentials?: RequestCredentials;
         fetch?: typeof fetch;
-        fetchOptions?: any;
+        fetchOptions?: RequestInit;
         headers?: Record<string, string>;
         includeExtensions?: boolean;
         includeUnusedVariables?: boolean;
@@ -139,9 +133,6 @@ export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation
 
 // @public (undocumented)
 export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
-
-// @public (undocumented)
-export const serializeFetchParameter: (p: any, label: string) => string;
 
 // (No @packageDocumentation comment for this package)
 

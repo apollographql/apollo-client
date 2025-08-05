@@ -6,42 +6,50 @@ import { ApolloLink } from "@apollo/client/link";
 import { OperationBatcher } from "./batching.js";
 
 export declare namespace BatchLink {
+  export namespace Shared {
+    /** These options are shared between `BatchLink` and `BatchHttpLink` */
+    interface Options {
+      /**
+       * The interval at which to batch, in milliseconds.
+       *
+       * @defaultValue 10
+       */
+      batchInterval?: number;
+
+      /**
+       * "batchInterval" is a throttling behavior by default, if you instead wish
+       * to debounce outbound requests, set "batchDebounce" to true. More useful
+       * for mutations than queries.
+       */
+      batchDebounce?: boolean;
+
+      /**
+       * The maximum number of operations to include in a single batch.
+       *
+       * @defaultValue \{\{defaultValue\}\}
+       */
+      batchMax?: number;
+
+      /**
+       * Creates the key for a batch
+       */
+      batchKey?: (operation: ApolloLink.Operation) => string;
+    }
+  }
+
   export type BatchHandler = (
     operations: ApolloLink.Operation[],
     forward: ApolloLink.ForwardFunction[]
   ) => Observable<ApolloLink.Result[]>;
 
-  export interface Options {
-    /**
-     * The interval at which to batch, in milliseconds.
-     *
-     * Defaults to 10.
-     */
-    batchInterval?: number;
-
-    /**
-     * "batchInterval" is a throttling behavior by default, if you instead wish
-     * to debounce outbound requests, set "batchDebounce" to true. More useful
-     * for mutations than queries.
-     */
-    batchDebounce?: boolean;
-
-    /**
-     * The maximum number of operations to include in one fetch.
-     *
-     * Defaults to 0 (infinite operations within the interval).
-     */
-    batchMax?: number;
-
+  export interface Options extends Shared.Options {
     /**
      * The handler that should execute a batch of operations.
      */
     batchHandler?: BatchLink.BatchHandler;
 
-    /**
-     * creates the key for a batch
-     */
-    batchKey?: (operation: ApolloLink.Operation) => string;
+    /** {@inheritDoc @apollo/client/link/batch!BatchLink.Shared.Options#batchMax:member {"defaultValue": 0}} */
+    batchMax?: number;
   }
 }
 

@@ -12,12 +12,18 @@ export namespace BatchLink {
     // (undocumented)
     export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
     // (undocumented)
-    export interface Options {
-        batchDebounce?: boolean;
+    export interface Options extends Shared.Options {
         batchHandler?: BatchLink.BatchHandler;
-        batchInterval?: number;
-        batchKey?: (operation: ApolloLink.Operation) => string;
         batchMax?: number;
+    }
+    // (undocumented)
+    export namespace Shared {
+        export interface Options {
+            batchDebounce?: boolean;
+            batchInterval?: number;
+            batchKey?: (operation: ApolloLink.Operation) => string;
+            batchMax?: number;
+        }
     }
 }
 

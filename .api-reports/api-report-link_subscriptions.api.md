@@ -8,7 +8,7 @@ import { ApolloLink } from '@apollo/client/link';
 import type { Client } from 'graphql-ws';
 import { Observable } from 'rxjs';
 
-// @public (undocumented)
+// @public
 export class GraphQLWsLink extends ApolloLink {
     constructor(client: Client);
     // (undocumented)

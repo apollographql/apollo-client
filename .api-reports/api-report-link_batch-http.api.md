@@ -19,10 +19,11 @@ export class BaseBatchHttpLink extends ApolloLink {
 
 // @public (undocumented)
 export namespace BatchHttpLink {
-    // (undocumented)
-    export type ContextOptions = HttpLink.ContextOptions;
-    // (undocumented)
-    export type Options = Pick<BatchLink.Options, "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"> & Omit<HttpLink.Options, "useGETForQueries">;
+    export interface ContextOptions extends HttpLink.ContextOptions {
+    }
+    export interface Options extends BatchLink.Shared.Options, HttpLink.Shared.Options {
+        batchMax?: number;
+    }
 }
 
 // @public

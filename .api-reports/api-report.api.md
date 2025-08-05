@@ -667,14 +667,12 @@ namespace ClientAwarenessLink {
     }
     // (undocumented)
     interface Options {
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        clientAwareness?: ClientAwarenessOptions;
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+        enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     }
 }
 
-// @public (undocumented)
+// @public
 class ClientAwarenessLink extends ApolloLink {
     constructor(constructorOptions?: ClientAwarenessLink.Options);
 }
@@ -1354,7 +1352,7 @@ export namespace HttpLink {
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
         http?: HttpLink.HttpOptions;
-        uri?: string | UriFunction;
+        uri?: string | HttpLink.UriFunction;
     }
     export interface HttpOptions {
         accept?: string[];
@@ -1362,16 +1360,7 @@ export namespace HttpLink {
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;
     }
-    export interface Options {
-        credentials?: RequestCredentials;
-        fetch?: typeof fetch;
-        fetchOptions?: RequestInit;
-        headers?: Record<string, string>;
-        includeExtensions?: boolean;
-        includeUnusedVariables?: boolean;
-        preserveHeaderCase?: boolean;
-        print?: Printer;
-        uri?: string | UriFunction;
+    export interface Options extends Shared.Options {
         useGETForQueries?: boolean;
     }
     // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
@@ -1379,10 +1368,24 @@ export namespace HttpLink {
     // (undocumented)
     export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
     // (undocumented)
+    export namespace Shared {
+        export interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: HttpLink.Printer;
+            uri?: string | HttpLink.UriFunction;
+        }
+    }
+    // (undocumented)
     export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
-// @public (undocumented)
+// @public
 export class HttpLink extends ApolloLink {
     constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
 }

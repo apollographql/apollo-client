@@ -14,16 +14,19 @@ export namespace ErrorLink {
         // (undocumented)
         (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
     }
-    // (undocumented)
     export interface ErrorHandlerOptions {
         error: ErrorLike;
         forward: ApolloLink.ForwardFunction;
         operation: ApolloLink.Operation;
         result?: ApolloLink.Result;
     }
+    // (undocumented)
+    export namespace ErrorLinkDocumentationTypes {
+        export function ErrorHandler(options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
+    }
 }
 
-// @public (undocumented)
+// @public
 export class ErrorLink extends ApolloLink {
     constructor(errorHandler: ErrorLink.ErrorHandler);
 }

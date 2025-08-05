@@ -124,6 +124,22 @@ function operationDefinesMutation(operation: ApolloLink.Operation) {
 export const createPersistedQueryLink = (options: PersistedQueryLink.Options) =>
   new PersistedQueryLink(options);
 
+/**
+ * `PersistedQueryLink` is a non-terminating link that enables the use of
+ * persisted queries, a technique that reduces bandwidth by sending query hashes
+ * instead of full query strings.
+ *
+ * @example
+ *
+ * ```ts
+ * import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
+ * import { sha256 } from "crypto-hash";
+ *
+ * const link = new PersistedQueryLink({
+ *   sha256: (queryString) => sha256(queryString),
+ * });
+ * ```
+ */
 export class PersistedQueryLink extends ApolloLink {
   constructor(options: PersistedQueryLink.Options) {
     let hashesByQuery:

@@ -10,6 +10,11 @@ export declare namespace SetContextLink {
     | Promise<Partial<ApolloLink.OperationContext>>
     | Partial<ApolloLink.OperationContext>;
 
+  /**
+   * @deprecated
+   * Use `ContextSetter` instead. This type is used by the deprecated
+   * `setContext` function.
+   */
   export type LegacyContextSetter = (
     operation: SetContextLink.SetContextOperation,
     prevContext: Readonly<ApolloLink.OperationContext>

@@ -140,9 +140,9 @@ Finally, combine the link that `generatePersistedQueryIdsFromManifest` returns w
 ```js
 import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
 import { generatePersistedQueryIdsFromManifest } from "@apollo/persisted-query-lists";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
 
-const persistedQueryLink = createPersistedQueryLink(
+const persistedQueryLink = new PersistedQueryLink(
   generatePersistedQueryIdsFromManifest({
     loadManifest: () => import("./path/to/persisted-query-manifest.json"),
   })
@@ -180,11 +180,11 @@ The link requires using `ApolloClient`'s `HttpLink`. The easiest way to use them
 
 ```js
 import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { sha256 } from "crypto-hash";
 
 const httpLink = new HttpLink({ uri: "/graphql" });
-const persistedQueriesLink = createPersistedQueryLink({ sha256 });
+const persistedQueriesLink = new PersistedQueryLink({ sha256 });
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: persistedQueriesLink.concat(httpLink),

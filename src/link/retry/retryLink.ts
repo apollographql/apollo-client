@@ -65,7 +65,7 @@ export declare namespace RetryLink {
      * Note that this INCLUDES the initial request as part of the count.
      * E.g. maxTries of 1 indicates no retrying should occur.
      *
-     * @defalutValue `5`
+     * @defaultValue `5`
      */
     max?: number;
 

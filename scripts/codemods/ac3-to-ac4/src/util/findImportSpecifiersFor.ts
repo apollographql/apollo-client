@@ -5,7 +5,7 @@ import { findImportDeclarationFor } from "./findImportDeclarationFor.js";
 
 export function findImportSpecifiersFor({
   description,
-  compatibleWith = "value",
+  compatibleWith = "type",
   context,
   context: { j },
 }: {

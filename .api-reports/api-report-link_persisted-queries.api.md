@@ -9,21 +9,23 @@ import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 
-// @public (undocumented)
-interface BaseOptions {
-    // (undocumented)
-    disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
-    // (undocumented)
-    retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
-    // (undocumented)
-    useGETForHashedQueries?: boolean;
-}
-
 // @public @deprecated (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
 
 // @public (undocumented)
 export namespace PersistedQueryLink {
+    // (undocumented)
+    export namespace Base {
+        // (undocumented)
+        export interface Options {
+            // (undocumented)
+            disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+            // (undocumented)
+            retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+            // (undocumented)
+            useGETForHashedQueries?: boolean;
+        }
+    }
     // (undocumented)
     export interface DisableFunctionOptions extends PersistedQueryLink.RetryFunctionOptions {
     }
@@ -37,7 +39,7 @@ export namespace PersistedQueryLink {
     // (undocumented)
     export type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
     // (undocumented)
-    export interface GenerateHashOptions extends BaseOptions {
+    export interface GenerateHashOptions extends Base.Options {
         // (undocumented)
         generateHash: PersistedQueryLink.GenerateHashFunction;
         // (undocumented)
@@ -58,10 +60,8 @@ export namespace PersistedQueryLink {
     }
     // (undocumented)
     export type SHA256Function = (queryString: string) => string | PromiseLike<string>;
-    // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    export interface SHA256Options extends BaseOptions {
+    export interface SHA256Options extends Base.Options {
         // (undocumented)
         generateHash?: never;
         // (undocumented)

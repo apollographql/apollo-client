@@ -30,13 +30,15 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
-interface BaseOptions {
-  disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
-  retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
-  useGETForHashedQueries?: boolean;
-}
-
 export declare namespace PersistedQueryLink {
+  namespace Base {
+    interface Options {
+      disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+      retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+      useGETForHashedQueries?: boolean;
+    }
+  }
+
   export interface ErrorMeta {
     persistedQueryNotSupported: boolean;
     persistedQueryNotFound: boolean;
@@ -50,12 +52,12 @@ export declare namespace PersistedQueryLink {
     queryString: string
   ) => string | PromiseLike<string>;
 
-  export interface SHA256Options extends BaseOptions {
+  export interface SHA256Options extends Base.Options {
     sha256: PersistedQueryLink.SHA256Function;
     generateHash?: never;
   }
 
-  export interface GenerateHashOptions extends BaseOptions {
+  export interface GenerateHashOptions extends Base.Options {
     sha256?: never;
     generateHash: PersistedQueryLink.GenerateHashFunction;
   }
@@ -102,7 +104,7 @@ function processErrors(
   };
 }
 
-const defaultOptions: Required<BaseOptions> = {
+const defaultOptions: Required<PersistedQueryLink.Base.Options> = {
   disable: ({ meta }) => meta.persistedQueryNotSupported,
   retry: ({ meta }) =>
     meta.persistedQueryNotSupported || meta.persistedQueryNotFound,

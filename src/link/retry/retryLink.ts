@@ -14,8 +14,39 @@ import { buildDelayFunction } from "./delayFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 
 export declare namespace RetryLink {
+  namespace RetryLinkDocumentationTypes {
+    /**
+     * A function used to determine whether to retry the current operation.
+     *
+     * @param attempt - The current attempt number
+     * @param operation - The current `ApolloLink.Operation` for the request
+     * @param error - The error that triggered the retry attempt
+     * @returns A boolean to indicate whether to retry the current operation
+     */
+    function AttemptsFunction(
+      attempt: number,
+      operation: ApolloLink.Operation,
+      error: ErrorLike
+    ): boolean | Promise<boolean>;
+
+    /**
+     * A function used to determine the delay for a retry attempt.
+     *
+     * @param attempt - The current attempt number
+     * @param operation - The current `ApolloLink.Operation` for the request
+     * @param error - The error that triggered the retry attempt
+     * @returns The delay in milliseconds before attempting the request again
+     */
+    function DelayFunction(
+      attempt: number,
+      operation: ApolloLink.Operation,
+      error: ErrorLike
+    ): number;
+  }
+
+  /** {@inheritDoc @apollo/client/link/retry!RetryLink.RetryLinkDocumentationTypes.DelayFunction:function(1)} */
   export type DelayFunction = (
-    count: number,
+    attempt: number,
     operation: ApolloLink.Operation,
     error: ErrorLike
   ) => number;
@@ -58,8 +89,9 @@ export declare namespace RetryLink {
     jitter?: boolean;
   }
 
+  /** {@inheritDoc @apollo/client/link/retry!RetryLink.RetryLinkDocumentationTypes.AttemptsFunction:function(1)} */
   export type AttemptsFunction = (
-    count: number,
+    attempt: number,
     operation: ApolloLink.Operation,
     error: ErrorLike
   ) => boolean | Promise<boolean>;

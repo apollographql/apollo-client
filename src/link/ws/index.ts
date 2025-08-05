@@ -62,9 +62,6 @@ export declare namespace WebSocketLink {
   }
 }
 
-// For backwards compatibility.
-export import WebSocketParams = WebSocketLink.Configuration;
-
 /**
  * `WebSocketLink` is a terminating link that executes GraphQL operations over
  * WebSocket connections using the `subscriptions-transport-ws` library. It's

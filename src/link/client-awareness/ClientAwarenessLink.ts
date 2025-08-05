@@ -94,7 +94,7 @@ export declare namespace ClientAwarenessLink {
  * ```
  */
 export class ClientAwarenessLink extends ApolloLink {
-  constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
+  constructor(options: ClientAwarenessLink.Options = {}) {
     super((operation, forward) => {
       const client = operation.client;
 
@@ -108,7 +108,7 @@ export class ClientAwarenessLink extends ApolloLink {
         } = compact(
           {},
           clientOptions.clientAwareness,
-          constructorOptions.clientAwareness,
+          options.clientAwareness,
           context.clientAwareness
         );
 
@@ -131,7 +131,7 @@ export class ClientAwarenessLink extends ApolloLink {
         const { transport = "extensions" } = compact(
           {},
           clientOptions.enhancedClientAwareness,
-          constructorOptions.enhancedClientAwareness
+          options.enhancedClientAwareness
         );
         if (transport === "extensions") {
           operation.extensions = compact(

@@ -62,7 +62,7 @@ export declare namespace RetryLink {
      * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
      * until they reach the maximum delay.
      *
-     * Note that if jittering is enabled, this is the _average_ delay.
+     * Note that if jittering is enabled, this is the average delay.
      *
      * @defaultValue `300`
      */

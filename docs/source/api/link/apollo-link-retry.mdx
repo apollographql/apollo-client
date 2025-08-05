@@ -34,11 +34,11 @@ The `attempts` function should return a `boolean` (or a `Promise` which resolves
 import { RetryLink } from "@apollo/client/link/retry";
 
 const link = new RetryLink({
-  attempts: (count, operation, error) => {
+  attempts: (attempt, operation, error) => {
     return !!error && operation.operationName != "specialCase";
   },
-  delay: (count, operation, error) => {
-    return count * 1000 * Math.random();
+  delay: (attempt, operation, error) => {
+    return attempt * 1000 * Math.random();
   },
 });
 ```

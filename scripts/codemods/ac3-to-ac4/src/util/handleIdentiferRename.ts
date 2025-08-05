@@ -117,7 +117,7 @@ export function handleIdentiferRename({
                 j.importDeclaration(
                   [specifier],
                   j.literal(to.module || from.module),
-                  importType
+                  rename.importType
                 )
               );
             }

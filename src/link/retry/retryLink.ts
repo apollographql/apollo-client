@@ -8,22 +8,91 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 
-import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
 import { buildDelayFunction } from "./delayFunction.js";
-import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 
 export declare namespace RetryLink {
+  export type DelayFunction = (
+    count: number,
+    operation: ApolloLink.Operation,
+    error: any
+  ) => number;
+
+  export interface DelayOptions {
+    /**
+     * The number of milliseconds to wait before attempting the first retry.
+     *
+     * Delays will increase exponentially for each attempt. E.g. if this is
+     * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
+     * until they reach maxDelay.
+     *
+     * Note that if jittering is enabled, this is the _average_ delay.
+     *
+     * @defaultValue `300`
+     */
+    initial?: number;
+
+    /**
+     * The maximum number of milliseconds that the link should wait for any
+     * retry.
+     *
+     * @defaultValue `Infinity`
+     */
+    max?: number;
+
+    /**
+     * Whether delays between attempts should be randomized.
+     *
+     * This helps avoid thundering herd type situations by better distributing
+     * load during major outages.
+     *
+     * @defaultValue `true`
+     */
+    jitter?: boolean;
+  }
+
+  export type AttemptsFunction = (
+    count: number,
+    operation: ApolloLink.Operation,
+    error: any
+  ) => boolean | Promise<boolean>;
+
+  export interface AttemptsOptions {
+    /**
+     * The max number of times to try a single operation before giving up. Pass
+     * `Infinity` for infinite retries.
+     *
+     * Note that this INCLUDES the initial request as part of the count.
+     * E.g. maxTries of 1 indicates no retrying should occur.
+     *
+     * @defaultValue `5`
+     */
+    max?: number;
+
+    /**
+     * Predicate function that determines whether a particular error should
+     * trigger a retry.
+     *
+     * For example, you may want to not retry 4xx class HTTP errors.
+     *
+     * @defaultValue `() => true`
+     */
+    retryIf?: (
+      error: any,
+      operation: ApolloLink.Operation
+    ) => boolean | Promise<boolean>;
+  }
+
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.
      */
-    delay?: DelayFunctionOptions | DelayFunction;
+    delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
 
     /**
      * Configuration for the retry strategy to use, or a custom retry strategy.
      */
-    attempts?: RetryFunctionOptions | RetryFunction;
+    attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
   }
 }
 
@@ -39,8 +108,8 @@ class RetryableOperation {
     private observer: Observer<ApolloLink.Result>,
     private operation: ApolloLink.Operation,
     private forward: ApolloLink.ForwardFunction,
-    private delayFor: DelayFunction,
-    private retryIf: RetryFunction
+    private delayFor: RetryLink.DelayFunction,
+    private retryIf: RetryLink.AttemptsFunction
   ) {
     this.try();
   }
@@ -105,8 +174,8 @@ class RetryableOperation {
 }
 
 export class RetryLink extends ApolloLink {
-  private delayFor: DelayFunction;
-  private retryIf: RetryFunction;
+  private delayFor: RetryLink.DelayFunction;
+  private retryIf: RetryLink.AttemptsFunction;
 
   constructor(options?: RetryLink.Options) {
     super();

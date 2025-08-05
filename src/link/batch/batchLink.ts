@@ -3,12 +3,14 @@ import { EMPTY } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 
-import type { BatchHandler } from "./batching.js";
 import { OperationBatcher } from "./batching.js";
-export type { BatchableRequest, BatchHandler } from "./batching.js";
-export { OperationBatcher } from "./batching.js";
 
 export declare namespace BatchLink {
+  export type BatchHandler = (
+    operations: ApolloLink.Operation[],
+    forward: ApolloLink.ForwardFunction[]
+  ) => Observable<ApolloLink.Result[]>;
+
   export interface Options {
     /**
      * The interval at which to batch, in milliseconds.
@@ -34,7 +36,7 @@ export declare namespace BatchLink {
     /**
      * The handler that should execute a batch of operations.
      */
-    batchHandler?: BatchHandler;
+    batchHandler?: BatchLink.BatchHandler;
 
     /**
      * creates the key for a batch

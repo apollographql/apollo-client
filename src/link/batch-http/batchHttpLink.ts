@@ -1,7 +1,6 @@
 import { Observable, throwError } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
-import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { HttpLink } from "@apollo/client/link/http";
@@ -87,7 +86,7 @@ export class BaseBatchHttpLink extends ApolloLink {
     this.batchInterval = batchInterval || 10;
     this.batchMax = batchMax || 10;
 
-    const batchHandler: BatchHandler = (operations) => {
+    const batchHandler: BatchLink.BatchHandler = (operations) => {
       const chosenURI = selectURI(operations[0], uri);
 
       const context = operations[0].getContext();

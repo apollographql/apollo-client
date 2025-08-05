@@ -13,12 +13,16 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const KEEP = "__KEEP";
 
-interface KeepTypenameConfig {
-  [key: string]: typeof KEEP | KeepTypenameConfig;
-}
+export declare namespace RemoveTypenameFromVariablesLink {
+  export interface KeepTypenameConfig {
+    [key: string]:
+      | typeof KEEP
+      | RemoveTypenameFromVariablesLink.KeepTypenameConfig;
+  }
 
-export interface RemoveTypenameFromVariablesOptions {
-  except?: KeepTypenameConfig;
+  export interface Options {
+    except?: RemoveTypenameFromVariablesLink.KeepTypenameConfig;
+  }
 }
 
 /**
@@ -26,13 +30,13 @@ export interface RemoveTypenameFromVariablesOptions {
  * Use `RemoveTypenameFromVariablesLink` from `@apollo/client/link/remove-typename` instead.
  */
 export function removeTypenameFromVariables(
-  options?: RemoveTypenameFromVariablesOptions
+  options?: RemoveTypenameFromVariablesLink.Options
 ) {
   return new RemoveTypenameFromVariablesLink(options);
 }
 
 export class RemoveTypenameFromVariablesLink extends ApolloLink {
-  constructor(options: RemoveTypenameFromVariablesOptions = {}) {
+  constructor(options: RemoveTypenameFromVariablesLink.Options = {}) {
     super((operation, forward) => {
       const { except } = options;
       const { query, variables } = operation;
@@ -66,7 +70,7 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
 function maybeStripTypenameUsingConfig(
   query: DocumentNode,
   variables: OperationVariables,
-  config: KeepTypenameConfig
+  config: RemoveTypenameFromVariablesLink.KeepTypenameConfig
 ) {
   const variableDefinitions = getVariableDefinitions(query);
 
@@ -91,7 +95,7 @@ type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
 
 function maybeStripTypename(
   value: JSONValue,
-  config: KeepTypenameConfig[string]
+  config: RemoveTypenameFromVariablesLink.KeepTypenameConfig[string]
 ): JSONValue {
   if (config === KEEP) {
     return value;

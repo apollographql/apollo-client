@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 export namespace SchemaLink {
     // (undocumented)
     export interface Options {
-        context?: ResolverContext | ResolverContextFunction;
+        context?: SchemaLink.ResolverContext | SchemaLink.ResolverContextFunction;
         rootValue?: any;
         schema: GraphQLSchema;
         validate?: boolean;

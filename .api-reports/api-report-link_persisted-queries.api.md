@@ -9,70 +9,63 @@ import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 
-// @public (undocumented)
-interface BaseOptions {
-    // (undocumented)
-    disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
-    // (undocumented)
-    retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
-    // (undocumented)
-    useGETForHashedQueries?: boolean;
-}
-
 // @public @deprecated (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
 
 // @public (undocumented)
-type ErrorMeta = {
-    persistedQueryNotSupported: boolean;
-    persistedQueryNotFound: boolean;
-};
-
-// @public (undocumented)
-type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
-
-// @public (undocumented)
 export namespace PersistedQueryLink {
     // (undocumented)
-    export interface CallbackOptions {
+    export namespace Base {
+        // (undocumented)
+        export interface Options {
+            // (undocumented)
+            disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+            // (undocumented)
+            retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+            // (undocumented)
+            useGETForHashedQueries?: boolean;
+        }
+    }
+    // (undocumented)
+    export interface DisableFunctionOptions extends PersistedQueryLink.RetryFunctionOptions {
+    }
+    // (undocumented)
+    export interface ErrorMeta {
+        // (undocumented)
+        persistedQueryNotFound: boolean;
+        // (undocumented)
+        persistedQueryNotSupported: boolean;
+    }
+    // (undocumented)
+    export type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
+    // (undocumented)
+    export interface GenerateHashOptions extends Base.Options {
+        // (undocumented)
+        generateHash: PersistedQueryLink.GenerateHashFunction;
+        // (undocumented)
+        sha256?: never;
+    }
+    // (undocumented)
+    export type Options = PersistedQueryLink.SHA256Options | PersistedQueryLink.GenerateHashOptions;
+    // (undocumented)
+    export interface RetryFunctionOptions {
         // (undocumented)
         error: ErrorLike;
-        // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
-        //
         // (undocumented)
-        meta: ErrorMeta;
+        meta: PersistedQueryLink.ErrorMeta;
         // (undocumented)
         operation: ApolloLink.Operation;
         // (undocumented)
         result?: FormattedExecutionResult;
     }
     // (undocumented)
-    export interface DisableFunctionOptions extends CallbackOptions {
-    }
+    export type SHA256Function = (queryString: string) => string | PromiseLike<string>;
     // (undocumented)
-    export interface GenerateHashOptions extends BaseOptions {
-        // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        generateHash: GenerateHashFunction;
-        // (undocumented)
-        sha256?: never;
-    }
-    // (undocumented)
-    export type Options = SHA256Options | GenerateHashOptions;
-    // (undocumented)
-    export interface RetryFunctionOptions extends CallbackOptions {
-    }
-    // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    export interface SHA256Options extends BaseOptions {
+    export interface SHA256Options extends Base.Options {
         // (undocumented)
         generateHash?: never;
-        // Warning: (ae-forgotten-export) The symbol "SHA256Function" needs to be exported by the entry point index.d.ts
-        //
         // (undocumented)
-        sha256: SHA256Function;
+        sha256: PersistedQueryLink.SHA256Function;
     }
 }
 
@@ -82,9 +75,6 @@ export class PersistedQueryLink extends ApolloLink {
     // (undocumented)
     resetHashCache: () => void;
 }
-
-// @public (undocumented)
-type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export const VERSION = 1;

@@ -30,44 +30,51 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
-type ErrorMeta = {
-  persistedQueryNotSupported: boolean;
-  persistedQueryNotFound: boolean;
-};
-
-type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
-type GenerateHashFunction = (
-  document: DocumentNode
-) => string | PromiseLike<string>;
-
-interface BaseOptions {
-  disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
-  retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
-  useGETForHashedQueries?: boolean;
-}
-
 export declare namespace PersistedQueryLink {
-  interface CallbackOptions {
-    error: ErrorLike;
-    operation: ApolloLink.Operation;
-    meta: ErrorMeta;
-    result?: FormattedExecutionResult;
+  namespace Base {
+    interface Options {
+      disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+      retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+      useGETForHashedQueries?: boolean;
+    }
   }
 
-  export interface SHA256Options extends BaseOptions {
-    sha256: SHA256Function;
+  export interface ErrorMeta {
+    persistedQueryNotSupported: boolean;
+    persistedQueryNotFound: boolean;
+  }
+
+  export type GenerateHashFunction = (
+    document: DocumentNode
+  ) => string | PromiseLike<string>;
+
+  export type SHA256Function = (
+    queryString: string
+  ) => string | PromiseLike<string>;
+
+  export interface SHA256Options extends Base.Options {
+    sha256: PersistedQueryLink.SHA256Function;
     generateHash?: never;
   }
 
-  export interface GenerateHashOptions extends BaseOptions {
+  export interface GenerateHashOptions extends Base.Options {
     sha256?: never;
-    generateHash: GenerateHashFunction;
+    generateHash: PersistedQueryLink.GenerateHashFunction;
   }
 
-  export type Options = SHA256Options | GenerateHashOptions;
+  export type Options =
+    | PersistedQueryLink.SHA256Options
+    | PersistedQueryLink.GenerateHashOptions;
 
-  export interface RetryFunctionOptions extends CallbackOptions {}
-  export interface DisableFunctionOptions extends CallbackOptions {}
+  export interface RetryFunctionOptions {
+    error: ErrorLike;
+    operation: ApolloLink.Operation;
+    meta: PersistedQueryLink.ErrorMeta;
+    result?: FormattedExecutionResult;
+  }
+
+  export interface DisableFunctionOptions
+    extends PersistedQueryLink.RetryFunctionOptions {}
 }
 
 function processErrors(
@@ -75,7 +82,7 @@ function processErrors(
     | GraphQLFormattedError[]
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
-): ErrorMeta {
+): PersistedQueryLink.ErrorMeta {
   const byMessage: Record<string, GraphQLFormattedError> = {},
     byCode: Record<string, GraphQLFormattedError> = {};
 
@@ -97,7 +104,7 @@ function processErrors(
   };
 }
 
-const defaultOptions: Required<BaseOptions> = {
+const defaultOptions: Required<PersistedQueryLink.Base.Options> = {
   disable: ({ meta }) => meta.persistedQueryNotSupported,
   retry: ({ meta }) =>
     meta.persistedQueryNotSupported || meta.persistedQueryNotFound,

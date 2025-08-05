@@ -209,18 +209,8 @@ The `PersistedQueryLink` class takes a configuration object:
 - `generateHash`: an optional function that takes the query document and returns the hash. If provided this custom function will override the default hashing approach that uses the supplied `sha256` function. If not provided, the persisted queries link will use a fallback hashing approach leveraging the `sha256` function.
 - `useGETForHashedQueries`: set to `true` to use the HTTP `GET` method when sending the hashed version of queries (but not for mutations). `GET` requests are not compatible with `@apollo/client/link/batch-http`.
   > If you want to use `GET` for non-mutation queries whether or not they are hashed, pass `useGETForQueries: true` option to `HttpLink` instead. If you want to use `GET` for all requests, pass `fetchOptions: {method: 'GET'}` to `HttpLink`.
-- `disable`: a function which takes an `ErrorResponse` (see below) and returns a boolean to disable any future persisted queries for that session. This defaults to disabling on `PersistedQueryNotSupported` or a 400 or 500 http error.
-
-**ErrorResponse**
-
-The argument that the optional `disable` function is given is an object with the following keys:
-
-- `operation`: The Operation that encountered an error (contains `query`, `variables`, `operationName`, and `context`).
-- `response`: The Execution of the response (contains `data` and `errors` as well `extensions` if sent from the server).
-- `graphQLErrors`: An array of errors from the GraphQL endpoint.
-- `networkError`: Any error during the link execution or server response.
-
-_Note_: `networkError` is the value from the downlink's `error` callback. In most cases, `graphQLErrors` is the `errors` field of the result from the last `next` call. A `networkError` can contain additional fields, such as a GraphQL object in the case of a failing HTTP status code from `@apollo/link/http`. In this situation, `graphQLErrors` is an alias for `networkError.result.errors` if the property exists.
+- `disable`: a function which takes a [`PersistedQueryLink.DisableFunctionOptions`](#persistedquerylinkdisablefunctionoptions) object and returns a boolean to disable any future persisted queries for that session. This defaults to disabling on `PersistedQueryNotSupported` error.
+- `retry`: a function which takes a [`PersistedQueryLink.RetryFunctionOptions`](#persistedquerylinkretryfunctionoptions) object and returns a boolean to retry the request with the full query text included. This defaults to `true` on `PersistedQueryNotSupported` or `PersistedQueryNotFound` errors.
 
 ## Apollo Studio
 

@@ -107,6 +107,11 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.prerelease.outputs.packages) }}
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}
+
       - name: Append NPM token to .npmrc
         run: |
           cat << EOF > "$HOME/.npmrc"

@@ -7,6 +7,7 @@ import type * as j from "jscodeshift";
 import type { IdentifierRename, ModuleRename } from "./renames.js";
 import { renames } from "./renames.js";
 import { findReferences } from "./util/findReferences.js";
+import { pick } from "./util/pick.js";
 
 type ImportKind = "type" | "value";
 
@@ -151,13 +152,17 @@ const transform: Transform = function transform(file, api) {
 
         if (alreadyImported.size() > 0) {
           // if the target import specifier already exists, we can just remove this one
-          specifierPath.replace();
+          specifierPath.replace(
+            // but keep comments in place
+            j.emptyStatement.from(pick(specifier, "comments"))
+          );
         } else {
           const targetDeclaration = findImportDeclarationFor(
             final,
             importType
           ).nodes()[0];
           // specifier should have been removed anyways, so we just reuse it in the existing position
+          // this also moves comments around
           specifierPath
             .get("imported")
             .replace(j.identifier(final.namespace || final.identifier));
@@ -180,7 +185,12 @@ const transform: Transform = function transform(file, api) {
           }
         }
         if (importDeclaration.specifiers?.length === 0) {
-          importDeclarationPath.replace();
+          importDeclarationPath.replace(
+            // when removing the import declaration, try to keep comments
+            // in place - we don't know if they really were attached
+            // to the import declaration or "just there"
+            j.emptyStatement.from(pick(importDeclaration, "comments"))
+          );
         }
       } finally {
         rename.postProcess?.({

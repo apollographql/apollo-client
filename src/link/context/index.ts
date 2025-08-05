@@ -4,7 +4,7 @@ import { ApolloLink } from "@apollo/client/link";
 
 export declare namespace SetContextLink {
   export type ContextSetter = (
-    prevContext: ApolloLink.OperationContext,
+    prevContext: Readonly<ApolloLink.OperationContext>,
     operation: SetContextOperation
   ) =>
     | Promise<Partial<ApolloLink.OperationContext>>
@@ -12,7 +12,7 @@ export declare namespace SetContextLink {
 
   export type LegacyContextSetter = (
     operation: SetContextOperation,
-    prevContext: ApolloLink.OperationContext
+    prevContext: Readonly<ApolloLink.OperationContext>
   ) =>
     | Promise<Partial<ApolloLink.OperationContext>>
     | Partial<ApolloLink.OperationContext>;

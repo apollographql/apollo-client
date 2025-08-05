@@ -1,6 +1,7 @@
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
+import type { UtilContext } from "./types.js";
 import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 // {
 //   // completely removed in AC4
@@ -457,7 +458,7 @@ export interface IdentifierRename {
   };
   importType: "type" | "value";
   postProcess?(args: {
-    j: j.JSCodeshift;
+    context: UtilContext;
     namespace?: string;
     identifier: string;
     renamedSpecifierPath: j.ASTPath<namedTypes.ImportSpecifier>;
@@ -486,14 +487,14 @@ export interface ModuleRename {
 function reorderGenerics(
   newOrder: number[]
 ): (args: {
-  j: j.JSCodeshift;
+  context: UtilContext;
   namespace?: string;
   identifier: string;
   renamedSpecifierPath: j.ASTPath<namedTypes.ImportSpecifier>;
 }) => void {
-  return ({ j, identifier, namespace, renamedSpecifierPath }) => {
+  return ({ context, identifier, namespace, renamedSpecifierPath }) => {
     reorderGenericArguments({
-      j,
+      context,
       namespace,
       identifier,
       scope: renamedSpecifierPath.scope,

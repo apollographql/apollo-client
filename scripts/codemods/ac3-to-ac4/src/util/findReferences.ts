@@ -1,15 +1,16 @@
 import assert from "assert";
 
 import type { namedTypes } from "ast-types";
-import type * as j from "jscodeshift";
+
+import type { UtilContext } from "../types.js";
 
 export function findReferences({
-  j,
+  context: { j },
   namespace,
   identifier,
   scope: rootScope,
 }: {
-  j: j.JSCodeshift;
+  context: UtilContext;
   namespace?: string;
   identifier: string;
   scope: any;

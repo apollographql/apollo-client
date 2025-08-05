@@ -1,10 +1,17 @@
 import type { TSTypeKind } from "ast-types/lib/gen/kinds";
-import type * as j from "jscodeshift";
+
+import type { UtilContext } from "../types.js";
 
 import { findReferences } from "./findReferences.js";
 
-export function reorderGenericArguments(args: {
-  j: j.JSCodeshift;
+export function reorderGenericArguments({
+  context,
+  namespace,
+  identifier,
+  scope,
+  newOrder,
+  context: { j },
+}: {
   namespace?: string;
   identifier: string;
   scope: any;
@@ -13,9 +20,14 @@ export function reorderGenericArguments(args: {
    * `[0, 1, 3]` would drop the third generic argument.
    */
   newOrder: number[];
+  context: UtilContext;
 }): void {
-  const { j, namespace, newOrder } = args;
-  findReferences(args).forEach((path) => {
+  findReferences({
+    context,
+    namespace,
+    identifier,
+    scope,
+  }).forEach((path) => {
     j(path).closest(j.TSTypeReference);
     const parentPath = namespace ? path.parent.parent : path.parent;
     const parentNode = parentPath.node;

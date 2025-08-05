@@ -142,9 +142,6 @@ export declare namespace RetryLink {
   }
 }
 
-/**
- * Tracking and management of operations that may be (or currently are) retried.
- */
 class RetryableOperation {
   private retryCount: number = 0;
   private currentSubscription: Subscription | null = null;

@@ -14,7 +14,7 @@ export function findReferences({
   identifier: string;
   scope: any;
 }) {
-  assert("bindings" in rootScope, "Expected a scope");
+  assert(rootScope && "bindings" in rootScope, "Expected a scope");
   const rootPath = rootScope.path;
   // code strongly inspired by https://github.com/facebook/jscodeshift/blob/656c20e2b5c9f59585c0485a0ab497ab703ec348/src/collections/VariableDeclarator.js#L76
   // original licensed MIT for Facebook, Inc. and its affiliates https://github.com/facebook/jscodeshift/blob/814683361502d1b641aeccce9462976a88246a35/LICENSE

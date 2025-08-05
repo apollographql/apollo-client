@@ -127,71 +127,73 @@ const transform: Transform = function transform(file, api) {
         getUnusedIdentifier(importAs);
       }
 
-      if (
-        from.namespace === final.namespace &&
-        localName !== importedName &&
-        importedFrom === final.module
-      ) {
-        // simple case - we just need to rename the import, everything else stays the same
-        specifierPath.get("imported").replace(j.identifier(final.identifier));
+      try {
+        if (
+          from.namespace === final.namespace &&
+          localName !== importedName &&
+          importedFrom === final.module
+        ) {
+          // simple case - we just need to rename the import, everything else stays the same
+          specifierPath.get("imported").replace(j.identifier(final.identifier));
 
-        return;
-      }
+          return;
+        }
 
-      if (final.namespace) {
-        moveGlobalIdentifierToNamespaceAccess(
-          specifierPath.get("local") || specifierPath.get("imported"),
-          importAs,
-          final.identifier
-        );
-      } else if (renameFrom !== importAs) {
-        renameGlobalIdentifier(renameFrom, importAs);
-      }
+        if (final.namespace) {
+          moveGlobalIdentifierToNamespaceAccess(
+            specifierPath.get("local") || specifierPath.get("imported"),
+            importAs,
+            final.identifier
+          );
+        } else if (renameFrom !== importAs) {
+          renameGlobalIdentifier(renameFrom, importAs);
+        }
 
-      if (alreadyImported.size() > 0) {
-        // if the target import specifier already exists, we can just remove this one
-        specifierPath.replace();
-        rename.postProcess?.({
-          j,
-          namespace: final.namespace ? importAs : undefined,
-          identifier: final.namespace ? final.identifier : importAs,
-          renamedSpecifierPath: alreadyImported.paths()[0],
-        });
-      } else {
-        const targetDeclaration = findImportDeclarationFor(
-          final,
-          importType
-        ).nodes()[0];
-        // specifier should have been removed anyways, so we just reuse it in the existing position
-        specifierPath
-          .get("imported")
-          .replace(j.identifier(final.namespace || final.identifier));
-        specifierPath.get("local").replace(j.identifier(importAs));
-
-        if (targetDeclaration !== specifierPath.parent) {
-          // remove the specifier, we create a new one in a different import declaration
+        if (alreadyImported.size() > 0) {
+          // if the target import specifier already exists, we can just remove this one
           specifierPath.replace();
-          if (targetDeclaration) {
-            (targetDeclaration.specifiers ??= []).push(specifier);
-          } else {
-            importDeclarations.insertAfter(
-              j.importDeclaration(
-                [specifier],
-                j.literal(to.module || from.module),
-                importType
-              )
-            );
+        } else {
+          const targetDeclaration = findImportDeclarationFor(
+            final,
+            importType
+          ).nodes()[0];
+          // specifier should have been removed anyways, so we just reuse it in the existing position
+          specifierPath
+            .get("imported")
+            .replace(j.identifier(final.namespace || final.identifier));
+          specifierPath.get("local").replace(j.identifier(importAs));
+
+          if (targetDeclaration !== specifierPath.parent) {
+            // remove the specifier, we create a new one in a different import declaration
+            specifierPath.replace();
+            if (targetDeclaration) {
+              (targetDeclaration.specifiers ??= []).push(specifier);
+            } else {
+              importDeclarations.insertAfter(
+                j.importDeclaration(
+                  [specifier],
+                  j.literal(to.module || from.module),
+                  importType
+                )
+              );
+            }
           }
         }
+        if (importDeclaration.specifiers?.length === 0) {
+          importDeclarationPath.replace();
+        }
+      } finally {
         rename.postProcess?.({
           j,
           namespace: final.namespace ? importAs : undefined,
           identifier: final.namespace ? final.identifier : importAs,
-          renamedSpecifierPath: j(specifier).paths()[0],
+          renamedSpecifierPath: source
+            .find(
+              j.ImportSpecifier,
+              (node) => (node.local?.name || node.imported.name) === importAs
+            )
+            .paths()[0],
         });
-      }
-      if (importDeclaration.specifiers?.length === 0) {
-        importDeclarationPath.replace();
       }
     });
   }

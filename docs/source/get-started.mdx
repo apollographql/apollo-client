@@ -21,11 +21,12 @@ Applications that use Apollo Client require two top-level dependencies:
 
 - `@apollo/client`: This single package contains virtually everything you need to set up Apollo Client. It includes the in-memory cache, local state management, error handling, and a React-based view layer.
 - `graphql`: This package provides logic for parsing GraphQL queries.
+- `rxjs`: This package provides the `Observable` primitive used throughout Apollo Client.
 
 Run the following command to install both of these packages:
 
 ```bash
-npm install @apollo/client graphql
+npm install @apollo/client graphql rxjs
 ```
 
 > If you're using a React sandbox from CodeSandbox and you encounter a `TypeError`, try downgrading the version of the `graphql` package to `15.8.0` in the Dependencies panel. If you encounter a _different_ error after downgrading, refresh the page.

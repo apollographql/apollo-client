@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.0.0-rc.9
+
+### Minor Changes
+
+- [#12828](https://github.com/apollographql/apollo-client/pull/12828) [`81b03d8`](https://github.com/apollographql/apollo-client/commit/81b03d86ad7e7384124708477829bcbf63d4fa2c) Thanks [@phryneas](https://github.com/phryneas)! - `invariant.error` will now also log in production builds, not only dev builds
+
+### Patch Changes
+
+- [#12822](https://github.com/apollographql/apollo-client/pull/12822) [`103664d`](https://github.com/apollographql/apollo-client/commit/103664dc93c0a7097eaec1a5144e769eb4fb7a31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `HttpLink.ContextOptions` and `BatchHttpLink.ContextOptions` include `ClientAwarenessLink.ContextOptions`.
+
+- [#12650](https://github.com/apollographql/apollo-client/pull/12650) [`2a32ac6`](https://github.com/apollographql/apollo-client/commit/2a32ac6d38de2be0be6891a969ee4f5e3bbca629) Thanks [@phryneas](https://github.com/phryneas)! - Fix a situation where a passed-in `AbortSignal` would override internal unsubscription cancellation behaviour.
+
 ## 4.0.0-rc.8
 
 ### Major Changes

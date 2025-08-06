@@ -12,8 +12,21 @@ function isOperation(
  * Determine if a document is a mutation document.
  *
  * @param document - The GraphQL document to check
+ * @returns A boolean indicating if the document is a mutation operation
  *
- * @since 3.8.0
+ * @example
+ *
+ * ```ts
+ * import { isMutationOperation } from "@apollo/client/utilities";
+ *
+ * const mutation = gql`
+ *   mutation MyMutation {
+ *     # ...
+ *   }
+ * `;
+ *
+ * isMutationOperation(mutation); // true
+ * ```
  */
 export function isMutationOperation(document: DocumentNode) {
   return isOperation(document, "mutation");
@@ -23,8 +36,21 @@ export function isMutationOperation(document: DocumentNode) {
  * Determine if a document is a query document.
  *
  * @param document - The GraphQL document to check
+ * @returns A boolean indicating if the document is a query operation
  *
- * @since 3.8.0
+ * @example
+ *
+ * ```ts
+ * import { isQueryOperation } from "@apollo/client/utilities";
+ *
+ * const query = gql`
+ *   query MyQuery {
+ *     # ...
+ *   }
+ * `;
+ *
+ * isQueryOperation(query); // true
+ * ```
  */
 export function isQueryOperation(document: DocumentNode) {
   return isOperation(document, "query");
@@ -34,8 +60,21 @@ export function isQueryOperation(document: DocumentNode) {
  * Determine if a document is a subscription document.
  *
  * @param document - The GraphQL document to check
+ * @returns A boolean indicating if the document is a subscription operation
  *
- * @since 3.8.0
+ * @example
+ *
+ * ```ts
+ * import { isSubscriptionOperation } from "@apollo/client/utilities";
+ *
+ * const subscription = gql`
+ *   subscription MySubscription {
+ *     # ...
+ *   }
+ * `;
+ *
+ * isSubscriptionOperation(subscription); // true
+ * ```
  */
 export function isSubscriptionOperation(document: DocumentNode) {
   return isOperation(document, "subscription");

@@ -948,26 +948,22 @@ type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Requ
 
 export { DocumentNode }
 
-// @public (undocumented)
+// @public
 export class DocumentTransform {
     // Warning: (ae-forgotten-export) The symbol "TransformFn" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "DocumentTransformOptions" needs to be exported by the entry point index.d.ts
     constructor(transform: TransformFn, options?: DocumentTransformOptions);
-    // (undocumented)
     concat(otherTransform: DocumentTransform): DocumentTransform;
-    // (undocumented)
     static identity(): DocumentTransform;
     // @internal @deprecated
     readonly left?: DocumentTransform;
     resetCache(): void;
     // @internal @deprecated
     readonly right?: DocumentTransform;
-    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
         left: DocumentTransform;
         right: DocumentTransform;
     };
-    // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
 

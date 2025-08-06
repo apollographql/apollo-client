@@ -87,26 +87,22 @@ type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
 // @public (undocumented)
 type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
-// @public (undocumented)
+// @public
 export class DocumentTransform {
     // Warning: (ae-forgotten-export) The symbol "TransformFn" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "DocumentTransformOptions" needs to be exported by the entry point index.d.ts
     constructor(transform: TransformFn, options?: DocumentTransformOptions);
-    // (undocumented)
     concat(otherTransform: DocumentTransform): DocumentTransform;
-    // (undocumented)
     static identity(): DocumentTransform;
     // @internal @deprecated
     readonly left?: DocumentTransform;
     resetCache(): void;
     // @internal @deprecated
     readonly right?: DocumentTransform;
-    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
         left: DocumentTransform;
         right: DocumentTransform;
     };
-    // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
 
@@ -135,7 +131,7 @@ export interface HKT {
     return: unknown;
 }
 
-// @public (undocumented)
+// @public
 export function isFormattedExecutionResult(result?: object): result is FormattedExecutionResult;
 
 // @public

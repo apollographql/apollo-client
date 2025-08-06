@@ -95,15 +95,16 @@ export class BaseHttpLink extends ApolloLink {
         controller = undefined;
       };
       if (options.signal) {
+        const externalSignal = options.signal;
         // in an ideal world we could use `AbortSignal.any` here, but
         // React Native uses https://github.com/mysticatea/abort-controller as
         // a polyfill for `AbortController`, and it does not support `AbortSignal.any`.
         const abort = controller.abort.bind(controller);
-        options.signal.addEventListener("abort", abort, { once: true });
+        externalSignal.addEventListener("abort", abort, { once: true });
         cleanupController = () => {
           controller = undefined;
           // on cleanup, we need to stop listening to `options.signal` to avoid memory leaks
-          options.signal.removeEventListener("abort", abort);
+          externalSignal.removeEventListener("abort", abort);
           cleanupController = noop;
         };
         // react native also does not support the addEventListener `signal` option

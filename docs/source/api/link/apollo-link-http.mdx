@@ -14,7 +14,7 @@ description: Get GraphQL results over a network using HTTP fetch.
 
 ```ts
 constructor(
-  options: HttpLink.Options & ClientAwarenessLink.Options = {}
+  options: HttpLink.Options = {}
 ): HttpLink
 ```
 
@@ -38,16 +38,4 @@ Provide a custom [`fetch` option](#options-fetch) to the `HttpLink` constructor 
   canonicalReference="@apollo/client/link/http!HttpLink.ContextOptions:interface"
   headingLevel={3}
   displayName="HttpLink.ContextOptions"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/http!HttpLink.HttpOptions:interface"
-  headingLevel={3}
-  displayName="HttpLink.HttpOptions"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.Options:interface"
-  headingLevel={3}
-  displayName="ClientAwarenessLink.Options"
 />

@@ -2,6 +2,21 @@ import { ApolloLink } from "@apollo/client/link";
 import { compact } from "@apollo/client/utilities/internal";
 
 export declare namespace ClientAwarenessLink {
+  /**
+   * Options passed to `ClientAwarenessLink` through [request context](https://apollographql.com/docs/react/api/link/introduction#managing-context). Previous
+   * non-terminating links in the link chain also can set these values to
+   * customize the behavior of `ClientAwarenessLink` for each operation.
+   *
+   * > [!NOTE]
+   * > Some of these values can also be provided to the `ClientAwarenessLink`
+   * > constructor. If a value is provided to both, the value in `context` takes
+   * > precedence.
+   */
+  export interface ContextOptions {
+    /** {@inheritDoc @apollo/client/link/client-awareness!ClientAwarenessLink.Options#clientAwareness:member} */
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+  }
+
   export interface ClientAwarenessOptions {
     /**
      * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
@@ -94,7 +109,7 @@ export declare namespace ClientAwarenessLink {
  * ```
  */
 export class ClientAwarenessLink extends ApolloLink {
-  constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
+  constructor(options: ClientAwarenessLink.Options = {}) {
     super((operation, forward) => {
       const client = operation.client;
 
@@ -108,7 +123,7 @@ export class ClientAwarenessLink extends ApolloLink {
         } = compact(
           {},
           clientOptions.clientAwareness,
-          constructorOptions.clientAwareness,
+          options.clientAwareness,
           context.clientAwareness
         );
 
@@ -131,7 +146,7 @@ export class ClientAwarenessLink extends ApolloLink {
         const { transport = "extensions" } = compact(
           {},
           clientOptions.enhancedClientAwareness,
-          constructorOptions.enhancedClientAwareness
+          options.enhancedClientAwareness
         );
         if (transport === "extensions") {
           operation.extensions = compact(

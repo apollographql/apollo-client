@@ -10,9 +10,20 @@ const TYPENAME_FIELD: FieldNode = {
 };
 
 /**
- * Adds `__typename` to all selection sets in the document.
+ * Adds `__typename` to all selection sets in the document. The operation
+ * definition's selection set remains unchanged.
  *
  * @param doc - The `ASTNode` to add `__typename` to
+ *
+ * @example
+ *
+ * ```ts
+ * const document = gql`
+ *   # ...
+ * `;
+ *
+ * const withTypename = addTypenameToDocument(document);
+ * ```
  */
 export const addTypenameToDocument = Object.assign(
   function <TNode extends ASTNode>(doc: TNode): TNode {

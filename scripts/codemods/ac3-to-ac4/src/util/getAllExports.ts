@@ -1,95 +1,82 @@
-import * as ts from "typescript";
+import assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import assert from "assert";
+
+import * as ts from "typescript";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface ExportInfo {
   name: string;
+  moduleName: string;
   kind: string;
-  type: string;
-  typeParameters?: TypeParameterInfo[];
-  members?: ExportInfo[];
-  isReExport?: boolean;
-  sourceFile?: string;
-  documentation?: string;
+  usageExamples: string[];
 }
 
-interface TypeParameterInfo {
-  name: string;
-  constraint?: string;
-  default?: string;
-}
-
-class TypeScriptExportAnalyzer {
-  private program: ts.Program;
-  private checker: ts.TypeChecker;
-  private sourceFile: ts.SourceFile;
-
-  constructor(entryPoint: string, projectRoot: string) {
-    // Load tsconfig.json from the project root
-    const configPath = path.join(projectRoot, "tsconfig.json");
-    if (!fs.existsSync(configPath)) {
-      throw new Error(`tsconfig.json not found at: ${configPath}`);
-    }
-
-    const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
-    if (configFile.error) {
-      throw new Error(
-        `Error reading tsconfig.json: ${ts.flattenDiagnosticMessageText(
-          configFile.error.messageText,
-          "\n"
-        )}`
-      );
-    }
-
-    const parsedConfig = ts.parseJsonConfigFileContent(
-      configFile.config,
-      ts.sys,
-      projectRoot
-    );
-
-    if (parsedConfig.errors.length > 0) {
-      console.warn("tsconfig.json parsing warnings:");
-      parsedConfig.errors.forEach((error) => {
-        console.warn(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
-      });
-    }
-
-    // Create program with all files that might be needed for proper resolution
-    // Include the entry point and let TypeScript resolve all dependencies
-    const rootFiles =
-      parsedConfig.fileNames.length > 0 ? parsedConfig.fileNames : [entryPoint];
-    if (!rootFiles.includes(entryPoint)) {
-      rootFiles.push(entryPoint);
-    }
-
-    this.program = ts.createProgram(rootFiles, parsedConfig.options);
-    this.checker = this.program.getTypeChecker();
-
-    const sourceFile = this.program.getSourceFile(entryPoint);
-    if (!sourceFile) {
-      throw new Error(`Could not find source file: ${entryPoint}`);
-    }
-    this.sourceFile = sourceFile;
-
-    // Run diagnostics to ensure proper type resolution
-    ts.getPreEmitDiagnostics(this.program);
+function analyze(
+  entryPoint: string,
+  projectRoot: string,
+  moduleName = projectRoot
+): ExportInfo[] {
+  // Load tsconfig.json from the project root
+  const configPath = path.join(projectRoot, "tsconfig.json");
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`tsconfig.json not found at: ${configPath}`);
   }
 
-  public analyzeExports() {
-    const moduleSymbol = this.checker.getSymbolAtLocation(this.sourceFile);
+  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (configFile.error) {
+    throw new Error(
+      `Error reading tsconfig.json: ${ts.flattenDiagnosticMessageText(
+        configFile.error.messageText,
+        "\n"
+      )}`
+    );
+  }
+
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    projectRoot
+  );
+
+  if (parsedConfig.errors.length > 0) {
+    console.warn("tsconfig.json parsing warnings:");
+    parsedConfig.errors.forEach((error) => {
+      console.warn(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
+    });
+  }
+
+  // Create program with all files that might be needed for proper resolution
+  // Include the entry point and let TypeScript resolve all dependencies
+  const rootFiles =
+    parsedConfig.fileNames.length > 0 ? parsedConfig.fileNames : [entryPoint];
+  if (!rootFiles.includes(entryPoint)) {
+    rootFiles.push(entryPoint);
+  }
+
+  const program = ts.createProgram(rootFiles, parsedConfig.options);
+  const checker = program.getTypeChecker();
+
+  const sourceFile = program.getSourceFile(entryPoint)!;
+
+  // Run diagnostics to ensure proper type resolution
+  ts.getPreEmitDiagnostics(program);
+
+  return analyzeExports();
+
+  function analyzeExports(): ExportInfo[] {
+    const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
+    const info = new Map<string, ExportInfo>();
 
     if (moduleSymbol && moduleSymbol.exports) {
       moduleSymbol.exports.forEach((symbol, name) => {
-        this.analyzeSymbol(symbol, name.toString());
+        info.set(name.toString(), analyzeExport(symbol, name.toString()));
       });
     }
     // Look for export statements
-    ts.forEachChild(this.sourceFile, (node) => {
+    ts.forEachChild(sourceFile, (node) => {
       if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
         const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text;
 
@@ -99,23 +86,37 @@ class TypeScriptExportAnalyzer {
             const originalName = specifier.propertyName?.text || exportName;
 
             // Try to resolve the actual symbol being re-exported
-            const resolvedSymbol = this.resolveReExportedSymbol(
+            const resolvedSymbol = resolveReExportedSymbol(
               moduleSpecifier,
               originalName
             );
 
             if (resolvedSymbol) {
-              this.analyzeSymbol(resolvedSymbol, exportName);
+              info.set(exportName, analyzeExport(resolvedSymbol, exportName));
             }
           });
         }
       }
     });
+    return [...info.values()];
   }
 
-  private analyzeSymbol(symbol: ts.Symbol, name: string): void {
+  function analyzeExport(symbol: ts.Symbol, name: string): ExportInfo {
+    return {
+      name,
+      moduleName,
+      kind: ts.SymbolFlags[symbol.flags],
+      usageExamples: Array.from(collectUsageExamples(symbol, name)),
+    };
+  }
+
+  function* collectUsageExamples(
+    symbol: ts.Symbol,
+    name: string
+  ): Generator<string, void, unknown> {
     if (symbol.flags & ts.SymbolFlags.Alias) {
-      return this.analyzeSymbol(this.checker.getAliasedSymbol(symbol), name);
+      yield* collectUsageExamples(checker.getAliasedSymbol(symbol), name);
+      return;
     }
 
     const declaration = symbol.valueDeclaration || symbol.declarations?.[0];
@@ -124,17 +125,6 @@ class TypeScriptExportAnalyzer {
       return;
     }
 
-    if (!name.includes(".")) {
-      console.log(`
-test("${name}", () => {
-  expect(
-    applyTransform(
-      imports,
-      {},
-      { source: ts\``);
-
-      console.log(`import {${name}} from "${this.sourceFile.fileName}";`);
-    }
     let typeParameters = "";
     if (
       (ts.isInterfaceDeclaration(declaration) ||
@@ -159,7 +149,7 @@ test("${name}", () => {
       ts.isInterfaceDeclaration(declaration) ||
       ts.isTypeAliasDeclaration(declaration)
     ) {
-      console.log(`type ${identifierUc} = ${name}${typeParameters};`);
+      yield `type ${identifierUc} = ${name}${typeParameters};`;
     } else if (ts.isClassDeclaration(declaration)) {
       const constructor = declaration.members.find((member) =>
         ts.isConstructorDeclaration(member)
@@ -172,31 +162,27 @@ test("${name}", () => {
             )
             .join(", ")
         : "";
-      console.log(`class ${identifierUc} extends ${name}${typeParameters} {}`);
-      console.log(
-        `const ${identifierLc} = new ${name}${typeParameters}(${constructorParams})`
-      );
+      yield `class ${identifierUc} extends ${name}${typeParameters} {}`;
+      yield `const ${identifierLc} = new ${name}${typeParameters}(${constructorParams})`;
     } else if (
       ts.isFunctionDeclaration(declaration) ||
       ts.isArrowFunction(declaration) ||
       ts.isFunctionExpression(declaration)
     ) {
-      console.log(
-        `${name}${typeParameters}(${declaration.parameters
-          .map((param, id) =>
-            ts.isIdentifier(param.name) ? param.name.text : `param${id}`
-          )
-          .join(", ")})`
-      );
+      yield `${name}${typeParameters}(${declaration.parameters
+        .map((param, id) =>
+          ts.isIdentifier(param.name) ? param.name.text : `param${id}`
+        )
+        .join(", ")})`;
     } else if (ts.isModuleDeclaration(declaration)) {
-      console.log(`const ${identifierUc} = ${name};`);
+      yield `const ${identifierUc} = ${name};`;
       for (const [childName, childSymbol] of symbol.exports || []) {
-        this.analyzeSymbol(childSymbol, `${name}.${childName.toString()}`);
+        collectUsageExamples(childSymbol, `${name}.${childName.toString()}`);
       }
     } else if (ts.isEnumDeclaration(declaration)) {
-      console.log(`type ${identifierUc} = ${name};`);
+      yield `type ${identifierUc} = ${name};`;
     } else if (ts.isVariableDeclaration(declaration)) {
-      console.log(`const ${identifierUc} = ${name};`);
+      yield `const ${identifierUc} = ${name};`;
     } else {
       throw new Error(
         `Unsupported declaration type for symbol ${name}: ${
@@ -204,30 +190,24 @@ test("${name}", () => {
         } - ${ts.SyntaxKind[declaration.kind]}`
       );
     }
-    if (!name.includes(".")) {
-      console.log(`\`.trim()
-      },
-      { parser: "ts" }
-    )
-  ).toMatchInlineSnapshot();
-});
-`);
-    }
   }
 
-  private resolveReExportedSymbol(moduleSpecifier: string, symbolName: string) {
+  function resolveReExportedSymbol(
+    moduleSpecifier: string,
+    symbolName: string
+  ) {
     // Use the more advanced module resolution that handles package.json exports
     const resolvedModule = ts.resolveModuleName(
       moduleSpecifier,
-      this.sourceFile.fileName,
-      this.program.getCompilerOptions(),
+      sourceFile.fileName,
+      program.getCompilerOptions(),
       ts.sys
     );
     assert(resolvedModule.resolvedModule);
     const resolvedFileName = resolvedModule.resolvedModule.resolvedFileName;
-    const targetSourceFile = this.program.getSourceFile(resolvedFileName);
+    const targetSourceFile = program.getSourceFile(resolvedFileName);
     assert(targetSourceFile);
-    const moduleSymbol = this.checker.getSymbolAtLocation(targetSourceFile);
+    const moduleSymbol = checker.getSymbolAtLocation(targetSourceFile);
     assert(moduleSymbol?.exports);
     const symbol = moduleSymbol.exports.get(symbolName as ts.__String);
     assert(symbol);
@@ -235,51 +215,66 @@ test("${name}", () => {
   }
 }
 
+function writeTest(exports: ExportInfo[], moduleName: string) {
+  fs.writeFileSync(
+    path.join(
+      import.meta.dirname,
+      "..",
+      "__tests__",
+      `${moduleName.replace(/[@\/]/g, "_")}.generated.ts`
+    ),
+    `
+import { describe, expect, test } from "vitest";
+
+import imports from "../imports.js";
+
+import { createDiff } from "./diffTransform.js";
+
+const diff = createDiff(imports);
+describe("@apollo/client", () => {
+
+
+${exports
+  .map(
+    (info) => `
+  test("${info.name}", () => {
+    expect(
+      diff(
+        \`
+import { ${info.name} } from "${info.moduleName}";
+${info.usageExamples.join("\n")}
+\`.trim()
+      )
+    ).toMatchSnapshot();
+  });
+`
+  )
+  .join("\n")}
+});
+`
+  );
+}
+
 const args = process.argv.slice(2);
 const projectRoot = path.join(import.meta.dirname, "../../../../..");
 
-if (args.length < 1) {
-  console.error("Usage: tsx export-analyzer.ts <entry-point.ts>");
+if (args.length < 2) {
+  console.error(
+    "Usage: tsx export-analyzer.ts src/cache/index.ts @apollo/client/cache"
+  );
   console.error("       The tool will look for tsconfig.json in ", projectRoot);
   process.exit(1);
 }
 
-const entryPoint = args[0];
+const [entryPoint, moduleName] = args;
 // Resolve entry point relative to project root if not absolute
 const resolvedEntryPoint =
   path.isAbsolute(entryPoint) ? entryPoint : (
     path.resolve(projectRoot, entryPoint)
   );
 
-if (!fs.existsSync(resolvedEntryPoint)) {
-  console.error(`Entry point not found: ${resolvedEntryPoint}`);
-  process.exit(1);
-}
+assert(fs.existsSync(resolvedEntryPoint));
+assert(fs.existsSync(projectRoot));
 
-if (!fs.existsSync(projectRoot)) {
-  console.error(`Project root not found: ${projectRoot}`);
-  process.exit(1);
-}
-
-console.log(
-  `
-import { applyTransform } from "jscodeshift/dist/testUtils";
-import { expect, test  } from "vitest";
-
-import imports from "../imports.js";
-
-function ts(code: TemplateStringsArray): string {
-  return code[0];
-}
-  `.trim()
-);
-
-const overrideAs = args[1];
-if (overrideAs) {
-  const orig = console.log;
-  console.log = (...[first, ...rest]) => {
-    orig(first.replaceAll(resolvedEntryPoint, overrideAs), ...rest);
-  };
-}
-
-new TypeScriptExportAnalyzer(resolvedEntryPoint, projectRoot).analyzeExports();
+const exports = analyze(resolvedEntryPoint, projectRoot, moduleName);
+writeTest(exports, moduleName);

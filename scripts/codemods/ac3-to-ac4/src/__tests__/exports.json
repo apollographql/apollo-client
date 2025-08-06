@@ -3373,7 +3373,7 @@
   "@apollo/client/link/batch": [
     {
       "name": "BatchableRequest",
-      "moduleName": "@apollo/client/batch",
+      "moduleName": "@apollo/client/link/batch",
       "kind": "Interface",
       "usageExamples": [
         "type _Test_BatchableRequest = BatchableRequest;"
@@ -3381,7 +3381,7 @@
     },
     {
       "name": "BatchHandler",
-      "moduleName": "@apollo/client/batch",
+      "moduleName": "@apollo/client/link/batch",
       "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_BatchHandler = BatchHandler;"
@@ -3389,7 +3389,7 @@
     },
     {
       "name": "OperationBatcher",
-      "moduleName": "@apollo/client/batch",
+      "moduleName": "@apollo/client/link/batch",
       "kind": "Class",
       "usageExamples": [
         "class _Test_OperationBatcher extends OperationBatcher {}",
@@ -3398,7 +3398,7 @@
     },
     {
       "name": "BatchLink",
-      "moduleName": "@apollo/client/batch",
+      "moduleName": "@apollo/client/link/batch",
       "usageExamples": [
         "class _Test_BatchLink extends BatchLink {}",
         "const _test_BatchLink = new BatchLink(fetchParams)"
@@ -3408,7 +3408,7 @@
   "@apollo/client/link/batch-http": [
     {
       "name": "BatchHttpLink",
-      "moduleName": "@apollo/client/batch-http",
+      "moduleName": "@apollo/client/link/batch-http",
       "usageExamples": [
         "class _Test_BatchHttpLink extends BatchHttpLink {}",
         "const _test_BatchHttpLink = new BatchHttpLink(fetchParams)"
@@ -3418,7 +3418,7 @@
   "@apollo/client/link/context": [
     {
       "name": "setContext",
-      "moduleName": "@apollo/client/context",
+      "moduleName": "@apollo/client/link/context",
       "kind": "Function",
       "usageExamples": [
         "setContext(setter)"
@@ -3426,7 +3426,7 @@
     },
     {
       "name": "ContextSetter",
-      "moduleName": "@apollo/client/context",
+      "moduleName": "@apollo/client/link/context",
       "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_ContextSetter = ContextSetter;"
@@ -6634,7 +6634,7 @@
   "@apollo/client/utilities/subscriptions/relay": [
     {
       "name": "createFetchMultipartSubscription",
-      "moduleName": "@apollo/client/utilities/subscriptions",
+      "moduleName": "@apollo/client/utilities/subscriptions/relay",
       "kind": "Function",
       "usageExamples": [
         "createFetchMultipartSubscription(uri, param1)"

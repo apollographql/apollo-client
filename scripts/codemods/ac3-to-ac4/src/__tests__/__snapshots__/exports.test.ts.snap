@@ -28,7 +28,7 @@ exports[`all exports > @apollo/client 1`] = `
    UpdateQueryMapFn,
    UpdateQueryOptions,
    SubscribeToMoreUpdateQueryFn,
-@@ -80,17 +73,14 @@
+@@ -78,17 +71,14 @@
    RefetchQueryDescriptor,
    InternalRefetchQueryDescriptor,
    RefetchQueriesInclude,
@@ -46,7 +46,7 @@ exports[`all exports > @apollo/client 1`] = `
    MutationQueryReducersMap,
    MutationUpdaterFn,
    MutationUpdaterFunction,
-@@ -106,12 +96,8 @@
+@@ -104,12 +94,8 @@
    ApolloReducerConfig,
    MergeInfo,
    MergeTree,
@@ -59,7 +59,7 @@ exports[`all exports > @apollo/client 1`] = `
    ApolloLink,
    DocumentNode,
    Path,
-@@ -119,14 +105,10 @@
+@@ -117,14 +103,10 @@
    IncrementalPayload,
    ExecutionPatchIncrementalResult,
    ApolloPayloadResult,
@@ -74,7 +74,7 @@ exports[`all exports > @apollo/client 1`] = `
    parseAndCheckHttpResponse,
    ClientParseError,
    serializeFetchParameter,
-@@ -141,107 +123,84 @@
+@@ -139,107 +121,84 @@
    selectURI,
    createHttpLink,
    HttpLink,
@@ -218,7 +218,7 @@ exports[`all exports > @apollo/client 1`] = `
  type _Test_UpdateQueryMapFn = UpdateQueryMapFn<TData, TVariables>;
  type _Test_UpdateQueryOptions = UpdateQueryOptions<TData, TVariables>;
  type _Test_SubscribeToMoreUpdateQueryFn = SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
-@@ -310,17 +269,17 @@
+@@ -306,17 +265,17 @@
  type _Test_RefetchQueryDescriptor = RefetchQueryDescriptor;
  type _Test_InternalRefetchQueryDescriptor = InternalRefetchQueryDescriptor;
  type _Test_RefetchQueriesInclude = RefetchQueriesInclude;
@@ -239,7 +239,7 @@ exports[`all exports > @apollo/client 1`] = `
  type _Test_MutationQueryReducersMap = MutationQueryReducersMap<T>;
  type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;
  type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-@@ -336,12 +295,12 @@
+@@ -332,12 +291,12 @@
  type _Test_ApolloReducerConfig = ApolloReducerConfig;
  type _Test_MergeInfo = MergeInfo;
  type _Test_MergeTree = MergeTree;
@@ -256,7 +256,7 @@ exports[`all exports > @apollo/client 1`] = `
  class _Test_ApolloLink extends ApolloLink {}
  const _test_ApolloLink = new ApolloLink(request)
  type _Test_DocumentNode = DocumentNode;
-@@ -350,14 +309,14 @@
+@@ -346,14 +305,14 @@
  type _Test_IncrementalPayload = IncrementalPayload<TData, TExtensions>;
  type _Test_ExecutionPatchIncrementalResult = ExecutionPatchIncrementalResult<TData, TExtensions>;
  type _Test_ApolloPayloadResult = ApolloPayloadResult<TData, TExtensions>;
@@ -275,7 +275,7 @@ exports[`all exports > @apollo/client 1`] = `
  parseAndCheckHttpResponse(operations)
  type _Test_ClientParseError = ClientParseError;
  const _Test_serializeFetchParameter = serializeFetchParameter;
-@@ -389,19 +348,19 @@
+@@ -385,19 +344,19 @@
  createQueryPreloader(client)
  useQuery<TData, TVariables>(query, options)
  type _Test_UseSuspenseQueryResult = UseSuspenseQueryResult<TData, TVariables>;
@@ -302,7 +302,7 @@ exports[`all exports > @apollo/client 1`] = `
  const _Test_skipToken = skipToken;
  type _Test_SkipToken = SkipToken;
  useApolloClient(override)
-@@ -409,47 +368,47 @@
+@@ -405,47 +364,47 @@
  useMutation<TData, TVariables, TContext, TCache>(mutation, options)
  useSubscription<TData, TVariables>(subscription, options)
  useReactiveVar<T>(rv)
@@ -375,22 +375,6 @@ exports[`all exports > @apollo/client 1`] = `
 "
 `;
 
-exports[`all exports > @apollo/client/batch 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`all exports > @apollo/client/batch-http 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
 exports[`all exports > @apollo/client/cache 1`] = `
 "Index: test.ts
 ===================================================================
@@ -425,14 +409,6 @@ exports[`all exports > @apollo/client/cache 1`] = `
 "
 `;
 
-exports[`all exports > @apollo/client/context 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
 exports[`all exports > @apollo/client/core 1`] = `
 "Index: test.ts
 ===================================================================
@@ -461,7 +437,7 @@ exports[`all exports > @apollo/client/core 1`] = `
    UpdateQueryMapFn,
    UpdateQueryOptions,
    SubscribeToMoreUpdateQueryFn,
-@@ -80,17 +73,14 @@
+@@ -78,17 +71,14 @@
    RefetchQueryDescriptor,
    InternalRefetchQueryDescriptor,
    RefetchQueriesInclude,
@@ -479,7 +455,7 @@ exports[`all exports > @apollo/client/core 1`] = `
    MutationQueryReducersMap,
    MutationUpdaterFn,
    MutationUpdaterFunction,
-@@ -106,12 +96,8 @@
+@@ -104,12 +94,8 @@
    ApolloReducerConfig,
    MergeInfo,
    MergeTree,
@@ -492,7 +468,7 @@ exports[`all exports > @apollo/client/core 1`] = `
    ApolloLink,
    DocumentNode,
    Path,
-@@ -119,14 +105,10 @@
+@@ -117,14 +103,10 @@
    IncrementalPayload,
    ExecutionPatchIncrementalResult,
    ApolloPayloadResult,
@@ -507,7 +483,7 @@ exports[`all exports > @apollo/client/core 1`] = `
    parseAndCheckHttpResponse,
    ClientParseError,
    serializeFetchParameter,
-@@ -140,29 +122,29 @@
+@@ -138,29 +120,29 @@
    createSignalIfSupported,
    selectURI,
    createHttpLink,
@@ -546,7 +522,7 @@ exports[`all exports > @apollo/client/core 1`] = `
  type _Test_UpdateQueryMapFn = UpdateQueryMapFn<TData, TVariables>;
  type _Test_UpdateQueryOptions = UpdateQueryOptions<TData, TVariables>;
  type _Test_SubscribeToMoreUpdateQueryFn = SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
-@@ -231,17 +213,17 @@
+@@ -227,17 +209,17 @@
  type _Test_RefetchQueryDescriptor = RefetchQueryDescriptor;
  type _Test_InternalRefetchQueryDescriptor = InternalRefetchQueryDescriptor;
  type _Test_RefetchQueriesInclude = RefetchQueriesInclude;
@@ -567,7 +543,7 @@ exports[`all exports > @apollo/client/core 1`] = `
  type _Test_MutationQueryReducersMap = MutationQueryReducersMap<T>;
  type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;
  type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-@@ -257,12 +239,12 @@
+@@ -253,12 +235,12 @@
  type _Test_ApolloReducerConfig = ApolloReducerConfig;
  type _Test_MergeInfo = MergeInfo;
  type _Test_MergeTree = MergeTree;
@@ -584,7 +560,7 @@ exports[`all exports > @apollo/client/core 1`] = `
  class _Test_ApolloLink extends ApolloLink {}
  const _test_ApolloLink = new ApolloLink(request)
  type _Test_DocumentNode = DocumentNode;
-@@ -271,14 +253,14 @@
+@@ -267,14 +249,14 @@
  type _Test_IncrementalPayload = IncrementalPayload<TData, TExtensions>;
  type _Test_ExecutionPatchIncrementalResult = ExecutionPatchIncrementalResult<TData, TExtensions>;
  type _Test_ApolloPayloadResult = ApolloPayloadResult<TData, TExtensions>;
@@ -619,6 +595,41 @@ exports[`all exports > @apollo/client/errors 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+"
+`;
+
+exports[`all exports > @apollo/client/link/batch 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`all exports > @apollo/client/link/batch-http 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`all exports > @apollo/client/link/context 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+@@ -1,6 +1,6 @@
+ import {
+   setContext,
+-  ContextSetter
++  SetContextLink
+ } from "@apollo/client/link/context";
+ setContext(setter)
+-type _Test_ContextSetter = ContextSetter;
+\\ No newline at end of file
++type _Test_ContextSetter = SetContextLink.LegacyContextSetter;
+\\ No newline at end of file
 "
 `;
 
@@ -1427,7 +1438,7 @@ exports[`all exports > @apollo/client/utilities/globals 1`] = `
 "
 `;
 
-exports[`all exports > @apollo/client/utilities/subscriptions 1`] = `
+exports[`all exports > @apollo/client/utilities/subscriptions/relay 1`] = `
 "Index: test.ts
 ===================================================================
 --- test.ts	original
@@ -1626,14 +1637,6 @@ exports[`individual exports > @apollo/client > CommonOptions 1`] = `
 `;
 
 exports[`individual exports > @apollo/client > Context 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client > CustomHKT 1`] = `
 "Index: test.ts
 ===================================================================
 --- test.ts	original
@@ -2885,14 +2888,6 @@ exports[`individual exports > @apollo/client > Transaction 1`] = `
 "
 `;
 
-exports[`individual exports > @apollo/client > TypeOverrides 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
 exports[`individual exports > @apollo/client > TypePolicies 1`] = `
 "Index: test.ts
 ===================================================================
@@ -3648,46 +3643,6 @@ exports[`individual exports > @apollo/client > useSuspenseQuery 1`] = `
 "
 `;
 
-exports[`individual exports > @apollo/client/batch > BatchHandler 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client/batch > BatchLink 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client/batch > BatchableRequest 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client/batch > OperationBatcher 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client/batch-http > BatchHttpLink 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
 exports[`individual exports > @apollo/client/cache > ApolloCache 1`] = `
 "Index: test.ts
 ===================================================================
@@ -4078,22 +4033,6 @@ exports[`individual exports > @apollo/client/cache > makeVar 1`] = `
 "
 `;
 
-exports[`individual exports > @apollo/client/context > ContextSetter 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
-exports[`individual exports > @apollo/client/context > setContext 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-"
-`;
-
 exports[`individual exports > @apollo/client/core > ApolloCache 1`] = `
 "Index: test.ts
 ===================================================================
@@ -4228,19 +4167,6 @@ exports[`individual exports > @apollo/client/core > ClientParseError 1`] = `
 -import { ClientParseError } from "@apollo/client/core";
 +import { ClientParseError } from "@apollo/client";
  type _Test_ClientParseError = ClientParseError;
-\\ No newline at end of file
-"
-`;
-
-exports[`individual exports > @apollo/client/core > CustomHKT 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-@@ -1,2 +1,2 @@
--import { CustomHKT } from "@apollo/client/core";
-+import { CustomHKT } from "@apollo/client";
- type _Test_CustomHKT = CustomHKT;
 \\ No newline at end of file
 "
 `;
@@ -5403,19 +5329,6 @@ exports[`individual exports > @apollo/client/core > Transaction 1`] = `
 "
 `;
 
-exports[`individual exports > @apollo/client/core > TypeOverrides 1`] = `
-"Index: test.ts
-===================================================================
---- test.ts	original
-+++ test.ts	transformed
-@@ -1,2 +1,2 @@
--import { TypeOverrides } from "@apollo/client/core";
-+import { TypeOverrides } from "@apollo/client";
- type _Test_TypeOverrides = TypeOverrides;
-\\ No newline at end of file
-"
-`;
-
 exports[`individual exports > @apollo/client/core > TypePolicies 1`] = `
 "Index: test.ts
 ===================================================================
@@ -6087,6 +6000,69 @@ exports[`individual exports > @apollo/client/errors > graphQLResultHasProtocolEr
 `;
 
 exports[`individual exports > @apollo/client/errors > isApolloError 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/batch > BatchHandler 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/batch > BatchLink 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/batch > BatchableRequest 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/batch > OperationBatcher 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/batch-http > BatchHttpLink 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+"
+`;
+
+exports[`individual exports > @apollo/client/link/context > ContextSetter 1`] = `
+"Index: test.ts
+===================================================================
+--- test.ts	original
++++ test.ts	transformed
+@@ -1,2 +1,2 @@
+-import { ContextSetter } from "@apollo/client/link/context";
+-type _Test_ContextSetter = ContextSetter;
+\\ No newline at end of file
++import { SetContextLink } from "@apollo/client/link/context";
++type _Test_ContextSetter = SetContextLink.LegacyContextSetter;
+\\ No newline at end of file
+"
+`;
+
+exports[`individual exports > @apollo/client/link/context > setContext 1`] = `
 "Index: test.ts
 ===================================================================
 --- test.ts	original
@@ -10149,7 +10125,7 @@ exports[`individual exports > @apollo/client/utilities/globals > newInvariantErr
 "
 `;
 
-exports[`individual exports > @apollo/client/utilities/subscriptions > createFetchMultipartSubscription 1`] = `
+exports[`individual exports > @apollo/client/utilities/subscriptions/relay > createFetchMultipartSubscription 1`] = `
 "Index: test.ts
 ===================================================================
 --- test.ts	original

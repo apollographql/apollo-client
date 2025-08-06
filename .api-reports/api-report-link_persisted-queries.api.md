@@ -16,60 +16,45 @@ export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => 
 export namespace PersistedQueryLink {
     // (undocumented)
     export namespace Base {
-        // (undocumented)
         export interface Options {
-            // (undocumented)
             disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
-            // (undocumented)
             retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
-            // (undocumented)
             useGETForHashedQueries?: boolean;
         }
     }
-    // (undocumented)
     export interface DisableFunctionOptions extends PersistedQueryLink.RetryFunctionOptions {
     }
-    // (undocumented)
     export interface ErrorMeta {
-        // (undocumented)
         persistedQueryNotFound: boolean;
-        // (undocumented)
         persistedQueryNotSupported: boolean;
     }
-    // (undocumented)
     export type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
-    // (undocumented)
     export interface GenerateHashOptions extends Base.Options {
-        // (undocumented)
         generateHash: PersistedQueryLink.GenerateHashFunction;
         // (undocumented)
         sha256?: never;
     }
-    // (undocumented)
     export type Options = PersistedQueryLink.SHA256Options | PersistedQueryLink.GenerateHashOptions;
     // (undocumented)
+    export namespace PersistedQueryLinkDocumentationTypes {
+        export function GenerateHashFunction(document: DocumentNode): string | PromiseLike<string>;
+        export function SHA256Function(queryString: string): string | PromiseLike<string>;
+    }
     export interface RetryFunctionOptions {
-        // (undocumented)
         error: ErrorLike;
-        // (undocumented)
         meta: PersistedQueryLink.ErrorMeta;
-        // (undocumented)
         operation: ApolloLink.Operation;
-        // (undocumented)
         result?: FormattedExecutionResult;
     }
-    // (undocumented)
     export type SHA256Function = (queryString: string) => string | PromiseLike<string>;
-    // (undocumented)
     export interface SHA256Options extends Base.Options {
         // (undocumented)
         generateHash?: never;
-        // (undocumented)
         sha256: PersistedQueryLink.SHA256Function;
     }
 }
 
-// @public (undocumented)
+// @public
 export class PersistedQueryLink extends ApolloLink {
     constructor(options: PersistedQueryLink.Options);
     // (undocumented)

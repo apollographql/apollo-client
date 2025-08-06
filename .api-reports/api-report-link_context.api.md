@@ -11,15 +11,17 @@ export function setContext(setter: SetContextLink.LegacyContextSetter): SetConte
 
 // @public (undocumented)
 export namespace SetContextLink {
+    export type ContextSetter = (prevContext: Readonly<ApolloLink.OperationContext>, operation: SetContextLink.SetContextOperation) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
+    // @deprecated (undocumented)
+    export type LegacyContextSetter = (operation: SetContextLink.SetContextOperation, prevContext: Readonly<ApolloLink.OperationContext>) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
     // (undocumented)
-    export type ContextSetter = (prevContext: ApolloLink.OperationContext, operation: SetContextOperation) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
-    // (undocumented)
-    export type LegacyContextSetter = (operation: SetContextOperation, prevContext: ApolloLink.OperationContext) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
-    // (undocumented)
+    export namespace SetContextLinkDocumentationTypes {
+        export function ContextSetter(prevContext: Readonly<ApolloLink.OperationContext>, operation: SetContextLink.SetContextOperation): Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
+    }
     export type SetContextOperation = Omit<ApolloLink.Operation, "getContext" | "setContext">;
 }
 
-// @public (undocumented)
+// @public
 export class SetContextLink extends ApolloLink {
     constructor(setter: SetContextLink.ContextSetter);
 }

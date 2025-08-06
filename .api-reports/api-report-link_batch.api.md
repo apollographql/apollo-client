@@ -9,9 +9,7 @@ import type { Observable } from 'rxjs';
 
 // @public (undocumented)
 export namespace BatchLink {
-    // (undocumented)
     export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
-    // (undocumented)
     export interface Options extends Shared.Options {
         batchHandler?: BatchLink.BatchHandler;
         batchMax?: number;
@@ -27,9 +25,9 @@ export namespace BatchLink {
     }
 }
 
-// @public (undocumented)
+// @public
 export class BatchLink extends ApolloLink {
-    constructor(fetchParams?: BatchLink.Options);
+    constructor(options?: BatchLink.Options);
     // (undocumented)
     request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
 }

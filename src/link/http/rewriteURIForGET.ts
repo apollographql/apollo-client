@@ -1,8 +1,8 @@
-import type { HttpLink } from "./HttpLink.js";
+import type { BaseHttpLink } from "./BaseHttpLink.js";
 
 // For GET operations, returns the given URI rewritten with parameters, or a
 // parse error.
-export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body) {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body) {
   // Implement the standard HTTP GET serialization, plus 'extensions'. Note
   // the extra level of JSON serialization!
   const queryParams: string[] = [];

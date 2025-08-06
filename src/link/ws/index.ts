@@ -8,30 +8,79 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 export declare namespace WebSocketLink {
   /**
-   * Configuration to use when constructing the subscription client (subscriptions-transport-ws).
+   * Configuration options for creating a `WebSocketLink` instance.
+   *
+   * @remarks
+   *
+   * These configuration options are used when creating a `WebSocketLink` without
+   * providing an existing `SubscriptionClient` instance. The options are passed
+   * directly to the `SubscriptionClient` constructor from the `subscriptions-transport-ws`
+   * library.
    */
   export interface Configuration {
     /**
-     * The endpoint to connect to.
+     * The WebSocket endpoint URI to connect to.
+     *
+     * This should be a valid WebSocket URI (starting with `ws://` or `wss://`)
+     * that points to your GraphQL subscription endpoint.
+     *
+     * @example "ws://localhost:4000/subscriptions"
+     * @example "wss://api.example.com/graphql"
      */
     uri: string;
 
     /**
-     * Options to pass when constructing the subscription client.
+     * Configuration options passed to the underlying `SubscriptionClient`.
+     *
+     * These options configure the WebSocket connection behavior, including
+     * reconnection settings, connection parameters, and event handlers.
+     *
+     * For a complete list of available options, see the
+     * [supported `subscriptions-transport-ws` options](https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L61-L71).
      */
     options?: ClientOptions;
 
     /**
-     * A custom WebSocket implementation to use.
+     * A custom WebSocket implementation to use for the connection.
+     *
+     * This is useful in environments that don't have native WebSocket support.
+     * You can provide a WebSocket polyfill or implementation that conforms to
+     * the W3C WebSocket API.
+     *
+     * @example
+     *
+     * ```ts
+     * import WebSocket from "ws";
+     *
+     * const wsLink = new WebSocketLink({
+     *   uri: "ws://localhost:4000/subscriptions",
+     *   webSocketImpl: WebSocket,
+     * });
+     * ```
      */
     webSocketImpl?: any;
   }
 }
 
-// For backwards compatibility.
-export import WebSocketParams = WebSocketLink.Configuration;
-
 /**
+ * `WebSocketLink` is a terminating link that executes GraphQL operations over
+ * WebSocket connections using the `subscriptions-transport-ws` library. It's
+ * primarily used for GraphQL subscriptions but can also handle queries and
+ * mutations.
+ *
+ * @example
+ *
+ * ```ts
+ * import { WebSocketLink } from "@apollo/client/link/ws";
+ * import { SubscriptionClient } from "subscriptions-transport-ws";
+ *
+ * const wsLink = new WebSocketLink(
+ *   new SubscriptionClient("ws://localhost:4000/subscriptions", {
+ *     reconnect: true,
+ *   })
+ * );
+ * ```
+ *
  * @deprecated `WebSocketLink` uses the deprecated and unmaintained
  * `subscriptions-transport-ws` library. This link is no longer maintained and
  * will be removed in a future major version of Apollo Client. We recommend

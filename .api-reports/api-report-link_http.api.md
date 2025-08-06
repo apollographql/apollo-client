@@ -7,57 +7,10 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import type { print as print_2 } from '@apollo/client/utilities';
+import type { print as print_2 } from 'graphql';
 
 // @public (undocumented)
-export class BaseHttpLink extends ApolloLink {
-    constructor(linkOptions?: HttpLink.Options);
-}
-
-// @public (undocumented)
-export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
-
-// @public @deprecated (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
-
-// @public @deprecated (undocumented)
-export const createSignalIfSupported: () => {
-    controller: boolean;
-    signal: boolean;
-} | {
-    controller: AbortController;
-    signal: AbortSignal;
-};
-
-// @public (undocumented)
-export const defaultPrinter: HttpLink.Printer;
-
-// @public (undocumented)
-export const fallbackHttpConfig: {
-    http: HttpLink.HttpOptions;
-    headers: {
-        accept: string;
-        "content-type": string;
-    };
-    options: {
-        method: string;
-    };
-};
-
-// @public (undocumented)
-interface HttpConfig {
-    // (undocumented)
-    credentials?: any;
-    // (undocumented)
-    headers?: Record<string, string>;
-    // (undocumented)
-    http?: HttpLink.HttpOptions;
-    // (undocumented)
-    options?: any;
-}
-
-// @public (undocumented)
-export namespace HttpLink {
+export namespace BaseHttpLink {
     // (undocumented)
     export interface Body {
         // (undocumented)
@@ -73,8 +26,8 @@ export namespace HttpLink {
         credentials?: RequestCredentials;
         fetchOptions?: RequestInit;
         headers?: Record<string, string>;
-        http?: HttpLink.HttpOptions;
-        uri?: string | HttpLink.UriFunction;
+        http?: BaseHttpLink.HttpOptions;
+        uri?: string | BaseHttpLink.UriFunction;
     }
     export interface HttpOptions {
         accept?: string[];
@@ -97,8 +50,8 @@ export namespace HttpLink {
             includeExtensions?: boolean;
             includeUnusedVariables?: boolean;
             preserveHeaderCase?: boolean;
-            print?: HttpLink.Printer;
-            uri?: string | HttpLink.UriFunction;
+            print?: BaseHttpLink.Printer;
+            uri?: string | BaseHttpLink.UriFunction;
         }
     }
     // (undocumented)
@@ -106,15 +59,70 @@ export namespace HttpLink {
 }
 
 // @public
+export class BaseHttpLink extends ApolloLink {
+    constructor(options?: BaseHttpLink.Options);
+}
+
+// @public (undocumented)
+export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
+
+// @public @deprecated (undocumented)
+export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
+
+// @public @deprecated (undocumented)
+export const createSignalIfSupported: () => {
+    controller: boolean;
+    signal: boolean;
+} | {
+    controller: AbortController;
+    signal: AbortSignal;
+};
+
+// @public (undocumented)
+export const defaultPrinter: BaseHttpLink.Printer;
+
+// @public (undocumented)
+export const fallbackHttpConfig: {
+    http: BaseHttpLink.HttpOptions;
+    headers: {
+        accept: string;
+        "content-type": string;
+    };
+    options: {
+        method: string;
+    };
+};
+
+// @public (undocumented)
+interface HttpConfig {
+    // (undocumented)
+    credentials?: any;
+    // (undocumented)
+    headers?: Record<string, string>;
+    // (undocumented)
+    http?: BaseHttpLink.HttpOptions;
+    // (undocumented)
+    options?: any;
+}
+
+// @public (undocumented)
+export namespace HttpLink {
+    export interface ContextOptions extends BaseHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
+    }
+    export interface Options extends BaseHttpLink.Options, ClientAwarenessLink.Options {
+    }
+}
+
+// @public
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
+    constructor(options?: HttpLink.Options);
 }
 
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -127,13 +135,13 @@ export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
 // @public (undocumented)
 export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: BaseHttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)

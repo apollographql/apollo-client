@@ -11,24 +11,18 @@ import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 // @public (undocumented)
 export namespace WebSocketLink {
-    export interface WebSocketParams {
+    export interface Configuration {
         options?: ClientOptions;
         uri: string;
         webSocketImpl?: any;
     }
 }
 
-// @public @deprecated (undocumented)
+// @public @deprecated
 export class WebSocketLink extends ApolloLink {
     constructor(paramsOrClient: WebSocketLink.Configuration | SubscriptionClient);
     // (undocumented)
     request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
-}
-
-export interface WebSocketParams {
-    options?: ClientOptions;
-    uri: string;
-    webSocketImpl?: any;
 }
 
 // (No @packageDocumentation comment for this package)

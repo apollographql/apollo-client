@@ -21,6 +21,7 @@ import { Observable } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { OperationTypeNode } from 'graphql';
+import type { print as print_2 } from 'graphql';
 import { resetCaches } from 'graphql-tag';
 import type { SelectionSetNode } from 'graphql';
 import type { Subscribable } from 'rxjs';
@@ -486,6 +487,61 @@ type AsStoreObject<T extends {
 };
 
 // @public (undocumented)
+namespace BaseHttpLink {
+    // (undocumented)
+    interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: BaseHttpLink.HttpOptions;
+        uri?: string | BaseHttpLink.UriFunction;
+    }
+    interface HttpOptions {
+        accept?: string[];
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    // Warning: (ae-forgotten-export) The symbol "BaseHttpLink" needs to be exported by the entry point index.d.ts
+    interface Options extends Shared.Options {
+        useGETForQueries?: boolean;
+    }
+    // (undocumented)
+    type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    namespace Shared {
+        interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: BaseHttpLink.Printer;
+            uri?: string | BaseHttpLink.UriFunction;
+        }
+    }
+    // (undocumented)
+    type UriFunction = (operation: ApolloLink.Operation) => string;
+}
+
+// @public
+class BaseHttpLink extends ApolloLink {
+    constructor(options?: BaseHttpLink.Options);
+}
+
+// @public (undocumented)
 type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" | "onWatchUpdated">;
 
 // @public (undocumented)
@@ -661,6 +717,9 @@ namespace ClientAwarenessLink {
         transport?: "headers" | false;
         version?: string;
     }
+    interface ContextOptions {
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+    }
     // (undocumented)
     interface EnhancedClientAwarenessOptions {
         transport?: "extensions" | false;
@@ -674,7 +733,7 @@ namespace ClientAwarenessLink {
 
 // @public
 class ClientAwarenessLink extends ApolloLink {
-    constructor(constructorOptions?: ClientAwarenessLink.Options);
+    constructor(options?: ClientAwarenessLink.Options);
 }
 
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
@@ -765,7 +824,7 @@ export const concat: typeof ApolloLink.concat;
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public @deprecated (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
+export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -858,8 +917,10 @@ type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
 // @public @deprecated (undocumented)
 export type DefaultOptions = ApolloClient.DefaultOptions;
 
+// Warning: (ae-forgotten-export) The symbol "BaseHttpLink" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export const defaultPrinter: HttpLink.Printer;
+export const defaultPrinter: BaseHttpLink.Printer;
 
 // @public (undocumented)
 interface DeleteModifier {
@@ -1032,7 +1093,7 @@ type ExtractByMatchingTypeNames<Union extends {
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpLink.HttpOptions;
+    http: BaseHttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -1329,65 +1390,22 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpLink.HttpOptions;
+    http?: BaseHttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
 export namespace HttpLink {
-    // (undocumented)
-    export interface Body {
-        // (undocumented)
-        extensions?: Record<string, any>;
-        // (undocumented)
-        operationName?: string;
-        // (undocumented)
-        query?: string;
-        // (undocumented)
-        variables?: Record<string, any>;
+    export interface ContextOptions extends BaseHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
     }
-    export interface ContextOptions {
-        credentials?: RequestCredentials;
-        fetchOptions?: RequestInit;
-        headers?: Record<string, string>;
-        http?: HttpLink.HttpOptions;
-        uri?: string | HttpLink.UriFunction;
+    export interface Options extends BaseHttpLink.Options, ClientAwarenessLink.Options {
     }
-    export interface HttpOptions {
-        accept?: string[];
-        includeExtensions?: boolean;
-        includeQuery?: boolean;
-        preserveHeaderCase?: boolean;
-    }
-    export interface Options extends Shared.Options {
-        useGETForQueries?: boolean;
-    }
-    // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
-    // (undocumented)
-    export namespace Shared {
-        export interface Options {
-            credentials?: RequestCredentials;
-            fetch?: typeof fetch;
-            fetchOptions?: RequestInit;
-            headers?: Record<string, string>;
-            includeExtensions?: boolean;
-            includeUnusedVariables?: boolean;
-            preserveHeaderCase?: boolean;
-            print?: HttpLink.Printer;
-            uri?: string | HttpLink.UriFunction;
-        }
-    }
-    // (undocumented)
-    export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
 // @public
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
+    constructor(options?: HttpLink.Options);
 }
 
 // @public (undocumented)
@@ -2233,11 +2251,6 @@ type Prettify<T> = {
 // @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
-// @public
-const print_2: ((ast: ASTNode) => string) & {
-    reset(): void;
-};
-
 // @public (undocumented)
 class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
@@ -2487,7 +2500,7 @@ export type RequestHandler = ApolloLink.RequestHandler;
 export { resetCaches }
 
 // @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -2524,13 +2537,13 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 // @public (undocumented)
 export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: BaseHttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)

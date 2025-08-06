@@ -10,29 +10,29 @@ import { Observable } from 'rxjs';
 
 // @public (undocumented)
 export namespace RetryLink {
-    // (undocumented)
-    export type AttemptsFunction = (count: number, operation: ApolloLink.Operation, error: ErrorLike) => boolean | Promise<boolean>;
-    // (undocumented)
+    export type AttemptsFunction = (attempt: number, operation: ApolloLink.Operation, error: ErrorLike) => boolean | Promise<boolean>;
     export interface AttemptsOptions {
         max?: number;
         retryIf?: (error: ErrorLike, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
     }
-    // (undocumented)
-    export type DelayFunction = (count: number, operation: ApolloLink.Operation, error: ErrorLike) => number;
-    // (undocumented)
+    export type DelayFunction = (attempt: number, operation: ApolloLink.Operation, error: ErrorLike) => number;
     export interface DelayOptions {
         initial?: number;
         jitter?: boolean;
         max?: number;
     }
-    // (undocumented)
     export interface Options {
         attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
         delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
     }
+    // (undocumented)
+    export namespace RetryLinkDocumentationTypes {
+        export function AttemptsFunction(attempt: number, operation: ApolloLink.Operation, error: ErrorLike): boolean | Promise<boolean>;
+        export function DelayFunction(attempt: number, operation: ApolloLink.Operation, error: ErrorLike): number;
+    }
 }
 
-// @public (undocumented)
+// @public
 export class RetryLink extends ApolloLink {
     constructor(options?: RetryLink.Options);
     // (undocumented)

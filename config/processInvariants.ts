@@ -206,7 +206,10 @@ export async function processInvariants(options: BuildStepOptions) {
               });
             }
 
-            if (isDEVLogicalAnd(path.parent.node)) {
+            if (
+              isDEVLogicalAnd(path.parent.node) ||
+              isIdWithName(node.callee.property, "error")
+            ) {
               return newNode;
             }
             fileRequiresDevImport = true;

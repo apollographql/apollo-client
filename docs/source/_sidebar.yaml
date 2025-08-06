@@ -195,6 +195,8 @@ items:
             href: ./api/link/apollo-link-base-batch-http
           - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
+          - label: BatchLink
+            href: ./api/link/apollo-link-batch
           - label: ClientAwarenessLink
             href: ./api/link/apollo-link-client-awareness
           - label: ErrorLink

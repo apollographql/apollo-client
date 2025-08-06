@@ -51,9 +51,7 @@ export declare namespace BatchHttpLink {
  * ```
  */
 export class BatchHttpLink extends ApolloLink {
-  constructor(
-    options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
-  ) {
+  constructor(options: BatchHttpLink.Options = {}) {
     const { left, right, request } = ApolloLink.from([
       new ClientAwarenessLink(options),
       new BaseBatchHttpLink(options),

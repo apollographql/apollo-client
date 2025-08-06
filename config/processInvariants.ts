@@ -183,7 +183,7 @@ export async function processInvariants(options: BuildStepOptions) {
           if (
             node.callee.type === "MemberExpression" &&
             isIdWithName(node.callee.object, "invariant") &&
-            isIdWithName(node.callee.property, "debug", "log", "warn")
+            isIdWithName(node.callee.property, "debug", "log", "warn", "error")
           ) {
             let newNode = node;
             if (node.arguments[0].type !== "Identifier") {
@@ -206,7 +206,10 @@ export async function processInvariants(options: BuildStepOptions) {
               });
             }
 
-            if (isDEVLogicalAnd(path.parent.node)) {
+            if (
+              isDEVLogicalAnd(path.parent.node) ||
+              isIdWithName(node.callee.property, "error")
+            ) {
               return newNode;
             }
             fileRequiresDevImport = true;

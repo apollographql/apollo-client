@@ -6,7 +6,7 @@
 
 import { ApolloLink } from '@apollo/client/link';
 
-// @public (undocumented)
+// @public
 export const KEEP = "__KEEP";
 
 // @public @deprecated (undocumented)
@@ -14,19 +14,16 @@ export function removeTypenameFromVariables(options?: RemoveTypenameFromVariable
 
 // @public (undocumented)
 export namespace RemoveTypenameFromVariablesLink {
-    // (undocumented)
     export interface KeepTypenameConfig {
         // (undocumented)
         [key: string]: typeof KEEP | RemoveTypenameFromVariablesLink.KeepTypenameConfig;
     }
-    // (undocumented)
     export interface Options {
-        // (undocumented)
         except?: RemoveTypenameFromVariablesLink.KeepTypenameConfig;
     }
 }
 
-// @public (undocumented)
+// @public
 export class RemoveTypenameFromVariablesLink extends ApolloLink {
     constructor(options?: RemoveTypenameFromVariablesLink.Options);
 }

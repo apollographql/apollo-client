@@ -64,15 +64,16 @@ function analyze(
   // Run diagnostics to ensure proper type resolution
   ts.getPreEmitDiagnostics(program);
 
-  return analyzeExports();
+  return analyzeExports(sourceFile);
 
-  function analyzeExports(): ExportInfo[] {
+  function analyzeExports(sourceFile: ts.SourceFile): ExportInfo[] {
     const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
     const info = new Map<string, ExportInfo>();
-
     if (moduleSymbol && moduleSymbol.exports) {
       moduleSymbol.exports.forEach((symbol, name) => {
-        info.set(name.toString(), analyzeExport(symbol, name.toString()));
+        if ((symbol.flags & ts.SymbolFlags.ExportStar) != symbol.flags) {
+          info.set(name.toString(), analyzeExport(symbol, name.toString()));
+        }
       });
     }
     // Look for export statements
@@ -80,7 +81,13 @@ function analyze(
       if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
         const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text;
 
-        if (node.exportClause && ts.isNamedExports(node.exportClause)) {
+        if (!node.exportClause) {
+          for (const exp of analyzeExports(
+            resolveSourceFile(moduleSpecifier, sourceFile)
+          )) {
+            info.set(exp.name, exp);
+          }
+        } else if (ts.isNamedExports(node.exportClause)) {
           node.exportClause.elements.forEach((specifier) => {
             const exportName = specifier.name.text;
             const originalName = specifier.propertyName?.text || exportName;
@@ -88,7 +95,13 @@ function analyze(
             // Try to resolve the actual symbol being re-exported
             const resolvedSymbol = resolveReExportedSymbol(
               moduleSpecifier,
-              originalName
+              originalName,
+              sourceFile
+            );
+
+            assert(
+              resolvedSymbol,
+              `Symbol ${originalName} not found in module ${moduleSpecifier}`
             );
 
             if (resolvedSymbol) {
@@ -114,14 +127,14 @@ function analyze(
     symbol: ts.Symbol,
     name: string
   ): Generator<string, void, unknown> {
-    if (symbol.flags & ts.SymbolFlags.Alias) {
+    if ((symbol.flags & ts.SymbolFlags.Alias) === ts.SymbolFlags.Alias) {
       yield* collectUsageExamples(checker.getAliasedSymbol(symbol), name);
       return;
     }
 
     const declaration = symbol.valueDeclaration || symbol.declarations?.[0];
 
-    if (!declaration) {
+    if (!declaration || ts.isExportAssignment(declaration)) {
       return;
     }
 
@@ -192,14 +205,14 @@ function analyze(
     }
   }
 
-  function resolveReExportedSymbol(
+  function resolveSourceFile(
     moduleSpecifier: string,
-    symbolName: string
-  ) {
+    containingFile: ts.SourceFile
+  ): ts.SourceFile {
     // Use the more advanced module resolution that handles package.json exports
     const resolvedModule = ts.resolveModuleName(
       moduleSpecifier,
-      sourceFile.fileName,
+      containingFile.fileName,
       program.getCompilerOptions(),
       ts.sys
     );
@@ -207,10 +220,33 @@ function analyze(
     const resolvedFileName = resolvedModule.resolvedModule.resolvedFileName;
     const targetSourceFile = program.getSourceFile(resolvedFileName);
     assert(targetSourceFile);
-    const moduleSymbol = checker.getSymbolAtLocation(targetSourceFile);
+    return targetSourceFile;
+  }
+  function resolveReExportedSymbol(
+    moduleSpecifier: string,
+    symbolName: string,
+    containingFile: ts.SourceFile
+  ): ts.Symbol | undefined {
+    const targetFile = resolveSourceFile(moduleSpecifier, containingFile);
+    const moduleSymbol = checker.getSymbolAtLocation(targetFile);
     assert(moduleSymbol?.exports);
-    const symbol = moduleSymbol.exports.get(symbolName as ts.__String);
-    assert(symbol);
+    let symbol = moduleSymbol.exports.get(symbolName as ts.__String);
+    if (!symbol) {
+      for (const [name, sym] of moduleSymbol.exports) {
+        const declaration = sym.valueDeclaration || sym.declarations?.[0];
+        if (!declaration || !ts.isExportDeclaration(declaration)) {
+          continue;
+        }
+        symbol = resolveReExportedSymbol(
+          (declaration.moduleSpecifier as ts.StringLiteral).text,
+          symbolName,
+          targetFile
+        );
+        if (symbol) {
+          return symbol;
+        }
+      }
+    }
     return symbol;
   }
 }
@@ -255,26 +291,64 @@ ${info.usageExamples.join("\n")}
   );
 }
 
-const args = process.argv.slice(2);
+const entryPoints = [
+  ["src/cache/index.ts", "@apollo/client/cache"],
+  ["src/index.ts", "@apollo/client"],
+  ["src/core/index.ts", "@apollo/client/core"],
+  ["src/dev/index.ts", "@apollo/client/dev"],
+  ["src/errors/index.ts", "@apollo/client/errors"],
+  ["src/link/batch/index.ts", "@apollo/client/batch"],
+  ["src/link/batch-http/index.ts", "@apollo/client/batch-http"],
+  ["src/link/context/index.ts", "@apollo/client/context"],
+  ["src/link/core/index.ts", "@apollo/client/link/core"],
+  ["src/link/error/index.ts", "@apollo/client/link/error"],
+  ["src/link/http/index.ts", "@apollo/client/link/http"],
+  [
+    "src/link/persisted-queries/index.ts",
+    "@apollo/client/link/persisted-queries",
+  ],
+  ["src/link/retry/index.ts", "@apollo/client/link/retry"],
+  ["src/link/remove-typename/index.ts", "@apollo/client/link/remove-typename"],
+  ["src/link/schema/index.ts", "@apollo/client/link/schema"],
+  ["src/link/subscriptions/index.ts", "@apollo/client/link/subscriptions"],
+  ["src/link/utils/index.ts", "@apollo/client/link/utils"],
+  ["src/link/ws/index.ts", "@apollo/client/link/ws"],
+  ["src/masking/index.ts", "@apollo/client/masking"],
+  ["src/react/index.ts", "@apollo/client/react"],
+  ["src/react/components/index.ts", "@apollo/client/react/components"],
+  ["src/react/context/index.ts", "@apollo/client/react/context"],
+  ["src/react/hoc/index.ts", "@apollo/client/react/hoc"],
+  ["src/react/hooks/index.ts", "@apollo/client/react/hooks"],
+  ["src/react/internal/index.ts", "@apollo/client/react/internal"],
+  ["src/react/parser/index.ts", "@apollo/client/react/parser"],
+  ["src/react/ssr/index.ts", "@apollo/client/react/ssr"],
+  ["src/testing/index.ts", "@apollo/client/testing"],
+  ["src/testing/core/index.ts", "@apollo/client/testing/core"],
+  ["src/testing/experimental/index.ts", "@apollo/client/testing/experimental"],
+  ["src/utilities/index.ts", "@apollo/client/utilities"],
+  ["src/utilities/globals/index.ts", "@apollo/client/utilities/globals"],
+  [
+    "src/utilities/subscriptions/urql/index.ts",
+    "@apollo/client/utilities/subscriptions",
+  ],
+];
 const projectRoot = path.join(import.meta.dirname, "../../../../..");
+const collected: Record<string, ExportInfo[]> = {};
+for (const [entryPoint, moduleName] of entryPoints) {
+  // Resolve entry point relative to project root if not absolute
+  const resolvedEntryPoint =
+    path.isAbsolute(entryPoint) ? entryPoint : (
+      path.resolve(projectRoot, entryPoint)
+    );
 
-if (args.length < 2) {
-  console.error(
-    "Usage: tsx export-analyzer.ts src/cache/index.ts @apollo/client/cache"
-  );
-  console.error("       The tool will look for tsconfig.json in ", projectRoot);
-  process.exit(1);
+  assert(fs.existsSync(resolvedEntryPoint));
+  assert(fs.existsSync(projectRoot));
+
+  const exports = analyze(resolvedEntryPoint, projectRoot, moduleName);
+  collected[moduleName] = exports;
 }
 
-const [entryPoint, moduleName] = args;
-// Resolve entry point relative to project root if not absolute
-const resolvedEntryPoint =
-  path.isAbsolute(entryPoint) ? entryPoint : (
-    path.resolve(projectRoot, entryPoint)
-  );
-
-assert(fs.existsSync(resolvedEntryPoint));
-assert(fs.existsSync(projectRoot));
-
-const exports = analyze(resolvedEntryPoint, projectRoot, moduleName);
-writeTest(exports, moduleName);
+fs.writeFileSync(
+  path.join(import.meta.dirname, "..", "__tests__", "exports.json"),
+  JSON.stringify(collected, null, 2)
+);

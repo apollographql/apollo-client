@@ -251,46 +251,6 @@ function analyze(
   }
 }
 
-function writeTest(exports: ExportInfo[], moduleName: string) {
-  fs.writeFileSync(
-    path.join(
-      import.meta.dirname,
-      "..",
-      "__tests__",
-      `${moduleName.replace(/[@\/]/g, "_")}.generated.ts`
-    ),
-    `
-import { describe, expect, test } from "vitest";
-
-import imports from "../imports.js";
-
-import { createDiff } from "./diffTransform.js";
-
-const diff = createDiff(imports);
-describe("@apollo/client", () => {
-
-
-${exports
-  .map(
-    (info) => `
-  test("${info.name}", () => {
-    expect(
-      diff(
-        \`
-import { ${info.name} } from "${info.moduleName}";
-${info.usageExamples.join("\n")}
-\`.trim()
-      )
-    ).toMatchSnapshot();
-  });
-`
-  )
-  .join("\n")}
-});
-`
-  );
-}
-
 const entryPoints = [
   ["src/cache/index.ts", "@apollo/client/cache"],
   ["src/index.ts", "@apollo/client"],
@@ -348,6 +308,8 @@ for (const [entryPoint, moduleName] of entryPoints) {
   collected[moduleName] = exports;
 }
 
+// in the end, generated files can be diffed with
+// jq --slurpfile new src/__tests__/exports.new.json 'to_entries|map({key, value: ((.value|map(.name))-($new[0][.key]|map(.name)))})|from_entries' < src/__tests__/exports.json >| src/__tests__/exports.removed.json
 fs.writeFileSync(
   path.join(import.meta.dirname, "..", "__tests__", "exports.json"),
   JSON.stringify(collected, null, 2)

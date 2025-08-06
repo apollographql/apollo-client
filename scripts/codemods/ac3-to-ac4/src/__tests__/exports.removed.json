@@ -27,6 +27,8 @@
     "ExecutionPatchResult",
     "SingleExecutionResult",
     "NextLink",
+    "ClientParseError",
+    "serializeFetchParameter",
     "HttpOptions",
     "UriFunction",
     "ApolloContextValue",
@@ -136,6 +138,8 @@
     "ExecutionPatchResult",
     "SingleExecutionResult",
     "NextLink",
+    "ClientParseError",
+    "serializeFetchParameter",
     "HttpOptions",
     "UriFunction"
   ],
@@ -147,28 +151,33 @@
     "NetworkError",
     "ApolloError"
   ],
-  "@apollo/client/link/batch": [],
+  "@apollo/client/link/batch": [
+    "BatchableRequest",
+    "BatchHandler",
+    "OperationBatcher"
+  ],
   "@apollo/client/link/batch-http": [],
   "@apollo/client/link/context": ["ContextSetter"],
-  "@apollo/client/link/core -> @apollo/client/link": [
+  "@apollo/client/link/core": [
     "Path",
     "ExecutionPatchInitialResult",
     "IncrementalPayload",
     "ExecutionPatchIncrementalResult",
     "ExecutionPatchResult",
     "SingleExecutionResult",
-    "FetchResult",
     "NextLink"
   ],
-  "@apollo/client/link/error": ["ErrorResponse"],
+  "@apollo/client/link/error": ["ErrorResponse", "ErrorHandler"],
   "@apollo/client/link/http": [
     "ServerParseError",
+    "ClientParseError",
+    "serializeFetchParameter",
     "HttpOptions",
     "UriFunction"
   ],
   "@apollo/client/link/persisted-queries": ["ErrorResponse"],
   "@apollo/client/link/retry": [],
-  "@apollo/client/link/remove-typename": [],
+  "@apollo/client/link/remove-typename": ["RemoveTypenameFromVariablesOptions"],
   "@apollo/client/link/schema": [],
   "@apollo/client/link/subscriptions": [],
   "@apollo/client/link/utils": [
@@ -180,18 +189,8 @@
     "validateOperation",
     "transformOperation"
   ],
-  "@apollo/client/link/ws": [],
-  "@apollo/client/masking": [
-    "DataMasking",
-    "FragmentType",
-    "Masked",
-    "MaskedDocumentNode",
-    "MaybeMasked",
-    "Unmasked",
-    "disableWarningsSlot",
-    "maskFragment",
-    "maskOperation"
-  ],
+  "@apollo/client/link/ws": ["WebSocketParams"],
+  "@apollo/client/masking": [],
   "@apollo/client/react": [
     "ApolloConsumer",
     "resetApolloContext",
@@ -280,12 +279,7 @@
     "UseFragmentOptions",
     "UseFragmentResult"
   ],
-  "@apollo/client/react/internal": [
-    "QueryReference",
-    "getSuspenseCache",
-    "CacheKey",
-    "QueryKey"
-  ],
+  "@apollo/client/react/internal": ["QueryReference"],
   "@apollo/client/react/parser": [
     "operationName",
     "parser",
@@ -342,7 +336,18 @@
     "getDirectiveNames",
     "getInclusionDirectives",
     "getFragmentMaskMode",
-    "getMainDefinition",
+    "FragmentMap",
+    "FragmentMapFunction",
+    "createFragmentMap",
+    "getFragmentQueryDocument",
+    "getFragmentFromSelection",
+    "isFullyUnmaskedOperation",
+    "checkDocument",
+    "getOperationDefinition",
+    "getOperationName",
+    "getFragmentDefinitions",
+    "getQueryDefinition",
+    "getFragmentDefinition",
     "getDefaultValues",
     "Directives",
     "VariableValue",
@@ -428,6 +433,8 @@
     "IsStrictlyAny"
   ],
   "@apollo/client/utilities/globals": [
+    "maybe",
+    "global",
     "invariant",
     "newInvariantError",
     "InvariantError",

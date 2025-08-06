@@ -1159,7 +1159,7 @@ describe("HttpLink", () => {
         expect(abortControllers[0].signal.aborted).toBe(true);
       });
 
-      it("a passed-in signal that is cancelled will fail the observable with an `AbortError`", async () => {
+      it("a passed-in signal that is aborted will fail the observable with an `AbortError`", async () => {
         try {
           fetchMock.restore();
           fetchMock.postOnce(

@@ -572,7 +572,7 @@ const cache = new InMemoryCache({
 
 ### Using `merge: false` to disable `merge`-related warnings
 
-You might encounter console warnings like "Cache data may be lost when...", even when the default behavior (incoming data replacing existing data) is desirable. In this case, you can disable the warning by passing `merge: false` to a field's `FieldPolicy` like so:
+Apollo Client replaces existing data with incoming data for non-normalized fields by default. When this happens, you will encounter console warnings like "Cache data may be lost when...", even when the default behavior is desirable. You can tell Apollo Client you want this behavior by passing `merge: false` to a field's `FieldPolicy`. By opting into this behavior, the console warning is no longer emitted:
 
 ```ts {6}
 const cache = new InMemoryCache({

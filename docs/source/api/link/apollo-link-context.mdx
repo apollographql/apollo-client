@@ -61,7 +61,7 @@ Take for example a user auth token being found, cached, then removed on a 401 re
 ```js
 import { ServerError } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
-import { onError } from "@apollo/client/link/error";
+import { ErrorLink } from "@apollo/client/link/error";
 
 // cached storage for the user token
 let token;

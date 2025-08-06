@@ -183,7 +183,7 @@ export async function processInvariants(options: BuildStepOptions) {
           if (
             node.callee.type === "MemberExpression" &&
             isIdWithName(node.callee.object, "invariant") &&
-            isIdWithName(node.callee.property, "debug", "log", "warn", "error")
+            isIdWithName(node.callee.property, "debug", "log", "warn")
           ) {
             let newNode = node;
             if (node.arguments[0].type !== "Identifier") {

@@ -105,6 +105,7 @@ export class BaseHttpLink extends ApolloLink {
         };
         externalSignal.addEventListener("abort", listener, { once: true });
         cleanupController = () => {
+          controller?.signal.removeEventListener("abort", cleanupController);
           controller = undefined;
           // on cleanup, we need to stop listening to `options.signal` to avoid memory leaks
           externalSignal.removeEventListener("abort", listener);

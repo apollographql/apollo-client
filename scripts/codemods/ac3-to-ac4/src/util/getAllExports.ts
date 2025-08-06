@@ -297,9 +297,9 @@ const entryPoints = [
   ["src/core/index.ts", "@apollo/client/core"],
   ["src/dev/index.ts", "@apollo/client/dev"],
   ["src/errors/index.ts", "@apollo/client/errors"],
-  ["src/link/batch/index.ts", "@apollo/client/batch"],
-  ["src/link/batch-http/index.ts", "@apollo/client/batch-http"],
-  ["src/link/context/index.ts", "@apollo/client/context"],
+  ["src/link/batch/index.ts", "@apollo/client/link/batch"],
+  ["src/link/batch-http/index.ts", "@apollo/client/link/batch-http"],
+  ["src/link/context/index.ts", "@apollo/client/link/context"],
   ["src/link/core/index.ts", "@apollo/client/link/core"],
   ["src/link/error/index.ts", "@apollo/client/link/error"],
   ["src/link/http/index.ts", "@apollo/client/link/http"],
@@ -329,7 +329,7 @@ const entryPoints = [
   ["src/utilities/globals/index.ts", "@apollo/client/utilities/globals"],
   [
     "src/utilities/subscriptions/urql/index.ts",
-    "@apollo/client/utilities/subscriptions",
+    "@apollo/client/utilities/subscriptions/relay",
   ],
 ];
 const projectRoot = path.join(import.meta.dirname, "../../../../..");

@@ -955,22 +955,6 @@
       ]
     },
     {
-      "name": "TypeOverrides",
-      "moduleName": "@apollo/client",
-      "kind": "Interface",
-      "usageExamples": [
-        "type _Test_TypeOverrides = TypeOverrides;"
-      ]
-    },
-    {
-      "name": "CustomHKT",
-      "moduleName": "@apollo/client",
-      "kind": "Interface",
-      "usageExamples": [
-        "type _Test_CustomHKT = CustomHKT;"
-      ]
-    },
-    {
       "name": "TypedDocumentNode",
       "moduleName": "@apollo/client",
       "kind": "Interface",
@@ -2731,22 +2715,6 @@
       ]
     },
     {
-      "name": "TypeOverrides",
-      "moduleName": "@apollo/client/core",
-      "kind": "Interface",
-      "usageExamples": [
-        "type _Test_TypeOverrides = TypeOverrides;"
-      ]
-    },
-    {
-      "name": "CustomHKT",
-      "moduleName": "@apollo/client/core",
-      "kind": "Interface",
-      "usageExamples": [
-        "type _Test_CustomHKT = CustomHKT;"
-      ]
-    },
-    {
       "name": "TypedDocumentNode",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
@@ -3402,7 +3370,7 @@
       ]
     }
   ],
-  "@apollo/client/batch": [
+  "@apollo/client/link/batch": [
     {
       "name": "BatchableRequest",
       "moduleName": "@apollo/client/batch",
@@ -3437,7 +3405,7 @@
       ]
     }
   ],
-  "@apollo/client/batch-http": [
+  "@apollo/client/link/batch-http": [
     {
       "name": "BatchHttpLink",
       "moduleName": "@apollo/client/batch-http",
@@ -3447,7 +3415,7 @@
       ]
     }
   ],
-  "@apollo/client/context": [
+  "@apollo/client/link/context": [
     {
       "name": "setContext",
       "moduleName": "@apollo/client/context",
@@ -6663,7 +6631,7 @@
       ]
     }
   ],
-  "@apollo/client/utilities/subscriptions": [
+  "@apollo/client/utilities/subscriptions/relay": [
     {
       "name": "createFetchMultipartSubscription",
       "moduleName": "@apollo/client/utilities/subscriptions",

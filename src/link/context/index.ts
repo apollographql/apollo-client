@@ -88,6 +88,7 @@ export function setContext(setter: SetContextLink.LegacyContextSetter) {
  *
  * const link = new SetContextLink((prevContext, operation) => {
  *   return {
+ *     credentials: "include",
  *     // ...
  *   };
  * });

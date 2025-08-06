@@ -3,7 +3,7 @@ import { Observable, throwError } from "rxjs";
 import { ApolloLink } from "@apollo/client/link";
 import { BatchLink } from "@apollo/client/link/batch";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
-import type { HttpLink } from "@apollo/client/link/http";
+import type { BaseHttpLink } from "@apollo/client/link/http";
 import {
   checkFetcher,
   defaultPrinter,
@@ -23,7 +23,7 @@ export declare namespace BatchHttpLink {
    */
   export interface Options
     extends BatchLink.Shared.Options,
-      HttpLink.Shared.Options {
+      BaseHttpLink.Shared.Options {
     /** {@inheritDoc @apollo/client/link/batch!BatchLink.Shared.Options#batchMax:member {"defaultValue": 10}} */
     batchMax?: number;
   }
@@ -37,7 +37,7 @@ export declare namespace BatchHttpLink {
    * > Some of these values can also be provided to the `BatchHttpLink` constructor.
    * > If a value is provided to both, the value in `context` takes precedence.
    */
-  export interface ContextOptions extends HttpLink.ContextOptions {}
+  export interface ContextOptions extends BaseHttpLink.ContextOptions {}
 }
 
 const backupFetch = maybe(() => fetch);

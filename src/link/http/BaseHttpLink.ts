@@ -51,8 +51,8 @@ export declare namespace BaseHttpLink {
  * authentication, persisted queries, dynamic URIs, and other granular updates.
  *
  * > [!NOTE]
- * > Prefer using `HttpLink` over `BaseHttpLink`. `BaseHttpLink` is useful when
- * > you need to disable client awareness features and would like to tree-shake
+ * > Prefer using `HttpLink` over `BaseHttpLink`. Use `BaseHttpLink` when you
+ * > need to disable client awareness features and would like to tree-shake
  * > the implementation of `ClientAwarenessLink` out of your app bundle.
  *
  * @example

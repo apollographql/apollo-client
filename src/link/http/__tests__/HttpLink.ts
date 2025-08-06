@@ -1159,52 +1159,79 @@ describe("HttpLink", () => {
         expect(abortControllers[0].signal.aborted).toBe(true);
       });
 
-      it("a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one", () => {
-        const fetch = jest.fn(async (_uri, _options) =>
-          Response.json({ data: { stub: { id: "foo" } } }, { status: 200 })
-        );
-        const externalAbortController = new AbortController();
+      it("a passed-in signal that is aborted will fail the observable with an `AbortError`", async () => {
+        try {
+          fetchMock.restore();
+          fetchMock.postOnce(
+            "data",
+            async () => '{ "data": { "stub": { "id": "foo" } } }',
+            { delay: 100 }
+          );
 
-        const link = createHttpLink({
-          uri: "data",
-          fetch,
-          fetchOptions: { signal: externalAbortController.signal },
-        });
+          const externalAbortController = new AbortController();
+          const abortControllers = trackGlobalAbortControllers();
 
-        const sub = execute(link, { query: sampleQuery }).subscribe(
-          failingObserver
-        );
-        sub.unsubscribe();
+          const link = createHttpLink({
+            uri: "/data",
+          });
 
-        expect(fetch.mock.calls.length).toBe(1);
-        expect(fetch.mock.calls[0][1]).toEqual(
-          expect.objectContaining({ signal: externalAbortController.signal })
-        );
+          const observable = execute(link, {
+            query: sampleQuery,
+            context: {
+              fetchOptions: { signal: externalAbortController.signal },
+            },
+          });
+
+          const internalAbortController = abortControllers[0];
+
+          const stream = new ObservableStream(observable);
+          const externalReason = new Error("External abort reason");
+
+          externalAbortController.abort(externalReason);
+
+          await expect(stream).toEmitError(
+            // this not being `externalReason` is a quirk of `fetch-mock`:
+            // https://github.com/wheresrhys/fetch-mock/blob/605ec0afa6a5ff35066b9e01a9bcd688f3c25ce0/packages/fetch-mock/src/Router.ts#L164-L167
+            new DOMException("The operation was aborted.", "AbortError")
+          );
+
+          expect(externalAbortController).not.toBe(internalAbortController);
+          expect(externalAbortController.signal.aborted).toBe(true);
+          expect(externalAbortController.signal.reason).toBe(externalReason);
+          expect(internalAbortController.signal.aborted).toBe(true);
+          expect(internalAbortController.signal.reason).toBe(externalReason);
+        } finally {
+          fetchMock.restore();
+        }
       });
 
-      it("a passed-in signal that is cancelled will fail the observable with an `AbortError`", async () => {
+      it("a passed-in signal will not fully overwrite the internally created one", () => {
         try {
+          const externalAbortController = new AbortController();
+          const abortControllers = trackGlobalAbortControllers();
+
           fetchMock.restore();
           fetchMock.postOnce(
             "data",
             async () => '{ "data": { "stub": { "id": "foo" } } }'
           );
 
-          const externalAbortController = new AbortController();
-
-          const link = createHttpLink({
+          const link = new HttpLink({
             uri: "/data",
-            fetchOptions: { signal: externalAbortController.signal },
           });
 
-          const error = await new Promise<Error>((resolve) => {
-            execute(link, { query: sampleQuery }).subscribe({
-              ...failingObserver,
-              error: resolve,
-            });
-            externalAbortController.abort();
-          });
-          expect(error.name).toBe("AbortError");
+          const sub = execute(link, {
+            query: sampleQuery,
+            context: {
+              fetchOptions: { signal: externalAbortController.signal },
+            },
+          }).subscribe(failingObserver);
+          const internalAbortController = abortControllers[0];
+
+          sub.unsubscribe();
+
+          expect(externalAbortController.signal.aborted).toBe(false);
+          expect(internalAbortController.signal.aborted).toBe(true);
         } finally {
           fetchMock.restore();
         }

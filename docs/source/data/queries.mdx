@@ -258,22 +258,22 @@ The [`useLazyQuery`](../api/react/useLazyQuery) hook is suited for manually exec
 
 Here's an example:
 
-```jsx {2,5,13} title="index.js"
+```jsx {2,5,15} title="index.js"
 import React from "react";
 import { useLazyQuery } from "@apollo/client/react";
 
-function DelayedQuery() {
-  const [getDog, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
+function GetDogsOnClick() {
+  const [getDogs, { loading, error, data }] = useLazyQuery(GET_DOGS);
 
   if (loading) return <p>Loading ...</p>;
-  if (error) return `Error! ${error}`;
+  if (error) return `Error! ${error.message}`;
 
   return (
     <div>
-      {data?.dog && <img src={data.dog.displayImage} />}
-      <button onClick={() => getDog({ variables: { breed: "bulldog" } })}>
-        Click me!
-      </button>
+      {data?.dogs.map((dog) => (
+        <Dog key={dog.id} dog={dog} />
+      ))}
+      <button onClick={() => getDogs()}>Load dogs</button>
     </div>
   );
 }

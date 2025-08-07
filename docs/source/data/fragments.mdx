@@ -1639,6 +1639,8 @@ The following masking utility types available for override. The GraphQL Codegen 
 - `MaybeMasked<TData>` - Returns `TData` as either masked or unmasked depending on the [types mode](#setting-a-types-mode-for-masked-types).
 - `Unmasked<TData>` - Unwraps `TData` into the full result.
 
+For more information about other types that can be overridden in Apollo Client, see the [TypeScript guide](../development-testing/static-typing).
+
 <Tip>
 
 You might not need to define type overrides for every overridable type. For example, if you don't use the `Masked` or `MaskedDocumentNode` utility types in your application, you don't need to provide type overrides for these types.

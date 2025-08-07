@@ -100,7 +100,7 @@
     {
       "name": "Reference",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_Reference = Reference;"
       ]
@@ -108,7 +108,7 @@
     {
       "name": "isReference",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "isReference(obj)"
       ]
@@ -116,7 +116,7 @@
     {
       "name": "makeReference",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "makeReference(id)"
       ]
@@ -124,7 +124,7 @@
     {
       "name": "canonicalStringify",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_canonicalStringify = canonicalStringify;"
       ]
@@ -270,7 +270,7 @@
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_StoreObject = StoreObject;"
       ]
@@ -278,7 +278,7 @@
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client/cache",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_StoreValue = StoreValue;"
       ]
@@ -408,7 +408,7 @@
     {
       "name": "mergeOptions",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "mergeOptions<TDefaultOptions, TOptions>(defaults, options)"
       ]
@@ -602,7 +602,7 @@
     {
       "name": "Transaction",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Transaction = Transaction<T>;"
       ]
@@ -610,7 +610,6 @@
     {
       "name": "DataProxy",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
       "usageExamples": [
         "const _Test_DataProxy = DataProxy;"
       ]
@@ -626,7 +625,7 @@
     {
       "name": "ReactiveVar",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_ReactiveVar = ReactiveVar<T>;"
       ]
@@ -634,7 +633,7 @@
     {
       "name": "TypePolicies",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_TypePolicies = TypePolicies;"
       ]
@@ -642,7 +641,7 @@
     {
       "name": "TypePolicy",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_TypePolicy = TypePolicy;"
       ]
@@ -650,7 +649,7 @@
     {
       "name": "FieldPolicy",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldPolicy = FieldPolicy<TExisting, TIncoming, TReadResult, TOptions>;"
       ]
@@ -658,7 +657,7 @@
     {
       "name": "FieldReadFunction",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldReadFunction = FieldReadFunction<TExisting, TReadResult, TOptions>;"
       ]
@@ -666,7 +665,7 @@
     {
       "name": "FieldMergeFunction",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldMergeFunction = FieldMergeFunction<TExisting, TIncoming, TOptions>;"
       ]
@@ -674,7 +673,7 @@
     {
       "name": "FieldFunctionOptions",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_FieldFunctionOptions = FieldFunctionOptions<TArgs, TVars>;"
       ]
@@ -682,7 +681,7 @@
     {
       "name": "PossibleTypesMap",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_PossibleTypesMap = PossibleTypesMap;"
       ]
@@ -690,7 +689,7 @@
     {
       "name": "WatchFragmentOptions",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_WatchFragmentOptions = WatchFragmentOptions<TData, TVars>;"
       ]
@@ -698,7 +697,7 @@
     {
       "name": "WatchFragmentResult",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_WatchFragmentResult = WatchFragmentResult<TData>;"
       ]
@@ -706,7 +705,7 @@
     {
       "name": "Cache",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "ValueModule",
       "usageExamples": [
         "const _Test_Cache = Cache;"
       ]
@@ -714,7 +713,7 @@
     {
       "name": "ApolloCache",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_ApolloCache extends ApolloCache<TSerialized> {}",
         "const _test_ApolloCache = new ApolloCache<TSerialized>()"
@@ -723,7 +722,7 @@
     {
       "name": "InMemoryCache",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_InMemoryCache extends InMemoryCache {}",
         "const _test_InMemoryCache = new InMemoryCache(config)"
@@ -732,7 +731,7 @@
     {
       "name": "MissingFieldError",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_MissingFieldError extends MissingFieldError {}",
         "const _test_MissingFieldError = new MissingFieldError(message, path, query, variables)"
@@ -741,7 +740,7 @@
     {
       "name": "defaultDataIdFromObject",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "defaultDataIdFromObject(param0, context)"
       ]
@@ -749,7 +748,7 @@
     {
       "name": "makeVar",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "makeVar<T>(value)"
       ]
@@ -757,7 +756,7 @@
     {
       "name": "ServerError",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_ServerError = ServerError;"
       ]
@@ -765,7 +764,7 @@
     {
       "name": "fromError",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "fromError<T>(errorValue)"
       ]
@@ -773,7 +772,7 @@
     {
       "name": "toPromise",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "toPromise<R>(observable)"
       ]
@@ -781,7 +780,7 @@
     {
       "name": "fromPromise",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "fromPromise<T>(promise)"
       ]
@@ -789,7 +788,7 @@
     {
       "name": "throwServerError",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_throwServerError = throwServerError;"
       ]
@@ -797,7 +796,7 @@
     {
       "name": "DataMasking",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_DataMasking = DataMasking;"
       ]
@@ -805,7 +804,7 @@
     {
       "name": "FragmentType",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FragmentType = FragmentType<TData>;"
       ]
@@ -813,7 +812,7 @@
     {
       "name": "Masked",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Masked = Masked<TData>;"
       ]
@@ -821,7 +820,7 @@
     {
       "name": "MaskedDocumentNode",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_MaskedDocumentNode = MaskedDocumentNode<TData, TVariables>;"
       ]
@@ -829,7 +828,7 @@
     {
       "name": "MaybeMasked",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_MaybeMasked = MaybeMasked<TData>;"
       ]
@@ -837,7 +836,7 @@
     {
       "name": "Unmasked",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Unmasked = Unmasked<TData>;"
       ]
@@ -845,7 +844,7 @@
     {
       "name": "DocumentTransformCacheKey",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_DocumentTransformCacheKey = DocumentTransformCacheKey;"
       ]
@@ -853,19 +852,17 @@
     {
       "name": "Observer",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "ObservableSubscription",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "Reference",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_Reference = Reference;"
       ]
@@ -873,7 +870,7 @@
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_StoreObject = StoreObject;"
       ]
@@ -881,7 +878,7 @@
     {
       "name": "DocumentTransform",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_DocumentTransform extends DocumentTransform {}",
         "const _test_DocumentTransform = new DocumentTransform(transform, options)"
@@ -890,13 +887,12 @@
     {
       "name": "Observable",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "isReference",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "isReference(obj)"
       ]
@@ -904,7 +900,7 @@
     {
       "name": "makeReference",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "makeReference(id)"
       ]
@@ -912,7 +908,6 @@
     {
       "name": "setLogVerbosity",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
@@ -1069,7 +1064,7 @@
     {
       "name": "PureQueryOptions",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_PureQueryOptions = PureQueryOptions<TVariables, TData>;"
       ]
@@ -1133,7 +1128,7 @@
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_StoreValue = StoreValue;"
       ]
@@ -1278,7 +1273,7 @@
     {
       "name": "DocumentNode",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_DocumentNode = DocumentNode;"
       ]
@@ -1511,7 +1506,7 @@
     {
       "name": "ApolloContextValue",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_ApolloContextValue = ApolloContextValue;"
       ]
@@ -1519,7 +1514,7 @@
     {
       "name": "ApolloProvider",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_ApolloProvider = ApolloProvider;"
       ]
@@ -1527,7 +1522,7 @@
     {
       "name": "ApolloConsumer",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_ApolloConsumer = ApolloConsumer;"
       ]
@@ -1535,7 +1530,7 @@
     {
       "name": "getApolloContext",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "getApolloContext()"
       ]
@@ -1543,7 +1538,7 @@
     {
       "name": "resetApolloContext",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_resetApolloContext = resetApolloContext;"
       ]
@@ -1814,7 +1809,7 @@
     {
       "name": "QueryReference",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_QueryReference = QueryReference<TData, TVariables>;"
       ]
@@ -1822,7 +1817,7 @@
     {
       "name": "QueryRef",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_QueryRef = QueryRef<TData, TVariables>;"
       ]
@@ -1830,7 +1825,7 @@
     {
       "name": "PreloadedQueryRef",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;"
       ]
@@ -2134,7 +2129,7 @@
     {
       "name": "NoInfer",
       "moduleName": "@apollo/client",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_NoInfer = NoInfer<T>;"
       ]
@@ -2168,7 +2163,7 @@
     {
       "name": "mergeOptions",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "mergeOptions<TDefaultOptions, TOptions>(defaults, options)"
       ]
@@ -2362,7 +2357,7 @@
     {
       "name": "Transaction",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Transaction = Transaction<T>;"
       ]
@@ -2370,7 +2365,6 @@
     {
       "name": "DataProxy",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
       "usageExamples": [
         "const _Test_DataProxy = DataProxy;"
       ]
@@ -2386,7 +2380,7 @@
     {
       "name": "ReactiveVar",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_ReactiveVar = ReactiveVar<T>;"
       ]
@@ -2394,7 +2388,7 @@
     {
       "name": "TypePolicies",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_TypePolicies = TypePolicies;"
       ]
@@ -2402,7 +2396,7 @@
     {
       "name": "TypePolicy",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_TypePolicy = TypePolicy;"
       ]
@@ -2410,7 +2404,7 @@
     {
       "name": "FieldPolicy",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldPolicy = FieldPolicy<TExisting, TIncoming, TReadResult, TOptions>;"
       ]
@@ -2418,7 +2412,7 @@
     {
       "name": "FieldReadFunction",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldReadFunction = FieldReadFunction<TExisting, TReadResult, TOptions>;"
       ]
@@ -2426,7 +2420,7 @@
     {
       "name": "FieldMergeFunction",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FieldMergeFunction = FieldMergeFunction<TExisting, TIncoming, TOptions>;"
       ]
@@ -2434,7 +2428,7 @@
     {
       "name": "FieldFunctionOptions",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_FieldFunctionOptions = FieldFunctionOptions<TArgs, TVars>;"
       ]
@@ -2442,7 +2436,7 @@
     {
       "name": "PossibleTypesMap",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_PossibleTypesMap = PossibleTypesMap;"
       ]
@@ -2450,7 +2444,7 @@
     {
       "name": "WatchFragmentOptions",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_WatchFragmentOptions = WatchFragmentOptions<TData, TVars>;"
       ]
@@ -2458,7 +2452,7 @@
     {
       "name": "WatchFragmentResult",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_WatchFragmentResult = WatchFragmentResult<TData>;"
       ]
@@ -2466,7 +2460,7 @@
     {
       "name": "Cache",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "ValueModule",
       "usageExamples": [
         "const _Test_Cache = Cache;"
       ]
@@ -2474,7 +2468,7 @@
     {
       "name": "ApolloCache",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_ApolloCache extends ApolloCache<TSerialized> {}",
         "const _test_ApolloCache = new ApolloCache<TSerialized>()"
@@ -2483,7 +2477,7 @@
     {
       "name": "InMemoryCache",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_InMemoryCache extends InMemoryCache {}",
         "const _test_InMemoryCache = new InMemoryCache(config)"
@@ -2492,7 +2486,7 @@
     {
       "name": "MissingFieldError",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_MissingFieldError extends MissingFieldError {}",
         "const _test_MissingFieldError = new MissingFieldError(message, path, query, variables)"
@@ -2501,7 +2495,7 @@
     {
       "name": "defaultDataIdFromObject",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "defaultDataIdFromObject(param0, context)"
       ]
@@ -2509,7 +2503,7 @@
     {
       "name": "makeVar",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "makeVar<T>(value)"
       ]
@@ -2517,7 +2511,7 @@
     {
       "name": "ServerError",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_ServerError = ServerError;"
       ]
@@ -2525,7 +2519,7 @@
     {
       "name": "fromError",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "fromError<T>(errorValue)"
       ]
@@ -2533,7 +2527,7 @@
     {
       "name": "toPromise",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "toPromise<R>(observable)"
       ]
@@ -2541,7 +2535,7 @@
     {
       "name": "fromPromise",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "fromPromise<T>(promise)"
       ]
@@ -2549,7 +2543,7 @@
     {
       "name": "throwServerError",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_throwServerError = throwServerError;"
       ]
@@ -2557,7 +2551,7 @@
     {
       "name": "DataMasking",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_DataMasking = DataMasking;"
       ]
@@ -2565,7 +2559,7 @@
     {
       "name": "FragmentType",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_FragmentType = FragmentType<TData>;"
       ]
@@ -2573,7 +2567,7 @@
     {
       "name": "Masked",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Masked = Masked<TData>;"
       ]
@@ -2581,7 +2575,7 @@
     {
       "name": "MaskedDocumentNode",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_MaskedDocumentNode = MaskedDocumentNode<TData, TVariables>;"
       ]
@@ -2589,7 +2583,7 @@
     {
       "name": "MaybeMasked",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_MaybeMasked = MaybeMasked<TData>;"
       ]
@@ -2597,7 +2591,7 @@
     {
       "name": "Unmasked",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_Unmasked = Unmasked<TData>;"
       ]
@@ -2605,7 +2599,7 @@
     {
       "name": "DocumentTransformCacheKey",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_DocumentTransformCacheKey = DocumentTransformCacheKey;"
       ]
@@ -2613,19 +2607,17 @@
     {
       "name": "Observer",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "ObservableSubscription",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "Reference",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_Reference = Reference;"
       ]
@@ -2633,7 +2625,7 @@
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_StoreObject = StoreObject;"
       ]
@@ -2641,7 +2633,7 @@
     {
       "name": "DocumentTransform",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Class",
       "usageExamples": [
         "class _Test_DocumentTransform extends DocumentTransform {}",
         "const _test_DocumentTransform = new DocumentTransform(transform, options)"
@@ -2650,13 +2642,12 @@
     {
       "name": "Observable",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "isReference",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "isReference(obj)"
       ]
@@ -2664,7 +2655,7 @@
     {
       "name": "makeReference",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "makeReference(id)"
       ]
@@ -2672,7 +2663,6 @@
     {
       "name": "setLogVerbosity",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
@@ -2829,7 +2819,7 @@
     {
       "name": "PureQueryOptions",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_PureQueryOptions = PureQueryOptions<TVariables, TData>;"
       ]
@@ -2893,7 +2883,7 @@
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_StoreValue = StoreValue;"
       ]
@@ -3038,7 +3028,7 @@
     {
       "name": "DocumentNode",
       "moduleName": "@apollo/client/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_DocumentNode = DocumentNode;"
       ]
@@ -3486,7 +3476,7 @@
     {
       "name": "DocumentNode",
       "moduleName": "@apollo/client/link/core",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_DocumentNode = DocumentNode;"
       ]
@@ -3616,7 +3606,7 @@
     {
       "name": "ErrorHandler",
       "moduleName": "@apollo/client/link/error",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_ErrorHandler = ErrorHandler;"
       ]
@@ -3930,7 +3920,7 @@
     {
       "name": "WebSocketParams",
       "moduleName": "@apollo/client/link/ws",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_WebSocketParams = WebSocketParams;"
       ]
@@ -4014,7 +4004,7 @@
     {
       "name": "ApolloContextValue",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_ApolloContextValue = ApolloContextValue;"
       ]
@@ -4022,7 +4012,7 @@
     {
       "name": "ApolloProvider",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_ApolloProvider = ApolloProvider;"
       ]
@@ -4030,7 +4020,7 @@
     {
       "name": "ApolloConsumer",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_ApolloConsumer = ApolloConsumer;"
       ]
@@ -4038,7 +4028,7 @@
     {
       "name": "getApolloContext",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "getApolloContext()"
       ]
@@ -4046,7 +4036,7 @@
     {
       "name": "resetApolloContext",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_resetApolloContext = resetApolloContext;"
       ]
@@ -4317,7 +4307,7 @@
     {
       "name": "QueryReference",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_QueryReference = QueryReference<TData, TVariables>;"
       ]
@@ -4325,7 +4315,7 @@
     {
       "name": "QueryRef",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_QueryRef = QueryRef<TData, TVariables>;"
       ]
@@ -4333,7 +4323,7 @@
     {
       "name": "PreloadedQueryRef",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;"
       ]
@@ -4637,7 +4627,7 @@
     {
       "name": "NoInfer",
       "moduleName": "@apollo/client/react",
-      "kind": "AliasExcludes",
+      "kind": "TypeAlias",
       "usageExamples": [
         "type _Test_NoInfer = NoInfer<T>;"
       ]
@@ -5532,7 +5522,7 @@
     {
       "name": "createTestSchema",
       "moduleName": "@apollo/client/testing/experimental",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_createTestSchema = createTestSchema;"
       ]
@@ -5540,7 +5530,7 @@
     {
       "name": "createSchemaFetch",
       "moduleName": "@apollo/client/testing/experimental",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_createSchemaFetch = createSchemaFetch;"
       ]
@@ -5558,7 +5548,7 @@
     {
       "name": "maybe",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "maybe<T>(thunk)"
       ]
@@ -6103,19 +6093,16 @@
     {
       "name": "Observer",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "ObservableSubscription",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
       "name": "Observable",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
@@ -6265,7 +6252,6 @@
     {
       "name": "AutoCleanedStrongCache",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
       "usageExamples": [
         "const _Test_AutoCleanedStrongCache = AutoCleanedStrongCache;"
       ]
@@ -6273,7 +6259,6 @@
     {
       "name": "AutoCleanedWeakCache",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
       "usageExamples": [
         "const _Test_AutoCleanedWeakCache = AutoCleanedWeakCache;"
       ]
@@ -6281,7 +6266,7 @@
     {
       "name": "cacheSizes",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_cacheSizes = cacheSizes;"
       ]
@@ -6289,7 +6274,7 @@
     {
       "name": "defaultCacheSizes",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
+      "kind": "ConstEnum",
       "usageExamples": [
         "type _Test_defaultCacheSizes = defaultCacheSizes;"
       ]
@@ -6297,7 +6282,7 @@
     {
       "name": "CacheSizes",
       "moduleName": "@apollo/client/utilities",
-      "kind": "AliasExcludes",
+      "kind": "Interface",
       "usageExamples": [
         "type _Test_CacheSizes = CacheSizes;"
       ]
@@ -6595,7 +6580,7 @@
     {
       "name": "invariant",
       "moduleName": "@apollo/client/utilities/globals",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test_invariant = invariant;"
       ]
@@ -6603,7 +6588,7 @@
     {
       "name": "newInvariantError",
       "moduleName": "@apollo/client/utilities/globals",
-      "kind": "AliasExcludes",
+      "kind": "Function",
       "usageExamples": [
         "newInvariantError(message, optionalParams)"
       ]
@@ -6611,7 +6596,6 @@
     {
       "name": "InvariantError",
       "moduleName": "@apollo/client/utilities/globals",
-      "kind": "AliasExcludes",
       "usageExamples": []
     },
     {
@@ -6625,7 +6609,7 @@
     {
       "name": "___DEV__",
       "moduleName": "@apollo/client/utilities/globals",
-      "kind": "AliasExcludes",
+      "kind": "BlockScopedVariable",
       "usageExamples": [
         "const _Test____DEV__ = ___DEV__;"
       ]

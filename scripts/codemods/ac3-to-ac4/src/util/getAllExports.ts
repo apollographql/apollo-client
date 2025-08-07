@@ -116,6 +116,10 @@ function analyze(
   }
 
   function analyzeExport(symbol: ts.Symbol, name: string): ExportInfo {
+    if ((symbol.flags & ts.SymbolFlags.Alias) === ts.SymbolFlags.Alias) {
+      return analyzeExport(checker.getAliasedSymbol(symbol), name);
+    }
+
     return {
       name,
       moduleName,
@@ -304,8 +308,10 @@ for (const [entryPoint, moduleName] of entryPoints) {
     resolvedEntryPoint = require.resolve(moduleName);
   } catch {
     if (moduleName === "@apollo/client/link/core") {
-      // this has been renamed, for comparison sake handle it the same as before
-      resolvedEntryPoint = require.resolve("@apollo/client/link");
+      try {
+        // this has been renamed, for comparison sake handle it the same as before
+        resolvedEntryPoint = require.resolve("@apollo/client/link");
+      } catch {}
     }
   }
   if (!resolvedEntryPoint) {
@@ -344,7 +350,7 @@ with_entries(
   value: (.key as $key | .value | map(.name as $name | select(($new[0][$key]|map(.name))|index($name)|not)))
     | map({
       name,
-      importType: (if .kind == "Interface" or .kind == "TypeAlias" or .kind == "AliasExcludes" or .kind == "NamespaceModule" then "type" else "value" end)
+      importType: (if .kind == "Interface" or .kind == "TypeAlias" or .kind == "NamespaceModule" then "type" else "value" end)
     })
     | {
       value: . | map(select(.importType == "value")) | map(.name),

@@ -1,17 +1,29 @@
 {
   "@apollo/client/cache": {
     "value": [
-      "DataProxy"
-    ],
-    "type": [
+      "DataProxy",
       "makeReference"
-    ]
+    ],
+    "type": []
   },
   "@apollo/client": {
     "value": [
+      "mergeOptions",
       "isApolloError",
       "ApolloError",
+      "DataProxy",
+      "fromError",
+      "toPromise",
+      "fromPromise",
+      "throwServerError",
+      "Observer",
+      "ObservableSubscription",
+      "makeReference",
       "serializeFetchParameter",
+      "ApolloProvider",
+      "ApolloConsumer",
+      "getApolloContext",
+      "resetApolloContext",
       "DocumentType",
       "operationName",
       "parser",
@@ -32,19 +44,10 @@
       "useFragment"
     ],
     "type": [
-      "mergeOptions",
       "FetchMoreOptions",
       "FetchMoreQueryOptions",
       "Resolver",
       "FragmentMatcher",
-      "DataProxy",
-      "fromError",
-      "toPromise",
-      "fromPromise",
-      "throwServerError",
-      "Observer",
-      "ObservableSubscription",
-      "makeReference",
       "MethodKeys",
       "PureQueryOptions",
       "MutationUpdaterFn",
@@ -60,10 +63,6 @@
       "HttpOptions",
       "UriFunction",
       "ApolloContextValue",
-      "ApolloProvider",
-      "ApolloConsumer",
-      "getApolloContext",
-      "resetApolloContext",
       "IDocumentDefinition",
       "PreloadQueryOptions",
       "PreloadQueryFetchPolicy",
@@ -124,16 +123,9 @@
   },
   "@apollo/client/core": {
     "value": [
+      "mergeOptions",
       "isApolloError",
       "ApolloError",
-      "serializeFetchParameter"
-    ],
-    "type": [
-      "mergeOptions",
-      "FetchMoreOptions",
-      "FetchMoreQueryOptions",
-      "Resolver",
-      "FragmentMatcher",
       "DataProxy",
       "fromError",
       "toPromise",
@@ -142,6 +134,13 @@
       "Observer",
       "ObservableSubscription",
       "makeReference",
+      "serializeFetchParameter"
+    ],
+    "type": [
+      "FetchMoreOptions",
+      "FetchMoreQueryOptions",
+      "Resolver",
+      "FragmentMatcher",
       "MethodKeys",
       "PureQueryOptions",
       "MutationUpdaterFn",
@@ -271,13 +270,13 @@
   },
   "@apollo/client/react": {
     "value": [
+      "ApolloConsumer",
+      "resetApolloContext",
       "DocumentType",
       "operationName",
       "parser"
     ],
     "type": [
-      "ApolloConsumer",
-      "resetApolloContext",
       "IDocumentDefinition",
       "QueryReference",
       "Context",
@@ -440,15 +439,16 @@
     ]
   },
   "@apollo/client/testing/experimental": {
-    "value": [],
-    "type": [
+    "value": [
       "createTestSchema",
       "createSchemaFetch"
-    ]
+    ],
+    "type": []
   },
   "@apollo/client/utilities": {
     "value": [
       "DEV",
+      "maybe",
       "shouldInclude",
       "hasDirectives",
       "hasAnyDirectives",
@@ -485,6 +485,8 @@
       "removeArgumentsFromDocument",
       "removeFragmentSpreadFromDocument",
       "removeClientSetsFromDocument",
+      "Observer",
+      "ObservableSubscription",
       "isStatefulPromise",
       "createFulfilledPromise",
       "createRejectedPromise",
@@ -492,6 +494,9 @@
       "preventUnhandledRejection",
       "maybeDeepFreeze",
       "omitDeep",
+      "AutoCleanedStrongCache",
+      "AutoCleanedWeakCache",
+      "defaultCacheSizes",
       "mergeDeep",
       "mergeDeepArray",
       "DeepMerger",
@@ -523,7 +528,6 @@
       "mergeIncrementalData"
     ],
     "type": [
-      "maybe",
       "DirectiveInfo",
       "InclusionDirectives",
       "FragmentMap",
@@ -539,8 +543,6 @@
       "RemoveFragmentSpreadConfig",
       "RemoveFragmentDefinitionConfig",
       "RemoveVariableDefinitionConfig",
-      "Observer",
-      "ObservableSubscription",
       "PromiseWithState",
       "DeepOmit",
       "OnlyRequiredProperties",
@@ -549,9 +551,6 @@
       "UnionToIntersection",
       "NoInfer",
       "RemoveIndexSignature",
-      "AutoCleanedStrongCache",
-      "AutoCleanedWeakCache",
-      "defaultCacheSizes",
       "TupleToIntersection",
       "ReconcilerFunction",
       "ConcastSourcesIterable",
@@ -563,14 +562,13 @@
     "value": [
       "maybe",
       "global",
-      "DEV"
-    ],
-    "type": [
       "invariant",
       "newInvariantError",
       "InvariantError",
+      "DEV",
       "___DEV__"
-    ]
+    ],
+    "type": []
   },
   "@apollo/client/utilities/subscriptions/relay": {
     "value": [],

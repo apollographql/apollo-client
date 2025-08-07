@@ -30,7 +30,6 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  split,
 } from "@apollo/client";
 import type { Incremental } from "@apollo/client/incremental";
 import {
@@ -9997,7 +9996,7 @@ describe("useSuspenseQuery", () => {
     const wsLink = new MockSubscriptionLink();
     const mockLink = new MockLink(mocks);
 
-    const link = split(
+    const link = ApolloLink.split(
       ({ query }) => {
         const definition = getMainDefinition(query);
 

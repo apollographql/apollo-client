@@ -28,18 +28,17 @@ import {
   CombinedGraphQLErrors,
   gql,
   NetworkStatus,
-  split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
   skipToken,
   useBackgroundQuery,
   useReadQuery,
 } from "@apollo/client/react";
-import type { QueryRef } from "@apollo/client/react/internal";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -7060,7 +7059,7 @@ describe("fetchMore", () => {
     const wsLink = new MockSubscriptionLink();
     const mockLink = new MockLink(mocks);
 
-    const link = split(
+    const link = ApolloLink.split(
       ({ query }) => {
         const definition = getMainDefinition(query);
 

@@ -19,3 +19,4 @@ node_modules/
 .next/
 .changeset/
 pnpm-lock.yaml
+scripts/codemods/ac3-to-ac4/src/__testfixtures__

@@ -91,10 +91,10 @@ If you're already using the client preset, we recommend, at minimum, [disabling 
 
 ## Using `TypedDocumentNode`
 
-In Apollo Client, all APIs that accept a `DocumentNode` can alternatively take `TypedDocumentNode<Data, Variables>`. This type enables Apollo Client APIs to infer the data and variable types using the GraphQL document.
+In Apollo Client, all APIs that accept a `DocumentNode` can alternatively take a `TypedDocumentNode<Data, Variables>`. This type enables Apollo Client APIs to infer the data and variable types using the GraphQL document.
 
 ```tsx
-import type { TypedDocumentNode } from "@apollo/client";
+import { useQuery, TypedDocumentNode } from "@apollo/client";
 import {
   GetRocketInventoryQuery,
   GetRocketInventoryQueryVariables,
@@ -113,6 +113,12 @@ const GET_ROCKET_INVENTORY: TypedDocumentNode<
     }
   }
 `;
+
+function RocketInventory() {
+  const { data } = useQuery(GET_ROCKET_INVENTORY);
+
+  // `data` is typed!
+}
 ```
 
 <Tip>

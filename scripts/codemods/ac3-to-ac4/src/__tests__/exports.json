@@ -4,9 +4,7 @@
       "name": "Transaction",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Transaction = Transaction<T>;"
-      ]
+      "usageExamples": ["type _Test_Transaction = Transaction<T>;"]
     },
     {
       "name": "WatchFragmentOptions",
@@ -37,56 +35,42 @@
       "name": "Cache",
       "moduleName": "@apollo/client/cache",
       "kind": "ValueModule",
-      "usageExamples": [
-        "const _Test_Cache = Cache;"
-      ]
+      "usageExamples": ["const _Test_Cache = Cache;"]
     },
     {
       "name": "DataProxy",
       "moduleName": "@apollo/client/cache",
-      "usageExamples": [
-        "const _Test_DataProxy = DataProxy;"
-      ]
+      "usageExamples": ["const _Test_DataProxy = DataProxy;"]
     },
     {
       "name": "MissingTree",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MissingTree = MissingTree;"
-      ]
+      "usageExamples": ["type _Test_MissingTree = MissingTree;"]
     },
     {
       "name": "Modifier",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Modifier = Modifier<T>;"
-      ]
+      "usageExamples": ["type _Test_Modifier = Modifier<T>;"]
     },
     {
       "name": "Modifiers",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Modifiers = Modifiers<T>;"
-      ]
+      "usageExamples": ["type _Test_Modifiers = Modifiers<T>;"]
     },
     {
       "name": "ModifierDetails",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ModifierDetails = ModifierDetails;"
-      ]
+      "usageExamples": ["type _Test_ModifierDetails = ModifierDetails;"]
     },
     {
       "name": "ReadFieldOptions",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ReadFieldOptions = ReadFieldOptions;"
-      ]
+      "usageExamples": ["type _Test_ReadFieldOptions = ReadFieldOptions;"]
     },
     {
       "name": "MissingFieldError",
@@ -101,33 +85,25 @@
       "name": "Reference",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Reference = Reference;"
-      ]
+      "usageExamples": ["type _Test_Reference = Reference;"]
     },
     {
       "name": "isReference",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "isReference(obj)"
-      ]
+      "usageExamples": ["isReference(obj)"]
     },
     {
       "name": "makeReference",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "makeReference(id)"
-      ]
+      "usageExamples": ["makeReference(id)"]
     },
     {
       "name": "canonicalStringify",
       "moduleName": "@apollo/client/cache",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canonicalStringify = canonicalStringify;"
-      ]
+      "usageExamples": ["const _Test_canonicalStringify = canonicalStringify;"]
     },
     {
       "name": "EntityStore",
@@ -141,17 +117,13 @@
       "name": "fieldNameFromStoreName",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "fieldNameFromStoreName(storeFieldName)"
-      ]
+      "usageExamples": ["fieldNameFromStoreName(storeFieldName)"]
     },
     {
       "name": "defaultDataIdFromObject",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "defaultDataIdFromObject(param0, context)"
-      ]
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
     },
     {
       "name": "InMemoryCache",
@@ -166,41 +138,31 @@
       "name": "ReactiveVar",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ReactiveVar = ReactiveVar<T>;"
-      ]
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
     },
     {
       "name": "makeVar",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "makeVar<T>(value)"
-      ]
+      "usageExamples": ["makeVar<T>(value)"]
     },
     {
       "name": "cacheSlot",
       "moduleName": "@apollo/client/cache",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_cacheSlot = cacheSlot;"
-      ]
+      "usageExamples": ["const _Test_cacheSlot = cacheSlot;"]
     },
     {
       "name": "TypePolicies",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicies = TypePolicies;"
-      ]
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
     },
     {
       "name": "TypePolicy",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicy = TypePolicy;"
-      ]
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
     },
     {
       "name": "FieldPolicy",
@@ -238,9 +200,7 @@
       "name": "PossibleTypesMap",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_PossibleTypesMap = PossibleTypesMap;"
-      ]
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
     },
     {
       "name": "Policies",
@@ -255,57 +215,43 @@
       "name": "FragmentRegistryAPI",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_FragmentRegistryAPI = FragmentRegistryAPI;"
-      ]
+      "usageExamples": ["type _Test_FragmentRegistryAPI = FragmentRegistryAPI;"]
     },
     {
       "name": "createFragmentRegistry",
       "moduleName": "@apollo/client/cache",
       "kind": "Function",
-      "usageExamples": [
-        "createFragmentRegistry(fragments)"
-      ]
+      "usageExamples": ["createFragmentRegistry(fragments)"]
     },
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_StoreObject = StoreObject;"
-      ]
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
     },
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_StoreValue = StoreValue;"
-      ]
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
     },
     {
       "name": "IdGetterObj",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IdGetterObj = IdGetterObj;"
-      ]
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
     },
     {
       "name": "IdGetter",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_IdGetter = IdGetter;"
-      ]
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
     },
     {
       "name": "NormalizedCache",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_NormalizedCache = NormalizedCache;"
-      ]
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
     },
     {
       "name": "NormalizedCacheObject",
@@ -319,17 +265,13 @@
       "name": "OptimisticStoreItem",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OptimisticStoreItem = OptimisticStoreItem;"
-      ]
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
     },
     {
       "name": "ReadQueryOptions",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ReadQueryOptions = ReadQueryOptions;"
-      ]
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
     },
     {
       "name": "DiffQueryAgainstStoreOptions",
@@ -343,33 +285,25 @@
       "name": "ApolloReducerConfig",
       "moduleName": "@apollo/client/cache",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ApolloReducerConfig = ApolloReducerConfig;"
-      ]
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
     },
     {
       "name": "InMemoryCacheConfig",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"
-      ]
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
     },
     {
       "name": "MergeInfo",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeInfo = MergeInfo;"
-      ]
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
     },
     {
       "name": "MergeTree",
       "moduleName": "@apollo/client/cache",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeTree = MergeTree;"
-      ]
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
     },
     {
       "name": "ReadMergeModifyContext",
@@ -392,9 +326,7 @@
     {
       "name": "DefaultOptions",
       "moduleName": "@apollo/client",
-      "usageExamples": [
-        "type _Test_DefaultOptions = DefaultOptions;"
-      ]
+      "usageExamples": ["type _Test_DefaultOptions = DefaultOptions;"]
     },
     {
       "name": "ApolloClient",
@@ -466,9 +398,7 @@
       "name": "FetchPolicy",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FetchPolicy = FetchPolicy;"
-      ]
+      "usageExamples": ["type _Test_FetchPolicy = FetchPolicy;"]
     },
     {
       "name": "WatchQueryFetchPolicy",
@@ -482,25 +412,19 @@
       "name": "MutationFetchPolicy",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MutationFetchPolicy = MutationFetchPolicy;"
-      ]
+      "usageExamples": ["type _Test_MutationFetchPolicy = MutationFetchPolicy;"]
     },
     {
       "name": "RefetchWritePolicy",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RefetchWritePolicy = RefetchWritePolicy;"
-      ]
+      "usageExamples": ["type _Test_RefetchWritePolicy = RefetchWritePolicy;"]
     },
     {
       "name": "ErrorPolicy",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ErrorPolicy = ErrorPolicy;"
-      ]
+      "usageExamples": ["type _Test_ErrorPolicy = ErrorPolicy;"]
     },
     {
       "name": "FetchMoreQueryOptions",
@@ -554,41 +478,31 @@
       "name": "NetworkStatus",
       "moduleName": "@apollo/client",
       "kind": "RegularEnum",
-      "usageExamples": [
-        "type _Test_NetworkStatus = NetworkStatus;"
-      ]
+      "usageExamples": ["type _Test_NetworkStatus = NetworkStatus;"]
     },
     {
       "name": "isNetworkRequestSettled",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "isNetworkRequestSettled(networkStatus)"
-      ]
+      "usageExamples": ["isNetworkRequestSettled(networkStatus)"]
     },
     {
       "name": "Resolver",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Resolver = Resolver;"
-      ]
+      "usageExamples": ["type _Test_Resolver = Resolver;"]
     },
     {
       "name": "FragmentMatcher",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentMatcher = FragmentMatcher;"
-      ]
+      "usageExamples": ["type _Test_FragmentMatcher = FragmentMatcher;"]
     },
     {
       "name": "isApolloError",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "isApolloError(err)"
-      ]
+      "usageExamples": ["isApolloError(err)"]
     },
     {
       "name": "ApolloError",
@@ -603,48 +517,36 @@
       "name": "Transaction",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Transaction = Transaction<T>;"
-      ]
+      "usageExamples": ["type _Test_Transaction = Transaction<T>;"]
     },
     {
       "name": "DataProxy",
       "moduleName": "@apollo/client",
-      "usageExamples": [
-        "const _Test_DataProxy = DataProxy;"
-      ]
+      "usageExamples": ["const _Test_DataProxy = DataProxy;"]
     },
     {
       "name": "InMemoryCacheConfig",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"
-      ]
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
     },
     {
       "name": "ReactiveVar",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ReactiveVar = ReactiveVar<T>;"
-      ]
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
     },
     {
       "name": "TypePolicies",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicies = TypePolicies;"
-      ]
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
     },
     {
       "name": "TypePolicy",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicy = TypePolicy;"
-      ]
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
     },
     {
       "name": "FieldPolicy",
@@ -682,9 +584,7 @@
       "name": "PossibleTypesMap",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_PossibleTypesMap = PossibleTypesMap;"
-      ]
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
     },
     {
       "name": "WatchFragmentOptions",
@@ -706,9 +606,7 @@
       "name": "Cache",
       "moduleName": "@apollo/client",
       "kind": "ValueModule",
-      "usageExamples": [
-        "const _Test_Cache = Cache;"
-      ]
+      "usageExamples": ["const _Test_Cache = Cache;"]
     },
     {
       "name": "ApolloCache",
@@ -741,81 +639,61 @@
       "name": "defaultDataIdFromObject",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "defaultDataIdFromObject(param0, context)"
-      ]
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
     },
     {
       "name": "makeVar",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "makeVar<T>(value)"
-      ]
+      "usageExamples": ["makeVar<T>(value)"]
     },
     {
       "name": "ServerError",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerError = ServerError;"
-      ]
+      "usageExamples": ["type _Test_ServerError = ServerError;"]
     },
     {
       "name": "fromError",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "fromError<T>(errorValue)"
-      ]
+      "usageExamples": ["fromError<T>(errorValue)"]
     },
     {
       "name": "toPromise",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "toPromise<R>(observable)"
-      ]
+      "usageExamples": ["toPromise<R>(observable)"]
     },
     {
       "name": "fromPromise",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "fromPromise<T>(promise)"
-      ]
+      "usageExamples": ["fromPromise<T>(promise)"]
     },
     {
       "name": "throwServerError",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_throwServerError = throwServerError;"
-      ]
+      "usageExamples": ["const _Test_throwServerError = throwServerError;"]
     },
     {
       "name": "DataMasking",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DataMasking = DataMasking;"
-      ]
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
     },
     {
       "name": "FragmentType",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentType = FragmentType<TData>;"
-      ]
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
     },
     {
       "name": "Masked",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Masked = Masked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
     },
     {
       "name": "MaskedDocumentNode",
@@ -829,17 +707,13 @@
       "name": "MaybeMasked",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MaybeMasked = MaybeMasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
     },
     {
       "name": "Unmasked",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Unmasked = Unmasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
     },
     {
       "name": "DocumentTransformCacheKey",
@@ -863,17 +737,13 @@
       "name": "Reference",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Reference = Reference;"
-      ]
+      "usageExamples": ["type _Test_Reference = Reference;"]
     },
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_StoreObject = StoreObject;"
-      ]
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
     },
     {
       "name": "DocumentTransform",
@@ -893,17 +763,13 @@
       "name": "isReference",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "isReference(obj)"
-      ]
+      "usageExamples": ["isReference(obj)"]
     },
     {
       "name": "makeReference",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "makeReference(id)"
-      ]
+      "usageExamples": ["makeReference(id)"]
     },
     {
       "name": "setLogVerbosity",
@@ -913,41 +779,31 @@
     {
       "name": "gql",
       "moduleName": "@apollo/client",
-      "usageExamples": [
-        "gql(literals, args)"
-      ]
+      "usageExamples": ["gql(literals, args)"]
     },
     {
       "name": "resetCaches",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "resetCaches()"
-      ]
+      "usageExamples": ["resetCaches()"]
     },
     {
       "name": "disableFragmentWarnings",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "disableFragmentWarnings()"
-      ]
+      "usageExamples": ["disableFragmentWarnings()"]
     },
     {
       "name": "enableExperimentalFragmentVariables",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "enableExperimentalFragmentVariables()"
-      ]
+      "usageExamples": ["enableExperimentalFragmentVariables()"]
     },
     {
       "name": "disableExperimentalFragmentVariables",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "disableExperimentalFragmentVariables()"
-      ]
+      "usageExamples": ["disableExperimentalFragmentVariables()"]
     },
     {
       "name": "TypedDocumentNode",
@@ -961,25 +817,19 @@
       "name": "MethodKeys",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MethodKeys = MethodKeys<T>;"
-      ]
+      "usageExamples": ["type _Test_MethodKeys = MethodKeys<T>;"]
     },
     {
       "name": "DefaultContext",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DefaultContext = DefaultContext;"
-      ]
+      "usageExamples": ["type _Test_DefaultContext = DefaultContext;"]
     },
     {
       "name": "OnQueryUpdated",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"
-      ]
+      "usageExamples": ["type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"]
     },
     {
       "name": "RefetchQueryDescriptor",
@@ -1073,17 +923,13 @@
       "name": "OperationVariables",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OperationVariables = OperationVariables;"
-      ]
+      "usageExamples": ["type _Test_OperationVariables = OperationVariables;"]
     },
     {
       "name": "ApolloQueryResult",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloQueryResult = ApolloQueryResult<T>;"
-      ]
+      "usageExamples": ["type _Test_ApolloQueryResult = ApolloQueryResult<T>;"]
     },
     {
       "name": "MutationQueryReducer",
@@ -1105,9 +951,7 @@
       "name": "MutationUpdaterFn",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;"
-      ]
+      "usageExamples": ["type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;"]
     },
     {
       "name": "MutationUpdaterFunction",
@@ -1121,41 +965,31 @@
       "name": "Resolvers",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Resolvers = Resolvers;"
-      ]
+      "usageExamples": ["type _Test_Resolvers = Resolvers;"]
     },
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_StoreValue = StoreValue;"
-      ]
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
     },
     {
       "name": "IdGetterObj",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IdGetterObj = IdGetterObj;"
-      ]
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
     },
     {
       "name": "IdGetter",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_IdGetter = IdGetter;"
-      ]
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
     },
     {
       "name": "NormalizedCache",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_NormalizedCache = NormalizedCache;"
-      ]
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
     },
     {
       "name": "NormalizedCacheObject",
@@ -1169,17 +1003,13 @@
       "name": "OptimisticStoreItem",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OptimisticStoreItem = OptimisticStoreItem;"
-      ]
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
     },
     {
       "name": "ReadQueryOptions",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ReadQueryOptions = ReadQueryOptions;"
-      ]
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
     },
     {
       "name": "DiffQueryAgainstStoreOptions",
@@ -1193,25 +1023,19 @@
       "name": "ApolloReducerConfig",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ApolloReducerConfig = ApolloReducerConfig;"
-      ]
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
     },
     {
       "name": "MergeInfo",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeInfo = MergeInfo;"
-      ]
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
     },
     {
       "name": "MergeTree",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeTree = MergeTree;"
-      ]
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
     },
     {
       "name": "ReadMergeModifyContext",
@@ -1225,41 +1049,31 @@
       "name": "empty",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_empty = empty;"
-      ]
+      "usageExamples": ["const _Test_empty = empty;"]
     },
     {
       "name": "from",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_from = from;"
-      ]
+      "usageExamples": ["const _Test_from = from;"]
     },
     {
       "name": "split",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_split = split;"
-      ]
+      "usageExamples": ["const _Test_split = split;"]
     },
     {
       "name": "concat",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_concat = concat;"
-      ]
+      "usageExamples": ["const _Test_concat = concat;"]
     },
     {
       "name": "execute",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_execute = execute;"
-      ]
+      "usageExamples": ["const _Test_execute = execute;"]
     },
     {
       "name": "ApolloLink",
@@ -1274,17 +1088,13 @@
       "name": "DocumentNode",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DocumentNode = DocumentNode;"
-      ]
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
     },
     {
       "name": "Path",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Path = Path;"
-      ]
+      "usageExamples": ["type _Test_Path = Path;"]
     },
     {
       "name": "ExecutionPatchInitialResult",
@@ -1338,9 +1148,7 @@
       "name": "Operation",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Operation = Operation;"
-      ]
+      "usageExamples": ["type _Test_Operation = Operation;"]
     },
     {
       "name": "SingleExecutionResult",
@@ -1362,41 +1170,31 @@
       "name": "NextLink",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NextLink = NextLink;"
-      ]
+      "usageExamples": ["type _Test_NextLink = NextLink;"]
     },
     {
       "name": "RequestHandler",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RequestHandler = RequestHandler;"
-      ]
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
     },
     {
       "name": "ServerParseError",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerParseError = ServerParseError;"
-      ]
+      "usageExamples": ["type _Test_ServerParseError = ServerParseError;"]
     },
     {
       "name": "parseAndCheckHttpResponse",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "parseAndCheckHttpResponse(operations)"
-      ]
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
     },
     {
       "name": "ClientParseError",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ClientParseError = ClientParseError;"
-      ]
+      "usageExamples": ["type _Test_ClientParseError = ClientParseError;"]
     },
     {
       "name": "serializeFetchParameter",
@@ -1410,33 +1208,25 @@
       "name": "HttpOptions",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_HttpOptions = HttpOptions;"
-      ]
+      "usageExamples": ["type _Test_HttpOptions = HttpOptions;"]
     },
     {
       "name": "UriFunction",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_UriFunction = UriFunction;"
-      ]
+      "usageExamples": ["type _Test_UriFunction = UriFunction;"]
     },
     {
       "name": "fallbackHttpConfig",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_fallbackHttpConfig = fallbackHttpConfig;"
-      ]
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
     },
     {
       "name": "defaultPrinter",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_defaultPrinter = defaultPrinter;"
-      ]
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
     },
     {
       "name": "selectHttpOptionsAndBody",
@@ -1458,9 +1248,7 @@
       "name": "checkFetcher",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_checkFetcher = checkFetcher;"
-      ]
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
     },
     {
       "name": "createSignalIfSupported",
@@ -1474,17 +1262,13 @@
       "name": "selectURI",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_selectURI = selectURI;"
-      ]
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
     },
     {
       "name": "createHttpLink",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_createHttpLink = createHttpLink;"
-      ]
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
     },
     {
       "name": "HttpLink",
@@ -1499,80 +1283,60 @@
       "name": "rewriteURIForGET",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "rewriteURIForGET(chosenURI, body)"
-      ]
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
     },
     {
       "name": "ApolloContextValue",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloContextValue = ApolloContextValue;"
-      ]
+      "usageExamples": ["type _Test_ApolloContextValue = ApolloContextValue;"]
     },
     {
       "name": "ApolloProvider",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloProvider = ApolloProvider;"
-      ]
+      "usageExamples": ["const _Test_ApolloProvider = ApolloProvider;"]
     },
     {
       "name": "ApolloConsumer",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloConsumer = ApolloConsumer;"
-      ]
+      "usageExamples": ["const _Test_ApolloConsumer = ApolloConsumer;"]
     },
     {
       "name": "getApolloContext",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "getApolloContext()"
-      ]
+      "usageExamples": ["getApolloContext()"]
     },
     {
       "name": "resetApolloContext",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_resetApolloContext = resetApolloContext;"
-      ]
+      "usageExamples": ["const _Test_resetApolloContext = resetApolloContext;"]
     },
     {
       "name": "IDocumentDefinition",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IDocumentDefinition = IDocumentDefinition;"
-      ]
+      "usageExamples": ["type _Test_IDocumentDefinition = IDocumentDefinition;"]
     },
     {
       "name": "DocumentType",
       "moduleName": "@apollo/client",
       "kind": "RegularEnum",
-      "usageExamples": [
-        "type _Test_DocumentType = DocumentType;"
-      ]
+      "usageExamples": ["type _Test_DocumentType = DocumentType;"]
     },
     {
       "name": "operationName",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "operationName(type)"
-      ]
+      "usageExamples": ["operationName(type)"]
     },
     {
       "name": "parser",
       "moduleName": "@apollo/client",
-      "usageExamples": [
-        "parser(document)"
-      ]
+      "usageExamples": ["parser(document)"]
     },
     {
       "name": "PreloadQueryOptions",
@@ -1602,17 +1366,13 @@
       "name": "createQueryPreloader",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "createQueryPreloader(client)"
-      ]
+      "usageExamples": ["createQueryPreloader(client)"]
     },
     {
       "name": "useQuery",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "UseSuspenseQueryResult",
@@ -1666,9 +1426,7 @@
       "name": "useSuspenseFragment",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useSuspenseFragment<TData, TVariables>(options)"
-      ]
+      "usageExamples": ["useSuspenseFragment<TData, TVariables>(options)"]
     },
     {
       "name": "LoadQueryFunction",
@@ -1706,9 +1464,7 @@
       "name": "useQueryRefHandlers",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useQueryRefHandlers<TData, TVariables>(queryRef)"
-      ]
+      "usageExamples": ["useQueryRefHandlers<TData, TVariables>(queryRef)"]
     },
     {
       "name": "UseReadQueryResult",
@@ -1722,41 +1478,31 @@
       "name": "useReadQuery",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useReadQuery<TData>(queryRef)"
-      ]
+      "usageExamples": ["useReadQuery<TData>(queryRef)"]
     },
     {
       "name": "skipToken",
       "moduleName": "@apollo/client",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_skipToken = skipToken;"
-      ]
+      "usageExamples": ["const _Test_skipToken = skipToken;"]
     },
     {
       "name": "SkipToken",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_SkipToken = SkipToken;"
-      ]
+      "usageExamples": ["type _Test_SkipToken = SkipToken;"]
     },
     {
       "name": "useApolloClient",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useApolloClient(override)"
-      ]
+      "usageExamples": ["useApolloClient(override)"]
     },
     {
       "name": "useLazyQuery",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useLazyQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useLazyQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "useMutation",
@@ -1778,17 +1524,13 @@
       "name": "useReactiveVar",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useReactiveVar<T>(rv)"
-      ]
+      "usageExamples": ["useReactiveVar<T>(rv)"]
     },
     {
       "name": "useFragment",
       "moduleName": "@apollo/client",
       "kind": "Function",
-      "usageExamples": [
-        "useFragment<TData, TVars>(options)"
-      ]
+      "usageExamples": ["useFragment<TData, TVars>(options)"]
     },
     {
       "name": "UseFragmentOptions",
@@ -1818,9 +1560,7 @@
       "name": "QueryRef",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_QueryRef = QueryRef<TData, TVariables>;"
-      ]
+      "usageExamples": ["type _Test_QueryRef = QueryRef<TData, TVariables>;"]
     },
     {
       "name": "PreloadedQueryRef",
@@ -1834,17 +1574,13 @@
       "name": "Context",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Context = Context;"
-      ]
+      "usageExamples": ["type _Test_Context = Context;"]
     },
     {
       "name": "CommonOptions",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_CommonOptions = CommonOptions<TOptions>;"
-      ]
+      "usageExamples": ["type _Test_CommonOptions = CommonOptions<TOptions>;"]
     },
     {
       "name": "BaseQueryOptions",
@@ -2026,9 +1762,7 @@
       "name": "MutationResult",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MutationResult = MutationResult<TData>;"
-      ]
+      "usageExamples": ["type _Test_MutationResult = MutationResult<TData>;"]
     },
     {
       "name": "MutationFunction",
@@ -2066,9 +1800,7 @@
       "name": "OnDataOptions",
       "moduleName": "@apollo/client",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_OnDataOptions = OnDataOptions<TData>;"
-      ]
+      "usageExamples": ["type _Test_OnDataOptions = OnDataOptions<TData>;"]
     },
     {
       "name": "OnSubscriptionDataOptions",
@@ -2130,9 +1862,7 @@
       "name": "NoInfer",
       "moduleName": "@apollo/client",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NoInfer = NoInfer<T>;"
-      ]
+      "usageExamples": ["type _Test_NoInfer = NoInfer<T>;"]
     }
   ],
   "@apollo/client/core": [
@@ -2147,9 +1877,7 @@
     {
       "name": "DefaultOptions",
       "moduleName": "@apollo/client/core",
-      "usageExamples": [
-        "type _Test_DefaultOptions = DefaultOptions;"
-      ]
+      "usageExamples": ["type _Test_DefaultOptions = DefaultOptions;"]
     },
     {
       "name": "ApolloClient",
@@ -2221,9 +1949,7 @@
       "name": "FetchPolicy",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FetchPolicy = FetchPolicy;"
-      ]
+      "usageExamples": ["type _Test_FetchPolicy = FetchPolicy;"]
     },
     {
       "name": "WatchQueryFetchPolicy",
@@ -2237,25 +1963,19 @@
       "name": "MutationFetchPolicy",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MutationFetchPolicy = MutationFetchPolicy;"
-      ]
+      "usageExamples": ["type _Test_MutationFetchPolicy = MutationFetchPolicy;"]
     },
     {
       "name": "RefetchWritePolicy",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RefetchWritePolicy = RefetchWritePolicy;"
-      ]
+      "usageExamples": ["type _Test_RefetchWritePolicy = RefetchWritePolicy;"]
     },
     {
       "name": "ErrorPolicy",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ErrorPolicy = ErrorPolicy;"
-      ]
+      "usageExamples": ["type _Test_ErrorPolicy = ErrorPolicy;"]
     },
     {
       "name": "FetchMoreQueryOptions",
@@ -2309,41 +2029,31 @@
       "name": "NetworkStatus",
       "moduleName": "@apollo/client/core",
       "kind": "RegularEnum",
-      "usageExamples": [
-        "type _Test_NetworkStatus = NetworkStatus;"
-      ]
+      "usageExamples": ["type _Test_NetworkStatus = NetworkStatus;"]
     },
     {
       "name": "isNetworkRequestSettled",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "isNetworkRequestSettled(networkStatus)"
-      ]
+      "usageExamples": ["isNetworkRequestSettled(networkStatus)"]
     },
     {
       "name": "Resolver",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Resolver = Resolver;"
-      ]
+      "usageExamples": ["type _Test_Resolver = Resolver;"]
     },
     {
       "name": "FragmentMatcher",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentMatcher = FragmentMatcher;"
-      ]
+      "usageExamples": ["type _Test_FragmentMatcher = FragmentMatcher;"]
     },
     {
       "name": "isApolloError",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "isApolloError(err)"
-      ]
+      "usageExamples": ["isApolloError(err)"]
     },
     {
       "name": "ApolloError",
@@ -2358,48 +2068,36 @@
       "name": "Transaction",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Transaction = Transaction<T>;"
-      ]
+      "usageExamples": ["type _Test_Transaction = Transaction<T>;"]
     },
     {
       "name": "DataProxy",
       "moduleName": "@apollo/client/core",
-      "usageExamples": [
-        "const _Test_DataProxy = DataProxy;"
-      ]
+      "usageExamples": ["const _Test_DataProxy = DataProxy;"]
     },
     {
       "name": "InMemoryCacheConfig",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"
-      ]
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
     },
     {
       "name": "ReactiveVar",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ReactiveVar = ReactiveVar<T>;"
-      ]
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
     },
     {
       "name": "TypePolicies",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicies = TypePolicies;"
-      ]
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
     },
     {
       "name": "TypePolicy",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_TypePolicy = TypePolicy;"
-      ]
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
     },
     {
       "name": "FieldPolicy",
@@ -2437,9 +2135,7 @@
       "name": "PossibleTypesMap",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_PossibleTypesMap = PossibleTypesMap;"
-      ]
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
     },
     {
       "name": "WatchFragmentOptions",
@@ -2461,9 +2157,7 @@
       "name": "Cache",
       "moduleName": "@apollo/client/core",
       "kind": "ValueModule",
-      "usageExamples": [
-        "const _Test_Cache = Cache;"
-      ]
+      "usageExamples": ["const _Test_Cache = Cache;"]
     },
     {
       "name": "ApolloCache",
@@ -2496,81 +2190,61 @@
       "name": "defaultDataIdFromObject",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "defaultDataIdFromObject(param0, context)"
-      ]
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
     },
     {
       "name": "makeVar",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "makeVar<T>(value)"
-      ]
+      "usageExamples": ["makeVar<T>(value)"]
     },
     {
       "name": "ServerError",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerError = ServerError;"
-      ]
+      "usageExamples": ["type _Test_ServerError = ServerError;"]
     },
     {
       "name": "fromError",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "fromError<T>(errorValue)"
-      ]
+      "usageExamples": ["fromError<T>(errorValue)"]
     },
     {
       "name": "toPromise",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "toPromise<R>(observable)"
-      ]
+      "usageExamples": ["toPromise<R>(observable)"]
     },
     {
       "name": "fromPromise",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "fromPromise<T>(promise)"
-      ]
+      "usageExamples": ["fromPromise<T>(promise)"]
     },
     {
       "name": "throwServerError",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_throwServerError = throwServerError;"
-      ]
+      "usageExamples": ["const _Test_throwServerError = throwServerError;"]
     },
     {
       "name": "DataMasking",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DataMasking = DataMasking;"
-      ]
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
     },
     {
       "name": "FragmentType",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentType = FragmentType<TData>;"
-      ]
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
     },
     {
       "name": "Masked",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Masked = Masked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
     },
     {
       "name": "MaskedDocumentNode",
@@ -2584,17 +2258,13 @@
       "name": "MaybeMasked",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MaybeMasked = MaybeMasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
     },
     {
       "name": "Unmasked",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Unmasked = Unmasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
     },
     {
       "name": "DocumentTransformCacheKey",
@@ -2618,17 +2288,13 @@
       "name": "Reference",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Reference = Reference;"
-      ]
+      "usageExamples": ["type _Test_Reference = Reference;"]
     },
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_StoreObject = StoreObject;"
-      ]
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
     },
     {
       "name": "DocumentTransform",
@@ -2648,17 +2314,13 @@
       "name": "isReference",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "isReference(obj)"
-      ]
+      "usageExamples": ["isReference(obj)"]
     },
     {
       "name": "makeReference",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "makeReference(id)"
-      ]
+      "usageExamples": ["makeReference(id)"]
     },
     {
       "name": "setLogVerbosity",
@@ -2668,41 +2330,31 @@
     {
       "name": "gql",
       "moduleName": "@apollo/client/core",
-      "usageExamples": [
-        "gql(literals, args)"
-      ]
+      "usageExamples": ["gql(literals, args)"]
     },
     {
       "name": "resetCaches",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "resetCaches()"
-      ]
+      "usageExamples": ["resetCaches()"]
     },
     {
       "name": "disableFragmentWarnings",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "disableFragmentWarnings()"
-      ]
+      "usageExamples": ["disableFragmentWarnings()"]
     },
     {
       "name": "enableExperimentalFragmentVariables",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "enableExperimentalFragmentVariables()"
-      ]
+      "usageExamples": ["enableExperimentalFragmentVariables()"]
     },
     {
       "name": "disableExperimentalFragmentVariables",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "disableExperimentalFragmentVariables()"
-      ]
+      "usageExamples": ["disableExperimentalFragmentVariables()"]
     },
     {
       "name": "TypedDocumentNode",
@@ -2716,25 +2368,19 @@
       "name": "MethodKeys",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MethodKeys = MethodKeys<T>;"
-      ]
+      "usageExamples": ["type _Test_MethodKeys = MethodKeys<T>;"]
     },
     {
       "name": "DefaultContext",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DefaultContext = DefaultContext;"
-      ]
+      "usageExamples": ["type _Test_DefaultContext = DefaultContext;"]
     },
     {
       "name": "OnQueryUpdated",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"
-      ]
+      "usageExamples": ["type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"]
     },
     {
       "name": "RefetchQueryDescriptor",
@@ -2828,17 +2474,13 @@
       "name": "OperationVariables",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OperationVariables = OperationVariables;"
-      ]
+      "usageExamples": ["type _Test_OperationVariables = OperationVariables;"]
     },
     {
       "name": "ApolloQueryResult",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloQueryResult = ApolloQueryResult<T>;"
-      ]
+      "usageExamples": ["type _Test_ApolloQueryResult = ApolloQueryResult<T>;"]
     },
     {
       "name": "MutationQueryReducer",
@@ -2860,9 +2502,7 @@
       "name": "MutationUpdaterFn",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;"
-      ]
+      "usageExamples": ["type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;"]
     },
     {
       "name": "MutationUpdaterFunction",
@@ -2876,41 +2516,31 @@
       "name": "Resolvers",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Resolvers = Resolvers;"
-      ]
+      "usageExamples": ["type _Test_Resolvers = Resolvers;"]
     },
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_StoreValue = StoreValue;"
-      ]
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
     },
     {
       "name": "IdGetterObj",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IdGetterObj = IdGetterObj;"
-      ]
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
     },
     {
       "name": "IdGetter",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_IdGetter = IdGetter;"
-      ]
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
     },
     {
       "name": "NormalizedCache",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_NormalizedCache = NormalizedCache;"
-      ]
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
     },
     {
       "name": "NormalizedCacheObject",
@@ -2924,17 +2554,13 @@
       "name": "OptimisticStoreItem",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_OptimisticStoreItem = OptimisticStoreItem;"
-      ]
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
     },
     {
       "name": "ReadQueryOptions",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ReadQueryOptions = ReadQueryOptions;"
-      ]
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
     },
     {
       "name": "DiffQueryAgainstStoreOptions",
@@ -2948,25 +2574,19 @@
       "name": "ApolloReducerConfig",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ApolloReducerConfig = ApolloReducerConfig;"
-      ]
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
     },
     {
       "name": "MergeInfo",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeInfo = MergeInfo;"
-      ]
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
     },
     {
       "name": "MergeTree",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MergeTree = MergeTree;"
-      ]
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
     },
     {
       "name": "ReadMergeModifyContext",
@@ -2980,41 +2600,31 @@
       "name": "empty",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_empty = empty;"
-      ]
+      "usageExamples": ["const _Test_empty = empty;"]
     },
     {
       "name": "from",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_from = from;"
-      ]
+      "usageExamples": ["const _Test_from = from;"]
     },
     {
       "name": "split",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_split = split;"
-      ]
+      "usageExamples": ["const _Test_split = split;"]
     },
     {
       "name": "concat",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_concat = concat;"
-      ]
+      "usageExamples": ["const _Test_concat = concat;"]
     },
     {
       "name": "execute",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_execute = execute;"
-      ]
+      "usageExamples": ["const _Test_execute = execute;"]
     },
     {
       "name": "ApolloLink",
@@ -3029,17 +2639,13 @@
       "name": "DocumentNode",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DocumentNode = DocumentNode;"
-      ]
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
     },
     {
       "name": "Path",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Path = Path;"
-      ]
+      "usageExamples": ["type _Test_Path = Path;"]
     },
     {
       "name": "ExecutionPatchInitialResult",
@@ -3093,9 +2699,7 @@
       "name": "Operation",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Operation = Operation;"
-      ]
+      "usageExamples": ["type _Test_Operation = Operation;"]
     },
     {
       "name": "SingleExecutionResult",
@@ -3117,41 +2721,31 @@
       "name": "NextLink",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NextLink = NextLink;"
-      ]
+      "usageExamples": ["type _Test_NextLink = NextLink;"]
     },
     {
       "name": "RequestHandler",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RequestHandler = RequestHandler;"
-      ]
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
     },
     {
       "name": "ServerParseError",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerParseError = ServerParseError;"
-      ]
+      "usageExamples": ["type _Test_ServerParseError = ServerParseError;"]
     },
     {
       "name": "parseAndCheckHttpResponse",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "parseAndCheckHttpResponse(operations)"
-      ]
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
     },
     {
       "name": "ClientParseError",
       "moduleName": "@apollo/client/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ClientParseError = ClientParseError;"
-      ]
+      "usageExamples": ["type _Test_ClientParseError = ClientParseError;"]
     },
     {
       "name": "serializeFetchParameter",
@@ -3165,33 +2759,25 @@
       "name": "HttpOptions",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_HttpOptions = HttpOptions;"
-      ]
+      "usageExamples": ["type _Test_HttpOptions = HttpOptions;"]
     },
     {
       "name": "UriFunction",
       "moduleName": "@apollo/client/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_UriFunction = UriFunction;"
-      ]
+      "usageExamples": ["type _Test_UriFunction = UriFunction;"]
     },
     {
       "name": "fallbackHttpConfig",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_fallbackHttpConfig = fallbackHttpConfig;"
-      ]
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
     },
     {
       "name": "defaultPrinter",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_defaultPrinter = defaultPrinter;"
-      ]
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
     },
     {
       "name": "selectHttpOptionsAndBody",
@@ -3213,9 +2799,7 @@
       "name": "checkFetcher",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_checkFetcher = checkFetcher;"
-      ]
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
     },
     {
       "name": "createSignalIfSupported",
@@ -3229,17 +2813,13 @@
       "name": "selectURI",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_selectURI = selectURI;"
-      ]
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
     },
     {
       "name": "createHttpLink",
       "moduleName": "@apollo/client/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_createHttpLink = createHttpLink;"
-      ]
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
     },
     {
       "name": "HttpLink",
@@ -3254,9 +2834,7 @@
       "name": "rewriteURIForGET",
       "moduleName": "@apollo/client/core",
       "kind": "Function",
-      "usageExamples": [
-        "rewriteURIForGET(chosenURI, body)"
-      ]
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
     }
   ],
   "@apollo/client/dev": [
@@ -3264,41 +2842,31 @@
       "name": "loadDevMessages",
       "moduleName": "@apollo/client/dev",
       "kind": "Function",
-      "usageExamples": [
-        "loadDevMessages()"
-      ]
+      "usageExamples": ["loadDevMessages()"]
     },
     {
       "name": "loadErrorMessageHandler",
       "moduleName": "@apollo/client/dev",
       "kind": "Function",
-      "usageExamples": [
-        "loadErrorMessageHandler(errorCodes)"
-      ]
+      "usageExamples": ["loadErrorMessageHandler(errorCodes)"]
     },
     {
       "name": "loadErrorMessages",
       "moduleName": "@apollo/client/dev",
       "kind": "Function",
-      "usageExamples": [
-        "loadErrorMessages()"
-      ]
+      "usageExamples": ["loadErrorMessages()"]
     },
     {
       "name": "setErrorMessageHandler",
       "moduleName": "@apollo/client/dev",
       "kind": "Function",
-      "usageExamples": [
-        "setErrorMessageHandler(handler)"
-      ]
+      "usageExamples": ["setErrorMessageHandler(handler)"]
     },
     {
       "name": "ErrorMessageHandler",
       "moduleName": "@apollo/client/dev",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ErrorMessageHandler = ErrorMessageHandler;"
-      ]
+      "usageExamples": ["type _Test_ErrorMessageHandler = ErrorMessageHandler;"]
     }
   ],
   "@apollo/client/errors": [
@@ -3306,17 +2874,13 @@
       "name": "graphQLResultHasProtocolErrors",
       "moduleName": "@apollo/client/errors",
       "kind": "Function",
-      "usageExamples": [
-        "graphQLResultHasProtocolErrors<T>(result)"
-      ]
+      "usageExamples": ["graphQLResultHasProtocolErrors<T>(result)"]
     },
     {
       "name": "isApolloError",
       "moduleName": "@apollo/client/errors",
       "kind": "Function",
-      "usageExamples": [
-        "isApolloError(err)"
-      ]
+      "usageExamples": ["isApolloError(err)"]
     },
     {
       "name": "PROTOCOL_ERRORS_SYMBOL",
@@ -3330,25 +2894,19 @@
       "name": "ApolloErrorOptions",
       "moduleName": "@apollo/client/errors",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloErrorOptions = ApolloErrorOptions;"
-      ]
+      "usageExamples": ["type _Test_ApolloErrorOptions = ApolloErrorOptions;"]
     },
     {
       "name": "GraphQLErrors",
       "moduleName": "@apollo/client/errors",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_GraphQLErrors = GraphQLErrors;"
-      ]
+      "usageExamples": ["type _Test_GraphQLErrors = GraphQLErrors;"]
     },
     {
       "name": "NetworkError",
       "moduleName": "@apollo/client/errors",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NetworkError = NetworkError;"
-      ]
+      "usageExamples": ["type _Test_NetworkError = NetworkError;"]
     },
     {
       "name": "ApolloError",
@@ -3365,17 +2923,13 @@
       "name": "BatchableRequest",
       "moduleName": "@apollo/client/link/batch",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_BatchableRequest = BatchableRequest;"
-      ]
+      "usageExamples": ["type _Test_BatchableRequest = BatchableRequest;"]
     },
     {
       "name": "BatchHandler",
       "moduleName": "@apollo/client/link/batch",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_BatchHandler = BatchHandler;"
-      ]
+      "usageExamples": ["type _Test_BatchHandler = BatchHandler;"]
     },
     {
       "name": "OperationBatcher",
@@ -3410,17 +2964,13 @@
       "name": "setContext",
       "moduleName": "@apollo/client/link/context",
       "kind": "Function",
-      "usageExamples": [
-        "setContext(setter)"
-      ]
+      "usageExamples": ["setContext(setter)"]
     },
     {
       "name": "ContextSetter",
       "moduleName": "@apollo/client/link/context",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ContextSetter = ContextSetter;"
-      ]
+      "usageExamples": ["type _Test_ContextSetter = ContextSetter;"]
     }
   ],
   "@apollo/client/link/core": [
@@ -3428,41 +2978,31 @@
       "name": "empty",
       "moduleName": "@apollo/client/link/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_empty = empty;"
-      ]
+      "usageExamples": ["const _Test_empty = empty;"]
     },
     {
       "name": "from",
       "moduleName": "@apollo/client/link/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_from = from;"
-      ]
+      "usageExamples": ["const _Test_from = from;"]
     },
     {
       "name": "split",
       "moduleName": "@apollo/client/link/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_split = split;"
-      ]
+      "usageExamples": ["const _Test_split = split;"]
     },
     {
       "name": "concat",
       "moduleName": "@apollo/client/link/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_concat = concat;"
-      ]
+      "usageExamples": ["const _Test_concat = concat;"]
     },
     {
       "name": "execute",
       "moduleName": "@apollo/client/link/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_execute = execute;"
-      ]
+      "usageExamples": ["const _Test_execute = execute;"]
     },
     {
       "name": "ApolloLink",
@@ -3477,17 +3017,13 @@
       "name": "DocumentNode",
       "moduleName": "@apollo/client/link/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DocumentNode = DocumentNode;"
-      ]
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
     },
     {
       "name": "Path",
       "moduleName": "@apollo/client/link/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Path = Path;"
-      ]
+      "usageExamples": ["type _Test_Path = Path;"]
     },
     {
       "name": "ExecutionPatchInitialResult",
@@ -3541,9 +3077,7 @@
       "name": "Operation",
       "moduleName": "@apollo/client/link/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Operation = Operation;"
-      ]
+      "usageExamples": ["type _Test_Operation = Operation;"]
     },
     {
       "name": "SingleExecutionResult",
@@ -3565,17 +3099,13 @@
       "name": "NextLink",
       "moduleName": "@apollo/client/link/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NextLink = NextLink;"
-      ]
+      "usageExamples": ["type _Test_NextLink = NextLink;"]
     },
     {
       "name": "RequestHandler",
       "moduleName": "@apollo/client/link/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RequestHandler = RequestHandler;"
-      ]
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
     }
   ],
   "@apollo/client/link/error": [
@@ -3583,17 +3113,13 @@
       "name": "onError",
       "moduleName": "@apollo/client/link/error",
       "kind": "Function",
-      "usageExamples": [
-        "onError(errorHandler)"
-      ]
+      "usageExamples": ["onError(errorHandler)"]
     },
     {
       "name": "ErrorResponse",
       "moduleName": "@apollo/client/link/error",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ErrorResponse = ErrorResponse;"
-      ]
+      "usageExamples": ["type _Test_ErrorResponse = ErrorResponse;"]
     },
     {
       "name": "ErrorLink",
@@ -3607,9 +3133,7 @@
       "name": "ErrorHandler",
       "moduleName": "@apollo/client/link/error",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ErrorHandler = ErrorHandler;"
-      ]
+      "usageExamples": ["type _Test_ErrorHandler = ErrorHandler;"]
     }
   ],
   "@apollo/client/link/http": [
@@ -3617,25 +3141,19 @@
       "name": "ServerParseError",
       "moduleName": "@apollo/client/link/http",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerParseError = ServerParseError;"
-      ]
+      "usageExamples": ["type _Test_ServerParseError = ServerParseError;"]
     },
     {
       "name": "parseAndCheckHttpResponse",
       "moduleName": "@apollo/client/link/http",
       "kind": "Function",
-      "usageExamples": [
-        "parseAndCheckHttpResponse(operations)"
-      ]
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
     },
     {
       "name": "ClientParseError",
       "moduleName": "@apollo/client/link/http",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ClientParseError = ClientParseError;"
-      ]
+      "usageExamples": ["type _Test_ClientParseError = ClientParseError;"]
     },
     {
       "name": "serializeFetchParameter",
@@ -3649,33 +3167,25 @@
       "name": "HttpOptions",
       "moduleName": "@apollo/client/link/http",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_HttpOptions = HttpOptions;"
-      ]
+      "usageExamples": ["type _Test_HttpOptions = HttpOptions;"]
     },
     {
       "name": "UriFunction",
       "moduleName": "@apollo/client/link/http",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_UriFunction = UriFunction;"
-      ]
+      "usageExamples": ["type _Test_UriFunction = UriFunction;"]
     },
     {
       "name": "fallbackHttpConfig",
       "moduleName": "@apollo/client/link/http",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_fallbackHttpConfig = fallbackHttpConfig;"
-      ]
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
     },
     {
       "name": "defaultPrinter",
       "moduleName": "@apollo/client/link/http",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_defaultPrinter = defaultPrinter;"
-      ]
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
     },
     {
       "name": "selectHttpOptionsAndBody",
@@ -3697,9 +3207,7 @@
       "name": "checkFetcher",
       "moduleName": "@apollo/client/link/http",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_checkFetcher = checkFetcher;"
-      ]
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
     },
     {
       "name": "createSignalIfSupported",
@@ -3713,17 +3221,13 @@
       "name": "selectURI",
       "moduleName": "@apollo/client/link/http",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_selectURI = selectURI;"
-      ]
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
     },
     {
       "name": "createHttpLink",
       "moduleName": "@apollo/client/link/http",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_createHttpLink = createHttpLink;"
-      ]
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
     },
     {
       "name": "HttpLink",
@@ -3738,9 +3242,7 @@
       "name": "rewriteURIForGET",
       "moduleName": "@apollo/client/link/http",
       "kind": "Function",
-      "usageExamples": [
-        "rewriteURIForGET(chosenURI, body)"
-      ]
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
     }
   ],
   "@apollo/client/link/persisted-queries": [
@@ -3748,25 +3250,19 @@
       "name": "VERSION",
       "moduleName": "@apollo/client/link/persisted-queries",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_VERSION = VERSION;"
-      ]
+      "usageExamples": ["const _Test_VERSION = VERSION;"]
     },
     {
       "name": "ErrorResponse",
       "moduleName": "@apollo/client/link/persisted-queries",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ErrorResponse = ErrorResponse;"
-      ]
+      "usageExamples": ["type _Test_ErrorResponse = ErrorResponse;"]
     },
     {
       "name": "PersistedQueryLink",
       "moduleName": "@apollo/client/link/persisted-queries",
       "kind": "NamespaceModule",
-      "usageExamples": [
-        "const _Test_PersistedQueryLink = PersistedQueryLink;"
-      ]
+      "usageExamples": ["const _Test_PersistedQueryLink = PersistedQueryLink;"]
     },
     {
       "name": "createPersistedQueryLink",
@@ -3800,17 +3296,13 @@
       "name": "removeTypenameFromVariables",
       "moduleName": "@apollo/client/link/remove-typename",
       "kind": "Function",
-      "usageExamples": [
-        "removeTypenameFromVariables(options)"
-      ]
+      "usageExamples": ["removeTypenameFromVariables(options)"]
     },
     {
       "name": "KEEP",
       "moduleName": "@apollo/client/link/remove-typename",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_KEEP = KEEP;"
-      ]
+      "usageExamples": ["const _Test_KEEP = KEEP;"]
     }
   ],
   "@apollo/client/link/schema": [
@@ -3839,73 +3331,55 @@
       "name": "fromError",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "fromError<T>(errorValue)"
-      ]
+      "usageExamples": ["fromError<T>(errorValue)"]
     },
     {
       "name": "toPromise",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "toPromise<R>(observable)"
-      ]
+      "usageExamples": ["toPromise<R>(observable)"]
     },
     {
       "name": "fromPromise",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "fromPromise<T>(promise)"
-      ]
+      "usageExamples": ["fromPromise<T>(promise)"]
     },
     {
       "name": "ServerError",
       "moduleName": "@apollo/client/link/utils",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ServerError = ServerError;"
-      ]
+      "usageExamples": ["type _Test_ServerError = ServerError;"]
     },
     {
       "name": "throwServerError",
       "moduleName": "@apollo/client/link/utils",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_throwServerError = throwServerError;"
-      ]
+      "usageExamples": ["const _Test_throwServerError = throwServerError;"]
     },
     {
       "name": "validateOperation",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "validateOperation(operation)"
-      ]
+      "usageExamples": ["validateOperation(operation)"]
     },
     {
       "name": "createOperation",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "createOperation(starting, operation)"
-      ]
+      "usageExamples": ["createOperation(starting, operation)"]
     },
     {
       "name": "transformOperation",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "transformOperation(operation)"
-      ]
+      "usageExamples": ["transformOperation(operation)"]
     },
     {
       "name": "filterOperationVariables",
       "moduleName": "@apollo/client/link/utils",
       "kind": "Function",
-      "usageExamples": [
-        "filterOperationVariables(variables, query)"
-      ]
+      "usageExamples": ["filterOperationVariables(variables, query)"]
     }
   ],
   "@apollo/client/link/ws": [
@@ -3921,9 +3395,7 @@
       "name": "WebSocketParams",
       "moduleName": "@apollo/client/link/ws",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_WebSocketParams = WebSocketParams;"
-      ]
+      "usageExamples": ["type _Test_WebSocketParams = WebSocketParams;"]
     }
   ],
   "@apollo/client/masking": [
@@ -3931,25 +3403,19 @@
       "name": "DataMasking",
       "moduleName": "@apollo/client/masking",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_DataMasking = DataMasking;"
-      ]
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
     },
     {
       "name": "FragmentType",
       "moduleName": "@apollo/client/masking",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentType = FragmentType<TData>;"
-      ]
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
     },
     {
       "name": "Masked",
       "moduleName": "@apollo/client/masking",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Masked = Masked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
     },
     {
       "name": "MaskedDocumentNode",
@@ -3963,17 +3429,13 @@
       "name": "MaybeMasked",
       "moduleName": "@apollo/client/masking",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_MaybeMasked = MaybeMasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
     },
     {
       "name": "Unmasked",
       "moduleName": "@apollo/client/masking",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Unmasked = Unmasked<TData>;"
-      ]
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
     },
     {
       "name": "disableWarningsSlot",
@@ -3995,9 +3457,7 @@
       "name": "maskOperation",
       "moduleName": "@apollo/client/masking",
       "kind": "Function",
-      "usageExamples": [
-        "maskOperation<TData>(data, document, cache)"
-      ]
+      "usageExamples": ["maskOperation<TData>(data, document, cache)"]
     }
   ],
   "@apollo/client/react": [
@@ -4005,72 +3465,54 @@
       "name": "ApolloContextValue",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloContextValue = ApolloContextValue;"
-      ]
+      "usageExamples": ["type _Test_ApolloContextValue = ApolloContextValue;"]
     },
     {
       "name": "ApolloProvider",
       "moduleName": "@apollo/client/react",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloProvider = ApolloProvider;"
-      ]
+      "usageExamples": ["const _Test_ApolloProvider = ApolloProvider;"]
     },
     {
       "name": "ApolloConsumer",
       "moduleName": "@apollo/client/react",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloConsumer = ApolloConsumer;"
-      ]
+      "usageExamples": ["const _Test_ApolloConsumer = ApolloConsumer;"]
     },
     {
       "name": "getApolloContext",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "getApolloContext()"
-      ]
+      "usageExamples": ["getApolloContext()"]
     },
     {
       "name": "resetApolloContext",
       "moduleName": "@apollo/client/react",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_resetApolloContext = resetApolloContext;"
-      ]
+      "usageExamples": ["const _Test_resetApolloContext = resetApolloContext;"]
     },
     {
       "name": "IDocumentDefinition",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IDocumentDefinition = IDocumentDefinition;"
-      ]
+      "usageExamples": ["type _Test_IDocumentDefinition = IDocumentDefinition;"]
     },
     {
       "name": "DocumentType",
       "moduleName": "@apollo/client/react",
       "kind": "RegularEnum",
-      "usageExamples": [
-        "type _Test_DocumentType = DocumentType;"
-      ]
+      "usageExamples": ["type _Test_DocumentType = DocumentType;"]
     },
     {
       "name": "operationName",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "operationName(type)"
-      ]
+      "usageExamples": ["operationName(type)"]
     },
     {
       "name": "parser",
       "moduleName": "@apollo/client/react",
-      "usageExamples": [
-        "parser(document)"
-      ]
+      "usageExamples": ["parser(document)"]
     },
     {
       "name": "PreloadQueryOptions",
@@ -4100,17 +3542,13 @@
       "name": "createQueryPreloader",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "createQueryPreloader(client)"
-      ]
+      "usageExamples": ["createQueryPreloader(client)"]
     },
     {
       "name": "useQuery",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "UseSuspenseQueryResult",
@@ -4164,9 +3602,7 @@
       "name": "useSuspenseFragment",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useSuspenseFragment<TData, TVariables>(options)"
-      ]
+      "usageExamples": ["useSuspenseFragment<TData, TVariables>(options)"]
     },
     {
       "name": "LoadQueryFunction",
@@ -4204,9 +3640,7 @@
       "name": "useQueryRefHandlers",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useQueryRefHandlers<TData, TVariables>(queryRef)"
-      ]
+      "usageExamples": ["useQueryRefHandlers<TData, TVariables>(queryRef)"]
     },
     {
       "name": "UseReadQueryResult",
@@ -4220,41 +3654,31 @@
       "name": "useReadQuery",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useReadQuery<TData>(queryRef)"
-      ]
+      "usageExamples": ["useReadQuery<TData>(queryRef)"]
     },
     {
       "name": "skipToken",
       "moduleName": "@apollo/client/react",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_skipToken = skipToken;"
-      ]
+      "usageExamples": ["const _Test_skipToken = skipToken;"]
     },
     {
       "name": "SkipToken",
       "moduleName": "@apollo/client/react",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_SkipToken = SkipToken;"
-      ]
+      "usageExamples": ["type _Test_SkipToken = SkipToken;"]
     },
     {
       "name": "useApolloClient",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useApolloClient(override)"
-      ]
+      "usageExamples": ["useApolloClient(override)"]
     },
     {
       "name": "useLazyQuery",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useLazyQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useLazyQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "useMutation",
@@ -4276,17 +3700,13 @@
       "name": "useReactiveVar",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useReactiveVar<T>(rv)"
-      ]
+      "usageExamples": ["useReactiveVar<T>(rv)"]
     },
     {
       "name": "useFragment",
       "moduleName": "@apollo/client/react",
       "kind": "Function",
-      "usageExamples": [
-        "useFragment<TData, TVars>(options)"
-      ]
+      "usageExamples": ["useFragment<TData, TVars>(options)"]
     },
     {
       "name": "UseFragmentOptions",
@@ -4316,9 +3736,7 @@
       "name": "QueryRef",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_QueryRef = QueryRef<TData, TVariables>;"
-      ]
+      "usageExamples": ["type _Test_QueryRef = QueryRef<TData, TVariables>;"]
     },
     {
       "name": "PreloadedQueryRef",
@@ -4332,17 +3750,13 @@
       "name": "Context",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Context = Context;"
-      ]
+      "usageExamples": ["type _Test_Context = Context;"]
     },
     {
       "name": "CommonOptions",
       "moduleName": "@apollo/client/react",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_CommonOptions = CommonOptions<TOptions>;"
-      ]
+      "usageExamples": ["type _Test_CommonOptions = CommonOptions<TOptions>;"]
     },
     {
       "name": "BaseQueryOptions",
@@ -4524,9 +3938,7 @@
       "name": "MutationResult",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MutationResult = MutationResult<TData>;"
-      ]
+      "usageExamples": ["type _Test_MutationResult = MutationResult<TData>;"]
     },
     {
       "name": "MutationFunction",
@@ -4564,9 +3976,7 @@
       "name": "OnDataOptions",
       "moduleName": "@apollo/client/react",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_OnDataOptions = OnDataOptions<TData>;"
-      ]
+      "usageExamples": ["type _Test_OnDataOptions = OnDataOptions<TData>;"]
     },
     {
       "name": "OnSubscriptionDataOptions",
@@ -4628,32 +4038,24 @@
       "name": "NoInfer",
       "moduleName": "@apollo/client/react",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NoInfer = NoInfer<T>;"
-      ]
+      "usageExamples": ["type _Test_NoInfer = NoInfer<T>;"]
     }
   ],
   "@apollo/client/react/components": [
     {
       "name": "Query",
       "moduleName": "@apollo/client/react/components",
-      "usageExamples": [
-        "Query<TData, TVariables>(props)"
-      ]
+      "usageExamples": ["Query<TData, TVariables>(props)"]
     },
     {
       "name": "Mutation",
       "moduleName": "@apollo/client/react/components",
-      "usageExamples": [
-        "Mutation<TData, TVariables>(props)"
-      ]
+      "usageExamples": ["Mutation<TData, TVariables>(props)"]
     },
     {
       "name": "Subscription",
       "moduleName": "@apollo/client/react/components",
-      "usageExamples": [
-        "Subscription<TData, TVariables>(props)"
-      ]
+      "usageExamples": ["Subscription<TData, TVariables>(props)"]
     },
     {
       "name": "QueryComponentOptions",
@@ -4685,41 +4087,31 @@
       "name": "ApolloConsumerProps",
       "moduleName": "@apollo/client/react/context",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloConsumerProps = ApolloConsumerProps;"
-      ]
+      "usageExamples": ["type _Test_ApolloConsumerProps = ApolloConsumerProps;"]
     },
     {
       "name": "ApolloConsumer",
       "moduleName": "@apollo/client/react/context",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloConsumer = ApolloConsumer;"
-      ]
+      "usageExamples": ["const _Test_ApolloConsumer = ApolloConsumer;"]
     },
     {
       "name": "ApolloContextValue",
       "moduleName": "@apollo/client/react/context",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_ApolloContextValue = ApolloContextValue;"
-      ]
+      "usageExamples": ["type _Test_ApolloContextValue = ApolloContextValue;"]
     },
     {
       "name": "getApolloContext",
       "moduleName": "@apollo/client/react/context",
       "kind": "Function",
-      "usageExamples": [
-        "getApolloContext()"
-      ]
+      "usageExamples": ["getApolloContext()"]
     },
     {
       "name": "resetApolloContext",
       "moduleName": "@apollo/client/react/context",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_resetApolloContext = resetApolloContext;"
-      ]
+      "usageExamples": ["const _Test_resetApolloContext = resetApolloContext;"]
     },
     {
       "name": "ApolloProviderProps",
@@ -4733,9 +4125,7 @@
       "name": "ApolloProvider",
       "moduleName": "@apollo/client/react/context",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_ApolloProvider = ApolloProvider;"
-      ]
+      "usageExamples": ["const _Test_ApolloProvider = ApolloProvider;"]
     }
   ],
   "@apollo/client/react/hoc": [
@@ -4855,9 +4245,7 @@
       "name": "WithApolloClient",
       "moduleName": "@apollo/client/react/hoc",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_WithApolloClient = WithApolloClient<P>;"
-      ]
+      "usageExamples": ["type _Test_WithApolloClient = WithApolloClient<P>;"]
     }
   ],
   "@apollo/client/react/hooks": [
@@ -4865,9 +4253,7 @@
       "name": "useQuery",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "UseSuspenseQueryResult",
@@ -4921,9 +4307,7 @@
       "name": "useSuspenseFragment",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useSuspenseFragment<TData, TVariables>(options)"
-      ]
+      "usageExamples": ["useSuspenseFragment<TData, TVariables>(options)"]
     },
     {
       "name": "LoadQueryFunction",
@@ -4961,9 +4345,7 @@
       "name": "useQueryRefHandlers",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useQueryRefHandlers<TData, TVariables>(queryRef)"
-      ]
+      "usageExamples": ["useQueryRefHandlers<TData, TVariables>(queryRef)"]
     },
     {
       "name": "UseReadQueryResult",
@@ -4977,41 +4359,31 @@
       "name": "useReadQuery",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useReadQuery<TData>(queryRef)"
-      ]
+      "usageExamples": ["useReadQuery<TData>(queryRef)"]
     },
     {
       "name": "skipToken",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_skipToken = skipToken;"
-      ]
+      "usageExamples": ["const _Test_skipToken = skipToken;"]
     },
     {
       "name": "SkipToken",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_SkipToken = SkipToken;"
-      ]
+      "usageExamples": ["type _Test_SkipToken = SkipToken;"]
     },
     {
       "name": "useApolloClient",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useApolloClient(override)"
-      ]
+      "usageExamples": ["useApolloClient(override)"]
     },
     {
       "name": "useLazyQuery",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useLazyQuery<TData, TVariables>(query, options)"
-      ]
+      "usageExamples": ["useLazyQuery<TData, TVariables>(query, options)"]
     },
     {
       "name": "useMutation",
@@ -5033,17 +4405,13 @@
       "name": "useReactiveVar",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useReactiveVar<T>(rv)"
-      ]
+      "usageExamples": ["useReactiveVar<T>(rv)"]
     },
     {
       "name": "useFragment",
       "moduleName": "@apollo/client/react/hooks",
       "kind": "Function",
-      "usageExamples": [
-        "useFragment<TData, TVars>(options)"
-      ]
+      "usageExamples": ["useFragment<TData, TVars>(options)"]
     },
     {
       "name": "UseFragmentOptions",
@@ -5067,25 +4435,19 @@
       "name": "getSuspenseCache",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "getSuspenseCache(client)"
-      ]
+      "usageExamples": ["getSuspenseCache(client)"]
     },
     {
       "name": "CacheKey",
       "moduleName": "@apollo/client/react/internal",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_CacheKey = CacheKey;"
-      ]
+      "usageExamples": ["type _Test_CacheKey = CacheKey;"]
     },
     {
       "name": "QueryKey",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_QueryKey = QueryKey;"
-      ]
+      "usageExamples": ["type _Test_QueryKey = QueryKey;"]
     },
     {
       "name": "QueryReference",
@@ -5099,9 +4461,7 @@
       "name": "QueryRef",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_QueryRef = QueryRef<TData, TVariables>;"
-      ]
+      "usageExamples": ["type _Test_QueryRef = QueryRef<TData, TVariables>;"]
     },
     {
       "name": "PreloadedQueryRef",
@@ -5124,41 +4484,31 @@
       "name": "getWrappedPromise",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "getWrappedPromise<TData>(queryRef)"
-      ]
+      "usageExamples": ["getWrappedPromise<TData>(queryRef)"]
     },
     {
       "name": "unwrapQueryRef",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "unwrapQueryRef<TData>(queryRef)"
-      ]
+      "usageExamples": ["unwrapQueryRef<TData>(queryRef)"]
     },
     {
       "name": "updateWrappedQueryRef",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "updateWrappedQueryRef<TData>(queryRef, promise)"
-      ]
+      "usageExamples": ["updateWrappedQueryRef<TData>(queryRef, promise)"]
     },
     {
       "name": "wrapQueryRef",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "wrapQueryRef<TData, TVariables>(internalQueryRef)"
-      ]
+      "usageExamples": ["wrapQueryRef<TData, TVariables>(internalQueryRef)"]
     },
     {
       "name": "assertWrappedQueryRef",
       "moduleName": "@apollo/client/react/internal",
       "kind": "Function",
-      "usageExamples": [
-        "assertWrappedQueryRef<TData, TVariables>(queryRef)"
-      ]
+      "usageExamples": ["assertWrappedQueryRef<TData, TVariables>(queryRef)"]
     },
     {
       "name": "SuspenseCacheOptions",
@@ -5172,9 +4522,7 @@
       "name": "HookWrappers",
       "moduleName": "@apollo/client/react/internal",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_HookWrappers = HookWrappers;"
-      ]
+      "usageExamples": ["type _Test_HookWrappers = HookWrappers;"]
     }
   ],
   "@apollo/client/react/parser": [
@@ -5182,40 +4530,30 @@
       "name": "operationName",
       "moduleName": "@apollo/client/react/parser",
       "kind": "Function",
-      "usageExamples": [
-        "operationName(type)"
-      ]
+      "usageExamples": ["operationName(type)"]
     },
     {
       "name": "parser",
       "moduleName": "@apollo/client/react/parser",
-      "usageExamples": [
-        "parser(document)"
-      ]
+      "usageExamples": ["parser(document)"]
     },
     {
       "name": "verifyDocumentType",
       "moduleName": "@apollo/client/react/parser",
       "kind": "Function",
-      "usageExamples": [
-        "verifyDocumentType(document, type)"
-      ]
+      "usageExamples": ["verifyDocumentType(document, type)"]
     },
     {
       "name": "DocumentType",
       "moduleName": "@apollo/client/react/parser",
       "kind": "RegularEnum",
-      "usageExamples": [
-        "type _Test_DocumentType = DocumentType;"
-      ]
+      "usageExamples": ["type _Test_DocumentType = DocumentType;"]
     },
     {
       "name": "IDocumentDefinition",
       "moduleName": "@apollo/client/react/parser",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_IDocumentDefinition = IDocumentDefinition;"
-      ]
+      "usageExamples": ["type _Test_IDocumentDefinition = IDocumentDefinition;"]
     }
   ],
   "@apollo/client/react/ssr": [
@@ -5223,25 +4561,19 @@
       "name": "getMarkupFromTree",
       "moduleName": "@apollo/client/react/ssr",
       "kind": "Function",
-      "usageExamples": [
-        "getMarkupFromTree(param0)"
-      ]
+      "usageExamples": ["getMarkupFromTree(param0)"]
     },
     {
       "name": "getDataFromTree",
       "moduleName": "@apollo/client/react/ssr",
       "kind": "Function",
-      "usageExamples": [
-        "getDataFromTree(tree, context)"
-      ]
+      "usageExamples": ["getDataFromTree(tree, context)"]
     },
     {
       "name": "renderToStringWithData",
       "moduleName": "@apollo/client/react/ssr",
       "kind": "Function",
-      "usageExamples": [
-        "renderToStringWithData(component)"
-      ]
+      "usageExamples": ["renderToStringWithData(component)"]
     },
     {
       "name": "RenderPromises",
@@ -5283,17 +4615,13 @@
       "name": "MockLinkOptions",
       "moduleName": "@apollo/client/testing",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MockLinkOptions = MockLinkOptions;"
-      ]
+      "usageExamples": ["type _Test_MockLinkOptions = MockLinkOptions;"]
     },
     {
       "name": "ResultFunction",
       "moduleName": "@apollo/client/testing",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ResultFunction = ResultFunction<T, V>;"
-      ]
+      "usageExamples": ["type _Test_ResultFunction = ResultFunction<T, V>;"]
     },
     {
       "name": "MockLink",
@@ -5308,9 +4636,7 @@
       "name": "mockSingleLink",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "mockSingleLink(mockedResponses)"
-      ]
+      "usageExamples": ["mockSingleLink(mockedResponses)"]
     },
     {
       "name": "MockSubscriptionLink",
@@ -5325,73 +4651,55 @@
       "name": "mockObservableLink",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "mockObservableLink()"
-      ]
+      "usageExamples": ["mockObservableLink()"]
     },
     {
       "name": "createMockClient",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "createMockClient<TData>(data, query, variables)"
-      ]
+      "usageExamples": ["createMockClient<TData>(data, query, variables)"]
     },
     {
       "name": "subscribeAndCount",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "subscribeAndCount<TResult>(reject, observable, cb)"
-      ]
+      "usageExamples": ["subscribeAndCount<TResult>(reject, observable, cb)"]
     },
     {
       "name": "itAsync",
       "moduleName": "@apollo/client/testing",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_itAsync = itAsync;"
-      ]
+      "usageExamples": ["const _Test_itAsync = itAsync;"]
     },
     {
       "name": "wait",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "wait(ms)"
-      ]
+      "usageExamples": ["wait(ms)"]
     },
     {
       "name": "tick",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "tick()"
-      ]
+      "usageExamples": ["tick()"]
     },
     {
       "name": "withErrorSpy",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "withErrorSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withErrorSpy<TArgs, TResult>(it, args)"]
     },
     {
       "name": "withWarningSpy",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "withWarningSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withWarningSpy<TArgs, TResult>(it, args)"]
     },
     {
       "name": "withLogSpy",
       "moduleName": "@apollo/client/testing",
       "kind": "Function",
-      "usageExamples": [
-        "withLogSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withLogSpy<TArgs, TResult>(it, args)"]
     }
   ],
   "@apollo/client/testing/core": [
@@ -5407,17 +4715,13 @@
       "name": "MockLinkOptions",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_MockLinkOptions = MockLinkOptions;"
-      ]
+      "usageExamples": ["type _Test_MockLinkOptions = MockLinkOptions;"]
     },
     {
       "name": "ResultFunction",
       "moduleName": "@apollo/client/testing/core",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_ResultFunction = ResultFunction<T, V>;"
-      ]
+      "usageExamples": ["type _Test_ResultFunction = ResultFunction<T, V>;"]
     },
     {
       "name": "MockLink",
@@ -5432,9 +4736,7 @@
       "name": "mockSingleLink",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "mockSingleLink(mockedResponses)"
-      ]
+      "usageExamples": ["mockSingleLink(mockedResponses)"]
     },
     {
       "name": "MockSubscriptionLink",
@@ -5449,73 +4751,55 @@
       "name": "mockObservableLink",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "mockObservableLink()"
-      ]
+      "usageExamples": ["mockObservableLink()"]
     },
     {
       "name": "createMockClient",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "createMockClient<TData>(data, query, variables)"
-      ]
+      "usageExamples": ["createMockClient<TData>(data, query, variables)"]
     },
     {
       "name": "subscribeAndCount",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "subscribeAndCount<TResult>(reject, observable, cb)"
-      ]
+      "usageExamples": ["subscribeAndCount<TResult>(reject, observable, cb)"]
     },
     {
       "name": "itAsync",
       "moduleName": "@apollo/client/testing/core",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_itAsync = itAsync;"
-      ]
+      "usageExamples": ["const _Test_itAsync = itAsync;"]
     },
     {
       "name": "wait",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "wait(ms)"
-      ]
+      "usageExamples": ["wait(ms)"]
     },
     {
       "name": "tick",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "tick()"
-      ]
+      "usageExamples": ["tick()"]
     },
     {
       "name": "withErrorSpy",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "withErrorSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withErrorSpy<TArgs, TResult>(it, args)"]
     },
     {
       "name": "withWarningSpy",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "withWarningSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withWarningSpy<TArgs, TResult>(it, args)"]
     },
     {
       "name": "withLogSpy",
       "moduleName": "@apollo/client/testing/core",
       "kind": "Function",
-      "usageExamples": [
-        "withLogSpy<TArgs, TResult>(it, args)"
-      ]
+      "usageExamples": ["withLogSpy<TArgs, TResult>(it, args)"]
     }
   ],
   "@apollo/client/testing/experimental": [
@@ -5523,17 +4807,13 @@
       "name": "createTestSchema",
       "moduleName": "@apollo/client/testing/experimental",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_createTestSchema = createTestSchema;"
-      ]
+      "usageExamples": ["const _Test_createTestSchema = createTestSchema;"]
     },
     {
       "name": "createSchemaFetch",
       "moduleName": "@apollo/client/testing/experimental",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_createSchemaFetch = createSchemaFetch;"
-      ]
+      "usageExamples": ["const _Test_createSchemaFetch = createSchemaFetch;"]
     }
   ],
   "@apollo/client/utilities": [
@@ -5541,97 +4821,73 @@
       "name": "DEV",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_DEV = DEV;"
-      ]
+      "usageExamples": ["const _Test_DEV = DEV;"]
     },
     {
       "name": "maybe",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "maybe<T>(thunk)"
-      ]
+      "usageExamples": ["maybe<T>(thunk)"]
     },
     {
       "name": "DirectiveInfo",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_DirectiveInfo = DirectiveInfo;"
-      ]
+      "usageExamples": ["type _Test_DirectiveInfo = DirectiveInfo;"]
     },
     {
       "name": "InclusionDirectives",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_InclusionDirectives = InclusionDirectives;"
-      ]
+      "usageExamples": ["type _Test_InclusionDirectives = InclusionDirectives;"]
     },
     {
       "name": "shouldInclude",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "shouldInclude(param0, variables)"
-      ]
+      "usageExamples": ["shouldInclude(param0, variables)"]
     },
     {
       "name": "hasDirectives",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "hasDirectives(names, root, all)"
-      ]
+      "usageExamples": ["hasDirectives(names, root, all)"]
     },
     {
       "name": "hasAnyDirectives",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_hasAnyDirectives = hasAnyDirectives;"
-      ]
+      "usageExamples": ["const _Test_hasAnyDirectives = hasAnyDirectives;"]
     },
     {
       "name": "hasAllDirectives",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_hasAllDirectives = hasAllDirectives;"
-      ]
+      "usageExamples": ["const _Test_hasAllDirectives = hasAllDirectives;"]
     },
     {
       "name": "hasClientExports",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "hasClientExports(document)"
-      ]
+      "usageExamples": ["hasClientExports(document)"]
     },
     {
       "name": "getDirectiveNames",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getDirectiveNames(root)"
-      ]
+      "usageExamples": ["getDirectiveNames(root)"]
     },
     {
       "name": "getInclusionDirectives",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getInclusionDirectives(directives)"
-      ]
+      "usageExamples": ["getInclusionDirectives(directives)"]
     },
     {
       "name": "getFragmentMaskMode",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getFragmentMaskMode(fragment)"
-      ]
+      "usageExamples": ["getFragmentMaskMode(fragment)"]
     },
     {
       "name": "DocumentTransformCacheKey",
@@ -5654,209 +4910,157 @@
       "name": "FragmentMap",
       "moduleName": "@apollo/client/utilities",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_FragmentMap = FragmentMap;"
-      ]
+      "usageExamples": ["type _Test_FragmentMap = FragmentMap;"]
     },
     {
       "name": "FragmentMapFunction",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_FragmentMapFunction = FragmentMapFunction;"
-      ]
+      "usageExamples": ["type _Test_FragmentMapFunction = FragmentMapFunction;"]
     },
     {
       "name": "createFragmentMap",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "createFragmentMap(fragments)"
-      ]
+      "usageExamples": ["createFragmentMap(fragments)"]
     },
     {
       "name": "getFragmentQueryDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getFragmentQueryDocument(document, fragmentName)"
-      ]
+      "usageExamples": ["getFragmentQueryDocument(document, fragmentName)"]
     },
     {
       "name": "getFragmentFromSelection",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getFragmentFromSelection(selection, fragmentMap)"
-      ]
+      "usageExamples": ["getFragmentFromSelection(selection, fragmentMap)"]
     },
     {
       "name": "isFullyUnmaskedOperation",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isFullyUnmaskedOperation(document)"
-      ]
+      "usageExamples": ["isFullyUnmaskedOperation(document)"]
     },
     {
       "name": "checkDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "checkDocument(doc)"
-      ]
+      "usageExamples": ["checkDocument(doc)"]
     },
     {
       "name": "getOperationDefinition",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getOperationDefinition(doc)"
-      ]
+      "usageExamples": ["getOperationDefinition(doc)"]
     },
     {
       "name": "getOperationName",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getOperationName(doc)"
-      ]
+      "usageExamples": ["getOperationName(doc)"]
     },
     {
       "name": "getFragmentDefinitions",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getFragmentDefinitions(doc)"
-      ]
+      "usageExamples": ["getFragmentDefinitions(doc)"]
     },
     {
       "name": "getQueryDefinition",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getQueryDefinition(doc)"
-      ]
+      "usageExamples": ["getQueryDefinition(doc)"]
     },
     {
       "name": "getFragmentDefinition",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getFragmentDefinition(doc)"
-      ]
+      "usageExamples": ["getFragmentDefinition(doc)"]
     },
     {
       "name": "getMainDefinition",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getMainDefinition(queryDoc)"
-      ]
+      "usageExamples": ["getMainDefinition(queryDoc)"]
     },
     {
       "name": "getDefaultValues",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getDefaultValues(definition)"
-      ]
+      "usageExamples": ["getDefaultValues(definition)"]
     },
     {
       "name": "print",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_print = print;"
-      ]
+      "usageExamples": ["const _Test_print = print;"]
     },
     {
       "name": "StoreObject",
       "moduleName": "@apollo/client/utilities",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_StoreObject = StoreObject;"
-      ]
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
     },
     {
       "name": "AsStoreObject",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_AsStoreObject = AsStoreObject<T>;"
-      ]
+      "usageExamples": ["type _Test_AsStoreObject = AsStoreObject<T>;"]
     },
     {
       "name": "Reference",
       "moduleName": "@apollo/client/utilities",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_Reference = Reference;"
-      ]
+      "usageExamples": ["type _Test_Reference = Reference;"]
     },
     {
       "name": "StoreValue",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_StoreValue = StoreValue;"
-      ]
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
     },
     {
       "name": "Directives",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Directives = Directives;"
-      ]
+      "usageExamples": ["type _Test_Directives = Directives;"]
     },
     {
       "name": "VariableValue",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_VariableValue = VariableValue;"
-      ]
+      "usageExamples": ["type _Test_VariableValue = VariableValue;"]
     },
     {
       "name": "makeReference",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "makeReference(id)"
-      ]
+      "usageExamples": ["makeReference(id)"]
     },
     {
       "name": "isDocumentNode",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isDocumentNode(value)"
-      ]
+      "usageExamples": ["isDocumentNode(value)"]
     },
     {
       "name": "isReference",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isReference(obj)"
-      ]
+      "usageExamples": ["isReference(obj)"]
     },
     {
       "name": "isField",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isField(selection)"
-      ]
+      "usageExamples": ["isField(selection)"]
     },
     {
       "name": "isInlineFragment",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isInlineFragment(selection)"
-      ]
+      "usageExamples": ["isInlineFragment(selection)"]
     },
     {
       "name": "valueToObjectRepresentation",
@@ -5870,33 +5074,25 @@
       "name": "storeKeyNameFromField",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "storeKeyNameFromField(field, variables)"
-      ]
+      "usageExamples": ["storeKeyNameFromField(field, variables)"]
     },
     {
       "name": "argumentsObjectFromField",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "argumentsObjectFromField(field, variables)"
-      ]
+      "usageExamples": ["argumentsObjectFromField(field, variables)"]
     },
     {
       "name": "resultKeyNameFromField",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "resultKeyNameFromField(field)"
-      ]
+      "usageExamples": ["resultKeyNameFromField(field)"]
     },
     {
       "name": "getStoreKeyName",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_getStoreKeyName = getStoreKeyName;"
-      ]
+      "usageExamples": ["const _Test_getStoreKeyName = getStoreKeyName;"]
     },
     {
       "name": "getTypenameFromResult",
@@ -5910,17 +5106,13 @@
       "name": "RemoveNodeConfig",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_RemoveNodeConfig = RemoveNodeConfig<N>;"
-      ]
+      "usageExamples": ["type _Test_RemoveNodeConfig = RemoveNodeConfig<N>;"]
     },
     {
       "name": "GetNodeConfig",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_GetNodeConfig = GetNodeConfig<N>;"
-      ]
+      "usageExamples": ["type _Test_GetNodeConfig = GetNodeConfig<N>;"]
     },
     {
       "name": "RemoveDirectiveConfig",
@@ -5934,9 +5126,7 @@
       "name": "GetDirectiveConfig",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_GetDirectiveConfig = GetDirectiveConfig;"
-      ]
+      "usageExamples": ["type _Test_GetDirectiveConfig = GetDirectiveConfig;"]
     },
     {
       "name": "RemoveArgumentsConfig",
@@ -5990,105 +5180,79 @@
       "name": "addNonReactiveToNamedFragments",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "addNonReactiveToNamedFragments(document)"
-      ]
+      "usageExamples": ["addNonReactiveToNamedFragments(document)"]
     },
     {
       "name": "buildQueryFromSelectionSet",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "buildQueryFromSelectionSet(document)"
-      ]
+      "usageExamples": ["buildQueryFromSelectionSet(document)"]
     },
     {
       "name": "removeDirectivesFromDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "removeDirectivesFromDocument(directives, doc)"
-      ]
+      "usageExamples": ["removeDirectivesFromDocument(directives, doc)"]
     },
     {
       "name": "removeConnectionDirectiveFromDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "removeConnectionDirectiveFromDocument(doc)"
-      ]
+      "usageExamples": ["removeConnectionDirectiveFromDocument(doc)"]
     },
     {
       "name": "removeArgumentsFromDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "removeArgumentsFromDocument(config, doc)"
-      ]
+      "usageExamples": ["removeArgumentsFromDocument(config, doc)"]
     },
     {
       "name": "removeFragmentSpreadFromDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "removeFragmentSpreadFromDocument(config, doc)"
-      ]
+      "usageExamples": ["removeFragmentSpreadFromDocument(config, doc)"]
     },
     {
       "name": "removeClientSetsFromDocument",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "removeClientSetsFromDocument(document)"
-      ]
+      "usageExamples": ["removeClientSetsFromDocument(document)"]
     },
     {
       "name": "isMutationOperation",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isMutationOperation(document)"
-      ]
+      "usageExamples": ["isMutationOperation(document)"]
     },
     {
       "name": "isQueryOperation",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isQueryOperation(document)"
-      ]
+      "usageExamples": ["isQueryOperation(document)"]
     },
     {
       "name": "isSubscriptionOperation",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isSubscriptionOperation(document)"
-      ]
+      "usageExamples": ["isSubscriptionOperation(document)"]
     },
     {
       "name": "concatPagination",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "concatPagination<T>(keyArgs)"
-      ]
+      "usageExamples": ["concatPagination<T>(keyArgs)"]
     },
     {
       "name": "offsetLimitPagination",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "offsetLimitPagination<T>(keyArgs)"
-      ]
+      "usageExamples": ["offsetLimitPagination<T>(keyArgs)"]
     },
     {
       "name": "relayStylePagination",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "relayStylePagination<TNode>(keyArgs)"
-      ]
+      "usageExamples": ["relayStylePagination<TNode>(keyArgs)"]
     },
     {
       "name": "Observer",
@@ -6117,89 +5281,67 @@
       "name": "isStatefulPromise",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isStatefulPromise<TValue>(promise)"
-      ]
+      "usageExamples": ["isStatefulPromise<TValue>(promise)"]
     },
     {
       "name": "createFulfilledPromise",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "createFulfilledPromise<TValue>(value)"
-      ]
+      "usageExamples": ["createFulfilledPromise<TValue>(value)"]
     },
     {
       "name": "createRejectedPromise",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "createRejectedPromise<TValue>(reason)"
-      ]
+      "usageExamples": ["createRejectedPromise<TValue>(reason)"]
     },
     {
       "name": "wrapPromiseWithState",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "wrapPromiseWithState<TValue>(promise)"
-      ]
+      "usageExamples": ["wrapPromiseWithState<TValue>(promise)"]
     },
     {
       "name": "preventUnhandledRejection",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "preventUnhandledRejection<T>(promise)"
-      ]
+      "usageExamples": ["preventUnhandledRejection<T>(promise)"]
     },
     {
       "name": "maybeDeepFreeze",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "maybeDeepFreeze<T>(obj)"
-      ]
+      "usageExamples": ["maybeDeepFreeze<T>(obj)"]
     },
     {
       "name": "canonicalStringify",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canonicalStringify = canonicalStringify;"
-      ]
+      "usageExamples": ["const _Test_canonicalStringify = canonicalStringify;"]
     },
     {
       "name": "omitDeep",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "omitDeep<T, K>(value, key)"
-      ]
+      "usageExamples": ["omitDeep<T, K>(value, key)"]
     },
     {
       "name": "stripTypename",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "stripTypename<T>(value)"
-      ]
+      "usageExamples": ["stripTypename<T>(value)"]
     },
     {
       "name": "DeepOmit",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_DeepOmit = DeepOmit<T, K>;"
-      ]
+      "usageExamples": ["type _Test_DeepOmit = DeepOmit<T, K>;"]
     },
     {
       "name": "DeepPartial",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_DeepPartial = DeepPartial<T>;"
-      ]
+      "usageExamples": ["type _Test_DeepPartial = DeepPartial<T>;"]
     },
     {
       "name": "OnlyRequiredProperties",
@@ -6213,17 +5355,13 @@
       "name": "Prettify",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Prettify = Prettify<T>;"
-      ]
+      "usageExamples": ["type _Test_Prettify = Prettify<T>;"]
     },
     {
       "name": "Primitive",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_Primitive = Primitive;"
-      ]
+      "usageExamples": ["type _Test_Primitive = Primitive;"]
     },
     {
       "name": "UnionToIntersection",
@@ -6237,9 +5375,7 @@
       "name": "NoInfer",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_NoInfer = NoInfer<T>;"
-      ]
+      "usageExamples": ["type _Test_NoInfer = NoInfer<T>;"]
     },
     {
       "name": "RemoveIndexSignature",
@@ -6267,41 +5403,31 @@
       "name": "cacheSizes",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_cacheSizes = cacheSizes;"
-      ]
+      "usageExamples": ["const _Test_cacheSizes = cacheSizes;"]
     },
     {
       "name": "defaultCacheSizes",
       "moduleName": "@apollo/client/utilities",
       "kind": "ConstEnum",
-      "usageExamples": [
-        "type _Test_defaultCacheSizes = defaultCacheSizes;"
-      ]
+      "usageExamples": ["type _Test_defaultCacheSizes = defaultCacheSizes;"]
     },
     {
       "name": "CacheSizes",
       "moduleName": "@apollo/client/utilities",
       "kind": "Interface",
-      "usageExamples": [
-        "type _Test_CacheSizes = CacheSizes;"
-      ]
+      "usageExamples": ["type _Test_CacheSizes = CacheSizes;"]
     },
     {
       "name": "mergeDeep",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "mergeDeep<T>(sources)"
-      ]
+      "usageExamples": ["mergeDeep<T>(sources)"]
     },
     {
       "name": "mergeDeepArray",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "mergeDeepArray<T>(sources)"
-      ]
+      "usageExamples": ["mergeDeepArray<T>(sources)"]
     },
     {
       "name": "TupleToIntersection",
@@ -6332,9 +5458,7 @@
       "name": "cloneDeep",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "cloneDeep<T>(value)"
-      ]
+      "usageExamples": ["cloneDeep<T>(value)"]
     },
     {
       "name": "iterateObserversSafely",
@@ -6348,9 +5472,7 @@
       "name": "asyncMap",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "asyncMap<V, R>(observable, mapFn, catchFn)"
-      ]
+      "usageExamples": ["asyncMap<V, R>(observable, mapFn, catchFn)"]
     },
     {
       "name": "ConcastSourcesIterable",
@@ -6381,81 +5503,61 @@
       "name": "fixObservableSubclass",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "fixObservableSubclass<S>(subclass)"
-      ]
+      "usageExamples": ["fixObservableSubclass<S>(subclass)"]
     },
     {
       "name": "isNonEmptyArray",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isNonEmptyArray<T>(value)"
-      ]
+      "usageExamples": ["isNonEmptyArray<T>(value)"]
     },
     {
       "name": "isArray",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_isArray = isArray;"
-      ]
+      "usageExamples": ["const _Test_isArray = isArray;"]
     },
     {
       "name": "isNonNullObject",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isNonNullObject(obj)"
-      ]
+      "usageExamples": ["isNonNullObject(obj)"]
     },
     {
       "name": "isPlainObject",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isPlainObject(obj)"
-      ]
+      "usageExamples": ["isPlainObject(obj)"]
     },
     {
       "name": "graphQLResultHasError",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "graphQLResultHasError<T>(result)"
-      ]
+      "usageExamples": ["graphQLResultHasError<T>(result)"]
     },
     {
       "name": "getGraphQLErrorsFromResult",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "getGraphQLErrorsFromResult<T>(result)"
-      ]
+      "usageExamples": ["getGraphQLErrorsFromResult<T>(result)"]
     },
     {
       "name": "canUseWeakMap",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canUseWeakMap = canUseWeakMap;"
-      ]
+      "usageExamples": ["const _Test_canUseWeakMap = canUseWeakMap;"]
     },
     {
       "name": "canUseWeakSet",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canUseWeakSet = canUseWeakSet;"
-      ]
+      "usageExamples": ["const _Test_canUseWeakSet = canUseWeakSet;"]
     },
     {
       "name": "canUseSymbol",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canUseSymbol = canUseSymbol;"
-      ]
+      "usageExamples": ["const _Test_canUseSymbol = canUseSymbol;"]
     },
     {
       "name": "canUseAsyncIteratorSymbol",
@@ -6469,41 +5571,31 @@
       "name": "canUseDOM",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canUseDOM = canUseDOM;"
-      ]
+      "usageExamples": ["const _Test_canUseDOM = canUseDOM;"]
     },
     {
       "name": "canUseLayoutEffect",
       "moduleName": "@apollo/client/utilities",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_canUseLayoutEffect = canUseLayoutEffect;"
-      ]
+      "usageExamples": ["const _Test_canUseLayoutEffect = canUseLayoutEffect;"]
     },
     {
       "name": "compact",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "compact<TArgs>(objects)"
-      ]
+      "usageExamples": ["compact<TArgs>(objects)"]
     },
     {
       "name": "makeUniqueId",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "makeUniqueId(prefix)"
-      ]
+      "usageExamples": ["makeUniqueId(prefix)"]
     },
     {
       "name": "stringifyForDisplay",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "stringifyForDisplay(value, space)"
-      ]
+      "usageExamples": ["stringifyForDisplay(value, space)"]
     },
     {
       "name": "mergeOptions",
@@ -6517,49 +5609,37 @@
       "name": "isExecutionPatchIncrementalResult",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isExecutionPatchIncrementalResult<T>(value)"
-      ]
+      "usageExamples": ["isExecutionPatchIncrementalResult<T>(value)"]
     },
     {
       "name": "isExecutionPatchInitialResult",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isExecutionPatchInitialResult<T>(value)"
-      ]
+      "usageExamples": ["isExecutionPatchInitialResult<T>(value)"]
     },
     {
       "name": "isExecutionPatchResult",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isExecutionPatchResult<T>(value)"
-      ]
+      "usageExamples": ["isExecutionPatchResult<T>(value)"]
     },
     {
       "name": "isApolloPayloadResult",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "isApolloPayloadResult(value)"
-      ]
+      "usageExamples": ["isApolloPayloadResult(value)"]
     },
     {
       "name": "mergeIncrementalData",
       "moduleName": "@apollo/client/utilities",
       "kind": "Function",
-      "usageExamples": [
-        "mergeIncrementalData<TData>(prevResult, result)"
-      ]
+      "usageExamples": ["mergeIncrementalData<TData>(prevResult, result)"]
     },
     {
       "name": "IsStrictlyAny",
       "moduleName": "@apollo/client/utilities",
       "kind": "TypeAlias",
-      "usageExamples": [
-        "type _Test_IsStrictlyAny = IsStrictlyAny<T>;"
-      ]
+      "usageExamples": ["type _Test_IsStrictlyAny = IsStrictlyAny<T>;"]
     }
   ],
   "@apollo/client/utilities/globals": [
@@ -6567,9 +5647,7 @@
       "name": "maybe",
       "moduleName": "@apollo/client/utilities/globals",
       "kind": "Function",
-      "usageExamples": [
-        "maybe<T>(thunk)"
-      ]
+      "usageExamples": ["maybe<T>(thunk)"]
     },
     {
       "name": "global",
@@ -6581,17 +5659,13 @@
       "name": "invariant",
       "moduleName": "@apollo/client/utilities/globals",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_invariant = invariant;"
-      ]
+      "usageExamples": ["const _Test_invariant = invariant;"]
     },
     {
       "name": "newInvariantError",
       "moduleName": "@apollo/client/utilities/globals",
       "kind": "Function",
-      "usageExamples": [
-        "newInvariantError(message, optionalParams)"
-      ]
+      "usageExamples": ["newInvariantError(message, optionalParams)"]
     },
     {
       "name": "InvariantError",
@@ -6602,17 +5676,13 @@
       "name": "DEV",
       "moduleName": "@apollo/client/utilities/globals",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test_DEV = DEV;"
-      ]
+      "usageExamples": ["const _Test_DEV = DEV;"]
     },
     {
       "name": "___DEV__",
       "moduleName": "@apollo/client/utilities/globals",
       "kind": "BlockScopedVariable",
-      "usageExamples": [
-        "const _Test____DEV__ = ___DEV__;"
-      ]
+      "usageExamples": ["const _Test____DEV__ = ___DEV__;"]
     }
   ],
   "@apollo/client/utilities/subscriptions/relay": [
@@ -6620,9 +5690,7 @@
       "name": "createFetchMultipartSubscription",
       "moduleName": "@apollo/client/utilities/subscriptions/relay",
       "kind": "Function",
-      "usageExamples": [
-        "createFetchMultipartSubscription(uri, param1)"
-      ]
+      "usageExamples": ["createFetchMultipartSubscription(uri, param1)"]
     }
   ]
 }

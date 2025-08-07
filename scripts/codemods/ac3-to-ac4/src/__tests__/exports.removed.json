@@ -1,9 +1,6 @@
 {
   "@apollo/client/cache": {
-    "value": [
-      "DataProxy",
-      "makeReference"
-    ],
+    "value": ["DataProxy", "makeReference"],
     "type": []
   },
   "@apollo/client": {
@@ -162,24 +159,12 @@
     "type": []
   },
   "@apollo/client/errors": {
-    "value": [
-      "isApolloError",
-      "ApolloError"
-    ],
-    "type": [
-      "ApolloErrorOptions",
-      "GraphQLErrors",
-      "NetworkError"
-    ]
+    "value": ["isApolloError", "ApolloError"],
+    "type": ["ApolloErrorOptions", "GraphQLErrors", "NetworkError"]
   },
   "@apollo/client/link/batch": {
-    "value": [
-      "OperationBatcher"
-    ],
-    "type": [
-      "BatchableRequest",
-      "BatchHandler"
-    ]
+    "value": ["OperationBatcher"],
+    "type": ["BatchableRequest", "BatchHandler"]
   },
   "@apollo/client/link/batch-http": {
     "value": [],
@@ -187,9 +172,7 @@
   },
   "@apollo/client/link/context": {
     "value": [],
-    "type": [
-      "ContextSetter"
-    ]
+    "type": ["ContextSetter"]
   },
   "@apollo/client/link/core": {
     "value": [],
@@ -205,15 +188,10 @@
   },
   "@apollo/client/link/error": {
     "value": [],
-    "type": [
-      "ErrorResponse",
-      "ErrorHandler"
-    ]
+    "type": ["ErrorResponse", "ErrorHandler"]
   },
   "@apollo/client/link/http": {
-    "value": [
-      "serializeFetchParameter"
-    ],
+    "value": ["serializeFetchParameter"],
     "type": [
       "ServerParseError",
       "ClientParseError",
@@ -223,9 +201,7 @@
   },
   "@apollo/client/link/persisted-queries": {
     "value": [],
-    "type": [
-      "ErrorResponse"
-    ]
+    "type": ["ErrorResponse"]
   },
   "@apollo/client/link/retry": {
     "value": [],
@@ -233,9 +209,7 @@
   },
   "@apollo/client/link/remove-typename": {
     "value": [],
-    "type": [
-      "RemoveTypenameFromVariablesOptions"
-    ]
+    "type": ["RemoveTypenameFromVariablesOptions"]
   },
   "@apollo/client/link/schema": {
     "value": [],
@@ -254,15 +228,11 @@
       "validateOperation",
       "transformOperation"
     ],
-    "type": [
-      "ServerError"
-    ]
+    "type": ["ServerError"]
   },
   "@apollo/client/link/ws": {
     "value": [],
-    "type": [
-      "WebSocketParams"
-    ]
+    "type": ["WebSocketParams"]
   },
   "@apollo/client/masking": {
     "value": [],
@@ -300,11 +270,7 @@
     ]
   },
   "@apollo/client/react/components": {
-    "value": [
-      "Query",
-      "Mutation",
-      "Subscription"
-    ],
+    "value": ["Query", "Mutation", "Subscription"],
     "type": [
       "QueryComponentOptions",
       "MutationComponentOptions",
@@ -318,11 +284,7 @@
       "resetApolloContext",
       "ApolloProvider"
     ],
-    "type": [
-      "ApolloConsumerProps",
-      "ApolloContextValue",
-      "ApolloProviderProps"
-    ]
+    "type": ["ApolloConsumerProps", "ApolloContextValue", "ApolloProviderProps"]
   },
   "@apollo/client/react/hoc": {
     "value": [
@@ -378,25 +340,14 @@
   },
   "@apollo/client/react/internal": {
     "value": [],
-    "type": [
-      "QueryReference"
-    ]
+    "type": ["QueryReference"]
   },
   "@apollo/client/react/parser": {
-    "value": [
-      "operationName",
-      "parser",
-      "verifyDocumentType",
-      "DocumentType"
-    ],
-    "type": [
-      "IDocumentDefinition"
-    ]
+    "value": ["operationName", "parser", "verifyDocumentType", "DocumentType"],
+    "type": ["IDocumentDefinition"]
   },
   "@apollo/client/react/ssr": {
-    "value": [
-      "RenderPromises"
-    ],
+    "value": ["RenderPromises"],
     "type": []
   },
   "@apollo/client/testing": {
@@ -413,9 +364,7 @@
       "withWarningSpy",
       "withLogSpy"
     ],
-    "type": [
-      "MockedProviderProps"
-    ]
+    "type": ["MockedProviderProps"]
   },
   "@apollo/client/testing/core": {
     "value": [
@@ -432,17 +381,10 @@
       "withWarningSpy",
       "withLogSpy"
     ],
-    "type": [
-      "MockedResponse",
-      "MockLinkOptions",
-      "ResultFunction"
-    ]
+    "type": ["MockedResponse", "MockLinkOptions", "ResultFunction"]
   },
   "@apollo/client/testing/experimental": {
-    "value": [
-      "createTestSchema",
-      "createSchemaFetch"
-    ],
+    "value": ["createTestSchema", "createSchemaFetch"],
     "type": []
   },
   "@apollo/client/utilities": {

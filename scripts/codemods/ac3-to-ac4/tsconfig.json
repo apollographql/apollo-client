@@ -4,25 +4,15 @@
     "target": "ESNext",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "paths": {},
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
     "strict": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/__testfixtures__"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/__testfixtures__"]
 }

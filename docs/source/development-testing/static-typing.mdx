@@ -11,13 +11,19 @@ Below, we'll guide you through installing and configuring GraphQL Code Generator
 
 ## Setting up your project
 
-> This article assumes your project already uses TypeScript. If not, [configure your project to use TypeScript](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide) or [start a new project](https://create-react-app.dev/docs/adding-typescript/).
+> This article assumes your project already uses TypeScript.
 
 To get started using GraphQL Code Generator, begin by installing the following packages (using Yarn or NPM):
 
 ```bash
-yarn add -D typescript graphql @graphql-codegen/cli @graphql-codegen/client-preset @graphql-typed-document-node/core
+npm install -D @graphql-codegen/cli @graphql-codegen/client-preset
 ```
+
+<Note>
+
+This installation assumes you have already [installed `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
+
+</Note>
 
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project:
 

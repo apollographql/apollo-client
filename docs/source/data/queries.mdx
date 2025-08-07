@@ -254,7 +254,7 @@ For more information, see [Handling operation errors](./error-handling/).
 
 When React renders a component that calls `useQuery`, Apollo Client automatically executes the corresponding query. But what if you want to execute a query in response to a user interaction, such as a user clicking a button?
 
-The [`useLazyQuery`](../api/react/useLazyQuery) hook is suited for manually executing queries. Unlike `useQuery`, when you use `useLazyQuery`, it does not immediately execute its associated query. Instead, it returns an execution function in its result tuple that you call whenever you're ready to execute the query.
+The [`useLazyQuery`](../api/react/useLazyQuery) hook is suited for manually executing queries. Unlike `useQuery`, when you use `useLazyQuery`, it does not immediately execute its associated query. Instead, it returns an execution function that you call whenever you need to execute the query.
 
 Here's an example:
 

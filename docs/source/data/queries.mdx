@@ -496,7 +496,7 @@ const handleClick = async () => {
 
 <Note>
 
-`data` might not contain any partial data is instead set to `undefined`. This typically occurs when a [network error](./error-handling#network-errors) causes the query to fail because the error might not be associated with GraphQL execution.
+`data` might not contain any partial data and is instead set to `undefined`. This typically occurs when a [network error](./error-handling#network-errors) causes the query to fail because the error might not be associated with GraphQL execution.
 
 </Note>
 
@@ -551,7 +551,7 @@ The `retain()` method returns the original promise. The previous example can be 
 const { data } = await getDogs().retain();
 ```
 
-For a complete list of supported options and result properties, see the [`useQuery` API reference](../api/react/useLazyQuery).
+For a complete list of supported options and result properties, see the [`useLazyQuery` API reference](../api/react/useLazyQuery).
 
 ## Setting a fetch policy
 

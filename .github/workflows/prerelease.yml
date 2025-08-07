@@ -107,6 +107,12 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.prerelease.outputs.packages) }}
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+
       - name: Checkout repo
         uses: actions/checkout@v4
         with:

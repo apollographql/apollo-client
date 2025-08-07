@@ -70,6 +70,12 @@ As our query executes and the values of `loading`, `error`, and `data` change, t
 
 When the user selects a dog breed from the populated dropdown, the selection is sent to the parent component via the provided `onDogSelected` function.
 
+<Note>
+
+If you are using TypeScript, `data` is typed as `unknown` when the query type is unknown. Accessing fields on `data` results in a TypeScript error. See the guide on [Using TypeScript](../development-testing/static-typing) to learn how to add types for your queries.
+
+</Note>
+
 In the next step, we'll associate the dropdown with a more sophisticated query that uses GraphQL variables.
 
 ## Caching query results

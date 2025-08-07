@@ -137,76 +137,88 @@ function analyze(
       return;
     }
 
-    const declaration = symbol.valueDeclaration || symbol.declarations?.[0];
-
-    if (!declaration || ts.isExportAssignment(declaration)) {
-      return;
-    }
-
-    let typeParameters = "";
-    if (
-      (ts.isInterfaceDeclaration(declaration) ||
-        ts.isTypeAliasDeclaration(declaration) ||
-        ts.isClassDeclaration(declaration) ||
-        ts.isFunctionDeclaration(declaration) ||
-        ts.isMethodDeclaration(declaration) ||
-        ts.isConstructorDeclaration(declaration) ||
-        ts.isFunctionExpression(declaration) ||
-        ts.isArrowFunction(declaration)) &&
-      declaration.typeParameters
-    ) {
-      typeParameters = `<${declaration.typeParameters
-        .map((tp) => tp.name.text)
-        .join(", ")}>`;
-    }
-
-    const identifierUc = `_Test_${name.replaceAll(".", "_")}`;
-    const identifierLc = `_test_${name.replaceAll(".", "_")}`;
-
-    if (
-      ts.isInterfaceDeclaration(declaration) ||
-      ts.isTypeAliasDeclaration(declaration)
-    ) {
-      yield `type ${identifierUc} = ${name}${typeParameters};`;
-    } else if (ts.isClassDeclaration(declaration)) {
-      const constructor = declaration.members.find((member) =>
-        ts.isConstructorDeclaration(member)
-      );
-      const constructorParams =
-        constructor ?
-          (constructor as ts.ConstructorDeclaration).parameters
-            .map((param, id) =>
-              ts.isIdentifier(param.name) ? param.name.text : `param${id}`
-            )
-            .join(", ")
-        : "";
-      yield `class ${identifierUc} extends ${name}${typeParameters} {}`;
-      yield `const ${identifierLc} = new ${name}${typeParameters}(${constructorParams})`;
-    } else if (
-      ts.isFunctionDeclaration(declaration) ||
-      ts.isArrowFunction(declaration) ||
-      ts.isFunctionExpression(declaration)
-    ) {
-      yield `${name}${typeParameters}(${declaration.parameters
-        .map((param, id) =>
-          ts.isIdentifier(param.name) ? param.name.text : `param${id}`
-        )
-        .join(", ")})`;
-    } else if (ts.isModuleDeclaration(declaration)) {
-      yield `const ${identifierUc} = ${name};`;
-      for (const [childName, childSymbol] of symbol.exports || []) {
-        collectUsageExamples(childSymbol, `${name}.${childName.toString()}`);
+    for (const declaration of symbol.declarations || [
+      symbol.valueDeclaration,
+    ]) {
+      if (!declaration || ts.isExportAssignment(declaration)) {
+        return;
       }
-    } else if (ts.isEnumDeclaration(declaration)) {
-      yield `type ${identifierUc} = ${name};`;
-    } else if (ts.isVariableDeclaration(declaration)) {
-      yield `const ${identifierUc} = ${name};`;
-    } else {
-      throw new Error(
-        `Unsupported declaration type for symbol ${name}: ${
-          declaration.kind
-        } - ${ts.SyntaxKind[declaration.kind]}`
-      );
+
+      let typeParameters = "";
+      if (
+        (ts.isInterfaceDeclaration(declaration) ||
+          ts.isTypeAliasDeclaration(declaration) ||
+          ts.isClassDeclaration(declaration) ||
+          ts.isFunctionDeclaration(declaration) ||
+          ts.isMethodDeclaration(declaration) ||
+          ts.isConstructorDeclaration(declaration) ||
+          ts.isFunctionExpression(declaration) ||
+          ts.isArrowFunction(declaration)) &&
+        declaration.typeParameters
+      ) {
+        typeParameters = `<${declaration.typeParameters
+          .map((tp) => tp.name.text)
+          .join(", ")}>`;
+      }
+
+      const identifierUc = `_Test_${name.replaceAll(".", "_")}`;
+      const identifierLc = `_test_${name.replaceAll(".", "_")}`;
+
+      if (
+        ts.isInterfaceDeclaration(declaration) ||
+        ts.isTypeAliasDeclaration(declaration)
+      ) {
+        yield `type ${identifierUc} = ${name}${typeParameters};`;
+      } else if (ts.isClassDeclaration(declaration)) {
+        const constructor = declaration.members.find((member) =>
+          ts.isConstructorDeclaration(member)
+        );
+        const constructorParams =
+          constructor ?
+            (constructor as ts.ConstructorDeclaration).parameters
+              .map((param, id) =>
+                ts.isIdentifier(param.name) ? param.name.text : `param${id}`
+              )
+              .join(", ")
+          : "";
+        yield `class ${identifierUc} extends ${name}${typeParameters} {}`;
+        yield `const ${identifierLc} = new ${name}${typeParameters}(${constructorParams})`;
+      } else if (
+        ts.isFunctionDeclaration(declaration) ||
+        ts.isArrowFunction(declaration) ||
+        ts.isFunctionExpression(declaration) ||
+        ts.isMethodDeclaration(declaration)
+      ) {
+        yield `${name}${typeParameters}(${declaration.parameters
+          .map((param, id) =>
+            ts.isIdentifier(param.name) ? param.name.text : `param${id}`
+          )
+          .join(", ")})`;
+      } else if (ts.isModuleDeclaration(declaration)) {
+        yield `const ${identifierUc} = ${name};`;
+        for (const [childName, childSymbol] of symbol.exports || []) {
+          yield* collectUsageExamples(
+            childSymbol,
+            `${name}.${childName.toString()}`
+          );
+        }
+      } else if (ts.isEnumDeclaration(declaration)) {
+        yield `type ${identifierUc} = ${name};`;
+      } else if (
+        ts.isVariableDeclaration(declaration) ||
+        ts.isPropertyDeclaration(declaration) ||
+        ts.isPropertyAccessExpression(declaration)
+      ) {
+        yield `const ${identifierUc} = ${name};`;
+      } else if (ts.isIdentifier(declaration)) {
+        /*ignore*/
+      } else {
+        throw new Error(
+          `Unsupported declaration type for symbol ${name}: ${
+            declaration.kind
+          } - ${ts.SyntaxKind[declaration.kind]}`
+        );
+      }
     }
   }
 
@@ -299,6 +311,20 @@ const entryPoints = [
 ];
 const projectRoot = path.join(import.meta.dirname, "../../../../..");
 const require = createRequire(path.join(projectRoot, "src", "index.ts"));
+
+if (!fs.existsSync(path.join(projectRoot, "package.json"))) {
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8")
+  );
+  if ("exports" in pkg) {
+    for (const exp of Object.keys(pkg.exports)) {
+      if (!entryPoints.some(([_, moduleName]) => moduleName === exp)) {
+        entryPoints.push(["", exp]);
+      }
+    }
+  }
+}
+
 const collected: Record<string, ExportInfo[]> = {};
 for (const [entryPoint, moduleName] of entryPoints) {
   // Resolve entry point relative to project root if not absolute

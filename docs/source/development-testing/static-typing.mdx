@@ -301,18 +301,14 @@ This technique enables us to modify the [`useQuery` example](#usequery) above to
 import React from "react";
 import { gql, TypedDocumentNode } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-
-interface RocketInventoryData {
-  rocketInventory: RocketInventory[];
-}
-
-interface RocketInventoryVars {
-  year: number;
-}
+import {
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables,
+} from "./path/to/types/file.ts";
 
 const GET_ROCKET_INVENTORY: TypedDocumentNode<
-  RocketInventoryData,
-  RocketInventoryVars
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables
 > = gql`
   query GetRocketInventory($year: Int!) {
     rocketInventory(year: $year) {

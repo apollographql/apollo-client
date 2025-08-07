@@ -306,7 +306,7 @@ function GetDogs({ isOnline }) {
 
 <Note>
 
-The changed options are immediately applied to the underlying `ObservableQuery` (accessible by the `observable` property) even though the query is not executed. Inspecting the options on the `observable` will return the updated options. This means the updated options will be used for other APIs (e.g. such as `refetch`), even before calling the execution function again.
+The changed options are immediately applied to the underlying `ObservableQuery` (accessible by the `observable` property) even though the query is not executed. Inspecting the options on the `observable` returns the updated options. This means the updated options will be used for other APIs (such as `refetch`), even before calling the execution function again.
 
 </Note>
 
@@ -336,7 +336,7 @@ function DogPhoto() {
 
 <Note>
 
-When using TypeScript, the `variables` option is required along with any required variables when the query provided to `useLazyQuery` contains required variables. If the options argument is not provided to the execution function, or the `variables` option is missing required variables, you will see a TypeScript error.
+When using TypeScript, the `variables` option is required along with any required variables when the query provided to `useLazyQuery` contains required variables. If the options argument is not provided to the execution function, or the `variables` option is missing required variables, you see a TypeScript error.
 
 </Note>
 
@@ -425,7 +425,7 @@ The result returned from the promise is useful when you need to execute side-eff
 
 <Tip>
 
-Use the `data`, `error`, and other properties returned by `useLazyQuery` to sync the query state with your component. Avoid using your own state setters from React's `useState` hook with data resolved from the promise. This ensures your component is kept up-to-date with cache changes as they occur throughout your application.<br /><br />
+Use the `data`, `error`, and other properties returned by `useLazyQuery` to sync the query state with your component. Avoid using your own state setters from React's `useState` hook with data resolved from the promise. This ensures your component stays up-to-date with cache changes as they occur throughout your application.<br /><br />
 
 In cases where you don't need to keep your component in sync with query state, use `client.query()` directly because it won't unnecessarily render your component for data that you don't use.
 
@@ -522,7 +522,7 @@ const handleClick = async () => {
 
 #### Retaining query results
 
-In-flight queries executed by `useLazyQuery` are aborted when the component unmounts, causing the promise to reject. In some cases, you may find this behavior undesirable and would prefer to let the query run to completion.
+In-flight queries executed by `useLazyQuery` are aborted when the component unmounts, causing the promise to reject. In some cases, you might find this behavior undesirable and would prefer to let the query run to completion.
 
 The promise returned by the execution function includes a `.retain()` method. When called, it ensures the query continues running even when the component unmounts.
 
@@ -551,7 +551,7 @@ The `retain()` method returns the original promise. The previous example can be 
 const { data } = await getDogs().retain();
 ```
 
-For a complete list of supported options and result properties, see the [API reference](../api/react/useLazyQuery).
+For a complete list of supported options and result properties, see the [`useQuery` API reference](../api/react/useLazyQuery).
 
 ## Setting a fetch policy
 

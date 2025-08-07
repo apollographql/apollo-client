@@ -30,7 +30,7 @@ const config: CodegenConfig = {
   // Don't exit with non-zero status when there are no documents
   ignoreNoDocuments: true,
   generates: {
-    // Note: pick a path that works the best for the structure of your application
+    // Use a path that works the best for the structure of your application
     "./src/types/__generated__/graphql.ts": {
       plugins: ["typescript", "typescript-operations"],
       config: {

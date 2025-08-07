@@ -309,6 +309,7 @@ const entryPoints = [
     "@apollo/client/utilities/subscriptions/relay",
   ],
 ];
+// @ts-ignore
 const projectRoot = path.join(import.meta.dirname, "../../../../..");
 const require = createRequire(path.join(projectRoot, "src", "index.ts"));
 
@@ -390,6 +391,7 @@ EOF
  */
 
 fs.writeFileSync(
+  // @ts-ignore
   path.join(import.meta.dirname, "..", "__tests__", "exports.json"),
   JSON.stringify(collected, null, 2)
 );

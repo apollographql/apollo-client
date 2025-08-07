@@ -31,8 +31,6 @@ export function handleIdentiferRename({
         "This case is not supported yet: " + JSON.stringify(rename)
       );
 
-      onModify();
-
       const specifier = specifierPath.value;
       const localName = specifier.local?.name;
       const importedName = specifier.imported.name;
@@ -59,6 +57,16 @@ export function handleIdentiferRename({
       } else if (getLocalName(specifier) !== importAs) {
         getUnusedIdentifier({ similarTo: importAs, context });
       }
+
+      if (
+        from.namespace === final.namespace &&
+        importedName === final.identifier &&
+        importedFrom === final.module
+      ) {
+        return;
+      }
+
+      onModify();
 
       try {
         if (

@@ -28,6 +28,9 @@ export function handleModuleRename({
             ))
       )
       .forEach((sourcePath) => {
+        if (sourcePath.node.source.value == rename.to.module) {
+          return; // No change needed.
+        }
         onModify();
         sourcePath.get("value", "source").replace(j.literal(rename.to.module));
       });
@@ -36,6 +39,9 @@ export function handleModuleRename({
   function mergeIntoExistingOrRenameImport() {
     findImportDeclarationFor({ description: rename.from, context }).forEach(
       (sourcePath) => {
+        if (sourcePath.node.source.value == rename.to.module) {
+          return; // No change needed.
+        }
         onModify();
         const sourceImport = j(sourcePath);
         let targetImport = findImportDeclarationFor({

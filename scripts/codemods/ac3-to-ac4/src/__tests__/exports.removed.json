@@ -441,7 +441,5 @@
     "DEV",
     "___DEV__"
   ],
-  "@apollo/client/utilities/subscriptions/relay": [
-    "createFetchMultipartSubscription"
-  ]
+  "@apollo/client/utilities/subscriptions/relay": []
 }

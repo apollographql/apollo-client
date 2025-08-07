@@ -4,6 +4,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 
 import * as ts from "typescript";
+import { createRequire } from "module";
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -293,15 +294,39 @@ const entryPoints = [
   ],
 ];
 const projectRoot = path.join(import.meta.dirname, "../../../../..");
+const require = createRequire(path.join(projectRoot, "src", "index.ts"));
 const collected: Record<string, ExportInfo[]> = {};
 for (const [entryPoint, moduleName] of entryPoints) {
   // Resolve entry point relative to project root if not absolute
-  const resolvedEntryPoint =
-    path.isAbsolute(entryPoint) ? entryPoint : (
-      path.resolve(projectRoot, entryPoint)
-    );
+  let resolvedEntryPoint: string | undefined = undefined;
+  try {
+    // for AC4 we can resolve the module directly
+    resolvedEntryPoint = require.resolve(moduleName);
+  } catch {
+    if (moduleName === "@apollo/client/link/core") {
+      // this has been renamed, for comparison sake handle it the same as before
+      resolvedEntryPoint = require.resolve("@apollo/client/link");
+    }
+  }
+  if (!resolvedEntryPoint) {
+    // if that didn't work we are probably dealing with AC3, use the known entry point
+    resolvedEntryPoint =
+      path.isAbsolute(entryPoint) ? entryPoint : (
+        path.resolve(projectRoot, entryPoint)
+      );
+  }
+  console.log(
+    `Analyzing exports for module: ${moduleName} at ${resolvedEntryPoint}`
+  );
 
-  assert(fs.existsSync(resolvedEntryPoint));
+  if (!fs.existsSync(resolvedEntryPoint)) {
+    console.log(
+      "File not found - entry point might have been deleted:",
+      resolvedEntryPoint
+    );
+    collected[moduleName] = [];
+    continue;
+  }
   assert(fs.existsSync(projectRoot));
 
   const exports = analyze(resolvedEntryPoint, projectRoot, moduleName);

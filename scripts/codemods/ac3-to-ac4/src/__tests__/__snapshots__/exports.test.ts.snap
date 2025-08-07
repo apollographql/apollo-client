@@ -142,10 +142,10 @@ exports[`all exports > @apollo/client 1`] = `
 +  SkipToken,
    QueryRef,
    PreloadedQueryRef,
-   Context,
+-  Context,
    CommonOptions,
    BaseQueryOptions,
-   QueryFunctionOptions,
+-  QueryFunctionOptions,
    ObservableQueryFields,
 -  QueryResult,
    QueryDataOptions,
@@ -156,11 +156,11 @@ exports[`all exports > @apollo/client 1`] = `
 -  SuspenseQueryHookOptions,
 -  BackgroundQueryHookFetchPolicy,
 -  BackgroundQueryHookOptions,
-   LoadableQueryHookFetchPolicy,
+-  LoadableQueryHookFetchPolicy,
 -  LoadableQueryHookOptions,
    QueryLazyOptions,
 -  LazyQueryResult,
-   QueryTuple,
+-  QueryTuple,
 -  LazyQueryExecFunction,
 -  LazyQueryResultTuple,
    RefetchQueriesFunction,
@@ -173,19 +173,21 @@ exports[`all exports > @apollo/client 1`] = `
 -  MutationTuple,
 -  OnDataOptions,
 -  OnSubscriptionDataOptions,
-   BaseSubscriptionOptions,
+-  BaseSubscriptionOptions,
 -  SubscriptionResult,
 -  SubscriptionHookOptions,
    SubscriptionDataOptions,
    SubscriptionCurrentObservable,
-   VariablesOption,
+-  VariablesOption,
 -  NoInfer
 -} from "@apollo/client";
 -type _Test_ApolloClientOptions = ApolloClientOptions<TCacheShape>;
 -type _Test_DefaultOptions = DefaultOptions;
-+  NoInfer,
++  @apollo/client,
 +} from "@apollo/client/react";
 +
++import type { NoInfer } from "@apollo/client/utilities/internal";
++import type { VariablesOption } from "@apollo/client/utilities/internal";
 +import type { QueryRef } from "@apollo/client/react";
 +type _Test_ApolloClientOptions = ApolloClient.Options<TCacheShape>;
 +type _Test_DefaultOptions = ApolloClient.DefaultOptions;
@@ -324,10 +326,12 @@ exports[`all exports > @apollo/client 1`] = `
 +type _Test_QueryReference = QueryRef<TData, TVariables>;
  type _Test_QueryRef = QueryRef<TData, TVariables>;
  type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;
- type _Test_Context = Context;
+-type _Test_Context = Context;
++type _Test_Context = @apollo/client.DefaultContext;
  type _Test_CommonOptions = CommonOptions<TOptions>;
  type _Test_BaseQueryOptions = BaseQueryOptions<TVariables, TData>;
- type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
+-type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
++type _Test_QueryFunctionOptions = useQuery.Options<TData, TVariables>;
  type _Test_ObservableQueryFields = ObservableQueryFields<TData, TVariables>;
 -type _Test_QueryResult = QueryResult<TData, TVariables>;
 +type _Test_QueryResult = useQuery.Result<TData, TVariables>;
@@ -339,6 +343,8 @@ exports[`all exports > @apollo/client 1`] = `
 -type _Test_SuspenseQueryHookOptions = SuspenseQueryHookOptions<TData, TVariables>;
 -type _Test_BackgroundQueryHookFetchPolicy = BackgroundQueryHookFetchPolicy;
 -type _Test_BackgroundQueryHookOptions = BackgroundQueryHookOptions<TData, TVariables>;
+-type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
+-type _Test_LoadableQueryHookOptions = LoadableQueryHookOptions;
 +type _Test_QueryHookOptions = useQuery.Options<TData, TVariables>;
 +type _Test_LazyQueryHookOptions = useLazyQuery.Options<TData, TVariables>;
 +type _Test_LazyQueryHookExecOptions = useLazyQuery.ExecOptions<TData, TVariables>;
@@ -346,15 +352,15 @@ exports[`all exports > @apollo/client 1`] = `
 +type _Test_SuspenseQueryHookOptions = useSuspenseQuery.Options<TVariables>;
 +type _Test_BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
 +type _Test_BackgroundQueryHookOptions = useBackgroundQuery.Options<TVariables>;
- type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
--type _Test_LoadableQueryHookOptions = LoadableQueryHookOptions;
++type _Test_LoadableQueryHookFetchPolicy = useLoadableQuery.FetchPolicy;
 +type _Test_LoadableQueryHookOptions = useLoadableQuery.Options;
  type _Test_QueryLazyOptions = QueryLazyOptions<TVariables>;
 -type _Test_LazyQueryResult = LazyQueryResult<TData, TVariables>;
-+type _Test_LazyQueryResult = useLazyQuery.Result<TData, TVariables>;
- type _Test_QueryTuple = QueryTuple<TData, TVariables>;
+-type _Test_QueryTuple = QueryTuple<TData, TVariables>;
 -type _Test_LazyQueryExecFunction = LazyQueryExecFunction<TData, TVariables>;
 -type _Test_LazyQueryResultTuple = LazyQueryResultTuple<TData, TVariables>;
++type _Test_LazyQueryResult = useLazyQuery.Result<TData, TVariables>;
++type _Test_QueryTuple = useLazyQuery.ResultTuple<TData, TVariables>;
 +type _Test_LazyQueryExecFunction = useLazyQuery.ExecFunction<TData, TVariables>;
 +type _Test_LazyQueryResultTuple = useLazyQuery.ResultTuple<TData, TVariables>;
  type _Test_RefetchQueriesFunction = RefetchQueriesFunction;
@@ -370,12 +376,13 @@ exports[`all exports > @apollo/client 1`] = `
 -type _Test_MutationTuple = MutationTuple<TData, TVariables, TContext, TCache>;
 -type _Test_OnDataOptions = OnDataOptions<TData>;
 -type _Test_OnSubscriptionDataOptions = OnSubscriptionDataOptions<TData>;
+-type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
+-type _Test_SubscriptionResult = SubscriptionResult<TData, TVariables>;
+-type _Test_SubscriptionHookOptions = SubscriptionHookOptions<TData, TVariables>;
 +type _Test_MutationTuple = useMutation.ResultTuple<TData, TVariables, TCache>;
 +type _Test_OnDataOptions = useSubscription.OnDataOptions<TData>;
 +type _Test_OnSubscriptionDataOptions = useSubscription.OnSubscriptionDataOptions<TData>;
- type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
--type _Test_SubscriptionResult = SubscriptionResult<TData, TVariables>;
--type _Test_SubscriptionHookOptions = SubscriptionHookOptions<TData, TVariables>;
++type _Test_BaseSubscriptionOptions = useSubscription.Options<TData, TVariables>;
 +type _Test_SubscriptionResult = useSubscription.Result<TData>;
 +type _Test_SubscriptionHookOptions = useSubscription.Options<TData, TVariables>;
  type _Test_SubscriptionDataOptions = SubscriptionDataOptions<TData, TVariables>;
@@ -965,10 +972,10 @@ exports[`all exports > @apollo/client/react 1`] = `
 -  QueryReference,
    QueryRef,
    PreloadedQueryRef,
-   Context,
+-  Context,
    CommonOptions,
    BaseQueryOptions,
-   QueryFunctionOptions,
+-  QueryFunctionOptions,
    ObservableQueryFields,
 -  QueryResult,
    QueryDataOptions,
@@ -979,11 +986,11 @@ exports[`all exports > @apollo/client/react 1`] = `
 -  SuspenseQueryHookOptions,
 -  BackgroundQueryHookFetchPolicy,
 -  BackgroundQueryHookOptions,
-   LoadableQueryHookFetchPolicy,
+-  LoadableQueryHookFetchPolicy,
 -  LoadableQueryHookOptions,
    QueryLazyOptions,
 -  LazyQueryResult,
-   QueryTuple,
+-  QueryTuple,
 -  LazyQueryExecFunction,
 -  LazyQueryResultTuple,
    RefetchQueriesFunction,
@@ -996,18 +1003,21 @@ exports[`all exports > @apollo/client/react 1`] = `
 -  MutationTuple,
 -  OnDataOptions,
 -  OnSubscriptionDataOptions,
-   BaseSubscriptionOptions,
+-  BaseSubscriptionOptions,
 -  SubscriptionResult,
 -  SubscriptionHookOptions,
    SubscriptionDataOptions,
    SubscriptionCurrentObservable,
-   VariablesOption,
+-  VariablesOption,
 -  NoInfer
-+  NoInfer,
++  @apollo/client,
  } from "@apollo/client/react";
++import type { NoInfer } from "@apollo/client/utilities/internal";
++import type { VariablesOption } from "@apollo/client/utilities/internal";
  type _Test_ApolloContextValue = ApolloContextValue;
  const _Test_ApolloProvider = ApolloProvider;
  const _Test_ApolloConsumer = ApolloConsumer;
+ getApolloContext()
 @@  @@
  type _Test_PreloadQueryFetchPolicy = PreloadQueryFetchPolicy;
  type _Test_PreloadQueryFunction = PreloadQueryFunction;
@@ -1051,10 +1061,12 @@ exports[`all exports > @apollo/client/react 1`] = `
 +type _Test_QueryReference = QueryRef<TData, TVariables>;
  type _Test_QueryRef = QueryRef<TData, TVariables>;
  type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;
- type _Test_Context = Context;
+-type _Test_Context = Context;
++type _Test_Context = @apollo/client.DefaultContext;
  type _Test_CommonOptions = CommonOptions<TOptions>;
  type _Test_BaseQueryOptions = BaseQueryOptions<TVariables, TData>;
- type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
+-type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
++type _Test_QueryFunctionOptions = useQuery.Options<TData, TVariables>;
  type _Test_ObservableQueryFields = ObservableQueryFields<TData, TVariables>;
 -type _Test_QueryResult = QueryResult<TData, TVariables>;
 +type _Test_QueryResult = useQuery.Result<TData, TVariables>;
@@ -1066,6 +1078,8 @@ exports[`all exports > @apollo/client/react 1`] = `
 -type _Test_SuspenseQueryHookOptions = SuspenseQueryHookOptions<TData, TVariables>;
 -type _Test_BackgroundQueryHookFetchPolicy = BackgroundQueryHookFetchPolicy;
 -type _Test_BackgroundQueryHookOptions = BackgroundQueryHookOptions<TData, TVariables>;
+-type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
+-type _Test_LoadableQueryHookOptions = LoadableQueryHookOptions;
 +type _Test_QueryHookOptions = useQuery.Options<TData, TVariables>;
 +type _Test_LazyQueryHookOptions = useLazyQuery.Options<TData, TVariables>;
 +type _Test_LazyQueryHookExecOptions = useLazyQuery.ExecOptions<TData, TVariables>;
@@ -1073,15 +1087,15 @@ exports[`all exports > @apollo/client/react 1`] = `
 +type _Test_SuspenseQueryHookOptions = useSuspenseQuery.Options<TVariables>;
 +type _Test_BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
 +type _Test_BackgroundQueryHookOptions = useBackgroundQuery.Options<TVariables>;
- type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
--type _Test_LoadableQueryHookOptions = LoadableQueryHookOptions;
++type _Test_LoadableQueryHookFetchPolicy = useLoadableQuery.FetchPolicy;
 +type _Test_LoadableQueryHookOptions = useLoadableQuery.Options;
  type _Test_QueryLazyOptions = QueryLazyOptions<TVariables>;
 -type _Test_LazyQueryResult = LazyQueryResult<TData, TVariables>;
-+type _Test_LazyQueryResult = useLazyQuery.Result<TData, TVariables>;
- type _Test_QueryTuple = QueryTuple<TData, TVariables>;
+-type _Test_QueryTuple = QueryTuple<TData, TVariables>;
 -type _Test_LazyQueryExecFunction = LazyQueryExecFunction<TData, TVariables>;
 -type _Test_LazyQueryResultTuple = LazyQueryResultTuple<TData, TVariables>;
++type _Test_LazyQueryResult = useLazyQuery.Result<TData, TVariables>;
++type _Test_QueryTuple = useLazyQuery.ResultTuple<TData, TVariables>;
 +type _Test_LazyQueryExecFunction = useLazyQuery.ExecFunction<TData, TVariables>;
 +type _Test_LazyQueryResultTuple = useLazyQuery.ResultTuple<TData, TVariables>;
  type _Test_RefetchQueriesFunction = RefetchQueriesFunction;
@@ -1097,12 +1111,13 @@ exports[`all exports > @apollo/client/react 1`] = `
 -type _Test_MutationTuple = MutationTuple<TData, TVariables, TContext, TCache>;
 -type _Test_OnDataOptions = OnDataOptions<TData>;
 -type _Test_OnSubscriptionDataOptions = OnSubscriptionDataOptions<TData>;
+-type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
+-type _Test_SubscriptionResult = SubscriptionResult<TData, TVariables>;
+-type _Test_SubscriptionHookOptions = SubscriptionHookOptions<TData, TVariables>;
 +type _Test_MutationTuple = useMutation.ResultTuple<TData, TVariables, TCache>;
 +type _Test_OnDataOptions = useSubscription.OnDataOptions<TData>;
 +type _Test_OnSubscriptionDataOptions = useSubscription.OnSubscriptionDataOptions<TData>;
- type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
--type _Test_SubscriptionResult = SubscriptionResult<TData, TVariables>;
--type _Test_SubscriptionHookOptions = SubscriptionHookOptions<TData, TVariables>;
++type _Test_BaseSubscriptionOptions = useSubscription.Options<TData, TVariables>;
 +type _Test_SubscriptionResult = useSubscription.Result<TData>;
 +type _Test_SubscriptionHookOptions = useSubscription.Options<TData, TVariables>;
  type _Test_SubscriptionDataOptions = SubscriptionDataOptions<TData, TVariables>;
@@ -1300,14 +1315,17 @@ exports[`all exports > @apollo/client/testing 1`] = `
    mockSingleLink,
    MockSubscriptionLink,
    mockObservableLink,
-@@  @@
-   wait,
+   createMockClient,
+   subscribeAndCount,
+   itAsync,
+-  wait,
    tick,
    withErrorSpy,
    withWarningSpy,
 -  withLogSpy
 +  withLogSpy,
  } from "@apollo/client/testing";
++import type { wait } from "@apollo/client/testing/internal";
 +import { MockedProvider, MockedProviderProps } from "@apollo/client/testing/react";
  type _Test_MockedProviderProps = MockedProviderProps<TSerializedCache>;
  class _Test_MockedProvider extends MockedProvider {}
@@ -1339,8 +1357,10 @@ exports[`all exports > @apollo/client/testing/core 1`] = `
    mockSingleLink,
    MockSubscriptionLink,
    mockObservableLink,
-@@  @@
-   wait,
+   createMockClient,
+   subscribeAndCount,
+   itAsync,
+-  wait,
    tick,
    withErrorSpy,
    withWarningSpy,
@@ -1351,6 +1371,8 @@ exports[`all exports > @apollo/client/testing/core 1`] = `
 -type _Test_ResultFunction = ResultFunction<T, V>;
 +  withLogSpy,
 +} from "@apollo/client/testing";
++
++import type { wait } from "@apollo/client/testing/internal";
 +type _Test_MockedResponse = MockLink.MockedResponse<TData, TVariables>;
 +type _Test_MockLinkOptions = MockLink.Options;
 +type _Test_ResultFunction = MockLink.ResultFunction<T, V>;
@@ -1756,8 +1778,10 @@ exports[`individual exports > @apollo/client > BaseSubscriptionOptions 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { BaseSubscriptionOptions } from "@apollo/client";
-+import type { BaseSubscriptionOptions } from "@apollo/client/react";
- type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
+-type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
+\\ No newline at end of file
++import type { useSubscription } from "@apollo/client/react";
++type _Test_BaseSubscriptionOptions = useSubscription.Options<TData, TVariables>;
 \\ No newline at end of file
 "
 `;
@@ -1798,8 +1822,10 @@ exports[`individual exports > @apollo/client > Context 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { Context } from "@apollo/client";
-+import type { Context } from "@apollo/client/react";
- type _Test_Context = Context;
+-type _Test_Context = Context;
+\\ No newline at end of file
++import type { @apollo/client } from "@apollo/client/react";
++type _Test_Context = @apollo/client.DefaultContext;
 \\ No newline at end of file
 "
 `;
@@ -2263,8 +2289,10 @@ exports[`individual exports > @apollo/client > LoadableQueryHookFetchPolicy 1`] 
 +++ test.ts	transformed
 @@  @@
 -import { LoadableQueryHookFetchPolicy } from "@apollo/client";
-+import type { LoadableQueryHookFetchPolicy } from "@apollo/client/react";
- type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
+-type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
+\\ No newline at end of file
++import type { useLoadableQuery } from "@apollo/client/react";
++type _Test_LoadableQueryHookFetchPolicy = useLoadableQuery.FetchPolicy;
 \\ No newline at end of file
 "
 `;
@@ -2511,7 +2539,7 @@ exports[`individual exports > @apollo/client > NoInfer 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { NoInfer } from "@apollo/client";
-+import type { NoInfer } from "@apollo/client/react";
++import type { NoInfer } from "@apollo/client/utilities/internal";
  type _Test_NoInfer = NoInfer<T>;
 \\ No newline at end of file
 "
@@ -2750,8 +2778,10 @@ exports[`individual exports > @apollo/client > QueryFunctionOptions 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { QueryFunctionOptions } from "@apollo/client";
-+import type { QueryFunctionOptions } from "@apollo/client/react";
- type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
+-type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
+\\ No newline at end of file
++import type { useQuery } from "@apollo/client/react";
++type _Test_QueryFunctionOptions = useQuery.Options<TData, TVariables>;
 \\ No newline at end of file
 "
 `;
@@ -2849,8 +2879,10 @@ exports[`individual exports > @apollo/client > QueryTuple 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { QueryTuple } from "@apollo/client";
-+import type { QueryTuple } from "@apollo/client/react";
- type _Test_QueryTuple = QueryTuple<TData, TVariables>;
+-type _Test_QueryTuple = QueryTuple<TData, TVariables>;
+\\ No newline at end of file
++import type { useLazyQuery } from "@apollo/client/react";
++type _Test_QueryTuple = useLazyQuery.ResultTuple<TData, TVariables>;
 \\ No newline at end of file
 "
 `;
@@ -3391,7 +3423,7 @@ exports[`individual exports > @apollo/client > VariablesOption 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { VariablesOption } from "@apollo/client";
-+import type { VariablesOption } from "@apollo/client/react";
++import type { VariablesOption } from "@apollo/client/utilities/internal";
  type _Test_VariablesOption = VariablesOption<TVariables>;
 \\ No newline at end of file
 "
@@ -7226,6 +7258,13 @@ exports[`individual exports > @apollo/client/react > BaseSubscriptionOptions 1`]
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { BaseSubscriptionOptions } from "@apollo/client/react";
+-type _Test_BaseSubscriptionOptions = BaseSubscriptionOptions<TData, TVariables>;
+\\ No newline at end of file
++import { useSubscription } from "@apollo/client/react";
++type _Test_BaseSubscriptionOptions = useSubscription.Options<TData, TVariables>;
+\\ No newline at end of file
 "
 `;
 
@@ -7242,6 +7281,13 @@ exports[`individual exports > @apollo/client/react > Context 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { Context } from "@apollo/client/react";
+-type _Test_Context = Context;
+\\ No newline at end of file
++import { @apollo/client } from "@apollo/client/react";
++type _Test_Context = @apollo/client.DefaultContext;
+\\ No newline at end of file
 "
 `;
 
@@ -7356,6 +7402,13 @@ exports[`individual exports > @apollo/client/react > LoadableQueryHookFetchPolic
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { LoadableQueryHookFetchPolicy } from "@apollo/client/react";
+-type _Test_LoadableQueryHookFetchPolicy = LoadableQueryHookFetchPolicy;
+\\ No newline at end of file
++import { useLoadableQuery } from "@apollo/client/react";
++type _Test_LoadableQueryHookFetchPolicy = useLoadableQuery.FetchPolicy;
+\\ No newline at end of file
 "
 `;
 
@@ -7455,6 +7508,11 @@ exports[`individual exports > @apollo/client/react > NoInfer 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { NoInfer } from "@apollo/client/react";
++import type { NoInfer } from "@apollo/client/utilities/internal";
+ type _Test_NoInfer = NoInfer<T>;
+\\ No newline at end of file
 "
 `;
 
@@ -7541,6 +7599,13 @@ exports[`individual exports > @apollo/client/react > QueryFunctionOptions 1`] = 
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { QueryFunctionOptions } from "@apollo/client/react";
+-type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
+\\ No newline at end of file
++import { useQuery } from "@apollo/client/react";
++type _Test_QueryFunctionOptions = useQuery.Options<TData, TVariables>;
+\\ No newline at end of file
 "
 `;
 
@@ -7610,6 +7675,13 @@ exports[`individual exports > @apollo/client/react > QueryTuple 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { QueryTuple } from "@apollo/client/react";
+-type _Test_QueryTuple = QueryTuple<TData, TVariables>;
+\\ No newline at end of file
++import { useLazyQuery } from "@apollo/client/react";
++type _Test_QueryTuple = useLazyQuery.ResultTuple<TData, TVariables>;
+\\ No newline at end of file
 "
 `;
 
@@ -7845,6 +7917,11 @@ exports[`individual exports > @apollo/client/react > VariablesOption 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { VariablesOption } from "@apollo/client/react";
++import type { VariablesOption } from "@apollo/client/utilities/internal";
+ type _Test_VariablesOption = VariablesOption<TVariables>;
+\\ No newline at end of file
 "
 `;
 
@@ -8948,6 +9025,11 @@ exports[`individual exports > @apollo/client/testing > wait 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { wait } from "@apollo/client/testing";
++import type { wait } from "@apollo/client/testing/internal";
+ wait(ms)
+\\ No newline at end of file
 "
 `;
 
@@ -9133,7 +9215,7 @@ exports[`individual exports > @apollo/client/testing/core > wait 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { wait } from "@apollo/client/testing/core";
-+import { wait } from "@apollo/client/testing";
++import type { wait } from "@apollo/client/testing/internal";
  wait(ms)
 \\ No newline at end of file
 "

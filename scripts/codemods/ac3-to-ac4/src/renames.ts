@@ -264,6 +264,13 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
+  ...[{ from: "VariablesOption" }, { from: "NoInfer" }].map(
+    moveInto({
+      from: { module: "@apollo/client/react" },
+      to: { module: "@apollo/client/utilities/internal" },
+      importType: "type",
+    })
+  ),
   ...[{ from: "__DEV__" }, { from: "DEV", to: "__DEV__" }].map(
     moveInto({
       from: {
@@ -344,6 +351,15 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
+  ...[{ from: "Context", to: "DefaultContext" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/react",
+      },
+      to: { namespace: "@apollo/client" },
+      importType: "type",
+    })
+  ),
   ...[{ from: "ApolloProviderProps", to: "Props" }].map(
     moveInto({
       from: {
@@ -377,6 +393,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "LazyQueryHookExecOptions", to: "ExecOptions" },
     { from: "LazyQueryHookOptions", to: "Options" },
     { from: "LazyQueryResult", to: "Result" },
+    { from: "QueryTuple", to: "ResultTuple" },
     { from: "LazyQueryResultTuple", to: "ResultTuple" },
   ].map(
     moveInto({
@@ -390,6 +407,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     { from: "LoadableQueryFetchPolicy", to: "FetchPolicy" },
+    { from: "LoadableQueryHookFetchPolicy", to: "FetchPolicy" },
     { from: "LoadableQueryHookOptions", to: "Options" },
     { from: "LoadQueryFunction" },
     { from: "UseLoadableQueryResult", to: "Result" },
@@ -433,6 +451,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "OnDataOptions" },
     { from: "OnSubscriptionDataOptions" },
     { from: "SubscriptionHookOptions", to: "Options" },
+    { from: "BaseSubscriptionOptions", to: "Options" },
     {
       from: "SubscriptionResult",
       to: "Result",
@@ -449,6 +468,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
+    { from: "QueryFunctionOptions", to: "Options" },
     { from: "QueryHookOptions", to: "Options" },
     { from: "QueryResult", to: "Result" },
   ].map(
@@ -556,6 +576,13 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     moveInto({
       from: { module: "@apollo/client/testing" },
       to: { namespace: "MockLink" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "wait" }].map(
+    moveInto({
+      from: { module: "@apollo/client/testing" },
+      to: { module: "@apollo/client/testing/internal" },
       importType: "type",
     })
   ),

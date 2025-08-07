@@ -1,0 +1,121 @@
+---
+title: ClientAwarenessLink
+description: API reference
+---
+
+<DocBlock
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
+
+## Constructor signature
+
+```ts
+constructor(
+  options?: ClientAwarenessLink.Options
+): ClientAwarenessLink
+```
+
+## Configuring client awareness
+
+Client awareness can be configured in various ways in Apollo Client.
+
+### Configuring with Apollo Client
+
+You can configure client awareness when initializing your Apollo Client instance using the `clientAwareness` and `enhancedClientAwareness` options. Options configured with the `ClientAwarenessLink` constructor, `HttpLink` constructor, or [request context](./introduction#managing-context) take precedence.
+
+```ts
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  clientAwareness: {
+    name: "My Client",
+    version: "my_client_version",
+  },
+  enhancedClientAwareness: {
+    transport: "extensions",
+  },
+});
+```
+
+### Configuring with `HttpLink`
+
+You can configure client awareness when initializing an `HttpLink` using the `clientAwareness` and `enhancedClientAwareness` options. These options take precedence over options provided to the `ApolloClient` constructor but can be overridden by [request context](./introduction#managing-context).
+
+```ts
+import { ApolloClient, HttpLink } from "@apollo/client";
+
+const link = new HttpLink({
+  clientAwareness: {
+    name: "My Client",
+    version: "my_client_version",
+  },
+  enhancedClientAwareness: {
+    transport: "extensions",
+  },
+});
+
+const client = new ApolloClient({
+  link,
+  // additional options
+});
+```
+
+<Note>
+
+If you use `BaseHttpLink`, add `ClientAwarenessLink` to your link chain manually to enable client awareness. `HttpLink` includes `ClientAwarenessLink` by default.
+
+</Note>
+
+### Configuring with request context
+
+Configure client awareness on a per-request basis by providing the `clientAwareness` field in the request's `context`. These values take precedence over all other configurations.
+
+<Note>
+
+The `enhancedClientAwareness` field is not supported in request context. Configure this feature at the client or link level instead.
+
+</Note>
+
+```ts
+const client = new ApolloClient(/* ... */);
+
+function MyComponent() {
+  const { data } = useQuery(query, {
+    context: {
+      clientAwareness: {
+        name: "My Client",
+        version: "my_client_version",
+      },
+    },
+  });
+
+  // ...
+}
+```
+
+## Types
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.ContextOptions:interface"
+  headingLevel={3}
+  displayName="ClientAwarenessLink.ContextOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.Options:interface"
+  headingLevel={3}
+  displayName="ClientAwarenessLink.Options"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.ClientAwarenessOptions:interface"
+  headingLevel={3}
+  displayName="ClientAwarenessLink.ClientAwarenessOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/client-awareness!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface"
+  headingLevel={3}
+  displayName="ClientAwarenessLink.EnhancedClientAwarenessOptions"
+/>

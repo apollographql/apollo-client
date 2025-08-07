@@ -5,51 +5,31 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import { Observable } from 'rxjs';
-
-// @public (undocumented)
-export interface BatchableRequest {
-    // (undocumented)
-    forward: ApolloLink.ForwardFunction;
-    // (undocumented)
-    operation: ApolloLink.Operation;
-}
-
-// @public (undocumented)
-export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
+import type { Observable } from 'rxjs';
 
 // @public (undocumented)
 export namespace BatchLink {
-    // (undocumented)
-    export interface Options {
-        batchDebounce?: boolean;
-        batchHandler?: BatchHandler;
-        batchInterval?: number;
-        batchKey?: (operation: ApolloLink.Operation) => string;
+    export type BatchHandler = (operations: ApolloLink.Operation[], forward: ApolloLink.ForwardFunction[]) => Observable<ApolloLink.Result[]>;
+    export interface Options extends Shared.Options {
+        batchHandler?: BatchLink.BatchHandler;
         batchMax?: number;
+    }
+    // (undocumented)
+    export namespace Shared {
+        export interface Options {
+            batchDebounce?: boolean;
+            batchInterval?: number;
+            batchKey?: (operation: ApolloLink.Operation) => string;
+            batchMax?: number;
+        }
     }
 }
 
-// @public (undocumented)
+// @public
 export class BatchLink extends ApolloLink {
-    constructor(fetchParams?: BatchLink.Options);
+    constructor(options?: BatchLink.Options);
     // (undocumented)
     request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
-}
-
-// @public (undocumented)
-export class OperationBatcher {
-    constructor({ batchDebounce, batchInterval, batchMax, batchHandler, batchKey, }: {
-        batchDebounce?: boolean;
-        batchInterval?: number;
-        batchMax?: number;
-        batchHandler: BatchHandler;
-        batchKey?: (operation: ApolloLink.Operation) => string;
-    });
-    // (undocumented)
-    consumeQueue(key?: string): (Observable<ApolloLink.Result> | undefined)[] | undefined;
-    // (undocumented)
-    enqueueRequest(request: BatchableRequest): Observable<ApolloLink.Result>;
 }
 
 // (No @packageDocumentation comment for this package)

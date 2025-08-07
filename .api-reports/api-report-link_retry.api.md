@@ -5,47 +5,34 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
+import type { ErrorLike } from '@apollo/client';
 import { Observable } from 'rxjs';
-
-// @public
-interface DelayFunction {
-    // (undocumented)
-    (count: number, operation: ApolloLink.Operation, error: any): number;
-}
-
-// @public (undocumented)
-interface DelayFunctionOptions {
-    initial?: number;
-    jitter?: boolean;
-    max?: number;
-}
-
-// @public
-interface RetryFunction {
-    // (undocumented)
-    (count: number, operation: ApolloLink.Operation, error: any): boolean | Promise<boolean>;
-}
-
-// @public (undocumented)
-interface RetryFunctionOptions {
-    max?: number;
-    retryIf?: (error: any, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
-}
 
 // @public (undocumented)
 export namespace RetryLink {
-    // (undocumented)
+    export type AttemptsFunction = (attempt: number, operation: ApolloLink.Operation, error: ErrorLike) => boolean | Promise<boolean>;
+    export interface AttemptsOptions {
+        max?: number;
+        retryIf?: (error: ErrorLike, operation: ApolloLink.Operation) => boolean | Promise<boolean>;
+    }
+    export type DelayFunction = (attempt: number, operation: ApolloLink.Operation, error: ErrorLike) => number;
+    export interface DelayOptions {
+        initial?: number;
+        jitter?: boolean;
+        max?: number;
+    }
     export interface Options {
-        // Warning: (ae-forgotten-export) The symbol "RetryFunctionOptions" needs to be exported by the entry point index.d.ts
-        // Warning: (ae-forgotten-export) The symbol "RetryFunction" needs to be exported by the entry point index.d.ts
-        attempts?: RetryFunctionOptions | RetryFunction;
-        // Warning: (ae-forgotten-export) The symbol "DelayFunctionOptions" needs to be exported by the entry point index.d.ts
-        // Warning: (ae-forgotten-export) The symbol "DelayFunction" needs to be exported by the entry point index.d.ts
-        delay?: DelayFunctionOptions | DelayFunction;
+        attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
+        delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
+    }
+    // (undocumented)
+    export namespace RetryLinkDocumentationTypes {
+        export function AttemptsFunction(attempt: number, operation: ApolloLink.Operation, error: ErrorLike): boolean | Promise<boolean>;
+        export function DelayFunction(attempt: number, operation: ApolloLink.Operation, error: ErrorLike): number;
     }
 }
 
-// @public (undocumented)
+// @public
 export class RetryLink extends ApolloLink {
     constructor(options?: RetryLink.Options);
     // (undocumented)

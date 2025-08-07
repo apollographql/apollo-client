@@ -37,7 +37,7 @@ import {
 } from "@microsoft/api-extractor";
 import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
 import type { DocComment, DocExcerpt, DocNode } from "@microsoft/tsdoc";
-import { TextRange } from "@microsoft/tsdoc";
+import type { TextRange } from "@microsoft/tsdoc";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { visit } from "recast";
 
@@ -77,7 +77,7 @@ function getCommentFor(
     const unusedVariables = new Set(Object.keys(variables || {}));
     let string = renderDocComment(apiItem.tsdocComment);
 
-    string = string.replaceAll(/\{\{(\w+)\}\}/g, (_, variable) => {
+    string = string.replaceAll(/\\?\{\\?\{(\w+)\\?\}\\?\}/g, (_, variable) => {
       unusedVariables.delete(variable);
       const value = variables?.[variable];
       if (value === undefined) {

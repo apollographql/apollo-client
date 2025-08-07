@@ -4,14 +4,17 @@ import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
-import { BatchLink, OperationBatcher } from "@apollo/client/link/batch";
+import { BatchLink } from "@apollo/client/link/batch";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
 
-import type { BatchableRequest, BatchHandler } from "../batchLink.js";
+import type { BatchableRequest } from "../batching.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { OperationBatcher } from "../batching.js";
 
 interface MockedResponse {
   request: ApolloLink.Request;
@@ -63,7 +66,7 @@ function requestToKey(request: ApolloLink.Request): string {
 function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
   const mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
-  const mockBatchHandler: BatchHandler = (
+  const mockBatchHandler: BatchLink.BatchHandler = (
     operations: ApolloLink.Operation[]
   ) => {
     return new Observable((observer) => {
@@ -811,7 +814,7 @@ describe("BatchLink", () => {
         expect(forward!.length).toBe(1);
 
         return forward![0]!(operation[0]).pipe(map((d: any) => [d]));
-      }) as BatchHandler);
+      }) as BatchLink.BatchHandler);
 
       const link = ApolloLink.from([
         new BatchLink({

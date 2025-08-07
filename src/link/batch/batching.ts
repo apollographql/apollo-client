@@ -3,10 +3,7 @@ import { Observable } from "rxjs";
 
 import type { ApolloLink } from "@apollo/client/link";
 
-export type BatchHandler = (
-  operations: ApolloLink.Operation[],
-  forward: ApolloLink.ForwardFunction[]
-) => Observable<ApolloLink.Result[]>;
+import type { BatchLink } from "./batchLink.js";
 
 export interface BatchableRequest {
   operation: ApolloLink.Operation;
@@ -43,7 +40,7 @@ export class OperationBatcher {
   private batchMax: number;
 
   //This function is called to the queries in the queue to the server.
-  private batchHandler: BatchHandler;
+  private batchHandler: BatchLink.BatchHandler;
   private batchKey: (operation: ApolloLink.Operation) => string;
 
   constructor({
@@ -56,7 +53,7 @@ export class OperationBatcher {
     batchDebounce?: boolean;
     batchInterval?: number;
     batchMax?: number;
-    batchHandler: BatchHandler;
+    batchHandler: BatchLink.BatchHandler;
     batchKey?: (operation: ApolloLink.Operation) => string;
   }) {
     this.batchDebounce = batchDebounce;

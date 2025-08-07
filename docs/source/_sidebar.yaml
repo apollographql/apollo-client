@@ -189,27 +189,33 @@ items:
             href: ./api/link/introduction
           - label: ApolloLink
             href: ./api/link/apollo-link
-          - label: HttpLink
-            href: ./api/link/apollo-link-http
+          - label: BaseHttpLink
+            href: ./api/link/apollo-link-base-http
+          - label: BaseBatchHttpLink
+            href: ./api/link/apollo-link-base-batch-http
           - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
-          - label: SetContextLink
-            href: ./api/link/apollo-link-context
+          - label: BatchLink
+            href: ./api/link/apollo-link-batch
+          - label: ClientAwarenessLink
+            href: ./api/link/apollo-link-client-awareness
           - label: ErrorLink
             href: ./api/link/apollo-link-error
+          - label: GraphQLWsLink
+            href: ./api/link/apollo-link-subscriptions
+          - label: HttpLink
+            href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
             href: ./api/link/persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
-          - label: RestLink
-            href: ./api/link/apollo-link-rest
           - label: RetryLink
             href: ./api/link/apollo-link-retry
           - label: SchemaLink
             href: ./api/link/apollo-link-schema
-          - label: GraphQLWsLink (newer protocol)
-            href: ./api/link/apollo-link-subscriptions
-          - label: WebSocketLink (older protocol)
+          - label: SetContextLink
+            href: ./api/link/apollo-link-context
+          - label: WebSocketLink (deprecated)
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links

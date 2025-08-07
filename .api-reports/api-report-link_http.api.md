@@ -7,24 +7,67 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import type { InvariantError } from '@apollo/client/utilities/invariant';
-import type { print as print_2 } from '@apollo/client/utilities';
+import type { print as print_2 } from 'graphql';
 
 // @public (undocumented)
+export namespace BaseHttpLink {
+    // (undocumented)
+    export interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    export interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: BaseHttpLink.HttpOptions;
+        uri?: string | BaseHttpLink.UriFunction;
+    }
+    export interface HttpOptions {
+        accept?: string[];
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    export interface Options extends Shared.Options {
+        useGETForQueries?: boolean;
+    }
+    // (undocumented)
+    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    export namespace Shared {
+        export interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: BaseHttpLink.Printer;
+            uri?: string | BaseHttpLink.UriFunction;
+        }
+    }
+    // (undocumented)
+    export type UriFunction = (operation: ApolloLink.Operation) => string;
+}
+
+// @public
 export class BaseHttpLink extends ApolloLink {
-    constructor(linkOptions?: HttpLink.Options);
+    constructor(options?: BaseHttpLink.Options);
 }
 
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
-// @public (undocumented)
-export type ClientParseError = InvariantError & {
-    parseError: Error;
-};
-
 // @public @deprecated (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
+export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -36,11 +79,11 @@ export const createSignalIfSupported: () => {
 };
 
 // @public (undocumented)
-export const defaultPrinter: HttpLink.Printer;
+export const defaultPrinter: BaseHttpLink.Printer;
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpLink.HttpOptions;
+    http: BaseHttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -57,65 +100,29 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpLink.HttpOptions;
+    http?: BaseHttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
 export namespace HttpLink {
-    // (undocumented)
-    export interface Body {
-        // (undocumented)
-        extensions?: Record<string, any>;
-        // (undocumented)
-        operationName?: string;
-        // (undocumented)
-        query?: string;
-        // (undocumented)
-        variables?: Record<string, any>;
+    export interface ContextOptions extends BaseHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
     }
-    export interface ContextOptions {
-        credentials?: RequestCredentials;
-        fetchOptions?: RequestInit;
-        headers?: Record<string, string>;
-        http?: HttpLink.HttpOptions;
-        uri?: string | UriFunction;
+    export interface Options extends BaseHttpLink.Options, ClientAwarenessLink.Options {
     }
-    export interface HttpOptions {
-        accept?: string[];
-        includeExtensions?: boolean;
-        includeQuery?: boolean;
-        preserveHeaderCase?: boolean;
-    }
-    export interface Options {
-        credentials?: string;
-        fetch?: typeof fetch;
-        fetchOptions?: any;
-        headers?: Record<string, string>;
-        includeExtensions?: boolean;
-        includeUnusedVariables?: boolean;
-        preserveHeaderCase?: boolean;
-        print?: Printer;
-        uri?: string | UriFunction;
-        useGETForQueries?: boolean;
-    }
-    // (undocumented)
-    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
-    // (undocumented)
-    export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
-// @public (undocumented)
+// @public
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
+    constructor(options?: HttpLink.Options);
 }
 
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -128,20 +135,17 @@ export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
 // @public (undocumented)
 export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: BaseHttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
 export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
-
-// @public (undocumented)
-export const serializeFetchParameter: (p: any, label: string) => string;
 
 // (No @packageDocumentation comment for this package)
 

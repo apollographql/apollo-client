@@ -10,20 +10,21 @@ import { Observable } from 'rxjs';
 
 // @public (undocumented)
 export namespace SchemaLink {
-    // (undocumented)
     export interface Options {
-        context?: ResolverContext | ResolverContextFunction;
+        context?: SchemaLink.ResolverContext | SchemaLink.ResolverContextFunction;
         rootValue?: any;
         schema: GraphQLSchema;
         validate?: boolean;
     }
-    // (undocumented)
     export type ResolverContext = Record<string, any>;
+    export type ResolverContextFunction = (operation: ApolloLink.Operation) => SchemaLink.ResolverContext | PromiseLike<SchemaLink.ResolverContext>;
     // (undocumented)
-    export type ResolverContextFunction = (operation: ApolloLink.Operation) => ResolverContext | PromiseLike<ResolverContext>;
+    export namespace SchemaLinkDocumentationTypes {
+        export function ResolverContextFunction(operation: ApolloLink.Operation): SchemaLink.ResolverContext | PromiseLike<SchemaLink.ResolverContext>;
+    }
 }
 
-// @public (undocumented)
+// @public
 export class SchemaLink extends ApolloLink {
     constructor(options: SchemaLink.Options);
     // (undocumented)

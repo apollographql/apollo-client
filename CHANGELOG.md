@@ -1,5 +1,41 @@
 # @apollo/client
 
+## 4.0.0-rc.9
+
+### Minor Changes
+
+- [#12828](https://github.com/apollographql/apollo-client/pull/12828) [`81b03d8`](https://github.com/apollographql/apollo-client/commit/81b03d86ad7e7384124708477829bcbf63d4fa2c) Thanks [@phryneas](https://github.com/phryneas)! - `invariant.error` will now also log in production builds, not only dev builds
+
+### Patch Changes
+
+- [#12822](https://github.com/apollographql/apollo-client/pull/12822) [`103664d`](https://github.com/apollographql/apollo-client/commit/103664dc93c0a7097eaec1a5144e769eb4fb7a31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `HttpLink.ContextOptions` and `BatchHttpLink.ContextOptions` include `ClientAwarenessLink.ContextOptions`.
+
+- [#12650](https://github.com/apollographql/apollo-client/pull/12650) [`2a32ac6`](https://github.com/apollographql/apollo-client/commit/2a32ac6d38de2be0be6891a969ee4f5e3bbca629) Thanks [@phryneas](https://github.com/phryneas)! - Fix a situation where a passed-in `AbortSignal` would override internal unsubscription cancellation behaviour.
+
+## 4.0.0-rc.8
+
+### Major Changes
+
+- [#12825](https://github.com/apollographql/apollo-client/pull/12825) [`292b949`](https://github.com/apollographql/apollo-client/commit/292b949e9e1d10a715e0fd403737361f91432fbf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `serializeFetchParameter` helper is no longer exported and `JSON.stringify` is used directly. As such, the `ClientParseError` type has also been removed in favor of throwing any JSON serialize errors directly.
+
+- [#12824](https://github.com/apollographql/apollo-client/pull/12824) [`0506f12`](https://github.com/apollographql/apollo-client/commit/0506f12936d3fe7c840e5d56a5efa20bbce1525e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the `error` argument for the `delay` and `attempts` functions on `RetryLink` are an `ErrorLike`.
+
+- [#12823](https://github.com/apollographql/apollo-client/pull/12823) [`19e315e`](https://github.com/apollographql/apollo-client/commit/19e315e316ae458913f4d11961b0a2a365df0a19) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move all 1st party link types into a namespace.
+
+- [#12823](https://github.com/apollographql/apollo-client/pull/12823) [`19e315e`](https://github.com/apollographql/apollo-client/commit/19e315e316ae458913f4d11961b0a2a365df0a19) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `OperationBatcher` class is no longer exported from `@apollo/client/link/batch`. It is an implementation detail of `BatchLink` and should not be relied on directly.
+
+### Patch Changes
+
+- [#12824](https://github.com/apollographql/apollo-client/pull/12824) [`0506f12`](https://github.com/apollographql/apollo-client/commit/0506f12936d3fe7c840e5d56a5efa20bbce1525e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `RetryLink` now emits a `next` event instead of an `error` event when encountering a protocol errors for multipart subscriptions when the operation is not retried. This ensures the observable notification remains the same as when `RetryLink` is not used.
+
+- [#12819](https://github.com/apollographql/apollo-client/pull/12819) [`7ff548d`](https://github.com/apollographql/apollo-client/commit/7ff548dab0f38bfe315fce6cc51105c93d112271) Thanks [@jerelmiller](https://github.com/jerelmiller)! - update type of `HttpLink.Options.fetchOptions` to `RequestInit`
+
+- [#12820](https://github.com/apollographql/apollo-client/pull/12820) [`fba3d9e`](https://github.com/apollographql/apollo-client/commit/fba3d9ec96cce9f1a89908e4f33361e27d1f52b4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `fetchOptions` option provided to `HttpLink` and `BatchHttpLink` is now `RequestInit` instead of `any`. The `credentials` option is now a `RequestCredentials` type instead of a `string`.
+
+- [#12823](https://github.com/apollographql/apollo-client/pull/12823) [`19e315e`](https://github.com/apollographql/apollo-client/commit/19e315e316ae458913f4d11961b0a2a365df0a19) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the type of the argument for the `sha256` function for `PersistedQueryLink` from `...any[]` to `string`.
+
+- [#12821](https://github.com/apollographql/apollo-client/pull/12821) [`223a409`](https://github.com/apollographql/apollo-client/commit/223a4094f401bbe7fd3e4c249fa405843b63ba2e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a deprecation warning to `WebSocketLink`.
+
 ## 4.0.0-rc.7
 
 ### Major Changes

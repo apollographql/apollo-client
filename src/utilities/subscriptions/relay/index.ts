@@ -2,8 +2,7 @@ import type { GraphQLResponse, RequestParameters } from "relay-runtime";
 import { Observable } from "relay-runtime";
 
 import type { OperationVariables } from "@apollo/client";
-import { serializeFetchParameter } from "@apollo/client";
-import type { HttpLink } from "@apollo/client/link/http";
+import type { BaseHttpLink } from "@apollo/client/link/http";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 // eslint-disable-next-line local-rules/import-from-inside-other-export
@@ -26,7 +25,7 @@ export function createFetchMultipartSubscription(
     operation: RequestParameters,
     variables: OperationVariables
   ): Observable<GraphQLResponse> {
-    const body: HttpLink.Body = {
+    const body: BaseHttpLink.Body = {
       operationName: operation.name,
       variables,
       query: operation.text || "",
@@ -35,7 +34,7 @@ export function createFetchMultipartSubscription(
 
     return Observable.create((sink) => {
       try {
-        options.body = serializeFetchParameter(body, "Payload");
+        options.body = JSON.stringify(body);
       } catch (parseError) {
         sink.error(parseError as Error);
       }

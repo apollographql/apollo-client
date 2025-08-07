@@ -8,33 +8,31 @@ import { ApolloLink } from '@apollo/client/link';
 import type { ErrorLike } from '@apollo/client';
 import { Observable } from 'rxjs';
 
-export interface ErrorHandler {
-    // (undocumented)
-    (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
-}
-
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
         (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
     }
-    // (undocumented)
     export interface ErrorHandlerOptions {
         error: ErrorLike;
         forward: ApolloLink.ForwardFunction;
         operation: ApolloLink.Operation;
         result?: ApolloLink.Result;
     }
+    // (undocumented)
+    export namespace ErrorLinkDocumentationTypes {
+        export function ErrorHandler(options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
+    }
 }
 
-// @public (undocumented)
+// @public
 export class ErrorLink extends ApolloLink {
     constructor(errorHandler: ErrorLink.ErrorHandler);
 }
 
 // @public @deprecated (undocumented)
-export function onError(errorHandler: ErrorHandler): ErrorLink;
+export function onError(errorHandler: ErrorLink.ErrorHandler): ErrorLink;
 
 // (No @packageDocumentation comment for this package)
 

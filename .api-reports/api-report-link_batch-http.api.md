@@ -5,29 +5,38 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
+import type { BaseHttpLink } from '@apollo/client/link/http';
 import { BatchLink } from '@apollo/client/link/batch';
 import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import type { HttpLink } from '@apollo/client/link/http';
 import { Observable } from 'rxjs';
 
 // @public (undocumented)
+export namespace BaseBatchHttpLink {
+    export interface ContextOptions extends BaseHttpLink.ContextOptions {
+    }
+    export interface Options extends BatchLink.Shared.Options, BaseHttpLink.Shared.Options {
+        batchMax?: number;
+    }
+}
+
+// @public
 export class BaseBatchHttpLink extends ApolloLink {
-    constructor(fetchParams?: BatchHttpLink.Options);
+    constructor(options?: BaseBatchHttpLink.Options);
     // (undocumented)
     request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
 }
 
 // @public (undocumented)
 export namespace BatchHttpLink {
-    // (undocumented)
-    export type ContextOptions = HttpLink.ContextOptions;
-    // (undocumented)
-    export type Options = Pick<BatchLink.Options, "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"> & Omit<HttpLink.Options, "useGETForQueries">;
+    export interface ContextOptions extends BaseBatchHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
+    }
+    export interface Options extends BaseBatchHttpLink.Options, ClientAwarenessLink.Options {
+    }
 }
 
 // @public
 export class BatchHttpLink extends ApolloLink {
-    constructor(options?: BatchHttpLink.Options & ClientAwarenessLink.Options);
+    constructor(options?: BatchHttpLink.Options);
 }
 
 // (No @packageDocumentation comment for this package)

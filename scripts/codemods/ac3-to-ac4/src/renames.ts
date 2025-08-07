@@ -231,7 +231,13 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     moveInto({
       from: {
         module: "@apollo/client/utilities",
-        alternativeModules: ["@apollo/client", "@apollo/client/core"],
+        alternativeModules: [
+          // mergeOptions, makeReference
+          "@apollo/client",
+          "@apollo/client/core",
+          // makeReference
+          "@apollo/client/cache",
+        ],
       },
       to: { module: "@apollo/client/utilities/internal" },
       importType: "value",
@@ -259,10 +265,23 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "__DEV__" }].map(
+  ...[{ from: "__DEV__" }, { from: "DEV", to: "__DEV__" }].map(
     moveInto({
-      from: { module: "@apollo/client/utilities/global" },
+      from: {
+        module: "@apollo/client/utilities/global",
+        alternativeModules: ["@apollo/client/utilities"],
+      },
       to: { module: "@apollo/client/utilities/environment" },
+      importType: "value",
+    })
+  ),
+  ...[{ from: "maybe" }, { from: "global" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/utilities/global",
+        alternativeModules: ["@apollo/client/utilities"],
+      },
+      to: { module: "@apollo/client/utilities/internal/globals" },
       importType: "value",
     })
   ),
@@ -307,6 +326,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     // move into `ObservableQuery` type namespace
     { from: "ApolloQueryResult", to: "Result" },
     { from: "SubscribeToMoreOptions" },
+    { from: "FetchMoreOptions" },
   ].map(
     moveInto({
       from: { module: "@apollo/client" },

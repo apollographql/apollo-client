@@ -334,7 +334,29 @@ for (const [entryPoint, moduleName] of entryPoints) {
 }
 
 // in the end, generated files can be diffed with
-// jq --slurpfile new src/__tests__/exports.new.json 'to_entries|map({key, value: ((.value|map(.name))-($new[0][.key]|map(.name)))})|from_entries' < src/__tests__/exports.json >| src/__tests__/exports.removed.json
+/*
+```sh
+jq --slurpfile new src/__tests__/exports.new.json -f <(
+cat <<'EOF'
+with_entries(
+ {
+  key,
+  value: (.key as $key | .value | map(.name as $name | select(($new[0][$key]|map(.name))|index($name)|not)))
+    | map({
+      name,
+      importType: (if .kind == "Interface" or .kind == "TypeAlias" or .kind == "AliasExcludes" or .kind == "NamespaceModule" then "type" else "value" end)
+    })
+    | {
+      value: . | map(select(.importType == "value")) | map(.name),
+      type: . | map(select(.importType == "type")) | map(.name),
+    }
+  }
+)
+EOF
+) < src/__tests__/exports.json >| src/__tests__/exports.removed.json
+```
+ */
+
 fs.writeFileSync(
   path.join(import.meta.dirname, "..", "__tests__", "exports.json"),
   JSON.stringify(collected, null, 2)

@@ -11,39 +11,42 @@ Below, we'll guide you through installing and configuring GraphQL Code Generator
 
 ## Setting up your project
 
-> This article assumes your project already uses TypeScript.
-
-To get started using GraphQL Code Generator, begin by installing the following packages (using Yarn or NPM):
+Install the following packages. This installation assumes you already have [insalled `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
 
 ```bash
-npm install -D @graphql-codegen/cli @graphql-codegen/client-preset
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations
 ```
 
-<Note>
-
-This installation assumes you have already [installed `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
-
-</Note>
-
-Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project:
+Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project. The following config is a recommended minimal configuration for Apollo Client apps.
 
 ```ts title="codegen.ts"
 import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
+  overwrite: true,
   schema: "<URL_OF_YOUR_GRAPHQL_API>",
-  // this assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
   documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
   generates: {
-    "./src/__generated__/": {
-      preset: "client",
-      plugins: [],
-      presetConfig: {
-        gqlTagName: "gql",
+    // Note: pick a path that works the best for the structure of your application
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript", "typescript-operations"],
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
       },
     },
   },
-  ignoreNoDocuments: true,
 };
 
 export default config;
@@ -55,24 +58,33 @@ There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/
 
 </Note>
 
-Finally, we'll add the following scripts to our `package.json` file:
+Finally, we'll add the script to our `package.json` file:
 
 ```json title="package.json"
 {
   "scripts": {
-    "compile": "graphql-codegen",
-    "compile:watch": "graphql-codegen -w"
+    "codegen": "graphql-codegen --config codegen.ts"
   }
 }
 ```
 
 Running either of the scripts above generates types based on the schema file or GraphQL API you provided in `codegen.ts`:
 
-```bash
-$ npm run compile
+```bash showLineNumbers=false
+$ npm run codegen
 ✔ Parse Configuration
 ✔ Generate outputs
 ```
+
+<Note>
+
+If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).<br /><br />
+
+We don't recommend using the client preset with Apollo Client apps because it generates some runtime code that adds additional bundle size to your app and includes some features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code.<br /><br />
+
+If you are already using the client preset, we recommend, at minimum, [disabling fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking). See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature.
+
+</Note>
 
 ## Typing hooks
 

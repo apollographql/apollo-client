@@ -3,14 +3,17 @@ import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities
 
 import type { PreserveTypes } from "./PreserveTypes.js";
 
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
+/**
+ * Type used with [fragments](https://apollographql.com/docs/react/data/fragments#using-with-fragments) to ensure parent objects contain the fragment spread from the type.
+ */
+export type FragmentType<TFragmentData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",
   PreserveTypes.TypeOverrides,
-  TData
+  TFragmentData
 >;
 
-/** Unwraps `TData` into its unmasked type */
+/** Unwraps `TData` into its unmasked type. */
 export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Unmasked",

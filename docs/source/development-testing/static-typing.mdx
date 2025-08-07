@@ -85,7 +85,7 @@ If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql
 
 We don't recommend using the client preset with Apollo Client apps because it generates some runtime code that adds additional bundle size to your app and includes some features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code.<br /><br />
 
-If you are already using the client preset, we recommend, at minimum, [disabling fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking). See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature.
+If you're already using the client preset, we recommend, at minimum, [disabling fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking). See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature.
 
 </Note>
 

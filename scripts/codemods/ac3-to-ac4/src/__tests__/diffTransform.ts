@@ -16,5 +16,5 @@ export const createDiff = (transform: Transform) => (source: string) => {
     "original",
     "transformed"
   );
-  return patch;
+  return patch.replace(/@@ -\d+,\d+ \+\d+,\d+ @@/g, "@@  @@");
 };

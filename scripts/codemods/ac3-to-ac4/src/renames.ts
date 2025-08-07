@@ -234,7 +234,6 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
         alternativeModules: [
           // mergeOptions, makeReference
           "@apollo/client",
-          "@apollo/client/core",
           // makeReference
           "@apollo/client/cache",
         ],
@@ -342,38 +341,6 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     moveInto({
       from: { module: "@apollo/client/cache" },
       to: { namespace: "ApolloCache" },
-      importType: "type",
-    })
-  ),
-  ...[
-    // move into `ApolloLink` runtime namespace
-    { from: "from" },
-    { from: "empty" },
-    { from: "concat" },
-    { from: "split" },
-  ].map(
-    moveInto({
-      from: {
-        module: "@apollo/client/link",
-        alternativeModules: ["@apollo/client"],
-      },
-      to: { namespace: "ApolloLink" },
-      importType: "value",
-    })
-  ),
-  ...[
-    // move into `ApolloLink` type namespace
-    { from: "FetchResult", to: "Result" },
-    { from: "GraphQLRequest", to: "Request" },
-    { from: "Operation" },
-    { from: "RequestHandler" },
-  ].map(
-    moveInto({
-      from: {
-        module: "@apollo/client/link",
-        alternativeModules: ["@apollo/client"],
-      },
-      to: { namespace: "ApolloLink" },
       importType: "type",
     })
   ),
@@ -592,13 +559,123 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "ErrorResponse", to: "ErrorHandlerOptions" }].map(
+
+  ...[
+    // move into `ApolloLink` runtime namespace
+    { from: "from" },
+    { from: "empty" },
+    { from: "concat" },
+    { from: "split" },
+  ].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ApolloLink" },
+      importType: "value",
+    })
+  ),
+  ...[
+    // move into `ApolloLink` type namespace
+    { from: "FetchResult", to: "Result" },
+    { from: "GraphQLRequest", to: "Request" },
+    { from: "Operation" },
+    { from: "RequestHandler" },
+    { from: "NextLink", to: "ForwardFunction" },
+  ].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "ApolloLink" },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "ExecutionPatchInitialResult", to: "InitialResult" },
+    { from: "IncrementalPayload", to: "IncrementalDeferPayload" },
+    { from: "ExecutionPatchIncrementalResult", to: "SubsequentResult" },
+    { from: "ExecutionPatchResult", to: "Chunk" },
+  ].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: {
+        module: "@apollo/client/incremental",
+        namespace: "Defer20220824Handler",
+      },
+      importType: "type",
+    })
+  ),
+  {
+    from: {
+      identifier: "Path",
+      module: "@apollo/client/link",
+      alternativeModules: ["@apollo/client"],
+    },
+    to: {
+      module: "@apollo/client/incremental",
+      namespace: "Incremental",
+    },
+    importType: "type",
+  },
+  {
+    from: {
+      identifier: "SingleExecutionResult",
+      module: "@apollo/client/link",
+      alternativeModules: ["@apollo/client"],
+    },
+    to: {
+      identifier: "FormattedExecutionResult",
+      module: "graphql",
+    },
+    importType: "type",
+  },
+  ...[{ from: "BatchHandler" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/batch",
+      },
+      to: {
+        namespace: "BatchLink",
+      },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ContextSetter", to: "LegacyContextSetter" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/context",
+        alternativeModules: ["@apollo/client"],
+      },
+      to: { namespace: "SetContextLink", alternativeModules: [] },
+      importType: "type",
+    })
+  ),
+  ...[
+    { from: "ErrorResponse", to: "ErrorHandlerOptions" },
+    { from: "ErrorHandler" },
+  ].map(
     moveInto({
       from: {
         module: "@apollo/client/link/error",
-        alternativeModules: ["@apollo/client"],
       },
-      to: { namespace: "ErrorLink", alternativeModules: [] },
+      to: { namespace: "ErrorLink" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ServerParseError" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/http",
+      },
+      to: {
+        module: "@apollo/client/errors",
+      },
       importType: "type",
     })
   ),
@@ -612,13 +689,34 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "ContextSetter", to: "LegacyContextSetter" }].map(
+  ...[{ from: "RemoveTypenameFromVariablesOptions", to: "Options" }].map(
     moveInto({
       from: {
-        module: "@apollo/client/link/context",
-        alternativeModules: ["@apollo/client"],
+        module: "@apollo/client/link/remove-typename",
       },
-      to: { namespace: "SetContextLink", alternativeModules: [] },
+      to: { namespace: "RemoveTypenameFromVariablesLink" },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "ServerError" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/utils",
+      },
+      to: {
+        module: "@apollo/client/errors",
+      },
+      importType: "type",
+    })
+  ),
+  ...[{ from: "WebSocketParams", to: "Configuration" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/link/wss",
+      },
+      to: {
+        namespace: "WebSocketLink",
+      },
       importType: "type",
     })
   ),

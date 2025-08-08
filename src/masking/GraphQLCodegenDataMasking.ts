@@ -9,7 +9,8 @@ import type {
 export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
     FragmentType: HKTImplementation.FragmentType;
-    MaybeMasked: HKTImplementation.MaybeMasked;
+    IsMasked: HKTImplementation.IsMasked;
+    Mask: HKTImplementation.Mask;
     Unmask: HKTImplementation.Unmask;
   }
   namespace HKTImplementation {
@@ -18,9 +19,14 @@ export declare namespace GraphQLCodegenDataMasking {
       return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
     }
 
-    export interface MaybeMasked extends HKT {
+    export interface IsMasked extends HKT {
       arg1: unknown; // TData
-      return: GraphQLCodegenDataMasking.MaybeMasked<this["arg1"]>;
+      return: GraphQLCodegenDataMasking.IsMasked<this["arg1"]>;
+    }
+
+    export interface Mask extends HKT {
+      arg1: unknown; // TData
+      return: GraphQLCodegenDataMasking.Mask<this["arg1"]>;
     }
 
     export interface Unmask extends HKT {
@@ -37,10 +43,16 @@ export declare namespace GraphQLCodegenDataMasking {
     : never;
 
   /**
-   * Returns TData as either masked or unmasked depending on whether masking is
-   * enabled.
+   * GraphQL Codegen generates types as masked types so this always returns
+   * true.
    */
-  export type MaybeMasked<TData> = TData;
+  export type IsMasked<_TData> = true;
+
+  /**
+   * GraphQL Codegen generates types as masked types, so this is an identity
+   * type.
+   */
+  export type Mask<TData> = TData;
 
   /**
    * Unmasks a type to provide its full result.

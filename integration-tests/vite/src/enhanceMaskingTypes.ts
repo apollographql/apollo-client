@@ -1,25 +1,25 @@
 import { HKT } from "@apollo/client/utilities";
 
-type CustomMaskImplementation<TData> = {
+type CustomMaybeMaskedImplementation<TData> = {
   [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
 };
 
-interface CustomMaskType extends HKT {
+interface CustomMaybeMaskedType extends HKT {
   arg1: unknown; // TData
-  return: CustomMaskImplementation<this["arg1"]>;
+  return: CustomMaybeMaskedImplementation<this["arg1"]>;
 }
 
 export interface CustomDataMaskingImplementation {
-  Mask: CustomMaskType;
+  MaybeMasked: CustomMaybeMaskedType;
 }
 
 declare module "@apollo/client" {
   export interface TypeOverrides extends CustomDataMaskingImplementation {}
 }
 
-import { Mask } from "@apollo/client";
+import { MaybeMasked } from "@apollo/client";
 
-type TestMasked = Mask<{
+type TestMasked = MaybeMasked<{
   _id: string;
   name: string;
   _description: string;

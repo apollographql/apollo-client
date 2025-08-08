@@ -14,7 +14,7 @@ import type { ApolloLink } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { MaybeMasked, Unmask } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { VariablesOption } from "@apollo/client/utilities/internal";
@@ -157,11 +157,11 @@ export declare namespace ApolloClient {
   > = {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
     optimisticResponse?:
-      | Unmasked<NoInfer<TData>>
+      | Unmask<NoInfer<TData>>
       | ((
           vars: TVariables,
           { IGNORE }: { IGNORE: IgnoreModifier }
-        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+        ) => Unmask<NoInfer<TData>> | IgnoreModifier);
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
     updateQueries?: MutationQueryReducersMap<TData>;
@@ -169,7 +169,7 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
     refetchQueries?:
       | ((
-          result: NormalizedExecutionResult<Unmasked<TData>>
+          result: NormalizedExecutionResult<Unmask<TData>>
         ) => InternalRefetchQueriesInclude)
       | InternalRefetchQueriesInclude;
 
@@ -517,7 +517,7 @@ export declare namespace ApolloClient {
       /**
        * The data to write to the store.
        */
-      data: Unmasked<TData>;
+      data: Unmask<TData>;
       /**
        * Whether to notify query watchers.
        * @defaultValue true
@@ -579,7 +579,7 @@ export declare namespace ApolloClient {
       /**
        * The data to write to the store.
        */
-      data: Unmasked<TData>;
+      data: Unmask<TData>;
       /**
        * Whether to notify query watchers.
        * @defaultValue true
@@ -1048,7 +1048,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.ReadQueryOptions<TData, TVariables>
-  ): Unmasked<TData> | null;
+  ): Unmask<TData> | null;
 
   /**
    * {@inheritDoc @apollo/client!ApolloClient#readQuery:member(1)}
@@ -1066,7 +1066,7 @@ export class ApolloClient {
      * instead of passing it as a separate option.
      */
     optimistic: boolean
-  ): Unmasked<TData> | null;
+  ): Unmask<TData> | null;
 
   public readQuery<
     TData = unknown,
@@ -1074,7 +1074,7 @@ export class ApolloClient {
   >(
     options: ApolloClient.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean = false
-  ): Unmasked<TData> | null {
+  ): Unmask<TData> | null {
     return this.cache.readQuery<TData, TVariables>(
       { ...options, query: this.transform(options.query) },
       optimistic
@@ -1154,7 +1154,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.ReadFragmentOptions<TData, TVariables>
-  ): Unmasked<TData> | null;
+  ): Unmask<TData> | null;
   /**
    * {@inheritDoc @apollo/client!ApolloClient#readFragment:member(1)}
    *
@@ -1167,7 +1167,7 @@ export class ApolloClient {
   >(
     options: ApolloClient.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean
-  ): Unmasked<TData> | null;
+  ): Unmask<TData> | null;
 
   public readFragment<
     TData = unknown,
@@ -1175,7 +1175,7 @@ export class ApolloClient {
   >(
     options: ApolloClient.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean = false
-  ): Unmasked<TData> | null {
+  ): Unmask<TData> | null {
     return this.cache.readFragment<TData, TVariables>(
       { ...options, fragment: this.transform(options.fragment) },
       optimistic

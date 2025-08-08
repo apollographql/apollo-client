@@ -2,6 +2,7 @@ export type {
   DataMasking,
   FragmentType,
   MaybeMasked,
+  Unmask,
   Unmasked,
 } from "./types.js";
 export type { GraphQLCodegenDataMasking } from "./GraphQLCodegenDataMasking.js";

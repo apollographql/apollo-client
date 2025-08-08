@@ -4,7 +4,7 @@ import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import type { Unmasked } from "@apollo/client/masking";
+import type { Unmask } from "@apollo/client/masking";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
   checkDocument,
@@ -61,8 +61,8 @@ export declare namespace MockLink {
     request: MockedRequest<TVariables>;
     maxUsageCount?: number;
     result?:
-      | ApolloLink.Result<Unmasked<TData>>
-      | ResultFunction<ApolloLink.Result<Unmasked<TData>>, TVariables>;
+      | ApolloLink.Result<Unmask<TData>>
+      | ResultFunction<ApolloLink.Result<Unmask<TData>>, TVariables>;
     error?: Error;
     delay?: number | MockLink.DelayFunction;
   }

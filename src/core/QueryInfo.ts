@@ -5,7 +5,7 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
-import type { Unmasked } from "@apollo/client/masking";
+import type { Unmask } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   getOperationName,
@@ -256,7 +256,7 @@ export class QueryInfo<
           if (this.shouldWrite(result, variables)) {
             cache.writeQuery({
               query,
-              data: result.data as Unmasked<any>,
+              data: result.data as Unmask<any>,
               variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
             });
@@ -341,7 +341,7 @@ export class QueryInfo<
       awaitRefetchQueries?: boolean;
       refetchQueries?:
         | ((
-            result: NormalizedExecutionResult<Unmasked<TData>>
+            result: NormalizedExecutionResult<Unmask<TData>>
           ) => InternalRefetchQueriesInclude)
         | InternalRefetchQueriesInclude;
       removeOptimistic?: string;
@@ -386,7 +386,7 @@ export class QueryInfo<
       ({
         ...result,
         dataState: this.hasNext ? "streaming" : "complete",
-      }) as NormalizedExecutionResult<Unmasked<TData>>;
+      }) as NormalizedExecutionResult<Unmask<TData>>;
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       cacheWrites.push({
@@ -498,7 +498,7 @@ export class QueryInfo<
               if (!this.hasNext) {
                 update(
                   cache as TCache,
-                  result as FormattedExecutionResult<Unmasked<TData>>,
+                  result as FormattedExecutionResult<Unmask<TData>>,
                   {
                     context: mutation.context,
                     variables: mutation.variables,

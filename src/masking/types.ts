@@ -28,9 +28,12 @@ export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
 /**
  * Unmasks a type to provide its full result.
  */
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
+export type Unmask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Unmasked",
   DefaultImplementation,
   TData
 >;
+
+/** @deprecated Use `Unmask` instead */
+export type Unmasked<TData> = Unmask<TData>;

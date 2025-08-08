@@ -9,7 +9,6 @@ import type {
 export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
     FragmentType: HKTImplementation.FragmentType;
-    IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
     Mask: HKTImplementation.Mask;
     Unmask: HKTImplementation.Unmask;
   }
@@ -17,11 +16,6 @@ export declare namespace GraphQLCodegenDataMasking {
     export interface FragmentType extends HKT {
       arg1: unknown; // TData
       return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
-    }
-
-    export interface IsMaskingEnabled extends HKT {
-      arg1: unknown; // TData
-      return: GraphQLCodegenDataMasking.IsMaskingEnabled<this["arg1"]>;
     }
 
     export interface Mask extends HKT {
@@ -41,15 +35,6 @@ export declare namespace GraphQLCodegenDataMasking {
         { " $fragmentRefs"?: { [key in TKey]: TData } }
       : never
     : never;
-
-  /**
-   * Determines if masking is enabled
-   *
-   * @remarks
-   * GraphQL Codegen always generates masked types. This implementation assumes
-   * masking is enabled simply by using this module.
-   */
-  export type IsMaskingEnabled<_TData> = true;
 
   /**
    * GraphQL Codegen generates types as masked types, so this is an identity

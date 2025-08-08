@@ -12,13 +12,6 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TData
 >;
 
-type IsMaskingEnabled<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "IsMaskingEnabled",
-  PreserveTypes.Implementation,
-  TData
->;
-
 /** Returns the type as a masked type */
 export type Mask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
@@ -41,5 +34,4 @@ export type Unmask<TData> = ApplyHKTImplementationWithDefault<
  * Returns TData as either masked or unmasked depending on whether masking is
  * enabled.
  */
-export type MaybeMasked<TData> =
-  true extends IsMaskingEnabled<TData> ? Mask<TData> : Unmask<TData>;
+export type MaybeMasked<TData> = Mask<TData>;

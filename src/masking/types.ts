@@ -34,6 +34,3 @@ export type Unmask<TData> = ApplyHKTImplementationWithDefault<
   DefaultImplementation,
   TData
 >;
-
-/** @deprecated Use `Unmask` instead */
-export type Unmasked<TData> = Unmask<TData>;

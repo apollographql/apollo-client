@@ -290,9 +290,6 @@ When your GraphQL operations include variables, TypeScript ensures you provide a
 The following adds a non-null variable to the `GetRocketInventory` query used in previous examples.
 
 ```tsx {8,9}
-import { useQuery, TypedDocumentNode } from "@apollo/client/react";
-import { gql } from "@apollo/client";
-
 const GET_ROCKET_INVENTORY: TypedDocumentNode<
   GetRocketInventoryQuery,
   GetRocketInventoryQueryVariables

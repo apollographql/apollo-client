@@ -526,7 +526,7 @@ const handleClick = async () => {
 
 In-flight queries executed by `useLazyQuery` are aborted when the component unmounts, causing the promise to reject. In some cases, you might find this behavior undesirable and would prefer to let the query run to completion.
 
-The promise returned by the execution function includes a `.retain()` method. When called, it ensures the query continues running even when the component unmounts.
+The promise returned by the execution function includes a `.retain()` method. When called, it ensures the query continues running even when the component unmounts or a new query is started before the last one finished.
 
 ```jsx
 function GetDogs() {

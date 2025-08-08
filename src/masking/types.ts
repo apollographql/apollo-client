@@ -7,17 +7,6 @@ type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
 
 export interface DataMasking {}
 
-/**
- * Returns TData as either masked or unmasked depending on whether masking is
- * enabled.
- */
-export type Masked<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Masked",
-  DefaultImplementation,
-  TData
->;
-
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",

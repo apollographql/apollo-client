@@ -9,17 +9,11 @@ import type {
 } from "./internal/types.js";
 export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
-    Masked: HKTImplementation.Masked;
     FragmentType: HKTImplementation.FragmentType;
     MaybeMasked: HKTImplementation.MaybeMasked;
     Unmasked: HKTImplementation.Unmasked;
   }
   namespace HKTImplementation {
-    export interface Masked extends HKT {
-      arg1: unknown; // TData
-      return: GraphQLCodegenDataMasking.Masked<this["arg1"]>;
-    }
-
     export interface FragmentType extends HKT {
       arg1: unknown; // TData
       return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
@@ -35,14 +29,6 @@ export declare namespace GraphQLCodegenDataMasking {
       return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
     }
   }
-
-  /**
-   * Marks a type as masked. This is used by `MaybeMasked` when determining
-   * whether to use the masked or unmasked type.
-   */
-  export type Masked<TData> = TData & {
-    __masked?: true;
-  };
 
   export type FragmentType<TData> =
     [TData] extends [{ " $fragmentName"?: infer TKey }] ?

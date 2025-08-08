@@ -1,7 +1,6 @@
 export type {
   DataMasking,
   FragmentType,
-  Masked,
   MaybeMasked,
   Unmasked,
 } from "./types.js";

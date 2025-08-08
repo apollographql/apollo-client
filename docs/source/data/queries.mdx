@@ -524,7 +524,13 @@ const handleClick = async () => {
 
 #### Retaining query results
 
-In-flight queries executed by `useLazyQuery` are aborted when the component unmounts, causing the promise to reject. In some cases, you might find this behavior undesirable and would prefer to let the query run to completion.
+In-flight queries executed by `useLazyQuery` are aborted when the component unmounts or another query is started when calling the execution function, causing the promise to reject. In some cases, you might find this behavior undesirable and would prefer to let the query run to completion.
+
+<Note>
+
+Apollo Client ensures the rejected promise doesn't throw an unhandled rejection error when you don't add a rejection handler to the promise. This however means that aborted errors are silent and might go unnoticed. If you want to be notified when the request is aborted, provide a rejection handler for the promise.
+
+</Note>
 
 The promise returned by the execution function includes a `.retain()` method. When called, it ensures the query continues running even when the component unmounts or a new query is started before the last one finished.
 

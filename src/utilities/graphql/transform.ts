@@ -10,8 +10,8 @@ const TYPENAME_FIELD: FieldNode = {
 };
 
 /**
- * Adds `__typename` to all selection sets in the document. The operation
- * definition's selection set remains unchanged.
+ * Adds `__typename` to all selection sets in the document except for the root
+ * selection set.
  *
  * @param doc - The `ASTNode` to add `__typename` to
  *

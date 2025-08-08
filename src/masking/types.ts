@@ -15,7 +15,7 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
 /** Unwraps `TData` into its unmasked type */
 export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
-  "Unmask",
+  "Unmasked",
   PreserveTypes.Implementation,
   TData
 >;
@@ -26,7 +26,7 @@ export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
  */
 export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
-  "Mask",
+  "MaybeMasked",
   PreserveTypes.Implementation,
   TData
 >;

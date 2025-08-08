@@ -3,8 +3,8 @@ import type { HKT } from "@apollo/client/utilities";
 export declare namespace PreserveTypes {
   export interface Implementation {
     FragmentType: HKTImplementation.FragmentType;
-    Mask: HKTImplementation.Mask;
-    Unmask: HKTImplementation.Unmask;
+    MaybeMasked: HKTImplementation.MaybeMasked;
+    Unmasked: HKTImplementation.Unmasked;
   }
   namespace HKTImplementation {
     export interface FragmentType extends HKT {
@@ -12,18 +12,18 @@ export declare namespace PreserveTypes {
       return: PreserveTypes.FragmentType<this["arg1"]>;
     }
 
-    export interface Mask extends HKT {
+    export interface MaybeMasked extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.Mask<this["arg1"]>;
+      return: PreserveTypes.MaybeMasked<this["arg1"]>;
     }
 
-    export interface Unmask extends HKT {
+    export interface Unmasked extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.Unmask<this["arg1"]>;
+      return: PreserveTypes.Unmasked<this["arg1"]>;
     }
   }
 
   export type FragmentType<_TData> = never;
-  export type Mask<TData> = TData;
-  export type Unmask<TData> = TData;
+  export type MaybeMasked<TData> = TData;
+  export type Unmasked<TData> = TData;
 }

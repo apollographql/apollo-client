@@ -14,17 +14,23 @@ type TransformFn = (document: DocumentNode) => DocumentNode;
 
 interface DocumentTransformOptions {
   /**
-   * Determines whether to cache the transformed GraphQL document. Caching can speed up repeated calls to the document transform for the same input document. Set to `false` to completely disable caching for the document transform. When disabled, this option takes precedence over the [`getCacheKey`](#getcachekey) option.
+   * Determines whether to cache the transformed GraphQL document. Caching can
+   * speed up repeated calls to the document transform for the same input
+   * document. Set to `false` to completely disable caching for the document
+   * transform. When disabled, this option takes precedence over the [`getCacheKey`](#getcachekey)
+   * option.
    *
-   * The default value is `true`.
+   * @defaultValue `true`
    */
   cache?: boolean;
   /**
    * Defines a custom cache key for a GraphQL document that will determine whether to re-run the document transform when given the same input GraphQL document. Returns an array that defines the cache key. Return `undefined` to disable caching for that GraphQL document.
    *
-   * > **Note:** The items in the array may be any type, but also need to be referentially stable to guarantee a stable cache key.
+   * > [!NOTE]
+   * > The items in the array can be any type, but each item needs to be
+   * > referentially stable to guarantee a stable cache key.
    *
-   * The default implementation of this function returns the `document` as the cache key.
+   * @defaultValue `(document) => [document]`
    */
   getCacheKey?: (
     document: DocumentNode
@@ -35,6 +41,25 @@ function identity(document: DocumentNode) {
   return document;
 }
 
+/**
+ * A class for transforming GraphQL documents. See the [Document transforms
+ * documentation](https://www.apollographql.com/docs/react/data/document-transforms) for more details on using them.
+ *
+ * @example
+ *
+ * ```ts
+ * import { DocumentTransform } from "@apollo/client/utilities";
+ * import { visit } from "graphql";
+ *
+ * const documentTransform = new DocumentTransform((doc) => {
+ *   return visit(doc, {
+ *     // ...
+ *   });
+ * });
+ *
+ * const transformedDoc = documentTransform.transformDocument(myDocument);
+ * ```
+ */
 export class DocumentTransform {
   private readonly transform: TransformFn;
   private cached: boolean;
@@ -52,6 +77,11 @@ export class DocumentTransform {
     return [document];
   }
 
+  /**
+   * Creates a DocumentTransform that returns the input document unchanged.
+   *
+   * @returns The input document
+   */
   static identity() {
     // No need to cache this transform since it just returns the document
     // unchanged. This should save a bit of memory that would otherwise be
@@ -59,6 +89,26 @@ export class DocumentTransform {
     return new DocumentTransform(identity, { cache: false });
   }
 
+  /**
+   * Creates a DocumentTransform that conditionally applies one of two transforms.
+   *
+   * @param predicate - Function that determines which transform to apply
+   * @param left - Transform to apply when `predicate` returns `true`
+   * @param right - Transform to apply when `predicate` returns `false`. If not provided, it defaults to `DocumentTransform.identity()`.
+   * @returns A DocumentTransform that conditionally applies a document transform based on the predicate
+   *
+   * @example
+   *
+   * ```ts
+   * import { isQueryOperation } from "@apollo/client/utilities";
+   *
+   * const conditionalTransform = DocumentTransform.split(
+   *   (document) => isQueryOperation(document),
+   *   queryTransform,
+   *   mutationTransform
+   * );
+   * ```
+   */
   static split(
     predicate: (document: DocumentNode) => boolean,
     left: DocumentTransform,
@@ -91,7 +141,7 @@ export class DocumentTransform {
   }
 
   /**
-   * Resets the internal cache of this transform, if it has one.
+   * Resets the internal cache of this transform, if it is cached.
    */
   resetCache() {
     if (this.cached) {
@@ -121,6 +171,29 @@ export class DocumentTransform {
     return this.transform(document);
   }
 
+  /**
+   * Transforms a GraphQL document using the configured transform function.
+   *
+   * @remarks
+   *
+   * Note that `transformDocument` caches the transformed document. Calling
+   * `transformDocument` again with the already-transformed document will
+   * immediately return it.
+   *
+   * @param document - The GraphQL document to transform
+   * @returns The transformed document
+   *
+   * @example
+   *
+   * ```ts
+   * const document = gql`
+   *   # ...
+   * `;
+   *
+   * const documentTransform = new DocumentTransform(transformFn);
+   * const transformedDocument = documentTransform.transformDocument(document);
+   * ```
+   */
   transformDocument(document: DocumentNode) {
     // If a user passes an already transformed result back to this function,
     // immediately return it.
@@ -135,6 +208,22 @@ export class DocumentTransform {
     return transformedDocument;
   }
 
+  /**
+   * Combines this document transform with another document transform. The
+   * returned document transform first applies the current document transform,
+   * then applies the other document transform.
+   *
+   * @param otherTransform - The transform to apply after this one
+   * @returns A new DocumentTransform that applies both transforms in sequence
+   *
+   * @example
+   *
+   * ```ts
+   * const combinedTransform = addTypenameTransform.concat(
+   *   removeDirectivesTransform
+   * );
+   * ```
+   */
   concat(otherTransform: DocumentTransform): DocumentTransform {
     return Object.assign(
       new DocumentTransform(

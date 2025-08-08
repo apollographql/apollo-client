@@ -12,7 +12,7 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TData
 >;
 
-/** Returns the type as a masked type */
+/** Unwraps the type into its masked type */
 export type Mask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Mask",
@@ -20,9 +20,7 @@ export type Mask<TData> = ApplyHKTImplementationWithDefault<
   TData
 >;
 
-/**
- * Unmasks a type to provide its full result.
- */
+/** Unwraps the type into its unmasked type */
 export type Unmask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Unmask",

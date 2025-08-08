@@ -381,6 +381,10 @@ Like `useQuery`, you provide `useMutation` a `TypedDocumentNode`. This adds the 
 ```tsx
 import { gql, TypedDocumentNode } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
+import {
+  SaveRocketMutation,
+  SaveRocketMutationVariables,
+} from "@/types/__generated__/graphql";
 
 const SAVE_ROCKET: TypedDocumentNode<
   SaveRocketMutation,

@@ -11,7 +11,7 @@ export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
     FragmentType: HKTImplementation.FragmentType;
     MaybeMasked: HKTImplementation.MaybeMasked;
-    Unmasked: HKTImplementation.Unmasked;
+    Unmask: HKTImplementation.Unmask;
   }
   namespace HKTImplementation {
     export interface FragmentType extends HKT {
@@ -24,9 +24,9 @@ export declare namespace GraphQLCodegenDataMasking {
       return: GraphQLCodegenDataMasking.MaybeMasked<this["arg1"]>;
     }
 
-    export interface Unmasked extends HKT {
+    export interface Unmask extends HKT {
       arg1: unknown; // TData
-      return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
+      return: GraphQLCodegenDataMasking.Unmask<this["arg1"]>;
     }
   }
 
@@ -46,7 +46,7 @@ export declare namespace GraphQLCodegenDataMasking {
   /**
    * Unmasks a type to provide its full result.
    */
-  export type Unmasked<TData> =
+  export type Unmask<TData> =
     true extends IsAny<TData> ? TData
     : TData extends object ?
       true extends ContainsFragmentsRefs<TData> ?

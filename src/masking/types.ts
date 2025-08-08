@@ -30,7 +30,7 @@ export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
  */
 export type Unmask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
-  "Unmasked",
+  "Unmask",
   DefaultImplementation,
   TData
 >;

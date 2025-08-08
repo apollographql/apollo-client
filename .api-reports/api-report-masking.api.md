@@ -105,8 +105,9 @@ export namespace GraphQLCodegenDataMasking {
             return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
         }
     }
+    export type MaybeMasked<TData> = TData;
     // (undocumented)
-    export interface Implementation {
+    export interface TypeOverrides {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
@@ -114,7 +115,6 @@ export namespace GraphQLCodegenDataMasking {
         // (undocumented)
         Unmasked: HKTImplementation.Unmasked;
     }
-    export type MaybeMasked<TData> = TData;
     // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts

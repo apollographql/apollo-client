@@ -4,7 +4,6 @@ import type { IsAny } from "@apollo/client/utilities/internal";
 import type {
   ContainsFragmentsRefs,
   RemoveFragmentName,
-  RemoveMaskedMarker,
   UnwrapFragmentRefs,
 } from "./internal/types.js";
 export declare namespace GraphQLCodegenDataMasking {
@@ -50,7 +49,7 @@ export declare namespace GraphQLCodegenDataMasking {
     true extends IsAny<TData> ? TData
     : TData extends object ?
       true extends ContainsFragmentsRefs<TData> ?
-        UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
+        UnwrapFragmentRefs<RemoveFragmentName<TData>>
       : TData
     : TData;
 }

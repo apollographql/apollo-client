@@ -37,8 +37,11 @@ export declare namespace GraphQLCodegenDataMasking {
     : never;
 
   /**
-   * GraphQL Codegen generates types as masked types, so this is an identity
-   * type.
+   * Unwraps the type to its masked type.
+   *
+   * @remarks
+   * GraphQL Codegen generates types as masked types. The implementation is an
+   * identity type.
    */
   export type Mask<TData> = TData;
 

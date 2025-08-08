@@ -91,11 +91,11 @@ export namespace GraphQLCodegenDataMasking {
             return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
         }
         // (undocumented)
-        export interface IsMasked extends HKT {
+        export interface IsMaskingEnabled extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: GraphQLCodegenDataMasking.IsMasked<this["arg1"]>;
+            return: GraphQLCodegenDataMasking.IsMaskingEnabled<this["arg1"]>;
         }
         // (undocumented)
         export interface Mask extends HKT {
@@ -117,13 +117,13 @@ export namespace GraphQLCodegenDataMasking {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
-        IsMasked: HKTImplementation.IsMasked;
+        IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
         // (undocumented)
         Mask: HKTImplementation.Mask;
         // (undocumented)
         Unmask: HKTImplementation.Unmask;
     }
-    export type IsMasked<_TData> = true;
+    export type IsMaskingEnabled<_TData> = true;
     export type Mask<TData> = TData;
     // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
@@ -131,8 +131,8 @@ export namespace GraphQLCodegenDataMasking {
     export type Unmask<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveFragmentName<TData>> : TData : TData;
 }
 
-// @public
-export type IsMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMasked", PreserveTypes.Implementation, TData>;
+// @public (undocumented)
+type IsMaskingEnabled<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMaskingEnabled", PreserveTypes.Implementation, TData>;
 
 // @public
 export type Mask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
@@ -143,8 +143,10 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 // @internal @deprecated (undocumented)
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode<TData>, cache: ApolloCache): TData;
 
-// @public (undocumented)
-export type MaybeMasked<TData> = true extends IsMasked<TData> ? Mask<TData> : Unmask<TData>;
+// Warning: (ae-forgotten-export) The symbol "IsMaskingEnabled" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type MaybeMasked<TData> = true extends IsMaskingEnabled<TData> ? Mask<TData> : Unmask<TData>;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -189,11 +191,11 @@ namespace PreserveTypes {
             return: PreserveTypes.FragmentType<this["arg1"]>;
         }
         // (undocumented)
-        interface IsMasked extends HKT {
+        interface IsMaskingEnabled extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.IsMasked<this["arg1"]>;
+            return: PreserveTypes.IsMaskingEnabled<this["arg1"]>;
         }
         // (undocumented)
         interface Mask extends HKT {
@@ -217,14 +219,14 @@ namespace PreserveTypes {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
-        IsMasked: HKTImplementation.IsMasked;
+        IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
         // (undocumented)
         Mask: HKTImplementation.Mask;
         // (undocumented)
         Unmask: HKTImplementation.Unmask;
     }
     // (undocumented)
-    type IsMasked<_TData> = false;
+    type IsMaskingEnabled<_TData> = false;
     // (undocumented)
     type Mask<TData> = TData;
     // (undocumented)

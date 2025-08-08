@@ -3,7 +3,7 @@ import type { HKT } from "@apollo/client/utilities";
 export declare namespace PreserveTypes {
   export interface Implementation {
     FragmentType: HKTImplementation.FragmentType;
-    IsMasked: HKTImplementation.IsMasked;
+    IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
     Mask: HKTImplementation.Mask;
     Unmask: HKTImplementation.Unmask;
   }
@@ -13,9 +13,9 @@ export declare namespace PreserveTypes {
       return: PreserveTypes.FragmentType<this["arg1"]>;
     }
 
-    export interface IsMasked extends HKT {
+    export interface IsMaskingEnabled extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.IsMasked<this["arg1"]>;
+      return: PreserveTypes.IsMaskingEnabled<this["arg1"]>;
     }
 
     export interface Mask extends HKT {
@@ -29,7 +29,7 @@ export declare namespace PreserveTypes {
     }
   }
 
-  export type IsMasked<_TData> = false;
+  export type IsMaskingEnabled<_TData> = false;
   export type FragmentType<_TData> = never;
   export type Mask<TData> = TData;
   export type Unmask<TData> = TData;

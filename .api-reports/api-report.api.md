@@ -1443,8 +1443,8 @@ const _invalidateModifier: unique symbol;
 // @internal @deprecated (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
-// @public
-export type IsMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMasked", PreserveTypes.Implementation, TData>;
+// @public (undocumented)
+type IsMaskingEnabled<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMaskingEnabled", PreserveTypes.Implementation, TData>;
 
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
@@ -1648,8 +1648,10 @@ interface MaskOperationOptions<TData> {
     fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-// @public (undocumented)
-export type MaybeMasked<TData> = true extends IsMasked<TData> ? Mask<TData> : Unmask<TData>;
+// Warning: (ae-forgotten-export) The symbol "IsMaskingEnabled" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type MaybeMasked<TData> = true extends IsMaskingEnabled<TData> ? Mask<TData> : Unmask<TData>;
 
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
@@ -2086,11 +2088,11 @@ namespace PreserveTypes {
             return: PreserveTypes.FragmentType<this["arg1"]>;
         }
         // (undocumented)
-        interface IsMasked extends HKT {
+        interface IsMaskingEnabled extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.IsMasked<this["arg1"]>;
+            return: PreserveTypes.IsMaskingEnabled<this["arg1"]>;
         }
         // (undocumented)
         interface Mask extends HKT {
@@ -2114,14 +2116,14 @@ namespace PreserveTypes {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
-        IsMasked: HKTImplementation.IsMasked;
+        IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
         // (undocumented)
         Mask: HKTImplementation.Mask;
         // (undocumented)
         Unmask: HKTImplementation.Unmask;
     }
     // (undocumented)
-    type IsMasked<_TData> = false;
+    type IsMaskingEnabled<_TData> = false;
     // (undocumented)
     type Mask<TData> = TData;
     // (undocumented)

@@ -1643,7 +1643,7 @@ interface MaskOperationOptions<TData> {
 }
 
 // @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.Implementation, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
@@ -2080,18 +2080,18 @@ namespace PreserveTypes {
             return: PreserveTypes.FragmentType<this["arg1"]>;
         }
         // (undocumented)
-        interface Mask extends HKT {
+        interface MaybeMasked extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.Mask<this["arg1"]>;
+            return: PreserveTypes.MaybeMasked<this["arg1"]>;
         }
         // (undocumented)
-        interface Unmask extends HKT {
+        interface Unmasked extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.Unmask<this["arg1"]>;
+            return: PreserveTypes.Unmasked<this["arg1"]>;
         }
     }
     // (undocumented)
@@ -2101,14 +2101,14 @@ namespace PreserveTypes {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
-        Mask: HKTImplementation.Mask;
+        MaybeMasked: HKTImplementation.MaybeMasked;
         // (undocumented)
-        Unmask: HKTImplementation.Unmask;
+        Unmasked: HKTImplementation.Unmasked;
     }
     // (undocumented)
-    type Mask<TData> = TData;
+    type MaybeMasked<TData> = TData;
     // (undocumented)
-    type Unmask<TData> = TData;
+    type Unmasked<TData> = TData;
 }
 
 // @internal @deprecated (undocumented)
@@ -2596,7 +2596,7 @@ export class UnconventionalError extends Error {
 }
 
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmask", PreserveTypes.Implementation, TData>;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.Implementation, TData>;
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {

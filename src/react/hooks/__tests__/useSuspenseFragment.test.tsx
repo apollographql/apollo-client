@@ -11,7 +11,6 @@ import React, { Suspense } from "react";
 
 import type {
   FragmentType,
-  Masked,
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
@@ -1424,8 +1423,8 @@ test("updates child fragments for cache updates to masked fields", async () => {
 
   const { render, mergeSnapshot, takeRender } = createRenderStream({
     initialSnapshot: {
-      parent: null as useSuspenseFragment.Result<Masked<Post>> | null,
-      child: null as useSuspenseFragment.Result<Masked<PostFields>> | null,
+      parent: null as useSuspenseFragment.Result<Post> | null,
+      child: null as useSuspenseFragment.Result<PostFields> | null,
     },
   });
 

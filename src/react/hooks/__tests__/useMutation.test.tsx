@@ -28,7 +28,6 @@ import {
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
@@ -4694,7 +4693,7 @@ describe.skip("Type Tests", () => {
     >();
   });
 
-  test("uses masked/unmasked type when using Masked<TData>", async () => {
+  test("uses proper masked/unmasked type", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -4719,7 +4718,7 @@ describe.skip("Type Tests", () => {
       id: string;
     }
 
-    const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+    const mutation: TypedDocumentNode<Mutation, Variables> = gql`
       mutation ($id: ID!) {
         updateUser(id: $id) {
           id

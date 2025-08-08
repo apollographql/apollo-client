@@ -32,7 +32,6 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { Masked } from "@apollo/client/masking";
 import {
   ApolloProvider,
   skipToken,
@@ -4088,7 +4087,7 @@ it("masks queries when dataMasking is `true`", async () => {
     link: new MockLink(mocks),
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4353,7 +4352,7 @@ it("masks queries updated by the cache", async () => {
     link: new MockLink(mocks),
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4472,7 +4471,7 @@ it("does not rerender when updating field in named fragment", async () => {
     link: new MockLink(mocks),
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4599,7 +4598,7 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     },
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4697,7 +4696,7 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     },
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4818,7 +4817,7 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     });
   }
 
-  const renderStream = createDefaultProfiler<DeepPartial<Masked<Query>>>();
+  const renderStream = createDefaultProfiler<DeepPartial<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -4921,7 +4920,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     link: new MockLink(mocks),
   });
 
-  const renderStream = createDefaultProfiler<Masked<Query> | undefined>();
+  const renderStream = createDefaultProfiler<Query | undefined>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 

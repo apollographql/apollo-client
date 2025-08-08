@@ -1,6 +1,5 @@
-import type { DataMasking } from "@apollo/client";
 import type { HKT } from "@apollo/client/utilities";
-import type { IsAny, Prettify } from "@apollo/client/utilities/internal";
+import type { IsAny } from "@apollo/client/utilities/internal";
 
 import type {
   ContainsFragmentsRefs,
@@ -56,18 +55,7 @@ export declare namespace GraphQLCodegenDataMasking {
    * Returns TData as either masked or unmasked depending on whether masking is
    * enabled.
    */
-  export type MaybeMasked<TData> =
-    DataMasking extends { mode: "unmask" } ?
-      // distribute TData - in case of a union, do the next steps for each member
-      TData extends any ?
-        // prevent "Type instantiation is excessively deep and possibly infinite."
-        true extends IsAny<TData> ? TData
-        : TData extends { __masked?: true } ?
-          Prettify<RemoveMaskedMarker<TData>>
-        : Unmasked<TData>
-      : never
-    : DataMasking extends { mode: "preserveTypes" } ? TData
-    : TData;
+  export type MaybeMasked<TData> = TData;
 
   /**
    * Unmasks a type to provide its full result.

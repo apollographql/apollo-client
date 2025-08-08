@@ -1443,9 +1443,6 @@ const _invalidateModifier: unique symbol;
 // @internal @deprecated (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
-// @public (undocumented)
-type IsMaskingEnabled<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMaskingEnabled", PreserveTypes.Implementation, TData>;
-
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
@@ -1648,10 +1645,8 @@ interface MaskOperationOptions<TData> {
     fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-// Warning: (ae-forgotten-export) The symbol "IsMaskingEnabled" needs to be exported by the entry point index.d.ts
-//
 // @public
-export type MaybeMasked<TData> = true extends IsMaskingEnabled<TData> ? Mask<TData> : Unmask<TData>;
+export type MaybeMasked<TData> = Mask<TData>;
 
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
@@ -2088,13 +2083,6 @@ namespace PreserveTypes {
             return: PreserveTypes.FragmentType<this["arg1"]>;
         }
         // (undocumented)
-        interface IsMaskingEnabled extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: PreserveTypes.IsMaskingEnabled<this["arg1"]>;
-        }
-        // (undocumented)
         interface Mask extends HKT {
             // (undocumented)
             arg1: unknown;
@@ -2116,14 +2104,10 @@ namespace PreserveTypes {
         // (undocumented)
         FragmentType: HKTImplementation.FragmentType;
         // (undocumented)
-        IsMaskingEnabled: HKTImplementation.IsMaskingEnabled;
-        // (undocumented)
         Mask: HKTImplementation.Mask;
         // (undocumented)
         Unmask: HKTImplementation.Unmask;
     }
-    // (undocumented)
-    type IsMaskingEnabled<_TData> = false;
     // (undocumented)
     type Mask<TData> = TData;
     // (undocumented)

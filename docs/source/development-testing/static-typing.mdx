@@ -375,9 +375,142 @@ function RocketInventory() {
 }
 ```
 
+### Mutations
+
+> For a more comprehensive guide on using mutations, see the [Mutations guide](../data/mutations).
+
+Like `useQuery`, you provide `useMutation` a `TypedDocumentNode`. This adds the query type for the `data` property and ensures that `variables` are validated by TypeScript.
+
+```tsx
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
+const SAVE_ROCKET: TypedDocumentNode<
+  SaveRocketMutation,
+  SaveRocketMutationVariables
+> = gql`
+  mutation SaveRocket($rocket: RocketInput!) {
+    saveRocket(rocket: $rocket) {
+      model
+    }
+  }
+`;
+
+export function NewRocketForm() {
+  const [model, setModel] = useState("");
+  const [year, setYear] = useState(0);
+  const [stock, setStock] = useState(0);
+
+  const [addRocket, { data }] = useMutation(SAVE_ROCKET, {
+    variables: { rocket: { model, year, stock } },
+  });
+
+  return (
+    <form>
+      <p>
+        <label>Model</label>
+        <input name="model" onChange={(e) => setModel(e.target.value)} />
+      </p>
+      <p>
+        <label>Year</label>
+        <input
+          type="number"
+          name="year"
+          onChange={(e) => setYear(+e.target.value)}
+        />
+      </p>
+      <p>
+        <label>Stock</label>
+        <input
+          type="number"
+          name="stock"
+          onChange={(e) => setStock(e.target.value)}
+        />
+      </p>
+      <button onClick={() => addRocket()}>Add rocket</button>
+    </form>
+  );
+}
+```
+
+<Note>
+
+Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` isn't tracked the same way as `useQuery` since its value is not read from the cache. The value of `data` is a set result of the last execution of the mutation.
+
+</Note>
+
+#### Using variables with `useMutation`
+
+`useMutation` allows you to provide variables to either the hook or the mutate function returned in the result tuple. When variables are provided to both the hook and mutate function, they are shallowly merged (see the [Mutations guide](../data/mutations#option-precedence) for more information).
+
+This behavior affects how TypeScript checks required variables with `useMutation`. Required variables must be provided to either the hook or the mutate function. If a required variable is not provided to the hook, the mutate function must include it. Required variables provided to the hook make them optional in the mutate function.
+
+The following uses the previous example but flattens out the variable declarations to demonstrate how required variables affects TypeScript validation.
+
+```tsx
+const SAVE_ROCKET: TypedDocumentNode<
+  SaveRocketMutation,
+  SaveRocketMutationVariables
+> = gql`
+  mutation SaveRocket($model: String!, $year: Int!, $stock: Int) {
+    saveRocket(rocket: { model: $model, year: $year, stock: $stock }) {
+      model
+    }
+  }
+`;
+
+export function NewRocketForm() {
+  // No required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET);
+
+  // ❌ TypeScript Error: Expected 1 argument, but got 0.
+  addRocket();
+  // ❌ TypeScript Error: Property 'variables' is missing in type '{}'
+  addRocket({});
+  // ❌ TypeScript Error: Type '{}' is missing the following properties from '{ year: number; model: string;, stock?: number }': model, year
+  addRocket({ variables: {} });
+  // ❌ TypeScript Error: Property 'year' is missing in type '{ model: string }'
+  addRocket({ variables: { model: "Falcon" } });
+  // ✅ Correct: All required variables provided
+  addRocket({ variables: { model: "Falcon", year: 2025 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year: number; model: string;, stock?: number }'
+  addRocket({ variables: { model: "Falcon", year: 2025, notAVariable: true } });
+
+  // Some required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET, {
+    variables: { model: "Falcon" },
+  });
+
+  // ❌ TypeScript Error: Expected 1 argument, but got 0.
+  addRocket();
+  // ❌ TypeScript Error: Property 'variables' is missing in type '{}'
+  addRocket({});
+  // ❌ TypeScript Error: Property 'year' is missing in type '{}'
+  addRocket({ variables: {} });
+  // ✅ Correct: All remaining required variables provided
+  addRocket({ variables: { year: 2025 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year: number; model?: string;, stock?: number }'
+  addRocket({ variables: { year: 2025, notAVariable: true } });
+
+  // All required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET, {
+    variables: { model: "Falcon", year: 2025 },
+  });
+
+  // ✅ Correct: All required variables are provided to the hook
+  addRocket();
+  // ✅ Correct: All required variables are provided to the hook
+  addRocket({ variables: { stock: 10 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year?: number; model?: string;, stock?: number }'
+  addRocket({ variables: { notAVariable: true } });
+}
+```
+
 ## Data masking
 
 Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).
+
+For a more comprehensive guide on using mutations, see the [Subscriptions guide](../data/subscriptions).
 
 ## Advanced GraphQL Codegen configuration
 

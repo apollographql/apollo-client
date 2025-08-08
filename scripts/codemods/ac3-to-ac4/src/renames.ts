@@ -584,7 +584,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     moveInto({
       from: { module: "@apollo/client/testing" },
       to: { module: "@apollo/client/testing/internal" },
-      importType: "type",
+      importType: "value",
     })
   ),
 

@@ -18,22 +18,6 @@ export type Masked<TData> = ApplyHKTImplementationWithDefault<
   TData
 >;
 
-/**
- * Marks a type as masked. This is a shortcut for
- * `TypedDocumentNode<Masked<TData>, TVariables>`
- */
-export type MaskedDocumentNode<
-  TData = { [key: string]: any },
-  // eslint-disable-next-line local-rules/variables-should-extend-operation-variables
-  TVariables = { [key: string]: any },
-> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "MaskedDocumentNode",
-  DefaultImplementation,
-  TData,
-  TVariables
->;
-
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",

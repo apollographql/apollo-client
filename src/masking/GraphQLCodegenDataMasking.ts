@@ -1,5 +1,3 @@
-import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-
 import type { DataMasking } from "@apollo/client";
 import type { HKT } from "@apollo/client/utilities";
 import type { IsAny, Prettify } from "@apollo/client/utilities/internal";
@@ -13,7 +11,6 @@ import type {
 export declare namespace GraphQLCodegenDataMasking {
   export interface Implementation {
     Masked: HKTImplementation.Masked;
-    MaskedDocumentNode: HKTImplementation.MaskedDocumentNode;
     FragmentType: HKTImplementation.FragmentType;
     MaybeMasked: HKTImplementation.MaybeMasked;
     Unmasked: HKTImplementation.Unmasked;
@@ -22,15 +19,6 @@ export declare namespace GraphQLCodegenDataMasking {
     export interface Masked extends HKT {
       arg1: unknown; // TData
       return: GraphQLCodegenDataMasking.Masked<this["arg1"]>;
-    }
-
-    export interface MaskedDocumentNode extends HKT {
-      arg1: unknown; // TData
-      arg2: unknown; // TVariables
-      return: GraphQLCodegenDataMasking.MaskedDocumentNode<
-        this["arg1"],
-        this["arg2"]
-      >;
     }
 
     export interface FragmentType extends HKT {
@@ -56,16 +44,6 @@ export declare namespace GraphQLCodegenDataMasking {
   export type Masked<TData> = TData & {
     __masked?: true;
   };
-
-  /**
-   * Marks a type as masked. This is a shortcut for
-   * `TypedDocumentNode<Masked<TData>, TVariables>`
-   */
-  export type MaskedDocumentNode<
-    TData = { [key: string]: any },
-    // eslint-disable-next-line local-rules/variables-should-extend-operation-variables
-    TVariables = { [key: string]: any },
-  > = TypedDocumentNode<Masked<TData>, TVariables>;
 
   export type FragmentType<TData> =
     [TData] extends [{ " $fragmentName"?: infer TKey }] ?

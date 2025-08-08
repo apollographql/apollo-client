@@ -30,7 +30,7 @@ export declare namespace PreserveTypes {
   }
 
   export type IsMasked<_TData> = false;
-  export type FragmentType<TData> = TData;
+  export type FragmentType<_TData> = never;
   export type Mask<TData> = TData;
   export type Unmask<TData> = TData;
 }

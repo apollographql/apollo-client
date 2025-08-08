@@ -250,38 +250,316 @@ If you set `errorPolicy` to `all`, `useQuery` does _not_ discard query response 
 
 For more information, see [Handling operation errors](./error-handling/).
 
-## Manual execution with `useLazyQuery`
+## Fetching in response to user interaction
 
-When React renders a component that calls `useQuery`, Apollo Client _automatically_ executes the corresponding query. But what if you want to execute a query in response to a different event, such as a user clicking a button?
+When React renders a component that calls `useQuery`, Apollo Client automatically executes the corresponding query. But what if you want to execute a query in response to a user interaction, such as a user clicking a button?
 
-The `useLazyQuery` hook is perfect for executing queries in response to events besides component rendering. Unlike with `useQuery`, when you call `useLazyQuery`, it does _not_ immediately execute its associated query. Instead, it returns a **query function** in its result tuple that you call whenever you're ready to execute the query.
+The [`useLazyQuery`](../api/react/useLazyQuery) hook is for manually executing queries. Unlike `useQuery`, when you use `useLazyQuery`, it doesn't immediately execute its associated query. Instead, it returns an execution function that you call whenever you need to execute the query.
 
 Here's an example:
 
-```jsx {2,5,13} title="index.js"
+```jsx {2,5,15} title="index.js"
 import React from "react";
 import { useLazyQuery } from "@apollo/client/react";
 
-function DelayedQuery() {
-  const [getDog, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
+function GetDogsOnClick() {
+  const [getDogs, { loading, error, data }] = useLazyQuery(GET_DOGS);
 
   if (loading) return <p>Loading ...</p>;
-  if (error) return `Error! ${error}`;
+  if (error) return `Error! ${error.message}`;
+
+  return (
+    <div>
+      {data?.dogs.map((dog) => (
+        <Dog key={dog.id} dog={dog} />
+      ))}
+      <button onClick={() => getDogs()}>Load dogs</button>
+    </div>
+  );
+}
+```
+
+The first item in `useLazyQuery`'s return tuple is the execution function, and the second item is an object that contains information about the executed query, such as the `loading`, `error`, `data`, and `dataState` properties.
+
+### Re-rendering with new options
+
+Unlike `useQuery`, options provided to `useLazyQuery` that change on re-renders do not automatically execute the query. Instead, `useLazyQuery` waits to execute the query with the updated options until you call the execution function again.
+
+The following is an example that changes the fetch policy depending on whether the user is online or offline:
+
+```tsx
+function GetDogs({ isOnline }) {
+  const [getDogs, { loading, data }] = useLazyQuery(GET_DOGS, {
+    fetchPolicy: isOnline ? "network-only" : "cache-only",
+  });
+
+  if (loading) return <p>Loading ...</p>;
+
+  return (
+    <div>
+      {data && <Dogs data={data.dogs} />}
+      <button onClick={() => getDogs()}>Get dogs</button>
+    </div>
+  );
+}
+```
+
+<Note>
+
+The changed options are immediately applied to the underlying `ObservableQuery` (accessible by the `observable` property) even though the query isn't executed. Inspecting the options on the `observable` returns the updated options. This means the updated options are used for other APIs (such as `refetch`), even before you call the execution function again.
+
+</Note>
+
+### Working with variables
+
+You provide `variables` to the execution function when executing the query.
+
+The following example gets a specific dog's photo when you click the **Get photo** button:
+
+```jsx
+function DogPhoto() {
+  const [getDogPhoto, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
+
+  if (loading) return <p>Loading ...</p>;
+  if (error) return `Error! ${error.message}`;
 
   return (
     <div>
       {data?.dog && <img src={data.dog.displayImage} />}
-      <button onClick={() => getDog({ variables: { breed: "bulldog" } })}>
-        Click me!
+      <button onClick={() => getDogPhoto({ variables: { name: "Lucky" } })}>
+        Get photo
       </button>
     </div>
   );
 }
 ```
 
-The first item in `useLazyQuery`'s return tuple is the query function, and the second item is the same result object returned by `useQuery`.
+<Note>
 
-For a full list of supported options, see the [API reference](../api/react/useLazyQuery).
+When using TypeScript, the `variables` option is required if the query provided to `useLazyQuery` contains required variables. If the options argument isn't provided to the execution function, or the `variables` option is missing required variables, TypeScript raises an error.
+
+</Note>
+
+#### Changing variables
+
+You change variables by calling the execution function with updated variables.
+
+The following example gets the selected dog's photo when you click the **Get photo** button.
+
+```jsx
+function DogPhoto() {
+  const [selectedDog, setSelectedDog] = useState(null);
+  const [getDogPhoto, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
+
+  if (loading) return <p>Loading ...</p>;
+  if (error) return `Error! ${error.message}`;
+
+  return (
+    <div>
+      <DogSelect
+        onChange={(dogName) => setSelectedDog(dogName)}
+        value={selectedDog}
+      />
+      {data?.dog && <img src={data.dog.displayImage} />}
+      {selectedDog && (
+        <button
+          onClick={() => getDogPhoto({ variables: { name: selectedDog } })}
+        >
+          Get photo
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+If you need to reference the currently executed query's variables, use the `variables` property returned by `useLazyQuery`. The `variables` property contains the value of the variables from the last execution of the query.
+
+<Tip>
+
+The `variables` property is empty until you call the execution function for the first time. Use the `called` property returned by `useLazyQuery` to determine if you've called the execution function at least once.
+
+</Tip>
+
+```jsx
+function DogPhoto() {
+  const [getDogPhoto, { called, variables }] = useLazyQuery(GET_DOG_PHOTO);
+
+  return (
+    <div>
+      {/* ... */}
+      <button onClick={() => getDogPhoto({ variables: { name: selectedDog } })}>
+        Get photo
+      </button>
+
+      {called && <span>Last fetched: {variables.name}</span>}
+    </div>
+  );
+}
+```
+
+### Using the promise returned from the execution function
+
+The execution function returns a promise that resolves with the query result:
+
+```jsx
+function GetDogs() {
+  const [getDogs, { data, loading, error }] = useLazyQuery(GET_DOGS);
+
+  const handleClick = async () => {
+    const { data } = await getDogs();
+
+    // Do something with `data`
+  };
+
+  return (
+    <div>
+      {/* ... */}
+      <button onClick={handleClick}>Get dogs</button>
+    </div>
+  );
+}
+```
+
+The result returned from the promise is useful when you need to execute side-effects using the data returned by the query.
+
+<Tip>
+
+Use the `data`, `error`, and other properties returned by `useLazyQuery` to sync the query state with your component. Avoid using your own state setters from React's `useState` hook with data resolved from the promise. This ensures your component stays up-to-date with cache changes as they occur throughout your application.<br /><br />
+
+In cases where you don't need to keep your component in sync with query state, use `client.query()` directly because it won't unnecessarily render your component for data that you don't use.
+
+Using `useLazyQuery` in these situations is an antipattern.
+
+<ExpansionPanel title="Example">
+
+```ts
+import { useApolloClient } from "@apollo/client/react";
+
+function GetDogs() {
+  const client = useApolloClient();
+
+  const handleClick = async () => {
+    const { data } = await client.query({ query: GET_DOGS });
+
+    // Do something with `data`
+  };
+
+  return <button onClick={handleClick}>Get dogs</button>;
+}
+```
+
+</ExpansionPanel>
+
+</Tip>
+
+#### Handling errors
+
+The promise resolves or rejects depending on the configured [`errorPolicy`](./error-handling#setting-an-error-policy). For a more comprehensive guide on working with errors, read the [Error handling documentation](./error-handling).
+
+##### `errorPolicy: "none"`
+
+The promise rejects with the error that caused the query to fail.
+
+```ts
+const handleClick = async () => {
+  try {
+    const { data } = await getDogs();
+  } catch (error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      // handle GraphQL errors
+    }
+
+    // Handle other error types
+    console.log(error.message);
+  }
+};
+```
+
+<Note>
+
+Errors always cause the promise to reject. The `error` property is never set when the promise resolves.
+
+</Note>
+
+##### `errorPolicy: "all"`
+
+The promise resolves with an object that includes the error and any partial data returned by the query. Read the partial data on the `data` property and the error that caused the query to fail on the `error` property.
+
+```ts
+const handleClick = async () => {
+  const { data, error } = await getDogs();
+
+  if (error && CombinedGraphQLErrors.is(error)) {
+    // handle GraphQL errors returned by the query
+  }
+};
+```
+
+<Note>
+
+The `data` property might be `undefined` instead of containing partial data. This typically occurs when a [network error](./error-handling#network-errors) causes the query to fail, because the error isn't associated with GraphQL execution.
+
+</Note>
+
+##### `errorPolicy: "ignore"`
+
+The promise resolves with an object that includes any partial data returned by the query. Errors are discarded.
+
+```ts
+const handleClick = async () => {
+  const { data } = await getDogs();
+
+  if (data !== undefined) {
+    // Do something with the returned data
+  }
+};
+```
+
+<Tip>
+
+`data` might be `undefined` if a [network error](./error-handling#network-errors) occurs. Check if `data` is `undefined` before you use it, in case an error occurs during query execution.
+
+</Tip>
+
+#### Retaining query results
+
+Apollo Client aborts in-flight queries executed by `useLazyQuery` when the component unmounts or when you start another query by calling the execution function. This causes the promise to reject. In some cases, you might find this behavior undesirable and prefer to let the query run to completion.
+
+<Note>
+
+Apollo Client ensures the rejected promise doesn't throw an unhandled rejection error when you don't add a rejection handler to the promise. However, this means that aborted errors are silent and might go unnoticed. If you want to be notified when the request is aborted, provide a rejection handler for the promise.
+
+</Note>
+
+The promise returned by the execution function includes a `.retain()` method. When you call it, it ensures the query continues running even if the component unmounts or you start a new query before the previous one finishes.
+
+```jsx
+function GetDogs() {
+  const [getDogs] = useLazyQuery(GET_DOGS);
+
+  const handleClick = async () => {
+    const promise = getDogs();
+
+    // Retain the query even if component unmounts
+    promise.retain();
+
+    const { data } = await promise;
+
+    // Do something with data
+  };
+
+  return <button onClick={handleClick}>Get dogs</button>;
+}
+```
+
+The `retain()` method returns the original promise, so you can shorten the previous example to a single line:
+
+```ts
+const { data } = await getDogs().retain();
+```
+
+For a complete list of supported options and result properties, see the [`useLazyQuery` API reference](../api/react/useLazyQuery).
 
 ## Setting a fetch policy
 

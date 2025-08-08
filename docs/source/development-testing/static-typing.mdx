@@ -402,6 +402,7 @@ export function NewRocketForm() {
   const [stock, setStock] = useState(0);
 
   const [addRocket, { data }] = useMutation(SAVE_ROCKET, {
+    //                ^? SaveRocketMutation | null | undefined
     variables: { rocket: { model, year, stock } },
   });
 

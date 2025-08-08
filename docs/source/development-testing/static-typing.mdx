@@ -183,13 +183,14 @@ We recommend using `TypedDocumentNode` and relying on type inference throughout 
 <ExpansionPanel title="Example">
 
 ```ts
-// ❌ Don't provide generic arguments to Apollo Client APIs
+// ❌ Don't leave GraphQL documents as plain `DocumentNode`s
 const query = gql`
   # ...
 `;
+// ❌ Don't provide generic arguments to Apollo Client APIs
 const { data } = useQuery<QueryType, VariablesType>(query);
 
-// ✅ Add the type to the query using `TypedDocumentNode` instead
+// ✅ Add the type for the GraphQL document with `TypedDocumentNode`
 const query: TypedDocumentNode<QueryType, VariablesType> = gql`
   # ...
 `;

@@ -10,6 +10,6 @@ If you're using GraphQL Codegen to generate masked types, opt into the GraphQL C
 import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
 
 declare module "@apollo/client" {
-  export interface TypeOverrides extends GraphQLCodegenDataMasking.Implementation {}
+  export interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
 }
 ```

@@ -7,7 +7,7 @@ import type {
   UnwrapFragmentRefs,
 } from "./internal/types.js";
 export declare namespace GraphQLCodegenDataMasking {
-  export interface Implementation {
+  export interface TypeOverrides {
     FragmentType: HKTImplementation.FragmentType;
     MaybeMasked: HKTImplementation.MaybeMasked;
     Unmasked: HKTImplementation.Unmasked;

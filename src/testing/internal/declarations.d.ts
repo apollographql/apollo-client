@@ -13,7 +13,7 @@ interface StreamingOverrideHKT extends HKT {
 }
 declare module "@apollo/client" {
   export interface TypeOverrides
-    extends GraphQLCodegenDataMasking.Implementation {
+    extends GraphQLCodegenDataMasking.TypeOverrides {
     Streaming: StreamingOverrideHKT;
   }
 }

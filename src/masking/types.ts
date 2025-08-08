@@ -8,7 +8,7 @@ export interface DataMasking {}
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",
-  PreserveTypes.Implementation,
+  PreserveTypes.TypeOverrides,
   TData
 >;
 
@@ -16,7 +16,7 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
 export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Unmasked",
-  PreserveTypes.Implementation,
+  PreserveTypes.TypeOverrides,
   TData
 >;
 
@@ -27,6 +27,6 @@ export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
 export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "MaybeMasked",
-  PreserveTypes.Implementation,
+  PreserveTypes.TypeOverrides,
   TData
 >;

@@ -1,7 +1,7 @@
 import type { HKT } from "@apollo/client/utilities";
 
 export declare namespace PreserveTypes {
-  export interface Implementation {
+  export interface TypeOverrides {
     FragmentType: HKTImplementation.FragmentType;
     MaybeMasked: HKTImplementation.MaybeMasked;
     Unmasked: HKTImplementation.Unmasked;

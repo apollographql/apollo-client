@@ -117,10 +117,8 @@ items:
         href: ./networking/advanced-http-networking
       - label: Authentication
         href: ./networking/authentication
-  - label: Migrating
-    children:
-      - label: Migrating to Apollo Client 3.0
-        href: ./migrating/apollo-client-3-migration
+  - label: Migrating to Apollo Client 4.0
+    href: ./migrating/apollo-client-4-migration
   - label: API Reference
     children:
       - label: Core

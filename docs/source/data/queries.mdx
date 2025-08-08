@@ -429,6 +429,8 @@ Use the `data`, `error`, and other properties returned by `useLazyQuery` to sync
 
 In cases where you don't need to keep your component in sync with query state, use `client.query()` directly because it won't unnecessarily render your component for data that you don't use.
 
+Using `useLazyQuery` in those situations should be considered an antipattern.
+
 <ExpansionPanel title="Example">
 
 ```ts

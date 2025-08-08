@@ -11,6 +11,10 @@ function isOperation(
 /**
  * Determine if a document is a mutation document.
  *
+ * @remarks
+ * If you are authoring an Apollo link, you might not need this utility.
+ * Prefer using the `operationType` property the `operation` object instead.
+ *
  * @param document - The GraphQL document to check
  * @returns A boolean indicating if the document is a mutation operation
  *
@@ -35,6 +39,10 @@ export function isMutationOperation(document: DocumentNode) {
 /**
  * Determine if a document is a query document.
  *
+ * @remarks
+ * If you are authoring an Apollo link, you might not need this utility.
+ * Prefer using the `operationType` property the `operation` object instead.
+ *
  * @param document - The GraphQL document to check
  * @returns A boolean indicating if the document is a query operation
  *
@@ -58,6 +66,10 @@ export function isQueryOperation(document: DocumentNode) {
 
 /**
  * Determine if a document is a subscription document.
+ *
+ * @remarks
+ * If you are authoring an Apollo link, you might not need this utility.
+ * Prefer using the `operationType` property the `operation` object instead.
  *
  * @param document - The GraphQL document to check
  * @returns A boolean indicating if the document is a subscription operation

@@ -25,11 +25,7 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import type {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
@@ -6309,7 +6305,7 @@ describe.skip("Type Tests", () => {
       };
     }
 
-    const query: MaskedDocumentNode<Query> = gql``;
+    const query: TypedDocumentNode<Query> = gql``;
 
     const [
       execute,
@@ -6317,9 +6313,9 @@ describe.skip("Type Tests", () => {
     ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<
-      Masked<Query> | DataValue.Streaming<Masked<Query>> | undefined
+      Query | DataValue.Streaming<Query> | undefined
     >();
-    expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
@@ -6358,7 +6354,7 @@ describe.skip("Type Tests", () => {
     {
       const { data } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
@@ -6372,13 +6368,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
   });
 

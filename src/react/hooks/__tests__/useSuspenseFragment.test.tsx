@@ -12,7 +12,6 @@ import React, { Suspense } from "react";
 import type {
   FragmentType,
   Masked,
-  MaskedDocumentNode,
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
@@ -1396,13 +1395,13 @@ test("updates child fragments for cache updates to masked fields", async () => {
     link: ApolloLink.empty(),
   });
 
-  const postFieldsFragment: MaskedDocumentNode<PostFields> = gql`
+  const postFieldsFragment: TypedDocumentNode<PostFields> = gql`
     fragment PostFields on Post {
       updatedAt
     }
   `;
 
-  const postFragment: MaskedDocumentNode<Post> = gql`
+  const postFragment: TypedDocumentNode<Post> = gql`
     fragment PostFragment on Post {
       id
       title

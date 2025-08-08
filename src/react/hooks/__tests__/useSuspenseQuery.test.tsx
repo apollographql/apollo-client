@@ -37,11 +37,7 @@ import {
   Defer20220824Handler,
   NotImplementedHandler,
 } from "@apollo/client/incremental";
-import type {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "@apollo/client/masking";
+import type { Masked, Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
   skipToken,
@@ -344,7 +340,7 @@ function useMaskedVariablesQueryCase() {
     }
   `;
 
-  const query: MaskedDocumentNode<
+  const query: TypedDocumentNode<
     MaskedVariablesCaseData,
     VariablesCaseVariables
   > = document;
@@ -11278,7 +11274,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11558,7 +11554,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11680,7 +11676,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11799,7 +11795,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11900,7 +11896,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -12019,7 +12015,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -12138,7 +12134,7 @@ describe("useSuspenseQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -12317,18 +12313,17 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
       }
@@ -12450,8 +12445,8 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -12459,12 +12454,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -12588,8 +12583,8 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -12597,12 +12592,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -12714,18 +12709,17 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
       }
@@ -12851,27 +12845,27 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
+          | DeepPartial<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<
           "complete" | "streaming" | "partial"
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
       }
@@ -13000,18 +12994,17 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
       }
@@ -13168,8 +13161,8 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -13177,12 +13170,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -13357,8 +13350,8 @@ describe("useSuspenseQuery", () => {
         );
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -13366,12 +13359,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -13512,8 +13505,8 @@ describe("useSuspenseQuery", () => {
         );
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -13521,12 +13514,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -13690,9 +13683,9 @@ describe("useSuspenseQuery", () => {
         );
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DeepPartial<MaskedVariablesCaseData>
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -13700,18 +13693,18 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
 
@@ -13864,18 +13857,17 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
       }
@@ -14021,9 +14013,9 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DeepPartial<MaskedVariablesCaseData>
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -14031,18 +14023,18 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
 
@@ -14124,9 +14116,9 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DeepPartial<MaskedVariablesCaseData>
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -14134,18 +14126,18 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
 
@@ -14223,8 +14215,8 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -14232,12 +14224,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -14315,8 +14307,8 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -14324,12 +14316,12 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
@@ -14424,9 +14416,9 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DeepPartial<MaskedVariablesCaseData>
+          | DataValue.Streaming<MaskedVariablesCaseData>
           | undefined
         >();
         expectTypeOf(dataState).toEqualTypeOf<
@@ -14434,18 +14426,18 @@ describe("useSuspenseQuery", () => {
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
 
@@ -14536,27 +14528,27 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          | Masked<MaskedVariablesCaseData>
-          | DeepPartial<Masked<MaskedVariablesCaseData>>
-          | DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+          | MaskedVariablesCaseData
+          | DeepPartial<MaskedVariablesCaseData>
+          | DataValue.Streaming<MaskedVariablesCaseData>
         >();
         expectTypeOf(dataState).toEqualTypeOf<
           "complete" | "streaming" | "partial"
         >();
 
         if (dataState === "complete") {
-          expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
+          expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
         }
 
         if (dataState === "streaming") {
           expectTypeOf(data).toEqualTypeOf<
-            DataValue.Streaming<Masked<MaskedVariablesCaseData>>
+            DataValue.Streaming<MaskedVariablesCaseData>
           >();
         }
 
         if (dataState === "partial") {
           expectTypeOf(data).toEqualTypeOf<
-            DeepPartial<Masked<MaskedVariablesCaseData>>
+            DeepPartial<MaskedVariablesCaseData>
           >();
         }
       }
@@ -14643,9 +14635,7 @@ describe("useSuspenseQuery", () => {
         const { refetch } = useSuspenseQuery(query, { variables: { id: "1" } });
         const { data } = await refetch();
 
-        expectTypeOf(data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData> | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
       }
 
       {
@@ -14677,9 +14667,7 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData> | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
       }
 
       {
@@ -14731,7 +14719,7 @@ describe("useSuspenseQuery", () => {
           variables: { id: "1" },
         });
 
-        const subscription: MaskedDocumentNode<
+        const subscription: TypedDocumentNode<
           Subscription,
           Record<string, never>
         > = gql`

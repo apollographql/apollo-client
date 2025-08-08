@@ -8,7 +8,7 @@ import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
-import type { Unmasked } from '@apollo/client/masking';
+import type { Unmask } from '@apollo/client/masking';
 
 // @internal @deprecated (undocumented)
 type CovariantUnaryFunction<out Arg, out Ret> = {
@@ -52,7 +52,7 @@ export namespace MockLink {
         // (undocumented)
         request: MockedRequest<TVariables>;
         // (undocumented)
-        result?: ApolloLink.Result<Unmasked<TData>> | ResultFunction<ApolloLink.Result<Unmasked<TData>>, TVariables>;
+        result?: ApolloLink.Result<Unmask<TData>> | ResultFunction<ApolloLink.Result<Unmask<TData>>, TVariables>;
     }
     // (undocumented)
     export interface Options {

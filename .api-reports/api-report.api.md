@@ -85,14 +85,14 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
-    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmask<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmask<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
-    optimistic: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    optimistic: boolean): Unmask<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmask<TData> | null;
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
-    optimistic: boolean): Unmasked<TData> | null;
+    optimistic: boolean): Unmask<TData> | null;
     // (undocumented)
     recordOptimisticTransaction(transaction: Transaction, optimisticId: string): void;
     // (undocumented)
@@ -105,12 +105,12 @@ export abstract class ApolloCache {
     // (undocumented)
     transformForLink(document: DocumentNode): DocumentNode;
     // (undocumented)
-    updateFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
     // (undocumented)
-    updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
     // (undocumented)
     abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
-    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmask<TData>>>;
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
@@ -145,7 +145,7 @@ export namespace ApolloClient {
         // (undocumented)
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
-            data: Unmasked<TData>;
+            data: Unmask<TData>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -156,7 +156,7 @@ export namespace ApolloClient {
         // (undocumented)
         export interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
-            data: Unmasked<TData>;
+            data: Unmask<TData>;
             fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
             fragmentName?: string;
             id?: string;
@@ -209,11 +209,11 @@ export namespace ApolloClient {
     //
     // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
-        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
+        optimisticResponse?: Unmask<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
-        }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+        }) => Unmask<NoInfer<TData>> | IgnoreModifier);
         updateQueries?: MutationQueryReducersMap<TData>;
-        refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+        refetchQueries?: ((result: NormalizedExecutionResult<Unmask<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         awaitRefetchQueries?: boolean;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         onQueryUpdated?: OnQueryUpdated<any>;
@@ -360,13 +360,13 @@ export class ApolloClient {
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
     // (undocumented)
     queryDeduplication: boolean;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmask<TData> | null;
     // @deprecated
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>, optimistic: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>, optimistic: boolean): Unmask<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>): Unmask<TData> | null;
     // @deprecated
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>,
-    optimistic: boolean): Unmasked<TData> | null;
+    optimistic: boolean): Unmask<TData> | null;
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
@@ -658,7 +658,7 @@ namespace Cache_2 {
     // (undocumented)
     interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
-        data: Unmasked<TData>;
+        data: Unmask<TData>;
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
         id?: string;
@@ -673,13 +673,13 @@ namespace Cache_2 {
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
-        result: Unmasked<TData>;
+        result: Unmask<TData>;
         variables?: TVariables;
     }
     // (undocumented)
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
-        data: Unmasked<TData>;
+        data: Unmask<TData>;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -735,17 +735,6 @@ namespace ClientAwarenessLink {
 class ClientAwarenessLink extends ApolloLink {
     constructor(options?: ClientAwarenessLink.Options);
 }
-
-// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
-//
-// @public
-type CombineByTypeName<T extends {
-    __typename?: string;
-}> = {
-    [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
-}[NonNullable<T["__typename"]>];
 
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
@@ -804,24 +793,8 @@ export class CombinedProtocolErrors extends Error {
     static is(error: unknown): error is CombinedProtocolErrors;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
-//
-// @public
-type CombineIntersection<T> = Exclude<T, {
-    __typename?: string;
-}> | CombineByTypeName<Extract<T, {
-    __typename?: string;
-}>>;
-
 // @public @deprecated (undocumented)
 export const concat: typeof ApolloLink.concat;
-
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public @deprecated (undocumented)
 export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
@@ -909,11 +882,6 @@ export interface DefaultContext extends Record<string, any> {
 // @public (undocumented)
 export function defaultDataIdFromObject({ __typename, id, _id }: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
 
-// Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
-
 // @public @deprecated (undocumented)
 export type DefaultOptions = ApolloClient.DefaultOptions;
 
@@ -942,9 +910,6 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export { disableExperimentalFragmentVariables }
 
 export { disableFragmentWarnings }
-
-// @public (undocumented)
-type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Required<U> ? Required<U> extends Required<T> ? never : T : T : T;
 
 export { DocumentNode }
 
@@ -1075,17 +1040,7 @@ export interface ErrorLike {
 export type ErrorPolicy = "none" | "ignore" | "all";
 
 // @public (undocumented)
-type Exact<in out T> = (x: T) => T;
-
-// @public (undocumented)
 export const execute: typeof ApolloLink.execute;
-
-// @public
-type ExtractByMatchingTypeNames<Union extends {
-    __typename?: string;
-}, TypeName extends string> = Union extends any ? TypeName extends NonNullable<Union["__typename"]> ? Omit<Union, "__typename"> & {
-    [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
-} : never : never;
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
@@ -1195,10 +1150,10 @@ interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
-// Warning: (ae-forgotten-export) The symbol "DefaultImplementation" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", DefaultImplementation, TData>;
+export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.Implementation, TData>;
 
 // @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;
@@ -1270,97 +1225,6 @@ const getInMemoryCacheMemoryInternals: (() => {
 }) | undefined;
 
 export { gql }
-
-// @public (undocumented)
-namespace GraphQLCodegenDataMasking {
-    // (undocumented)
-    type FragmentType<TData> = [
-    TData
-    ] extends [{
-        " $fragmentName"?: infer TKey;
-    }] ? TKey extends string ? {
-        " $fragmentRefs"?: {
-            [key in TKey]: TData;
-        };
-    } : never : never;
-    // (undocumented)
-    namespace HKTImplementation {
-        // (undocumented)
-        interface FragmentType extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
-        }
-        // (undocumented)
-        interface Masked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.Masked<this["arg1"]>;
-        }
-        // (undocumented)
-        interface MaskedDocumentNode extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            arg2: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.MaskedDocumentNode<this["arg1"], this["arg2"]>;
-        }
-        // (undocumented)
-        interface MaybeMasked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.MaybeMasked<this["arg1"]>;
-        }
-        // (undocumented)
-        interface Unmasked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
-        }
-    }
-    // (undocumented)
-    interface Implementation {
-        // (undocumented)
-        FragmentType: HKTImplementation.FragmentType;
-        // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        Masked: HKTImplementation.Masked;
-        // (undocumented)
-        MaskedDocumentNode: HKTImplementation.MaskedDocumentNode;
-        // (undocumented)
-        MaybeMasked: HKTImplementation.MaybeMasked;
-        // (undocumented)
-        Unmasked: HKTImplementation.Unmasked;
-    }
-    type Masked<TData> = TData & {
-        __masked?: true;
-    };
-    // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-    type MaskedDocumentNode<TData = {
-        [key: string]: any;
-    }, TVariables = {
-        [key: string]: any;
-    }> = TypedDocumentNode<Masked<TData>, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-    type MaybeMasked<TData> = DataMasking extends {
-        mode: "unmask";
-    } ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
-        __masked?: true;
-    } ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
-        mode: "preserveTypes";
-    } ? TData : TData;
-    // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
-    type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
-}
 
 // @public @deprecated (undocumented)
 export type GraphQLRequest = ApolloLink.Request;
@@ -1580,6 +1444,9 @@ const _invalidateModifier: unique symbol;
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
+type IsMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMasked", PreserveTypes.Implementation, TData>;
+
+// @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 // @public
@@ -1758,14 +1625,7 @@ export class LocalStateError extends Error {
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
 // @public
-export type Masked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Masked", DefaultImplementation, TData>;
-
-// @public
-export type MaskedDocumentNode<TData = {
-    [key: string]: any;
-}, TVariables = {
-    [key: string]: any;
-}> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaskedDocumentNode", DefaultImplementation, TData, TVariables>;
+type Mask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
@@ -1788,9 +1648,14 @@ interface MaskOperationOptions<TData> {
     fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-// @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", DefaultImplementation, TData>;
+// Warning: (ae-forgotten-export) The symbol "IsMasked" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Mask" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type MaybeMasked<TData> = true extends IsMasked<TData> ? Mask<TData> : Unmask<TData>;
 
+// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
     context: LocalState.ContextFunction<TContext>;
@@ -1806,19 +1671,6 @@ export interface MergeInfo {
     typename: string | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeObjects<T, U> = Prettify<{
-    [k in keyof T]: k extends keyof U ? [
-    NonNullable<T[k]>,
-    NonNullable<U[k]>
-    ] extends ([
-    infer TK extends object,
-    infer UK extends object
-    ]) ? TK extends unknown[] ? UK extends unknown[] ? CombineIntersection<TK[number] | UK[number]>[] | Extract<T[k] | U[k], undefined | null> : T[k] : CombineIntersection<TK | UK> | Extract<T[k] | U[k], undefined | null> : T[k] : T[k];
-} & Pick<U, Exclude<keyof U, keyof T>>>;
-
 // @public (undocumented)
 type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
 
@@ -1829,22 +1681,6 @@ export interface MergeTree {
     // (undocumented)
     map: Map<string | number, MergeTree>;
 }
-
-// Warning: (ae-forgotten-export) The symbol "MergeUnionsAcc" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "takeOneFromUnion" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, never>;
-
-// Warning: (ae-forgotten-export) The symbol "DistributedRequiredExclude" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeObjects" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnionsAcc<TUnion, Curr, Merged> = [
-Curr
-] extends [never] ? Merged : MergeUnionsAcc<DistributedRequiredExclude<TUnion, Curr>, takeOneFromUnion<DistributedRequiredExclude<TUnion, Curr>>, [
-Merged
-] extends [never] ? Curr : MergeObjects<Curr, Merged>>;
 
 // @public (undocumented)
 export class MissingFieldError extends Error {
@@ -1902,7 +1738,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmask<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -1927,7 +1763,7 @@ interface MutationStoreValue {
 }
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
+export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmask<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -2040,10 +1876,10 @@ export namespace ObservableQuery {
         variables?: Partial<NoInfer<TFetchVars>>;
         errorPolicy?: ErrorPolicy;
         context?: DefaultContext;
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
+        updateQuery?: (previousQueryResult: Unmask<TData>, options: {
+            fetchMoreResult: Unmask<TFetchData>;
             variables: TFetchVars;
-        }) => Unmasked<TData>;
+        }) => Unmask<TData>;
     };
     // (undocumented)
     export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
@@ -2239,10 +2075,61 @@ export type PossibleTypesMap = {
     [supertype: string]: string[];
 };
 
-// @internal @deprecated (undocumented)
-type Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
+// @public (undocumented)
+namespace PreserveTypes {
+    // (undocumented)
+    type FragmentType<_TData> = never;
+    // (undocumented)
+    namespace HKTImplementation {
+        // (undocumented)
+        interface FragmentType extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: PreserveTypes.FragmentType<this["arg1"]>;
+        }
+        // (undocumented)
+        interface IsMasked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: PreserveTypes.IsMasked<this["arg1"]>;
+        }
+        // (undocumented)
+        interface Mask extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: PreserveTypes.Mask<this["arg1"]>;
+        }
+        // (undocumented)
+        interface Unmask extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: PreserveTypes.Unmask<this["arg1"]>;
+        }
+    }
+    // (undocumented)
+    interface Implementation {
+        // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        FragmentType: HKTImplementation.FragmentType;
+        // (undocumented)
+        IsMasked: HKTImplementation.IsMasked;
+        // (undocumented)
+        Mask: HKTImplementation.Mask;
+        // (undocumented)
+        Unmask: HKTImplementation.Unmask;
+    }
+    // (undocumented)
+    type IsMasked<_TData> = false;
+    // (undocumented)
+    type Mask<TData> = TData;
+    // (undocumented)
+    type Unmask<TData> = TData;
+}
 
 // @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
@@ -2467,6 +2354,8 @@ type RefetchQueriesIncludeShorthand = "all" | "active";
 // @public @deprecated (undocumented)
 export type RefetchQueriesOptions<TCache extends ApolloCache, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
+// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloClient.QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
@@ -2479,16 +2368,10 @@ export type RefetchQueryDescriptor = string | DocumentNode;
 // @public (undocumented)
 export type RefetchWritePolicy = "merge" | "overwrite";
 
-// @public (undocumented)
-type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
-
 // @internal @deprecated (undocumented)
 type RemoveIndexSignature<T> = {
     [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
 };
-
-// @public (undocumented)
-type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
 // @public @deprecated (undocumented)
 export type RequestHandler = ApolloLink.RequestHandler;
@@ -2653,11 +2536,11 @@ export type SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables exten
 // @public (undocumented)
 export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
-    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: DeepPartial<Unmask<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
-            data: Unmasked<TSubscriptionData>;
+            data: Unmask<TSubscriptionData>;
         };
-    }): Unmasked<TData> | void;
+    }): Unmask<TData> | void;
 };
 
 // @public
@@ -2667,11 +2550,6 @@ export interface SubscriptionObservable<T> extends Observable<T> {
 
 // @public @deprecated (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.SubscribeOptions<TData, TVariables>;
-
-// Warning: (ae-forgotten-export) The symbol "unionToIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
 
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
@@ -2737,24 +2615,17 @@ export class UnconventionalError extends Error {
     static is(error: unknown): error is UnconventionalError;
 }
 
-// @public (undocumented)
-type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
-
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", DefaultImplementation, TData>;
+export type Unmask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmask", PreserveTypes.Implementation, TData>;
 
-// @public (undocumented)
-type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
-    " $fragmentRefs"?: infer FragmentRefs;
-} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
-    [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData : never;
+// @public @deprecated (undocumented)
+export type Unmasked<TData> = Unmask<TData>;
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     (
-    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+    unsafePreviousData: DeepPartial<Unmask<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmask<TData> | void;
 }
 
 // @public (undocumented)
@@ -2762,10 +2633,10 @@ export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
     variables?: TVariables;
 } & ({
     complete: true;
-    previousData: Unmasked<TData>;
+    previousData: Unmask<TData>;
 } | {
     complete: false;
-    previousData: DeepPartial<Unmasked<TData>> | undefined;
+    previousData: DeepPartial<Unmask<TData>> | undefined;
 });
 
 // @internal @deprecated (undocumented)

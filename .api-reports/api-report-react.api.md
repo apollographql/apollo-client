@@ -48,7 +48,7 @@ import type { StoreObject as StoreObject_2 } from '@apollo/client';
 import type { SubscribeToMoreFunction } from '@apollo/client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
-import type { Unmasked } from '@apollo/client';
+import type { Unmask } from '@apollo/client';
 import type { UpdateQueryMapFn } from '@apollo/client';
 import type { VariablesOption } from '@apollo/client/utilities/internal';
 import type { WatchQueryFetchPolicy } from '@apollo/client';
@@ -645,10 +645,10 @@ export namespace useMutation {
         onCompleted?: (data: MaybeMasked<TData>, clientOptions?: Options<TData, TVariables, TCache>) => void;
         onError?: (error: ErrorLike, clientOptions?: Options<TData, TVariables, TCache>) => void;
         onQueryUpdated?: OnQueryUpdated<any>;
-        optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
+        optimisticResponse?: Unmask<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
-        }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
-        refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+        }) => Unmask<NoInfer_2<TData>> | IgnoreModifier);
+        refetchQueries?: ((result: NormalizedExecutionResult<Unmask<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         updateQueries?: MutationQueryReducersMap<TData>;
         variables?: TConfiguredVariables;

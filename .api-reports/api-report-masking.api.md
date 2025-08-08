@@ -67,7 +67,7 @@ type ExtractByMatchingTypeNames<Union extends {
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.Implementation, TData>;
+export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TData>;
 
 // @public (undocumented)
 export namespace GraphQLCodegenDataMasking {
@@ -128,7 +128,7 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode<TData>, cache: ApolloCache): TData;
 
 // @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.Implementation, TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.TypeOverrides, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -188,7 +188,9 @@ namespace PreserveTypes {
         }
     }
     // (undocumented)
-    interface Implementation {
+    type MaybeMasked<TData> = TData;
+    // (undocumented)
+    interface TypeOverrides {
         // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
@@ -198,8 +200,6 @@ namespace PreserveTypes {
         // (undocumented)
         Unmasked: HKTImplementation.Unmasked;
     }
-    // (undocumented)
-    type MaybeMasked<TData> = TData;
     // (undocumented)
     type Unmasked<TData> = TData;
 }
@@ -216,7 +216,7 @@ type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.Implementation, TData>;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.TypeOverrides, TData>;
 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {

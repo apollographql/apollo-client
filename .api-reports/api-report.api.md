@@ -1153,7 +1153,7 @@ interface FragmentRegistryAPI {
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.Implementation, TData>;
+export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TData>;
 
 // @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;
@@ -1643,7 +1643,7 @@ interface MaskOperationOptions<TData> {
 }
 
 // @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.Implementation, TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.TypeOverrides, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
@@ -2095,7 +2095,9 @@ namespace PreserveTypes {
         }
     }
     // (undocumented)
-    interface Implementation {
+    type MaybeMasked<TData> = TData;
+    // (undocumented)
+    interface TypeOverrides {
         // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
@@ -2105,8 +2107,6 @@ namespace PreserveTypes {
         // (undocumented)
         Unmasked: HKTImplementation.Unmasked;
     }
-    // (undocumented)
-    type MaybeMasked<TData> = TData;
     // (undocumented)
     type Unmasked<TData> = TData;
 }
@@ -2596,7 +2596,7 @@ export class UnconventionalError extends Error {
 }
 
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.Implementation, TData>;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.TypeOverrides, TData>;
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {

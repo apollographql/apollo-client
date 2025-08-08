@@ -121,9 +121,6 @@ export namespace GraphQLCodegenDataMasking {
     export type Unmask<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveFragmentName<TData>> : TData : TData;
 }
 
-// @public
-export type Mask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
-
 // @internal @deprecated (undocumented)
 export function maskFragment<TData = unknown>(data: TData, document: TypedDocumentNode<TData> | DocumentNode, cache: ApolloCache, fragmentName?: string): TData;
 
@@ -131,7 +128,7 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode<TData>, cache: ApolloCache): TData;
 
 // @public
-export type MaybeMasked<TData> = Mask<TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -219,10 +216,7 @@ type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
 // @public
-export type Unmask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmask", PreserveTypes.Implementation, TData>;
-
-// @public @deprecated (undocumented)
-export type Unmasked<TData> = Unmask<TData>;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmask", PreserveTypes.Implementation, TData>;
 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {

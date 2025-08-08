@@ -58,7 +58,6 @@ import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
 import { makeVar } from '@apollo/client/cache';
-import { Mask } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
@@ -100,7 +99,6 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
-import { Unmask } from '@apollo/client/masking';
 import { Unmasked } from '@apollo/client/masking';
 import type { VariablesOption } from '@apollo/client/utilities/internal';
 import { WatchFragmentOptions } from '@apollo/client/cache';
@@ -136,7 +134,7 @@ export namespace ApolloClient {
         // (undocumented)
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
-            data: Unmask<TData>;
+            data: Unmasked<TData>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -147,7 +145,7 @@ export namespace ApolloClient {
         // (undocumented)
         export interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
-            data: Unmask<TData>;
+            data: Unmasked<TData>;
             fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
             fragmentName?: string;
             id?: string;
@@ -198,11 +196,11 @@ export namespace ApolloClient {
     }
     // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
-        optimisticResponse?: Unmask<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
+        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
-        }) => Unmask<NoInfer<TData>> | IgnoreModifier);
+        }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
         updateQueries?: MutationQueryReducersMap<TData>;
-        refetchQueries?: ((result: NormalizedExecutionResult<Unmask<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+        refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         awaitRefetchQueries?: boolean;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         onQueryUpdated?: OnQueryUpdated<any>;
@@ -343,13 +341,13 @@ export class ApolloClient {
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
     // (undocumented)
     queryDeduplication: boolean;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmask<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // @deprecated
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>, optimistic: boolean): Unmask<TData> | null;
-    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>): Unmask<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>, optimistic: boolean): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
     // @deprecated
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>,
-    optimistic: boolean): Unmask<TData> | null;
+    optimistic: boolean): Unmasked<TData> | null;
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
@@ -545,8 +543,6 @@ export { LocalStateError }
 
 export { makeVar }
 
-export { Mask }
-
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
@@ -587,7 +583,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: NormalizedExecutionResult<Unmask<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -612,7 +608,7 @@ interface MutationStoreValue {
 }
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmask<TData>>, options: {
+export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -683,10 +679,10 @@ export namespace ObservableQuery {
         variables?: Partial<NoInfer<TFetchVars>>;
         errorPolicy?: ErrorPolicy;
         context?: DefaultContext;
-        updateQuery?: (previousQueryResult: Unmask<TData>, options: {
-            fetchMoreResult: Unmask<TFetchData>;
+        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+            fetchMoreResult: Unmasked<TFetchData>;
             variables: TFetchVars;
-        }) => Unmask<TData>;
+        }) => Unmasked<TData>;
     };
     // (undocumented)
     export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
@@ -1049,11 +1045,11 @@ export type SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables exten
 // @public (undocumented)
 export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
-    unsafePreviousData: DeepPartial<Unmask<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
-            data: Unmask<TSubscriptionData>;
+            data: Unmasked<TSubscriptionData>;
         };
-    }): Unmask<TData> | void;
+    }): Unmasked<TData> | void;
 };
 
 // @public
@@ -1104,15 +1100,13 @@ export { TypePolicy }
 
 export { UnconventionalError }
 
-export { Unmask }
-
 export { Unmasked }
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     (
-    unsafePreviousData: DeepPartial<Unmask<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmask<TData> | void;
+    unsafePreviousData: DeepPartial<Unmasked<TData>>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -1120,10 +1114,10 @@ export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
     variables?: TVariables;
 } & ({
     complete: true;
-    previousData: Unmask<TData>;
+    previousData: Unmasked<TData>;
 } | {
     complete: false;
-    previousData: DeepPartial<Unmask<TData>> | undefined;
+    previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
 // @public (undocumented)

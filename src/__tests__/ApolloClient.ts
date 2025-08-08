@@ -14,7 +14,11 @@ import { Kind } from "graphql";
 import { DeepPartial, Observable } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
-import { createFragmentRegistry, InMemoryCache } from "../cache";
+import {
+  createFragmentRegistry,
+  InMemoryCache,
+  MissingFieldError,
+} from "../cache";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
@@ -2646,6 +2650,148 @@ describe("ApolloClient", () => {
           complete: true,
         });
       }
+    });
+
+    it("reports complete as false when `from` is not identifiable", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: {},
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toStrictEqual({
+          data: {},
+          complete: false,
+          missing:
+            "Can't determine completeness for fragment query on non-identifiable object",
+        });
+      }
+    });
+
+    it("reports diffs correctly when using getFragmentDoc", async () => {
+      const cache = new InMemoryCache();
+
+      const diffWithFragment = cache.diff({
+        query: cache["getFragmentDoc"](gql`
+          fragment FooFragment on Foo {
+            foo
+          }
+        `),
+        id: cache.identify({}),
+        returnPartialData: true,
+        optimistic: true,
+      });
+
+      expect(diffWithFragment).toStrictEqual({
+        result: {},
+        complete: false,
+        missing: [
+          new MissingFieldError(
+            "Can't determine completeness for fragment query on non-identifiable object",
+            expect.anything(), // query
+            expect.anything() // variables
+          ),
+        ],
+      });
+
+      await new Promise((res) => {
+        cache.watch({
+          query: cache["getFragmentDoc"](gql`
+            fragment FooFragment on Foo {
+              foo
+            }
+          `),
+          id: cache.identify({}),
+          returnPartialData: true,
+          immediate: true,
+          optimistic: true,
+          callback: (diff) => {
+            expect(diff).toStrictEqual({
+              result: {},
+              complete: false,
+              missing: [
+                new MissingFieldError(
+                  "Can't determine completeness for fragment query on non-identifiable object",
+                  expect.anything(), // query
+                  expect.anything() // variables
+                ),
+              ],
+            });
+            res(void 0);
+          },
+        });
+      });
+    });
+
+    it("reports diffs correctly when not using getFragmentDoc", async () => {
+      const cache = new InMemoryCache();
+
+      const diffWithoutFragment = cache.diff({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+        id: cache.identify({}),
+        returnPartialData: true,
+        optimistic: true,
+      });
+
+      expect(diffWithoutFragment).toStrictEqual({
+        result: {},
+        complete: false,
+        missing: [
+          new MissingFieldError(
+            "Can't find field 'foo' on ROOT_QUERY object",
+            expect.anything(), // query
+            expect.anything() // variables
+          ),
+        ],
+      });
+
+      await new Promise((res) => {
+        cache.watch({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          id: cache.identify({}),
+          returnPartialData: true,
+          immediate: true,
+          optimistic: true,
+          callback: (diff) => {
+            expect(diff).toStrictEqual({
+              result: {},
+              complete: false,
+              missing: [
+                new MissingFieldError(
+                  "Can't find field 'foo' on ROOT_QUERY object",
+                  expect.anything(), // query
+                  expect.anything() // variables
+                ),
+              ],
+            });
+            res(void 0);
+          },
+        });
+      });
     });
   });
 

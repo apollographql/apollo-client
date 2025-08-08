@@ -636,9 +636,12 @@ const GET_ROCKET_INVENTORY: TypedDocumentNode<
 `;
 
 function MyComponent() {
-  const { data } = useQuery(GET_ROCKET_INVENTORY);
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    //    ^? GetRocketInventoryQuery | undefined;
+    variables: { year: 2025 },
+  });
 
-  // `data` is properly typed!
+  // ...
 }
 ```
 
@@ -717,8 +720,11 @@ import { useQuery } from "@apollo/client/react";
 import { getRocketInventoryQuery } from "./my-component.generated";
 
 function MyComponent() {
-  const { data } = useQuery(getRocketInventoryQuery);
+  const { data } = useQuery(getRocketInventoryQuery, {
+    //    ^? GetRocketInventoryQuery | undefined;
+    variables: { year: 2025 },
+  });
 
-  // `data` is properly typed!
+  // ...
 }
 ```

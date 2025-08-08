@@ -507,6 +507,46 @@ export function NewRocketForm() {
 }
 ```
 
+### Subscriptions
+
+> For a more comprehensive guide on using subscriptions, see the [Subscriptions guide](../data/subscriptions).
+
+Like `useQuery`, you provide `useSubscription` a `TypedDocumentNode`. This adds the query type for the `data` property and ensures that `variables` are validated by TypeScript.
+
+```tsx
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useSubscription } from "@apollo/client/react";
+import {
+  GetLatestNewsSubscription,
+  GetLatestNewsSubscriptionVariables,
+} from "@/types/__generated__/graphql";
+
+const LATEST_NEWS: TypedDocumentNode<
+  GetLatestNewsSubscription,
+  GetLatestNewsSubscriptionVariables
+> = gql`
+  subscription GetLatestNews {
+    latestNews {
+      content
+    }
+  }
+`;
+
+export function LatestNews() {
+  const { data } = useSubscription(LATEST_NEWS);
+  //      ^? GetLatestNewsSubscription | undefined
+
+  return (
+    <div>
+      <h5>Latest News</h5>
+      <p>{data?.latestNews.content}</p>
+    </div>
+  );
+}
+```
+
+Variables are validated the same as `useQuery`. See [working with variables](#working-with-variables) to learn more about how required variables are validated.
+
 ## Data masking
 
 Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).

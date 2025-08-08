@@ -254,7 +254,7 @@ For more information, see [Handling operation errors](./error-handling/).
 
 When React renders a component that calls `useQuery`, Apollo Client automatically executes the corresponding query. But what if you want to execute a query in response to a user interaction, such as a user clicking a button?
 
-The [`useLazyQuery`](../api/react/useLazyQuery) hook is suited for manually executing queries. Unlike `useQuery`, when you use `useLazyQuery`, it does not immediately execute its associated query. Instead, it returns an execution function that you call whenever you need to execute the query.
+The [`useLazyQuery`](../api/react/useLazyQuery) hook is for manually executing queries. Unlike `useQuery`, when you use `useLazyQuery`, it doesn't immediately execute its associated query. Instead, it returns an execution function that you call whenever you need to execute the query.
 
 Here's an example:
 
@@ -283,7 +283,7 @@ The first item in `useLazyQuery`'s return tuple is the execution function, and t
 
 ### Re-rendering with new options
 
-Unlike `useQuery`, options provided to `useLazyQuery` that change on re-renders do not automatically execute the query. Instead, `useLazyQuery` waits to execute the query using the updated options until the execution function is called again.
+Unlike `useQuery`, options provided to `useLazyQuery` that change on re-renders do not automatically execute the query. Instead, `useLazyQuery` waits to execute the query with the updated options until you call the execution function again.
 
 The following is an example that changes the fetch policy depending on whether the user is online or offline:
 
@@ -306,7 +306,7 @@ function GetDogs({ isOnline }) {
 
 <Note>
 
-The changed options are immediately applied to the underlying `ObservableQuery` (accessible by the `observable` property) even though the query is not executed. Inspecting the options on the `observable` returns the updated options. This means the updated options will be used for other APIs (such as `refetch`), even before calling the execution function again.
+The changed options are immediately applied to the underlying `ObservableQuery` (accessible by the `observable` property) even though the query isn't executed. Inspecting the options on the `observable` returns the updated options. This means the updated options are used for other APIs (such as `refetch`), even before you call the execution function again.
 
 </Note>
 
@@ -314,7 +314,7 @@ The changed options are immediately applied to the underlying `ObservableQuery` 
 
 You provide `variables` to the execution function when executing the query.
 
-The following is an example that gets a specific dog's photo when clicking the "Get photo" button:
+The following example gets a specific dog's photo when you click the **Get photo** button:
 
 ```jsx
 function DogPhoto() {
@@ -336,7 +336,7 @@ function DogPhoto() {
 
 <Note>
 
-When using TypeScript, the `variables` option is required along with any required variables when the query provided to `useLazyQuery` contains required variables. If the options argument is not provided to the execution function, or the `variables` option is missing required variables, you see a TypeScript error.
+When using TypeScript, the `variables` option is required if the query provided to `useLazyQuery` contains required variables. If the options argument isn't provided to the execution function, or the `variables` option is missing required variables, TypeScript raises an error.
 
 </Note>
 
@@ -344,7 +344,7 @@ When using TypeScript, the `variables` option is required along with any require
 
 You change variables by calling the execution function with updated variables.
 
-The following is an example that gets the selected dog's photo when clicking the "Get photo" button.
+The following example gets the selected dog's photo when you click the **Get photo** button.
 
 ```jsx
 function DogPhoto() {
@@ -377,7 +377,7 @@ If you need to reference the currently executed query's variables, use the `vari
 
 <Tip>
 
-The `variables` property is empty until the execution function is called for the first time. Use the `called` property returned by `useLazyQuery` to determine if the execution function has been called at least once.
+The `variables` property is empty until you call the execution function for the first time. Use the `called` property returned by `useLazyQuery` to determine if you've called the execution function at least once.
 
 </Tip>
 
@@ -429,7 +429,7 @@ Use the `data`, `error`, and other properties returned by `useLazyQuery` to sync
 
 In cases where you don't need to keep your component in sync with query state, use `client.query()` directly because it won't unnecessarily render your component for data that you don't use.
 
-Using `useLazyQuery` in those situations should be considered an antipattern.
+Using `useLazyQuery` in these situations is an antipattern.
 
 <ExpansionPanel title="Example">
 
@@ -498,7 +498,7 @@ const handleClick = async () => {
 
 <Note>
 
-`data` might not contain any partial data and is instead set to `undefined`. This typically occurs when a [network error](./error-handling#network-errors) causes the query to fail because the error might not be associated with GraphQL execution.
+The `data` property might be `undefined` instead of containing partial data. This typically occurs when a [network error](./error-handling#network-errors) causes the query to fail, because the error isn't associated with GraphQL execution.
 
 </Note>
 
@@ -518,21 +518,21 @@ const handleClick = async () => {
 
 <Tip>
 
-`data` might be `undefined` in the event a [network error](./error-handling#network-errors) is raised. We recommend checking if `data` is `undefined` before attempting to use it in case an error occurs during query execution.
+`data` might be `undefined` if a [network error](./error-handling#network-errors) occurs. Check if `data` is `undefined` before you use it, in case an error occurs during query execution.
 
 </Tip>
 
 #### Retaining query results
 
-In-flight queries executed by `useLazyQuery` are aborted when the component unmounts or another query is started when calling the execution function, causing the promise to reject. In some cases, you might find this behavior undesirable and would prefer to let the query run to completion.
+Apollo Client aborts in-flight queries executed by `useLazyQuery` when the component unmounts or when you start another query by calling the execution function. This causes the promise to reject. In some cases, you might find this behavior undesirable and prefer to let the query run to completion.
 
 <Note>
 
-Apollo Client ensures the rejected promise doesn't throw an unhandled rejection error when you don't add a rejection handler to the promise. This however means that aborted errors are silent and might go unnoticed. If you want to be notified when the request is aborted, provide a rejection handler for the promise.
+Apollo Client ensures the rejected promise doesn't throw an unhandled rejection error when you don't add a rejection handler to the promise. However, this means that aborted errors are silent and might go unnoticed. If you want to be notified when the request is aborted, provide a rejection handler for the promise.
 
 </Note>
 
-The promise returned by the execution function includes a `.retain()` method. When called, it ensures the query continues running even when the component unmounts or a new query is started before the last one finished.
+The promise returned by the execution function includes a `.retain()` method. When you call it, it ensures the query continues running even if the component unmounts or you start a new query before the previous one finishes.
 
 ```jsx
 function GetDogs() {
@@ -553,7 +553,7 @@ function GetDogs() {
 }
 ```
 
-The `retain()` method returns the original promise. The previous example can be shortened to a single line:
+The `retain()` method returns the original promise, so you can shorten the previous example to a single line:
 
 ```ts
 const { data } = await getDogs().retain();

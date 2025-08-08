@@ -8,7 +8,7 @@ import type {
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
 import type {
   ApplyHKTImplementationWithDefault,
@@ -313,7 +313,7 @@ export type NormalizedExecutionResult<
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: NormalizedExecutionResult<Unmask<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }
@@ -329,7 +329,7 @@ export type MutationUpdaterFunction<
   TCache extends ApolloCache,
 > = (
   cache: TCache,
-  result: FormattedExecutionResult<Unmask<TData>>,
+  result: FormattedExecutionResult<Unmasked<TData>>,
   options: {
     context?: DefaultContext;
     variables?: TVariables;

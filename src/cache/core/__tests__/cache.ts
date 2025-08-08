@@ -2,7 +2,7 @@ import { expectTypeOf } from "expect-type";
 import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
 import { gql } from "graphql-tag";
 
-import type { OperationVariables, Unmask } from "@apollo/client";
+import type { OperationVariables, Unmasked } from "@apollo/client";
 import type { Cache } from "@apollo/client/cache";
 import { ApolloCache } from "@apollo/client/cache";
 
@@ -39,7 +39,7 @@ class TestCache extends ApolloCache {
   public read<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.ReadOptions<TData, TVariables>): Unmask<TData> | null {
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     return null;
   }
 

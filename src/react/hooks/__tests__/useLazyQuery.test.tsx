@@ -25,7 +25,7 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
@@ -3516,7 +3516,7 @@ describe("useLazyQuery Hook", () => {
       }
 
       const query: TypedDocumentNode<
-        Unmask<Query>,
+        Unmasked<Query>,
         Record<string, never>
       > = gql`
         query MaskedQuery {
@@ -3633,7 +3633,7 @@ describe("useLazyQuery Hook", () => {
       }
 
       const query: TypedDocumentNode<
-        Unmask<Query>,
+        Unmasked<Query>,
         Record<string, never>
       > = gql`
         query MaskedQuery {

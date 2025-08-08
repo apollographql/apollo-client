@@ -3,7 +3,7 @@ import { setup } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import type { MaybeMasked, Unmask } from "@apollo/client/masking";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 
 import type { ContainsFragmentsRefs } from "../internal/types.js";
@@ -26,7 +26,7 @@ type UnrelatedType = {
   };
 };
 // @ts-ignore
-type _TypeCacheWarmup = Unmask<UnrelatedType> | MaybeMasked<UnrelatedType>;
+type _TypeCacheWarmup = Unmasked<UnrelatedType> | MaybeMasked<UnrelatedType>;
 
 test("unmasks deeply nested fragments", (prefix) => {
   type UserFieldsFragment = {
@@ -61,11 +61,11 @@ test("unmasks deeply nested fragments", (prefix) => {
   type Source = UserFieldsFragment;
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    expectTypeOf<Unmask<Source>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
       __typename: "User";
       id: number;
       age: number;
@@ -116,11 +116,11 @@ test("unmasks deeply nested fragments", (prefix) => {
   type Source = UserFieldsFragment;
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    expectTypeOf<Unmask<Source>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
       __typename: "User";
       id: number;
       age: number;
@@ -184,11 +184,11 @@ test("unmasks deeply nested nullable fragments", (prefix) => {
   type Source = UserFieldsFragment;
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    expectTypeOf<Unmask<Source>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
       __typename: "User";
       id: number;
       age: number;
@@ -232,11 +232,11 @@ test("unmasks DeepPartial types", (prefix) => {
   type Source = DeepPartial<UserFieldsFragment>;
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    expectTypeOf<Unmask<Source>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
       __typename?: "User";
       id?: number;
       age?: number;
@@ -248,37 +248,37 @@ test("unmasks DeepPartial types", (prefix) => {
 
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
-    attest<{}, Unmask<{}>>();
+    attest<{}, Unmasked<{}>>();
   }).types([112, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
-    expectTypeOf<Unmask<{}>>().toEqualTypeOf<{}>();
+    expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
   });
 
   bench(prefix + "generic record type instantiations", () => {
-    attest<Record<string, any>, Unmask<Record<string, any>>>();
+    attest<Record<string, any>, Unmasked<Record<string, any>>>();
   }).types([116, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
-    expectTypeOf<Unmask<Record<string, any>>>().toEqualTypeOf<
+    expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
       Record<string, any>
     >();
   });
 
   bench(prefix + "unknown instantiations", () => {
-    attest<unknown, Unmask<unknown>>();
+    attest<unknown, Unmasked<unknown>>();
   }).types([48, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
-    expectTypeOf<Unmask<unknown>>().toBeUnknown();
+    expectTypeOf<Unmasked<unknown>>().toBeUnknown();
   });
 
   bench(prefix + "any instantiations", () => {
-    attest<any, Unmask<any>>();
+    attest<any, Unmasked<any>>();
   }).types([49, "instantiations"]);
 
   bench(prefix + "any functionality", () => {
-    expectTypeOf<Unmask<any>>().toBeAny();
+    expectTypeOf<Unmasked<any>>().toBeAny();
   });
 });
 
@@ -369,11 +369,11 @@ test("deals with overlapping array from parent fragment", (prefix) => {
   };
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as Unmask<Source>;
+    const x = {} as Unmasked<Source>;
     // some fields for hovering
     x.id;
     x.artists;
@@ -431,11 +431,11 @@ test("base type, multiple fragments on sub-types", (prefix) => {
   };
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as Unmask<Source>;
+    const x = {} as Unmasked<Source>;
     expectTypeOf(x).branded.toEqualTypeOf<{
       __typename: "Track";
       id: number;
@@ -491,11 +491,11 @@ test("leaves tuples alone", (prefix) => {
   }
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as Unmask<Source>;
+    const x = {} as Unmasked<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<{
       coords: [long: number, lat: number];
@@ -569,7 +569,7 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
   }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as Unmask<Source>;
+    const x = {} as Unmasked<Source>;
     const y = {} as ContainsFragmentsRefs<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<{
@@ -647,11 +647,11 @@ test("Unmasked handles branded primitive types", (prefix) => {
   } & { " $fragmentName"?: "UserFieldsFragment" };
 
   bench(prefix + "instantiations", () => {
-    return {} as Unmask<Source>;
+    return {} as Unmasked<Source>;
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as Unmask<Source>;
+    const x = {} as Unmasked<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<{
       __typename: "Foo";

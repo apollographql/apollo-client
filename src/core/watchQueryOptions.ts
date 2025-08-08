@@ -1,4 +1,4 @@
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 
 import type { ApolloClient } from "./ApolloClient.js";
@@ -61,7 +61,7 @@ export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
        * Indicate if the previous query result has been found fully in the cache.
        */
       complete: true;
-      previousData: Unmask<TData>;
+      previousData: Unmasked<TData>;
     }
   | {
       /**
@@ -69,7 +69,7 @@ export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {
        * Might have partial or missing data.
        */
       complete: false;
-      previousData: DeepPartial<Unmask<TData>> | undefined;
+      previousData: DeepPartial<Unmasked<TData>> | undefined;
     }
 );
 
@@ -83,9 +83,9 @@ export interface UpdateQueryMapFn<
      * argument will be removed in Apollo Client v5. Use `options.previousData`
      * instead for a more type-safe value.
      */
-    unsafePreviousData: DeepPartial<Unmask<TData>>,
+    unsafePreviousData: DeepPartial<Unmasked<TData>>,
     options: UpdateQueryOptions<TData, TVariables>
-  ): Unmask<TData> | void;
+  ): Unmasked<TData> | void;
 }
 
 export type SubscribeToMoreUpdateQueryFn<
@@ -99,11 +99,11 @@ export type SubscribeToMoreUpdateQueryFn<
      * argument will be removed in Apollo Client v5. Use `options.previousData`
      * instead for a more type-safe value.
      */
-    unsafePreviousData: DeepPartial<Unmask<TData>>,
+    unsafePreviousData: DeepPartial<Unmasked<TData>>,
     options: UpdateQueryOptions<TData, TVariables> & {
-      subscriptionData: { data: Unmask<TSubscriptionData> };
+      subscriptionData: { data: Unmasked<TSubscriptionData> };
     }
-  ): Unmask<TData> | void;
+  ): Unmasked<TData> | void;
 };
 
 export interface SubscribeToMoreFunction<

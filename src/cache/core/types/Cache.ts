@@ -4,7 +4,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 
 import type { ApolloCache } from "../cache.js";
 
@@ -64,7 +64,7 @@ export declare namespace Cache {
     variables?: TVariables;
 
     dataId?: string;
-    result: Unmask<TData>;
+    result: Unmasked<TData>;
 
     /**
      * Whether to notify query watchers.
@@ -264,7 +264,7 @@ export declare namespace Cache {
     /**
      * The data to write to the store.
      */
-    data: Unmask<TData>;
+    data: Unmasked<TData>;
     /**
      * Whether to notify query watchers.
      * @defaultValue true
@@ -312,7 +312,7 @@ export declare namespace Cache {
     /**
      * The data to write to the store.
      */
-    data: Unmask<TData>;
+    data: Unmasked<TData>;
     /**
      * Whether to notify query watchers.
      * @defaultValue true

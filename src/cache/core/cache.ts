@@ -12,7 +12,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import type { FragmentType, Unmask } from "@apollo/client/masking";
+import type { FragmentType, Unmasked } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -103,7 +103,7 @@ export abstract class ApolloCache {
   public abstract read<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.ReadOptions<TData, TVariables>): Unmask<TData> | null;
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -258,7 +258,7 @@ export abstract class ApolloCache {
     id,
     optimistic,
     returnPartialData,
-  }: Cache.ReadQueryOptions<TData, TVariables>): Unmask<TData> | null;
+  }: Cache.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
   /**
    * {@inheritDoc @apollo/client!ApolloCache#readQuery:member(1)}
    */
@@ -272,14 +272,14 @@ export abstract class ApolloCache {
      * instead of passing it as a separate option.
      */
     optimistic: boolean
-  ): Unmask<TData> | null;
+  ): Unmasked<TData> | null;
   public readQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmask<TData> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       rootId: options.id || "ROOT_QUERY",
@@ -293,7 +293,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloCache.WatchFragmentResult<Unmask<TData>>> {
+  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>> {
     const {
       fragment,
       fragmentName,
@@ -365,7 +365,7 @@ export abstract class ApolloCache {
             data,
             dataState: diff.complete ? "complete" : "partial",
             complete: !!diff.complete,
-          } as ApolloCache.WatchFragmentResult<Unmask<TData>>;
+          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
 
           if (diff.missing) {
             result.missing = diff.missing.missing;
@@ -401,7 +401,7 @@ export abstract class ApolloCache {
     id,
     optimistic,
     returnPartialData,
-  }: Cache.ReadFragmentOptions<TData, TVariables>): Unmask<TData> | null;
+  }: Cache.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -412,14 +412,14 @@ export abstract class ApolloCache {
      * instead of passing it as a separate option.
      */
     optimistic: boolean
-  ): Unmask<TData> | null;
+  ): Unmasked<TData> | null;
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmask<TData> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
@@ -503,8 +503,8 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
-    update: (data: Unmask<TData> | null) => Unmask<TData> | null | void
-  ): Unmask<TData> | null {
+    update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
+  ): Unmasked<TData> | null {
     return this.batch({
       update(cache) {
         const value = cache.readQuery<TData, TVariables>(options);
@@ -521,8 +521,8 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
-    update: (data: Unmask<TData> | null) => Unmask<TData> | null | void
-  ): Unmask<TData> | null {
+    update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
+  ): Unmasked<TData> | null {
     return this.batch({
       update(cache) {
         const value = cache.readFragment<TData, TVariables>(options);

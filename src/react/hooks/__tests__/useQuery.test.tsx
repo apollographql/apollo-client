@@ -37,7 +37,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
   useLazyQuery,
@@ -11195,7 +11195,7 @@ describe("useQuery Hook", () => {
 
       // We have to use Unmasked here since the default is to preserve types
       const query: TypedDocumentNode<
-        Unmask<Query>,
+        Unmasked<Query>,
         Record<string, never>
       > = gql`
         query MaskedQuery {
@@ -11235,7 +11235,7 @@ describe("useQuery Hook", () => {
 
       const renderStream =
         createRenderStream<
-          useQuery.Result<Unmask<Query>, Record<string, never>>
+          useQuery.Result<Unmasked<Query>, Record<string, never>>
         >();
 
       function App() {
@@ -11292,7 +11292,7 @@ describe("useQuery Hook", () => {
       }
 
       const query: TypedDocumentNode<
-        Unmask<Query>,
+        Unmasked<Query>,
         Record<string, never>
       > = gql`
         query MaskedQuery {
@@ -11331,7 +11331,7 @@ describe("useQuery Hook", () => {
 
       const renderStream =
         createRenderStream<
-          useQuery.Result<Unmask<Query>, Record<string, never>>
+          useQuery.Result<Unmasked<Query>, Record<string, never>>
         >();
 
       function App() {

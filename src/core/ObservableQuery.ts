@@ -12,7 +12,7 @@ import { BehaviorSubject, Observable, share, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
-import type { MaybeMasked, Unmask } from "@apollo/client/masking";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -173,12 +173,12 @@ export declare namespace ObservableQuery {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
     context?: DefaultContext;
     updateQuery?: (
-      previousQueryResult: Unmask<TData>,
+      previousQueryResult: Unmasked<TData>,
       options: {
-        fetchMoreResult: Unmask<TFetchData>;
+        fetchMoreResult: Unmasked<TFetchData>;
         variables: TFetchVars;
       }
-    ) => Unmask<TData>;
+    ) => Unmasked<TData>;
   };
 
   export interface SubscribeToMoreOptions<
@@ -924,7 +924,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.writeQuery({
                   query: combinedOptions.query,
                   variables: combinedOptions.variables,
-                  data: fetchMoreResult.data as Unmask<any>,
+                  data: fetchMoreResult.data as Unmasked<any>,
                 });
               }
             },
@@ -951,8 +951,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
           const lastResult = this.getCurrentResult();
-          const data = updateQuery!(lastResult.data as Unmask<TData>, {
-            fetchMoreResult: fetchMoreResult.data as Unmask<TFetchData>,
+          const data = updateQuery!(lastResult.data as Unmasked<TData>, {
+            fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
           // was reportResult
@@ -1039,7 +1039,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             this.updateQuery((previous, updateOptions) =>
               updateQuery(previous, {
                 subscriptionData: subscriptionData as {
-                  data: Unmask<TSubscriptionData>;
+                  data: Unmasked<TSubscriptionData>;
                 },
                 ...updateOptions,
               })
@@ -1121,7 +1121,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { result, complete } = this.getCacheDiff({ optimistic: false });
 
     const newResult = mapFn(
-      result! as DeepPartial<Unmask<TData>>,
+      result! as DeepPartial<Unmasked<TData>>,
       {
         variables: this.variables,
         complete: !!complete,

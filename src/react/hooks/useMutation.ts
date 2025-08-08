@@ -17,7 +17,7 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  Unmask,
+  Unmasked,
 } from "@apollo/client";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { NoInfer, Prettify } from "@apollo/client/utilities/internal";
@@ -45,11 +45,11 @@ export declare namespace useMutation {
   > {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
     optimisticResponse?:
-      | Unmask<NoInfer<TData>>
+      | Unmasked<NoInfer<TData>>
       | ((
           vars: TVariables,
           { IGNORE }: { IGNORE: IgnoreModifier }
-        ) => Unmask<NoInfer<TData>> | IgnoreModifier);
+        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
     updateQueries?: MutationQueryReducersMap<TData>;
@@ -57,7 +57,7 @@ export declare namespace useMutation {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
     refetchQueries?:
       | ((
-          result: NormalizedExecutionResult<Unmask<TData>>
+          result: NormalizedExecutionResult<Unmasked<TData>>
         ) => InternalRefetchQueriesInclude)
       | InternalRefetchQueriesInclude;
 

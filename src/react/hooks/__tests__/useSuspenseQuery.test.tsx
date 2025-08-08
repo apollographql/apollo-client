@@ -37,7 +37,7 @@ import {
   Defer20220824Handler,
   NotImplementedHandler,
 } from "@apollo/client/incremental";
-import type { Unmask } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
   skipToken,
@@ -245,7 +245,7 @@ function useErrorCase<TData extends ErrorCaseData>({
   networkError,
   graphQLErrors,
 }: {
-  data?: Unmask<TData>;
+  data?: Unmasked<TData>;
   networkError?: Error;
   graphQLErrors?: GraphQLError[];
 } = {}) {

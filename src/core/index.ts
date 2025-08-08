@@ -139,9 +139,7 @@ export {
 export type {
   DataMasking,
   FragmentType,
-  Mask,
   MaybeMasked,
-  Unmask,
   Unmasked,
 } from "@apollo/client/masking";
 

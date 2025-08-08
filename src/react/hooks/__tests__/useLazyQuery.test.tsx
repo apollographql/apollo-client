@@ -2227,6 +2227,37 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("in-flight request promises reject with an `AbortError` when a new request is started before it could finish`", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result } = renderHook(() => useLazyQuery(helloQuery), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [execute] = result.current;
+
+    let promise1: ReturnType<typeof execute>;
+    act(() => {
+      promise1 = execute();
+    });
+    let promise2: ReturnType<typeof execute>;
+    act(() => {
+      promise2 = execute();
+    });
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+
+    await expect(promise1!).rejects.toStrictEqual(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
+    await expect(promise2!).resolves.toStrictEqual({
+      data: { hello: "Greetings" },
+    });
+  });
+
   it("in-flight request promises reject with an `AbortError` when component unmounts`", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });

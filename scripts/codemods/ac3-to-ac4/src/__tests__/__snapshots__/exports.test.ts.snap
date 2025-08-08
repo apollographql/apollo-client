@@ -276,7 +276,7 @@ exports[`all exports > @apollo/client 1`] = `
 +type _Test_GraphQLRequest = ApolloLink.Request<TVariables>;
 +type _Test_Operation = ApolloLink.Operation;
 +type _Test_SingleExecutionResult = FormattedExecutionResult<TData, TContext, TExtensions>;
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 +type _Test_NextLink = ApolloLink.ForwardFunction;
 +type _Test_RequestHandler = ApolloLink.RequestHandler;
  type _Test_ServerParseError = ServerParseError;
@@ -622,7 +622,7 @@ exports[`all exports > @apollo/client/core 1`] = `
 +type _Test_GraphQLRequest = ApolloLink.Request<TVariables>;
 +type _Test_Operation = ApolloLink.Operation;
 +type _Test_SingleExecutionResult = FormattedExecutionResult<TData, TContext, TExtensions>;
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 +type _Test_NextLink = ApolloLink.ForwardFunction;
 +type _Test_RequestHandler = ApolloLink.RequestHandler;
  type _Test_ServerParseError = ServerParseError;
@@ -766,7 +766,7 @@ exports[`all exports > @apollo/client/link/core 1`] = `
 +type _Test_GraphQLRequest = ApolloLink.Request<TVariables>;
 +type _Test_Operation = ApolloLink.Operation;
 +type _Test_SingleExecutionResult = FormattedExecutionResult<TData, TContext, TExtensions>;
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 +type _Test_NextLink = ApolloLink.ForwardFunction;
 +type _Test_RequestHandler = ApolloLink.RequestHandler;
 \\ No newline at end of file
@@ -1341,7 +1341,7 @@ exports[`all exports > @apollo/client/testing 1`] = `
 -  withLogSpy
 +  withLogSpy,
  } from "@apollo/client/testing";
-+import type { wait } from "@apollo/client/testing/internal";
++import { wait } from "@apollo/client/testing/internal";
 +import { MockedProvider, MockedProviderProps } from "@apollo/client/testing/react";
  type _Test_MockedProviderProps = MockedProviderProps<TSerializedCache>;
  class _Test_MockedProvider extends MockedProvider {}
@@ -1388,7 +1388,7 @@ exports[`all exports > @apollo/client/testing/core 1`] = `
 +  withLogSpy,
 +} from "@apollo/client/testing";
 +
-+import type { wait } from "@apollo/client/testing/internal";
++import { wait } from "@apollo/client/testing/internal";
 +type _Test_MockedResponse = MockLink.MockedResponse<TData, TVariables>;
 +type _Test_MockLinkOptions = MockLink.Options;
 +type _Test_ResultFunction = MockLink.ResultFunction<T, V>;
@@ -2024,7 +2024,7 @@ exports[`individual exports > @apollo/client > FetchResult 1`] = `
 -type _Test_FetchResult = FetchResult<TData, TContext, TExtensions>;
 \\ No newline at end of file
 +import { ApolloLink } from "@apollo/client";
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 \\ No newline at end of file
 "
 `;
@@ -4779,7 +4779,7 @@ exports[`individual exports > @apollo/client/core > FetchResult 1`] = `
 -type _Test_FetchResult = FetchResult<TData, TContext, TExtensions>;
 \\ No newline at end of file
 +import { ApolloLink } from "@apollo/client";
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 \\ No newline at end of file
 "
 `;
@@ -6578,7 +6578,7 @@ exports[`individual exports > @apollo/client/link/core > FetchResult 1`] = `
 -type _Test_FetchResult = FetchResult<TData, TContext, TExtensions>;
 \\ No newline at end of file
 +import { ApolloLink } from "@apollo/client/link";
-+type _Test_FetchResult = ApolloLink.Result<TData, TContext, TExtensions>;
++type _Test_FetchResult = ApolloLink.Result<TData, TExtensions>;
 \\ No newline at end of file
 "
 `;
@@ -9071,7 +9071,7 @@ exports[`individual exports > @apollo/client/testing > wait 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { wait } from "@apollo/client/testing";
-+import type { wait } from "@apollo/client/testing/internal";
++import { wait } from "@apollo/client/testing/internal";
  wait(ms)
 \\ No newline at end of file
 "
@@ -9259,7 +9259,7 @@ exports[`individual exports > @apollo/client/testing/core > wait 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { wait } from "@apollo/client/testing/core";
-+import type { wait } from "@apollo/client/testing/internal";
++import { wait } from "@apollo/client/testing/internal";
  wait(ms)
 \\ No newline at end of file
 "

@@ -606,7 +606,12 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     // move into `ApolloLink` type namespace
-    { from: "FetchResult", to: "Result" },
+    {
+      from: "FetchResult",
+      to: "Result",
+      // FetchResult<TData, TContext, TExtensions> -> ApolloLink.Result<TData, TExtensions>
+      postProcess: reorderGenerics([0, 2]),
+    },
     { from: "GraphQLRequest", to: "Request" },
     { from: "Operation" },
     { from: "RequestHandler" },

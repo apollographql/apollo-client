@@ -1,16 +1,14 @@
 import type { TypeOverrides } from "@apollo/client";
 import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities/internal";
 
-import type { GraphQLCodegenDataMasking } from "./GraphQLCodegenDataMasking.js";
-
-type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
+import type { PreserveTypes } from "./PreserveTypes.js";
 
 export interface DataMasking {}
 
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",
-  DefaultImplementation,
+  PreserveTypes.Implementation,
   TData
 >;
 
@@ -20,7 +18,7 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
 export type IsMasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "IsMasked",
-  DefaultImplementation,
+  PreserveTypes.Implementation,
   TData
 >;
 
@@ -31,7 +29,7 @@ export type IsMasked<TData> = ApplyHKTImplementationWithDefault<
 export type Mask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Mask",
-  DefaultImplementation,
+  PreserveTypes.Implementation,
   TData
 >;
 
@@ -41,7 +39,7 @@ export type Mask<TData> = ApplyHKTImplementationWithDefault<
 export type Unmask<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "Unmask",
-  DefaultImplementation,
+  PreserveTypes.Implementation,
   TData
 >;
 

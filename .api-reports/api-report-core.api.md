@@ -53,11 +53,13 @@ import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import { IsMasked } from '@apollo/client/masking';
 import { isReference } from '@apollo/client/utilities';
 import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
 import { makeVar } from '@apollo/client/cache';
+import { Mask } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
@@ -533,6 +535,8 @@ export namespace InternalTypes {
     export type { NextFetchPolicyContext, QueryManager };
 }
 
+export { IsMasked }
+
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
@@ -543,6 +547,8 @@ export { LinkError }
 export { LocalStateError }
 
 export { makeVar }
+
+export { Mask }
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {

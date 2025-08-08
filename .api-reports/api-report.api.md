@@ -1444,7 +1444,7 @@ const _invalidateModifier: unique symbol;
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
-type IsMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMasked", PreserveTypes.Implementation, TData>;
+export type IsMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "IsMasked", PreserveTypes.Implementation, TData>;
 
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
@@ -1625,7 +1625,7 @@ export class LocalStateError extends Error {
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
 // @public
-type Mask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
+export type Mask<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Mask", PreserveTypes.Implementation, TData>;
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
@@ -1648,9 +1648,6 @@ interface MaskOperationOptions<TData> {
     fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-// Warning: (ae-forgotten-export) The symbol "IsMasked" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "Mask" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export type MaybeMasked<TData> = true extends IsMasked<TData> ? Mask<TData> : Unmask<TData>;
 

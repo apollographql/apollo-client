@@ -1,5 +1,4 @@
 import type { Transform } from "jscodeshift";
-import type * as j from "jscodeshift";
 
 import { renames } from "./renames.js";
 import type { ImportKind } from "./types.js";
@@ -41,9 +40,5 @@ const transform: Transform = function transform(file, api) {
   }
   return modified ? source.toSource() : undefined;
 };
-
-export function getLocalName(spec: j.ImportSpecifier): string {
-  return "" + (spec.local?.name || spec.imported.name);
-}
 
 export default transform;

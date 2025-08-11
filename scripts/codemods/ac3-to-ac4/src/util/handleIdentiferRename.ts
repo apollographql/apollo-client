@@ -1,6 +1,7 @@
 import assert from "assert";
 
-import { getLocalName } from "../imports.js";
+import type * as j from "jscodeshift";
+
 import type { IdentifierRename } from "../renames.js";
 import type { UtilContext } from "../types.js";
 
@@ -154,4 +155,8 @@ export function handleIdentiferRename({
       }
     }
   );
+}
+
+function getLocalName(spec: j.ImportSpecifier): string {
+  return "" + (spec.local?.name || spec.imported.name);
 }

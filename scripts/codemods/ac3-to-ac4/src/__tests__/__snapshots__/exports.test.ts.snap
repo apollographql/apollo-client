@@ -90,58 +90,46 @@ exports[`all exports > @apollo/client 1`] = `
    HttpLink,
    rewriteURIForGET,
 -  ApolloContextValue,
-+  Defer20220824Handler,
-+  Incremental,
-+  FormattedExecutionResult,
-+} from "@apollo/client";
-+
-+import {
-   ApolloProvider,
+-  ApolloProvider,
    ApolloConsumer,
-   getApolloContext,
+-  getApolloContext,
    resetApolloContext,
--  IDocumentDefinition,
+   IDocumentDefinition,
    DocumentType,
    operationName,
    parser,
 -  PreloadQueryOptions,
 -  PreloadQueryFetchPolicy,
 -  PreloadQueryFunction,
-   createQueryPreloader,
-   useQuery,
+-  createQueryPreloader,
+-  useQuery,
 -  UseSuspenseQueryResult,
-   useSuspenseQuery,
+-  useSuspenseQuery,
 -  UseBackgroundQueryResult,
-   useBackgroundQuery,
+-  useBackgroundQuery,
 -  UseSuspenseFragmentResult,
 -  UseSuspenseFragmentOptions,
-   useSuspenseFragment,
+-  useSuspenseFragment,
 -  LoadQueryFunction,
 -  UseLoadableQueryResult,
-   useLoadableQuery,
+-  useLoadableQuery,
 -  UseQueryRefHandlersResult,
-   useQueryRefHandlers,
+-  useQueryRefHandlers,
 -  UseReadQueryResult,
-   useReadQuery,
-   skipToken,
+-  useReadQuery,
+-  skipToken,
 -  SkipToken,
-   useApolloClient,
-   useLazyQuery,
-   useMutation,
-   useSubscription,
-   useReactiveVar,
-   useFragment,
+-  useApolloClient,
+-  useLazyQuery,
+-  useMutation,
+-  useSubscription,
+-  useReactiveVar,
+-  useFragment,
 -  UseFragmentOptions,
 -  UseFragmentResult,
 -  QueryReference,
-+  ApolloContextValue,
-+  IDocumentDefinition,
-+  PreloadQueryOptions,
-+  PreloadQueryFetchPolicy,
-+  PreloadQueryFunction,
-+  SkipToken,
-   QueryRef,
-   PreloadedQueryRef,
+-  QueryRef,
+-  PreloadedQueryRef,
 -  Context,
    CommonOptions,
    BaseQueryOptions,
@@ -167,7 +155,7 @@ exports[`all exports > @apollo/client 1`] = `
    BaseMutationOptions,
 -  MutationFunctionOptions,
 -  MutationResult,
-   MutationFunction,
+-  MutationFunction,
 -  MutationHookOptions,
    MutationDataOptions,
 -  MutationTuple,
@@ -176,18 +164,48 @@ exports[`all exports > @apollo/client 1`] = `
 -  BaseSubscriptionOptions,
 -  SubscriptionResult,
 -  SubscriptionHookOptions,
-   SubscriptionDataOptions,
+-  SubscriptionDataOptions,
    SubscriptionCurrentObservable,
 -  VariablesOption,
 -  NoInfer
--} from "@apollo/client";
++  Defer20220824Handler,
++  Incremental,
++  FormattedExecutionResult,
+ } from "@apollo/client";
 -type _Test_ApolloClientOptions = ApolloClientOptions<TCacheShape>;
 -type _Test_DefaultOptions = DefaultOptions;
-+  @apollo/client,
++
++import {
++  ApolloProvider,
++  createQueryPreloader,
++  getApolloContext,
++  skipToken,
++  useApolloClient,
++  useBackgroundQuery,
++  useFragment,
++  useLazyQuery,
++  useLoadableQuery,
++  useMutation,
++  useQuery,
++  useQueryRefHandlers,
++  useReactiveVar,
++  useReadQuery,
++  useSubscription,
++  useSuspenseFragment,
++  useSuspenseQuery,
++  ApolloContextValue,
++  MutationFunction,
++  PreloadedQueryRef,
++  PreloadQueryFetchPolicy,
++  PreloadQueryFunction,
++  PreloadQueryOptions,
++  QueryRef,
++  SkipToken,
++  SubscriptionDataOptions,
 +} from "@apollo/client/react";
 +
-+import type { NoInfer } from "@apollo/client/utilities/internal";
 +import type { VariablesOption } from "@apollo/client/utilities/internal";
++import type { NoInfer } from "@apollo/client/utilities/internal";
 +import type { QueryRef } from "@apollo/client/react";
 +type _Test_ApolloClientOptions = ApolloClient.Options<TCacheShape>;
 +type _Test_DefaultOptions = ApolloClient.DefaultOptions;
@@ -327,7 +345,7 @@ exports[`all exports > @apollo/client 1`] = `
  type _Test_QueryRef = QueryRef<TData, TVariables>;
  type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;
 -type _Test_Context = Context;
-+type _Test_Context = @apollo/client.DefaultContext;
++type _Test_Context = DefaultContext;
  type _Test_CommonOptions = CommonOptions<TOptions>;
  type _Test_BaseQueryOptions = BaseQueryOptions<TVariables, TData>;
 -type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
@@ -940,6 +958,18 @@ exports[`all exports > @apollo/client/link/ws 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import {
+-  WebSocketLink,
+-  WebSocketParams
+-} from "@apollo/client/link/ws";
++import { WebSocketLink } from "@apollo/client/link/ws";
+ class _Test_WebSocketLink extends WebSocketLink {}
+ const _test_WebSocketLink = new WebSocketLink(paramsOrClient)
+-type _Test_WebSocketParams = WebSocketParams;
+\\ No newline at end of file
++type _Test_WebSocketParams = WebSocketLink.Configuration;
+\\ No newline at end of file
 "
 `;
 
@@ -1026,10 +1056,10 @@ exports[`all exports > @apollo/client/react 1`] = `
    SubscriptionCurrentObservable,
 -  VariablesOption,
 -  NoInfer
-+  @apollo/client,
  } from "@apollo/client/react";
-+import type { NoInfer } from "@apollo/client/utilities/internal";
++import type { DefaultContext } from "@apollo/client";
 +import type { VariablesOption } from "@apollo/client/utilities/internal";
++import type { NoInfer } from "@apollo/client/utilities/internal";
  type _Test_ApolloContextValue = ApolloContextValue;
  const _Test_ApolloProvider = ApolloProvider;
  const _Test_ApolloConsumer = ApolloConsumer;
@@ -1078,7 +1108,7 @@ exports[`all exports > @apollo/client/react 1`] = `
  type _Test_QueryRef = QueryRef<TData, TVariables>;
  type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables>;
 -type _Test_Context = Context;
-+type _Test_Context = @apollo/client.DefaultContext;
++type _Test_Context = DefaultContext;
  type _Test_CommonOptions = CommonOptions<TOptions>;
  type _Test_BaseQueryOptions = BaseQueryOptions<TVariables, TData>;
 -type _Test_QueryFunctionOptions = QueryFunctionOptions<TData, TVariables>;
@@ -1284,8 +1314,8 @@ exports[`all exports > @apollo/client/react/internal 1`] = `
 -  HookWrappers
 +  HookWrappers,
  } from "@apollo/client/react/internal";
-+import type { PreloadedQueryRef } from "@apollo/client/react";
 +import type { QueryRef } from "@apollo/client/react";
++import type { PreloadedQueryRef } from "@apollo/client/react";
 +import type { QueryRef } from "@apollo/client/react";
  getSuspenseCache(client)
  type _Test_CacheKey = CacheKey;
@@ -1331,17 +1361,14 @@ exports[`all exports > @apollo/client/testing 1`] = `
    mockSingleLink,
    MockSubscriptionLink,
    mockObservableLink,
-   createMockClient,
-   subscribeAndCount,
-   itAsync,
--  wait,
+@@  @@
+   wait,
    tick,
    withErrorSpy,
    withWarningSpy,
 -  withLogSpy
 +  withLogSpy,
  } from "@apollo/client/testing";
-+import { wait } from "@apollo/client/testing/internal";
 +import { MockedProvider, MockedProviderProps } from "@apollo/client/testing/react";
  type _Test_MockedProviderProps = MockedProviderProps<TSerializedCache>;
  class _Test_MockedProvider extends MockedProvider {}
@@ -1373,10 +1400,8 @@ exports[`all exports > @apollo/client/testing/core 1`] = `
    mockSingleLink,
    MockSubscriptionLink,
    mockObservableLink,
-   createMockClient,
-   subscribeAndCount,
-   itAsync,
--  wait,
+@@  @@
+   wait,
    tick,
    withErrorSpy,
    withWarningSpy,
@@ -1387,8 +1412,6 @@ exports[`all exports > @apollo/client/testing/core 1`] = `
 -type _Test_ResultFunction = ResultFunction<T, V>;
 +  withLogSpy,
 +} from "@apollo/client/testing";
-+
-+import { wait } from "@apollo/client/testing/internal";
 +type _Test_MockedResponse = MockLink.MockedResponse<TData, TVariables>;
 +type _Test_MockLinkOptions = MockLink.Options;
 +type _Test_ResultFunction = MockLink.ResultFunction<T, V>;
@@ -1534,14 +1557,13 @@ exports[`all exports > @apollo/client/utilities 1`] = `
    mergeIncrementalData,
 -  IsStrictlyAny
 +  IsStrictlyAny,
-+  __DEV__,
  } from "@apollo/client/utilities";
 -const _Test_DEV = DEV;
 +
 +import {
++  argumentsObjectFromField,
 +  AutoCleanedStrongCache,
 +  AutoCleanedWeakCache,
-+  argumentsObjectFromField,
 +  canUseDOM,
 +  checkDocument,
 +  cloneDeep,
@@ -1551,10 +1573,10 @@ exports[`all exports > @apollo/client/utilities 1`] = `
 +  createRejectedPromise,
 +  DeepMerger,
 +  getDefaultValues,
-+  getFragmentFromSelection,
-+  getFragmentQueryDocument,
 +  getFragmentDefinition,
 +  getFragmentDefinitions,
++  getFragmentFromSelection,
++  getFragmentQueryDocument,
 +  getGraphQLErrorsFromResult,
 +  getOperationDefinition,
 +  getOperationName,
@@ -1650,11 +1672,6 @@ exports[`individual exports > @apollo/client > ApolloConsumer 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { ApolloConsumer } from "@apollo/client";
-+import { ApolloConsumer } from "@apollo/client/react";
- const _Test_ApolloConsumer = ApolloConsumer;
-\\ No newline at end of file
 "
 `;
 
@@ -1766,11 +1783,6 @@ exports[`individual exports > @apollo/client > BaseMutationOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { BaseMutationOptions } from "@apollo/client";
-+import type { BaseMutationOptions } from "@apollo/client/react";
- type _Test_BaseMutationOptions = BaseMutationOptions<TData, TVariables, TContext, TCache>;
-\\ No newline at end of file
 "
 `;
 
@@ -1779,11 +1791,6 @@ exports[`individual exports > @apollo/client > BaseQueryOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { BaseQueryOptions } from "@apollo/client";
-+import type { BaseQueryOptions } from "@apollo/client/react";
- type _Test_BaseQueryOptions = BaseQueryOptions<TVariables, TData>;
-\\ No newline at end of file
 "
 `;
 
@@ -1823,11 +1830,6 @@ exports[`individual exports > @apollo/client > CommonOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { CommonOptions } from "@apollo/client";
-+import type { CommonOptions } from "@apollo/client/react";
- type _Test_CommonOptions = CommonOptions<TOptions>;
-\\ No newline at end of file
 "
 `;
 
@@ -1840,8 +1842,8 @@ exports[`individual exports > @apollo/client > Context 1`] = `
 -import { Context } from "@apollo/client";
 -type _Test_Context = Context;
 \\ No newline at end of file
-+import type { @apollo/client } from "@apollo/client/react";
-+type _Test_Context = @apollo/client.DefaultContext;
++import type { DefaultContext } from "@apollo/client";
++type _Test_Context = DefaultContext;
 \\ No newline at end of file
 "
 `;
@@ -1922,11 +1924,6 @@ exports[`individual exports > @apollo/client > DocumentType 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { DocumentType } from "@apollo/client";
-+import { DocumentType } from "@apollo/client/react";
- type _Test_DocumentType = DocumentType;
-\\ No newline at end of file
 "
 `;
 
@@ -2113,11 +2110,6 @@ exports[`individual exports > @apollo/client > IDocumentDefinition 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { IDocumentDefinition } from "@apollo/client";
-+import type { IDocumentDefinition } from "@apollo/client/react";
- type _Test_IDocumentDefinition = IDocumentDefinition;
-\\ No newline at end of file
 "
 `;
 
@@ -2389,11 +2381,6 @@ exports[`individual exports > @apollo/client > MutationDataOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { MutationDataOptions } from "@apollo/client";
-+import type { MutationDataOptions } from "@apollo/client/react";
- type _Test_MutationDataOptions = MutationDataOptions<TData, TVariables, TContext, TCache>;
-\\ No newline at end of file
 "
 `;
 
@@ -2598,11 +2585,6 @@ exports[`individual exports > @apollo/client > ObservableQueryFields 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { ObservableQueryFields } from "@apollo/client";
-+import type { ObservableQueryFields } from "@apollo/client/react";
- type _Test_ObservableQueryFields = ObservableQueryFields<TData, TVariables>;
-\\ No newline at end of file
 "
 `;
 
@@ -2779,11 +2761,6 @@ exports[`individual exports > @apollo/client > QueryDataOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { QueryDataOptions } from "@apollo/client";
-+import type { QueryDataOptions } from "@apollo/client/react";
- type _Test_QueryDataOptions = QueryDataOptions<TData, TVariables>;
-\\ No newline at end of file
 "
 `;
 
@@ -2822,11 +2799,6 @@ exports[`individual exports > @apollo/client > QueryLazyOptions 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { QueryLazyOptions } from "@apollo/client";
-+import type { QueryLazyOptions } from "@apollo/client/react";
- type _Test_QueryLazyOptions = QueryLazyOptions<TVariables>;
-\\ No newline at end of file
 "
 `;
 
@@ -2940,11 +2912,6 @@ exports[`individual exports > @apollo/client > RefetchQueriesFunction 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { RefetchQueriesFunction } from "@apollo/client";
-+import type { RefetchQueriesFunction } from "@apollo/client/react";
- type _Test_RefetchQueriesFunction = RefetchQueriesFunction;
-\\ No newline at end of file
 "
 `;
 
@@ -3137,11 +3104,6 @@ exports[`individual exports > @apollo/client > SubscriptionCurrentObservable 1`]
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { SubscriptionCurrentObservable } from "@apollo/client";
-+import type { SubscriptionCurrentObservable } from "@apollo/client/react";
- type _Test_SubscriptionCurrentObservable = SubscriptionCurrentObservable;
-\\ No newline at end of file
 "
 `;
 
@@ -3720,11 +3682,6 @@ exports[`individual exports > @apollo/client > operationName 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { operationName } from "@apollo/client";
-+import { operationName } from "@apollo/client/react";
- operationName(type)
-\\ No newline at end of file
 "
 `;
 
@@ -3741,11 +3698,6 @@ exports[`individual exports > @apollo/client > parser 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { parser } from "@apollo/client";
-+import { parser } from "@apollo/client/react";
- parser(document)
-\\ No newline at end of file
 "
 `;
 
@@ -3754,11 +3706,6 @@ exports[`individual exports > @apollo/client > resetApolloContext 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { resetApolloContext } from "@apollo/client";
-+import { resetApolloContext } from "@apollo/client/react";
- const _Test_resetApolloContext = resetApolloContext;
-\\ No newline at end of file
 "
 `;
 
@@ -7152,6 +7099,13 @@ exports[`individual exports > @apollo/client/link/ws > WebSocketParams 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
+@@  @@
+-import { WebSocketParams } from "@apollo/client/link/ws";
+-type _Test_WebSocketParams = WebSocketParams;
+\\ No newline at end of file
++import { WebSocketLink } from "@apollo/client/link/ws";
++type _Test_WebSocketParams = WebSocketLink.Configuration;
+\\ No newline at end of file
 "
 `;
 
@@ -7329,8 +7283,8 @@ exports[`individual exports > @apollo/client/react > Context 1`] = `
 -import { Context } from "@apollo/client/react";
 -type _Test_Context = Context;
 \\ No newline at end of file
-+import { @apollo/client } from "@apollo/client/react";
-+type _Test_Context = @apollo/client.DefaultContext;
++import type { DefaultContext } from "@apollo/client";
++type _Test_Context = DefaultContext;
 \\ No newline at end of file
 "
 `;
@@ -9069,11 +9023,6 @@ exports[`individual exports > @apollo/client/testing > wait 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { wait } from "@apollo/client/testing";
-+import { wait } from "@apollo/client/testing/internal";
- wait(ms)
-\\ No newline at end of file
 "
 `;
 
@@ -9259,7 +9208,7 @@ exports[`individual exports > @apollo/client/testing/core > wait 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { wait } from "@apollo/client/testing/core";
-+import { wait } from "@apollo/client/testing/internal";
++import { wait } from "@apollo/client/testing";
  wait(ms)
 \\ No newline at end of file
 "
@@ -9395,7 +9344,6 @@ exports[`individual exports > @apollo/client/utilities > DEV 1`] = `
 -import { DEV } from "@apollo/client/utilities";
 -const _Test_DEV = DEV;
 \\ No newline at end of file
-+import { __DEV__ } from "@apollo/client/utilities";
 +const _Test_DEV = __DEV__;
 \\ No newline at end of file
 "

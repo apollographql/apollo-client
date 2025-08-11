@@ -24,30 +24,72 @@ export declare namespace Removals {
    * Use the hooks exported from the `@apollo/client/react` package instead.
    */
   export type renderProp = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * Error handling has been overhauled as a whole.
+   */
+  export type errors = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * The Observable implementation of Apollo Client has been moved from `zen-observable` to `rxjs`.
+   */
+  export type rxjs = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export was an implementation detail of {{of}} and is no longer available.
+   */
+  export type implementationDetail = never;
+  /**
+   * @deprecated The utility `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * It was an implementation detail that is no longer necessary and has been removed without replacement.
+   */
+  export type utility = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * The testing utilities have moved into their own package, [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library).
+   */
+  export type testingLibrary = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export is considered internal and is no longer exposed.
+   */
+  export type internal = never;
 }
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"ApolloConsumer"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type }
  */
 export declare const ApolloConsumer: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"ApolloError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"ApolloError"} }
  */
 export declare const ApolloError: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"Concast"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"Concast"} }
+ *
+ * Instead of `Concast`, look into the `rxjs` [`BehaviorSubject`](https://rxjs.dev/api/index/class/BehaviorSubject) api.
  */
 export declare const Concast: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"DataProxy"} }
+ * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"DataProxy"} }
+ *
+ * You can find the types that were previously available in the `DataProxy` namespace either in the `ApolloClient` namespace or the `Cache` namespace.
  */
 export declare const DataProxy: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"DocumentType"} }
+ * @deprecated The `DocumentType` enum has been removed from Apollo Client 4.0, along with the `parser` API exported from `@apollo/client/react/parser`.
+ *
+ * This API was mostly an implementation detail and has been removed without replacement.
  */
 export declare const DocumentType: never;
 
@@ -57,17 +99,17 @@ export declare const DocumentType: never;
 export declare const Mutation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"ObservableSubscription"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"ObservableSubscription"} }
  */
 export declare const ObservableSubscription: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"Observer"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"Observer"} }
  */
 export declare const Observer: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"OperationBatcher"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"OperationBatcher", "of": "`BatchLink`"} }
  */
 export declare const OperationBatcher: never;
 
@@ -77,87 +119,91 @@ export declare const OperationBatcher: never;
 export declare const Query: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"RenderPromises"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"RenderPromises", "of": "`getMarkupFromTree`"} }
  */
 export declare const RenderPromises: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.renderProp:type }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"Subscription"} }
  */
 export declare const Subscription: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"addNonReactiveToNamedFragments"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"addNonReactiveToNamedFragments", "of": "the internal `QueryManager` class"} }
  */
 export declare const addNonReactiveToNamedFragments: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"asyncMap"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"asyncMap"} }
+ *
+ * Consider using the `rxjs` [`mergeMap`](https://rxjs.dev/api/operators/mergeMap) operator instead.
  */
 export declare const asyncMap: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"buildQueryFromSelectionSet"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"buildQueryFromSelectionSet"} }
  */
 export declare const buildQueryFromSelectionSet: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"canUseAsyncIteratorSymbol"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"canUseAsyncIteratorSymbol"} }
  */
 export declare const canUseAsyncIteratorSymbol: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"canUseLayoutEffect"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"canUseLayoutEffect"} }
  */
 export declare const canUseLayoutEffect: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"canUseSymbol"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"canUseSymbol"} }
  */
 export declare const canUseSymbol: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"canUseWeakMap"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"canUseWeakMap"} }
  */
 export declare const canUseWeakMap: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"canUseWeakSet"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"canUseWeakSet"} }
  */
 export declare const canUseWeakSet: never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"createMockClient"} }
+ *
+ * Please create an `ApolloClient` instance with a `MockLink` manually instead.
  */
 export declare const createMockClient: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"createSchemaFetch"} }
+ * {@inheritDoc @apollo/client/removals!Removals.testingLibrary:type {"name":"createSchemaFetch"} }
  */
 export declare const createSchemaFetch: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"createTestSchema"} }
+ * {@inheritDoc @apollo/client/removals!Removals.testingLibrary:type {"name":"createTestSchema"} }
  */
 export declare const createTestSchema: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"defaultCacheSizes"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"defaultCacheSizes"} }
  */
 export declare const defaultCacheSizes: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"fixObservableSubclass"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"fixObservableSubclass","of":"ObservableQuery"} }
  */
 export declare const fixObservableSubclass: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"fromError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"fromError"} }
  */
 export declare const fromError: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"fromPromise"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"fromPromise"} }
  */
 export declare const fromPromise: never;
 

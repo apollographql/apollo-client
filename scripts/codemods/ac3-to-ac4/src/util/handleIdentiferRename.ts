@@ -32,9 +32,21 @@ export function handleIdentiferRename({
         "This case is not supported yet: " + JSON.stringify(rename)
       );
 
+      if (
+        source.find(j.ImportSpecifier, (node) => node === specifierPath.value)
+          .length === 0
+      ) {
+        // if the specifier is not found in the source, it was already removed by a previous iteration
+        return;
+      }
+
       const specifier = specifierPath.value;
-      const localName = specifier.local?.name;
       const importedName = specifier.imported.name;
+      const localName =
+        specifier.local && specifier.local.name !== importedName ?
+          specifier.local.name
+        : undefined;
+
       const importDeclarations = j(specifierPath).closest(j.ImportDeclaration);
       const importDeclarationPath = importDeclarations.paths()[0];
       const importDeclaration = importDeclarationPath.value;
@@ -72,7 +84,7 @@ export function handleIdentiferRename({
       try {
         if (
           from.namespace === final.namespace &&
-          localName !== importedName &&
+          localName &&
           importedFrom === final.module
         ) {
           // simple case - we just need to rename the import, everything else stays the same
@@ -89,7 +101,8 @@ export function handleIdentiferRename({
             namespaceProp: final.identifier,
             context,
           });
-        } else if (renameFrom !== importAs) {
+          specifierPath.get("local").replace();
+        } else if (!localName) {
           renameGlobalIdentifier({
             identifierName: renameFrom,
             newName: importAs,
@@ -106,7 +119,7 @@ export function handleIdentiferRename({
         } else {
           const targetDeclaration = findImportDeclarationFor({
             description: final,
-            compatibleWith: importType,
+            compatibleWith: rename.importType === "type" ? "type" : importType,
             context,
           }).nodes()[0];
           // specifier should have been removed anyways, so we just reuse it in the existing position
@@ -114,13 +127,18 @@ export function handleIdentiferRename({
           specifierPath
             .get("imported")
             .replace(j.identifier(final.namespace || final.identifier));
-          specifierPath.get("local").replace(j.identifier(importAs));
 
           if (targetDeclaration !== specifierPath.parent) {
             // remove the specifier, we create a new one in a different import declaration
             specifierPath.replace();
             if (targetDeclaration) {
-              (targetDeclaration.specifiers ??= []).push(specifier);
+              if (
+                j(targetDeclaration)
+                  .find(j.ImportSpecifier, pick(specifier, "imported", "local"))
+                  .size() === 0
+              ) {
+                (targetDeclaration.specifiers ??= []).push(specifier);
+              }
             } else {
               importDeclarations.insertAfter(
                 j.importDeclaration(

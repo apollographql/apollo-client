@@ -186,6 +186,10 @@ exports[`all exports > @apollo/client 1`] = `
 +  useSubscription,
 +  useSuspenseFragment,
 +  useSuspenseQuery,
++} from "@apollo/client/react";
++
++import type {
++  QueryRef,
 +  ApolloContextValue,
 +  MutationFunction,
 +  PreloadedQueryRef,
@@ -197,9 +201,7 @@ exports[`all exports > @apollo/client 1`] = `
 +  SubscriptionDataOptions,
 +} from "@apollo/client/react";
 +
-+import type { VariablesOption } from "@apollo/client/utilities/internal";
-+import type { NoInfer } from "@apollo/client/utilities/internal";
-+import type { QueryRef } from "@apollo/client/react";
++import type { NoInfer, VariablesOption } from "@apollo/client/utilities/internal";
 +type _Test_ApolloClientOptions = ApolloClient.Options<TCacheShape>;
 +type _Test_DefaultOptions = ApolloClient.DefaultOptions;
  class _Test_ApolloClient extends ApolloClient<TCacheShape> {}
@@ -705,11 +707,15 @@ exports[`all exports > @apollo/client/link/core 1`] = `
 +} from "@apollo/client/link";
 +
 +import type { FormattedExecutionResult } from "graphql";
-+import type { Incremental } from "@apollo/client/incremental";
-+import type { Defer20220824Handler } from "@apollo/client/incremental";
-+import type { Defer20220824Handler } from "@apollo/client/incremental";
-+import type { Defer20220824Handler } from "@apollo/client/incremental";
-+import type { Defer20220824Handler } from "@apollo/client/incremental";
++
++import type {
++  Defer20220824Handler,
++  Defer20220824Handler,
++  Defer20220824Handler,
++  Defer20220824Handler,
++  Incremental,
++} from "@apollo/client/incremental";
++
  const _Test_empty = empty;
  const _Test_from = from;
  const _Test_split = split;
@@ -997,8 +1003,7 @@ exports[`all exports > @apollo/client/react 1`] = `
 -  NoInfer
  } from "@apollo/client/react";
 +import type { DefaultContext } from "@apollo/client";
-+import type { VariablesOption } from "@apollo/client/utilities/internal";
-+import type { NoInfer } from "@apollo/client/utilities/internal";
++import type { NoInfer, VariablesOption } from "@apollo/client/utilities/internal";
  type _Test_ApolloContextValue = ApolloContextValue;
  const _Test_ApolloProvider = ApolloProvider;
  const _Test_ApolloConsumer = ApolloConsumer;
@@ -1253,9 +1258,7 @@ exports[`all exports > @apollo/client/react/internal 1`] = `
 -  HookWrappers
 +  HookWrappers,
  } from "@apollo/client/react/internal";
-+import type { QueryRef } from "@apollo/client/react";
-+import type { PreloadedQueryRef } from "@apollo/client/react";
-+import type { QueryRef } from "@apollo/client/react";
++import type { QueryRef, PreloadedQueryRef, QueryRef } from "@apollo/client/react";
  getSuspenseCache(client)
  type _Test_CacheKey = CacheKey;
  type _Test_QueryKey = QueryKey;

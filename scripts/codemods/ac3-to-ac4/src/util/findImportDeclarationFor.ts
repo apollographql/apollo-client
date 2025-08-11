@@ -4,6 +4,14 @@ import type * as j from "jscodeshift/src/core.js";
 import type { IdentifierRename } from "../renames.js";
 import type { ImportKind, UtilContext } from "../types.js";
 
+const typeImportsFirst = (
+  a: j.ASTPath<namedTypes.ImportDeclaration>,
+  b: j.ASTPath<namedTypes.ImportDeclaration>
+) =>
+  a.value.importKind === "type" && b.value.importKind !== "type" ? -1
+  : a.value.importKind !== "type" && b.value.importKind === "type" ? 1
+  : 0;
+
 export function findImportDeclarationFor({
   description,
   compatibleWith = "type",
@@ -23,18 +31,24 @@ export function findImportDeclarationFor({
       j(node).find(j.ImportNamespaceSpecifier).size() > 0;
     return isValidImportKind && !hasNamespaceImport;
   };
-  const perfectMatch = source.find(
-    j.ImportDeclaration,
-    (node) => test(node) && description.module == "" + node.source.value
-  );
-  const alternativeMatches = source.find(
-    j.ImportDeclaration,
-    (node) =>
-      (test(node) &&
-        description.alternativeModules?.includes("" + node.source.value)) ||
-      false
-  );
-  return j(perfectMatch.paths().concat(...alternativeMatches.paths()));
+  const perfectMatch = source
+    .find(
+      j.ImportDeclaration,
+      (node) => test(node) && description.module == "" + node.source.value
+    )
+    .paths()
+    .sort(typeImportsFirst);
+  const alternativeMatches = source
+    .find(
+      j.ImportDeclaration,
+      (node) =>
+        (test(node) &&
+          description.alternativeModules?.includes("" + node.source.value)) ||
+        false
+    )
+    .paths()
+    .sort(typeImportsFirst);
+  return j(perfectMatch.concat(...alternativeMatches));
   /**
    * {
    * const moduleMatches =

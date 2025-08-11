@@ -1,8 +1,9 @@
 import type { API, FileInfo, Options, Transform } from "jscodeshift";
 
 import imports from "./imports.js";
+import links from "./links.js";
 
-export const codemods = { imports } satisfies Record<string, Transform>;
+export const codemods = { imports, links } satisfies Record<string, Transform>;
 
 export default async function transform(
   file: FileInfo,

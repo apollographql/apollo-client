@@ -2,7 +2,6 @@ import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
 import type { UtilContext } from "./types.js";
-import { callExpressionToNewExpression } from "./util/callExpressionToNewExpression.js";
 import { reorderGenericArguments } from "./util/reorderGenericArguments.js";
 // {
 //   // completely removed in AC4
@@ -562,23 +561,6 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-
-  ...[
-    // move into `ApolloLink` runtime namespace
-    { from: "concat" },
-    { from: "empty" },
-    { from: "from" },
-    { from: "split" },
-  ].map(
-    moveInto({
-      from: {
-        module: "@apollo/client/link",
-        alternativeModules: ["@apollo/client"],
-      },
-      to: { namespace: "ApolloLink" },
-      importType: "value",
-    })
-  ),
   ...[
     // move into `ApolloLink` type namespace
     {
@@ -727,45 +709,6 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  // Function to class transformations that require special handling
-  {
-    from: { module: "@apollo/client/link/error", identifier: "onError" },
-    to: { identifier: "ErrorLink" },
-    importType: "value",
-    postProcess: callExpressionToNewExpression(),
-  },
-  // {
-  //   from: { module: "@apollo/client/link/context", identifier: "setContext" },
-  //   to: { identifier: "SetContextLink" },
-  //   importType: "value",
-  //   // Note: setContext arguments are flipped compared to SetContextLink
-  //   // cannot codemod this reliably, so we leave it to the user
-  //   postProcess: callExpressionToNewExpression(),
-  // },
-  {
-    from: {
-      module: "@apollo/client/link/persisted-queries",
-      identifier: "createPersistedQueryLink",
-    },
-    to: { identifier: "PersistedQueryLink" },
-    importType: "value",
-    postProcess: callExpressionToNewExpression(),
-  },
-  {
-    from: { module: "@apollo/client/link/http", identifier: "createHttpLink" },
-    to: { identifier: "HttpLink" },
-    importType: "value",
-    postProcess: callExpressionToNewExpression(),
-  },
-  {
-    from: {
-      module: "@apollo/client/link/remove-typename",
-      identifier: "removeTypenameFromVariables",
-    },
-    to: { identifier: "RemoveTypenameFromVariablesLink" },
-    importType: "value",
-    postProcess: callExpressionToNewExpression(),
-  },
   // no direct 1:1 drop-in replacement
   // {
   //   from: { module: "@apollo/client/react/ssr", identifier: "renderToStringWithData" },

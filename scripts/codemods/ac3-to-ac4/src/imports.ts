@@ -13,7 +13,7 @@ declare module "ast-types" {
   }
 }
 
-const transform: Transform = function transform(file, api) {
+const importTransform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
   const context = { j, source };
@@ -41,4 +41,4 @@ const transform: Transform = function transform(file, api) {
   return modified ? source.toSource() : undefined;
 };
 
-export default transform;
+export default importTransform;

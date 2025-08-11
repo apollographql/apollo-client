@@ -57,14 +57,7 @@ exports[`all exports > @apollo/client 1`] = `
    MutationUpdaterFn,
    MutationUpdaterFunction,
 @@  @@
-   ApolloReducerConfig,
-   MergeInfo,
-   MergeTree,
-   ReadMergeModifyContext,
--  empty,
--  from,
--  split,
--  concat,
+   concat,
    execute,
    ApolloLink,
    DocumentNode,
@@ -258,18 +251,6 @@ exports[`all exports > @apollo/client 1`] = `
  type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;
  type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 @@  @@
- type _Test_ApolloReducerConfig = ApolloReducerConfig;
- type _Test_MergeInfo = MergeInfo;
- type _Test_MergeTree = MergeTree;
- type _Test_ReadMergeModifyContext = ReadMergeModifyContext;
--const _Test_empty = empty;
--const _Test_from = from;
--const _Test_split = split;
--const _Test_concat = concat;
-+const _Test_empty = ApolloLink.empty;
-+const _Test_from = ApolloLink.from;
-+const _Test_split = ApolloLink.split;
-+const _Test_concat = ApolloLink.concat;
  const _Test_execute = execute;
  class _Test_ApolloLink extends ApolloLink {}
  const _test_ApolloLink = new ApolloLink(request)
@@ -512,14 +493,7 @@ exports[`all exports > @apollo/client/core 1`] = `
    MutationUpdaterFn,
    MutationUpdaterFunction,
 @@  @@
-   ApolloReducerConfig,
-   MergeInfo,
-   MergeTree,
-   ReadMergeModifyContext,
--  empty,
--  from,
--  split,
--  concat,
+   concat,
    execute,
    ApolloLink,
    DocumentNode,
@@ -604,18 +578,6 @@ exports[`all exports > @apollo/client/core 1`] = `
  type _Test_MutationUpdaterFn = MutationUpdaterFn<T>;
  type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 @@  @@
- type _Test_ApolloReducerConfig = ApolloReducerConfig;
- type _Test_MergeInfo = MergeInfo;
- type _Test_MergeTree = MergeTree;
- type _Test_ReadMergeModifyContext = ReadMergeModifyContext;
--const _Test_empty = empty;
--const _Test_from = from;
--const _Test_split = split;
--const _Test_concat = concat;
-+const _Test_empty = ApolloLink.empty;
-+const _Test_from = ApolloLink.from;
-+const _Test_split = ApolloLink.split;
-+const _Test_concat = ApolloLink.concat;
  const _Test_execute = execute;
  class _Test_ApolloLink extends ApolloLink {}
  const _test_ApolloLink = new ApolloLink(request)
@@ -723,19 +685,15 @@ exports[`all exports > @apollo/client/link/core 1`] = `
 --- test.ts	original
 +++ test.ts	transformed
 @@  @@
--import {
--  empty,
--  from,
--  split,
--  concat,
--  execute,
--  ApolloLink,
--  DocumentNode,
+   concat,
+   execute,
+   ApolloLink,
+   DocumentNode,
 -  Path,
 -  ExecutionPatchInitialResult,
 -  IncrementalPayload,
 -  ExecutionPatchIncrementalResult,
--  ApolloPayloadResult,
+   ApolloPayloadResult,
 -  ExecutionPatchResult,
 -  GraphQLRequest,
 -  Operation,
@@ -744,21 +702,18 @@ exports[`all exports > @apollo/client/link/core 1`] = `
 -  NextLink,
 -  RequestHandler
 -} from "@apollo/client/link/core";
--const _Test_empty = empty;
--const _Test_from = from;
--const _Test_split = split;
--const _Test_concat = concat;
-+import { execute, ApolloLink, DocumentNode, ApolloPayloadResult } from "@apollo/client/link";
++} from "@apollo/client/link";
++
 +import type { FormattedExecutionResult } from "graphql";
 +import type { Incremental } from "@apollo/client/incremental";
 +import type { Defer20220824Handler } from "@apollo/client/incremental";
 +import type { Defer20220824Handler } from "@apollo/client/incremental";
 +import type { Defer20220824Handler } from "@apollo/client/incremental";
 +import type { Defer20220824Handler } from "@apollo/client/incremental";
-+const _Test_empty = ApolloLink.empty;
-+const _Test_from = ApolloLink.from;
-+const _Test_split = ApolloLink.split;
-+const _Test_concat = ApolloLink.concat;
+ const _Test_empty = empty;
+ const _Test_from = from;
+ const _Test_split = split;
+ const _Test_concat = concat;
  const _Test_execute = execute;
  class _Test_ApolloLink extends ApolloLink {}
  const _test_ApolloLink = new ApolloLink(request)
@@ -803,10 +758,9 @@ exports[`all exports > @apollo/client/link/error 1`] = `
 -  ErrorLink,
 -  ErrorHandler
 -} from "@apollo/client/link/error";
--onError(errorHandler)
++import { onError, ErrorLink } from "@apollo/client/link/error";
+ onError(errorHandler)
 -type _Test_ErrorResponse = ErrorResponse;
-+import { ErrorLink } from "@apollo/client/link/error";
-+new ErrorLink(errorHandler)
 +type _Test_ErrorResponse = ErrorLink.ErrorHandlerOptions;
  class _Test_ErrorLink extends ErrorLink {}
  const _test_ErrorLink = new ErrorLink(errorHandler)
@@ -830,11 +784,9 @@ exports[`all exports > @apollo/client/link/http 1`] = `
    serializeFetchParameter,
    HttpOptions,
 @@  @@
-   selectHttpOptionsAndBodyInternal,
-   checkFetcher,
    createSignalIfSupported,
    selectURI,
--  createHttpLink,
+   createHttpLink,
    HttpLink,
 -  rewriteURIForGET
 +  rewriteURIForGET,
@@ -844,17 +796,6 @@ exports[`all exports > @apollo/client/link/http 1`] = `
  parseAndCheckHttpResponse(operations)
  type _Test_ClientParseError = ClientParseError;
  const _Test_serializeFetchParameter = serializeFetchParameter;
-@@  @@
- selectHttpOptionsAndBodyInternal(operation, printer, configs)
- const _Test_checkFetcher = checkFetcher;
- const _Test_createSignalIfSupported = createSignalIfSupported;
- const _Test_selectURI = selectURI;
--const _Test_createHttpLink = createHttpLink;
-+const _Test_createHttpLink = HttpLink;
- class _Test_HttpLink extends HttpLink {}
- const _test_HttpLink = new HttpLink(options)
- rewriteURIForGET(chosenURI, body)
-\\ No newline at end of file
 "
 `;
 
@@ -870,14 +811,12 @@ exports[`all exports > @apollo/client/link/persisted-queries 1`] = `
 -  PersistedQueryLink,
 -  createPersistedQueryLink
 -} from "@apollo/client/link/persisted-queries";
-+import { VERSION, PersistedQueryLink } from "@apollo/client/link/persisted-queries";
++import { VERSION, PersistedQueryLink, createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
  const _Test_VERSION = VERSION;
 -type _Test_ErrorResponse = ErrorResponse;
 +type _Test_ErrorResponse = PersistedQueryLink.DisableFunctionOptions;
  const _Test_PersistedQueryLink = PersistedQueryLink;
--const _Test_createPersistedQueryLink = createPersistedQueryLink;
-\\ No newline at end of file
-+const _Test_createPersistedQueryLink = PersistedQueryLink;
+ const _Test_createPersistedQueryLink = createPersistedQueryLink;
 \\ No newline at end of file
 "
 `;
@@ -888,16 +827,16 @@ exports[`all exports > @apollo/client/link/remove-typename 1`] = `
 --- test.ts	original
 +++ test.ts	transformed
 @@  @@
--import {
+ import {
 -  RemoveTypenameFromVariablesOptions,
--  removeTypenameFromVariables,
+   removeTypenameFromVariables,
 -  KEEP
--} from "@apollo/client/link/remove-typename";
++  KEEP,
++  RemoveTypenameFromVariablesLink
+ } from "@apollo/client/link/remove-typename";
 -type _Test_RemoveTypenameFromVariablesOptions = RemoveTypenameFromVariablesOptions;
--removeTypenameFromVariables(options)
-+import { KEEP, RemoveTypenameFromVariablesLink } from "@apollo/client/link/remove-typename";
 +type _Test_RemoveTypenameFromVariablesOptions = RemoveTypenameFromVariablesLink.Options;
-+new RemoveTypenameFromVariablesLink(options)
+ removeTypenameFromVariables(options)
  const _Test_KEEP = KEEP;
 \\ No newline at end of file
 "
@@ -3459,13 +3398,6 @@ exports[`individual exports > @apollo/client > concat 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { concat } from "@apollo/client";
--const _Test_concat = concat;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_concat = ApolloLink.concat;
-\\ No newline at end of file
 "
 `;
 
@@ -3535,13 +3467,6 @@ exports[`individual exports > @apollo/client > empty 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { empty } from "@apollo/client";
--const _Test_empty = empty;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_empty = ApolloLink.empty;
-\\ No newline at end of file
 "
 `;
 
@@ -3574,13 +3499,6 @@ exports[`individual exports > @apollo/client > from 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { from } from "@apollo/client";
--const _Test_from = from;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_from = ApolloLink.from;
-\\ No newline at end of file
 "
 `;
 
@@ -3783,13 +3701,6 @@ exports[`individual exports > @apollo/client > split 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { split } from "@apollo/client";
--const _Test_split = split;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_split = ApolloLink.split;
-\\ No newline at end of file
 "
 `;
 
@@ -5849,10 +5760,8 @@ exports[`individual exports > @apollo/client/core > concat 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { concat } from "@apollo/client/core";
--const _Test_concat = concat;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_concat = ApolloLink.concat;
++import { concat } from "@apollo/client";
+ const _Test_concat = concat;
 \\ No newline at end of file
 "
 `;
@@ -5942,10 +5851,8 @@ exports[`individual exports > @apollo/client/core > empty 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { empty } from "@apollo/client/core";
--const _Test_empty = empty;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_empty = ApolloLink.empty;
++import { empty } from "@apollo/client";
+ const _Test_empty = empty;
 \\ No newline at end of file
 "
 `;
@@ -5996,10 +5903,8 @@ exports[`individual exports > @apollo/client/core > from 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { from } from "@apollo/client/core";
--const _Test_from = from;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_from = ApolloLink.from;
++import { from } from "@apollo/client";
+ const _Test_from = from;
 \\ No newline at end of file
 "
 `;
@@ -6230,10 +6135,8 @@ exports[`individual exports > @apollo/client/core > split 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { split } from "@apollo/client/core";
--const _Test_split = split;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client";
-+const _Test_split = ApolloLink.split;
++import { split } from "@apollo/client";
+ const _Test_split = split;
 \\ No newline at end of file
 "
 `;
@@ -6642,10 +6545,8 @@ exports[`individual exports > @apollo/client/link/core > concat 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { concat } from "@apollo/client/link/core";
--const _Test_concat = concat;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client/link";
-+const _Test_concat = ApolloLink.concat;
++import { concat } from "@apollo/client/link";
+ const _Test_concat = concat;
 \\ No newline at end of file
 "
 `;
@@ -6657,10 +6558,8 @@ exports[`individual exports > @apollo/client/link/core > empty 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { empty } from "@apollo/client/link/core";
--const _Test_empty = empty;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client/link";
-+const _Test_empty = ApolloLink.empty;
++import { empty } from "@apollo/client/link";
+ const _Test_empty = empty;
 \\ No newline at end of file
 "
 `;
@@ -6685,10 +6584,8 @@ exports[`individual exports > @apollo/client/link/core > from 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { from } from "@apollo/client/link/core";
--const _Test_from = from;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client/link";
-+const _Test_from = ApolloLink.from;
++import { from } from "@apollo/client/link";
+ const _Test_from = from;
 \\ No newline at end of file
 "
 `;
@@ -6700,10 +6597,8 @@ exports[`individual exports > @apollo/client/link/core > split 1`] = `
 +++ test.ts	transformed
 @@  @@
 -import { split } from "@apollo/client/link/core";
--const _Test_split = split;
-\\ No newline at end of file
-+import { ApolloLink } from "@apollo/client/link";
-+const _Test_split = ApolloLink.split;
++import { split } from "@apollo/client/link";
+ const _Test_split = split;
 \\ No newline at end of file
 "
 `;
@@ -6751,13 +6646,6 @@ exports[`individual exports > @apollo/client/link/error > onError 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { onError } from "@apollo/client/link/error";
--onError(errorHandler)
-\\ No newline at end of file
-+import { ErrorLink } from "@apollo/client/link/error";
-+new ErrorLink(errorHandler)
-\\ No newline at end of file
 "
 `;
 
@@ -6819,13 +6707,6 @@ exports[`individual exports > @apollo/client/link/http > createHttpLink 1`] = `
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { createHttpLink } from "@apollo/client/link/http";
--const _Test_createHttpLink = createHttpLink;
-\\ No newline at end of file
-+import { HttpLink } from "@apollo/client/link/http";
-+const _Test_createHttpLink = HttpLink;
-\\ No newline at end of file
 "
 `;
 
@@ -6937,13 +6818,6 @@ exports[`individual exports > @apollo/client/link/persisted-queries > createPers
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
--const _Test_createPersistedQueryLink = createPersistedQueryLink;
-\\ No newline at end of file
-+import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
-+const _Test_createPersistedQueryLink = PersistedQueryLink;
-\\ No newline at end of file
 "
 `;
 
@@ -6975,13 +6849,6 @@ exports[`individual exports > @apollo/client/link/remove-typename > removeTypena
 ===================================================================
 --- test.ts	original
 +++ test.ts	transformed
-@@  @@
--import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
--removeTypenameFromVariables(options)
-\\ No newline at end of file
-+import { RemoveTypenameFromVariablesLink } from "@apollo/client/link/remove-typename";
-+new RemoveTypenameFromVariablesLink(options)
-\\ No newline at end of file
 "
 `;
 

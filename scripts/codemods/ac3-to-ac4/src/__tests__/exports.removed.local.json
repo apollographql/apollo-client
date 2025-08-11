@@ -176,7 +176,7 @@
       { "from": "withLogSpy" },
       { "from": "wait" }
     ],
-    "type": [{ "from": "MockedProviderProps" }]
+    "type": []
   },
   "@apollo/client/testing/core": {
     "value": [

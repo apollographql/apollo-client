@@ -745,7 +745,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ...[{ from: "WebSocketParams", to: "Configuration" }].map(
     moveInto({
       from: {
-        module: "@apollo/client/link/wss",
+        module: "@apollo/client/link/ws",
       },
       to: {
         namespace: "WebSocketLink",

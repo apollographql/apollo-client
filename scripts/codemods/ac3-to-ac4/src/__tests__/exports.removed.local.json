@@ -14,8 +14,7 @@
       { "from": "throwServerError" },
       { "from": "Observer" },
       { "from": "ObservableSubscription" },
-      { "from": "serializeFetchParameter" },
-      "all really removed"
+      { "from": "serializeFetchParameter" }
     ],
     "type": [
       { "from": "FetchMoreQueryOptions" },

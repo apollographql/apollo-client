@@ -357,7 +357,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       from: {
         module: "@apollo/client/react",
       },
-      to: { namespace: "@apollo/client" },
+      to: { module: "@apollo/client" },
       importType: "type",
     })
   ),

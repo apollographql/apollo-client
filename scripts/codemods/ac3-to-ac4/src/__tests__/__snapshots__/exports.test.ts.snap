@@ -707,15 +707,7 @@ exports[`all exports > @apollo/client/link/core 1`] = `
 +} from "@apollo/client/link";
 +
 +import type { FormattedExecutionResult } from "graphql";
-+
-+import type {
-+  Defer20220824Handler,
-+  Defer20220824Handler,
-+  Defer20220824Handler,
-+  Defer20220824Handler,
-+  Incremental,
-+} from "@apollo/client/incremental";
-+
++import type { Defer20220824Handler, Incremental } from "@apollo/client/incremental";
  const _Test_empty = empty;
  const _Test_from = from;
  const _Test_split = split;

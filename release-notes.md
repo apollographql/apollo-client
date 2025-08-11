@@ -1,12 +1,12 @@
 # Apollo Client v4.0 Release Notes
 
-Apollo Client v4 represents our most significant release yet, featuring comprehensive improvements to error handling, TypeScript support, and developer experience. This release modernizes the codebase while maintaining the powerful GraphQL client capabilities you rely on.
+Apollo Client v4 contains comprehensive improvements to error handling, TypeScript support, and developer experience. This release modernizes the codebase and reduces bundle size while maintaining the powerful GraphQL client capabilities you rely on.
 
 ## Major Themes
 
 ### Enhanced Error Handling
 
-Apollo Client v4 completely reimagines error handling with a new, more granular error system that replaces the monolithic `ApolloError` class.
+Apollo Client v4 introduces more precise error abstractions that replace the monolithic `ApolloError` class.
 
 **Key Changes:**
 - **Specialized Error Classes**: Errors are now categorized into distinct types:
@@ -15,7 +15,6 @@ Apollo Client v4 completely reimagines error handling with a new, more granular 
   - `CombinedProtocolErrors` for transport-level errors
 - **Type-Safe Error Handling**: Use `instanceof` checks to handle specific error types
 - **Improved Error Wrapping**: String errors are automatically wrapped in `Error` instances, and non-error objects are wrapped in `UnconventionalError` with a `cause` property
-- **GraphQL over HTTP Spec Compliance**: Full support for `application/graphql-response+json` media type with stricter adherence to the GraphQL over HTTP specification
 
 **Migration Example:**
 ```typescript
@@ -38,7 +37,7 @@ if (error instanceof CombinedGraphQLErrors) {
 
 ### TypeScript Improvements
 
-Apollo Client v4 delivers substantial TypeScript enhancements that improve type safety and developer experience.
+Apollo Client v4 improves type safety and developer experience through its type definitions.
 
 **dataState Type System Overhaul:**
 - The `TData` generic is no longer modified by the `DataState` generic
@@ -61,7 +60,7 @@ Apollo Client v4 delivers substantial TypeScript enhancements that improve type 
 
 ### The New `dataState` Property
 
-The `dataState` property is a powerful new addition that provides clear visibility into the completeness of your query results.
+The `dataState` property provides clear visibility into the completeness of your query results.
 
 **Values:**
 - `empty`: No data available (`data` is `undefined`)
@@ -89,7 +88,7 @@ if (dataState === 'complete') {
 
 ### `@defer` Support Evolution
 
-Apollo Client v4 introduces a pluggable incremental delivery system for the `@defer` directive.
+Apollo Client v4 introduces a pluggable incremental delivery system for the `@defer` directive. This gives developers the flexibility to define which incremental delivery protocol to use, with the flexibility needed to adapt to any further specification changes.
 
 **Pluggable Implementation:**
 - Configure incremental delivery through the `incrementalHandler` option
@@ -106,7 +105,7 @@ Apollo Client v4 introduces a pluggable incremental delivery system for the `@de
 
 ### Local State Management Enhancements
 
-Local state management in Apollo Client v4 has been completely revamped for better reliability and type safety.
+Local state management in Apollo Client v4 has been revamped for modularity, reliability and type safety.
 
 **Resolver System Overhaul:**
 - Resolvers have been moved from `ApolloClient` to a new `LocalState` class
@@ -152,9 +151,8 @@ const resolver = (parent, args, context, info) => {
 ```
 
 **New Codegen Plugin:**
-- `@apollo/client-graphql-codegen` package for creating resolver types
-- Type-safe resolver development
-- Tailored specifically for `LocalState` usage
+
+This release introduces the `@apollo/client-graphql-codegen` package for creating resolver types for GraphQL Code Generator. It is tailored specifically for `LocalState` usage and allows for type-safe resolver development.
 
 ## Additional Improvements
 
@@ -166,7 +164,7 @@ All React-related exports have moved to dedicated entrypoints:
 - Testing utilities: `@apollo/client/testing/react`
 - Note: `gql` should be imported from `@apollo/client`, not from `@apollo/client/react`
 
-This change allows core client usage without requiring React as a dependency.
+In previous versions, users sometimes inadvertently imported React modules through seemingly unrelated paths.  In v4 we resolve these footguns to make it more transparent when React-only modules are being imported.
 
 ### Modern Package Format
 
@@ -224,6 +222,7 @@ const link = new HttpLink({ uri: '/graphql' });
 - No longer supports Node Streams or Async Iterators as `Response.body`
 - Better abort signal handling
 - WebSocketLink deprecation warning added
+- Full support for `application/graphql-response+json` media type with stricter adherence to the GraphQL over HTTP specification
 
 ### SSR Improvements
 
@@ -250,4 +249,4 @@ For detailed migration guides and examples, visit our documentation at [apollogr
 
 ## Acknowledgments
 
-This release represents months of work from the Apollo Client team and our amazing community. Thank you to all our contributors who helped make Apollo Client v4 the best version yet!
+This release represents years of work from the Apollo Client team and our amazing community. Thank you to all our contributors who helped make v4 possible!

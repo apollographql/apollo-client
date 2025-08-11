@@ -11,10 +11,10 @@ Apollo Client v4 completely reimagines error handling with a new, more granular 
 **Key Changes:**
 - **Specialized Error Classes**: Errors are now categorized into distinct types:
   - `CombinedGraphQLErrors` for GraphQL errors (replacing `graphqlErrors`)
-  - Network errors are passed through directly without wrapping
+  - Network errors are passed through directly as-is (no wrapper class)
   - `CombinedProtocolErrors` for transport-level errors
 - **Type-Safe Error Handling**: Use `instanceof` checks to handle specific error types
-- **Improved Error Wrapping**: String errors are automatically wrapped in `Error` instances, and non-error objects are wrapped in `UnknownError` with a `cause` property
+- **Improved Error Wrapping**: String errors are automatically wrapped in `Error` instances, and non-error objects are wrapped in `UnconventionalError` with a `cause` property
 - **GraphQL over HTTP Spec Compliance**: Full support for `application/graphql-response+json` media type with stricter adherence to the GraphQL over HTTP specification
 
 **Migration Example:**
@@ -28,7 +28,10 @@ if (error instanceof ApolloError) {
 // Apollo Client v4
 if (error instanceof CombinedGraphQLErrors) {
   console.log(error.graphQLErrors);
-} else if (error instanceof NetworkError) {
+} else if (error instanceof CombinedProtocolErrors) {
+  console.log(error.protocolErrors);
+} else {
+  // Network errors and other errors are passed through as-is
   console.log(error.message);
 }
 ```
@@ -94,7 +97,7 @@ Apollo Client v4 introduces a pluggable incremental delivery system for the `@de
 - Available handlers:
   - `NotImplementedHandler` (default)
   - `Defer20220824Handler` (Apollo Router format)
-  - `GraphQL17Alpha2Handler` (GraphQL 17.0.0-alpha.2 format)
+  - `GraphQL17Alpha2Handler` (alias for Defer20220824Handler, for GraphQL 17.0.0-alpha.2 compatibility)
 
 **HTTP Multipart Improvements:**
 - Stricter error handling for connection issues
@@ -106,10 +109,32 @@ Apollo Client v4 introduces a pluggable incremental delivery system for the `@de
 Local state management in Apollo Client v4 has been completely revamped for better reliability and type safety.
 
 **Resolver System Overhaul:**
+- Resolvers have been moved from `ApolloClient` to a new `LocalState` class
+- The `resolvers` option on `ApolloClient` has been replaced with a `localState` option
 - Errors thrown in resolvers now set the field to `null` and add to the `errors` array
 - Remote results are dealiased before being passed to resolvers
 - New `context` function for customizing `requestContext`
 - `Resolvers` generic provides autocompletion and type checking
+
+**Breaking Change - Resolver Migration:**
+Resolvers must now be configured through the `LocalState` class:
+```typescript
+// Apollo Client v3
+const client = new ApolloClient({
+  cache,
+  resolvers: { /* ... */ }
+});
+
+// Apollo Client v4
+import { LocalState } from '@apollo/client/local-state';
+
+const client = new ApolloClient({
+  cache,
+  localState: new LocalState({
+    resolvers: { /* ... */ }
+  })
+});
+```
 
 **Breaking Change - Resolver Context:**
 The resolver `context` argument (3rd argument) has been restructured:
@@ -139,6 +164,7 @@ const resolver = (parent, args, context, info) => {
 All React-related exports have moved to dedicated entrypoints:
 - Main exports: `@apollo/client/react`
 - Testing utilities: `@apollo/client/testing/react`
+- Note: `gql` should be imported from `@apollo/client`, not from `@apollo/client/react`
 
 This change allows core client usage without requiring React as a dependency.
 
@@ -209,13 +235,14 @@ const link = new HttpLink({ uri: '/graphql' });
 
 Apollo Client v4 includes breaking changes that require migration. The most significant include:
 
-1. **Error System**: Replace `ApolloError` checks with specific error class checks
-2. **React Exports**: Update imports from `@apollo/client` to `@apollo/client/react`
+1. **Error System**: Replace `ApolloError` checks with specific error class checks (`CombinedGraphQLErrors`, `CombinedProtocolErrors`, etc.)
+2. **React Exports**: Update imports from `@apollo/client` to `@apollo/client/react` (except `gql` which stays in `@apollo/client`)
 3. **Link Classes**: Replace creator functions with class constructors
 4. **ApolloClient Constructor**: `link` option is now required
-5. **Resolver Context**: Update resolver signatures to use new context structure
-6. **RxJS Migration**: Update observable transformations to use `.pipe()`
-7. **Type System**: Update type signatures for `dataState` changes
+5. **Local State**: Move `resolvers` from `ApolloClient` to new `LocalState` class
+6. **Resolver Context**: Update resolver signatures to use new context structure
+7. **RxJS Migration**: Update observable transformations to use `.pipe()`
+8. **Type System**: Update type signatures for `dataState` changes
 
 ## Migration Resources
 

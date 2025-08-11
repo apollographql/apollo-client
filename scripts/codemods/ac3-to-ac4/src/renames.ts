@@ -70,22 +70,22 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ...[
     // were re-exported from the `@apollo/client/react` entry point
     { from: "ApolloProvider" },
-    { from: "getApolloContext" },
     { from: "createQueryPreloader" },
-    { from: "useQuery" },
-    { from: "useSuspenseQuery" },
-    { from: "useBackgroundQuery" },
-    { from: "useSuspenseFragment" },
-    { from: "useLoadableQuery" },
-    { from: "useQueryRefHandlers" },
-    { from: "useReadQuery" },
+    { from: "getApolloContext" },
     { from: "skipToken" },
     { from: "useApolloClient" },
-    { from: "useLazyQuery" },
-    { from: "useMutation" },
-    { from: "useSubscription" },
-    { from: "useReactiveVar" },
+    { from: "useBackgroundQuery" },
     { from: "useFragment" },
+    { from: "useLazyQuery" },
+    { from: "useLoadableQuery" },
+    { from: "useMutation" },
+    { from: "useQuery" },
+    { from: "useQueryRefHandlers" },
+    { from: "useReactiveVar" },
+    { from: "useReadQuery" },
+    { from: "useSubscription" },
+    { from: "useSuspenseFragment" },
+    { from: "useSuspenseQuery" },
   ].map(
     moveInto({
       from: { module: "@apollo/client" },
@@ -96,52 +96,52 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ...[
     // were re-exported from the `@apollo/client/react` entry point
     { from: "ApolloContextValue" },
-    { from: "PreloadQueryOptions" },
+    { from: "BackgroundQueryHookFetchPolicy" },
+    { from: "BackgroundQueryHookOptions" },
+    { from: "BaseSubscriptionOptions" },
+    { from: "Context" },
+    { from: "LazyQueryExecFunction" },
+    { from: "LazyQueryHookExecOptions" },
+    { from: "LazyQueryHookOptions" },
+    { from: "LazyQueryResult" },
+    { from: "LazyQueryResultTuple" },
+    { from: "LoadableQueryHookFetchPolicy" },
+    { from: "LoadableQueryHookOptions" },
+    { from: "LoadQueryFunction" },
+    { from: "MutationFunction" },
+    { from: "MutationFunctionOptions" },
+    { from: "MutationHookOptions" },
+    { from: "MutationResult" },
+    { from: "MutationTuple" },
+    { from: "NoInfer" },
+    { from: "OnDataOptions" },
+    { from: "OnSubscriptionDataOptions" },
+    { from: "PreloadedQueryRef" },
     { from: "PreloadQueryFetchPolicy" },
     { from: "PreloadQueryFunction" },
-    { from: "UseSuspenseQueryResult" },
+    { from: "PreloadQueryOptions" },
+    { from: "QueryFunctionOptions" },
+    { from: "QueryHookOptions" },
+    { from: "QueryRef" },
+    { from: "QueryReference" },
+    { from: "QueryResult" },
+    { from: "QueryTuple" },
+    { from: "SkipToken" },
+    { from: "SubscriptionDataOptions" },
+    { from: "SubscriptionHookOptions" },
+    { from: "SubscriptionResult" },
+    { from: "SuspenseQueryHookFetchPolicy" },
+    { from: "SuspenseQueryHookOptions" },
     { from: "UseBackgroundQueryResult" },
-    { from: "UseSuspenseFragmentResult" },
-    { from: "UseSuspenseFragmentOptions" },
-    { from: "LoadQueryFunction" },
+    { from: "UseFragmentOptions" },
+    { from: "UseFragmentResult" },
     { from: "UseLoadableQueryResult" },
     { from: "UseQueryRefHandlersResult" },
     { from: "UseReadQueryResult" },
-    { from: "SkipToken" },
-    { from: "UseFragmentOptions" },
-    { from: "UseFragmentResult" },
-    { from: "QueryReference" },
-    { from: "QueryRef" },
-    { from: "PreloadedQueryRef" },
-    { from: "Context" },
-    { from: "QueryFunctionOptions" },
-    { from: "QueryResult" },
-    { from: "QueryHookOptions" },
-    { from: "LazyQueryHookOptions" },
-    { from: "LazyQueryHookExecOptions" },
-    { from: "SuspenseQueryHookFetchPolicy" },
-    { from: "SuspenseQueryHookOptions" },
-    { from: "BackgroundQueryHookFetchPolicy" },
-    { from: "BackgroundQueryHookOptions" },
-    { from: "LoadableQueryHookFetchPolicy" },
-    { from: "LoadableQueryHookOptions" },
-    { from: "LazyQueryResult" },
-    { from: "QueryTuple" },
-    { from: "LazyQueryExecFunction" },
-    { from: "LazyQueryResultTuple" },
-    { from: "MutationFunctionOptions" },
-    { from: "MutationResult" },
-    { from: "MutationFunction" },
-    { from: "MutationHookOptions" },
-    { from: "MutationTuple" },
-    { from: "OnDataOptions" },
-    { from: "OnSubscriptionDataOptions" },
-    { from: "BaseSubscriptionOptions" },
-    { from: "SubscriptionResult" },
-    { from: "SubscriptionHookOptions" },
-    { from: "SubscriptionDataOptions" },
+    { from: "UseSuspenseFragmentOptions" },
+    { from: "UseSuspenseFragmentResult" },
+    { from: "UseSuspenseQueryResult" },
     { from: "VariablesOption" },
-    { from: "NoInfer" },
   ].map(
     moveInto({
       from: { module: "@apollo/client" },
@@ -151,8 +151,8 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     // move to the `@apollo/client/react` entry point
-    { from: "QueryRef" },
     { from: "PreloadedQueryRef" },
+    { from: "QueryRef" },
   ].map(
     moveInto({
       from: { module: "@apollo/client/react/internal" },
@@ -162,9 +162,9 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     // move to the `@apollo/client/utilities/internal` entry point
+    { from: "argumentsObjectFromField" },
     { from: "AutoCleanedStrongCache" },
     { from: "AutoCleanedWeakCache" },
-    { from: "argumentsObjectFromField" },
     { from: "canUseDOM" },
     { from: "checkDocument" },
     { from: "cloneDeep" },
@@ -175,12 +175,16 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "dealias" },
     { from: "decoratePromise" },
     { from: "DeepMerger" },
+    { from: "filterMap" },
+    { from: "getApolloCacheMemoryInternals" },
+    { from: "getApolloClientMemoryInternals" },
     { from: "getDefaultValues" },
-    { from: "getFragmentFromSelection" },
-    { from: "getFragmentQueryDocument" },
     { from: "getFragmentDefinition" },
     { from: "getFragmentDefinitions" },
+    { from: "getFragmentFromSelection" },
+    { from: "getFragmentQueryDocument" },
     { from: "getGraphQLErrorsFromResult" },
+    { from: "getInMemoryCacheMemoryInternals" },
     { from: "getOperationDefinition" },
     { from: "getOperationName" },
     { from: "getQueryDefinition" },
@@ -202,17 +206,13 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "mergeOptions" },
     { from: "omitDeep" },
     { from: "preventUnhandledRejection" },
+    { from: "registerGlobalCache" },
     { from: "removeDirectivesFromDocument" },
     { from: "resultKeyNameFromField" },
     { from: "shouldInclude" },
     { from: "storeKeyNameFromField" },
     { from: "stringifyForDisplay" },
     { from: "toQueryResult" },
-    { from: "filterMap" },
-    { from: "getApolloCacheMemoryInternals" },
-    { from: "getApolloClientMemoryInternals" },
-    { from: "getInMemoryCacheMemoryInternals" },
-    { from: "registerGlobalCache" },
   ].map(
     moveInto({
       from: {
@@ -250,14 +250,14 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "VariablesOption" }, { from: "NoInfer" }].map(
+  ...[{ from: "NoInfer" }, { from: "VariablesOption" }].map(
     moveInto({
       from: { module: "@apollo/client/react" },
       to: { module: "@apollo/client/utilities/internal" },
       importType: "type",
     })
   ),
-  ...[{ from: "__DEV__" }, { from: "DEV", to: "__DEV__" }].map(
+  ...[{ from: "DEV", to: "__DEV__" }, { from: "__DEV__" }].map(
     moveInto({
       from: {
         module: "@apollo/client/utilities/global",
@@ -267,7 +267,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "value",
     })
   ),
-  ...[{ from: "maybe" }, { from: "global" }].map(
+  ...[{ from: "global" }, { from: "maybe" }].map(
     moveInto({
       from: {
         module: "@apollo/client/utilities/global",
@@ -279,8 +279,8 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ),
   ...[
     { from: "invariant" },
-    { from: "newInvariantError" },
     { from: "InvariantError" },
+    { from: "newInvariantError" },
   ].map(
     moveInto({
       from: { module: "@apollo/client/utilities/global" },
@@ -295,10 +295,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "DevtoolsOptions" },
     { from: "MutateResult" },
     { from: "MutationOptions", to: "MutateOptions" },
-    {
-      from: "QueryOptions",
-      postProcess: reorderGenerics([1, 0]),
-    },
+    { from: "QueryOptions", postProcess: reorderGenerics([1, 0]) },
     { from: "RefetchQueriesOptions" },
     { from: "RefetchQueriesResult" },
     {
@@ -317,8 +314,8 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
   ...[
     // move into `ObservableQuery` type namespace
     { from: "ApolloQueryResult", to: "Result" },
-    { from: "SubscribeToMoreOptions" },
     { from: "FetchMoreOptions" },
+    { from: "SubscribeToMoreOptions" },
   ].map(
     moveInto({
       from: { module: "@apollo/client" },
@@ -379,8 +376,8 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     { from: "LazyQueryHookExecOptions", to: "ExecOptions" },
     { from: "LazyQueryHookOptions", to: "Options" },
     { from: "LazyQueryResult", to: "Result" },
-    { from: "QueryTuple", to: "ResultTuple" },
     { from: "LazyQueryResultTuple", to: "ResultTuple" },
+    { from: "QueryTuple", to: "ResultTuple" },
   ].map(
     moveInto({
       from: {
@@ -434,10 +431,10 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
+    { from: "BaseSubscriptionOptions", to: "Options" },
     { from: "OnDataOptions" },
     { from: "OnSubscriptionDataOptions" },
     { from: "SubscriptionHookOptions", to: "Options" },
-    { from: "BaseSubscriptionOptions", to: "Options" },
     {
       from: "SubscriptionResult",
       to: "Result",
@@ -568,9 +565,9 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
 
   ...[
     // move into `ApolloLink` runtime namespace
-    { from: "from" },
-    { from: "empty" },
     { from: "concat" },
+    { from: "empty" },
+    { from: "from" },
     { from: "split" },
   ].map(
     moveInto({
@@ -586,14 +583,13 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     // move into `ApolloLink` type namespace
     {
       from: "FetchResult",
-      to: "Result",
-      // FetchResult<TData, TContext, TExtensions> -> ApolloLink.Result<TData, TExtensions>
+      to: "Result", // FetchResult<TData, TContext, TExtensions> -> ApolloLink.Result<TData, TExtensions>
       postProcess: reorderGenerics([0, 2]),
     },
     { from: "GraphQLRequest", to: "Request" },
+    { from: "NextLink", to: "ForwardFunction" },
     { from: "Operation" },
     { from: "RequestHandler" },
-    { from: "NextLink", to: "ForwardFunction" },
   ].map(
     moveInto({
       from: {
@@ -605,10 +601,10 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
-    { from: "ExecutionPatchInitialResult", to: "InitialResult" },
-    { from: "IncrementalPayload", to: "IncrementalDeferPayload" },
     { from: "ExecutionPatchIncrementalResult", to: "SubsequentResult" },
+    { from: "ExecutionPatchInitialResult", to: "InitialResult" },
     { from: "ExecutionPatchResult", to: "Chunk" },
+    { from: "IncrementalPayload", to: "IncrementalDeferPayload" },
   ].map(
     moveInto({
       from: {
@@ -668,8 +664,8 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
     })
   ),
   ...[
-    { from: "ErrorResponse", to: "ErrorHandlerOptions" },
     { from: "ErrorHandler" },
+    { from: "ErrorResponse", to: "ErrorHandlerOptions" },
   ].map(
     moveInto({
       from: {

@@ -580,13 +580,6 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "wait" }].map(
-    moveInto({
-      from: { module: "@apollo/client/testing" },
-      to: { module: "@apollo/client/testing/internal" },
-      importType: "value",
-    })
-  ),
 
   ...[
     // move into `ApolloLink` runtime namespace

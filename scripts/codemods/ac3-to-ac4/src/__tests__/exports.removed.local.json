@@ -173,7 +173,8 @@
       { "from": "tick" },
       { "from": "withErrorSpy" },
       { "from": "withWarningSpy" },
-      { "from": "withLogSpy" }
+      { "from": "withLogSpy" },
+      { "from": "wait" }
     ],
     "type": [{ "from": "MockedProviderProps" }]
   },

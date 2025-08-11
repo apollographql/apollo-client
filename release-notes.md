@@ -88,11 +88,10 @@ if (dataState === 'complete') {
 
 ### `@defer` Support Evolution
 
-Apollo Client v4 introduces a pluggable incremental delivery system for the `@defer` directive. This gives developers the flexibility to define which incremental delivery protocol to use, with the flexibility needed to adapt to any further specification changes.
+Apollo Client v4 introduces a pluggable incremental delivery system for the `@defer` directive. This gives developers the flexibility to define which incremental delivery protocol to use without sacrificing compatibility with any further specification changes. Please note that Apollo Client 4.0 intentionally does not specifcy a default implementation since incremental delivery is still not merged into the draft GraphQL specification. Users must opt into a specific protocol version.
 
 **Pluggable Implementation:**
 - Configure incremental delivery through the `incrementalHandler` option
-- Ships without a default implementation for maximum flexibility
 - Available handlers:
   - `NotImplementedHandler` (default)
   - `Defer20220824Handler` (Apollo Router format)
@@ -165,6 +164,24 @@ All React-related exports have moved to dedicated entrypoints:
 - Note: `gql` should be imported from `@apollo/client`, not from `@apollo/client/react`
 
 In previous versions, users sometimes inadvertently imported React modules through seemingly unrelated paths.  In v4 we resolve these footguns to make it more transparent when React-only modules are being imported.
+
+**React Compiler Support (Experimental):**
+Apollo Client v4 ships with React Compiler-optimized hooks available at `@apollo/client/react/compiled`. This experimental feature provides:
+- Pre-compiled React hooks optimized by the React Compiler
+- Drop-in replacement for standard React hooks
+- Potential performance improvements in React 19+ applications
+- Same API surface as `@apollo/client/react`
+
+To use the compiled hooks:
+```typescript
+// Instead of importing from @apollo/client/react
+import { useQuery, useMutation } from '@apollo/client/react/compiled';
+
+// Use exactly the same as before - the API is identical
+const { data, loading } = useQuery(MY_QUERY);
+```
+
+Note: This is an experimental optimization. The standard `@apollo/client/react` hooks remain the recommended default for most applications.
 
 ### Modern Package Format
 

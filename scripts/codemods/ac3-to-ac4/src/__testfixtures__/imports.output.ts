@@ -10,8 +10,7 @@ const providerProps: ApolloProvider.Props = {} as any;
 import type { ErrorLink } from "@apollo/client/link/error";
 const response: ErrorLink.ErrorHandlerOptions = {} as any;
 
-import { getApolloContext, ApolloProvider, useQuery, QueryRef, useLoadableQuery } from "@apollo/client/react";
-
+import { getApolloContext, QueryRef, ApolloProvider, useQuery, useLoadableQuery } from "@apollo/client/react";
 import { omitDeep } from "@apollo/client/utilities/internal";
 import type { SetContextLink } from "@apollo/client/link/context";
 const contextSetter: SetContextLink.LegacyContextSetter = (() => {}) as any;

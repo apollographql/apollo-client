@@ -10,9 +10,11 @@ const providerProps: ApolloProviderProps = {} as any;
 import type { ErrorResponse } from "@apollo/client/link/error";
 const response: ErrorResponse = {} as any;
 
+import { useQuery, ApolloProvider } from "@apollo/client";
+
 import type { LoadQueryFunction } from "@apollo/client";
 
-import { getApolloContext, ApolloProvider, useQuery } from "@apollo/client/react";
+import { getApolloContext } from "@apollo/client/react/context";
 
 import { omitDeep } from "@apollo/client/utilities";
 

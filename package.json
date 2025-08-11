@@ -59,6 +59,7 @@
     "./react/internal": "./src/react/internal/index.ts",
     "./react/internal/compiler-runtime": "./src/react/internal/compiler-runtime/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",
+    "./removals": "./src/removals.ts",
     "./testing": "./src/testing/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
     "./utilities": "./src/utilities/index.ts",

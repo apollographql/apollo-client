@@ -770,7 +770,7 @@ export interface IdentifierRename {
   }): void;
 }
 
-export interface IdentifierRenameCommon extends Omit<IdentifierRename, "from"> {
+interface IdentifierRenameCommon extends Omit<IdentifierRename, "from"> {
   from: Omit<IdentifierRename["from"], "identifier"> & {
     identifier?: string;
   };

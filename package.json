@@ -59,7 +59,6 @@
     "./react/internal": "./src/react/internal/index.ts",
     "./react/internal/compiler-runtime": "./src/react/internal/compiler-runtime/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",
-    "./removals": "./src/removals.ts",
     "./testing": "./src/testing/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
     "./utilities": "./src/utilities/index.ts",
@@ -77,7 +76,8 @@
       "production": "./src/utilities/environment/index.production.ts",
       "development": "./src/utilities/environment/index.development.ts",
       "default": "./src/utilities/environment/index.ts"
-    }
+    },
+    "./zz_removals": "./src/zz_removals.ts"
   },
   "scripts": {
     "prebuild": "npm run clean",

@@ -487,3 +487,5 @@ Array [
   "setVerbosity",
 ]
 `;
+
+exports[`exports of public entry points @apollo/client/zz_removals 1`] = `Array []`;

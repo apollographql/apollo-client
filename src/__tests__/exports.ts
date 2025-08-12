@@ -43,6 +43,7 @@ import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
 import * as utilitiesInternal from "@apollo/client/utilities/internal";
 import * as utilitiesInternalGlobals from "@apollo/client/utilities/internal/globals";
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
+import * as zz_removals from "@apollo/client/zz_removals";
 
 // eslint-disable-next-line local-rules/no-relative-imports
 import { entryPoints } from "../../config/entryPoints.js";
@@ -105,6 +106,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities/internal/globals", utilitiesInternalGlobals);
   check("@apollo/client/utilities/invariant", utilitiesInvariant);
   check("@apollo/client/utilities/environment", utilitiesEnvironment);
+  check("@apollo/client/zz_removals", zz_removals);
 
   checkWithConditions("@apollo/client/react", ["react-server"]);
 

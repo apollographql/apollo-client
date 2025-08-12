@@ -84,14 +84,14 @@ export declare const ApolloConsumer: never;
 /**
  * {@inheritDoc @apollo/client/zz-removals!Removals.errors:type {"name":"ApolloError"} }
  */
-export declare const ApolloError: never;
+export declare class ApolloError {}
 
 /**
  * {@inheritDoc @apollo/client/zz-removals!Removals.rxjs:type {"name":"Concast"} }
  *
  * Instead of `Concast`, look into the `rxjs` [`BehaviorSubject`](https://rxjs.dev/api/index/class/BehaviorSubject) api.
  */
-export declare const Concast: never;
+export declare class Concast {}
 
 /**
  * {@inheritDoc @apollo/client/zz-removals!Removals.removedType:type {"name":"DataProxy"} }

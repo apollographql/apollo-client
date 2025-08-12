@@ -14,7 +14,8 @@ export const ApolloConsumer: never;
 export type ApolloConsumerProps = never;
 
 // @public @deprecated (undocumented)
-export const ApolloError: never;
+export class ApolloError {
+}
 
 // @public @deprecated (undocumented)
 export type ApolloErrorOptions = never;
@@ -65,7 +66,8 @@ export type ClientParseError = never;
 export type CommonOptions = never;
 
 // @public @deprecated (undocumented)
-export const Concast: never;
+export class Concast {
+}
 
 // @public @deprecated (undocumented)
 export type ConcastSourcesArray = never;

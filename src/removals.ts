@@ -60,6 +60,20 @@ export declare namespace Removals {
    * This export is considered internal and is no longer exposed.
    */
   export type internal = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This was an internal testing utility that was not meant for public use.
+   * It has been removed without replacement.
+   */
+  export type internalTesting = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export was part of a specific `@defer` protocol implementation.
+   * These implementations are now pluggable, so this export might not be relevant for all protocol specifications.
+   */
+  export type defer = never;
 }
 
 /**
@@ -208,22 +222,22 @@ export declare const fromError: never;
 export declare const fromPromise: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"getDirectiveNames"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"getDirectiveNames"} }
  */
 export declare const getDirectiveNames: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"getFragmentMaskMode"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"getFragmentMaskMode","of":"data masking"} }
  */
 export declare const getFragmentMaskMode: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"getInclusionDirectives"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"getInclusionDirectives","of":"local state"} }
  */
 export declare const getInclusionDirectives: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"getTypenameFromResult"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"getTypenameFromResult","of":"`InMemoryCache`"} }
  */
 export declare const getTypenameFromResult: never;
 
@@ -233,72 +247,72 @@ export declare const getTypenameFromResult: never;
 export declare const graphql: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"hasAllDirectives"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"hasAllDirectives"} }
  */
 export declare const hasAllDirectives: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"hasAnyDirectives"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"hasAnyDirectives"} }
  */
 export declare const hasAnyDirectives: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"hasClientExports"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"hasClientExports"} }
  */
 export declare const hasClientExports: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isApolloError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"isApolloError"} }
  */
 export declare const isApolloError: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isApolloPayloadResult"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"isApolloPayloadResult","of":"HttpLink"} }
  */
 export declare const isApolloPayloadResult: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isExecutionPatchIncrementalResult"} }
+ * {@inheritDoc @apollo/client/removals!Removals.defer:type {"name":"isExecutionPatchIncrementalResult"} }
  */
 export declare const isExecutionPatchIncrementalResult: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isExecutionPatchInitialResult"} }
+ * {@inheritDoc @apollo/client/removals!Removals.defer:type {"name":"isExecutionPatchInitialResult"} }
  */
 export declare const isExecutionPatchInitialResult: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isExecutionPatchResult"} }
+ * {@inheritDoc @apollo/client/removals!Removals.defer:type {"name":"isExecutionPatchResult"} }
  */
 export declare const isExecutionPatchResult: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isFullyUnmaskedOperation"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"isFullyUnmaskedOperation","of":"data masking"} }
  */
 export declare const isFullyUnmaskedOperation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isInlineFragment"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"isInlineFragment"} }
  */
 export declare const isInlineFragment: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"isStatefulPromise"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"isStatefulPromise"} }
  */
 export declare const isStatefulPromise: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"itAsync"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"itAsync"} }
  */
 export declare const itAsync: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"iterateObserversSafely"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"iterateObserversSafely"} }
  */
 export declare const iterateObserversSafely: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"mergeIncrementalData"} }
+ * {@inheritDoc @apollo/client/removals!Removals.defer:type {"name":"mergeIncrementalData"} }
  */
 export declare const mergeIncrementalData: never;
 
@@ -309,91 +323,106 @@ export declare const mockObservableLink: never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"mockSingleLink"} }
+ *
+ * This utility was a wrapper around `MockLink`.
+ * Please call `new MockLink(mockedResponses)` directly.
  */
 export declare const mockSingleLink: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"operationName"} }
+ * @deprecated The `operationName` function has been removed from Apollo Client 4.0, along with the `parser` API exported from `@apollo/client/react/parser`.
+ *
+ * This API was mostly an implementation detail and has been removed without replacement.
  */
 export declare const operationName: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"parser"} }
+ * @deprecated The `parser` function has been removed from Apollo Client 4.0, along with the whole `@apollo/client/react/parser` entry point.
+ *
+ * This API was mostly an implementation detail and has been removed without replacement.
  */
 export declare const parser: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"removeArgumentsFromDocument"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"removeArgumentsFromDocument"} }
  */
 export declare const removeArgumentsFromDocument: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"removeClientSetsFromDocument"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"removeClientSetsFromDocument"} }
  */
 export declare const removeClientSetsFromDocument: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"removeConnectionDirectiveFromDocument"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"removeConnectionDirectiveFromDocument"} }
  */
 export declare const removeConnectionDirectiveFromDocument: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"removeFragmentSpreadFromDocument"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"removeFragmentSpreadFromDocument"} }
  */
 export declare const removeFragmentSpreadFromDocument: never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"resetApolloContext"} }
+ *
+ * This function was deprecated and is no longer available.
  */
 export declare const resetApolloContext: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"serializeFetchParameter"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"serializeFetchParameter","of":"HttpLink"} }
+ *
+ * Please use `JSON.stringify` instead.
  */
 export declare const serializeFetchParameter: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"subscribeAndCount"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"subscribeAndCount"} }
  */
 export declare const subscribeAndCount: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"throwServerError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"throwServerError","of":"HttpLink"} }
+ *
+ * Please instantiate a `ServerError` directly instead.
  */
 export declare const throwServerError: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"tick"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"tick"} }
  */
 export declare const tick: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"toPromise"} }
+ * {@inheritDoc @apollo/client/removals!Removals.rxjs:type {"name":"toPromise"} }
+ *
+ * Please use the `rxjs` [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) or [`lastValueFrom`](https://rxjs.dev/api/index/function/lastValueFrom) functions instead.
  */
 export declare const toPromise: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"transformOperation"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"transformOperation","of":"ApolloLink.execute"} }
  */
 export declare const transformOperation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"validateOperation"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"validateOperation","of":"ApolloLink.execute"} }
  */
 export declare const validateOperation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"valueToObjectRepresentation"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"valueToObjectRepresentation"} }
  */
 export declare const valueToObjectRepresentation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"verifyDocumentType"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"verifyDocumentType"} }
  */
 export declare const verifyDocumentType: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"wait"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"wait"} }
  */
 export declare const wait: never;
 
@@ -403,52 +432,56 @@ export declare const wait: never;
 export declare const withApollo: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withErrorSpy"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"withErrorSpy"} }
  */
 export declare const withErrorSpy: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withLogSpy"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"withLogSpy"} }
  */
 export declare const withLogSpy: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withMutation"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"withMutation"} }
  */
 export declare const withMutation: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withQuery"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"withQuery"} }
  */
 export declare const withQuery: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withSubscription"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"withSubscription"} }
  */
 export declare const withSubscription: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedValue:type {"name":"withWarningSpy"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"withWarningSpy"} }
  */
 export declare const withWarningSpy: never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ApolloConsumerProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.renderProp:type {"name":"ApolloConsumerProps"} }
  */
 export type ApolloConsumerProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ApolloErrorOptions"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"ApolloErrorOptions"} }
  */
 export type ApolloErrorOptions = never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"BaseMutationOptions"} }
+ *
+ * Look into `ApolloClient.MutateOptions` or `useMutation.Options` instead.
  */
 export type BaseMutationOptions = never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"BaseQueryOptions"} }
+ *
+ * Look into `ApolloClient.QueryOptions` or `useQuery.Options` instead.
  */
 export type BaseQueryOptions = never;
 
@@ -458,22 +491,22 @@ export type BaseQueryOptions = never;
 export type BatchableRequest = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ChildDataProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"ChildDataProps"} }
  */
 export type ChildDataProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ChildMutateProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"ChildMutateProps"} }
  */
 export type ChildMutateProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ChildProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"ChildProps"} }
  */
 export type ChildProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ClientParseError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"ClientParseError"} }
  */
 export type ClientParseError = never;
 
@@ -498,7 +531,7 @@ export type ConcastSourcesIterable = never;
 export type DataProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"DataValue"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"DataValue"} }
  */
 export type DataValue = never;
 
@@ -514,6 +547,8 @@ export type Directives = never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"FetchMoreQueryOptions"} }
+ *
+ * Look into `ObservableQuery.FetchMoreOptions` instead.
  */
 export type FetchMoreQueryOptions = never;
 
@@ -538,7 +573,7 @@ export type GetFragmentSpreadConfig = never;
 export type GetNodeConfig = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"GraphQLErrors"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"GraphQLErrors"} }
  */
 export type GraphQLErrors = never;
 
@@ -553,7 +588,7 @@ export type IDocumentDefinition = never;
 export type InclusionDirectives = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"IsStrictlyAny"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internalTesting:type {"name":"IsStrictlyAny"} }
  */
 export type IsStrictlyAny = never;
 
@@ -563,17 +598,19 @@ export type IsStrictlyAny = never;
 export type MethodKeys = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"MutateProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"MutateProps"} }
  */
 export type MutateProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"MutationComponentOptions"} }
+ * {@inheritDoc @apollo/client/removals!Removals.renderProp:type {"name":"MutationComponentOptions"} }
  */
 export type MutationComponentOptions = never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"MutationDataOptions"} }
+ *
+ * Look into `ApolloClient.MutateOptions` or `useMutation.Options` instead.
  */
 export type MutationDataOptions = never;
 
@@ -583,32 +620,32 @@ export type MutationDataOptions = never;
 export type MutationUpdaterFn = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"NetworkError"} }
+ * {@inheritDoc @apollo/client/removals!Removals.errors:type {"name":"NetworkError"} }
  */
 export type NetworkError = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ObservableQueryFields"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"ObservableQueryFields"} }
  */
 export type ObservableQueryFields = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"OnlyRequiredProperties"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"OnlyRequiredProperties"} }
  */
 export type OnlyRequiredProperties = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"OperationOption"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"OperationOption"} }
  */
 export type OperationOption = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"OptionProps"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"OptionProps"} }
  */
 export type OptionProps = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"PromiseWithState"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"PromiseWithState"} }
  */
 export type PromiseWithState = never;
 
@@ -618,17 +655,17 @@ export type PromiseWithState = never;
 export type PureQueryOptions = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"QueryComponentOptions"} }
+ * {@inheritDoc @apollo/client/removals!Removals.renderProp:type {"name":"QueryComponentOptions"} }
  */
 export type QueryComponentOptions = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"QueryControls"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"QueryControls"} }
  */
 export type QueryControls = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"QueryDataOptions"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"QueryDataOptions","of":"`getMarkupFromTree`"} }
  */
 export type QueryDataOptions = never;
 
@@ -638,12 +675,14 @@ export type QueryDataOptions = never;
 export type QueryLazyOptions = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"ReconcilerFunction"} }
+ * {@inheritDoc @apollo/client/removals!Removals.internal:type {"name":"ReconcilerFunction"} }
  */
 export type ReconcilerFunction = never;
 
 /**
  * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"RefetchQueriesFunction"} }
+ *
+ * Look into using `useMutation.Options['refetchQueries']` instead.
  */
 export type RefetchQueriesFunction = never;
 
@@ -678,17 +717,17 @@ export type RemoveNodeConfig = never;
 export type RemoveVariableDefinitionConfig = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"Resolver"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"Resolver","of":"local state"} }
  */
 export type Resolver = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"Resolvers"} }
+ * {@inheritDoc @apollo/client/removals!Removals.implementationDetail:type {"name":"Resolvers","of":"local state"} }
  */
 export type Resolvers = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"SubscriptionComponentOptions"} }
+ * {@inheritDoc @apollo/client/removals!Removals.renderProp:type {"name":"SubscriptionComponentOptions"} }
  */
 export type SubscriptionComponentOptions = never;
 
@@ -698,12 +737,12 @@ export type SubscriptionComponentOptions = never;
 export type SubscriptionCurrentObservable = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"TupleToIntersection"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"TupleToIntersection"} }
  */
 export type TupleToIntersection = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"UnionToIntersection"} }
+ * {@inheritDoc @apollo/client/removals!Removals.utility:type {"name":"UnionToIntersection"} }
  */
 export type UnionToIntersection = never;
 
@@ -713,6 +752,6 @@ export type UnionToIntersection = never;
 export type VariableValue = never;
 
 /**
- * {@inheritDoc @apollo/client/removals!Removals.removedType:type {"name":"WithApolloClient"} }
+ * {@inheritDoc @apollo/client/removals!Removals.HOC:type {"name":"WithApolloClient"} }
  */
 export type WithApolloClient = never;

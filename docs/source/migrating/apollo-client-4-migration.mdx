@@ -420,7 +420,7 @@ import {
 const client = new ApolloClient({
   // ...
   uri: "https://example.com/graphql",
-  link: new HttpLink({ <!--[!code --]-->
+  link: new HttpLink({ // [!code ++]
     uri: "https://example.com/graphql",
   }), // [!code ++]
   // ...

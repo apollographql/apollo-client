@@ -9,17 +9,17 @@ export declare namespace PreserveTypes {
   namespace HKTImplementation {
     export interface FragmentType extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.FragmentType<this["arg1"]>;
+      return: never;
     }
 
     export interface MaybeMasked extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.MaybeMasked<this["arg1"]>;
+      return: this["arg1"];
     }
 
     export interface Unmasked extends HKT {
       arg1: unknown; // TData
-      return: PreserveTypes.Unmasked<this["arg1"]>;
+      return: this["arg1"];
     }
   }
 

@@ -1,5 +1,26 @@
 # @apollo/client
 
+## 4.0.0-rc.10
+
+### Major Changes
+
+- [#12837](https://github.com/apollographql/apollo-client/pull/12837) [`7c49fdc`](https://github.com/apollographql/apollo-client/commit/7c49fdce2f40571d92c83602bbb1b5bd891f626b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - You must now opt in to use GraphQL Codegen data masking types when using Apollo Client's data masking feature. By default, Apollo Client now uses an identity type to apply to masked/unmasked types.
+
+  If you're using GraphQL Codegen to generate masked types, opt into the GraphQL Codegen masked types using declaration merging on the `TypeOverides` interface.
+
+  ```ts title="apollo-client.d.ts
+  import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+
+  declare module "@apollo/client" {
+    export interface TypeOverrides
+      extends GraphQLCodegenDataMasking.TypeOverrides {}
+  }
+  ```
+
+- [#12837](https://github.com/apollographql/apollo-client/pull/12837) [`7c49fdc`](https://github.com/apollographql/apollo-client/commit/7c49fdce2f40571d92c83602bbb1b5bd891f626b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The types mode for data masking has been removed. Adding a types mode to the `DataMasking` interface has no effect. Remove the `mode` key in the module where you declare the `DataMasking` type for the `@apollo/client` module.
+
+  As a result, the `Masked` and `MaskedDocumentNode` types have also been removed since these have no effect when types are preserved.
+
 ## 4.0.0-rc.9
 
 ### Minor Changes

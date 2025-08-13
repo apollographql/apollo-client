@@ -2077,21 +2077,21 @@ namespace PreserveTypes {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.FragmentType<this["arg1"]>;
+            return: never;
         }
         // (undocumented)
         interface MaybeMasked extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.MaybeMasked<this["arg1"]>;
+            return: this["arg1"];
         }
         // (undocumented)
         interface Unmasked extends HKT {
             // (undocumented)
             arg1: unknown;
             // (undocumented)
-            return: PreserveTypes.Unmasked<this["arg1"]>;
+            return: this["arg1"];
         }
     }
     // (undocumented)

@@ -51,9 +51,437 @@ Install Apollo Client 4.0 along with it's peer dependencies with the following c
 npm install @apollo/client graphql rxjs
 ```
 
--------- old guide from here
+## Applying the Codemod
+
+To ease the migration process, we have created a codemod that will automatically update your codebase to use the new imports and APIs in Apollo Client 4.0.
+
+This codemod consists of the following steps:
+
+- `imports` step:
+  - Updates imports that have moved around, e.g. changing `import { useQuery } from '@apollo/client'` to `import { useQuery } from '@apollo/client/react'`.
+  - Updates type references that have moved into namespaces. E.g.
+  ```ts
+  import { FetchResult } from "@apollo/client";
+  fn<FetchResult>();
+  ```
+  becomes
+  ```ts
+  import { ApolloLink } from "@apollo/client";
+  fn<ApolloLink.Result>();
+  ```
+- `links` step:
+  - In Apollo Client 4.0, the links have been unified to all be classes. So this step will update your code to use the new class-based links.
+    For example, it will change:
+  ```ts
+  import { createHttpLink } from "@apollo/client";
+  const link = createHttpLink({ uri: "https://example.com/graphql" });
+  ```
+  to:
+  ```ts
+  import { HttpLink } from "@apollo/client/link/http";
+  const link = new HttpLink({ uri: "https://example.com/graphql" });
+  ```
+  - The `from`, `split` and `concat` functions should now be used as methods on the `ApolloLink` class, so this step will also update your code to use these static methods.
+- `removals`
+  In Apollo CLient 4.0, a number of exports has been removed for various reasons.
+  This step will move all of those imports to point at `@apollo/client/zz_removals`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
+
+### Runing the Codemod
+
+To run the codemod, you can use the command
+
+```sh
+npx @apollo/client-codemod-migrate-3-to-4 src
+```
+
+which will behave just like the command line tool `jscodeshift` with a preselected codemod.
+
+Run `npx @apollo/client-codemod-migrate-3-to-4 --help` to see all available options.
+
+### Using the Codemod with TypeScript
+
+If you have a TypeScript project, we recommend running the codemod against `.ts` and `.tsx` files separately as those have slightly overlapping syntax and might otherwise be misinterpreted by the codemod.
+
+```sh
+npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
+npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
+```
+
+### Running only specific steps
+
+You can also run the codemod with only specific steps by using the `--codemod` option. For example, to run only the `imports` and `links` steps, you can use:
+
+```sh
+npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
+```
 
 ## Updating imports
+
+If you used the [Codemod](#applying-the-codemod) to update your imports, you can skip this section.
+If you did not use the codemod, you will need to manually update your imports to point at the right files.
+
+<details>
+<summary><h3 style="display:inline">List of all changed imports</h3><br/>(click to expand)</summary>
+
+The following entry points have been renamed:
+| previous entry point | new entry point |
+| --------------------- | -------------------- |
+| `@apollo/client/core` | `@apollo/client` |
+| `@apollo/client/link/core` | `@apollo/client/link` |
+| `@apollo/client/react/context` | `@apollo/client/react` |
+| `@apollo/client/react/hooks` | `@apollo/client/react` |
+| `@apollo/client/testing/core` | `@apollo/client/testing` |
+
+The following entry points have been removed:
+| previous entry point | reason |
+| --------------------- | -------------------- |
+| `@apollo/client/react/components` | The render prop components were already deprecated in Apollo Client 3.0 and have been removed in 4.0. |
+| `@apollo/client/react/hoc` | The higher order components were already deprecated in Apollo Client 3.0 and have been removed in 4.0. |
+| `@apollo/client/react/parser` | This module was an implementation detail of the render prop components and HOCs. |
+| `@apollo/client/testing/experimental` | This is available as [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library) |
+| `@apollo/client/utilities/globals` | This was an implementation detail and has been removed. Some of the exports are now available in other entry points. |
+| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql now so we don't ship it anymore. |
+
+The following individual imports have been renamed, moved to new entry points and/or moved into namespaces:
+
+<table>
+<thead>
+<tr><th>previous entry point</th><th>new entry point</th></tr>
+<tr><td>previous import name</td><td>new import name</td></tr>
+</thead>
+<tbody>
+<tr><th>`@apollo/client`</th><th>(unchanged)</th></tr>
+<tr><td>`ApolloClientOptions`</td><td>`ApolloClient.Options`</td></tr>
+<tr><td>`DefaultOptions`</td><td>`ApolloClient.DefaultOptions`</td></tr>
+<tr><td>`DevtoolsOptions`</td><td>`ApolloClient.DevtoolsOptions`</td></tr>
+<tr><td>`MutateResult`</td><td>`ApolloClient.MutateResult`</td></tr>
+<tr><td>`MutationOptions`</td><td>`ApolloClient.MutateOptions`</td></tr>
+<tr><td>`QueryOptions`</td><td>`ApolloClient.QueryOptions`</td></tr>
+<tr><td>`RefetchQueriesOptions`</td><td>`ApolloClient.RefetchQueriesOptions`</td></tr>
+<tr><td>`RefetchQueriesResult`</td><td>`ApolloClient.RefetchQueriesResult`</td></tr>
+<tr><td>`SubscriptionOptions`</td><td>`ApolloClient.SubscribeOptions`</td></tr>
+<tr><td>`WatchQueryOptions`</td><td>`ApolloClient.WatchQueryOptions`</td></tr>
+<tr><td>`ApolloQueryResult`</td><td>`ObservableQuery.Result`</td></tr>
+<tr><td>`FetchMoreOptions`</td><td>`ObservableQuery.FetchMoreOptions`</td></tr>
+<tr><td>`SubscribeToMoreOptions`</td><td>`ObservableQuery.SubscribeToMoreOptions`</td></tr>
+<tr><th>`@apollo/client`</th><th>`@apollo/client/react`</th></tr>
+<tr><td>`ApolloProvider`</td><td>(unchanged)</td></tr>
+<tr><td>`createQueryPreloader`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloContext`</td><td>(unchanged)</td></tr>
+<tr><td>`skipToken`</td><td>(unchanged)</td></tr>
+<tr><td>`useApolloClient`</td><td>(unchanged)</td></tr>
+<tr><td>`useBackgroundQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useFragment`</td><td>(unchanged)</td></tr>
+<tr><td>`useLazyQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useLoadableQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useMutation`</td><td>(unchanged)</td></tr>
+<tr><td>`useQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useQueryRefHandlers`</td><td>(unchanged)</td></tr>
+<tr><td>`useReactiveVar`</td><td>(unchanged)</td></tr>
+<tr><td>`useReadQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useSubscription`</td><td>(unchanged)</td></tr>
+<tr><td>`useSuspenseFragment`</td><td>(unchanged)</td></tr>
+<tr><td>`useSuspenseQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`ApolloContextValue`</td><td>(unchanged)</td></tr>
+<tr><td>`BackgroundQueryHookFetchPolicy`</td><td>`useBackgroundQuery.FetchPolicy`</td></tr>
+<tr><td>`BackgroundQueryHookOptions`</td><td>`useBackgroundQuery.Options`</td></tr>
+<tr><td>`BaseSubscriptionOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`Context`</td><td>(unchanged)</td></tr>
+<tr><td>`LazyQueryExecFunction`</td><td>`useLazyQuery.ExecFunction`</td></tr>
+<tr><td>`LazyQueryHookExecOptions`</td><td>`useLazyQuery.ExecOptions`</td></tr>
+<tr><td>`LazyQueryHookOptions`</td><td>`useLazyQuery.Options`</td></tr>
+<tr><td>`LazyQueryResult`</td><td>`useLazyQuery.Result`</td></tr>
+<tr><td>`LazyQueryResultTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`LoadableQueryHookFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookOptions`</td><td>`useLoadableQuery.Options`</td></tr>
+<tr><td>`LoadQueryFunction`</td><td>`useLoadableQuery.LoadQueryFunction`</td></tr>
+<tr><td>`MutationFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`MutationFunctionOptions`</td><td>`useMutation.MutationFunctionOptions`</td></tr>
+<tr><td>`MutationHookOptions`</td><td>`useMutation.Options`</td></tr>
+<tr><td>`MutationResult`</td><td>`useMutation.Result`</td></tr>
+<tr><td>`MutationTuple`</td><td>`useMutation.ResultTuple`</td></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`OnDataOptions`</td><td>`useSubscription.OnDataOptions`</td></tr>
+<tr><td>`OnSubscriptionDataOptions`</td><td>`useSubscription.OnSubscriptionDataOptions`</td></tr>
+<tr><td>`PreloadedQueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryFetchPolicy`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryFunctionOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryHookOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryReference`</td><td>`QueryRef`</td></tr>
+<tr><td>`QueryResult`</td><td>`useQuery.Result`</td></tr>
+<tr><td>`QueryTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`SkipToken`</td><td>(unchanged)</td></tr>
+<tr><td>`SubscriptionDataOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`SubscriptionHookOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`SubscriptionResult`</td><td>`useSubscription.Result`</td></tr>
+<tr><td>`SuspenseQueryHookFetchPolicy`</td><td>`useSuspenseQuery.FetchPolicy`</td></tr>
+<tr><td>`SuspenseQueryHookOptions`</td><td>`useSuspenseQuery.Options`</td></tr>
+<tr><td>`UseBackgroundQueryResult`</td><td>`useBackgroundQuery.Result`</td></tr>
+<tr><td>`UseFragmentOptions`</td><td>`useFragment.Options`</td></tr>
+<tr><td>`UseFragmentResult`</td><td>`useFragment.Result`</td></tr>
+<tr><td>`UseLoadableQueryResult`</td><td>`useLoadableQuery.Result`</td></tr>
+<tr><td>`UseQueryRefHandlersResult`</td><td>`useQueryRefHandlers.Result`</td></tr>
+<tr><td>`UseReadQueryResult`</td><td>`useReadQuery.Result`</td></tr>
+<tr><td>`UseSuspenseFragmentOptions`</td><td>`useSuspenseFragment.Options`</td></tr>
+<tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
+<tr><td>`UseSuspenseQueryResult`</td><td>`useSuspenseQuery.Result`</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/cache`</th><th>(unchanged)</th></tr>
+<tr><td>`WatchFragmentOptions`</td><td>`ApolloCache.WatchFragmentOptions`</td></tr>
+<tr><td>`WatchFragmentResult`</td><td>`ApolloCache.WatchFragmentResult`</td></tr>
+<tr><th>`@apollo/client/link`</th><th>`@apollo/client/incremental`</th></tr>
+<tr><td>`ExecutionPatchIncrementalResult`</td><td>`Defer20220824Handler.SubsequentResult`</td></tr>
+<tr><td>`ExecutionPatchInitialResult`</td><td>`Defer20220824Handler.InitialResult`</td></tr>
+<tr><td>`ExecutionPatchResult`</td><td>`Defer20220824Handler.Chunk`</td></tr>
+<tr><td>`IncrementalPayload`</td><td>`Defer20220824Handler.IncrementalDeferPayload`</td></tr>
+<tr><td>`Path`</td><td>`Incremental.Path`</td></tr>
+<tr><th>`@apollo/client/link`</th><th>(unchanged)</th></tr>
+<tr><td>`FetchResult`</td><td>`ApolloLink.Result`</td></tr>
+<tr><td>`GraphQLRequest`</td><td>`ApolloLink.Request`</td></tr>
+<tr><td>`NextLink`</td><td>`ApolloLink.ForwardFunction`</td></tr>
+<tr><td>`Operation`</td><td>`ApolloLink.Operation`</td></tr>
+<tr><td>`RequestHandler`</td><td>`ApolloLink.RequestHandler`</td></tr>
+<tr><th>`@apollo/client/link`</th><th>`graphql`</th></tr>
+<tr><td>`SingleExecutionResult`</td><td>`FormattedExecutionResult`</td></tr>
+<tr><th>`@apollo/client/link/batch`</th><th>(unchanged)</th></tr>
+<tr><td>`BatchHandler`</td><td>`BatchLink.BatchHandler`</td></tr>
+<tr><th>`@apollo/client/link/context`</th><th>(unchanged)</th></tr>
+<tr><td>`ContextSetter`</td><td>`SetContextLink.LegacyContextSetter`</td></tr>
+<tr><th>`@apollo/client/link/error`</th><th>(unchanged)</th></tr>
+<tr><td>`ErrorHandler`</td><td>`ErrorLink.ErrorHandler`</td></tr>
+<tr><td>`ErrorResponse`</td><td>`ErrorLink.ErrorHandlerOptions`</td></tr>
+<tr><th>`@apollo/client/link/http`</th><th>`@apollo/client/errors`</th></tr>
+<tr><td>`ServerParseError`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/link/persisted-queries`</th><th>(unchanged)</th></tr>
+<tr><td>`ErrorResponse`</td><td>`PersistedQueryLink.DisableFunctionOptions`</td></tr>
+<tr><th>`@apollo/client/link/remove-typename`</th><th>(unchanged)</th></tr>
+<tr><td>`RemoveTypenameFromVariablesOptions`</td><td>`RemoveTypenameFromVariablesLink.Options`</td></tr>
+<tr><th>`@apollo/client/link/utils`</th><th>`@apollo/client/errors`</th></tr>
+<tr><td>`ServerError`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/link/ws`</th><th>(unchanged)</th></tr>
+<tr><td>`WebSocketParams`</td><td>`WebSocketLink.Configuration`</td></tr>
+<tr><th>`@apollo/client/react`</th><th>`@apollo/client`</th></tr>
+<tr><td>`Context`</td><td>`DefaultContext`</td></tr>
+<tr><th>`@apollo/client/react`</th><th>(unchanged)</th></tr>
+<tr><td>`QueryReference`</td><td>`QueryRef`</td></tr>
+<tr><td>`ApolloProviderProps`</td><td>`ApolloProvider.Props`</td></tr>
+<tr><td>`BackgroundQueryHookFetchPolicy`</td><td>`useBackgroundQuery.FetchPolicy`</td></tr>
+<tr><td>`BackgroundQueryHookOptions`</td><td>`useBackgroundQuery.Options`</td></tr>
+<tr><td>`UseBackgroundQueryResult`</td><td>`useBackgroundQuery.Result`</td></tr>
+<tr><td>`LazyQueryExecFunction`</td><td>`useLazyQuery.ExecFunction`</td></tr>
+<tr><td>`LazyQueryHookExecOptions`</td><td>`useLazyQuery.ExecOptions`</td></tr>
+<tr><td>`LazyQueryHookOptions`</td><td>`useLazyQuery.Options`</td></tr>
+<tr><td>`LazyQueryResult`</td><td>`useLazyQuery.Result`</td></tr>
+<tr><td>`LazyQueryResultTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`QueryTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`LoadableQueryFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookOptions`</td><td>`useLoadableQuery.Options`</td></tr>
+<tr><td>`LoadQueryFunction`</td><td>`useLoadableQuery.LoadQueryFunction`</td></tr>
+<tr><td>`UseLoadableQueryResult`</td><td>`useLoadableQuery.Result`</td></tr>
+<tr><td>`MutationFunctionOptions`</td><td>`useMutation.MutationFunctionOptions`</td></tr>
+<tr><td>`MutationHookOptions`</td><td>`useMutation.Options`</td></tr>
+<tr><td>`MutationResult`</td><td>`useMutation.Result`</td></tr>
+<tr><td>`MutationTuple`</td><td>`useMutation.ResultTuple`</td></tr>
+<tr><td>`BaseSubscriptionOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`OnDataOptions`</td><td>`useSubscription.OnDataOptions`</td></tr>
+<tr><td>`OnSubscriptionDataOptions`</td><td>`useSubscription.OnSubscriptionDataOptions`</td></tr>
+<tr><td>`SubscriptionHookOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`SubscriptionResult`</td><td>`useSubscription.Result`</td></tr>
+<tr><td>`QueryFunctionOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryHookOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryResult`</td><td>`useQuery.Result`</td></tr>
+<tr><td>`SuspenseQueryHookFetchPolicy`</td><td>`useSuspenseQuery.FetchPolicy`</td></tr>
+<tr><td>`SuspenseQueryHookOptions`</td><td>`useSuspenseQuery.Options`</td></tr>
+<tr><td>`UseSuspenseQueryResult`</td><td>`useSuspenseQuery.Result`</td></tr>
+<tr><td>`UseQueryRefHandlersResult`</td><td>`useQueryRefHandlers.Result`</td></tr>
+<tr><td>`UseFragmentOptions`</td><td>`useFragment.Options`</td></tr>
+<tr><td>`UseFragmentResult`</td><td>`useFragment.Result`</td></tr>
+<tr><td>`UseReadQueryResult`</td><td>`useReadQuery.Result`</td></tr>
+<tr><td>`UseSuspenseFragmentOptions`</td><td>`useSuspenseFragment.Options`</td></tr>
+<tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
+<tr><th>`@apollo/client/react`</th><th>`@apollo/client/utilities/internal`</th></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/react/internal`</th><th>`@apollo/client/react`</th></tr>
+<tr><td>`PreloadedQueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryRef`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/testing`</th><th>(unchanged)</th></tr>
+<tr><td>`MockedRequest`</td><td>`MockLink.MockedRequest`</td></tr>
+<tr><td>`MockedResponse`</td><td>`MockLink.MockedResponse`</td></tr>
+<tr><td>`MockLinkOptions`</td><td>`MockLink.Options`</td></tr>
+<tr><td>`ResultFunction`</td><td>`MockLink.ResultFunction`</td></tr>
+<tr><th>`@apollo/client/testing`</th><th>`@apollo/client/testing/react`</th></tr>
+<tr><td>`MockedProvider`</td><td>(unchanged)</td></tr>
+<tr><td>`MockedProviderProps`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/utilities`</th><th>`@apollo/client/utilities/internal`</th></tr>
+<tr><td>`argumentsObjectFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`AutoCleanedStrongCache`</td><td>(unchanged)</td></tr>
+<tr><td>`AutoCleanedWeakCache`</td><td>(unchanged)</td></tr>
+<tr><td>`canUseDOM`</td><td>(unchanged)</td></tr>
+<tr><td>`checkDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`cloneDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`compact`</td><td>(unchanged)</td></tr>
+<tr><td>`createFragmentMap`</td><td>(unchanged)</td></tr>
+<tr><td>`createFulfilledPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`createRejectedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`dealias`</td><td>(unchanged)</td></tr>
+<tr><td>`decoratePromise`</td><td>(unchanged)</td></tr>
+<tr><td>`DeepMerger`</td><td>(unchanged)</td></tr>
+<tr><td>`filterMap`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloCacheMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloClientMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getDefaultValues`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentDefinitions`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentFromSelection`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentQueryDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`getGraphQLErrorsFromResult`</td><td>(unchanged)</td></tr>
+<tr><td>`getInMemoryCacheMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getOperationDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getOperationName`</td><td>(unchanged)</td></tr>
+<tr><td>`getQueryDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getStoreKeyName`</td><td>(unchanged)</td></tr>
+<tr><td>`graphQLResultHasError`</td><td>(unchanged)</td></tr>
+<tr><td>`hasDirectives`</td><td>(unchanged)</td></tr>
+<tr><td>`hasForcedResolvers`</td><td>(unchanged)</td></tr>
+<tr><td>`isArray`</td><td>(unchanged)</td></tr>
+<tr><td>`isDocumentNode`</td><td>(unchanged)</td></tr>
+<tr><td>`isField`</td><td>(unchanged)</td></tr>
+<tr><td>`isNonEmptyArray`</td><td>(unchanged)</td></tr>
+<tr><td>`isNonNullObject`</td><td>(unchanged)</td></tr>
+<tr><td>`isPlainObject`</td><td>(unchanged)</td></tr>
+<tr><td>`makeReference`</td><td>(unchanged)</td></tr>
+<tr><td>`makeUniqueId`</td><td>(unchanged)</td></tr>
+<tr><td>`maybeDeepFreeze`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeDeepArray`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`omitDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`preventUnhandledRejection`</td><td>(unchanged)</td></tr>
+<tr><td>`registerGlobalCache`</td><td>(unchanged)</td></tr>
+<tr><td>`removeDirectivesFromDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`resultKeyNameFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`shouldInclude`</td><td>(unchanged)</td></tr>
+<tr><td>`storeKeyNameFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`stringifyForDisplay`</td><td>(unchanged)</td></tr>
+<tr><td>`toQueryResult`</td><td>(unchanged)</td></tr>
+<tr><td>`DecoratedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`DeepOmit`</td><td>(unchanged)</td></tr>
+<tr><td>`FragmentMap`</td><td>(unchanged)</td></tr>
+<tr><td>`FragmentMapFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`FulfilledPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`IsAny`</td><td>(unchanged)</td></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`PendingPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`Prettify`</td><td>(unchanged)</td></tr>
+<tr><td>`Primitive`</td><td>(unchanged)</td></tr>
+<tr><td>`RejectedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`RemoveIndexSignature`</td><td>(unchanged)</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/environment`</th></tr>
+<tr><td>`DEV`</td><td>`__DEV__`</td></tr>
+<tr><td>`__DEV__`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/internal/globals`</th></tr>
+<tr><td>`global`</td><td>(unchanged)</td></tr>
+<tr><td>`maybe`</td><td>(unchanged)</td></tr>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/invariant`</th></tr>
+<tr><td>`invariant`</td><td>(unchanged)</td></tr>
+<tr><td>`InvariantError`</td><td>(unchanged)</td></tr>
+<tr><td>`newInvariantError`</td><td>(unchanged)</td></tr>
+</tbody>
+</table>
+
+</details>
+
+## Replacing removed exports
+
+If you used the [Codemod](#applying-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/zz_removals`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
+
+For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/zz_removals.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/zz_removals.d.ts)
+
+## Update your ApolloClient creation
+
+Some of the constructor options of `ApolloClient` have changed around in Apollo Client 4.0.
+
+### Move `uri`, `headers`, and `credentials` to a new `HttpLink`
+
+Before:
+
+```ts
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink, // [!code ++]
+} from "@apollo/client/core";
+const client = new ApolloClient({
+  // ...
+  uri: "https://example.com/graphql",
+  link: new HttpLink({ <!--[!code --]-->
+    uri: "https://example.com/graphql",
+  }), // [!code ++]
+  // ...
+});
+```
+
+Before:
+
+```js
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  uri: "https://example.com/graphql",
+  name: "My Apollo Client App",
+  version: "1.0.0",
+  connectToDevTools: true,
+  resolvers: {
+    Query: {
+      myField: () => "Hello World",
+    },
+  },
+});
+```
+
+After:
+
+```js
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  LocalState,
+} from "@apollo/client";
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  // `uri`, `headers`, and `credentials` now need to be passed into a new `HttpLink` instance
+  link: new HttpLink({
+    uri: "https://example.com/graphql",
+  }),
+  // `name` and `version` are now passed into the `clientAwareness` option
+  clientAwareness: {
+    name: "My Apollo Client App",
+    version: "1.0.0",
+  },
+  // `connectToDevTools` has been replaced with `devtools.enabled`
+  devtools: { enabled: true },
+  // `resolvers` now need to be passed into a new `LocalState` instance
+  localState: new LocalState({
+    resolvers: {
+      Query: {
+        myField: () => "Hello World",
+      },
+    },
+  }),
+});
+```
+
+## (optional, but recommended) Stop using generated hooks
+
+---
 
 The `@apollo/client` library includes functionality that previously required installing additional packages. As part of migrating to Apollo Client 3.0, follow the instructions below for each library your application currently uses.
 

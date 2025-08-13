@@ -8,6 +8,7 @@ import type { UtilContext } from "../types.js";
 import { findImportDeclarationFor } from "./findImportDeclarationFor.js";
 import { findImportSpecifiersFor } from "./findImportSpecifiersFor.js";
 import { getUnusedIdentifier } from "./getUnusedIdentifier.js";
+import { monkeyPatchAstTypes } from "./monkeyPatchAstTypes.js";
 import { moveGlobalIdentifierToNamespaceAccess } from "./moveGlobalIdentifierToNamespaceAccess.js";
 import { pick } from "./pick.js";
 import { renameGlobalIdentifier } from "./renameGlobalIdentifier.js";
@@ -24,6 +25,8 @@ export function handleIdentiferRename({
 }) {
   const { from, to } = rename;
   const final = { ...from, ...to };
+
+  monkeyPatchAstTypes(context.j);
 
   findImportSpecifiersFor({ description: from, context }).forEach(
     (specifierPath) => {

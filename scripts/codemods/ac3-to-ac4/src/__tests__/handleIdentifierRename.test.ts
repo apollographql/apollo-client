@@ -398,3 +398,26 @@ describe("aliased imports", () => {
     `);
   });
 });
+
+test("generic position", () => {
+  expect(
+    transform(
+      `
+        import { FetchResult } from "@apollo/client";
+        fn<FetchResult>();
+      `,
+      {
+        from: {
+          module: "@apollo/client/link",
+          alternativeModules: ["@apollo/client"],
+          identifier: "FetchResult",
+        },
+        to: { namespace: "ApolloLink", identifier: "Result" },
+        importType: "type",
+      }
+    )
+  ).toMatchInlineSnapshot(`
+    "import { ApolloLink } from "@apollo/client";
+    fn<ApolloLink.Result>();"
+  `);
+});

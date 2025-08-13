@@ -1,4 +1,5 @@
 import { Streaming } from "@apollo/client";
+import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
 import type { HKT } from "@apollo/client/utilities";
 import { DeepPartial } from "@apollo/client/utilities";
 
@@ -11,7 +12,8 @@ interface StreamingOverrideHKT extends HKT {
   return: StreamingOverride<this["arg1"]>;
 }
 declare module "@apollo/client" {
-  export interface TypeOverrides {
+  export interface TypeOverrides
+    extends GraphQLCodegenDataMasking.TypeOverrides {
     Streaming: StreamingOverrideHKT;
   }
 }

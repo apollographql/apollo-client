@@ -2,7 +2,6 @@ import { Observable } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloLink, gql } from "@apollo/client";
-import type { MaskedDocumentNode } from "@apollo/client/masking";
 import type { MockLink } from "@apollo/client/testing";
 
 export interface SimpleCaseData {
@@ -104,13 +103,13 @@ export function setupMaskedVariablesCase() {
       name
     }
   `;
-  const query: MaskedDocumentNode<
+  const query: TypedDocumentNode<
     MaskedVariablesCaseData,
     VariablesCaseVariables
   > = document;
 
   const unmaskedQuery: TypedDocumentNode<
-    MaskedVariablesCaseData,
+    UnmaskedVariablesCaseData,
     VariablesCaseVariables
   > = document;
 

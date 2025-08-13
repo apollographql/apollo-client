@@ -58,8 +58,6 @@ import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
 import { makeVar } from '@apollo/client/cache';
-import { Masked } from '@apollo/client/masking';
-import { MaskedDocumentNode } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
@@ -544,10 +542,6 @@ export { LinkError }
 export { LocalStateError }
 
 export { makeVar }
-
-export { Masked }
-
-export { MaskedDocumentNode }
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {

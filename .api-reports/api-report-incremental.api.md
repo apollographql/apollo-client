@@ -9,11 +9,21 @@ import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
+import type { HKT } from '@apollo/client/utilities';
 
 // @public (undocumented)
 namespace Defer20220824Handler {
     // (undocumented)
     type Chunk<TData extends Record<string, unknown>> = InitialResult<TData> | SubsequentResult<TData>;
+    // (undocumented)
+    interface Defer20220824Result extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        arg2: unknown;
+        // (undocumented)
+        return: Defer20220824Handler.Chunk<Record<string, unknown>>;
+    }
     // (undocumented)
     type IncrementalDeferPayload<TData = Record<string, unknown>> = {
         data?: TData | null | undefined;
@@ -37,6 +47,11 @@ namespace Defer20220824Handler {
         hasNext: boolean;
         incremental?: Array<IncrementalDeferPayload<TData>>;
     };
+    // (undocumented)
+    interface TypeOverrides {
+        // (undocumented)
+        AdditionalApolloLinkResultTypes: Defer20220824Result;
+    }
 }
 
 // @public
@@ -89,6 +104,24 @@ export namespace Incremental {
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+}
+
+// @public (undocumented)
+export namespace NotImplementedHandler {
+    // (undocumented)
+    export interface NotImplementedResult extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        arg2: unknown;
+        // (undocumented)
+        return: never;
+    }
+    // (undocumented)
+    export interface TypeOverrides {
+        // (undocumented)
+        AdditionalApolloLinkResultTypes: NotImplementedResult;
+    }
 }
 
 // @public (undocumented)

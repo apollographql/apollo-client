@@ -7,7 +7,7 @@
 import type { ASTNode } from 'graphql';
 import { disableExperimentalFragmentVariables } from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
-import type { DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
@@ -28,10 +28,6 @@ import type { Subscribable } from 'rxjs';
 import type { Subscription } from 'rxjs';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-
-// @public (undocumented)
-interface AdditionalApolloLinkResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
-}
 
 // Warning: (ae-forgotten-export) The symbol "Modifier" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -389,6 +385,11 @@ export type ApolloClientOptions = ApolloClient.Options;
 
 // @public (undocumented)
 export namespace ApolloLink {
+    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type AdditionalResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> = ApplyHKTImplementationWithDefault<TypeOverrides, "AdditionalApolloLinkResultTypes", NotImplementedHandler.TypeOverrides, TData, TExtensions>;
     // (undocumented)
     export namespace DocumentationTypes {
         export function ForwardFunction(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
@@ -420,10 +421,8 @@ export namespace ApolloLink {
         variables?: OperationVariables;
     }
     export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result>;
-    // Warning: (ae-forgotten-export) The symbol "AdditionalApolloLinkResultTypes" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalApolloLinkResultTypes<TData, TExtensions>[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
+    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalResultTypes<TData, TExtensions>;
 }
 
 // @public
@@ -829,7 +828,6 @@ export type DataState<TData> = {
 
 // @public (undocumented)
 export namespace DataValue {
-    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
     export type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
     export type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
@@ -1831,6 +1829,38 @@ export interface NormalizedCacheObject {
 
 // @public
 export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
+
+// @public (undocumented)
+namespace NotImplementedHandler {
+    // (undocumented)
+    interface NotImplementedResult extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        arg2: unknown;
+        // (undocumented)
+        return: never;
+    }
+    // (undocumented)
+    interface TypeOverrides {
+        // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        AdditionalApolloLinkResultTypes: NotImplementedResult;
+    }
+}
+
+// @public (undocumented)
+class NotImplementedHandler implements Incremental.Handler<never> {
+    // (undocumented)
+    extractErrors(): void;
+    // (undocumented)
+    isIncrementalResult(_: any): _ is never;
+    // (undocumented)
+    prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
+    // (undocumented)
+    startRequest: any;
+}
 
 export { Observable }
 

@@ -231,7 +231,7 @@ exports[`all exports 1`] = `
 +  removeConnectionDirectiveFromDocument as utilities_removeConnectionDirectiveFromDocument,
 +  removeFragmentSpreadFromDocument as utilities_removeFragmentSpreadFromDocument,
 +  valueToObjectRepresentation as utilities_valueToObjectRepresentation,
-+} from "@apollo/client/zz_removals";
++} from "@apollo/client/v4-migration";
 +
 +import type {
 +  ClientParseError as _ClientParseError,
@@ -311,7 +311,7 @@ exports[`all exports 1`] = `
 +  TupleToIntersection as utilities_TupleToIntersection,
 +  UnionToIntersection as utilities_UnionToIntersection,
 +  VariableValue as utilities_VariableValue,
-+} from "@apollo/client/zz_removals";
++} from "@apollo/client/v4-migration";
 +
 +import {
    ApolloClientOptions as core_ApolloClientOptions,

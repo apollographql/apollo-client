@@ -488,4 +488,4 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/zz_removals 1`] = `Array []`;
+exports[`exports of public entry points @apollo/client/v4-migration 1`] = `Array []`;

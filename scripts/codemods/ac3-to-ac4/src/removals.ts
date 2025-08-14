@@ -179,7 +179,7 @@ const removalsTransform: Transform = function transform(file, api) {
         identifier: removal.identifier,
         alternativeModules: ["@apollo/client", "@apollo/client/core"],
       },
-      to: { module: "@apollo/client/zz_removals", alternativeModules: [] },
+      to: { module: "@apollo/client/v4-migration", alternativeModules: [] },
       importType: removal.importType,
     };
     handleIdentiferRename({

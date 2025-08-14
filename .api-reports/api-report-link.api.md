@@ -5,20 +5,21 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { DefaultContext } from '@apollo/client';
-import type { DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
+import type { NotImplementedHandler } from '@apollo/client/incremental';
 import type { Observable } from 'rxjs';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
-
-// @public (undocumented)
-export interface AdditionalApolloLinkResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
-}
+import type { TypeOverrides } from '@apollo/client';
 
 // @public (undocumented)
 export namespace ApolloLink {
+    // (undocumented)
+    export type AdditionalResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> = ApplyHKTImplementationWithDefault<TypeOverrides, "AdditionalApolloLinkResultTypes", NotImplementedHandler.TypeOverrides, TData, TExtensions>;
     // (undocumented)
     export namespace DocumentationTypes {
         export function ForwardFunction(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
@@ -51,7 +52,7 @@ export namespace ApolloLink {
     }
     export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result>;
     // (undocumented)
-    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalApolloLinkResultTypes<TData, TExtensions>[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
+    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalResultTypes<TData, TExtensions>;
 }
 
 // @public

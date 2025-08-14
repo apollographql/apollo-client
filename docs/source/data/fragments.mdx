@@ -1286,6 +1286,31 @@ To migrate from CodeGen's fragment masking feature to Apollo Client's data maski
 
 3. [Enable data masking](#enabling-data-masking) in Apollo Client.
 
+#### Setting data masking types
+
+By default, Apollo Client makes no modification to the operation types provided to its APIs, regardless of whether the type definitions are masked or unmasked. This provides a simpler upgrade path when you're ready to [incrementally adopt](#incremental-adoption-in-an-existing-application) data masking.
+
+To use GraphQL Codegen's masking format with your operation types, you need to tell Apollo Client to use the associated GraphQL Codegen masking types. You do this by defining a [type override](../development-testing/static-typing#overriding-type-implementations-of-built-in-types) that uses the GraphQL Codegen masking format.
+
+Create a TypeScript file that will be used to modify the `TypeOverrides` interface. Extend `TypeOverrides` with the `GraphQLCodegenDataMasking.TypeOverrides` interface.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+
+declare module "@apollo/client" {
+  interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
+}
+```
+
+<Note>
+
+This example uses `apollo-client.d.ts` as the file name to make it easily identifiable. You can name this file as you wish.
+
+</Note>
+
 #### Using with fragments
 
 When using [colocated fragments](#colocating-fragments) with your components, it's best to ensure the object passed to your component is done in a type-safe way. This means:

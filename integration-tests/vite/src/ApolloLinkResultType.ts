@@ -1,4 +1,5 @@
 import type { ApolloLink } from "@apollo/client";
+import { expectTypeOf } from "expect-type";
 import type { FormattedExecutionResult } from "graphql";
 
 // ensure that without manual addition to `TypeOverrides`,

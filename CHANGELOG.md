@@ -1,5 +1,21 @@
 # @apollo/client
 
+## 4.0.0-rc.11
+
+### Major Changes
+
+- [#12840](https://github.com/apollographql/apollo-client/pull/12840) [`83e132a`](https://github.com/apollographql/apollo-client/commit/83e132ab1bacb3293da61dd4519379e36a1fb090) Thanks [@phryneas](https://github.com/phryneas)! - If you use an incremental delivery handler, you now have to explicitly opt into adding the chunk types to the `ApolloLink.Result` type.
+
+  ```ts title="apollo-client.d.ts
+  import { Defer20220824Handler } from "@apollo/client/incremental";
+
+  declare module "@apollo/client" {
+    export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
+  }
+  ```
+
+- [#12841](https://github.com/apollographql/apollo-client/pull/12841) [`65b503f`](https://github.com/apollographql/apollo-client/commit/65b503fe4bfcf942e8f66f36f622f5f6448d6731) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `DataMasking` interface exported from `@apollo/client` and `@apollo/client/masking`.
+
 ## 4.0.0-rc.10
 
 ### Major Changes

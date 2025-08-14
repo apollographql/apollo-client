@@ -84,7 +84,7 @@ This codemod consists of the following steps:
   - The `from`, `split` and `concat` functions should now be used as methods on the `ApolloLink` class, so this step will also update your code to use these static methods.
 - `removals`
   In Apollo Client 4, a number of exports has been removed for various reasons.
-  This step will move all of those imports to point at `@apollo/client/zz_removals`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
+  This step will move all of those imports to point at `@apollo/client/v4-migration`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
 
 ### Runing the Codemod
 
@@ -399,9 +399,9 @@ The following individual imports have been renamed, moved to new entry points an
 
 ## Replacing removed exports
 
-If you used the [Codemod](#applying-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/zz_removals`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
+If you used the [Codemod](#applying-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/v4-migration`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
 
-For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/zz_removals.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/zz_removals.d.ts)
+For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/v4-migration.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/v4-migration.d.ts)
 
 ## Update your ApolloClient creation
 

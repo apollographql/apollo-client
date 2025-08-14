@@ -1664,8 +1664,6 @@ And thats it! Now when we use the `Masked` type in our application or Apollo Cli
 
 The following masking utility types available for override. The GraphQL Codegen type implementation is used by default types that do not have a type override.
 
-- `Masked<TData>` - Marks `TData` as masked. The marked `TData` type is used by `MaybeMasked` when the [types mode](#setting-a-types-mode-for-masked-types) is `unmask` to determine whether to apply `Unmask` on `TData`.
-- `MaskedDocumentNode<TData, TVariables>` - Marks `TData` as masked. This is a shortcut for `TypedDocumentNode<Masked<TData>, TVariables>`.
 - `FragmentType<TFragmentData>` - Type used with [fragments](#using-with-fragments) to ensure parent objects contain the fragment spread from the type.
 - `MaybeMasked<TData>` - Returns `TData` as either masked or unmasked depending on the [types mode](#setting-a-types-mode-for-masked-types).
 - `Unmasked<TData>` - Unwraps `TData` into the full result.

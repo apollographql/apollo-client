@@ -552,6 +552,178 @@ Variables are validated the same as `useQuery`. See [working with variables](#wo
 
 Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).
 
+## Overriding type implementations for built-in types
+
+Apollo Client makes it possible to use custom implementations of certain built-in utility types. This enables you to work with custom type outputs that might otherwise be incompatible with the default type implementations in Apollo Client.
+
+You use a technique called 'higher-kinded types' (HKT) to provide your own type implementations for Apollo Client's utility types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
+
+### Anatomy of HKTs
+
+HKTs in Apollo Client consist of two parts:
+
+- The HKT type definition - This provides the plumbing necessary to use your custom type implementation with Apollo Client
+- The `TypeOverrides` interface - An interface used with [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) to provide the mapping for the overridden types to your HKT types
+
+#### Creating an HKT type
+
+You create HKT types by extending the `HKT` interface exported by `@apollo/client/utilities`.
+
+```ts
+import { HKT } from "@apollo/client/utilities";
+
+// The implementation of the type
+type MyCustomImplementation<GenericArg1, GenericArg2> = SomeOtherUtility<
+  GenericArg1,
+  GenericArg2
+>;
+
+interface MyTypeOverride extends HKT {
+  arg1: unknown; // GenericArg1
+  arg2: unknown; // GenericArg2
+  return: MyCustomImplementation<this["arg1"], this["arg2"]>;
+}
+```
+
+You can think of each property on the `HKT` type as a placeholder. Each `arg*` property corresponds to a generic argument used for the implementation. The `return` property provides the mapping to the actual implementation of the type, using the `arg*` values as generic arguments.
+
+#### Mapping HKT types to its type override
+
+Once your HKT type is created, you tell Apollo Client about it by using [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) using the `TypeOverrides` interface. This interface is included in Apollo Client to enable you to provide mappings to your custom type implementations.
+
+Create a TypeScript file that defines the `TypeOverrides` interface for the `@apollo/client` module.
+
+```ts title=apollo-client.d.ts
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    TypeOverride1: MyTypeOverride;
+  }
+}
+```
+
+Each key in the `TypeOverrides` interface corresponds to an overridable type in Apollo Client and its value maps to an HKT type that provides the definition for that type.
+
+<Note>
+
+`TypeOverride1` is used as an example in the previous code block but is not a valid overridable type so it is ignored. See the [available type overrides](#available-type-overrides) for more information on which types can be overridden.
+
+</Note>
+
+### Example: Custom `dataState` types
+
+Let's add our own type overrides for the `Complete` and `Streaming` utility types. These types are used to provide types for the `data` property when [`dataState`](#type-narrowing-data-with-datastate) is set to specific values. The `Complete` type is used when `dataState` is `"complete"`, and `Streaming` is used when `dataState` is `"streaming"`.
+
+For this example, we'll assume a custom type generation format where:
+
+- Streamed types (i.e. operation types that use the `@defer` directive) include a `__streaming` virtual property. Its value is the operation type that should be used when the result is still streaming from the server.
+
+  ```ts
+  type StreamedQuery = {
+    // The streamed variant of the operation type is provided under the
+    // `__streaming` virtual property
+    __streaming?: {
+      user: { __typename: "User"; id: number } & (
+        | { name: string }
+        | { name?: never }
+      );
+    };
+
+    // The full result type includes all other fields in the type
+    user: { __typename: "User"; id: number; name: string };
+  };
+  ```
+
+- Complete types which provide the full type of a query
+
+  ```ts
+  type CompleteQuery = {
+    user: { __typename: "User"; id: number; name: string };
+  };
+  ```
+
+<Note>
+
+This is a hypothetical format that doesn't exist in Apollo Client or any known code generation tool. This format is used specifically for this example to illustrate how to provide type overrides to Apollo Client.
+
+</Note>
+
+First, let's define our custom implementation of the `Streaming` type. The implementation works by checking if the `__streaming` virtual property exists on the type. If so, it returns the value on the `__streaming` property as the type, otherwise it returns the input type unmodified.
+
+```ts title="custom-types.ts"
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+```
+
+Now let's define our custom implementation of the `Complete` type. The implementation works by removing the `__streaming` virtual property on the input type. This can be accomplished using the built-in [`Omit`](https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys) type.
+
+```ts {4} title="custom-types.ts"
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+
+type Complete<TData> = Omit<TData, "__streaming">;
+```
+
+Now we need to define higher-kinded types for each of these implementations. This provides the bridge needed by Apollo Client to use our custom type implementations. This is done by extending the `HKT` interface exported by `@apollo/client/utilities`.
+
+Let's provide HKTs for our `Complete` and `Streaming` types. We'll put these in the same file as our type implementations.
+
+```ts {8-11,13-16} title="custom-types.ts"
+import { HKT } from "@apollo/client/utilities";
+
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+
+type Complete<TData> = Omit<TData, "__streaming">;
+
+export interface StreamingHKT extends HKT {
+  arg1: unknown; // TData
+  return: Streaming<this["arg1"]>;
+}
+
+export interface CompleteHKT extends HKT {
+  arg1: unknown; // TData
+  return: Complete<this["arg1"]>;
+}
+```
+
+With our HKT types in place, we now need to tell Apollo Client about them. We'll need to provide our type overrides on the `TypeOverrides` interface.
+
+Create a TypeScript file and define a `TypeOverrides` interface for the `@apollo/client` module.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+import { CompleteHKT, StreamingHKT } from "./custom-types";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    Complete: CompleteHKT;
+    Streaming: StreamingHKT;
+  }
+}
+```
+
+And that's it! Now when `dataState` is `"complete"` or `"streaming"`, Apollo Client will use our custom type implementations 🎉.
+
+### Available type overrides
+
+The following utility types are available to override:
+
+- `FragmentType<TFragmentData>` - Type used with fragments to ensure parent objects contain the fragment spread
+- `Unmasked<TData>` - Unwraps masked types into the full result type
+- `MaybeMasked<TData>` - Conditionally returns either masked or unmasked type
+- `Complete<TData>` - Type returned when `dataState` is `"complete"`
+- `Streaming<TData>` - Type returned when `dataState` is `"streaming"` (for `@defer` queries)
+- `Partial<TData>` - Type returned when `dataState` is `"partial"`
+- `AdditionalApolloLinkResultTypes` - Additional types that can be returned from Apollo Link operations
+
+For more information about data masking types specifically, see the [data masking guide](../data/fragments#defining-your-own-masking-types-using-higher-kinded-types).
+
 ## Advanced GraphQL Codegen configuration
 
 ### Generating relative types files

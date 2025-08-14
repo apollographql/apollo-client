@@ -625,7 +625,7 @@ import { CombinedGraphQLErrors } from "@apollo/client"; // [!code highlight]
 
 function ShowingSomeErrors() {
   const { loading, error, data } = useQuery(MY_QUERY);
-  // [!code word:CombinedGraphQLErrors.is]
+
   if (CombinedGraphQLErrors.is(error)) { // [!code highlight]
     return (
       <div>

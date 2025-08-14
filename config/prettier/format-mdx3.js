@@ -19,14 +19,32 @@ export const parsers = {
   },
 };
 
+// matches e.g. "[!code ++]" "[!code highlight:3]" "[!code word:Cache]" or "[!code word:Cache:123]"
+const codePattern = /\[!code ([a-z+-]+|word:((?:\\.|[^:\]])+))(:\d+)?\]/;
+// matches repetitions with surrounding and in-between spaces, so e.g. "[!code ++] [!code highlight:3]"
+const multiCodePattern = new RegExp(`(\\s*${codePattern.source})+\\s*`);
+const patterns = [
+  // "<!-- [!code ++] -->", "<!-- [!code ++] [!code highlight:3] -->"
+  new RegExp(`<!--${multiCodePattern.source}-->`, "g"),
+  // "{/* [!code ++] */", "/* [!code ++] [!code highlight:3] */}"
+  new RegExp(`[{]/[*]${multiCodePattern.source}[*]/[}]`, "g"),
+  // "/* [!code ++] */", "/* [!code ++] [!code highlight:3] */"
+  new RegExp(`/[*]${multiCodePattern.source}[*]/`, "g"),
+  // end-of line comments like "// [!code ++]", "# [!code highlight:3]", "-- [!code word:Cache] [!code --]""
+  new RegExp(`(//|["'#]|;{1,2}|%{1,2}|--)${multiCodePattern.source}$`, "gm"),
+];
+const specialCommentPattern = new RegExp(
+  `(${patterns.map((p) => `(${p.source})`).join("|")})`,
+  "gm"
+);
+console.log(specialCommentPattern.source);
+
 /**
  * Applied to code blocks to preserve special comments like `// [!code ...]` on the same line.
  */
 function handleCodeBlockWithSpecialComments(node, path, options) {
   // Check if this code block has special comments
-  const specialCommentPattern = /\/\/\s*\[!code\s+[^\]]*\]/g;
   const commentMatches = [...node.value.matchAll(specialCommentPattern)];
-
   // Nothing to do.
   if (commentMatches.length == 0) return null;
 
@@ -53,7 +71,6 @@ function handleCodeBlockWithSpecialComments(node, path, options) {
       options
     ).formatted;
 
-    const specialCommentPattern = /\/\/\s*\[!code\s+[^\]]*\]/g;
     const formattedCommentMatches = [
       ...stringResult.matchAll(specialCommentPattern),
     ];
@@ -70,9 +87,12 @@ function handleCodeBlockWithSpecialComments(node, path, options) {
         insertPos--;
       }
 
+      // Move comment one space in, except if it's a JSX comment - in that case
+      // the space would format differently on re-formatting in the future.
+      const sep = stringResult[commentMatch.index] === "{" ? "" : " ";
       stringResult =
         stringResult.substring(0, insertPos + 1) +
-        " " +
+        sep +
         stringResult.substring(commentMatch.index);
     }
 

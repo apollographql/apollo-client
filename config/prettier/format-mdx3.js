@@ -30,16 +30,19 @@ function handleCodeBlockWithSpecialComments(node, path, options) {
   // Nothing to do.
   if (commentMatches.length == 0) return null;
 
-  // Analyze comment positions - only track if comment should be inline
-  const commentPositions = commentMatches.map((commentMatch) => {
-    const beforeComment = node.value.substring(0, commentMatch.index);
-    const lineStart = beforeComment.lastIndexOf("\n") + 1;
-    const codeOnLine = node.value.substring(lineStart, commentMatch.index);
-
-    return {
-      comment: commentMatch[0],
-      shouldBeInline: codeOnLine.trim() !== "",
-    };
+  /** `true` if comment should be inline, `false` if it should be on a new line. */
+  const commentsInline = commentMatches.map((commentMatch) => {
+    for (
+      let index = commentMatch.index - 1, char = node.value[index];
+      index >= 0 && char !== "\n";
+      char = node.value[--index]
+    ) {
+      const char = node.value[index];
+      if (char !== " " && char !== "\t") {
+        return true;
+      }
+    }
+    return false;
   });
 
   // Use default formatting first
@@ -58,8 +61,8 @@ function handleCodeBlockWithSpecialComments(node, path, options) {
     // Process each comment in reverse order to avoid index shifting
     for (let i = formattedCommentMatches.length - 1; i >= 0; i--) {
       const commentMatch = formattedCommentMatches[i];
-      const pos = commentPositions[i];
-      if (!pos || !pos.shouldBeInline) continue;
+      const shouldBeInline = commentsInline[i];
+      if (!shouldBeInline) continue;
 
       // Find the preceding non-whitespace character, starting from the comment position
       let insertPos = commentMatch.index - 1;

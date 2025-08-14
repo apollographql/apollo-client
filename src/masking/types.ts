@@ -3,8 +3,6 @@ import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities
 
 import type { PreserveTypes } from "./PreserveTypes.js";
 
-export interface DataMasking {}
-
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",

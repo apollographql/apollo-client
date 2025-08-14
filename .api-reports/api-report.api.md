@@ -808,10 +808,6 @@ export const createSignalIfSupported: () => {
 };
 
 // @public (undocumented)
-export interface DataMasking {
-}
-
-// @public (undocumented)
 export type DataState<TData> = {
     data: DataValue.Complete<TData>;
     dataState: "complete";

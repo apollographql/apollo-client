@@ -137,7 +137,6 @@ export {
 
 /* Masking */
 export type {
-  DataMasking,
   FragmentType,
   MaybeMasked,
   Unmasked,

@@ -1,4 +1,5 @@
 import { Streaming } from "@apollo/client";
+import type { Defer20220824Handler } from "@apollo/client/incremental";
 import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
 import type { HKT } from "@apollo/client/utilities";
 import { DeepPartial } from "@apollo/client/utilities";
@@ -11,9 +12,11 @@ type StreamingOverride<TData> = TData & { __streaming?: true };
 interface StreamingOverrideHKT extends HKT {
   return: StreamingOverride<this["arg1"]>;
 }
+
 declare module "@apollo/client" {
   export interface TypeOverrides
-    extends GraphQLCodegenDataMasking.TypeOverrides {
+    extends GraphQLCodegenDataMasking.TypeOverrides,
+      Defer20220824Handler.TypeOverrides {
     Streaming: StreamingOverrideHKT;
   }
 }

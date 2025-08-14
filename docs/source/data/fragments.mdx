@@ -1526,6 +1526,12 @@ By default, Apollo Client uses GraphQL Codegen's [fragment masking](https://the-
 
 You can use a technique called 'higher-kinded types' (HKT) to provide your own type implementations for Apollo Client's masking types.
 
+<Note>
+
+You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
+
+</Note>
+
 #### Example
 
 Let's add our own type overrides for the `Masked` and `MaybeMasked` utility types. The `MaybeMasked` type is used throughout Apollo Client to conditionally return either the masked or unmasked type definition for a given type. The `Masked` type marks a type as masked so that `MaybeMasked` can return the type as masked.

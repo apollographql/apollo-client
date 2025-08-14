@@ -509,6 +509,19 @@ const client = new ApolloClient({
 });
 ```
 
+Additionally, you should enable the `TypeOverrides` for the `Defer20220824Handler`.
+This will add the deferred chunk types to `ApolloLink.Result` and ensures that you handle incremental results correctly in custom links that might access `result` directly.
+
+To do so, create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
+
+```ts title="apollo-client.d.ts
+import { Defer20220824Handler } from "@apollo/client/incremental"; // [!code highlight]
+
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {} // [!code highlight]
+}
+```
+
 <Note>
 
 Over time, we will introduce additional incremental handlers to support different proposals of the protocol.
@@ -517,18 +530,36 @@ Over time, we will introduce additional incremental handlers to support differen
 
 ## Enable data masking types
 
-In Apollo Client 4, the data masking types are now pluggable to allow for more flexibility when working with different solutions like GraphQL Code Generator or `gql.tadqa` - all of which might have different typings for data masking.
+In Apollo Client 4, the data masking types are now pluggable to allow for more flexibility when working with different solutions like GraphQL Code Generator or `gql.tadqa` - which might have different typings for data masking.
 
 To configure the data masking types to be the same as they were in Apollo Client 3, create a `.d.ts` file in your project with the following content:
 
 ```ts title="apollo-client.d.ts
-import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking"; // [!code highlight]
 
 declare module "@apollo/client" {
-  export interface TypeOverrides
+  export interface TypeOverrides // [!code highlight:2]
     extends GraphQLCodegenDataMasking.TypeOverrides {}
 }
 ```
+
+<Note>
+
+You can always combine multiple `TypeOverrides` of different kinds, so you can also combine this with the `Defer20220824Handler` type overrides from the previous section.
+
+```ts title="apollo-client.d.ts
+import { Defer20220824Handler } from "@apollo/client/incremental";
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking"; // [!code ++]
+
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {} // [!code --]
+  export interface TypeOverrides // [!code ++:3]
+    extends Defer20220824Handler.TypeOverrides,
+      GraphQLCodegenDataMasking.TypeOverrides {}
+}
+```
+
+</Note>
 
 ## For React users
 

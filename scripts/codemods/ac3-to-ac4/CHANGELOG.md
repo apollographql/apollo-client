@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#12818](https://github.com/apollographql/apollo-client/pull/12818) [`d1e9503`](https://github.com/apollographql/apollo-client/commit/d1e9503eb58325529f0f0dc8b0cb07cf05431ee3) Thanks [@phryneas](https://github.com/phryneas)! - Extend `imports` codemod, add new `links` codemod.
+- [#12818](https://github.com/apollographql/apollo-client/pull/12818) [`d1e9503`](https://github.com/apollographql/apollo-client/commit/d1e9503eb58325529f0f0dc8b0cb07cf05431ee3) Thanks [@phryneas](https://github.com/phryneas)! - Extend `imports` codemod, add new `links` and `removals` (via #12838) codemods.
 
 ## 1.0.0-rc.1
 

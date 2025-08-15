@@ -563,9 +563,61 @@ declare module "@apollo/client" {
 
 ## For React users
 
+One of Apollo Client 4's focus points is to be more opinionated about how to use Apollo Client.
+A big part of that is to ensure that the React hooks are more straightforward to use, for a very specific use case.
+We believe that hooks should be used to synchronize data with your component, and not trigger side effects that won't synchronize with your component.
+As a result, in some previous use cases, we now recommend to use the core APIs of Apollo Client directly where synchronization with a component is not indented.
+
+As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
+
+```ts
+const [execute] = useLazyQuery(MY_QUERY); // [!code --]
+const client = useApolloClient(); // [!code ++]
+// ...
+await execute({ variables }); // [!code --]
+await client.query({ query: MY_QUERY, variables }); // [!code ++]
+```
+
+### changes to `useLazyQuery`
+
+`useLazyQuery` has undergone a big rewrite to have a more predictable behaviour.
+In Apollo Client 3, once the `useLazyQuery` execute function was called for the first time, it would behave like a regular `useQuery` hook, meaning it would automatically make network requests once options were changed.
+
+In Apollo Client 4, the focus of `useLazyQuery` is more to execute a query on demand in response to user interactions, and synchronize data with the component.
+
+As a result, some major changes have been made:
+
+- `useLazyQuery` no longer accepts a `variables` or `context` option. The previous behaviour where these options were merged together with the `variables` and `context` passed to the execute function has been removed, as it was confusing and hard to predict.
+  Instead, you should pass `variables` and `context` directly to the execute function, which will then be used to execute the query.
+- The `execute` function no longer accepts any other options than `variables` and `context`. Those options should be passed directly to the hook instead.
+- calling the `execute` function of `useLazyQuery` during render is no longer allowed. This also means that it is no longer possible to make queries with `useLazyQuery` during SSR.
+- `onCompleted` and `onError` callbacks have been removed from the hook options - if you need to programmatically react to the result of the query, `await` the promise returned by the `execute` function.
+- if a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.
+  This means that you can no longer have multiple queries in flight at the same time with `useLazyQuery`.
+  To indicate that you are still interested in a query finishing even if it will not reflect in your component UI, you can call `.retain()` on the promise returned by the `execute` function.
+  That said, this is usually a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchroniziing the result with your component - in that case, you should not use a hook at all, but rather call `client.query` directly.
+
+### changes to `useMutation`
+
+- The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, you should use `client.mutate` directly instead of using a hook.
+
+```ts
+const [mutate] = useMutation(MY_MUTATION); // [!code --]
+const client = useApolloClient(); // [!code ++]
+// ...
+await mutate({ variables }); // [!code --]
+await client.mutate({ mutation: MY_MUTATION, variables }); // [!code ++]
+```
+
 ### (optional, but recommended) Stop using generated hooks
 
 Apollo Client 4 comes with a lot of improvements to our hook types. If you are using generated hooks, you will not be able to benefit from these improvements, so we recommend to stop using generated hooks and use our hooks directly with `TypedDocumentNode` instead.
+
+## TypeScript changes
+
+### Moving types into namespaces
+
+### Removal of `<TContext>` and `TSerialized` generics
 
 ## New error handling
 
@@ -832,6 +884,19 @@ observable.pipe(map((x) => x * 2)); // [!code ++]
 
 A good way to find the operator you need is to follow the [rxjs operator decision tree](https://rxjs.dev/operator-decision-tree).
 
+## Local state changes
+
+Local state management (using `@client` fields) has been moved out into the `LocalState` class.
+This allows for users that don't use local state to save on bundle size. It you use `@client` directives, either with `TypePolicy` `read` fields or with `resolvers`, you need to create a new `LocalState` instance and pass it to the `ApolloClient` constructor.
+
+If you fail to do so, during development an error will be thrown, and in production, results might be less predictable. (Jerel to add more context about consequences here.)
+
+### Local resolvers changes
+
+Local resolvers are now a part of the `LocalState` class, so you need to pass them to the `LocalState` constructor instead of the `ApolloClient` constructor.
+
+Generally, local resolvers should now behave more consistent and have gained some capabilities **link updated resolver docs here**
+
 ## Other breaking changes
 
 <hr />
@@ -844,210 +909,7 @@ This document outlines the key migration points that should be added or expanded
 
 ## Priority 1: Critical Breaking Changes
 
-### 2. ErrorLink Changes
-
-**What changed:** The `ErrorLink` (previously created with `onError`) now uses a single `error` property instead of separate `graphQLErrors`, `networkError`, and `protocolErrors`.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { onError } from "@apollo/client/link/error";
-
-const errorLink = onError(
-  ({ graphQLErrors, networkError, protocolErrors, response }) => {
-    if (graphQLErrors) {
-      graphQLErrors.forEach(({ message }) =>
-        console.log(`GraphQL error: ${message}`)
-      );
-    }
-    if (networkError) {
-      console.log(`Network error: ${networkError.message}`);
-    }
-  }
-);
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { ErrorLink } from "@apollo/client/link/error";
-import { CombinedGraphQLErrors, ServerError } from "@apollo/client";
-
-const errorLink = new ErrorLink(({ error, result }) => {
-  if (CombinedGraphQLErrors.is(error)) {
-    error.errors.forEach(({ message }) =>
-      console.log(`GraphQL error: ${message}`)
-    );
-  } else if (ServerError.is(error)) {
-    console.log(`Server error: ${error.message}`);
-  } else if (error) {
-    console.log(`Other error: ${error.message}`);
-  }
-});
-```
-
-### 3. Local State System Overhaul
-
-**What changed:** Local state with `@client` fields now requires explicit opt-in with `LocalState` class.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  resolvers: {
-    Query: {
-      isLoggedIn: () => !!localStorage.getItem("token"),
-    },
-  },
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { LocalState } from "@apollo/client/local-state";
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  localState: new LocalState({
-    resolvers: {
-      Query: {
-        isLoggedIn: () => !!localStorage.getItem("token"),
-      },
-    },
-  }),
-});
-```
-
-**Resolver context changes:**
-
-```ts
-// Before (3.x)
-resolvers: {
-  Query: {
-    myResolver: (parent, args, { cache, ...requestContext }) => {
-      // cache was directly available
-    };
-  }
-}
-
-// After (4.0)
-resolvers: {
-  Query: {
-    myResolver: (parent, args, { requestContext, client, phase }) => {
-      const cache = client.cache;
-      // phase is "exports" or "resolve"
-    };
-  }
-}
-```
-
-## Priority 2: SetContextLink Argument Changes
-
-### 4. SetContextLink Constructor Arguments
-
-**What changed:** `SetContextLink` flips the callback arguments compared to `setContext` - `prevContext` comes first, `operation` comes second.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { setContext } from "@apollo/client/link/context";
-
-const authLink = setContext((operation, prevContext) => ({
-  headers: {
-    ...prevContext.headers,
-    authorization: localStorage.getItem("token") || "",
-  },
-}));
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { SetContextLink } from "@apollo/client/link/context";
-
-const authLink = new SetContextLink((prevContext, operation) => ({
-  headers: {
-    ...prevContext.headers,
-    authorization: localStorage.getItem("token") || "",
-  },
-}));
-```
-
 ## Priority 3: Major React Hook Changes
-
-### 5. useLazyQuery SSR and Options Changes
-
-**What changed:** `useLazyQuery` no longer supports SSR and the `execute` function has limited options.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const [execute, { data, loading }] = useLazyQuery(MY_QUERY, {
-  fetchPolicy: "network-only",
-  context: { headers: { "X-Custom": "value" } },
-});
-
-// Could override options in execute
-await execute({
-  fetchPolicy: "cache-first",
-  context: { headers: { "X-Other": "value" } },
-  variables: { id: 1 },
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-const [execute, { data, loading }] = useLazyQuery(MY_QUERY, {
-  fetchPolicy: "network-only",
-  // context must be set here if static
-});
-
-// Only variables and context can be passed to execute
-await execute({
-  variables: { id: 1 },
-  context: { headers: { "X-Custom": "value" } },
-});
-
-// To change fetchPolicy, rerender the component
-```
-
-### 6. useMutation ignoreResults Removal
-
-**What changed:** The `ignoreResults` option has been removed from `useMutation`.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const [mutate] = useMutation(MY_MUTATION, {
-  ignoreResults: true,
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-// Use client.mutate directly if you don't need component state sync
-const client = useApolloClient();
-await client.mutate({
-  mutation: MY_MUTATION,
-  variables: {
-    /* ... */
-  },
-});
-```
 
 ### 7. Type Namespace Changes
 
@@ -1157,80 +1019,6 @@ const link = new ApolloLink((operation, forward) => {
 ```
 
 ## Priority 5: Link and Network Changes
-
-### 10. Link Classes vs Functions
-
-**What changed:** Link creator functions have been replaced with classes, and static methods no longer accept plain functions.
-
-⚠️ **Important:** `SetContextLink` flips the callback arguments compared to `setContext`!
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { createHttpLink } from "@apollo/client/link/http";
-import { setContext } from "@apollo/client/link/context";
-import { onError } from "@apollo/client/link/error";
-import { concat, split, from } from "@apollo/client";
-
-const httpLink = createHttpLink({
-  uri: "https://api.example.com/graphql",
-});
-
-const authLink = setContext((_, { headers }) => ({
-  headers: {
-    ...headers,
-    authorization: localStorage.getItem("token") || "",
-  },
-}));
-
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  // error handling
-});
-
-// Could pass plain functions to concat/split
-const link = concat((operation, forward) => forward(operation), httpLink);
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { HttpLink } from "@apollo/client/link/http";
-import { SetContextLink } from "@apollo/client/link/context";
-import { ErrorLink } from "@apollo/client/link/error";
-import { ApolloLink } from "@apollo/client";
-import { OperationTypeNode } from "graphql";
-
-const httpLink = new HttpLink({
-  uri: "https://api.example.com/graphql",
-});
-
-// Note: SetContextLink flips the arguments - prevContext comes first, operation second
-const authLink = new SetContextLink(({ headers }, operation) => ({
-  headers: {
-    ...headers,
-    authorization: localStorage.getItem("token") || "",
-  },
-}));
-
-const errorLink = new ErrorLink(({ error }) => {
-  // error handling with unified error
-});
-
-// Must wrap functions in ApolloLink
-const link = ApolloLink.concat(
-  new ApolloLink((operation, forward) => forward(operation)),
-  httpLink
-);
-
-// Use operationType for cleaner conditions
-const splitLink = ApolloLink.split(
-  ({ operationType }) => operationType === OperationTypeNode.SUBSCRIPTION,
-  wsLink,
-  httpLink
-);
-```
 
 ### 11. Observable and Query Lifetime Changes
 

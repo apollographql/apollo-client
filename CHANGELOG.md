@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.0-rc.12
+
+### Minor Changes
+
+- [#12844](https://github.com/apollographql/apollo-client/pull/12844) [`18a0cad`](https://github.com/apollographql/apollo-client/commit/18a0cad773257e540ec8dc8e90f7a875a0ccf99f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an entrypoint at `@apollo/client/v4-migration` that includes removed values and types. Each export includes doc blocks on how to migrate away from the removed type.
+
 ## 4.0.0-rc.11
 
 ### Major Changes

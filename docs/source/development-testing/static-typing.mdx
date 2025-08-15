@@ -129,7 +129,7 @@ export default config;
 
 <Caution>
 
-This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because its incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or any feature of the fragment masking feature, you will need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
+This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because its incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or anything generated from the fragment masking feature, you will need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
 
 </Caution>
 

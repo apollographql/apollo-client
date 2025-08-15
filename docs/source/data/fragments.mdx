@@ -1561,12 +1561,11 @@ You can use a technique called 'higher-kinded types' (HKT) to provide your own t
 
 Let's add our own type overrides for the `MaybeMasked` and `Unmasked` utility types.
 
-The `MaybeMasked` type is used throughout Apollo Client to return the masked or unmasked type definition for a given type, assuming they have data masking types enabled and are "mask-able" - otherwise it will just return the "unmasked" type that is passed in. 
-(So when writing these types, you can assume that the user has data masking types enabled.)
+The `MaybeMasked` type is used throughout Apollo Client to return the masked or unmasked type definition for a given type, assuming they have data masking types enabled and are "mask-able" - otherwise it will just return the "unmasked" type that is passed in.
 
 The `Unmasked` type unwraps a masked type to its full result type and is used throughout Apollo Client where the full data type is needed for a given API (e.g. `client.writeQuery`).
 
-For this example, we'll assume the operation types are generated using two variations:
+For this example, we'll assume the data masking types are enabled and the operation types are generated using two variations:
 
 1. Data masked types are generated with a `__masked` virtual property. Its value is the operation type with any masked fields removed from the type.
 

@@ -577,6 +577,7 @@ In Apollo Client 4,
 - non-error-like objects are wrapped in a `UnconventionalError` object, with `name` of `UnconventionalError`, `message` of `"An error of unexpected shape occurred."` and the `cause` property pointing at the originally thrown value.
 - GraphQL errors are wrapped in a `CombinedGraphQLErrors` object
 - a few other error classes have been added to represent specific error cases, such as `ServerParseError`, and `ServerError`.
+- the `errors` property that was present next to the `error` property on some interfaces like `ApolloQueryResult` (returned by `ApollClient.query` and emitted by `ObservableQuery`) or `QueryResult` (returned by `useQuery`) has been removed. Instead, access these errors through the `error` property, which is now an instance of `CombinedGraphQLErrors` if there are any GraphQL errors.
 
 You can read up on all available error classes and how to handle them in the [Error Handling](../react/data/error-handling) documentation and the API reference "Errors" section.
 
@@ -592,7 +593,7 @@ This way you can still receive cache updates or call `refetch` without having to
 
 So if you take this code snippet from Apollo Client 3:
 
-```tsx
+```tsx title="error handling with useQuery in Apollo Client 3"
 import { useQuery } from "@apollo/client/react";
 
 function ShowingSomeErrors() {
@@ -619,7 +620,7 @@ We have two key observations here:
 
 The same snippet with Apollo Client 4 would look like this:
 
-```tsx
+```tsx title="error handling with useQuery in Apollo Client 4"
 import { useQuery } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client"; // [!code highlight]
 
@@ -653,6 +654,7 @@ So the major changes are:
 - `error.graphQLErrors` has been replaced with `error.errors`, which is an array of objects as returned from the server, with a shape of `GraphQLFormattedError`
 - all error classes shipping with Apollo-Client 4 have a static `is` method that you can use to check if an error is of that type, so you can use `ServerParseError.is(error)` or `ServerError.is(error)` to check for those specific error types.
 - additional error handling logic is needed to handle all the other possible errors.
+- previously, `result.errors` was available as a shortcut to access the `error.graphQLErrors` array, but this has been removed.
 
 <Note>
 
@@ -669,6 +671,167 @@ These hooks will not expose errors to your component but instead throw them, so 
 
 </Tip>
 
+## Link API changes
+
+### All links are now available as classes
+
+All links are now available as classes. While the old function link creators are still around, they are deprecated and will be removed in a future version.
+
+| old link creator              | new link class                    |
+| ----------------------------- | --------------------------------- |
+| `setContext`                  | `SetContextLink`                  |
+| `onError`                     | `ErrorLink`                       |
+| `createHttpLink`              | `HttpLink`                        |
+| `createPersistedQueryLink`    | `PersistedQueryLink`              |
+| `removeTypenameFromVariables` | `RemoveTypenameFromVariablesLink` |
+
+<Caution>
+
+Pay attention when migrating from the old `setContext` creator to the new `SetContextLink` class.
+The arguments to the callback have changed, so you need to swap the order of `prevContext` and `operation`.
+
+```ts
+import { setContext } from "@apollo/client/link/context"; // [!code --]
+import { SetContextLink } from "@apollo/client/link/context"; // [!code ++]
+
+const authLink = setContext((operation, prevContext) => { /*...*/ } // [!code --]
+const authLink = new SetContextLink((prevContext, operation) => { /*...*/ }  // [!code ++]
+```
+
+</Caution>
+
+### `from`, `concat`, and `split` exports deprecated
+
+Instead of using the `from`, `concat`, and `split` exports from `@apollo/client/link/core`, please now use the `ApolloLink.from`, `ApolloLink.concat`, and `ApolloLink.split` methods.
+
+### `ApolloLink` usage pattern of `from` and `concat` now aligned with the native `Array` class
+
+The static `ApolloLink.concat` method is now deprecated.
+Instead, use the static `ApolloLink.from` method.
+
+`ApolloLink.prototype.concat` now accepts a dynamic number of arguments.
+
+This aligns this API with the `Array.from` and `Array.prototype.concat` methods, which should make these methods more familiar to to work with for JavaScript developers.
+
+```ts
+import { ApolloLink } from "@apollo/client/link";
+ApolloLink.concat(firstLink, secondLink); // [!code --]
+ApolloLink.from([firstLink, secondLink]); // [!code ++]
+
+link1.concat(link2).concat(link3); // [!code --]
+link1.concat(link2, link3); // [!code ++]
+```
+
+### `ApolloLink` `from,concat,split` static and instance methods now require `ApolloLink` instances
+
+These methods previously accepted `ApolloLink` instances or operator functions as arguments.
+Now, they only accept `ApolloLink` instances.
+
+```ts
+ApolloLink.from(
+  (operation, forward) => { // [!code --:3]
+    /*...*/
+  },
+  new ApolloLink((operation, forward) => { // [!code ++:3]
+    /*...*/
+  }),
+  nextLink
+);
+```
+
+### ErrorLink argument changes
+
+The `ErrorLink` (previously created with `onError`) now uses a single `error` property instead of separate `graphQLErrors`, `networkError`, and `protocolErrors`.
+
+With built-in error classes, use `ErrorClass.is` to check for specific error types.
+For external error types like `TypeError`, use `instanceof` or the more modern [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError#instanceof_vs._error.iserror) in combination with a check for `error.name` to check the kind of error.
+
+```ts
+import {
+  onError, // [!code --]
+  ErrorLink, // [!code ++]
+} from "@apollo/client/link/error";
+import { CombinedGraphQLErrors, ServerError } from "@apollo/client"; // [!code ++]
+
+const errorLink = onError( // [!code --:12]
+  ({ graphQLErrors, networkError, protocolErrors, response }) => {
+    if (graphQLErrors) {
+      graphQLErrors.forEach(({ message }) =>
+        console.log(`GraphQL error: ${message}`)
+      );
+    }
+    if (networkError) {
+      console.log(`Network error: ${networkError.message}`);
+    }
+  }
+);
+const errorLink = new ErrorLink(({ error, result }) => { // [!code ++:11]
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach(({ message }) =>
+      console.log(`GraphQL error: ${message}`)
+    );
+  } else if (ServerError.is(error)) {
+    console.log(`Server error: ${error.message}`);
+  } else if (error) {
+    console.log(`Other error: ${error.message}`);
+  }
+});
+```
+
+<Note>
+
+If the error thrown in the link chain is not an error-like object, it will be wrapped in an `UnconventionalError` class - so it is always safe to access `error.message` and `error.name` on the `error` object.
+
+</Note>
+
+### `ApolloLink` operation and context changes
+
+The `operation` object passed to the `ApolloLink` methods has changed.
+
+- the `cache` property has been removed
+- instead, the `client` property is now available, which contains the `ApolloClient` instance
+- you can now access the cache instance via `operation.client.cache`
+- `operationName` is now a string if the operation has a name, or `undefined` if it does not
+- a new property `operationType` has been added, which can be used to more easily determine if an operation is a `"query"`, `"mutation"` or `"subscription"`.
+- the `context` property returned by `operation.getContext()` is now typed as `ReadOnly` to prevent accidental mutations that might not propagate correctly
+- the `context` type can be extended by declaration merging to allow for custom properties to align with your links.
+  For example, to make your context type-safe for usage with `HttpLink`, place this snippet in a `.d.ts` file in your project:
+
+```ts title="apollo-client.d.ts"
+import { HttpLink } from "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext extends HttpLink.ContextOptions {}
+}
+```
+
+### `ApolloLink.execute` and `execute` method changes
+
+### Notes for custom link implementations
+
+#### Observable API changes
+
+In Apollo Client 4, the underlying `Observable` implementation has changed from using `zen-observable` to using `rxjs` `Observable` instances.
+
+This can affect custom link implementations that rely on the `Observable` API.
+
+If you were previously using the `map`, `filter`, `reduce`, `flatMap` or `concat` methods on the `Observable` instances, you will need to update your code to use the `rxjs` equivalents.
+
+Additionally, if you were using `Obervable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
+
+```ts
+import { of, from, map } from "rxjs"; // [!code ++]
+
+Observable.of(1, 2, 3); // [!code --]
+of(1, 2, 3); // [!code ++]
+Observable.from([1, 2, 3]); // [!code --]
+from([1, 2, 3]); // [!code ++]
+observable.map((x) => x * 2); // [!code --]
+observable.pipe(map((x) => x * 2)); // [!code ++]
+```
+
+A good way to find the operator you need is to follow the [rxjs operator decision tree](https://rxjs.dev/operator-decision-tree).
+
 ## Other breaking changes
 
 <hr />
@@ -680,32 +843,6 @@ These hooks will not expose errors to your component but instead throw them, so 
 This document outlines the key migration points that should be added or expanded in the migration guide, focusing on practical "before" and "after" examples that developers need when migrating from Apollo Client 3.x to 4.0.
 
 ## Priority 1: Critical Breaking Changes
-
-### 1. Error Handling Overhaul
-
-**What changed:** The `errors` array property has been removed from all results in favor of a single `error` property.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const { loading, errors, data } = useQuery(MY_QUERY);
-if (errors && errors.length > 0) {
-  errors.forEach((error) => console.log(error.message));
-}
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { CombinedGraphQLErrors } from "@apollo/client";
-
-const { loading, error, data } = useQuery(MY_QUERY);
-if (CombinedGraphQLErrors.is(error)) {
-  error.errors.forEach((graphQLError) => console.log(graphQLError.message));
-}
-```
 
 ### 2. ErrorLink Changes
 

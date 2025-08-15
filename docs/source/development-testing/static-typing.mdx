@@ -83,9 +83,9 @@ $ npm run codegen
 
 If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
 
-**We don't recommend using the client preset with Apollo Client apps** because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code. Follow the steps in the previous section to use a setup that includes these plugins.
+We don't recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code. Follow the steps in the previous section to use a setup that includes these plugins.
 
-If you're already using the client preset, or you choose to use it instead of the working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
+If you're already using the client preset, or you choose to use it instead of working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
 
 ```ts
 import { CodegenConfig } from "@graphql-codegen/cli";
@@ -135,7 +135,7 @@ This configuration [disables fragment masking](https://the-guild.dev/graphql/cod
 
 ## Using operation types
 
-By default, Apollo Client sets the type of the `data` property as `unknown` type when the data type cannot be determined. This provides a layer of safety to avoid accessing properties on `data` that TypeScript doesn't know about.
+By default, Apollo Client sets the type of the `data` property to `unknown` type when the data type cannot be determined. This provides a layer of safety to avoid accessing properties on `data` that TypeScript doesn't know about.
 
 The following example uses `gql` to create a GraphQL document for a query. The query is typed as a `DocumentNode` which doesn't provide type information about its data or variables.
 

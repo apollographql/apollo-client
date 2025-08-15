@@ -491,7 +491,7 @@ Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` 
 
 This behavior affects how TypeScript checks required variables with `useMutation`. Required variables must be provided to either the hook or the mutate function. If a required variable is not provided to the hook, the mutate function must include it. Required variables provided to the hook make them optional in the mutate function.
 
-The following uses the previous example but flattens the variable declarations to demonstrate how required variables affects TypeScript validation.
+The following uses the previous example but flattens the variable declarations to demonstrate how required variables affect TypeScript validation.
 
 ```tsx
 const SAVE_ROCKET: TypedDocumentNode<
@@ -725,7 +725,7 @@ Learn more about integrating TypeScript with incremental responses the [`@defer`
 
 Apollo Client makes it possible to use custom implementations of certain built-in utility types. This enables you to work with custom type outputs that might otherwise be incompatible with the default type implementations in Apollo Client.
 
-You use a technique called 'higher-kinded types' (HKT) to provide your own type implementations for Apollo Client's utility types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
+You use a technique called _higher-kinded types_ (HKT) to provide your own type implementations for Apollo Client's utility types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
 
 ### Anatomy of HKTs
 
@@ -988,7 +988,7 @@ function MyComponent() {
 
 ### Generating precompiled GraphQL documents with their type definitions
 
-The `gql` template literal tag is used in Apollo Client apps to define GraphQL documents for use with Apollo Client APIs. It's purpose is to parse the GraphQL string into a standard GraphQL AST. Parsing occurs when the module is executed which can add startup time to your application. Additionally, the GraphQL document returned by `gql` is typed as a `DocumentNode` which doesn't include type information about its data or variables.
+The `gql` template literal tag is used in Apollo Client apps to define GraphQL documents for use with Apollo Client APIs. Its purpose is to parse the GraphQL string into a standard GraphQL AST. Parsing occurs when the module is executed which adds startup time to your application. Additionally, the GraphQL document returned by `gql` is typed as a `DocumentNode` which doesn't include type information about its data or variables.
 
 The [`typed-document-node`](https://the-guild.dev/graphql/codegen/plugins/typescript/typed-document-node) plugin makes it possible to generate precompiled GraphQL documents preconfigured with [`TypedDocumentNode`](#using-typeddocumentnode).
 

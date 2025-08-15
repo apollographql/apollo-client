@@ -592,6 +592,127 @@ export function LatestNews() {
 
 Variables are validated the same as `useQuery`. See [working with variables](#working-with-variables) to learn more about how required variables are validated.
 
+## Defining context types
+
+Apollo Client allows you to pass [custom context](../api/link/introduction#managing-context) through to the link chain. By default, context is typed as `Record<string, any>` to allow for any arbitrary value as context. However, this default has a couple downsides. You don't get proper type safety and you don't get autocomplete suggestions in your editor to understand what context options are available to you.
+
+You can define your own context types for better type safety in Apollo Client using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html).
+
+### Adding custom context properties
+
+To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface. Provide
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext {
+    myProperty?: string;
+    requestId?: number;
+  }
+}
+```
+
+Now when you pass context for operations, TypeScript will validate the types:
+
+```tsx
+const { data } = useQuery(MY_QUERY, {
+  context: {
+    myProperty: "value", // ✅ Valid value
+    requestId: "123", // ❌ Type 'string' is not assignable to type 'number | undefined'
+  },
+});
+```
+
+<Tip>
+
+We recommend all custom context properties are optional by default. If a context value is necessary for the operation of your application (such as an authentication token used in request headers), we recommend that you try to provide the value with [`SetContextLink`](../api/link/apollo-link-context) or a [custom link](../api/link/introduction#creating-a-custom-link) first. Reserve required properties for options that are truly meant to be provided to every hook or request to your server and cannot be provided by a link in your link chain.
+
+</Tip>
+
+<Note>
+
+Apollo Client doesn't validate that the `context` option is provided when it contains required properties like it does with the [`variables` option](#working-with-variables). However, adding the `context` option might result in a TypeScript error when any required properties are not provided.
+
+</Note>
+
+### Using context from built-in links
+
+Some links provided by Apollo Client have built-in context option types. You can extend `DefaultContext` with these types to get proper type checking for link-specific options.
+
+The following example adds `HttpLink`'s context types to `DefaultContext`:
+
+```ts title="apollo-client.d.ts"
+import "@apollo/client";
+import { HttpLink } from "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext extends HttpLink.ContextOptions {}
+}
+```
+
+Now when you pass context for operations, TypeScript will validate the types:
+
+```tsx
+const { data } = useQuery(MY_QUERY, {
+  context: {
+    headers: {
+      "X-Custom-Header": "value", // ✅ Valid header value
+    },
+    credentials: "include", // ✅ Valid RequestCredentials value
+    fetchOptions: {
+      mode: "none", // ❌ Type "none" is not assignable to type 'RequestMode | undefined'
+    },
+  },
+});
+```
+
+If you are using more than one link that has context options, you can extend from each link's context options:
+
+```ts title="apollo-client.d.ts"
+import "@apollo/client";
+import type { BaseHttpLink } from "@apollo/client/link/http";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+
+declare module "@apollo/client" {
+  interface DefaultContext
+    extends BaseHttpLink.ContextOptions,
+      ClientAwarenessLink.ContextOptions {}
+}
+```
+
+The following built-in links provide context option types:
+
+- [`HttpLink.ContextOptions`](../api/link/apollo-link-http#httplinkcontextoptions)
+- [`BaseHttpLink.ContextOptions`](../api/link/apollo-link-base-http#basehttplinkcontextoptions)
+- [`BatchHttpLink.ContextOptions`](../api/link/apollo-link-batch-http#batchhttplinkcontextoptions)
+- [`BaseBatchHttpLink.ContextOptions`](../api/link/apollo-link-base-batch-http#basebatchhttplinkcontextoptions)
+- [`ClientAwarenessLink.ContextOptions`](../api/link/apollo-link-client-awareness#clientawarenesslinkcontextoptions)
+
+### Using context in custom links
+
+With context types defined, context properties accessed in custom links are properly type checked when reading or writing context.
+
+```ts
+import { ApolloLink } from "@apollo/client";
+
+const customLink = new ApolloLink((operation, forward) => {
+  const context = operation.getContext();
+
+  // TypeScript knows about your custom properties
+  console.log(context.myProperty); // string | undefined
+  console.log(context.requestId); // number | undefined
+
+  operation.setContext({
+    requestId: "123", // ❌ Type 'string' is not assignable to type 'number | undefined'
+  });
+
+  return forward(operation);
+});
+```
+
 ## Data masking
 
 Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).

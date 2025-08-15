@@ -76,7 +76,8 @@
       "production": "./src/utilities/environment/index.production.ts",
       "development": "./src/utilities/environment/index.development.ts",
       "default": "./src/utilities/environment/index.ts"
-    }
+    },
+    "./v4-migration": "./src/v4-migration.ts"
   },
   "scripts": {
     "prebuild": "npm run clean",

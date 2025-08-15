@@ -2,9 +2,13 @@ import type { API, FileInfo, Options, Transform } from "jscodeshift";
 
 import imports from "./imports.js";
 import links from "./links.js";
+import removals from "./removals.js";
 import { monkeyPatchAstTypes } from "./util/monkeyPatchAstTypes.js";
 
-export const codemods = { imports, links } satisfies Record<string, Transform>;
+export const codemods = { imports, links, removals } satisfies Record<
+  string,
+  Transform
+>;
 
 export default async function transform(
   file: FileInfo,

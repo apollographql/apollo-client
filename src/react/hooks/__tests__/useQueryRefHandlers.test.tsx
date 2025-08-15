@@ -10,11 +10,12 @@ import React, { Suspense } from "react";
 import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
+  ApolloLink,
   gql,
   InMemoryCache,
   NetworkStatus,
-  split,
 } from "@apollo/client";
+import type { QueryRef } from "@apollo/client/react";
 import {
   createQueryPreloader,
   useBackgroundQuery,
@@ -22,7 +23,6 @@ import {
   useQueryRefHandlers,
   useReadQuery,
 } from "@apollo/client/react";
-import type { QueryRef } from "@apollo/client/react/internal";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -2025,7 +2025,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   const wsLink = new MockSubscriptionLink();
   const mockLink = new MockLink(mocks);
 
-  const link = split(
+  const link = ApolloLink.split(
     ({ query }) => {
       const definition = getMainDefinition(query);
 

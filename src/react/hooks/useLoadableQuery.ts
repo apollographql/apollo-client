@@ -14,10 +14,10 @@ import type {
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
+import type { QueryRef } from "@apollo/client/react";
 import type {
   CacheKey,
   FetchMoreFunction,
-  QueryRef,
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import {

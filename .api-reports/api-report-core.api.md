@@ -17,7 +17,6 @@ import { CombinedProtocolErrors } from '@apollo/client/errors';
 import { concat } from '@apollo/client/link';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
-import { DataMasking } from '@apollo/client/masking';
 import type { DeepPartial } from '@apollo/client/utilities';
 import { defaultDataIdFromObject } from '@apollo/client/cache';
 import { defaultPrinter } from '@apollo/client/link/http';
@@ -393,8 +392,6 @@ export { concat }
 export { createHttpLink }
 
 export { createSignalIfSupported }
-
-export { DataMasking }
 
 // @public (undocumented)
 export type DataState<TData> = {

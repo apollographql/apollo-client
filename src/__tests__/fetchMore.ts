@@ -8,7 +8,6 @@ import {
   ApolloLink,
   CombinedGraphQLErrors,
   NetworkStatus,
-  split,
 } from "@apollo/client";
 import type {
   ApolloCache,
@@ -2484,7 +2483,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: split(
+    link: ApolloLink.split(
       (op) => op.operationName === "DeferQuery",
       defer.httpLink,
       baseLink

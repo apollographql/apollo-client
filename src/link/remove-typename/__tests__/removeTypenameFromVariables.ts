@@ -6,7 +6,7 @@ import { gql } from "@apollo/client";
 import type { ApolloLink } from "@apollo/client/link";
 import {
   KEEP,
-  removeTypenameFromVariables,
+  RemoveTypenameFromVariablesLink,
 } from "@apollo/client/link/remove-typename";
 import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
@@ -37,7 +37,7 @@ test("strips all __typename keys by default", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables();
+  const link = new RemoveTypenameFromVariablesLink();
 
   const { variables } = await execute(link, {
     query,
@@ -73,7 +73,7 @@ test("does nothing when no variables are passed", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables();
+  const link = new RemoveTypenameFromVariablesLink();
 
   const resultOperation = await execute(link, { query });
 
@@ -95,7 +95,7 @@ test("does nothing when no variables are passed even if variables are declared i
     }
   `;
 
-  const link = removeTypenameFromVariables();
+  const link = new RemoveTypenameFromVariablesLink();
 
   const resultOperation = await execute(link, { query });
 
@@ -115,7 +115,7 @@ test("keeps __typename for variables with types defined by `except`", async () =
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
     },
@@ -150,7 +150,7 @@ test("keeps __typename in all variables with types configured with `except`", as
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
       Config: KEEP,
@@ -180,7 +180,7 @@ test("handles variable declarations declared as non null and list types", async 
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
     },
@@ -221,7 +221,7 @@ test("keeps __typename at configured fields under input object types", async () 
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       FooInput: {
         bar: KEEP,
@@ -277,7 +277,7 @@ test("keeps __typename at a deeply nested field", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       FooInput: {
         bar: {
@@ -329,7 +329,7 @@ test("handles configured fields varying nesting levels", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       FooInput: {
         bar: KEEP,
@@ -383,7 +383,7 @@ test("handles multiple configured types with fields", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       FooInput: {
         bar: KEEP,
@@ -437,7 +437,7 @@ test("handles when __typename is not present in all paths", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
     },
@@ -472,7 +472,7 @@ test("handles when __typename is not present in variables", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
     },
@@ -507,7 +507,7 @@ test("handles when declared variables are unused", async () => {
     }
   `;
 
-  const link = removeTypenameFromVariables({
+  const link = new RemoveTypenameFromVariablesLink({
     except: {
       JSON: KEEP,
     },
@@ -539,7 +539,7 @@ test("ensures operation.getContext and operation.setContext functions are proper
     }
   `;
 
-  const link = removeTypenameFromVariables();
+  const link = new RemoveTypenameFromVariablesLink();
 
   const operationWithoutVariables = await execute(link, { query });
   const operationWithVariables = await execute(link, {

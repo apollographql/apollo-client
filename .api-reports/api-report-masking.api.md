@@ -39,10 +39,6 @@ type CombineIntersection<T> = Exclude<T, {
 // @public (undocumented)
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
-// @public (undocumented)
-export interface DataMasking {
-}
-
 // @internal @deprecated (undocumented)
 export const disableWarningsSlot: {
     readonly id: string;

@@ -11,14 +11,15 @@ import type {
   DefaultContext,
   OperationVariables,
 } from "@apollo/client";
+import type { TypeOverrides } from "@apollo/client";
+import type { NotImplementedHandler } from "@apollo/client/incremental";
 import { createOperation } from "@apollo/client/link/utils";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
-
-import type { AdditionalApolloLinkResultTypes } from "./types.js";
 
 export declare namespace ApolloLink {
   /**
@@ -73,15 +74,23 @@ export declare namespace ApolloLink {
     forward: ApolloLink.ForwardFunction
   ) => Observable<ApolloLink.Result>;
 
+  export type AdditionalResultTypes<
+    TData = Record<string, any>,
+    TExtensions = Record<string, any>,
+  > = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "AdditionalApolloLinkResultTypes",
+    NotImplementedHandler.TypeOverrides,
+    TData,
+    TExtensions
+  >;
+
   export type Result<
     TData = Record<string, any>,
     TExtensions = Record<string, any>,
   > =
     | FormattedExecutionResult<TData, TExtensions>
-    | AdditionalApolloLinkResultTypes<
-        TData,
-        TExtensions
-      >[keyof AdditionalApolloLinkResultTypes<TData, TExtensions>];
+    | AdditionalResultTypes<TData, TExtensions>;
 
   /**
    * The currently executed operation object provided to an `ApolloLink.RequestHandler`

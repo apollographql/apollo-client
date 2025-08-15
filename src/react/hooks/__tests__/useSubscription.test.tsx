@@ -11,7 +11,7 @@ import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { DefaultContext, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, concat } from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -572,7 +572,7 @@ describe("useSubscription Hook", () => {
       return forward(operation);
     });
     const client = new ApolloClient({
-      link: concat(contextLink, link),
+      link: ApolloLink.concat(contextLink, link),
       cache: new Cache(),
     });
 
@@ -636,7 +636,7 @@ describe("useSubscription Hook", () => {
       return forward(operation);
     });
     const client = new ApolloClient({
-      link: concat(extensionsLink, link),
+      link: ApolloLink.concat(extensionsLink, link),
       cache: new Cache(),
     });
 

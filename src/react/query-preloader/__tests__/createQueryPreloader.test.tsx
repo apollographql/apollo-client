@@ -26,15 +26,12 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
+import type { PreloadedQueryRef, QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
   createQueryPreloader,
   useReadQuery,
 } from "@apollo/client/react";
-import type {
-  PreloadedQueryRef,
-  QueryRef,
-} from "@apollo/client/react/internal";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {

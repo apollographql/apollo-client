@@ -8,7 +8,7 @@ import type {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
-import type { PreloadedQueryRef } from "@apollo/client/react/internal";
+import type { PreloadedQueryRef } from "@apollo/client/react";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,

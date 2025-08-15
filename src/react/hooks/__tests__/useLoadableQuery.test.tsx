@@ -30,7 +30,6 @@ import {
   CombinedGraphQLErrors,
   gql,
   NetworkStatus,
-  split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
@@ -4833,7 +4832,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   const wsLink = new MockSubscriptionLink();
   const mockLink = new MockLink(mocks);
 
-  const link = split(
+  const link = ApolloLink.split(
     ({ query }) => {
       const definition = getMainDefinition(query);
 
@@ -4972,7 +4971,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
   const wsLink = new MockSubscriptionLink();
   const mockLink = new MockLink(mocks);
 
-  const link = split(
+  const link = ApolloLink.split(
     ({ query }) => {
       const definition = getMainDefinition(query);
 

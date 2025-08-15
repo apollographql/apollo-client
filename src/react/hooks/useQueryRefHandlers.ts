@@ -4,9 +4,9 @@ import type { DataState, OperationVariables } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import type { ApolloClient } from "@apollo/client";
 import type { ObservableQuery } from "@apollo/client";
+import type { QueryRef } from "@apollo/client/react";
 import type {
   FetchMoreFunction,
-  QueryRef,
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import {

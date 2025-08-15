@@ -24,11 +24,11 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
  *
  * ```ts
  * import {
- *   removeTypenameFromVariables,
+ *   RemoveTypenameFromVariablesLink,
  *   KEEP,
  * } from "@apollo/client/link/remove-typename";
  *
- * const link = removeTypenameFromVariables({
+ * const link = new RemoveTypenameFromVariablesLink({
  *   except: {
  *     JSON: KEEP, // Keep __typename for all JSON scalar variables
  *     DashboardInput: {

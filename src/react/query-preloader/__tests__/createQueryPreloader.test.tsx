@@ -26,7 +26,6 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { Masked } from "@apollo/client/masking";
 import type { PreloadedQueryRef, QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -1910,9 +1909,7 @@ test("masks result when dataMasking is `true`", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<
-    Masked<MaskedVariablesCaseData>
-  >({
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });

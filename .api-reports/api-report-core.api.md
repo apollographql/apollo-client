@@ -17,7 +17,6 @@ import { CombinedProtocolErrors } from '@apollo/client/errors';
 import { concat } from '@apollo/client/link';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
-import { DataMasking } from '@apollo/client/masking';
 import type { DeepPartial } from '@apollo/client/utilities';
 import { defaultDataIdFromObject } from '@apollo/client/cache';
 import { defaultPrinter } from '@apollo/client/link/http';
@@ -58,8 +57,6 @@ import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
 import { makeVar } from '@apollo/client/cache';
-import { Masked } from '@apollo/client/masking';
-import { MaskedDocumentNode } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
@@ -396,8 +393,6 @@ export { createHttpLink }
 
 export { createSignalIfSupported }
 
-export { DataMasking }
-
 // @public (undocumented)
 export type DataState<TData> = {
     data: DataValue.Complete<TData>;
@@ -544,10 +539,6 @@ export { LinkError }
 export { LocalStateError }
 
 export { makeVar }
-
-export { Masked }
-
-export { MaskedDocumentNode }
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {

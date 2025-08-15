@@ -17,7 +17,6 @@ import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
-import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -3587,17 +3586,15 @@ describe.skip("Type Tests", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const subscription: MaskedDocumentNode<Subscription> = gql``;
+    const subscription: TypedDocumentNode<Subscription> = gql``;
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<
-          Masked<Subscription> | undefined
-        >();
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Masked<Subscription> | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
 
   test("uses unmodified type when using TypedDocumentNode", async () => {

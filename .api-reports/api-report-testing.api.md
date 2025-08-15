@@ -6,6 +6,7 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
+import { FormattedExecutionResult } from 'graphql';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
@@ -108,7 +109,7 @@ export class MockSubscriptionLink extends ApolloLink {
     // (undocumented)
     operation?: ApolloLink.Operation;
     // (undocumented)
-    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result<Record<string, any>, Record<string, any>>>;
+    request(operation: ApolloLink.Operation): Observable<FormattedExecutionResult<Record<string, any>, Record<string, any>>>;
     // (undocumented)
     setups: any[];
     // (undocumented)

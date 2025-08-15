@@ -57,7 +57,7 @@ export default config;
 
 <Note>
 
-There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick whichever way works best for your project setup.
+There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`. Use the method that best fits your project's needs.
 
 </Note>
 
@@ -83,7 +83,7 @@ $ npm run codegen
 
 If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
 
-We don't recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code. Follow the steps in the previous section to use a setup that includes these plugins.
+We do not recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. Instead, we recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum), which focus on only generating types and don't include additional runtime code. Follow the steps in the preceding section to use a setup that includes these plugins.
 
 If you're already using the client preset, or you choose to use it instead of working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
 
@@ -481,7 +481,7 @@ export function NewRocketForm() {
 
 <Note>
 
-Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` isn't tracked the same way as `useQuery` since its value is not read from the cache. The value of `data` is a set result of the last execution of the mutation.
+Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` isn't tracked the same way as `useQuery` because its value is not read from the cache. The value of `data` is a set result of the last execution of the mutation.
 
 </Note>
 
@@ -491,7 +491,7 @@ Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` 
 
 This behavior affects how TypeScript checks required variables with `useMutation`. Required variables must be provided to either the hook or the mutate function. If a required variable is not provided to the hook, the mutate function must include it. Required variables provided to the hook make them optional in the mutate function.
 
-The following uses the previous example but flattens out the variable declarations to demonstrate how required variables affects TypeScript validation.
+The following uses the previous example but flattens the variable declarations to demonstrate how required variables affects TypeScript validation.
 
 ```tsx
 const SAVE_ROCKET: TypedDocumentNode<
@@ -594,7 +594,7 @@ Variables are validated the same as `useQuery`. See [working with variables](#wo
 
 ## Defining context types
 
-Apollo Client allows you to pass [custom context](../api/link/introduction#managing-context) through to the link chain. By default, context is typed as `Record<string, any>` to allow for any arbitrary value as context. However, this default has a couple downsides. You don't get proper type safety and you don't get autocomplete suggestions in your editor to understand what context options are available to you.
+Apollo Client enables you to pass [custom context](../api/link/introduction#managing-context) through to the link chain. By default, context is typed as `Record<string, any>` to allow for any arbitrary value as context. However, this default has a few downsides. You don't get proper type safety and you don't get autocomplete suggestions in your editor to understand what context options are available to you.
 
 You can define your own context types for better type safety in Apollo Client using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html).
 

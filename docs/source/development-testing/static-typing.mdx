@@ -79,15 +79,59 @@ $ npm run codegen
 ✔ Generate outputs
 ```
 
-<Note>
+### The `client` preset
 
-If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).<br /><br />
+If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
 
-We don't recommend using the client preset with Apollo Client apps because it generates some runtime code that adds additional bundle size to your app and includes some features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code.<br /><br />
+We don't recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. We instead recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum) which focus on only generating types and doesn't include additional runtime code. Follow the steps in the previous section to use a setup that includes these plugins.
 
-If you're already using the client preset, we recommend, at minimum, [disabling fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking). See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature.
+If you're already using the client preset, or you choose to use it instead of the working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
 
-</Note>
+```ts
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}", "!src/gql/**/*"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/gql/": {
+      preset: "client",
+      presetConfig: {
+        // Disable fragment masking
+        fragmentMasking: false,
+      },
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<Caution>
+
+This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because its incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or any feature of the fragment masking feature, you will need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
+
+</Caution>
 
 ## Using operation types
 

@@ -1142,7 +1142,7 @@ function isForcedResolver(field: FieldNode) {
 // of the previous main operation.
 function toQueryOperation(document: DocumentNode): DocumentNode {
   const definition = getMainDefinition(document);
-  const definitionOperation = (<OperationDefinitionNode>definition).operation;
+  const definitionOperation = (definition as OperationDefinitionNode).operation;
 
   if (definitionOperation === "query") {
     // Already a query, so return the existing document.

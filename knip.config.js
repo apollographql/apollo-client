@@ -33,6 +33,7 @@ const config = {
       "codegen/local-state/config.ts",
       "codegen/local-state/plugin.ts",
       "codegen/local-state/visitor.ts",
+      "scripts/codemods/ac3-to-ac4/src/util/getAllExports.ts",
     ]),
   project: [
     "src/**/*.ts{,x}",
@@ -61,8 +62,6 @@ const config = {
     "terser",
     // used as a reporter by the `test:coverage` script
     "jest-junit",
-    "babel-plugin-react-compiler",
-    "react-compiler-runtime",
     "@mdx-js/language-service",
   ],
   jest: {

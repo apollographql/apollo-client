@@ -51,7 +51,7 @@ export type LazyQueryHookExecOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = useLazyQuery.ExecOptions<TVariables>;
 
-/** @deprecated Use `useLazyQuery.ExecOptions` instead */
+/** @deprecated Use `useLazyQuery.ExecFunction` instead */
 export type LazyQueryExecFunction<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

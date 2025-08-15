@@ -8,8 +8,8 @@ import {
   InMemoryCache,
 } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
-import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
+import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { RemoveTypenameFromVariablesLink } from "@apollo/client/link/remove-typename";
 import { cacheSizes } from "@apollo/client/utilities";
 
 // this is compiled away so we need to import it from sources
@@ -58,10 +58,10 @@ it("returns information about cache usage (empty caches)", () => {
     cache: new InMemoryCache({
       fragments: createFragmentRegistry(),
     }),
-    link: createPersistedQueryLink({
+    link: new PersistedQueryLink({
       sha256,
     })
-      .concat(removeTypenameFromVariables())
+      .concat(new RemoveTypenameFromVariablesLink())
       .concat(ApolloLink.empty()),
   });
   expect(client.getMemoryInternals?.()).toEqual({
@@ -126,10 +126,10 @@ it("returns information about cache usage (some query triggered)", () => {
     cache: new InMemoryCache({
       fragments: createFragmentRegistry(),
     }),
-    link: createPersistedQueryLink({
+    link: new PersistedQueryLink({
       sha256,
     })
-      .concat(removeTypenameFromVariables())
+      .concat(new RemoveTypenameFromVariablesLink())
       .concat(ApolloLink.empty()),
   });
 

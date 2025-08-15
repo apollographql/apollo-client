@@ -35,8 +35,10 @@ import type { ObservableQuery } from '@apollo/client';
 import type { OnQueryUpdated } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 import { PreloadedQueryRef } from '@apollo/client/react/internal';
+import type { PreloadedQueryRef as PreloadedQueryRef_2 } from '@apollo/client/react';
 import type { Prettify } from '@apollo/client/utilities/internal';
 import { QueryRef } from '@apollo/client/react/internal';
+import type { QueryRef as QueryRef_2 } from '@apollo/client/react';
 import type { ReactiveVar } from '@apollo/client';
 import type * as ReactTypes from 'react';
 import type { Reference } from '@apollo/client/cache';
@@ -148,17 +150,17 @@ export interface PreloadQueryFunction {
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
         returnPartialData: true;
         errorPolicy: "ignore" | "all";
-    }): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
+    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
         errorPolicy: "ignore" | "all";
-    }): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">;
+    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
         returnPartialData: true;
-    }): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial">;
+    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
     options?: PreloadQueryOptions<NoInfer_2<TVariables>>
-    ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
-    toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
+    ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+    toPromise<TQueryRef extends PreloadedQueryRef_2<any, any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
 }
 
 // @public (undocumented)
@@ -210,7 +212,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     returnPartialData: boolean;
     fetchPolicy: "no-cache";
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming">,
+QueryRef_2<TData, TVariables, "complete" | "streaming">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -219,7 +221,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     returnPartialData: false;
     errorPolicy: "ignore" | "all";
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -228,7 +230,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     returnPartialData: boolean;
     errorPolicy: "ignore" | "all";
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "partial" | "empty">,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -236,7 +238,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     errorPolicy: "ignore" | "all";
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -245,7 +247,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     skip: boolean;
     returnPartialData: false;
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -254,7 +256,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     skip: boolean;
     returnPartialData: boolean;
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -262,7 +264,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: false;
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming">,
+QueryRef_2<TData, TVariables, "complete" | "streaming">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -270,7 +272,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: boolean;
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "partial">,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -278,7 +280,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     skip: boolean;
 }): [
-QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -289,7 +291,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: false;
 })): [
-QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -297,7 +299,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: boolean;
 })): [
-QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -305,7 +307,7 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: useBackgroundQuery.Options<NoInfer_2<TVariables>>
 ] : [options: useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [
-QueryRef<TData, TVariables, "complete" | "streaming">,
+QueryRef_2<TData, TVariables, "complete" | "streaming">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -313,13 +315,13 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>
 ] : [options: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [
-QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>): [
-QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
@@ -362,7 +364,7 @@ export namespace useBackgroundQuery {
     // (undocumented)
     export namespace DocumentationTypes {
         export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useBackgroundQuery.Options<TVariables>): [
-        QueryRef<TData, TVariables> | undefined,
+        QueryRef_2<TData, TVariables> | undefined,
         useBackgroundQuery.Result<TData, TVariables>
         ];
     }
@@ -600,7 +602,7 @@ export namespace useLoadableQuery {
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = [
     loadQuery: LoadQueryFunction<TVariables>,
-    queryRef: QueryRef<TData, TVariables, TStates> | null,
+    queryRef: QueryRef_2<TData, TVariables, TStates> | null,
     handlers: Handlers<TData, TVariables>
     ];
 }
@@ -759,13 +761,13 @@ export namespace useQuery {
 }
 
 // @public
-export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>): useQueryRefHandlers.Result<TData, TVariables>;
+export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef_2<TData, TVariables, DataState<TData>["dataState"]>): useQueryRefHandlers.Result<TData, TVariables>;
 
 // @public (undocumented)
 export namespace useQueryRefHandlers {
     // (undocumented)
     export namespace DocumentationTypes {
-        export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
+        export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef_2<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
     }
     // (undocumented)
     export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -782,7 +784,7 @@ export type UseQueryRefHandlersResult<TData = unknown, TVariables extends Operat
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public
-export function useReadQuery<TData, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, any, TStates>): useReadQuery.Result<TData, TStates>;
+export function useReadQuery<TData, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef_2<TData, any, TStates>): useReadQuery.Result<TData, TStates>;
 
 // @public (undocumented)
 export namespace useReadQuery {
@@ -802,7 +804,7 @@ export namespace useReadQuery {
             export interface Result<TData = unknown> extends Base.Result<TData>, DocumentationTypes.DataState<TData> {
             }
         }
-        export function useReadQuery<TData>(queryRef: QueryRef<TData>): useReadQuery.Result<TData>;
+        export function useReadQuery<TData>(queryRef: QueryRef_2<TData>): useReadQuery.Result<TData>;
     }
     // (undocumented)
     export type Result<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = Base.Result<TData> & GetDataState<MaybeMasked_2<TData>, TStates>;

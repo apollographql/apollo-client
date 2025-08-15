@@ -1,0 +1,4308 @@
+{
+  "@apollo/client/cache": [
+    {
+      "name": "Transaction",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Transaction = Transaction;"]
+    },
+    {
+      "name": "WatchFragmentOptions",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentOptions = WatchFragmentOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "WatchFragmentResult",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentResult = WatchFragmentResult<TData>;"
+      ]
+    },
+    {
+      "name": "ApolloCache",
+      "moduleName": "@apollo/client/cache",
+      "usageExamples": [
+        "const _Test_ApolloCache = ApolloCache;",
+        "type _Test_ApolloCache_WatchFragmentOptions = ApolloCache.WatchFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloCache_WatchFragmentResult = ApolloCache.WatchFragmentResult<TData>;",
+        "class _Test_ApolloCache extends ApolloCache {}",
+        "const _test_ApolloCache = new ApolloCache()"
+      ]
+    },
+    {
+      "name": "Cache",
+      "moduleName": "@apollo/client/cache",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_Cache = Cache;",
+        "type _Test_Cache_WatchCallback = Cache.WatchCallback<TData>;",
+        "type _Test_Cache_ReadOptions = Cache.ReadOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteOptions = Cache.WriteOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffOptions = Cache.DiffOptions<TData, TVariables>;",
+        "type _Test_Cache_WatchOptions = Cache.WatchOptions<TData, TVariables>;",
+        "type _Test_Cache_EvictOptions = Cache.EvictOptions;",
+        "type _Test_Cache_ResetOptions = Cache.ResetOptions;",
+        "type _Test_Cache_ModifyOptions = Cache.ModifyOptions<Entity>;",
+        "type _Test_Cache_BatchOptions = Cache.BatchOptions<TCache, TUpdateResult>;",
+        "type _Test_Cache_ReadQueryOptions = Cache.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_ReadFragmentOptions = Cache.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteQueryOptions = Cache.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteFragmentOptions = Cache.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateQueryOptions = Cache.UpdateQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateFragmentOptions = Cache.UpdateFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffResult = Cache.DiffResult<TData>;"
+      ]
+    },
+    {
+      "name": "IgnoreModifier",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_IgnoreModifier = IgnoreModifier;"]
+    },
+    {
+      "name": "MissingTree",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MissingTree = MissingTree;"]
+    },
+    {
+      "name": "Modifier",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Modifier = Modifier<T>;"]
+    },
+    {
+      "name": "ModifierDetails",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ModifierDetails = ModifierDetails;"]
+    },
+    {
+      "name": "Modifiers",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Modifiers = Modifiers<T>;"]
+    },
+    {
+      "name": "ReadFieldOptions",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ReadFieldOptions = ReadFieldOptions;"]
+    },
+    {
+      "name": "MissingFieldError",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_MissingFieldError extends MissingFieldError {}",
+        "const _test_MissingFieldError = new MissingFieldError(message, path, query, variables)"
+      ]
+    },
+    {
+      "name": "Reference",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_Reference = Reference;"]
+    },
+    {
+      "name": "canonicalStringify",
+      "moduleName": "@apollo/client/cache",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_canonicalStringify = canonicalStringify;"]
+    },
+    {
+      "name": "isReference",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Function",
+      "usageExamples": ["isReference(obj)"]
+    },
+    {
+      "name": "EntityStore",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_EntityStore extends EntityStore {}",
+        "const _test_EntityStore = new EntityStore(policies, group)"
+      ]
+    },
+    {
+      "name": "defaultDataIdFromObject",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Function",
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
+    },
+    {
+      "name": "fieldNameFromStoreName",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Function",
+      "usageExamples": ["fieldNameFromStoreName(storeFieldName)"]
+    },
+    {
+      "name": "InMemoryCache",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_InMemoryCache extends InMemoryCache {}",
+        "const _test_InMemoryCache = new InMemoryCache(config)"
+      ]
+    },
+    {
+      "name": "ReactiveVar",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
+    },
+    {
+      "name": "cacheSlot",
+      "moduleName": "@apollo/client/cache",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_cacheSlot = cacheSlot;"]
+    },
+    {
+      "name": "makeVar",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Function",
+      "usageExamples": ["makeVar<T>(value)"]
+    },
+    {
+      "name": "FieldFunctionOptions",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_FieldFunctionOptions = FieldFunctionOptions<TArgs, TVariables>;"
+      ]
+    },
+    {
+      "name": "FieldMergeFunction",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldMergeFunction = FieldMergeFunction<TExisting, TIncoming, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldPolicy",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldPolicy = FieldPolicy<TExisting, TIncoming, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldReadFunction",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldReadFunction = FieldReadFunction<TExisting, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "PossibleTypesMap",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
+    },
+    {
+      "name": "TypePolicies",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
+    },
+    {
+      "name": "TypePolicy",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
+    },
+    {
+      "name": "Policies",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_Policies extends Policies {}",
+        "const _test_Policies = new Policies(config)"
+      ]
+    },
+    {
+      "name": "FragmentRegistryAPI",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_FragmentRegistryAPI = FragmentRegistryAPI;"]
+    },
+    {
+      "name": "createFragmentRegistry",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Function",
+      "usageExamples": ["createFragmentRegistry(fragments)"]
+    },
+    {
+      "name": "ApolloReducerConfig",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
+    },
+    {
+      "name": "DiffQueryAgainstStoreOptions",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DiffQueryAgainstStoreOptions = DiffQueryAgainstStoreOptions;"
+      ]
+    },
+    {
+      "name": "IdGetter",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
+    },
+    {
+      "name": "IdGetterObj",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
+    },
+    {
+      "name": "InMemoryCacheConfig",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
+    },
+    {
+      "name": "MergeInfo",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
+    },
+    {
+      "name": "MergeTree",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
+    },
+    {
+      "name": "NormalizedCache",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
+    },
+    {
+      "name": "NormalizedCacheObject",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_NormalizedCacheObject = NormalizedCacheObject;"
+      ]
+    },
+    {
+      "name": "OptimisticStoreItem",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
+    },
+    {
+      "name": "ReadMergeModifyContext",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ReadMergeModifyContext = ReadMergeModifyContext;"
+      ]
+    },
+    {
+      "name": "ReadQueryOptions",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
+    },
+    {
+      "name": "StoreObject",
+      "moduleName": "@apollo/client/cache",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
+    },
+    {
+      "name": "StoreValue",
+      "moduleName": "@apollo/client/cache",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
+    }
+  ],
+  "@apollo/client": [
+    {
+      "name": "ApolloClientOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ApolloClientOptions = ApolloClientOptions;"]
+    },
+    {
+      "name": "ApolloQueryResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_ApolloQueryResult = ApolloQueryResult<TData, TStates>;"
+      ]
+    },
+    {
+      "name": "DefaultOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DefaultOptions = DefaultOptions;"]
+    },
+    {
+      "name": "DevtoolsOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DevtoolsOptions = DevtoolsOptions;"]
+    },
+    {
+      "name": "MutateResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MutateResult = MutateResult<TData>;"]
+    },
+    {
+      "name": "MutationOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationOptions = MutationOptions<TData, TVariables, TCache>;"
+      ]
+    },
+    {
+      "name": "QueryOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_QueryOptions = QueryOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesOptions = RefetchQueriesOptions<TCache, TResult>;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesResult = RefetchQueriesResult<TResult>;"
+      ]
+    },
+    {
+      "name": "SubscribeToMoreOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreOptions = SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscriptionOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscriptionOptions = SubscriptionOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "WatchQueryOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchQueryOptions = WatchQueryOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "ApolloClient",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ApolloClient = ApolloClient;",
+        "type _Test_ApolloClient_DefaultOptions = ApolloClient.DefaultOptions;",
+        "type _Test_ApolloClient_Options = ApolloClient.Options;",
+        "type _Test_ApolloClient_DevtoolsOptions = ApolloClient.DevtoolsOptions;",
+        "type _Test_ApolloClient_MutateOptions = ApolloClient.MutateOptions<TData, TVariables, TCache>;",
+        "type _Test_ApolloClient_MutateResult = ApolloClient.MutateResult<TData>;",
+        "type _Test_ApolloClient_QueryOptions = ApolloClient.QueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_QueryResult = ApolloClient.QueryResult<TData>;",
+        "type _Test_ApolloClient_RefetchQueriesOptions = ApolloClient.RefetchQueriesOptions<TCache, TResult>;",
+        "type _Test_ApolloClient_RefetchQueriesResult = ApolloClient.RefetchQueriesResult<TResult>;",
+        "const _Test_ApolloClient_RefetchQueriesResult = ApolloClient.RefetchQueriesResult;",
+        "type _Test_ApolloClient_RefetchQueriesResult_AdditionalProperties = ApolloClient.RefetchQueriesResult.AdditionalProperties<TResult>;",
+        "type _Test_ApolloClient_SubscribeOptions = ApolloClient.SubscribeOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_SubscribeResult = ApolloClient.SubscribeResult<TData>;",
+        "type _Test_ApolloClient_WatchFragmentOptions = ApolloClient.WatchFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WatchFragmentResult = ApolloClient.WatchFragmentResult<TData>;",
+        "type _Test_ApolloClient_WatchQueryOptions = ApolloClient.WatchQueryOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_ReadQueryOptions = ApolloClient.ReadQueryOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_ReadFragmentOptions = ApolloClient.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WriteQueryOptions = ApolloClient.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WriteFragmentOptions = ApolloClient.WriteFragmentOptions<TData, TVariables>;",
+        "class _Test_ApolloClient extends ApolloClient {}",
+        "const _test_ApolloClient = new ApolloClient(options)"
+      ]
+    },
+    {
+      "name": "ObservableQuery",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ObservableQuery = ObservableQuery;",
+        "type _Test_ObservableQuery_Options = ObservableQuery.Options<TData, TVariables>;",
+        "type _Test_ObservableQuery_FetchMoreOptions = ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>;",
+        "type _Test_ObservableQuery_SubscribeToMoreOptions = ObservableQuery.SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>;",
+        "type _Test_ObservableQuery_CacheWatchOptions = ObservableQuery.CacheWatchOptions<TData, TVariables>;",
+        "type _Test_ObservableQuery_Result = ObservableQuery.Result<TData, TStates>;",
+        "type _Test_ObservableQuery_ResultPromise = ObservableQuery.ResultPromise<T>;",
+        "const _Test_ObservableQuery_DocumentationTypes = ObservableQuery.DocumentationTypes;",
+        "type _Test_ObservableQuery_DocumentationTypes_OperatorFunctionChain = ObservableQuery.DocumentationTypes.OperatorFunctionChain<From, To>;",
+        "type _Test_ObservableQuery_DocumentationTypes_ObservableMethods = ObservableQuery.DocumentationTypes.ObservableMethods<TData, OperatorResult>;",
+        "class _Test_ObservableQuery extends ObservableQuery<TData, TVariables> {}",
+        "const _test_ObservableQuery = new ObservableQuery<TData, TVariables>(param0)"
+      ]
+    },
+    {
+      "name": "ErrorPolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ErrorPolicy = ErrorPolicy;"]
+    },
+    {
+      "name": "FetchPolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_FetchPolicy = FetchPolicy;"]
+    },
+    {
+      "name": "MutationFetchPolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MutationFetchPolicy = MutationFetchPolicy;"]
+    },
+    {
+      "name": "RefetchWritePolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_RefetchWritePolicy = RefetchWritePolicy;"]
+    },
+    {
+      "name": "SubscribeToMoreFunction",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreFunction = SubscribeToMoreFunction<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscribeToMoreUpdateQueryFn",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreUpdateQueryFn = SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;"
+      ]
+    },
+    {
+      "name": "UpdateQueryMapFn",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_UpdateQueryMapFn = UpdateQueryMapFn<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UpdateQueryOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UpdateQueryOptions = UpdateQueryOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "WatchQueryFetchPolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchQueryFetchPolicy = WatchQueryFetchPolicy;"
+      ]
+    },
+    {
+      "name": "isNetworkRequestSettled",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["isNetworkRequestSettled(networkStatus)"]
+    },
+    {
+      "name": "NetworkStatus",
+      "moduleName": "@apollo/client",
+      "kind": "RegularEnum",
+      "usageExamples": ["type _Test_NetworkStatus = NetworkStatus;"]
+    },
+    {
+      "name": "DataState",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DataState = DataState<TData>;"]
+    },
+    {
+      "name": "DataValue",
+      "moduleName": "@apollo/client",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_DataValue = DataValue;",
+        "type _Test_DataValue_Complete = DataValue.Complete<TData>;",
+        "type _Test_DataValue_Streaming = DataValue.Streaming<TData>;",
+        "type _Test_DataValue_Partial = DataValue.Partial<TData>;"
+      ]
+    },
+    {
+      "name": "DefaultContext",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DefaultContext = DefaultContext;"]
+    },
+    {
+      "name": "ErrorLike",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ErrorLike = ErrorLike;"]
+    },
+    {
+      "name": "GetDataState",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_GetDataState = GetDataState<TData, TState>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesInclude",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesInclude = InternalRefetchQueriesInclude;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesMap",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesMap = InternalRefetchQueriesMap<TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesOptions",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesOptions = InternalRefetchQueriesOptions<TCache, TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesResult = InternalRefetchQueriesResult<TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueryDescriptor",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueryDescriptor = InternalRefetchQueryDescriptor;"
+      ]
+    },
+    {
+      "name": "MutationQueryReducer",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationQueryReducer = MutationQueryReducer<T>;"
+      ]
+    },
+    {
+      "name": "MutationQueryReducersMap",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationQueryReducersMap = MutationQueryReducersMap<T>;"
+      ]
+    },
+    {
+      "name": "MutationUpdaterFunction",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TCache>;"
+      ]
+    },
+    {
+      "name": "NormalizedExecutionResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_NormalizedExecutionResult = NormalizedExecutionResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "OnQueryUpdated",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"]
+    },
+    {
+      "name": "OperationVariables",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OperationVariables = OperationVariables;"]
+    },
+    {
+      "name": "RefetchQueriesInclude",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesInclude = RefetchQueriesInclude;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesPromiseResults",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesPromiseResults = RefetchQueriesPromiseResults<TResult>;"
+      ]
+    },
+    {
+      "name": "RefetchQueryDescriptor",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueryDescriptor = RefetchQueryDescriptor;"
+      ]
+    },
+    {
+      "name": "SubscriptionObservable",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_SubscriptionObservable = SubscriptionObservable<T>;"
+      ]
+    },
+    {
+      "name": "TypedDocumentNode",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_TypedDocumentNode = TypedDocumentNode<TResult, TVariables>;"
+      ]
+    },
+    {
+      "name": "TypeOverrides",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_TypeOverrides = TypeOverrides;"]
+    },
+    {
+      "name": "CombinedGraphQLErrors",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_CombinedGraphQLErrors = CombinedGraphQLErrors;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatterOptions = CombinedGraphQLErrors.MessageFormatterOptions;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatter = CombinedGraphQLErrors.MessageFormatter;",
+        "const _Test_CombinedGraphQLErrors_DocumentationTypes = CombinedGraphQLErrors.DocumentationTypes;",
+        "CombinedGraphQLErrors.DocumentationTypes.formatMessage(errors, options)",
+        "CombinedGraphQLErrors.DocumentationTypes.is(error)",
+        "type _Test_CombinedGraphQLErrors_DocumentationTypes_InstanceProperties = CombinedGraphQLErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedGraphQLErrors.is(error)",
+        "const _Test_CombinedGraphQLErrors_formatMessage = CombinedGraphQLErrors.formatMessage;",
+        "class _Test_CombinedGraphQLErrors extends CombinedGraphQLErrors {}",
+        "const _test_CombinedGraphQLErrors = new CombinedGraphQLErrors(result)"
+      ]
+    },
+    {
+      "name": "CombinedProtocolErrors",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_CombinedProtocolErrors = CombinedProtocolErrors;",
+        "type _Test_CombinedProtocolErrors_MessageFormatterOptions = CombinedProtocolErrors.MessageFormatterOptions;",
+        "type _Test_CombinedProtocolErrors_MessageFormatter = CombinedProtocolErrors.MessageFormatter;",
+        "const _Test_CombinedProtocolErrors_DocumentationTypes = CombinedProtocolErrors.DocumentationTypes;",
+        "CombinedProtocolErrors.DocumentationTypes.formatMessage(errors, options)",
+        "type _Test_CombinedProtocolErrors_DocumentationTypes_InstanceProperties = CombinedProtocolErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedProtocolErrors.is(error)",
+        "const _Test_CombinedProtocolErrors_formatMessage = CombinedProtocolErrors.formatMessage;",
+        "class _Test_CombinedProtocolErrors extends CombinedProtocolErrors {}",
+        "const _test_CombinedProtocolErrors = new CombinedProtocolErrors(protocolErrors)"
+      ]
+    },
+    {
+      "name": "LinkError",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_LinkError = LinkError;"]
+    },
+    {
+      "name": "LocalStateError",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_LocalStateError = LocalStateError;",
+        "type _Test_LocalStateError_Options = LocalStateError.Options;",
+        "const _Test_LocalStateError_DocumentationTypes = LocalStateError.DocumentationTypes;",
+        "type _Test_LocalStateError_DocumentationTypes_InstanceProperties = LocalStateError.DocumentationTypes.InstanceProperties;",
+        "LocalStateError.is(error)",
+        "class _Test_LocalStateError extends LocalStateError {}",
+        "const _test_LocalStateError = new LocalStateError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerError",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ServerError = ServerError;",
+        "type _Test_ServerError_Options = ServerError.Options;",
+        "const _Test_ServerError_DocumentationTypes = ServerError.DocumentationTypes;",
+        "type _Test_ServerError_DocumentationTypes_InstanceProperties = ServerError.DocumentationTypes.InstanceProperties;",
+        "ServerError.is(error)",
+        "class _Test_ServerError extends ServerError {}",
+        "const _test_ServerError = new ServerError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerParseError",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ServerParseError = ServerParseError;",
+        "type _Test_ServerParseError_Options = ServerParseError.Options;",
+        "const _Test_ServerParseError_DocumentationTypes = ServerParseError.DocumentationTypes;",
+        "type _Test_ServerParseError_DocumentationTypes_InstanceProperties = ServerParseError.DocumentationTypes.InstanceProperties;",
+        "ServerParseError.is(error)",
+        "class _Test_ServerParseError extends ServerParseError {}",
+        "const _test_ServerParseError = new ServerParseError(originalParseError, options)"
+      ]
+    },
+    {
+      "name": "UnconventionalError",
+      "moduleName": "@apollo/client",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_UnconventionalError extends UnconventionalError {}",
+        "const _test_UnconventionalError = new UnconventionalError(errorType)"
+      ]
+    },
+    {
+      "name": "ApolloReducerConfig",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
+    },
+    {
+      "name": "Cache",
+      "moduleName": "@apollo/client",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_Cache = Cache;",
+        "type _Test_Cache_WatchCallback = Cache.WatchCallback<TData>;",
+        "type _Test_Cache_ReadOptions = Cache.ReadOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteOptions = Cache.WriteOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffOptions = Cache.DiffOptions<TData, TVariables>;",
+        "type _Test_Cache_WatchOptions = Cache.WatchOptions<TData, TVariables>;",
+        "type _Test_Cache_EvictOptions = Cache.EvictOptions;",
+        "type _Test_Cache_ResetOptions = Cache.ResetOptions;",
+        "type _Test_Cache_ModifyOptions = Cache.ModifyOptions<Entity>;",
+        "type _Test_Cache_BatchOptions = Cache.BatchOptions<TCache, TUpdateResult>;",
+        "type _Test_Cache_ReadQueryOptions = Cache.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_ReadFragmentOptions = Cache.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteQueryOptions = Cache.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteFragmentOptions = Cache.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateQueryOptions = Cache.UpdateQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateFragmentOptions = Cache.UpdateFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffResult = Cache.DiffResult<TData>;"
+      ]
+    },
+    {
+      "name": "DiffQueryAgainstStoreOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DiffQueryAgainstStoreOptions = DiffQueryAgainstStoreOptions;"
+      ]
+    },
+    {
+      "name": "FieldFunctionOptions",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_FieldFunctionOptions = FieldFunctionOptions<TArgs, TVariables>;"
+      ]
+    },
+    {
+      "name": "FieldMergeFunction",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldMergeFunction = FieldMergeFunction<TExisting, TIncoming, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldPolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldPolicy = FieldPolicy<TExisting, TIncoming, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldReadFunction",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldReadFunction = FieldReadFunction<TExisting, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "IdGetter",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
+    },
+    {
+      "name": "IdGetterObj",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
+    },
+    {
+      "name": "InMemoryCacheConfig",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
+    },
+    {
+      "name": "MergeInfo",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
+    },
+    {
+      "name": "MergeTree",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
+    },
+    {
+      "name": "NormalizedCache",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
+    },
+    {
+      "name": "NormalizedCacheObject",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_NormalizedCacheObject = NormalizedCacheObject;"
+      ]
+    },
+    {
+      "name": "OptimisticStoreItem",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
+    },
+    {
+      "name": "PossibleTypesMap",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
+    },
+    {
+      "name": "ReactiveVar",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
+    },
+    {
+      "name": "ReadMergeModifyContext",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ReadMergeModifyContext = ReadMergeModifyContext;"
+      ]
+    },
+    {
+      "name": "ReadQueryOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
+    },
+    {
+      "name": "StoreValue",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
+    },
+    {
+      "name": "Transaction",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Transaction = Transaction;"]
+    },
+    {
+      "name": "TypePolicies",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
+    },
+    {
+      "name": "TypePolicy",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
+    },
+    {
+      "name": "WatchFragmentOptions",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentOptions = WatchFragmentOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "WatchFragmentResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentResult = WatchFragmentResult<TData>;"
+      ]
+    },
+    {
+      "name": "ApolloCache",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ApolloCache = ApolloCache;",
+        "type _Test_ApolloCache_WatchFragmentOptions = ApolloCache.WatchFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloCache_WatchFragmentResult = ApolloCache.WatchFragmentResult<TData>;",
+        "class _Test_ApolloCache extends ApolloCache {}",
+        "const _test_ApolloCache = new ApolloCache()"
+      ]
+    },
+    {
+      "name": "defaultDataIdFromObject",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
+    },
+    {
+      "name": "InMemoryCache",
+      "moduleName": "@apollo/client",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_InMemoryCache extends InMemoryCache {}",
+        "const _test_InMemoryCache = new InMemoryCache(config)"
+      ]
+    },
+    {
+      "name": "makeVar",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["makeVar<T>(value)"]
+    },
+    {
+      "name": "MissingFieldError",
+      "moduleName": "@apollo/client",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_MissingFieldError extends MissingFieldError {}",
+        "const _test_MissingFieldError = new MissingFieldError(message, path, query, variables)"
+      ]
+    },
+    {
+      "name": "ApolloLink",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_ApolloLink = ApolloLink;",
+        "type _Test_ApolloLink_ExecuteContext = ApolloLink.ExecuteContext;",
+        "type _Test_ApolloLink_ForwardFunction = ApolloLink.ForwardFunction;",
+        "type _Test_ApolloLink_Request = ApolloLink.Request;",
+        "type _Test_ApolloLink_RequestHandler = ApolloLink.RequestHandler;",
+        "type _Test_ApolloLink_Result = ApolloLink.Result<TData, TExtensions>;",
+        "type _Test_ApolloLink_Operation = ApolloLink.Operation;",
+        "type _Test_ApolloLink_OperationContext = ApolloLink.OperationContext;",
+        "const _Test_ApolloLink_DocumentationTypes = ApolloLink.DocumentationTypes;",
+        "ApolloLink.DocumentationTypes.RequestHandler(operation, forward)",
+        "ApolloLink.DocumentationTypes.ForwardFunction(operation)",
+        "ApolloLink.empty()",
+        "ApolloLink.from(links)",
+        "ApolloLink.split(test, left, right)",
+        "ApolloLink.execute(link, request, context)",
+        "ApolloLink.concat(links)",
+        "class _Test_ApolloLink extends ApolloLink {}",
+        "const _test_ApolloLink = new ApolloLink(request)"
+      ]
+    },
+    {
+      "name": "concat",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_concat = concat;"]
+    },
+    {
+      "name": "empty",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_empty = empty;"]
+    },
+    {
+      "name": "execute",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_execute = execute;"]
+    },
+    {
+      "name": "from",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_from = from;"]
+    },
+    {
+      "name": "split",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_split = split;"]
+    },
+    {
+      "name": "ApolloPayloadResult",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ApolloPayloadResult = ApolloPayloadResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "DocumentNode",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
+    },
+    {
+      "name": "FetchResult",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FetchResult = FetchResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "GraphQLRequest",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_GraphQLRequest = GraphQLRequest;"]
+    },
+    {
+      "name": "Operation",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Operation = Operation;"]
+    },
+    {
+      "name": "RequestHandler",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
+    },
+    {
+      "name": "checkFetcher",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
+    },
+    {
+      "name": "createHttpLink",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
+    },
+    {
+      "name": "createSignalIfSupported",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_createSignalIfSupported = createSignalIfSupported;"
+      ]
+    },
+    {
+      "name": "defaultPrinter",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
+    },
+    {
+      "name": "fallbackHttpConfig",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
+    },
+    {
+      "name": "HttpLink",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "const _Test_HttpLink = HttpLink;",
+        "type _Test_HttpLink_ContextOptions = HttpLink.ContextOptions;",
+        "type _Test_HttpLink_Options = HttpLink.Options;",
+        "class _Test_HttpLink extends HttpLink {}",
+        "const _test_HttpLink = new HttpLink(options)"
+      ]
+    },
+    {
+      "name": "parseAndCheckHttpResponse",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
+    },
+    {
+      "name": "rewriteURIForGET",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
+    },
+    {
+      "name": "selectHttpOptionsAndBody",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBody(operation, fallbackConfig, configs)"
+      ]
+    },
+    {
+      "name": "selectHttpOptionsAndBodyInternal",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBodyInternal(operation, printer, configs)"
+      ]
+    },
+    {
+      "name": "selectURI",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
+    },
+    {
+      "name": "DataMasking",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
+    },
+    {
+      "name": "FragmentType",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
+    },
+    {
+      "name": "Masked",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
+    },
+    {
+      "name": "MaskedDocumentNode",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MaskedDocumentNode = MaskedDocumentNode<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "MaybeMasked",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
+    },
+    {
+      "name": "Unmasked",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
+    },
+    {
+      "name": "DocumentTransformCacheKey",
+      "moduleName": "@apollo/client",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DocumentTransformCacheKey = DocumentTransformCacheKey;"
+      ]
+    },
+    {
+      "name": "Reference",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_Reference = Reference;"]
+    },
+    {
+      "name": "StoreObject",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
+    },
+    {
+      "name": "DocumentTransform",
+      "moduleName": "@apollo/client",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_DocumentTransform extends DocumentTransform {}",
+        "const _test_DocumentTransform = new DocumentTransform(transform, options)"
+      ]
+    },
+    {
+      "name": "isReference",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["isReference(obj)"]
+    },
+    {
+      "name": "Observable",
+      "moduleName": "@apollo/client",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_Observable extends Observable<T> {}",
+        "const _test_Observable = new Observable<T>(subscribe)"
+      ]
+    },
+    {
+      "name": "setLogVerbosity",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["setLogVerbosity(level)"]
+    },
+    {
+      "name": "disableExperimentalFragmentVariables",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["disableExperimentalFragmentVariables()"]
+    },
+    {
+      "name": "disableFragmentWarnings",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["disableFragmentWarnings()"]
+    },
+    {
+      "name": "enableExperimentalFragmentVariables",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["enableExperimentalFragmentVariables()"]
+    },
+    {
+      "name": "gql",
+      "moduleName": "@apollo/client",
+      "usageExamples": [
+        "gql(literals, args)",
+        "const _Test_gql = gql;",
+        "const _Test_gql_default = gql.default;",
+        "const _Test_gql_gql = gql.gql;",
+        "const _Test_gql_resetCaches = gql.resetCaches;",
+        "const _Test_gql_disableFragmentWarnings = gql.disableFragmentWarnings;",
+        "const _Test_gql_enableExperimentalFragmentVariables = gql.enableExperimentalFragmentVariables;",
+        "const _Test_gql_disableExperimentalFragmentVariables = gql.disableExperimentalFragmentVariables;",
+        "const _Test_gql = gql;",
+        "const _Test_gql_default = gql.default;",
+        "const _Test_gql_gql = gql.gql;",
+        "const _Test_gql_resetCaches = gql.resetCaches;",
+        "const _Test_gql_disableFragmentWarnings = gql.disableFragmentWarnings;",
+        "const _Test_gql_enableExperimentalFragmentVariables = gql.enableExperimentalFragmentVariables;",
+        "const _Test_gql_disableExperimentalFragmentVariables = gql.disableExperimentalFragmentVariables;"
+      ]
+    },
+    {
+      "name": "resetCaches",
+      "moduleName": "@apollo/client",
+      "kind": "Function",
+      "usageExamples": ["resetCaches()"]
+    },
+    {
+      "name": "build",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_build = build;"]
+    },
+    {
+      "name": "version",
+      "moduleName": "@apollo/client",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_version = version;"]
+    },
+    {
+      "name": "InternalTypes",
+      "moduleName": "@apollo/client",
+      "kind": "ValueModule",
+      "usageExamples": [
+        "const _Test_InternalTypes = InternalTypes;",
+        "type _Test_InternalTypes_NextFetchPolicyContext = InternalTypes.NextFetchPolicyContext<TData, TVariables>;",
+        "class _Test_InternalTypes_QueryManager extends InternalTypes.QueryManager {}",
+        "const _test_InternalTypes_QueryManager = new InternalTypes.QueryManager(options)"
+      ]
+    },
+    {
+      "name": "CustomHKT",
+      "moduleName": "@apollo/client",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_CustomHKT = CustomHKT;"]
+    }
+  ],
+  "@apollo/client/core": [
+    {
+      "name": "ApolloClientOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ApolloClientOptions = ApolloClientOptions;"]
+    },
+    {
+      "name": "ApolloQueryResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_ApolloQueryResult = ApolloQueryResult<TData, TStates>;"
+      ]
+    },
+    {
+      "name": "DefaultOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DefaultOptions = DefaultOptions;"]
+    },
+    {
+      "name": "DevtoolsOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DevtoolsOptions = DevtoolsOptions;"]
+    },
+    {
+      "name": "MutateResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MutateResult = MutateResult<TData>;"]
+    },
+    {
+      "name": "MutationOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationOptions = MutationOptions<TData, TVariables, TCache>;"
+      ]
+    },
+    {
+      "name": "QueryOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_QueryOptions = QueryOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesOptions = RefetchQueriesOptions<TCache, TResult>;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesResult = RefetchQueriesResult<TResult>;"
+      ]
+    },
+    {
+      "name": "SubscribeToMoreOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreOptions = SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscriptionOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscriptionOptions = SubscriptionOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "WatchQueryOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchQueryOptions = WatchQueryOptions<TVariables, TData>;"
+      ]
+    },
+    {
+      "name": "ApolloClient",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ApolloClient = ApolloClient;",
+        "type _Test_ApolloClient_DefaultOptions = ApolloClient.DefaultOptions;",
+        "type _Test_ApolloClient_Options = ApolloClient.Options;",
+        "type _Test_ApolloClient_DevtoolsOptions = ApolloClient.DevtoolsOptions;",
+        "type _Test_ApolloClient_MutateOptions = ApolloClient.MutateOptions<TData, TVariables, TCache>;",
+        "type _Test_ApolloClient_MutateResult = ApolloClient.MutateResult<TData>;",
+        "type _Test_ApolloClient_QueryOptions = ApolloClient.QueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_QueryResult = ApolloClient.QueryResult<TData>;",
+        "type _Test_ApolloClient_RefetchQueriesOptions = ApolloClient.RefetchQueriesOptions<TCache, TResult>;",
+        "type _Test_ApolloClient_RefetchQueriesResult = ApolloClient.RefetchQueriesResult<TResult>;",
+        "const _Test_ApolloClient_RefetchQueriesResult = ApolloClient.RefetchQueriesResult;",
+        "type _Test_ApolloClient_RefetchQueriesResult_AdditionalProperties = ApolloClient.RefetchQueriesResult.AdditionalProperties<TResult>;",
+        "type _Test_ApolloClient_SubscribeOptions = ApolloClient.SubscribeOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_SubscribeResult = ApolloClient.SubscribeResult<TData>;",
+        "type _Test_ApolloClient_WatchFragmentOptions = ApolloClient.WatchFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WatchFragmentResult = ApolloClient.WatchFragmentResult<TData>;",
+        "type _Test_ApolloClient_WatchQueryOptions = ApolloClient.WatchQueryOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_Base = ApolloClient.Base;",
+        "type _Test_ApolloClient_Base_ReadQueryOptions = ApolloClient.Base.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_ReadFragmentOptions = ApolloClient.Base.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteQueryOptions = ApolloClient.Base.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_Base_WriteFragmentOptions = ApolloClient.Base.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_ReadQueryOptions = ApolloClient.ReadQueryOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "const _Test_ApolloClient_DocumentationTypes = ApolloClient.DocumentationTypes;",
+        "type _Test_ApolloClient_DocumentationTypes_ReadQueryOptions = ApolloClient.DocumentationTypes.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteQueryOptions = ApolloClient.DocumentationTypes.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_DocumentationTypes_WriteFragmentOptions = ApolloClient.DocumentationTypes.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_ReadFragmentOptions = ApolloClient.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WriteQueryOptions = ApolloClient.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_ApolloClient_WriteFragmentOptions = ApolloClient.WriteFragmentOptions<TData, TVariables>;",
+        "class _Test_ApolloClient extends ApolloClient {}",
+        "const _test_ApolloClient = new ApolloClient(options)"
+      ]
+    },
+    {
+      "name": "ObservableQuery",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ObservableQuery = ObservableQuery;",
+        "type _Test_ObservableQuery_Options = ObservableQuery.Options<TData, TVariables>;",
+        "type _Test_ObservableQuery_FetchMoreOptions = ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>;",
+        "type _Test_ObservableQuery_SubscribeToMoreOptions = ObservableQuery.SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>;",
+        "type _Test_ObservableQuery_CacheWatchOptions = ObservableQuery.CacheWatchOptions<TData, TVariables>;",
+        "type _Test_ObservableQuery_Result = ObservableQuery.Result<TData, TStates>;",
+        "type _Test_ObservableQuery_ResultPromise = ObservableQuery.ResultPromise<T>;",
+        "const _Test_ObservableQuery_DocumentationTypes = ObservableQuery.DocumentationTypes;",
+        "type _Test_ObservableQuery_DocumentationTypes_OperatorFunctionChain = ObservableQuery.DocumentationTypes.OperatorFunctionChain<From, To>;",
+        "type _Test_ObservableQuery_DocumentationTypes_ObservableMethods = ObservableQuery.DocumentationTypes.ObservableMethods<TData, OperatorResult>;",
+        "class _Test_ObservableQuery extends ObservableQuery<TData, TVariables> {}",
+        "const _test_ObservableQuery = new ObservableQuery<TData, TVariables>(param0)"
+      ]
+    },
+    {
+      "name": "ErrorPolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ErrorPolicy = ErrorPolicy;"]
+    },
+    {
+      "name": "FetchPolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_FetchPolicy = FetchPolicy;"]
+    },
+    {
+      "name": "MutationFetchPolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MutationFetchPolicy = MutationFetchPolicy;"]
+    },
+    {
+      "name": "RefetchWritePolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_RefetchWritePolicy = RefetchWritePolicy;"]
+    },
+    {
+      "name": "SubscribeToMoreFunction",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreFunction = SubscribeToMoreFunction<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscribeToMoreUpdateQueryFn",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscribeToMoreUpdateQueryFn = SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;"
+      ]
+    },
+    {
+      "name": "UpdateQueryMapFn",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_UpdateQueryMapFn = UpdateQueryMapFn<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UpdateQueryOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UpdateQueryOptions = UpdateQueryOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "WatchQueryFetchPolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchQueryFetchPolicy = WatchQueryFetchPolicy;"
+      ]
+    },
+    {
+      "name": "isNetworkRequestSettled",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["isNetworkRequestSettled(networkStatus)"]
+    },
+    {
+      "name": "NetworkStatus",
+      "moduleName": "@apollo/client/core",
+      "kind": "RegularEnum",
+      "usageExamples": ["type _Test_NetworkStatus = NetworkStatus;"]
+    },
+    {
+      "name": "DataState",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DataState = DataState<TData>;"]
+    },
+    {
+      "name": "DataValue",
+      "moduleName": "@apollo/client/core",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_DataValue = DataValue;",
+        "type _Test_DataValue_Complete = DataValue.Complete<TData>;",
+        "type _Test_DataValue_Streaming = DataValue.Streaming<TData>;",
+        "type _Test_DataValue_Partial = DataValue.Partial<TData>;"
+      ]
+    },
+    {
+      "name": "DefaultContext",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DefaultContext = DefaultContext;"]
+    },
+    {
+      "name": "ErrorLike",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ErrorLike = ErrorLike;"]
+    },
+    {
+      "name": "GetDataState",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_GetDataState = GetDataState<TData, TState>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesInclude",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesInclude = InternalRefetchQueriesInclude;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesMap",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesMap = InternalRefetchQueriesMap<TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesOptions = InternalRefetchQueriesOptions<TCache, TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueriesResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueriesResult = InternalRefetchQueriesResult<TResult>;"
+      ]
+    },
+    {
+      "name": "InternalRefetchQueryDescriptor",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_InternalRefetchQueryDescriptor = InternalRefetchQueryDescriptor;"
+      ]
+    },
+    {
+      "name": "MutationQueryReducer",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationQueryReducer = MutationQueryReducer<T>;"
+      ]
+    },
+    {
+      "name": "MutationQueryReducersMap",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationQueryReducersMap = MutationQueryReducersMap<T>;"
+      ]
+    },
+    {
+      "name": "MutationUpdaterFunction",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationUpdaterFunction = MutationUpdaterFunction<TData, TVariables, TCache>;"
+      ]
+    },
+    {
+      "name": "NormalizedExecutionResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_NormalizedExecutionResult = NormalizedExecutionResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "OnQueryUpdated",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OnQueryUpdated = OnQueryUpdated<TResult>;"]
+    },
+    {
+      "name": "OperationVariables",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OperationVariables = OperationVariables;"]
+    },
+    {
+      "name": "RefetchQueriesInclude",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesInclude = RefetchQueriesInclude;"
+      ]
+    },
+    {
+      "name": "RefetchQueriesPromiseResults",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueriesPromiseResults = RefetchQueriesPromiseResults<TResult>;"
+      ]
+    },
+    {
+      "name": "RefetchQueryDescriptor",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchQueryDescriptor = RefetchQueryDescriptor;"
+      ]
+    },
+    {
+      "name": "SubscriptionObservable",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_SubscriptionObservable = SubscriptionObservable<T>;"
+      ]
+    },
+    {
+      "name": "TypedDocumentNode",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_TypedDocumentNode = TypedDocumentNode<TResult, TVariables>;"
+      ]
+    },
+    {
+      "name": "TypeOverrides",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_TypeOverrides = TypeOverrides;"]
+    },
+    {
+      "name": "CombinedGraphQLErrors",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_CombinedGraphQLErrors = CombinedGraphQLErrors;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatterOptions = CombinedGraphQLErrors.MessageFormatterOptions;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatter = CombinedGraphQLErrors.MessageFormatter;",
+        "const _Test_CombinedGraphQLErrors_DocumentationTypes = CombinedGraphQLErrors.DocumentationTypes;",
+        "CombinedGraphQLErrors.DocumentationTypes.formatMessage(errors, options)",
+        "CombinedGraphQLErrors.DocumentationTypes.is(error)",
+        "type _Test_CombinedGraphQLErrors_DocumentationTypes_InstanceProperties = CombinedGraphQLErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedGraphQLErrors.is(error)",
+        "const _Test_CombinedGraphQLErrors_formatMessage = CombinedGraphQLErrors.formatMessage;",
+        "class _Test_CombinedGraphQLErrors extends CombinedGraphQLErrors {}",
+        "const _test_CombinedGraphQLErrors = new CombinedGraphQLErrors(result)"
+      ]
+    },
+    {
+      "name": "CombinedProtocolErrors",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_CombinedProtocolErrors = CombinedProtocolErrors;",
+        "type _Test_CombinedProtocolErrors_MessageFormatterOptions = CombinedProtocolErrors.MessageFormatterOptions;",
+        "type _Test_CombinedProtocolErrors_MessageFormatter = CombinedProtocolErrors.MessageFormatter;",
+        "const _Test_CombinedProtocolErrors_DocumentationTypes = CombinedProtocolErrors.DocumentationTypes;",
+        "CombinedProtocolErrors.DocumentationTypes.formatMessage(errors, options)",
+        "type _Test_CombinedProtocolErrors_DocumentationTypes_InstanceProperties = CombinedProtocolErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedProtocolErrors.is(error)",
+        "const _Test_CombinedProtocolErrors_formatMessage = CombinedProtocolErrors.formatMessage;",
+        "class _Test_CombinedProtocolErrors extends CombinedProtocolErrors {}",
+        "const _test_CombinedProtocolErrors = new CombinedProtocolErrors(protocolErrors)"
+      ]
+    },
+    {
+      "name": "LinkError",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_LinkError = LinkError;"]
+    },
+    {
+      "name": "LocalStateError",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_LocalStateError = LocalStateError;",
+        "type _Test_LocalStateError_Options = LocalStateError.Options;",
+        "const _Test_LocalStateError_DocumentationTypes = LocalStateError.DocumentationTypes;",
+        "type _Test_LocalStateError_DocumentationTypes_InstanceProperties = LocalStateError.DocumentationTypes.InstanceProperties;",
+        "LocalStateError.is(error)",
+        "class _Test_LocalStateError extends LocalStateError {}",
+        "const _test_LocalStateError = new LocalStateError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerError",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ServerError = ServerError;",
+        "type _Test_ServerError_Options = ServerError.Options;",
+        "const _Test_ServerError_DocumentationTypes = ServerError.DocumentationTypes;",
+        "type _Test_ServerError_DocumentationTypes_InstanceProperties = ServerError.DocumentationTypes.InstanceProperties;",
+        "ServerError.is(error)",
+        "class _Test_ServerError extends ServerError {}",
+        "const _test_ServerError = new ServerError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerParseError",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ServerParseError = ServerParseError;",
+        "type _Test_ServerParseError_Options = ServerParseError.Options;",
+        "const _Test_ServerParseError_DocumentationTypes = ServerParseError.DocumentationTypes;",
+        "type _Test_ServerParseError_DocumentationTypes_InstanceProperties = ServerParseError.DocumentationTypes.InstanceProperties;",
+        "ServerParseError.is(error)",
+        "class _Test_ServerParseError extends ServerParseError {}",
+        "const _test_ServerParseError = new ServerParseError(originalParseError, options)"
+      ]
+    },
+    {
+      "name": "UnconventionalError",
+      "moduleName": "@apollo/client/core",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_UnconventionalError extends UnconventionalError {}",
+        "const _test_UnconventionalError = new UnconventionalError(errorType)"
+      ]
+    },
+    {
+      "name": "ApolloReducerConfig",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ApolloReducerConfig = ApolloReducerConfig;"]
+    },
+    {
+      "name": "Cache",
+      "moduleName": "@apollo/client/core",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_Cache = Cache;",
+        "type _Test_Cache_WatchCallback = Cache.WatchCallback<TData>;",
+        "type _Test_Cache_ReadOptions = Cache.ReadOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteOptions = Cache.WriteOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffOptions = Cache.DiffOptions<TData, TVariables>;",
+        "type _Test_Cache_WatchOptions = Cache.WatchOptions<TData, TVariables>;",
+        "type _Test_Cache_EvictOptions = Cache.EvictOptions;",
+        "type _Test_Cache_ResetOptions = Cache.ResetOptions;",
+        "type _Test_Cache_ModifyOptions = Cache.ModifyOptions<Entity>;",
+        "type _Test_Cache_BatchOptions = Cache.BatchOptions<TCache, TUpdateResult>;",
+        "type _Test_Cache_ReadQueryOptions = Cache.ReadQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_ReadFragmentOptions = Cache.ReadFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteQueryOptions = Cache.WriteQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_WriteFragmentOptions = Cache.WriteFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateQueryOptions = Cache.UpdateQueryOptions<TData, TVariables>;",
+        "type _Test_Cache_UpdateFragmentOptions = Cache.UpdateFragmentOptions<TData, TVariables>;",
+        "type _Test_Cache_DiffResult = Cache.DiffResult<TData>;"
+      ]
+    },
+    {
+      "name": "DiffQueryAgainstStoreOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DiffQueryAgainstStoreOptions = DiffQueryAgainstStoreOptions;"
+      ]
+    },
+    {
+      "name": "FieldFunctionOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_FieldFunctionOptions = FieldFunctionOptions<TArgs, TVariables>;"
+      ]
+    },
+    {
+      "name": "FieldMergeFunction",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldMergeFunction = FieldMergeFunction<TExisting, TIncoming, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldPolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldPolicy = FieldPolicy<TExisting, TIncoming, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "FieldReadFunction",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FieldReadFunction = FieldReadFunction<TExisting, TReadResult, TOptions>;"
+      ]
+    },
+    {
+      "name": "IdGetter",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_IdGetter = IdGetter;"]
+    },
+    {
+      "name": "IdGetterObj",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_IdGetterObj = IdGetterObj;"]
+    },
+    {
+      "name": "InMemoryCacheConfig",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_InMemoryCacheConfig = InMemoryCacheConfig;"]
+    },
+    {
+      "name": "MergeInfo",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeInfo = MergeInfo;"]
+    },
+    {
+      "name": "MergeTree",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_MergeTree = MergeTree;"]
+    },
+    {
+      "name": "NormalizedCache",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_NormalizedCache = NormalizedCache;"]
+    },
+    {
+      "name": "NormalizedCacheObject",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_NormalizedCacheObject = NormalizedCacheObject;"
+      ]
+    },
+    {
+      "name": "OptimisticStoreItem",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OptimisticStoreItem = OptimisticStoreItem;"]
+    },
+    {
+      "name": "PossibleTypesMap",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_PossibleTypesMap = PossibleTypesMap;"]
+    },
+    {
+      "name": "ReactiveVar",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ReactiveVar = ReactiveVar<T>;"]
+    },
+    {
+      "name": "ReadMergeModifyContext",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ReadMergeModifyContext = ReadMergeModifyContext;"
+      ]
+    },
+    {
+      "name": "ReadQueryOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ReadQueryOptions = ReadQueryOptions;"]
+    },
+    {
+      "name": "StoreValue",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
+    },
+    {
+      "name": "Transaction",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Transaction = Transaction;"]
+    },
+    {
+      "name": "TypePolicies",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicies = TypePolicies;"]
+    },
+    {
+      "name": "TypePolicy",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_TypePolicy = TypePolicy;"]
+    },
+    {
+      "name": "WatchFragmentOptions",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentOptions = WatchFragmentOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "WatchFragmentResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_WatchFragmentResult = WatchFragmentResult<TData>;"
+      ]
+    },
+    {
+      "name": "ApolloCache",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ApolloCache = ApolloCache;",
+        "type _Test_ApolloCache_WatchFragmentOptions = ApolloCache.WatchFragmentOptions<TData, TVariables>;",
+        "type _Test_ApolloCache_WatchFragmentResult = ApolloCache.WatchFragmentResult<TData>;",
+        "class _Test_ApolloCache extends ApolloCache {}",
+        "const _test_ApolloCache = new ApolloCache()"
+      ]
+    },
+    {
+      "name": "defaultDataIdFromObject",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["defaultDataIdFromObject(param0, context)"]
+    },
+    {
+      "name": "InMemoryCache",
+      "moduleName": "@apollo/client/core",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_InMemoryCache extends InMemoryCache {}",
+        "const _test_InMemoryCache = new InMemoryCache(config)"
+      ]
+    },
+    {
+      "name": "makeVar",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["makeVar<T>(value)"]
+    },
+    {
+      "name": "MissingFieldError",
+      "moduleName": "@apollo/client/core",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_MissingFieldError extends MissingFieldError {}",
+        "const _test_MissingFieldError = new MissingFieldError(message, path, query, variables)"
+      ]
+    },
+    {
+      "name": "ApolloLink",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_ApolloLink = ApolloLink;",
+        "type _Test_ApolloLink_ExecuteContext = ApolloLink.ExecuteContext;",
+        "type _Test_ApolloLink_ForwardFunction = ApolloLink.ForwardFunction;",
+        "type _Test_ApolloLink_Request = ApolloLink.Request;",
+        "type _Test_ApolloLink_RequestHandler = ApolloLink.RequestHandler;",
+        "type _Test_ApolloLink_Result = ApolloLink.Result<TData, TExtensions>;",
+        "type _Test_ApolloLink_Operation = ApolloLink.Operation;",
+        "type _Test_ApolloLink_OperationContext = ApolloLink.OperationContext;",
+        "const _Test_ApolloLink_DocumentationTypes = ApolloLink.DocumentationTypes;",
+        "ApolloLink.DocumentationTypes.RequestHandler(operation, forward)",
+        "ApolloLink.DocumentationTypes.ForwardFunction(operation)",
+        "ApolloLink.empty()",
+        "ApolloLink.from(links)",
+        "ApolloLink.split(test, left, right)",
+        "ApolloLink.execute(link, request, context)",
+        "ApolloLink.concat(links)",
+        "class _Test_ApolloLink extends ApolloLink {}",
+        "const _test_ApolloLink = new ApolloLink(request)"
+      ]
+    },
+    {
+      "name": "concat",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_concat = concat;"]
+    },
+    {
+      "name": "empty",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_empty = empty;"]
+    },
+    {
+      "name": "execute",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_execute = execute;"]
+    },
+    {
+      "name": "from",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_from = from;"]
+    },
+    {
+      "name": "split",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_split = split;"]
+    },
+    {
+      "name": "ApolloPayloadResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ApolloPayloadResult = ApolloPayloadResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "DocumentNode",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
+    },
+    {
+      "name": "FetchResult",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FetchResult = FetchResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "GraphQLRequest",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_GraphQLRequest = GraphQLRequest;"]
+    },
+    {
+      "name": "Operation",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Operation = Operation;"]
+    },
+    {
+      "name": "RequestHandler",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
+    },
+    {
+      "name": "checkFetcher",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
+    },
+    {
+      "name": "createHttpLink",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
+    },
+    {
+      "name": "createSignalIfSupported",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_createSignalIfSupported = createSignalIfSupported;"
+      ]
+    },
+    {
+      "name": "defaultPrinter",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
+    },
+    {
+      "name": "fallbackHttpConfig",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
+    },
+    {
+      "name": "HttpLink",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "const _Test_HttpLink = HttpLink;",
+        "type _Test_HttpLink_ContextOptions = HttpLink.ContextOptions;",
+        "type _Test_HttpLink_Options = HttpLink.Options;",
+        "class _Test_HttpLink extends HttpLink {}",
+        "const _test_HttpLink = new HttpLink(options)"
+      ]
+    },
+    {
+      "name": "parseAndCheckHttpResponse",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
+    },
+    {
+      "name": "rewriteURIForGET",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
+    },
+    {
+      "name": "selectHttpOptionsAndBody",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBody(operation, fallbackConfig, configs)"
+      ]
+    },
+    {
+      "name": "selectHttpOptionsAndBodyInternal",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBodyInternal(operation, printer, configs)"
+      ]
+    },
+    {
+      "name": "selectURI",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
+    },
+    {
+      "name": "DataMasking",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
+    },
+    {
+      "name": "FragmentType",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
+    },
+    {
+      "name": "Masked",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
+    },
+    {
+      "name": "MaskedDocumentNode",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MaskedDocumentNode = MaskedDocumentNode<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "MaybeMasked",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
+    },
+    {
+      "name": "Unmasked",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
+    },
+    {
+      "name": "DocumentTransformCacheKey",
+      "moduleName": "@apollo/client/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DocumentTransformCacheKey = DocumentTransformCacheKey;"
+      ]
+    },
+    {
+      "name": "Reference",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_Reference = Reference;"]
+    },
+    {
+      "name": "StoreObject",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
+    },
+    {
+      "name": "DocumentTransform",
+      "moduleName": "@apollo/client/core",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_DocumentTransform extends DocumentTransform {}",
+        "const _test_DocumentTransform = new DocumentTransform(transform, options)"
+      ]
+    },
+    {
+      "name": "isReference",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["isReference(obj)"]
+    },
+    {
+      "name": "Observable",
+      "moduleName": "@apollo/client/core",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_Observable extends Observable<T> {}",
+        "const _test_Observable = new Observable<T>(subscribe)"
+      ]
+    },
+    {
+      "name": "setLogVerbosity",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["setLogVerbosity(level)"]
+    },
+    {
+      "name": "disableExperimentalFragmentVariables",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["disableExperimentalFragmentVariables()"]
+    },
+    {
+      "name": "disableFragmentWarnings",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["disableFragmentWarnings()"]
+    },
+    {
+      "name": "enableExperimentalFragmentVariables",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["enableExperimentalFragmentVariables()"]
+    },
+    {
+      "name": "gql",
+      "moduleName": "@apollo/client/core",
+      "usageExamples": [
+        "gql(literals, args)",
+        "const _Test_gql = gql;",
+        "const _Test_gql_default = gql.default;",
+        "const _Test_gql_gql = gql.gql;",
+        "const _Test_gql_resetCaches = gql.resetCaches;",
+        "const _Test_gql_disableFragmentWarnings = gql.disableFragmentWarnings;",
+        "const _Test_gql_enableExperimentalFragmentVariables = gql.enableExperimentalFragmentVariables;",
+        "const _Test_gql_disableExperimentalFragmentVariables = gql.disableExperimentalFragmentVariables;",
+        "const _Test_gql = gql;",
+        "const _Test_gql_default = gql.default;",
+        "const _Test_gql_gql = gql.gql;",
+        "const _Test_gql_resetCaches = gql.resetCaches;",
+        "const _Test_gql_disableFragmentWarnings = gql.disableFragmentWarnings;",
+        "const _Test_gql_enableExperimentalFragmentVariables = gql.enableExperimentalFragmentVariables;",
+        "const _Test_gql_disableExperimentalFragmentVariables = gql.disableExperimentalFragmentVariables;"
+      ]
+    },
+    {
+      "name": "resetCaches",
+      "moduleName": "@apollo/client/core",
+      "kind": "Function",
+      "usageExamples": ["resetCaches()"]
+    },
+    {
+      "name": "build",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_build = build;"]
+    },
+    {
+      "name": "version",
+      "moduleName": "@apollo/client/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_version = version;"]
+    },
+    {
+      "name": "InternalTypes",
+      "moduleName": "@apollo/client/core",
+      "kind": "ValueModule",
+      "usageExamples": [
+        "const _Test_InternalTypes = InternalTypes;",
+        "type _Test_InternalTypes_NextFetchPolicyContext = InternalTypes.NextFetchPolicyContext<TData, TVariables>;",
+        "class _Test_InternalTypes_QueryManager extends InternalTypes.QueryManager {}",
+        "const _test_InternalTypes_QueryManager = new InternalTypes.QueryManager(options)"
+      ]
+    },
+    {
+      "name": "CustomHKT",
+      "moduleName": "@apollo/client/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_CustomHKT = CustomHKT;"]
+    }
+  ],
+  "@apollo/client/dev": [
+    {
+      "name": "loadDevMessages",
+      "moduleName": "@apollo/client/dev",
+      "kind": "Function",
+      "usageExamples": ["loadDevMessages()"]
+    },
+    {
+      "name": "loadErrorMessageHandler",
+      "moduleName": "@apollo/client/dev",
+      "kind": "Function",
+      "usageExamples": ["loadErrorMessageHandler(errorCodes)"]
+    },
+    {
+      "name": "loadErrorMessages",
+      "moduleName": "@apollo/client/dev",
+      "kind": "Function",
+      "usageExamples": ["loadErrorMessages()"]
+    },
+    {
+      "name": "setErrorMessageHandler",
+      "moduleName": "@apollo/client/dev",
+      "kind": "Function",
+      "usageExamples": ["setErrorMessageHandler(handler)"]
+    },
+    {
+      "name": "ErrorMessageHandler",
+      "moduleName": "@apollo/client/dev",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ErrorMessageHandler = ErrorMessageHandler;"]
+    }
+  ],
+  "@apollo/client/errors": [
+    {
+      "name": "graphQLResultHasProtocolErrors",
+      "moduleName": "@apollo/client/errors",
+      "kind": "Function",
+      "usageExamples": ["graphQLResultHasProtocolErrors<T>(result)"]
+    },
+    {
+      "name": "toErrorLike",
+      "moduleName": "@apollo/client/errors",
+      "kind": "Function",
+      "usageExamples": ["toErrorLike(error)"]
+    },
+    {
+      "name": "PROTOCOL_ERRORS_SYMBOL",
+      "moduleName": "@apollo/client/errors",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_PROTOCOL_ERRORS_SYMBOL = PROTOCOL_ERRORS_SYMBOL;"
+      ]
+    },
+    {
+      "name": "CombinedGraphQLErrors",
+      "moduleName": "@apollo/client/errors",
+      "usageExamples": [
+        "const _Test_CombinedGraphQLErrors = CombinedGraphQLErrors;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatterOptions = CombinedGraphQLErrors.MessageFormatterOptions;",
+        "type _Test_CombinedGraphQLErrors_MessageFormatter = CombinedGraphQLErrors.MessageFormatter;",
+        "const _Test_CombinedGraphQLErrors_DocumentationTypes = CombinedGraphQLErrors.DocumentationTypes;",
+        "CombinedGraphQLErrors.DocumentationTypes.formatMessage(errors, options)",
+        "CombinedGraphQLErrors.DocumentationTypes.is(error)",
+        "type _Test_CombinedGraphQLErrors_DocumentationTypes_InstanceProperties = CombinedGraphQLErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedGraphQLErrors.is(error)",
+        "const _Test_CombinedGraphQLErrors_formatMessage = CombinedGraphQLErrors.formatMessage;",
+        "class _Test_CombinedGraphQLErrors extends CombinedGraphQLErrors {}",
+        "const _test_CombinedGraphQLErrors = new CombinedGraphQLErrors(result)"
+      ]
+    },
+    {
+      "name": "CombinedProtocolErrors",
+      "moduleName": "@apollo/client/errors",
+      "usageExamples": [
+        "const _Test_CombinedProtocolErrors = CombinedProtocolErrors;",
+        "type _Test_CombinedProtocolErrors_MessageFormatterOptions = CombinedProtocolErrors.MessageFormatterOptions;",
+        "type _Test_CombinedProtocolErrors_MessageFormatter = CombinedProtocolErrors.MessageFormatter;",
+        "const _Test_CombinedProtocolErrors_DocumentationTypes = CombinedProtocolErrors.DocumentationTypes;",
+        "CombinedProtocolErrors.DocumentationTypes.formatMessage(errors, options)",
+        "type _Test_CombinedProtocolErrors_DocumentationTypes_InstanceProperties = CombinedProtocolErrors.DocumentationTypes.InstanceProperties;",
+        "CombinedProtocolErrors.is(error)",
+        "const _Test_CombinedProtocolErrors_formatMessage = CombinedProtocolErrors.formatMessage;",
+        "class _Test_CombinedProtocolErrors extends CombinedProtocolErrors {}",
+        "const _test_CombinedProtocolErrors = new CombinedProtocolErrors(protocolErrors)"
+      ]
+    },
+    {
+      "name": "isErrorLike",
+      "moduleName": "@apollo/client/errors",
+      "kind": "Function",
+      "usageExamples": ["isErrorLike(error)"]
+    },
+    {
+      "name": "LinkError",
+      "moduleName": "@apollo/client/errors",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_LinkError = LinkError;"]
+    },
+    {
+      "name": "registerLinkError",
+      "moduleName": "@apollo/client/errors",
+      "kind": "Function",
+      "usageExamples": ["registerLinkError(error)"]
+    },
+    {
+      "name": "LocalStateError",
+      "moduleName": "@apollo/client/errors",
+      "usageExamples": [
+        "const _Test_LocalStateError = LocalStateError;",
+        "type _Test_LocalStateError_Options = LocalStateError.Options;",
+        "const _Test_LocalStateError_DocumentationTypes = LocalStateError.DocumentationTypes;",
+        "type _Test_LocalStateError_DocumentationTypes_InstanceProperties = LocalStateError.DocumentationTypes.InstanceProperties;",
+        "LocalStateError.is(error)",
+        "class _Test_LocalStateError extends LocalStateError {}",
+        "const _test_LocalStateError = new LocalStateError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerError",
+      "moduleName": "@apollo/client/errors",
+      "usageExamples": [
+        "const _Test_ServerError = ServerError;",
+        "type _Test_ServerError_Options = ServerError.Options;",
+        "const _Test_ServerError_DocumentationTypes = ServerError.DocumentationTypes;",
+        "type _Test_ServerError_DocumentationTypes_InstanceProperties = ServerError.DocumentationTypes.InstanceProperties;",
+        "ServerError.is(error)",
+        "class _Test_ServerError extends ServerError {}",
+        "const _test_ServerError = new ServerError(message, options)"
+      ]
+    },
+    {
+      "name": "ServerParseError",
+      "moduleName": "@apollo/client/errors",
+      "usageExamples": [
+        "const _Test_ServerParseError = ServerParseError;",
+        "type _Test_ServerParseError_Options = ServerParseError.Options;",
+        "const _Test_ServerParseError_DocumentationTypes = ServerParseError.DocumentationTypes;",
+        "type _Test_ServerParseError_DocumentationTypes_InstanceProperties = ServerParseError.DocumentationTypes.InstanceProperties;",
+        "ServerParseError.is(error)",
+        "class _Test_ServerParseError extends ServerParseError {}",
+        "const _test_ServerParseError = new ServerParseError(originalParseError, options)"
+      ]
+    },
+    {
+      "name": "UnconventionalError",
+      "moduleName": "@apollo/client/errors",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_UnconventionalError extends UnconventionalError {}",
+        "const _test_UnconventionalError = new UnconventionalError(errorType)"
+      ]
+    }
+  ],
+  "@apollo/client/link/batch": [
+    {
+      "name": "BatchLink",
+      "moduleName": "@apollo/client/link/batch",
+      "usageExamples": [
+        "const _Test_BatchLink = BatchLink;",
+        "const _Test_BatchLink_Shared = BatchLink.Shared;",
+        "type _Test_BatchLink_Shared_Options = BatchLink.Shared.Options;",
+        "type _Test_BatchLink_BatchHandler = BatchLink.BatchHandler;",
+        "type _Test_BatchLink_Options = BatchLink.Options;",
+        "class _Test_BatchLink extends BatchLink {}",
+        "const _test_BatchLink = new BatchLink(options)"
+      ]
+    }
+  ],
+  "@apollo/client/link/batch-http": [
+    {
+      "name": "BaseBatchHttpLink",
+      "moduleName": "@apollo/client/link/batch-http",
+      "usageExamples": [
+        "const _Test_BaseBatchHttpLink = BaseBatchHttpLink;",
+        "type _Test_BaseBatchHttpLink_ContextOptions = BaseBatchHttpLink.ContextOptions;",
+        "type _Test_BaseBatchHttpLink_Options = BaseBatchHttpLink.Options;",
+        "class _Test_BaseBatchHttpLink extends BaseBatchHttpLink {}",
+        "const _test_BaseBatchHttpLink = new BaseBatchHttpLink(options)"
+      ]
+    },
+    {
+      "name": "BatchHttpLink",
+      "moduleName": "@apollo/client/link/batch-http",
+      "usageExamples": [
+        "const _Test_BatchHttpLink = BatchHttpLink;",
+        "type _Test_BatchHttpLink_Options = BatchHttpLink.Options;",
+        "type _Test_BatchHttpLink_ContextOptions = BatchHttpLink.ContextOptions;",
+        "class _Test_BatchHttpLink extends BatchHttpLink {}",
+        "const _test_BatchHttpLink = new BatchHttpLink(options)"
+      ]
+    }
+  ],
+  "@apollo/client/link/context": [
+    {
+      "name": "setContext",
+      "moduleName": "@apollo/client/link/context",
+      "kind": "Function",
+      "usageExamples": ["setContext(setter)"]
+    },
+    {
+      "name": "SetContextLink",
+      "moduleName": "@apollo/client/link/context",
+      "usageExamples": [
+        "const _Test_SetContextLink = SetContextLink;",
+        "const _Test_SetContextLink_SetContextLinkDocumentationTypes = SetContextLink.SetContextLinkDocumentationTypes;",
+        "SetContextLink.SetContextLinkDocumentationTypes.ContextSetter(prevContext, operation)",
+        "type _Test_SetContextLink_ContextSetter = SetContextLink.ContextSetter;",
+        "type _Test_SetContextLink_LegacyContextSetter = SetContextLink.LegacyContextSetter;",
+        "type _Test_SetContextLink_SetContextOperation = SetContextLink.SetContextOperation;",
+        "class _Test_SetContextLink extends SetContextLink {}",
+        "const _test_SetContextLink = new SetContextLink(setter)"
+      ]
+    }
+  ],
+  "@apollo/client/link/core": [
+    {
+      "name": "empty",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_empty = empty;"]
+    },
+    {
+      "name": "from",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_from = from;"]
+    },
+    {
+      "name": "split",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_split = split;"]
+    },
+    {
+      "name": "concat",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_concat = concat;"]
+    },
+    {
+      "name": "execute",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_execute = execute;"]
+    },
+    {
+      "name": "ApolloLink",
+      "moduleName": "@apollo/client/link/core",
+      "usageExamples": [
+        "const _Test_ApolloLink = ApolloLink;",
+        "type _Test_ApolloLink_ExecuteContext = ApolloLink.ExecuteContext;",
+        "type _Test_ApolloLink_ForwardFunction = ApolloLink.ForwardFunction;",
+        "type _Test_ApolloLink_Request = ApolloLink.Request;",
+        "type _Test_ApolloLink_RequestHandler = ApolloLink.RequestHandler;",
+        "type _Test_ApolloLink_Result = ApolloLink.Result<TData, TExtensions>;",
+        "type _Test_ApolloLink_Operation = ApolloLink.Operation;",
+        "type _Test_ApolloLink_OperationContext = ApolloLink.OperationContext;",
+        "const _Test_ApolloLink_DocumentationTypes = ApolloLink.DocumentationTypes;",
+        "ApolloLink.DocumentationTypes.RequestHandler(operation, forward)",
+        "ApolloLink.DocumentationTypes.ForwardFunction(operation)",
+        "ApolloLink.empty()",
+        "ApolloLink.from(links)",
+        "ApolloLink.split(test, left, right)",
+        "ApolloLink.execute(link, request, context)",
+        "ApolloLink.concat(links)",
+        "class _Test_ApolloLink extends ApolloLink {}",
+        "const _test_ApolloLink = new ApolloLink(request)"
+      ]
+    },
+    {
+      "name": "AdditionalApolloLinkResultTypes",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_AdditionalApolloLinkResultTypes = AdditionalApolloLinkResultTypes<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "ApolloPayloadResult",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_ApolloPayloadResult = ApolloPayloadResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "DocumentNode",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DocumentNode = DocumentNode;"]
+    },
+    {
+      "name": "FetchResult",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FetchResult = FetchResult<TData, TExtensions>;"
+      ]
+    },
+    {
+      "name": "GraphQLRequest",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_GraphQLRequest = GraphQLRequest;"]
+    },
+    {
+      "name": "Operation",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Operation = Operation;"]
+    },
+    {
+      "name": "RequestHandler",
+      "moduleName": "@apollo/client/link/core",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_RequestHandler = RequestHandler;"]
+    }
+  ],
+  "@apollo/client/link/error": [
+    {
+      "name": "onError",
+      "moduleName": "@apollo/client/link/error",
+      "kind": "Function",
+      "usageExamples": ["onError(errorHandler)"]
+    },
+    {
+      "name": "ErrorLink",
+      "moduleName": "@apollo/client/link/error",
+      "usageExamples": [
+        "const _Test_ErrorLink = ErrorLink;",
+        "const _Test_ErrorLink_ErrorLinkDocumentationTypes = ErrorLink.ErrorLinkDocumentationTypes;",
+        "ErrorLink.ErrorLinkDocumentationTypes.ErrorHandler(options)",
+        "type _Test_ErrorLink_ErrorHandler = ErrorLink.ErrorHandler;",
+        "type _Test_ErrorLink_ErrorHandlerOptions = ErrorLink.ErrorHandlerOptions;",
+        "class _Test_ErrorLink extends ErrorLink {}",
+        "const _test_ErrorLink = new ErrorLink(errorHandler)"
+      ]
+    }
+  ],
+  "@apollo/client/link/http": [
+    {
+      "name": "parseAndCheckHttpResponse",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "Function",
+      "usageExamples": ["parseAndCheckHttpResponse(operations)"]
+    },
+    {
+      "name": "defaultPrinter",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_defaultPrinter = defaultPrinter;"]
+    },
+    {
+      "name": "fallbackHttpConfig",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_fallbackHttpConfig = fallbackHttpConfig;"]
+    },
+    {
+      "name": "selectHttpOptionsAndBody",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBody(operation, fallbackConfig, configs)"
+      ]
+    },
+    {
+      "name": "selectHttpOptionsAndBodyInternal",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "Function",
+      "usageExamples": [
+        "selectHttpOptionsAndBodyInternal(operation, printer, configs)"
+      ]
+    },
+    {
+      "name": "checkFetcher",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_checkFetcher = checkFetcher;"]
+    },
+    {
+      "name": "createSignalIfSupported",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_createSignalIfSupported = createSignalIfSupported;"
+      ]
+    },
+    {
+      "name": "selectURI",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_selectURI = selectURI;"]
+    },
+    {
+      "name": "BaseHttpLink",
+      "moduleName": "@apollo/client/link/http",
+      "usageExamples": [
+        "const _Test_BaseHttpLink = BaseHttpLink;",
+        "type _Test_BaseHttpLink_ContextOptions = BaseHttpLink.ContextOptions;",
+        "type _Test_BaseHttpLink_HttpOptions = BaseHttpLink.HttpOptions;",
+        "const _Test_BaseHttpLink_Shared = BaseHttpLink.Shared;",
+        "type _Test_BaseHttpLink_Shared_Options = BaseHttpLink.Shared.Options;",
+        "type _Test_BaseHttpLink_Options = BaseHttpLink.Options;",
+        "type _Test_BaseHttpLink_Body = BaseHttpLink.Body;",
+        "type _Test_BaseHttpLink_Printer = BaseHttpLink.Printer;",
+        "type _Test_BaseHttpLink_UriFunction = BaseHttpLink.UriFunction;",
+        "class _Test_BaseHttpLink extends BaseHttpLink {}",
+        "const _test_BaseHttpLink = new BaseHttpLink(options)"
+      ]
+    },
+    {
+      "name": "createHttpLink",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_createHttpLink = createHttpLink;"]
+    },
+    {
+      "name": "HttpLink",
+      "moduleName": "@apollo/client/link/http",
+      "usageExamples": [
+        "const _Test_HttpLink = HttpLink;",
+        "type _Test_HttpLink_ContextOptions = HttpLink.ContextOptions;",
+        "type _Test_HttpLink_Options = HttpLink.Options;",
+        "class _Test_HttpLink extends HttpLink {}",
+        "const _test_HttpLink = new HttpLink(options)"
+      ]
+    },
+    {
+      "name": "rewriteURIForGET",
+      "moduleName": "@apollo/client/link/http",
+      "kind": "Function",
+      "usageExamples": ["rewriteURIForGET(chosenURI, body)"]
+    }
+  ],
+  "@apollo/client/link/persisted-queries": [
+    {
+      "name": "VERSION",
+      "moduleName": "@apollo/client/link/persisted-queries",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_VERSION = VERSION;"]
+    },
+    {
+      "name": "PersistedQueryLink",
+      "moduleName": "@apollo/client/link/persisted-queries",
+      "usageExamples": [
+        "const _Test_PersistedQueryLink = PersistedQueryLink;",
+        "const _Test_PersistedQueryLink_PersistedQueryLinkDocumentationTypes = PersistedQueryLink.PersistedQueryLinkDocumentationTypes;",
+        "PersistedQueryLink.PersistedQueryLinkDocumentationTypes.SHA256Function(queryString)",
+        "PersistedQueryLink.PersistedQueryLinkDocumentationTypes.GenerateHashFunction(document)",
+        "const _Test_PersistedQueryLink_Base = PersistedQueryLink.Base;",
+        "type _Test_PersistedQueryLink_Base_Options = PersistedQueryLink.Base.Options;",
+        "type _Test_PersistedQueryLink_ErrorMeta = PersistedQueryLink.ErrorMeta;",
+        "type _Test_PersistedQueryLink_GenerateHashFunction = PersistedQueryLink.GenerateHashFunction;",
+        "type _Test_PersistedQueryLink_SHA256Function = PersistedQueryLink.SHA256Function;",
+        "type _Test_PersistedQueryLink_SHA256Options = PersistedQueryLink.SHA256Options;",
+        "type _Test_PersistedQueryLink_GenerateHashOptions = PersistedQueryLink.GenerateHashOptions;",
+        "type _Test_PersistedQueryLink_Options = PersistedQueryLink.Options;",
+        "type _Test_PersistedQueryLink_RetryFunctionOptions = PersistedQueryLink.RetryFunctionOptions;",
+        "type _Test_PersistedQueryLink_DisableFunctionOptions = PersistedQueryLink.DisableFunctionOptions;",
+        "class _Test_PersistedQueryLink extends PersistedQueryLink {}",
+        "const _test_PersistedQueryLink = new PersistedQueryLink(options)"
+      ]
+    },
+    {
+      "name": "createPersistedQueryLink",
+      "moduleName": "@apollo/client/link/persisted-queries",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_createPersistedQueryLink = createPersistedQueryLink;"
+      ]
+    }
+  ],
+  "@apollo/client/link/retry": [
+    {
+      "name": "RetryLink",
+      "moduleName": "@apollo/client/link/retry",
+      "usageExamples": [
+        "const _Test_RetryLink = RetryLink;",
+        "const _Test_RetryLink_RetryLinkDocumentationTypes = RetryLink.RetryLinkDocumentationTypes;",
+        "RetryLink.RetryLinkDocumentationTypes.AttemptsFunction(attempt, operation, error)",
+        "RetryLink.RetryLinkDocumentationTypes.DelayFunction(attempt, operation, error)",
+        "type _Test_RetryLink_DelayFunction = RetryLink.DelayFunction;",
+        "type _Test_RetryLink_DelayOptions = RetryLink.DelayOptions;",
+        "type _Test_RetryLink_AttemptsFunction = RetryLink.AttemptsFunction;",
+        "type _Test_RetryLink_AttemptsOptions = RetryLink.AttemptsOptions;",
+        "type _Test_RetryLink_Options = RetryLink.Options;",
+        "class _Test_RetryLink extends RetryLink {}",
+        "const _test_RetryLink = new RetryLink(options)"
+      ]
+    }
+  ],
+  "@apollo/client/link/remove-typename": [
+    {
+      "name": "KEEP",
+      "moduleName": "@apollo/client/link/remove-typename",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_KEEP = KEEP;"]
+    },
+    {
+      "name": "removeTypenameFromVariables",
+      "moduleName": "@apollo/client/link/remove-typename",
+      "kind": "Function",
+      "usageExamples": ["removeTypenameFromVariables(options)"]
+    },
+    {
+      "name": "RemoveTypenameFromVariablesLink",
+      "moduleName": "@apollo/client/link/remove-typename",
+      "usageExamples": [
+        "const _Test_RemoveTypenameFromVariablesLink = RemoveTypenameFromVariablesLink;",
+        "type _Test_RemoveTypenameFromVariablesLink_KeepTypenameConfig = RemoveTypenameFromVariablesLink.KeepTypenameConfig;",
+        "type _Test_RemoveTypenameFromVariablesLink_Options = RemoveTypenameFromVariablesLink.Options;",
+        "class _Test_RemoveTypenameFromVariablesLink extends RemoveTypenameFromVariablesLink {}",
+        "const _test_RemoveTypenameFromVariablesLink = new RemoveTypenameFromVariablesLink(options)"
+      ]
+    }
+  ],
+  "@apollo/client/link/schema": [
+    {
+      "name": "SchemaLink",
+      "moduleName": "@apollo/client/link/schema",
+      "usageExamples": [
+        "const _Test_SchemaLink = SchemaLink;",
+        "const _Test_SchemaLink_SchemaLinkDocumentationTypes = SchemaLink.SchemaLinkDocumentationTypes;",
+        "SchemaLink.SchemaLinkDocumentationTypes.ResolverContextFunction(operation)",
+        "type _Test_SchemaLink_ResolverContext = SchemaLink.ResolverContext;",
+        "type _Test_SchemaLink_ResolverContextFunction = SchemaLink.ResolverContextFunction;",
+        "type _Test_SchemaLink_Options = SchemaLink.Options;",
+        "class _Test_SchemaLink extends SchemaLink {}",
+        "const _test_SchemaLink = new SchemaLink(options)"
+      ]
+    }
+  ],
+  "@apollo/client/link/subscriptions": [
+    {
+      "name": "GraphQLWsLink",
+      "moduleName": "@apollo/client/link/subscriptions",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_GraphQLWsLink extends GraphQLWsLink {}",
+        "const _test_GraphQLWsLink = new GraphQLWsLink(client)"
+      ]
+    }
+  ],
+  "@apollo/client/link/utils": [
+    {
+      "name": "createOperation",
+      "moduleName": "@apollo/client/link/utils",
+      "kind": "Function",
+      "usageExamples": ["createOperation(request, param1)"]
+    },
+    {
+      "name": "filterOperationVariables",
+      "moduleName": "@apollo/client/link/utils",
+      "kind": "Function",
+      "usageExamples": ["filterOperationVariables(variables, query)"]
+    }
+  ],
+  "@apollo/client/link/ws": [
+    {
+      "name": "WebSocketLink",
+      "moduleName": "@apollo/client/link/ws",
+      "usageExamples": [
+        "const _Test_WebSocketLink = WebSocketLink;",
+        "type _Test_WebSocketLink_Configuration = WebSocketLink.Configuration;",
+        "class _Test_WebSocketLink extends WebSocketLink {}",
+        "const _test_WebSocketLink = new WebSocketLink(paramsOrClient)"
+      ]
+    }
+  ],
+  "@apollo/client/masking": [
+    {
+      "name": "DataMasking",
+      "moduleName": "@apollo/client/masking",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_DataMasking = DataMasking;"]
+    },
+    {
+      "name": "FragmentType",
+      "moduleName": "@apollo/client/masking",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_FragmentType = FragmentType<TData>;"]
+    },
+    {
+      "name": "Masked",
+      "moduleName": "@apollo/client/masking",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Masked = Masked<TData>;"]
+    },
+    {
+      "name": "MaskedDocumentNode",
+      "moduleName": "@apollo/client/masking",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MaskedDocumentNode = MaskedDocumentNode<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "MaybeMasked",
+      "moduleName": "@apollo/client/masking",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MaybeMasked = MaybeMasked<TData>;"]
+    },
+    {
+      "name": "Unmasked",
+      "moduleName": "@apollo/client/masking",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_Unmasked = Unmasked<TData>;"]
+    },
+    {
+      "name": "GraphQLCodegenDataMasking",
+      "moduleName": "@apollo/client/masking",
+      "kind": "NamespaceModule",
+      "usageExamples": [
+        "const _Test_GraphQLCodegenDataMasking = GraphQLCodegenDataMasking;",
+        "type _Test_GraphQLCodegenDataMasking_Implementation = GraphQLCodegenDataMasking.Implementation;",
+        "const _Test_GraphQLCodegenDataMasking_HKTImplementation = GraphQLCodegenDataMasking.HKTImplementation;",
+        "type _Test_GraphQLCodegenDataMasking_HKTImplementation_Masked = GraphQLCodegenDataMasking.HKTImplementation.Masked;",
+        "type _Test_GraphQLCodegenDataMasking_HKTImplementation_MaskedDocumentNode = GraphQLCodegenDataMasking.HKTImplementation.MaskedDocumentNode;",
+        "type _Test_GraphQLCodegenDataMasking_HKTImplementation_FragmentType = GraphQLCodegenDataMasking.HKTImplementation.FragmentType;",
+        "type _Test_GraphQLCodegenDataMasking_HKTImplementation_MaybeMasked = GraphQLCodegenDataMasking.HKTImplementation.MaybeMasked;",
+        "type _Test_GraphQLCodegenDataMasking_HKTImplementation_Unmasked = GraphQLCodegenDataMasking.HKTImplementation.Unmasked;",
+        "type _Test_GraphQLCodegenDataMasking_Masked = GraphQLCodegenDataMasking.Masked<TData>;",
+        "type _Test_GraphQLCodegenDataMasking_MaskedDocumentNode = GraphQLCodegenDataMasking.MaskedDocumentNode<TData, TVariables>;",
+        "type _Test_GraphQLCodegenDataMasking_FragmentType = GraphQLCodegenDataMasking.FragmentType<TData>;",
+        "type _Test_GraphQLCodegenDataMasking_MaybeMasked = GraphQLCodegenDataMasking.MaybeMasked<TData>;",
+        "type _Test_GraphQLCodegenDataMasking_Unmasked = GraphQLCodegenDataMasking.Unmasked<TData>;"
+      ]
+    },
+    {
+      "name": "disableWarningsSlot",
+      "moduleName": "@apollo/client/masking",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_disableWarningsSlot = disableWarningsSlot;"
+      ]
+    },
+    {
+      "name": "maskFragment",
+      "moduleName": "@apollo/client/masking",
+      "kind": "Function",
+      "usageExamples": [
+        "maskFragment<TData>(data, document, cache, fragmentName)"
+      ]
+    },
+    {
+      "name": "maskOperation",
+      "moduleName": "@apollo/client/masking",
+      "kind": "Function",
+      "usageExamples": ["maskOperation<TData>(data, document, cache)"]
+    }
+  ],
+  "@apollo/client/react": [
+    {
+      "name": "ApolloContextValue",
+      "moduleName": "@apollo/client/react",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_ApolloContextValue = ApolloContextValue;"]
+    },
+    {
+      "name": "getApolloContext",
+      "moduleName": "@apollo/client/react",
+      "kind": "Function",
+      "usageExamples": ["getApolloContext()"]
+    },
+    {
+      "name": "ApolloProvider",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "const _Test_ApolloProvider = ApolloProvider;",
+        "type _Test_ApolloProvider_Props = ApolloProvider.Props;",
+        "const _Test_ApolloProvider = ApolloProvider;"
+      ]
+    },
+    {
+      "name": "useApolloClient",
+      "moduleName": "@apollo/client/react",
+      "kind": "Function",
+      "usageExamples": ["useApolloClient(override)"]
+    },
+    {
+      "name": "useLazyQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useLazyQuery<TData, TVariables>(query, options)",
+        "useLazyQuery<TData, TVariables>(query, options)",
+        "useLazyQuery<TData, TVariables>(query, options)",
+        "useLazyQuery<TData, TVariables, TStates>(query, options)",
+        "const _Test_useLazyQuery = useLazyQuery;",
+        "type _Test_useLazyQuery_Options = useLazyQuery.Options<TData, TVariables>;",
+        "const _Test_useLazyQuery_DocumentationTypes = useLazyQuery.DocumentationTypes;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "useLazyQuery.DocumentationTypes.useLazyQuery<TData, TVariables>(query, options)",
+        "const _Test_useLazyQuery_DocumentationTypes = useLazyQuery.DocumentationTypes;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "useLazyQuery.DocumentationTypes.useLazyQuery<TData, TVariables>(query, options)",
+        "const _Test_useLazyQuery_DocumentationTypes = useLazyQuery.DocumentationTypes;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "useLazyQuery.DocumentationTypes.useLazyQuery<TData, TVariables>(query, options)",
+        "const _Test_useLazyQuery_DocumentationTypes = useLazyQuery.DocumentationTypes;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "useLazyQuery.DocumentationTypes.useLazyQuery<TData, TVariables>(query, options)",
+        "const _Test_useLazyQuery_DocumentationTypes = useLazyQuery.DocumentationTypes;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "const _Test_useLazyQuery_DocumentationTypes_useLazyQuery = useLazyQuery.DocumentationTypes.useLazyQuery;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Options = useLazyQuery.DocumentationTypes.useLazyQuery.Options<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_Result = useLazyQuery.DocumentationTypes.useLazyQuery.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ExecOptions = useLazyQuery.DocumentationTypes.useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_DocumentationTypes_useLazyQuery_ResultTuple = useLazyQuery.DocumentationTypes.useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "useLazyQuery.DocumentationTypes.useLazyQuery<TData, TVariables>(query, options)",
+        "const _Test_useLazyQuery_Base = useLazyQuery.Base;",
+        "type _Test_useLazyQuery_Base_Result = useLazyQuery.Base.Result<TData, TVariables>;",
+        "type _Test_useLazyQuery_Result = useLazyQuery.Result<TData, TVariables, TStates>;",
+        "type _Test_useLazyQuery_ExecOptions = useLazyQuery.ExecOptions<TVariables>;",
+        "type _Test_useLazyQuery_ResultTuple = useLazyQuery.ResultTuple<TData, TVariables, TStates>;",
+        "type _Test_useLazyQuery_ExecFunction = useLazyQuery.ExecFunction<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "useMutation",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useMutation<TData, TVariables, TCache, TConfiguredVariables>(mutation, options)",
+        "const _Test_useMutation = useMutation;",
+        "type _Test_useMutation_Options = useMutation.Options<TData, TVariables, TCache, TConfiguredVariables>;",
+        "type _Test_useMutation_Result = useMutation.Result<TData>;",
+        "type _Test_useMutation_ResultTuple = useMutation.ResultTuple<TData, TVariables, TCache>;",
+        "type _Test_useMutation_MutationFunction = useMutation.MutationFunction<TData, TVariables, TCache>;",
+        "type _Test_useMutation_MutationFunctionOptions = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;",
+        "const _Test_useMutation_DocumentationTypes = useMutation.DocumentationTypes;",
+        "useMutation.DocumentationTypes.useMutation<TData, TVariables>(mutation, options)"
+      ]
+    },
+    {
+      "name": "useQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useQuery<TData, TVariables>(query, options)",
+        "useQuery<TData, TVariables>(query, options)",
+        "useQuery<TData, TVariables>(query, param1)",
+        "useQuery<TData, TVariables>(query, param1)",
+        "const _Test_useQuery = useQuery;",
+        "const _Test_useQuery_Base = useQuery.Base;",
+        "type _Test_useQuery_Base_Options = useQuery.Base.Options<TData, TVariables>;",
+        "type _Test_useQuery_Base_Result = useQuery.Base.Result<TData, TVariables>;",
+        "const _Test_useQuery_Base = useQuery.Base;",
+        "type _Test_useQuery_Base_Options = useQuery.Base.Options<TData, TVariables>;",
+        "type _Test_useQuery_Base_Result = useQuery.Base.Result<TData, TVariables>;",
+        "type _Test_useQuery_Options = useQuery.Options<TData, TVariables>;",
+        "const _Test_useQuery_DocumentationTypes = useQuery.DocumentationTypes;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "useQuery.DocumentationTypes.useQuery<TData, TVariables>(query, options)",
+        "const _Test_useQuery_DocumentationTypes = useQuery.DocumentationTypes;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "useQuery.DocumentationTypes.useQuery<TData, TVariables>(query, options)",
+        "const _Test_useQuery_DocumentationTypes = useQuery.DocumentationTypes;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "const _Test_useQuery_DocumentationTypes_useQuery = useQuery.DocumentationTypes.useQuery;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Options = useQuery.DocumentationTypes.useQuery.Options<TData, TVariables>;",
+        "type _Test_useQuery_DocumentationTypes_useQuery_Result = useQuery.DocumentationTypes.useQuery.Result<TData, TVariables>;",
+        "useQuery.DocumentationTypes.useQuery<TData, TVariables>(query, options)",
+        "type _Test_useQuery_Result = useQuery.Result<TData, TVariables, TStates>;",
+        "const _Test_useQuery_ssrDisabledResult = useQuery.ssrDisabledResult;"
+      ]
+    },
+    {
+      "name": "useSubscription",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useSubscription<TData, TVariables>(subscription, param1)",
+        "const _Test_useSubscription = useSubscription;",
+        "const _Test_useSubscription_Base = useSubscription.Base;",
+        "type _Test_useSubscription_Base_Options = useSubscription.Base.Options<TData, TVariables>;",
+        "type _Test_useSubscription_Options = useSubscription.Options<TData, TVariables>;",
+        "const _Test_useSubscription_DocumentationTypes = useSubscription.DocumentationTypes;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "useSubscription.DocumentationTypes.useSubscription<TData, TVariables>(options)",
+        "const _Test_useSubscription_DocumentationTypes = useSubscription.DocumentationTypes;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "useSubscription.DocumentationTypes.useSubscription<TData, TVariables>(options)",
+        "const _Test_useSubscription_DocumentationTypes = useSubscription.DocumentationTypes;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "const _Test_useSubscription_DocumentationTypes_useSubscription = useSubscription.DocumentationTypes.useSubscription;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Options = useSubscription.DocumentationTypes.useSubscription.Options<TData, TVariables>;",
+        "type _Test_useSubscription_DocumentationTypes_useSubscription_Result = useSubscription.DocumentationTypes.useSubscription.Result<TData>;",
+        "useSubscription.DocumentationTypes.useSubscription<TData, TVariables>(options)",
+        "type _Test_useSubscription_Result = useSubscription.Result<TData>;",
+        "type _Test_useSubscription_OnDataResult = useSubscription.OnDataResult<TData>;",
+        "type _Test_useSubscription_OnDataOptions = useSubscription.OnDataOptions<TData>;",
+        "type _Test_useSubscription_OnSubscriptionDataOptions = useSubscription.OnSubscriptionDataOptions<TData>;"
+      ]
+    },
+    {
+      "name": "useReactiveVar",
+      "moduleName": "@apollo/client/react",
+      "kind": "Function",
+      "usageExamples": ["useReactiveVar<T>(rv)"]
+    },
+    {
+      "name": "useFragment",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useFragment<TData, TVariables>(options)",
+        "const _Test_useFragment = useFragment;",
+        "type _Test_useFragment_Options = useFragment.Options<TData, TVariables>;",
+        "const _Test_useFragment_DocumentationTypes = useFragment.DocumentationTypes;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "useFragment.DocumentationTypes.useFragment<TData, TVariables>(param0)",
+        "const _Test_useFragment_DocumentationTypes = useFragment.DocumentationTypes;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "useFragment.DocumentationTypes.useFragment<TData, TVariables>(param0)",
+        "const _Test_useFragment_DocumentationTypes = useFragment.DocumentationTypes;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "const _Test_useFragment_DocumentationTypes_useFragment = useFragment.DocumentationTypes.useFragment;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Options = useFragment.DocumentationTypes.useFragment.Options<TData, TVariables>;",
+        "type _Test_useFragment_DocumentationTypes_useFragment_Result = useFragment.DocumentationTypes.useFragment.Result<TData>;",
+        "useFragment.DocumentationTypes.useFragment<TData, TVariables>(param0)",
+        "type _Test_useFragment_Result = useFragment.Result<TData>;"
+      ]
+    },
+    {
+      "name": "useSuspenseQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, param1)",
+        "useSuspenseQuery<TData, TVariables>(query, param1)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "useSuspenseQuery<TData, TVariables>(query, options)",
+        "const _Test_useSuspenseQuery = useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_FetchPolicy = useSuspenseQuery.FetchPolicy;",
+        "const _Test_useSuspenseQuery_Base = useSuspenseQuery.Base;",
+        "type _Test_useSuspenseQuery_Base_Options = useSuspenseQuery.Base.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_Base_Result = useSuspenseQuery.Base.Result<TData, TVariables>;",
+        "const _Test_useSuspenseQuery_Base = useSuspenseQuery.Base;",
+        "type _Test_useSuspenseQuery_Base_Options = useSuspenseQuery.Base.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_Base_Result = useSuspenseQuery.Base.Result<TData, TVariables>;",
+        "type _Test_useSuspenseQuery_Options = useSuspenseQuery.Options<TVariables>;",
+        "const _Test_useSuspenseQuery_DocumentationTypes = useSuspenseQuery.DocumentationTypes;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "useSuspenseQuery.DocumentationTypes.useSuspenseQuery<TData, TVariables>(query, options)",
+        "const _Test_useSuspenseQuery_DocumentationTypes = useSuspenseQuery.DocumentationTypes;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "useSuspenseQuery.DocumentationTypes.useSuspenseQuery<TData, TVariables>(query, options)",
+        "const _Test_useSuspenseQuery_DocumentationTypes = useSuspenseQuery.DocumentationTypes;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "const _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery = useSuspenseQuery.DocumentationTypes.useSuspenseQuery;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Options = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Options<TVariables>;",
+        "type _Test_useSuspenseQuery_DocumentationTypes_useSuspenseQuery_Result = useSuspenseQuery.DocumentationTypes.useSuspenseQuery.Result<TData, TVariables>;",
+        "useSuspenseQuery.DocumentationTypes.useSuspenseQuery<TData, TVariables>(query, options)",
+        "type _Test_useSuspenseQuery_Result = useSuspenseQuery.Result<TData, TVariables, TStates>;"
+      ]
+    },
+    {
+      "name": "useBackgroundQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, param1)",
+        "useBackgroundQuery<TData, TVariables>(query, param1)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "useBackgroundQuery<TData, TVariables>(query, options)",
+        "const _Test_useBackgroundQuery = useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_FetchPolicy = useBackgroundQuery.FetchPolicy;",
+        "const _Test_useBackgroundQuery_Base = useBackgroundQuery.Base;",
+        "type _Test_useBackgroundQuery_Base_Options = useBackgroundQuery.Base.Options;",
+        "type _Test_useBackgroundQuery_Options = useBackgroundQuery.Options<TVariables>;",
+        "const _Test_useBackgroundQuery_DocumentationTypes = useBackgroundQuery.DocumentationTypes;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "useBackgroundQuery.DocumentationTypes.useBackgroundQuery<TData, TVariables>(query, options)",
+        "const _Test_useBackgroundQuery_DocumentationTypes = useBackgroundQuery.DocumentationTypes;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "useBackgroundQuery.DocumentationTypes.useBackgroundQuery<TData, TVariables>(query, options)",
+        "const _Test_useBackgroundQuery_DocumentationTypes = useBackgroundQuery.DocumentationTypes;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "const _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery = useBackgroundQuery.DocumentationTypes.useBackgroundQuery;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Options = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Options<TVariables>;",
+        "type _Test_useBackgroundQuery_DocumentationTypes_useBackgroundQuery_Result = useBackgroundQuery.DocumentationTypes.useBackgroundQuery.Result<TData, TVariables>;",
+        "useBackgroundQuery.DocumentationTypes.useBackgroundQuery<TData, TVariables>(query, options)",
+        "type _Test_useBackgroundQuery_Result = useBackgroundQuery.Result<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "useSuspenseFragment",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useSuspenseFragment<TData, TVariables>(options)",
+        "useSuspenseFragment<TData, TVariables>(options)",
+        "useSuspenseFragment<TData, TVariables>(options)",
+        "useSuspenseFragment<TData, TVariables>(options)",
+        "useSuspenseFragment<TData, TVariables>(options)",
+        "const _Test_useSuspenseFragment = useSuspenseFragment;",
+        "const _Test_useSuspenseFragment_Base = useSuspenseFragment.Base;",
+        "type _Test_useSuspenseFragment_Base_Options = useSuspenseFragment.Base.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_Options = useSuspenseFragment.Options<TData, TVariables>;",
+        "const _Test_useSuspenseFragment_DocumentationTypes = useSuspenseFragment.DocumentationTypes;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "useSuspenseFragment.DocumentationTypes.useSuspenseFragment<TData, TVariables>(options)",
+        "const _Test_useSuspenseFragment_DocumentationTypes = useSuspenseFragment.DocumentationTypes;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "useSuspenseFragment.DocumentationTypes.useSuspenseFragment<TData, TVariables>(options)",
+        "const _Test_useSuspenseFragment_DocumentationTypes = useSuspenseFragment.DocumentationTypes;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "const _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment = useSuspenseFragment.DocumentationTypes.useSuspenseFragment;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Options = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Options<TData, TVariables>;",
+        "type _Test_useSuspenseFragment_DocumentationTypes_useSuspenseFragment_Result = useSuspenseFragment.DocumentationTypes.useSuspenseFragment.Result<TData>;",
+        "useSuspenseFragment.DocumentationTypes.useSuspenseFragment<TData, TVariables>(options)",
+        "type _Test_useSuspenseFragment_Result = useSuspenseFragment.Result<TData>;"
+      ]
+    },
+    {
+      "name": "useLoadableQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useLoadableQuery<TData, TVariables>(query, options)",
+        "useLoadableQuery<TData, TVariables>(query, options)",
+        "useLoadableQuery<TData, TVariables>(query, options)",
+        "useLoadableQuery<TData, TVariables>(query, options)",
+        "useLoadableQuery<TData, TVariables>(query, options)",
+        "const _Test_useLoadableQuery = useLoadableQuery;",
+        "type _Test_useLoadableQuery_LoadQueryFunction = useLoadableQuery.LoadQueryFunction<TVariables>;",
+        "type _Test_useLoadableQuery_Result = useLoadableQuery.Result<TData, TVariables, TStates>;",
+        "type _Test_useLoadableQuery_Handlers = useLoadableQuery.Handlers<TData, TVariables>;",
+        "type _Test_useLoadableQuery_FetchPolicy = useLoadableQuery.FetchPolicy;",
+        "type _Test_useLoadableQuery_Options = useLoadableQuery.Options;",
+        "const _Test_useLoadableQuery_DocumentationTypes = useLoadableQuery.DocumentationTypes;",
+        "useLoadableQuery.DocumentationTypes.useLoadableQuery<TData, TVariables>(query, options)"
+      ]
+    },
+    {
+      "name": "useQueryRefHandlers",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useQueryRefHandlers<TData, TVariables>(queryRef)",
+        "const _Test_useQueryRefHandlers = useQueryRefHandlers;",
+        "type _Test_useQueryRefHandlers_Result = useQueryRefHandlers.Result<TData, TVariables>;",
+        "const _Test_useQueryRefHandlers_DocumentationTypes = useQueryRefHandlers.DocumentationTypes;",
+        "useQueryRefHandlers.DocumentationTypes.useQueryRefHandlers<TData, TVariables>(queryRef)"
+      ]
+    },
+    {
+      "name": "useReadQuery",
+      "moduleName": "@apollo/client/react",
+      "usageExamples": [
+        "useReadQuery<TData, TStates>(queryRef)",
+        "const _Test_useReadQuery = useReadQuery;",
+        "const _Test_useReadQuery_Base = useReadQuery.Base;",
+        "type _Test_useReadQuery_Base_Result = useReadQuery.Base.Result<TData>;",
+        "type _Test_useReadQuery_Result = useReadQuery.Result<TData, TStates>;",
+        "const _Test_useReadQuery_DocumentationTypes = useReadQuery.DocumentationTypes;",
+        "useReadQuery.DocumentationTypes.useReadQuery<TData>(queryRef)",
+        "const _Test_useReadQuery_DocumentationTypes_useReadQuery = useReadQuery.DocumentationTypes.useReadQuery;",
+        "type _Test_useReadQuery_DocumentationTypes_useReadQuery_Result = useReadQuery.DocumentationTypes.useReadQuery.Result<TData>;"
+      ]
+    },
+    {
+      "name": "skipToken",
+      "moduleName": "@apollo/client/react",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_skipToken = skipToken;"]
+    },
+    {
+      "name": "SkipToken",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_SkipToken = SkipToken;"]
+    },
+    {
+      "name": "PreloadQueryFetchPolicy",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_PreloadQueryFetchPolicy = PreloadQueryFetchPolicy;"
+      ]
+    },
+    {
+      "name": "PreloadQueryFunction",
+      "moduleName": "@apollo/client/react",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_PreloadQueryFunction = PreloadQueryFunction;"
+      ]
+    },
+    {
+      "name": "PreloadQueryOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_PreloadQueryOptions = PreloadQueryOptions<TVariables>;"
+      ]
+    },
+    {
+      "name": "createQueryPreloader",
+      "moduleName": "@apollo/client/react",
+      "kind": "Function",
+      "usageExamples": ["createQueryPreloader(client)"]
+    },
+    {
+      "name": "PreloadedQueryRef",
+      "moduleName": "@apollo/client/react",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables, TStates>;"
+      ]
+    },
+    {
+      "name": "QueryRef",
+      "moduleName": "@apollo/client/react",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_QueryRef = QueryRef<TData, TVariables, TStates>;"
+      ]
+    },
+    {
+      "name": "BackgroundQueryHookFetchPolicy",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_BackgroundQueryHookFetchPolicy = BackgroundQueryHookFetchPolicy;"
+      ]
+    },
+    {
+      "name": "BackgroundQueryHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_BackgroundQueryHookOptions = BackgroundQueryHookOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "LazyQueryExecFunction",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LazyQueryExecFunction = LazyQueryExecFunction<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "LazyQueryHookExecOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LazyQueryHookExecOptions = LazyQueryHookExecOptions<TVariables>;"
+      ]
+    },
+    {
+      "name": "LazyQueryHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LazyQueryHookOptions = LazyQueryHookOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "LazyQueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LazyQueryResult = LazyQueryResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "LazyQueryResultTuple",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LazyQueryResultTuple = LazyQueryResultTuple<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "LoadableQueryFetchPolicy",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LoadableQueryFetchPolicy = LoadableQueryFetchPolicy;"
+      ]
+    },
+    {
+      "name": "LoadableQueryHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LoadableQueryHookOptions = LoadableQueryHookOptions;"
+      ]
+    },
+    {
+      "name": "LoadQueryFunction",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_LoadQueryFunction = LoadQueryFunction<TVariables>;"
+      ]
+    },
+    {
+      "name": "MutationFunctionOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationFunctionOptions = MutationFunctionOptions<TData, TVariables, _TContext, TCache>;"
+      ]
+    },
+    {
+      "name": "MutationHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationHookOptions = MutationHookOptions<TData, TVariables, _TContext, TCache>;"
+      ]
+    },
+    {
+      "name": "MutationResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MutationResult = MutationResult<TData>;"]
+    },
+    {
+      "name": "MutationTuple",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MutationTuple = MutationTuple<TData, TVariables, _TContext, TCache>;"
+      ]
+    },
+    {
+      "name": "OnDataOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_OnDataOptions = OnDataOptions<TData>;"]
+    },
+    {
+      "name": "OnSubscriptionDataOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_OnSubscriptionDataOptions = OnSubscriptionDataOptions<TData>;"
+      ]
+    },
+    {
+      "name": "QueryHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_QueryHookOptions = QueryHookOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "QueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_QueryResult = QueryResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscriptionHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscriptionHookOptions = SubscriptionHookOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SubscriptionResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SubscriptionResult = SubscriptionResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "SuspenseQueryHookFetchPolicy",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SuspenseQueryHookFetchPolicy = SuspenseQueryHookFetchPolicy;"
+      ]
+    },
+    {
+      "name": "SuspenseQueryHookOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_SuspenseQueryHookOptions = SuspenseQueryHookOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseBackgroundQueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseBackgroundQueryResult = UseBackgroundQueryResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseFragmentOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseFragmentOptions = UseFragmentOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseFragmentResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseFragmentResult = UseFragmentResult<TData>;"
+      ]
+    },
+    {
+      "name": "UseLoadableQueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseLoadableQueryResult = UseLoadableQueryResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseQueryRefHandlersResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseQueryRefHandlersResult = UseQueryRefHandlersResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseReadQueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseReadQueryResult = UseReadQueryResult<TData>;"
+      ]
+    },
+    {
+      "name": "UseSuspenseFragmentOptions",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseSuspenseFragmentOptions = UseSuspenseFragmentOptions<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "UseSuspenseFragmentResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseSuspenseFragmentResult = UseSuspenseFragmentResult<TData>;"
+      ]
+    },
+    {
+      "name": "UseSuspenseQueryResult",
+      "moduleName": "@apollo/client/react",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_UseSuspenseQueryResult = UseSuspenseQueryResult<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "reactCompilerVersion",
+      "moduleName": "@apollo/client/react",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_reactCompilerVersion = reactCompilerVersion;"
+      ]
+    }
+  ],
+  "@apollo/client/react/components": [],
+  "@apollo/client/react/context": [],
+  "@apollo/client/react/hoc": [],
+  "@apollo/client/react/hooks": [],
+  "@apollo/client/react/internal": [
+    {
+      "name": "getSuspenseCache",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": ["getSuspenseCache(client)"]
+    },
+    {
+      "name": "CacheKey",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_CacheKey = CacheKey;"]
+    },
+    {
+      "name": "FragmentKey",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_FragmentKey = FragmentKey;"]
+    },
+    {
+      "name": "QueryKey",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_QueryKey = QueryKey;"]
+    },
+    {
+      "name": "PreloadedQueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_PreloadedQueryRef = PreloadedQueryRef<TData, TVariables, TStates>;"
+      ]
+    },
+    {
+      "name": "QueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_QueryRef = QueryRef<TData, TVariables, TStates>;"
+      ]
+    },
+    {
+      "name": "assertWrappedQueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": [
+        "assertWrappedQueryRef<TData, TVariables, TStates>(queryRef)",
+        "assertWrappedQueryRef<TData, TVariables, TStates>(queryRef)",
+        "assertWrappedQueryRef<TData, TVariables, TStates>(queryRef)"
+      ]
+    },
+    {
+      "name": "getWrappedPromise",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": ["getWrappedPromise<TData, TStates>(queryRef)"]
+    },
+    {
+      "name": "InternalQueryReference",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_InternalQueryReference extends InternalQueryReference<TData, TStates> {}",
+        "const _test_InternalQueryReference = new InternalQueryReference<TData, TStates>(observable, options)"
+      ]
+    },
+    {
+      "name": "unwrapQueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": [
+        "unwrapQueryRef<TData, TStates>(queryRef)",
+        "unwrapQueryRef<TData, TStates>(queryRef)",
+        "unwrapQueryRef<TData, TStates>(queryRef)"
+      ]
+    },
+    {
+      "name": "updateWrappedQueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": [
+        "updateWrappedQueryRef<TData, TStates>(queryRef, promise)"
+      ]
+    },
+    {
+      "name": "wrapQueryRef",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Function",
+      "usageExamples": [
+        "wrapQueryRef<TData, TVariables, TStates>(internalQueryRef)"
+      ]
+    },
+    {
+      "name": "SuspenseCacheOptions",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "Interface",
+      "usageExamples": [
+        "type _Test_SuspenseCacheOptions = SuspenseCacheOptions;"
+      ]
+    },
+    {
+      "name": "HookWrappers",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_HookWrappers = HookWrappers;"]
+    },
+    {
+      "name": "wrapperSymbol",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_wrapperSymbol = wrapperSymbol;"]
+    },
+    {
+      "name": "FetchMoreFunction",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_FetchMoreFunction = FetchMoreFunction<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "RefetchFunction",
+      "moduleName": "@apollo/client/react/internal",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_RefetchFunction = RefetchFunction<TData, TVariables>;"
+      ]
+    }
+  ],
+  "@apollo/client/react/parser": [],
+  "@apollo/client/react/ssr": [
+    {
+      "name": "getDataFromTree",
+      "moduleName": "@apollo/client/react/ssr",
+      "kind": "Function",
+      "usageExamples": ["getDataFromTree(tree, context)"]
+    },
+    {
+      "name": "getMarkupFromTree",
+      "moduleName": "@apollo/client/react/ssr",
+      "kind": "Function",
+      "usageExamples": ["getMarkupFromTree(param0)"]
+    },
+    {
+      "name": "prerenderStatic",
+      "moduleName": "@apollo/client/react/ssr",
+      "usageExamples": [
+        "prerenderStatic(param0)",
+        "const _Test_prerenderStatic = prerenderStatic;",
+        "type _Test_prerenderStatic_Options = prerenderStatic.Options;",
+        "type _Test_prerenderStatic_Result = prerenderStatic.Result;",
+        "type _Test_prerenderStatic_Diagnostics = prerenderStatic.Diagnostics;",
+        "type _Test_prerenderStatic_RenderToString = prerenderStatic.RenderToString;",
+        "type _Test_prerenderStatic_RenderToStringPromise = prerenderStatic.RenderToStringPromise;",
+        "type _Test_prerenderStatic_PrerenderToWebStream = prerenderStatic.PrerenderToWebStream;",
+        "type _Test_prerenderStatic_PrerenderToNodeStream = prerenderStatic.PrerenderToNodeStream;"
+      ]
+    },
+    {
+      "name": "renderToStringWithData",
+      "moduleName": "@apollo/client/react/ssr",
+      "kind": "Function",
+      "usageExamples": ["renderToStringWithData(component)"]
+    }
+  ],
+  "@apollo/client/testing": [
+    {
+      "name": "MockedRequest",
+      "moduleName": "@apollo/client/testing",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MockedRequest = MockedRequest<TVariables>;"]
+    },
+    {
+      "name": "MockedResponse",
+      "moduleName": "@apollo/client/testing",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_MockedResponse = MockedResponse<TData, TVariables>;"
+      ]
+    },
+    {
+      "name": "MockLinkOptions",
+      "moduleName": "@apollo/client/testing",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_MockLinkOptions = MockLinkOptions;"]
+    },
+    {
+      "name": "ResultFunction",
+      "moduleName": "@apollo/client/testing",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_ResultFunction = ResultFunction<T, V>;"]
+    },
+    {
+      "name": "MockLink",
+      "moduleName": "@apollo/client/testing",
+      "usageExamples": [
+        "const _Test_MockLink = MockLink;",
+        "type _Test_MockLink_DelayFunction = MockLink.DelayFunction;",
+        "type _Test_MockLink_Delay = MockLink.Delay;",
+        "type _Test_MockLink_DefaultOptions = MockLink.DefaultOptions;",
+        "type _Test_MockLink_MockedRequest = MockLink.MockedRequest<TVariables>;",
+        "type _Test_MockLink_MockedResponse = MockLink.MockedResponse<TData, TVariables>;",
+        "type _Test_MockLink_ResultFunction = MockLink.ResultFunction<T, V>;",
+        "type _Test_MockLink_Options = MockLink.Options;",
+        "const _Test_MockLink_defaultOptions = MockLink.defaultOptions;",
+        "class _Test_MockLink extends MockLink {}",
+        "const _test_MockLink = new MockLink(mockedResponses, options)"
+      ]
+    },
+    {
+      "name": "realisticDelay",
+      "moduleName": "@apollo/client/testing",
+      "kind": "Function",
+      "usageExamples": ["realisticDelay(param0)"]
+    },
+    {
+      "name": "MockSubscriptionLink",
+      "moduleName": "@apollo/client/testing",
+      "usageExamples": [
+        "const _Test_MockSubscriptionLink = MockSubscriptionLink;",
+        "type _Test_MockSubscriptionLink_Result = MockSubscriptionLink.Result;",
+        "class _Test_MockSubscriptionLink extends MockSubscriptionLink {}",
+        "const _test_MockSubscriptionLink = new MockSubscriptionLink()"
+      ]
+    }
+  ],
+  "@apollo/client/testing/core": [],
+  "@apollo/client/testing/experimental": [],
+  "@apollo/client/utilities": [
+    {
+      "name": "Observable",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_Observable extends Observable<T> {}",
+        "const _test_Observable = new Observable<T>(subscribe)"
+      ]
+    },
+    {
+      "name": "DeepPartial",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_DeepPartial = DeepPartial<T>;"]
+    },
+    {
+      "name": "DocumentTransformCacheKey",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "TypeAlias",
+      "usageExamples": [
+        "type _Test_DocumentTransformCacheKey = DocumentTransformCacheKey;"
+      ]
+    },
+    {
+      "name": "DocumentTransform",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Class",
+      "usageExamples": [
+        "class _Test_DocumentTransform extends DocumentTransform {}",
+        "const _test_DocumentTransform = new DocumentTransform(transform, options)"
+      ]
+    },
+    {
+      "name": "print",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_print = print;"]
+    },
+    {
+      "name": "isFormattedExecutionResult",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["isFormattedExecutionResult(result)"]
+    },
+    {
+      "name": "AsStoreObject",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_AsStoreObject = AsStoreObject<T>;"]
+    },
+    {
+      "name": "Reference",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_Reference = Reference;"]
+    },
+    {
+      "name": "StoreObject",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_StoreObject = StoreObject;"]
+    },
+    {
+      "name": "StoreValue",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "TypeAlias",
+      "usageExamples": ["type _Test_StoreValue = StoreValue;"]
+    },
+    {
+      "name": "isReference",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["isReference(obj)"]
+    },
+    {
+      "name": "addTypenameToDocument",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "BlockScopedVariable",
+      "usageExamples": [
+        "const _Test_addTypenameToDocument = addTypenameToDocument;"
+      ]
+    },
+    {
+      "name": "isMutationOperation",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["isMutationOperation(document)"]
+    },
+    {
+      "name": "isQueryOperation",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["isQueryOperation(document)"]
+    },
+    {
+      "name": "isSubscriptionOperation",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["isSubscriptionOperation(document)"]
+    },
+    {
+      "name": "canonicalStringify",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_canonicalStringify = canonicalStringify;"]
+    },
+    {
+      "name": "getMainDefinition",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["getMainDefinition(queryDoc)"]
+    },
+    {
+      "name": "concatPagination",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["concatPagination<T>(keyArgs)"]
+    },
+    {
+      "name": "offsetLimitPagination",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["offsetLimitPagination<T>(keyArgs)"]
+    },
+    {
+      "name": "relayStylePagination",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["relayStylePagination<TNode>(keyArgs)"]
+    },
+    {
+      "name": "stripTypename",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Function",
+      "usageExamples": ["stripTypename<T>(value)"]
+    },
+    {
+      "name": "cacheSizes",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "BlockScopedVariable",
+      "usageExamples": ["const _Test_cacheSizes = cacheSizes;"]
+    },
+    {
+      "name": "CacheSizes",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_CacheSizes = CacheSizes;"]
+    },
+    {
+      "name": "HKT",
+      "moduleName": "@apollo/client/utilities",
+      "kind": "Interface",
+      "usageExamples": ["type _Test_HKT = HKT;"]
+    }
+  ],
+  "@apollo/client/utilities/globals": [],
+  "@apollo/client/utilities/subscriptions/relay": [
+    {
+      "name": "createFetchMultipartSubscription",
+      "moduleName": "@apollo/client/utilities/subscriptions/relay",
+      "kind": "Function",
+      "usageExamples": ["createFetchMultipartSubscription(uri, param1)"]
+    }
+  ]
+}

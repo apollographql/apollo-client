@@ -10,8 +10,9 @@
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "resolveJsonModule": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/__testfixtures__"]
 }

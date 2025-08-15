@@ -21,11 +21,7 @@ import {
 } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
-import {
-  BaseHttpLink,
-  createHttpLink,
-  HttpLink,
-} from "@apollo/client/link/http";
+import { BaseHttpLink, HttpLink } from "@apollo/client/link/http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -161,7 +157,7 @@ describe("HttpLink", () => {
       const variables = { params: "stub" };
       const extensions = { myExtension: "foo" };
 
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
         fetchOptions: { method: "GET" },
         includeExtensions: true,
@@ -192,7 +188,7 @@ describe("HttpLink", () => {
     it("supports using a GET request with search", async () => {
       const variables = { params: "stub" };
 
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data?foo=bar",
         fetchOptions: { method: "GET" },
       });
@@ -214,7 +210,7 @@ describe("HttpLink", () => {
 
     it("supports using a GET request on the context", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
       });
 
@@ -242,7 +238,7 @@ describe("HttpLink", () => {
 
     it("uses GET with useGETForQueries", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
         useGETForQueries: true,
       });
@@ -267,7 +263,7 @@ describe("HttpLink", () => {
 
     it("uses POST for mutations with useGETForQueries", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
         useGETForQueries: true,
       });
@@ -290,7 +286,7 @@ describe("HttpLink", () => {
     });
 
     it("strips unused variables, respecting nested fragments", async () => {
-      const link = createHttpLink({ uri: "/data" });
+      const link = new HttpLink({ uri: "/data" });
 
       const query = gql`
         query PEOPLE($declaredAndUsed: String, $declaredButUnused: Int) {
@@ -349,7 +345,7 @@ describe("HttpLink", () => {
 
     it("should not add empty client awareness settings to request headers", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
       });
 
@@ -374,7 +370,7 @@ describe("HttpLink", () => {
     });
 
     it("throws for GET if the variables can't be stringified", async () => {
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
         useGETForQueries: true,
         includeUnusedVariables: true,
@@ -397,7 +393,7 @@ describe("HttpLink", () => {
     });
 
     it("throws for GET if the extensions can't be stringified", async () => {
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "/data",
         useGETForQueries: true,
         includeExtensions: true,
@@ -420,11 +416,11 @@ describe("HttpLink", () => {
     });
 
     it("does not need any constructor arguments", () => {
-      expect(() => createHttpLink()).not.toThrow();
+      expect(() => new HttpLink()).not.toThrow();
     });
 
     it("calls next and then complete", async () => {
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
       const observable = execute(link, {
         query: sampleQuery,
       });
@@ -435,7 +431,7 @@ describe("HttpLink", () => {
     });
 
     it("calls error when fetch fails", async () => {
-      const link = createHttpLink({ uri: "error" });
+      const link = new HttpLink({ uri: "error" });
       const observable = execute(link, {
         query: sampleQuery,
       });
@@ -445,7 +441,7 @@ describe("HttpLink", () => {
     });
 
     it("calls error when fetch fails", async () => {
-      const link = createHttpLink({ uri: "error" });
+      const link = new HttpLink({ uri: "error" });
       const observable = execute(link, {
         query: sampleMutation,
       });
@@ -455,7 +451,7 @@ describe("HttpLink", () => {
     });
 
     it("unsubscribes without calling subscriber", async () => {
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
       const observable = execute(link, {
         query: sampleQuery,
       });
@@ -507,21 +503,21 @@ describe("HttpLink", () => {
     };
 
     it("passes all arguments to multiple fetch body including extensions", async () => {
-      const link = createHttpLink({ uri: "data", includeExtensions: true });
+      const link = new HttpLink({ uri: "data", includeExtensions: true });
 
       await verifyRequest(link, true);
       await verifyRequest(link, true);
     });
 
     it("passes all arguments to multiple fetch body excluding extensions", async () => {
-      const link = createHttpLink({ uri: "data", includeExtensions: false });
+      const link = new HttpLink({ uri: "data", includeExtensions: false });
 
       await verifyRequest(link, false);
       await verifyRequest(link, false);
     });
 
     it("calls multiple subscribers", async () => {
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
       const context = { info: "stub" };
       const variables = { params: "stub" };
 
@@ -542,7 +538,7 @@ describe("HttpLink", () => {
     });
 
     it("calls remaining subscribers after unsubscribe", async () => {
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
       const context = { info: "stub" };
       const variables = { params: "stub" };
 
@@ -568,7 +564,7 @@ describe("HttpLink", () => {
 
     it("allows for dynamic endpoint setting", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
 
       const observable = execute(link, {
         query: sampleQuery,
@@ -595,7 +591,7 @@ describe("HttpLink", () => {
           })
         );
       });
-      const link = middleware.concat(createHttpLink({ uri: "data" }));
+      const link = middleware.concat(new HttpLink({ uri: "data" }));
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -613,7 +609,7 @@ describe("HttpLink", () => {
 
     it("adds headers to the request from the setup", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "data",
         headers: { authorization: "1234" },
       });
@@ -640,7 +636,7 @@ describe("HttpLink", () => {
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", headers: { authorization: "no user" } })
+        new HttpLink({ uri: "data", headers: { authorization: "no user" } })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -658,7 +654,7 @@ describe("HttpLink", () => {
 
     it("adds headers to the request from the context on an operation", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
 
       const context = {
         headers: { authorization: "1234" },
@@ -688,7 +684,7 @@ describe("HttpLink", () => {
         });
         return forward(operation);
       });
-      const link = middleware.concat(createHttpLink({ uri: "data" }));
+      const link = middleware.concat(new HttpLink({ uri: "data" }));
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -701,7 +697,7 @@ describe("HttpLink", () => {
 
     it("adds creds to the request from the setup", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "data", credentials: "include" });
+      const link = new HttpLink({ uri: "data", credentials: "include" });
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -721,7 +717,7 @@ describe("HttpLink", () => {
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", credentials: "include" })
+        new HttpLink({ uri: "data", credentials: "include" })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -741,7 +737,7 @@ describe("HttpLink", () => {
         });
         return forward(operation);
       });
-      const link = middleware.concat(createHttpLink());
+      const link = middleware.concat(new HttpLink());
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -754,7 +750,7 @@ describe("HttpLink", () => {
 
     it("adds uri to the request from the setup", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "data" });
+      const link = new HttpLink({ uri: "data" });
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -774,7 +770,7 @@ describe("HttpLink", () => {
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", credentials: "include" })
+        new HttpLink({ uri: "data", credentials: "include" })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -795,7 +791,7 @@ describe("HttpLink", () => {
         return fetch("dataFunc", options);
       };
 
-      const link = createHttpLink({ fetch: customFetch });
+      const link = new HttpLink({ fetch: customFetch });
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -807,7 +803,7 @@ describe("HttpLink", () => {
 
     it("adds fetchOptions to the request from the setup", async () => {
       const variables = { params: "stub" };
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "data",
         fetchOptions: { mode: "no-cors" },
       });
@@ -832,7 +828,7 @@ describe("HttpLink", () => {
         });
         return forward(operation);
       });
-      const link = middleware.concat(createHttpLink({ uri: "data" }));
+      const link = middleware.concat(new HttpLink({ uri: "data" }));
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -844,7 +840,7 @@ describe("HttpLink", () => {
     });
 
     it("uses the latest window.fetch function if options.fetch not configured", async () => {
-      const httpLink = createHttpLink({ uri: "data" });
+      const httpLink = new HttpLink({ uri: "data" });
 
       const fetch = window.fetch;
       expect(typeof fetch).toBe("function");
@@ -881,7 +877,7 @@ describe("HttpLink", () => {
         }
       );
 
-      const httpLink = createHttpLink({ uri: "data", print: customPrinter });
+      const httpLink = new HttpLink({ uri: "data", print: customPrinter });
 
       const observable = execute(httpLink, {
         query: sampleQuery,
@@ -911,7 +907,7 @@ describe("HttpLink", () => {
         return forward(operation);
       });
       const link = middleware.concat(
-        createHttpLink({ uri: "data", fetchOptions: { mode: "no-cors" } })
+        new HttpLink({ uri: "data", fetchOptions: { mode: "no-cors" } })
       );
 
       const observable = execute(link, { query: sampleQuery, variables });
@@ -935,7 +931,7 @@ describe("HttpLink", () => {
         operation.extensions.persistedQuery = { hash: "1234" };
         return forward(operation);
       });
-      const link = middleware.concat(createHttpLink({ uri: "data" }));
+      const link = middleware.concat(new HttpLink({ uri: "data" }));
 
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
@@ -973,7 +969,7 @@ describe("HttpLink", () => {
         });
       });
 
-      const link = middleware.concat(createHttpLink({ uri: "data", fetch }));
+      const link = middleware.concat(new HttpLink({ uri: "data", fetch }));
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
@@ -987,7 +983,7 @@ describe("HttpLink", () => {
     voidFetchDuringEachTest();
 
     it("warns if fetch is undeclared", async () => {
-      expect(() => createHttpLink({ uri: "data" })).toThrow(
+      expect(() => new HttpLink({ uri: "data" })).toThrow(
         /has not been found globally/
       );
     });
@@ -995,14 +991,14 @@ describe("HttpLink", () => {
     it("warns if fetch is undefined", async () => {
       window.fetch = undefined as any;
 
-      expect(() => createHttpLink({ uri: "data" })).toThrow(
+      expect(() => new HttpLink({ uri: "data" })).toThrow(
         /has not been found globally/
       );
     });
 
     it("does not warn if fetch is undeclared but a fetch is passed", () => {
       expect(() => {
-        createHttpLink({ uri: "data", fetch: (() => {}) as any });
+        new HttpLink({ uri: "data", fetch: (() => {}) as any });
       }).not.toThrow();
     });
   });
@@ -1011,7 +1007,7 @@ describe("HttpLink", () => {
     it("throws an error if response code is > 300", async () => {
       const response = Response.json({}, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
@@ -1026,7 +1022,7 @@ describe("HttpLink", () => {
     it("throws an error if response code is > 300 and handles string response body", async () => {
       const response = new Response("Error! Foo bar", { status: 302 });
 
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
@@ -1045,7 +1041,7 @@ describe("HttpLink", () => {
       };
       const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
@@ -1061,7 +1057,7 @@ describe("HttpLink", () => {
       const result = { errors: [{ message: "dangit" }] };
       const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
@@ -1076,7 +1072,7 @@ describe("HttpLink", () => {
     it("throws an error if empty response from the server ", async () => {
       const response = Response.json({ body: "boo" }, { status: 200 });
 
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
@@ -1089,7 +1085,7 @@ describe("HttpLink", () => {
     });
 
     it("throws if the body can't be stringified", async () => {
-      const link = createHttpLink({
+      const link = new HttpLink({
         uri: "data",
         fetch: async () => new Response(""),
         includeUnusedVariables: true,
@@ -1148,7 +1144,7 @@ describe("HttpLink", () => {
           Response.json({ data: { stub: { id: "foo" } } }, { status: 200 });
         const abortControllers = trackGlobalAbortControllers();
 
-        const link = createHttpLink({ uri: "data", fetch });
+        const link = new HttpLink({ uri: "data", fetch });
 
         const sub = execute(link, { query: sampleQuery }).subscribe(
           failingObserver
@@ -1171,7 +1167,7 @@ describe("HttpLink", () => {
           const externalAbortController = new AbortController();
           const abortControllers = trackGlobalAbortControllers();
 
-          const link = createHttpLink({
+          const link = new HttpLink({
             uri: "/data",
           });
 
@@ -1243,7 +1239,7 @@ describe("HttpLink", () => {
         const abortControllers = trackGlobalAbortControllers();
 
         // (the request is already finished at that point)
-        const link = createHttpLink({ uri: "data", fetch });
+        const link = new HttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({
@@ -1262,7 +1258,7 @@ describe("HttpLink", () => {
 
         const abortControllers = trackGlobalAbortControllers();
         // the request would be closed by the browser in the case of an error anyways
-        const link = createHttpLink({ uri: "data", fetch });
+        const link = new HttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({
@@ -1281,7 +1277,7 @@ describe("HttpLink", () => {
         status: 400,
         headers: { "content-type": "application/json" },
       });
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
@@ -1300,7 +1296,7 @@ describe("HttpLink", () => {
         status: 200,
         headers: { "content-type": "application/json" },
       });
-      const link = createHttpLink({ uri: "data", fetch: async () => response });
+      const link = new HttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);

@@ -120,6 +120,11 @@ npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 If you used the [Codemod](#applying-the-codemod) to update your imports, you can skip this section.
 If you did not use the codemod, you will need to manually update your imports to point at the right files.
 
+### Move from manual CJS/ESM imports to `exports`
+
+Apollo Client 4 now has an `exports` field in the `package.json`, which means that you previously used imports like `@apollo/client/react/index.js` or `@apollo/client/react/react.cjs`, you should now use the `@apollo/client/react` entry point.
+Your bundler will be aware of the different module formats provided and be able to resolve the right one for you, based on import conditions and the `exports` field of the `package.json`.
+
 <details>
 <summary><h3 style="display:inline">List of all changed imports</h3><br/>(click to expand)</summary>
 
@@ -608,6 +613,12 @@ const client = useApolloClient(); // [!code ++]
 await mutate({ variables }); // [!code --]
 await client.mutate({ mutation: MY_MUTATION, variables }); // [!code ++]
 ```
+
+### `useQuery`: removal of the deprecated `onCompleted` and `onError` options
+
+The `useQuery` callback options `onCompleted` and `onError` have been removed, as they were easy to accidentally use differently than intended and cause bugs in your application.
+
+You can read up more on this decision and recommendations on what to do instead in [this GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
 ### (optional, but recommended) Stop using generated hooks
 

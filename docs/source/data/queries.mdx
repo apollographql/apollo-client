@@ -16,6 +16,12 @@ This article shows how to fetch GraphQL data in React with the `useQuery` hook a
 
 ## Prerequisites
 
+<Note>
+
+If your application is built using TypeScript, we recommend reading the [TypeScript guide](../development-testing/static-typing) to learn how to use TypeScript with Apollo Client.
+
+</Note>
+
 This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/graphql).
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For more information, see the [getting started guide](../get-started/).
@@ -69,6 +75,12 @@ As our query executes and the values of `loading`, `error`, and `data` change, t
 - When loading is `false` and there is no `error`, the query has completed. The component renders a dropdown menu that's populated with the list of dog breeds returned by the server.
 
 When the user selects a dog breed from the populated dropdown, the selection is sent to the parent component via the provided `onDogSelected` function.
+
+<Note>
+
+If you are using TypeScript, `data` is typed as `unknown` when the query type is unknown. Accessing fields on `data` results in a TypeScript error. See the [TypeScript with Apollo Client](../development-testing/static-typing) guide to learn how to add types for your queries.
+
+</Note>
 
 In the next step, we'll associate the dropdown with a more sophisticated query that uses GraphQL variables.
 

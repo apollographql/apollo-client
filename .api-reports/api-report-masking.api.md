@@ -62,8 +62,8 @@ type ExtractByMatchingTypeNames<Union extends {
 
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TData>;
+// @public
+export type FragmentType<TFragmentData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentData>;
 
 // @public (undocumented)
 export namespace GraphQLCodegenDataMasking {

@@ -9,13 +9,15 @@ GraphQL uses a type system to clearly define the available data for each type an
 
 We'll guide you through installing and configuring GraphQL Code Generator to generate types for your GraphQL operations.
 
-## Setting up your project
+## Setting up your project with GraphQL Codegen
 
 Install the following packages. This installation assumes you already have [installed `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
 
 ```bash
 npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations
 ```
+
+### Recommended starter configuration
 
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project. The following is a recommended minimal configuration for Apollo Client apps.
 
@@ -79,7 +81,7 @@ $ npm run codegen
 ✔ Generate outputs
 ```
 
-### The `client` preset
+### A note about the `client` preset
 
 If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
 

@@ -916,7 +916,29 @@ Local resolvers are now a part of the `LocalState` class, so you need to pass th
 
 Generally, local resolvers should now behave more consistent and have gained some capabilities **link updated resolver docs here**
 
-## Other breaking changes
+## Notable breaking changes
+
+### Bundling changes
+
+#### `exports` field in package.json
+
+Apollo Client 4 now uses the `exports` field in its `package.json` to define which files are available for import. This means you should now be able to use `import { ApolloClient } from "@apollo/client"` instead of `import { ApolloClient } from "@apollo/client/index.js"` or `import { ApolloClient } from "@apollo/client/main.cjs"`.
+
+#### New transpilation target, no shipped polyfills
+
+Apollo Client is now transpiled to target a `since 2023, node >= 20, not dead` target. This means that Apollo Client can now use modern JavaScript features without downlevel transpilation, which will generally result in better performance and smaller bundle size.
+We also have stopped the practice of shipping polyfills.
+
+Please note that we might bump the transpilation target to more modern targets in upcoming minor versions. See our [dependency support policy](TODO in separate PR) for more details on the supported environments.
+
+If you are targeting older browsers or special environments, you might need to adjust your build configuration to transpile the Apollo Client library itself to a lower target, or polyfill the missing features yourself.
+
+#### Development mode changes
+
+Previously, you had to set a global `__DEV__` variable to `false` to disable development mode.
+Now, development mode is primarily controlled by the `development` export condition of the `package.json` exports field. Most modern bundlers should now automatically pick correctly between the development and production version of Apollo Client based on your build environment.
+
+If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behaviour, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
 
 <hr />
 

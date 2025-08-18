@@ -143,7 +143,9 @@ const { data } = useQuery(query);
 
 <Tip>
 
-We recommend that you always provide the variables type to `TypedDocumentNode`. GraphQL Codegen creates a variables type, even when the GraphQL operation doesn't define any variables. This ensures you don't provide variable values to your query which results in runtime errors from your GraphQL server. Additionally, this ensures that TypeScript catches errors when you update your query over time and include required variables.
+We recommend that you always provide the variables type to `TypedDocumentNode`, even when the GraphQL operation doesn't define any variables. This ensures you don't provide variable values to your query which results in runtime errors from your GraphQL server. Additionally, this ensures that TypeScript catches errors when you update your query over time and include required variables.<br/><br/>
+
+If you use GraphQL Codegen, an empty variables type is generated for you using the type `Record<string, never>`.
 
 </Tip>
 

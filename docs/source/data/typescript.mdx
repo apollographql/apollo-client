@@ -323,10 +323,22 @@ Like `useQuery`, you provide `useMutation` a `TypedDocumentNode`. This adds the 
 ```tsx
 import { gql, TypedDocumentNode } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
-import {
-  SaveRocketMutation,
-  SaveRocketMutationVariables,
-} from "@/types/__generated__/graphql";
+
+// In a real application, consider generating types from your schema
+// instead of writing them by hand
+type SaveRocketMutation = {
+  saveRocket: {
+    model: string;
+  } | null;
+};
+
+type SaveRocketMutationVariables = {
+  rocket: {
+    model: string;
+    year: number;
+    stock: number;
+  };
+};
 
 const SAVE_ROCKET: TypedDocumentNode<
   SaveRocketMutation,
@@ -459,10 +471,16 @@ Like `useQuery`, you provide `useSubscription` a `TypedDocumentNode`. This adds 
 ```tsx
 import { gql, TypedDocumentNode } from "@apollo/client";
 import { useSubscription } from "@apollo/client/react";
-import {
-  GetLatestNewsSubscription,
-  GetLatestNewsSubscriptionVariables,
-} from "@/types/__generated__/graphql";
+
+// In a real application, consider generating types from your schema
+// instead of writing them by hand
+type GetLatestNewsSubscription = {
+  latestNews: {
+    content: string;
+  };
+};
+
+type GetLatestNewsSubscriptionVariables = Record<string, never>;
 
 const LATEST_NEWS: TypedDocumentNode<
   GetLatestNewsSubscription,

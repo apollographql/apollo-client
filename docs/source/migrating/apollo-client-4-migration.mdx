@@ -25,14 +25,6 @@ Apollo Client 3.14 introduces a lot of deprecations and warnings that will help 
   - return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
   - added a new `dataState` property that contains information about the state of the `data` property of a return value. This property can be used to narrow down the type of `data`.
   - most types are now colocated within the API that they relate to, so it is much easier to find the right type for the right situation.
-    Some examples:
-    - `FetchResult` is now `ApolloLink.Result`
-    - `ApolloClientOptions` is now `ApolloClient.Options`
-    - `QueryOptions` is now `ApolloClient.QueryOptions`
-    - `ApolloQueryResult` is now `ObservableQuery.Result`
-    - `QueryHookOptions` is now `useQuery.Options`
-    - `QueryResult` is now `useQuery.Result`
-    - `LazyQueryResult` is now `useLazyQuery.Result`
   - some core types like types for `DataMasking` or types representing the that `dataState` narrows down to can now be overwritten.
 - Local State changes
   - The local resolver implementation is now a pluggable `LocalState` class to save on bundle size for everyone who doesn't use it.
@@ -636,7 +628,40 @@ Note that that codemod is a separate package and not maintained by the Apollo Cl
 
 ### Moving types into namespaces
 
-### Removal of `<TContext>` and `TSerialized` generics
+Most types are now colocated within the API that they relate to, so it is much easier to find the right type for the right situation.
+
+Some examples:
+
+- `FetchResult` is now `ApolloLink.Result`
+- `ApolloClientOptions` is now `ApolloClient.Options`
+- `QueryOptions` is now `ApolloClient.QueryOptions`
+- `ApolloQueryResult` is now `ObservableQuery.Result`
+- `QueryHookOptions` is now `useQuery.Options`
+- `QueryResult` is now `useQuery.Result`
+- `LazyQueryResult` is now `useLazyQuery.Result`
+
+These renames should be taken care of by running the codemod, but if you are not using the codemod, most of these types will still be available under their old names, with a deprecation note pointing to the new location.
+
+### Removal of `<TContext>` and `<TCacheShape>` generics
+
+A lot of APIs in Apollo CLient 3 used a manual `TContext` generic to pass the context type around. This was extremely fragile, so these generics have been removed in Apollo Client 4. Instead, stick to overriding the `DefaultContext` type by using module augmentation.
+
+To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext {
+    myProperty?: string;
+    requestId?: number;
+  }
+}
+```
+
+Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, since it added a lot of mential overhead with very little benefits. There is no replacement for this generic.
 
 ## New error handling
 
@@ -952,112 +977,7 @@ This document outlines the key migration points that should be added or expanded
 
 ## Priority 3: Major React Hook Changes
 
-### 7. Type Namespace Changes
-
-**What changed:** Hook types have been moved into namespaces.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { QueryResult, QueryHookOptions, MutationResult } from "@apollo/client";
-
-const options: QueryHookOptions<TData, TVariables> = {
-  /* ... */
-};
-const processResult = (result: QueryResult<TData>) => {
-  /* ... */
-};
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { useQuery, useMutation } from "@apollo/client/react";
-
-const options: useQuery.Options<TData, TVariables> = {
-  /* ... */
-};
-const processResult = (result: useQuery.Result<TData>) => {
-  /* ... */
-};
-```
-
 ## Priority 4: TypeScript and API Changes
-
-### 8. Generic Parameter Removals
-
-**What changed:** `TCacheShape` and `TSerialized` generics removed.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const client = new ApolloClient<NormalizedCacheObject, SerializedType>({
-  cache: new InMemoryCache(),
-});
-
-class CustomCache extends ApolloCache<SerializedType> {
-  extract(): SerializedType {
-    /* ... */
-  }
-}
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-});
-
-// client.extract() returns unknown
-const extracted = client.extract() as MySerializedType;
-
-class CustomCache extends ApolloCache {
-  extract(): MySerializedType {
-    /* ... */
-  }
-}
-```
-
-### 9. TContext Replaced with DefaultContext
-
-**What changed:** `TContext` generic replaced with declaration merging.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-interface MyContext {
-  userId: string;
-}
-
-const link = new ApolloLink((operation, forward) => {
-  const context = operation.getContext() as MyContext;
-  // ...
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-// In a .d.ts file or module
-declare module "@apollo/client" {
-  interface DefaultContext {
-    userId: string;
-  }
-}
-
-// Context is now properly typed everywhere
-const link = new ApolloLink((operation, forward) => {
-  const context = operation.getContext(); // typed as DefaultContext
-  console.log(context.userId); // properly typed
-});
-```
 
 ## Priority 5: Link and Network Changes
 

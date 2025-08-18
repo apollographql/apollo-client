@@ -606,6 +606,10 @@ await mutate({ variables }); // [!code --]
 await client.mutate({ mutation: MY_MUTATION, variables }); // [!code ++]
 ```
 
+### `useQuery`: `notifyOnNetworkStatusChange` option defaults to `true`
+
+The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` instead of `false` in Apollo Client 3.
+
 ### `useQuery`: removal of the deprecated `onCompleted` and `onError` options
 
 The `useQuery` callback options `onCompleted` and `onError` have been removed, as they were easy to accidentally use differently than intended and cause bugs in your application.
@@ -662,6 +666,17 @@ declare module "@apollo/client" {
 ```
 
 Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, since it added a lot of mential overhead with very little benefits. There is no replacement for this generic.
+
+## Changes in tracking of active queries and active observables
+
+In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.
+
+In Apollo Client 4, this behaviour has changed. We only track queries that are currently subscribed to, and once they are unsubscribed from, they are removed from the tracking list.
+This changes the meaning of `active` and `inactive` queries from what they were in Apollo Client 3.
+In Apollo Client 4, a query is only considered `inactive` if it is currently subscribed to, but skipped by setting the `skip` option in a hook,
+passing a `skipToken`, or setting the `fetchPolicy` to `standby`. Other subscribed queries are considered `active`, and any unsubscribed query is not tracked at all.
+
+This changes the behaviour of the `client.getObservableQueries` and `client.refetchQueries` methods, along with the `refetchQueries` option of `client.mutate` and `useMutation`.
 
 ## New error handling
 
@@ -965,55 +980,13 @@ Now, development mode is primarily controlled by the `development` export condit
 
 If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behaviour, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
 
+### `canonizeResults` option removed
+
+The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
+
 <hr />
 
 # From here on it's AI, don't trust it blindly!
-
-# Refined Apollo Client 4.0 Migration Guide Plan
-
-This document outlines the key migration points that should be added or expanded in the migration guide, focusing on practical "before" and "after" examples that developers need when migrating from Apollo Client 3.x to 4.0.
-
-## Priority 1: Critical Breaking Changes
-
-## Priority 3: Major React Hook Changes
-
-## Priority 4: TypeScript and API Changes
-
-## Priority 5: Link and Network Changes
-
-### 11. Observable and Query Lifetime Changes
-
-**What changed:** ObservableQuery behavior with subscriptions and retain.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-// Unsubscribing would terminate the network request
-const subscription = observableQuery.subscribe({
-  next: (result) => {
-    /* ... */
-  },
-});
-subscription.unsubscribe(); // Stops the network request
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-// Use retain() to keep network request running
-const promise = observableQuery.refetch();
-promise.retain(); // Keep running even if unsubscribed
-
-// Or for regular subscriptions - the request continues by default
-const subscription = observableQuery.subscribe({
-  next: (result) => {
-    /* ... */
-  },
-});
-subscription.unsubscribe(); // Request continues unless no other subscribers
-```
 
 ## Priority 6: Testing Utilities
 
@@ -1141,29 +1114,6 @@ class MyCache extends ApolloCache {
     return true; // Your logic here
   }
 }
-```
-
-### 15. canonizeResults Removal
-
-**What changed:** The `canonizeResults` option has been removed.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const cache = new InMemoryCache({
-  canonizeResults: true, // Prone to memory leaks
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-const cache = new InMemoryCache({
-  // canonizeResults option no longer exists
-  // Some referential equality may be lost
-});
 ```
 
 ## Priority 8: SSR Changes

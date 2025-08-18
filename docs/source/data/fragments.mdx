@@ -1553,7 +1553,7 @@ If you are using the [data masking types generated from GraphQL Codegen](#settin
 
 </Note>
 
-By default, Apollo Client uses GraphQL Codegen's [fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#fragment-masking) output and orients its masking utility types around this format. If you aren't using GraphQL Codegen to generate your types, or your types are generated in a different format, the default type implementations built into Apollo Client might be incompatible which results in inaccurate types.
+Apollo Client provides an [integration](#setting-data-masking-types) with GraphQL Codegen's [fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#fragment-masking) output and orients its masking utility types around this format. If you aren't using GraphQL Codegen to generate your types, or your types are generated in a different format, the type implementations built into Apollo Client might be incompatible which results in inaccurate types.
 
 You can use a technique called _higher-kinded types_ (HKT) to provide your own type implementations for Apollo Client's masking types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
 

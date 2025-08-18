@@ -39,6 +39,7 @@ export function handleModuleRename({
   function mergeIntoExistingOrRenameImport() {
     findImportDeclarationFor({ description: rename.from, context }).forEach(
       (sourcePath) => {
+        console.log("found " + sourcePath.node.source.value);
         if (sourcePath.node.source.value == rename.to.module) {
           return; // No change needed.
         }
@@ -47,6 +48,7 @@ export function handleModuleRename({
         let targetImport = findImportDeclarationFor({
           description: rename.to,
           context,
+          exact: true,
         })
           .filter(
             (declaration) =>

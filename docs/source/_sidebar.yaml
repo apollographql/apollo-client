@@ -85,6 +85,8 @@ items:
         href: ./development-testing/developer-tooling
       - label: Using TypeScript
         href: ./development-testing/static-typing
+      - label: GraphQL Codegen
+        href: ./development-testing/graphql-codegen
       - label: Testing React components
         href: ./development-testing/testing
       - label: Schema-driven testing

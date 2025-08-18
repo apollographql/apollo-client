@@ -7,19 +7,19 @@ This article walks you through migrating your application to Apollo Client 4.0 f
 <Note>
 
 If you are migrating from older versions of Apollo Client 3, we generally recommend updating to Apollo Client 3.14 first.
-Apollo Client 3.14 introduces a lot of deprecations and warnings that will help you to prepare your application for a smooth migration to Apollo Client 4.0.
+Apollo Client 3.14 introduces many deprecations and warnings that will help you prepare your application for a smooth migration to Apollo Client 4.0.
 
 </Note>
 
 ## What’s new in 4.0
 
 - Bundling changes
-  - Apollo Client 4.0 now has an `exports` field in it's `package.json` for better ESM support
+  - Apollo Client 4.0 now has an `exports` field in its `package.json` for better ESM support
   - `@apollo/client/core` and `@apollo/client` are now identical and framework-agnostic. React-related exports are now only available in `@apollo/client/react`.
 - Enhanced Error Handling
   - network errors are now handled the same way as GraphQL errors and populate the `error` field of a query result
   - the throwing behaviour between network errors and GraphQL errors has been unified
-  - `ApolloError` has been removed. A number of new error classes has been introduced, and external errors are now passed through as-is without wrapping them, which allows for easier debugging.
+  - `ApolloError` has been removed. A number of new error classes have been introduced, and external errors are now passed through as-is without wrapping them, which enables easier debugging.
 - TypeScript improvements
   - APIs like `client.query` or `useQuery` that accept variables in options will now require the variables to be passed in if any option is non-optional.
   - return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
@@ -31,7 +31,7 @@ Apollo Client 3.14 introduces a lot of deprecations and warnings that will help 
   - Many improvements and bug fixes in the new `LocalState` implementation
 - The `Observable` implementation has been changed to `rxjs`.
 - The incremental delivery implementation has been made pluggable, so in the future we can support multiple different versions of the incremental delivery protocol.
-- For a full list of changes, please see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
+- For a full list of changes, see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
 ## Installation
 
@@ -55,7 +55,7 @@ This codemod consists of the following steps:
 
 - `imports` step:
   - Updates imports that have moved around, e.g. changing `import { useQuery } from '@apollo/client'` to `import { useQuery } from '@apollo/client/react'`.
-  - Updates type references that have moved into namespaces. E.g.
+  - Updates type references that have moved into namespaces. For example:
   ```ts
   import { FetchResult } from "@apollo/client";
   fn<FetchResult>();
@@ -66,7 +66,7 @@ This codemod consists of the following steps:
   fn<ApolloLink.Result>();
   ```
 - `links` step:
-  - In Apollo Client 4, the links have been unified to all be classes. So this step will update your code to use the new class-based links.
+  - In Apollo Client 4, the links have been unified to all be classes. This step updates your code to use the new class-based links.
     For example, it will change:
   ```ts
   import { createHttpLink } from "@apollo/client";
@@ -79,12 +79,12 @@ This codemod consists of the following steps:
   ```
   - The `from`, `split` and `concat` functions should now be used as methods on the `ApolloLink` class, so this step will also update your code to use these static methods.
 - `removals`
-  In Apollo Client 4, a number of exports has been removed for various reasons.
+  In Apollo Client 4, a number of exports have been removed for various reasons.
   This step will move all of those imports to point at `@apollo/client/v4-migration`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
 
 ### Running the codemod
 
-To run the codemod, you can use the command
+To run the codemod, use the following command:
 
 ```sh
 npx @apollo/client-codemod-migrate-3-to-4 src
@@ -113,7 +113,7 @@ npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 
 ## Updating imports
 
-If you used the [Codemod](#applying-the-codemod) to update your imports, you can skip this section.
+If you used the [Codemod](#running-the-codemod) to update your imports, you can skip this section.
 If you did not use the codemod, you will need to manually update your imports to point at the right files.
 
 ### Move from manual CJS/ESM imports to `exports`
@@ -141,7 +141,7 @@ The following entry points have been removed:
 | `@apollo/client/react/parser` | This module was an implementation detail of the render prop components and HOCs. |
 | `@apollo/client/testing/experimental` | This is available as [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library) |
 | `@apollo/client/utilities/globals` | This was an implementation detail and has been removed. Some of the exports are now available in other entry points. |
-| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql now so we don't ship it anymore. |
+| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql and is no longer included. |
 
 The following individual imports have been renamed, moved to new entry points and/or moved into namespaces:
 
@@ -400,20 +400,20 @@ The following individual imports have been renamed, moved to new entry points an
 
 ## Replacing removed exports
 
-If you used the [Codemod](#applying-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/v4-migration`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
+If you used the [Codemod](#running-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/v4-migration`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
 
 For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/v4-migration.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/files/v4-migration.d.ts)
 
 ## Update your ApolloClient creation
 
-Some of the constructor options of `ApolloClient` have changed around in Apollo Client 4. This section will help you update your `ApolloClient` creation code to the new options.
+Some of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section will help you update your `ApolloClient` creation code to the new options.
 
 ### Implicitly create a new `HttpLink`
 
 The shorthand annotation where you could pass `uri`, `headers` or `credentials` directly into the `ApolloClient` constructor has been removed.
 Instead, you now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
 
-Although it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change allows you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
+Although it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change enables you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
 
 ```ts
 import {

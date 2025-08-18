@@ -25,6 +25,8 @@ items:
         href: ./data/fragments
       - label: Mutations
         href: ./data/mutations
+      - label: TypeScript
+        href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
       - label: Subscriptions

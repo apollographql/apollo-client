@@ -492,6 +492,19 @@ const client = new ApolloClient({
 });
 ```
 
+### Change `disableNetworkFetches` to `prioritizeCacheValues`
+
+If you are using the `disableNetworkFetches` option, note that it has been renamed to `prioritizeCacheValues`.
+
+```ts
+const client = new ApolloClient({
+  // ...
+  disableNetworkFetches: ..., // [!code --]
+  prioritizeCacheValues: ..., // [!code ++]
+  // ...
+});
+```
+
 ### Enable incremental delivery (`@defer`)
 
 In Apollo Client 4, you can swap out the incremental delivery protocol implementation.
@@ -557,6 +570,17 @@ declare module "@apollo/client" {
 ```
 
 </Note>
+
+## Core API changes
+
+### New `notifyOnNetworkStatusChange` default value
+
+`notifyOnNetworkStatusChange` for `ObservableQuery` instances created by `client.watchQuery` now defaults to `true` instead of `false`.
+
+### Immediate `loading` status emitted by `ObservableQuery`
+
+When you create an `ObservableQuery` with `client.watchQuery`, unless you explicitly disable `notifyOnNetworkStatusChange`, the first emitted value will now always have `loading: true` if the query is not already in the cache.
+Previously, this initial loading state would have been skipped.
 
 ## For React users
 
@@ -627,6 +651,14 @@ The GraphQL Code Generator team is providing a codemod to help you migrate off o
 Note that that codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend to use a manual codegen configuration over the client preset shown in the video, as the client preset has some overlapping features with Apollo Client that do not play well together. If you choose to go this route, see [our recommended configuration for the GraphQL Code Generator Client Preset](https://www.apollographql.com/docs/deploy-preview/74d89f8b5deec991d04de44f/react/development-testing/static-typing#the-client-preset), but in the long run also consider rolling your own configuration.
 
 </Note>
+
+### New SSR api `prerenderStatic`
+
+A new `prerenderStatic` API has been added to the `@apollo/client/react/ssr` package.
+This API is a replacement for the previous `renderToStringWithData`, `getDataFromTree` and `getMarkupFromTree` APIs, which are now deprecated.
+
+`prerenderStatic` can be used together with the modern [`prerender`](https://react.dev/reference/react-dom/static/prerender) and [`prerenderToNodeStream`](https://react.dev/reference/react-dom/static/prerenderToNodeStream) React APIs, which will enable you to server-side render, even if you are using suspense in your application.
+Note that this is still only a step towards full support for streaming SSR, and you might need one of our [framework integrations](https://github.com/apollographql/apollo-client-integrations) to make full use of streaming SSR.
 
 ## TypeScript changes
 
@@ -956,15 +988,35 @@ Local resolvers are now a part of the `LocalState` class, so you need to pass th
 
 Generally, local resolvers should now behave more consistent and have gained some capabilities **link updated resolver docs here**
 
-## Notable breaking changes
+## Testing-related changes
 
-### Bundling changes
+A lot of utilities that were previously part of the `@apollo/client/utilities` and `@apollo/client/testing` packages have been removed. They were used for internal testing purposes and we are not using them anymore, so we removed them.
 
-#### `exports` field in package.json
+### `MockedProvider` changes
+
+#### default "realistic" `delay`
+
+If no `delay` is specified in mocks, MockLink now default to the `realisticDelay` function, which uses a random delay between 20 and 50ms to ensure tests handle loading states.
+
+If you want to restore the previous behaviour of "no delay", you can set it via
+
+```ts
+MockLink.defaultOptions = {
+  delay: 0,
+};
+```
+
+#### Removed `createMockClient` and `mockSingleLink`
+
+The `createMockClient` and `mockSingleLink` utilities have been removed. Instead, you can now use the `MockLink` class directly to create a mock link and pass it into a new `ApolloClient` instance.
+
+## Bundling changes
+
+### `exports` field in package.json
 
 Apollo Client 4 now uses the `exports` field in its `package.json` to define which files are available for import. This means you should now be able to use `import { ApolloClient } from "@apollo/client"` instead of `import { ApolloClient } from "@apollo/client/index.js"` or `import { ApolloClient } from "@apollo/client/main.cjs"`.
 
-#### New transpilation target, no shipped polyfills
+### New transpilation target, no shipped polyfills
 
 Apollo Client is now transpiled to target a `since 2023, node >= 20, not dead` target. This means that Apollo Client can now use modern JavaScript features without downlevel transpilation, which will generally result in better performance and smaller bundle size.
 We also have stopped the practice of shipping polyfills.
@@ -973,273 +1025,19 @@ Please note that we might bump the transpilation target to more modern targets i
 
 If you are targeting older browsers or special environments, you might need to adjust your build configuration to transpile the Apollo Client library itself to a lower target, or polyfill the missing features yourself.
 
-#### Development mode changes
+### Development mode changes
 
 Previously, you had to set a global `__DEV__` variable to `false` to disable development mode.
 Now, development mode is primarily controlled by the `development` export condition of the `package.json` exports field. Most modern bundlers should now automatically pick correctly between the development and production version of Apollo Client based on your build environment.
 
 If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behaviour, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
 
-### `canonizeResults` option removed
+## Other notable breaking changes
+
+### `InMemoryCache` `canonizeResults` option removed
 
 The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
 
-<hr />
+### New requirements for custom cache implementations
 
-# From here on it's AI, don't trust it blindly!
-
-## Priority 6: Testing Utilities
-
-### 12. MockLink Default Delays
-
-**What changed:** MockLink now has default delays to ensure tests handle loading states.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const mocks = [
-  {
-    request: { query: MY_QUERY },
-    result: {
-      data: {
-        /* ... */
-      },
-    },
-    // No delay by default - immediate response
-  },
-];
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { MockLink, realisticDelay } from "@apollo/client/testing";
-
-// Default uses realisticDelay() (20-50ms)
-const mocks = [
-  {
-    request: { query: MY_QUERY },
-    result: {
-      data: {
-        /* ... */
-      },
-    },
-  },
-];
-
-// To restore old behavior globally:
-MockLink.defaultOptions = {
-  delay: 0,
-};
-
-// Or per-mock:
-const mocks = [
-  {
-    request: { query: MY_QUERY },
-    result: {
-      data: {
-        /* ... */
-      },
-    },
-    delay: 0, // immediate
-  },
-];
-```
-
-### 13. Testing Utility Removals
-
-**What changed:** Several testing utilities have been removed.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { createMockClient, mockSingleLink } from "@apollo/client/testing";
-
-const client = createMockClient(data, query, variables);
-const link = mockSingleLink({
-  request: { query, variables },
-  result: { data },
-});
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { MockLink } from "@apollo/client/testing";
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new MockLink([
-    {
-      request: { query, variables },
-      result: { data },
-    },
-  ]),
-});
-```
-
-## Priority 7: Cache Implementation Changes
-
-### 14. Custom Cache Requirements
-
-**What changed:** Custom caches must implement `fragmentMatches`.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-class MyCache extends ApolloCache {
-  // fragmentMatches was optional
-}
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { InlineFragmentNode, FragmentDefinitionNode } from "graphql";
-
-class MyCache extends ApolloCache {
-  // Now required
-  public fragmentMatches(
-    fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string
-  ): boolean {
-    // Implementation required
-    return true; // Your logic here
-  }
-}
-```
-
-## Priority 8: SSR Changes
-
-### 16. SSR Method Updates
-
-**What changed:** New `prerenderStatic` method replaces deprecated SSR methods.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-import { getDataFromTree, renderToStringWithData } from "@apollo/client/react/ssr";
-
-const html = await renderToStringWithData(<App />);
-// or
-await getDataFromTree(<App />);
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-import { prerenderStatic } from "@apollo/client/react/ssr";
-
-const { html, data } = await prerenderStatic(<App />, {
-  // Works with React 19 prerender APIs
-});
-```
-
-### 17. prioritizeCacheValues Renaming
-
-**What changed:** `disableNetworkFetches` renamed to `prioritizeCacheValues`.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-client.disableNetworkFetches();
-// Queries would be permanently changed to cache-first
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-client.prioritizeCacheValues();
-// Queries keep original fetchPolicy, just prioritize cache temporarily
-```
-
-## Priority 9: Other Notable Changes
-
-### 18. notifyOnNetworkStatusChange Default
-
-**What changed:** `notifyOnNetworkStatusChange` now defaults to `true`.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-// No loading states on refetch by default
-const { data, loading, refetch } = useQuery(QUERY);
-await refetch(); // loading stays false
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-// Loading states on refetch by default
-const { data, loading, refetch } = useQuery(QUERY);
-await refetch(); // loading becomes true
-
-// To restore old behavior globally:
-new ApolloClient({
-  defaultOptions: {
-    watchQuery: {
-      notifyOnNetworkStatusChange: false,
-    },
-  },
-});
-```
-
-### 19. ObservableQuery Registration
-
-**What changed:** ObservableQueries only registered while they have subscribers.
-
-**Before:**
-
-```ts
-// Apollo Client 3.x
-const observableQuery = client.watchQuery({ query });
-// Immediately registered with client
-client.getObservableQueries(); // Map includes this query
-```
-
-**After:**
-
-```ts
-// Apollo Client 4.0
-const observableQuery = client.watchQuery({ query });
-// Not registered yet
-client.getObservableQueries(); // Set is empty
-
-const sub = observableQuery.subscribe({ next: () => {} });
-client.getObservableQueries(); // Set now includes this query
-
-sub.unsubscribe();
-client.getObservableQueries(); // Set is empty again (unless other subscribers)
-```
-
-## Notes on Documentation Approach
-
-1. **Focus on practical migration:** Each section should show concrete before/after code examples
-2. **Group related changes:** Keep related changes together (e.g., all error handling changes)
-3. **Prioritize by impact:** Most common/impactful changes should come first
-4. **Link to detailed docs:** Migration guide should link to full documentation for complex topics
-5. **Avoid duplicating existing sections:** Build upon what's already documented, don't repeat
-
-## Items to Skip/Minimize
-
-Based on the review, these items don't need extensive documentation in the migration guide:
-
-- Minor type name changes (FetchResult → ApolloLink.Result, etc.) unless affecting common usage
-- Bug fixes and implementation details
-- Features that were long-deprecated (3+ years)
-- Internal/experimental APIs that were in `/internal` paths
-- New features that don't affect migration (dataState, DataValue namespaces)
-- Implementation details (RenderPromises removal, parser cache removal)
+Custom cache implementations must now implement the `fragmentMatches` method, which is required for fragment matching in Apollo Client 4.

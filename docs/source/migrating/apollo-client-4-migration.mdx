@@ -35,15 +35,19 @@ Apollo Client 3.14 introduces a lot of deprecations and warnings that will help 
 
 ## Installation
 
-> **WARNING:** Apollo Client 4.0 is a major-version release that includes **breaking changes**. If you are updating an existing application to use Apollo Client 4.0, please see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md) for details about these changes.
+<Caution>
 
-Install Apollo Client 4 along with it's peer dependencies with the following command:
+Apollo Client 4.0 is a major-version release that includes breaking changes. If you are updating an existing application to use Apollo Client 4.0, see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md) for details about these changes.
+
+</Caution>
+
+Install Apollo Client 4 along with its peer dependencies with the following command:
 
 ```
 npm install @apollo/client graphql rxjs
 ```
 
-## Applying the Codemod
+## Codemod
 
 To ease the migration process, we have created a codemod that will automatically update your codebase to use the new imports and APIs in Apollo Client 4.
 
@@ -78,7 +82,7 @@ This codemod consists of the following steps:
   In Apollo Client 4, a number of exports has been removed for various reasons.
   This step will move all of those imports to point at `@apollo/client/v4-migration`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
 
-### Runing the Codemod
+### Running the codemod
 
 To run the codemod, you can use the command
 
@@ -406,10 +410,10 @@ Some of the constructor options of `ApolloClient` have changed around in Apollo 
 
 ### Implicitly create a new `HttpLink`
 
-The shorthand annotation where you could pass `uri`, `headers` or `credential` directly into the `ApolloClient` constructor has been removed.
+The shorthand annotation where you could pass `uri`, `headers` or `credentials` directly into the `ApolloClient` constructor has been removed.
 Instead, you now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
 
-While it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change allows you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
+Although it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change allows you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
 
 ```ts
 import {
@@ -587,7 +591,7 @@ Previously, this initial loading state would have been skipped.
 One of Apollo Client 4's focus points is to be more opinionated about how to use Apollo Client.
 A big part of that is to ensure that the React hooks are more straightforward to use, for a very specific use case.
 We believe that hooks should be used to synchronize data with your component, and not trigger side effects that won't synchronize with your component.
-As a result, in some previous use cases, we now recommend to use the core APIs of Apollo Client directly where synchronization with a component is not indented.
+As a result, in some previous use cases, we now recommend to use the core APIs of Apollo Client directly where synchronization with a component is not intended.
 
 As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
 
@@ -616,7 +620,7 @@ As a result, some major changes have been made:
 - if a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.
   This means that you can no longer have multiple queries in flight at the same time with `useLazyQuery`.
   To indicate that you are still interested in a query finishing even if it will not reflect in your component UI, you can call `.retain()` on the promise returned by the `execute` function.
-  That said, this is usually a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchroniziing the result with your component - in that case, you should not use a hook at all, but rather call `client.query` directly.
+  That said, this is usually a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component - in that case, you should not use a hook at all, but instead call `client.query` directly.
 
 ### changes to `useMutation`
 
@@ -638,7 +642,7 @@ The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` in
 
 The `useQuery` callback options `onCompleted` and `onError` have been removed, as they were easy to accidentally use differently than intended and cause bugs in your application.
 
-You can read up more on this decision and recommendations on what to do instead in [this GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
+You can read up more on this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
 ### (optional, but recommended) Stop using generated hooks
 
@@ -680,7 +684,7 @@ These renames should be taken care of by running the codemod, but if you are not
 
 ### Removal of `<TContext>` and `<TCacheShape>` generics
 
-A lot of APIs in Apollo CLient 3 used a manual `TContext` generic to pass the context type around. This was extremely fragile, so these generics have been removed in Apollo Client 4. Instead, stick to overriding the `DefaultContext` type by using module augmentation.
+Many APIs in Apollo Client 3 used a manual `TContext` generic to pass the context type around. This was extremely fragile, so these generics have been removed in Apollo Client 4. Instead, override the `DefaultContext` type by using module augmentation.
 
 To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
 
@@ -697,7 +701,7 @@ declare module "@apollo/client" {
 }
 ```
 
-Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, since it added a lot of mential overhead with very little benefits. There is no replacement for this generic.
+Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, because it added a lot of mental overhead with very little benefit. There is no replacement for this generic.
 
 ## Changes in tracking of active queries and active observables
 
@@ -759,7 +763,7 @@ function ShowingSomeErrors() {
 We have two key observations here:
 
 - `error` was previously always guaranteed to be an `ApolloError` instance, so we could access `error.graphQLErrors` directly.
-- `errorPolicy` was only applied to GraphQL errors, so if a network error occured, that would be `throw`n and needed to be handled outside of the component.
+- `errorPolicy` was only applied to GraphQL errors, so if a network error occurred, that would be `throw`n and needed to be handled outside of the component.
 
 The same snippet with Apollo Client 4 would look like this:
 
@@ -986,7 +990,7 @@ If you fail to do so, during development an error will be thrown, and in product
 
 Local resolvers are now a part of the `LocalState` class, so you need to pass them to the `LocalState` constructor instead of the `ApolloClient` constructor.
 
-Generally, local resolvers should now behave more consistent and have gained some capabilities **link updated resolver docs here**
+Generally, local resolvers should now behave more consistently and have gained some capabilities **link updated resolver docs here**
 
 ## Testing-related changes
 

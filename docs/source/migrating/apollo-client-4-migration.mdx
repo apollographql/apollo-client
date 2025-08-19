@@ -72,8 +72,8 @@ This codemod runs modifications in the following order:
 Updates imports that have moved around
 
 ```ts disableCopy=true
-import { useQuery } from "@apollo/client"; // [!code --]
-import { useQuery } from "@apollo/client/react"; // [!code ++]
+import { useQuery } from "@apollo/client";// [!code --]
+import { useQuery } from "@apollo/client/react";// [!code ++]
 ```
 
 </li><li>
@@ -81,11 +81,11 @@ import { useQuery } from "@apollo/client/react"; // [!code ++]
 Updates type references that have moved into namespaces.
 
 ```ts disableCopy=true
-import { FetchResult } from "@apollo/client"; // [!code --]
-import { ApolloLink } from "@apollo/client"; // [!code ++]
+import { FetchResult } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
 // ...
-fn<FetchResult>(); // [!code --]
-fn<ApolloLink.Result>(); // [!code ++]
+fn<FetchResult>();// [!code --]
+fn<ApolloLink.Result>();// [!code ++]
 ```
 
 </li></ul>
@@ -98,11 +98,11 @@ fn<ApolloLink.Result>(); // [!code ++]
 Updates the usage of Apollo-provided links to their associated class implementation.
 
 ```ts disableCopy=true
-import { createHttpLink } from "@apollo/client"; // [!code --]
-import { HttpLink } from "@apollo/client/link/http"; // [!code ++]
+import { createHttpLink } from "@apollo/client";// [!code --]
+import { HttpLink } from "@apollo/client/link/http";// [!code ++]
 // ...
-const link = createHttpLink({ uri: "https://example.com/graphql" }); // [!code --]
-const link = new HttpLink({ uri: "https://example.com/graphql" }); // [!code ++]
+const link = createHttpLink({ uri: "https://example.com/graphql" });// [!code --]
+const link = new HttpLink({ uri: "https://example.com/graphql" });// [!code ++]
 ```
 
 </li><li>
@@ -110,11 +110,11 @@ const link = new HttpLink({ uri: "https://example.com/graphql" }); // [!code ++]
 Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
 
 ```ts disableCopy=true
-import { from } from "@apollo/client"; // [!code --]
-import { ApolloLink } from "@apollo/client"; // [!code ++]
+import { from } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
 // ...
-const link = from([a, b, c]); // [!code --]
-const link = ApolloLink.from([a, b, c]); // [!code ++]
+const link = from([a, b, c]);// [!code --]
+const link = ApolloLink.from([a, b, c]);// [!code ++]
 ```
 
 </li></ul>
@@ -127,8 +127,8 @@ const link = ApolloLink.from([a, b, c]); // [!code ++]
 Updates exports removed from Apollo Client to a special `@apollo/client/v4-migration` entrypoint. This is a type-only entrypoint that contains doc blocks with migration instructions for each removed item.
 
 ```ts disableCopy=true
-import { Concast } from "@apollo/client"; // [!code --]
-import { Concast } from "@apollo/client/v4-migration"; // [!code ++]
+import { Concast } from "@apollo/client";// [!code --]
+import { Concast } from "@apollo/client/v4-migration";// [!code ++]
 ```
 
 </li></ul>
@@ -517,15 +517,15 @@ The `uri`, `headers`, and `credentials` options used to implicitly create an `Ht
 import {
   ApolloClient,
   InMemoryCache,
-  HttpLink, // [!code ++]
+  HttpLink,// [!code ++]
 } from "@apollo/client/core";
 const client = new ApolloClient({
   // ...
-  link: new HttpLink({ // [!code ++]
+  link: new HttpLink({// [!code ++]
     uri: "https://example.com/graphql",
     credentials: "include",
     headers: { "x-custom-header": "value" },
-  }), // [!code ++]
+  }),// [!code ++]
   // ...
 });
 ```
@@ -539,10 +539,10 @@ The `name` and `version` options, which are a part of the client awareness featu
 ```ts
 const client = new ApolloClient({
   // ...
-  clientAwareness: { // [!code ++]
+  clientAwareness: {// [!code ++]
     name: "My Apollo Client App",
     version: "1.0.0",
-  }, // [!code ++]
+  },// [!code ++]
   // ...
 });
 ```
@@ -563,11 +563,11 @@ When using `@client` fields, you now need to create a new `LocalState` instance 
 import {
   ApolloClient,
   InMemoryCache,
-  LocalState, // [!code ++]
+  LocalState,// [!code ++]
 } from "@apollo/client/core";
 const client = new ApolloClient({
   // ...
-  localState: new LocalState(), // [!code ++]
+  localState: new LocalState(),// [!code ++]
   // ...
 });
 ```
@@ -578,17 +578,17 @@ Additionally, if you are using local resolvers with the `resolvers` option, you 
 import {
   ApolloClient,
   InMemoryCache,
-  LocalState, // [!code ++]
+  LocalState,// [!code ++]
 } from "@apollo/client/core";
 const client = new ApolloClient({
   // ...
-  localState: new LocalState({ // [!code ++]
+  localState: new LocalState({// [!code ++]
     resolvers: {
       Query: {
         myField: () => "Hello World",
       },
     },
-  }), // [!code ++]
+  }),// [!code ++]
   // ...
 });
 ```
@@ -602,8 +602,8 @@ The `connectToDevTools` option has been replaced with a new `devtools` option th
 ```ts disableCopy=true
 const client = new ApolloClient({
   // ...
-  connectToDevTools: true, // [!code --]
-  devtools: { enabled: true }, // [!code ++]
+  connectToDevTools: true,// [!code --]
+  devtools: { enabled: true },// [!code ++]
   // ...
 });
 ```
@@ -628,10 +628,10 @@ The incremental delivery protocol implementation is now configurable and require
 Since Apollo Client 3 only supported an older version of the specification, initialize an instance of `Defer20220824Handler` and provide it as the `incrementalHandler` option.
 
 ```ts
-import { Defer20220824Handler } from "@apollo/client/incremental"; // [!code ++]
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code ++]
 const client = new ApolloClient({
   // ...
-  incrementalHandler: new Defer20220824Handler(), // [!code ++]
+  incrementalHandler: new Defer20220824Handler(),// [!code ++]
   // ...
 });
 ```
@@ -641,10 +641,10 @@ To provide accurate TypeScript types, you will also need tell Apollo Client to u
 Create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
 
 ```ts title="apollo-client.d.ts
-import { Defer20220824Handler } from "@apollo/client/incremental"; // [!code highlight]
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code highlight]
 
 declare module "@apollo/client" {
-  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {} // [!code highlight]
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}// [!code highlight]
 }
 ```
 
@@ -661,10 +661,10 @@ In Apollo Client 4, the data masking types are now pluggable to allow for more f
 To configure the data masking types to be the same as they were in Apollo Client 3, create a `.d.ts` file in your project with the following content:
 
 ```ts title="apollo-client.d.ts
-import { GraphQLCodegenDataMasking } from "@apollo/client/masking"; // [!code highlight]
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code highlight]
 
 declare module "@apollo/client" {
-  export interface TypeOverrides // [!code highlight:2]
+  export interface TypeOverrides// [!code highlight:2]
     extends GraphQLCodegenDataMasking.TypeOverrides {}
 }
 ```
@@ -675,11 +675,11 @@ You can always combine multiple `TypeOverrides` of different kinds, so you can a
 
 ```ts title="apollo-client.d.ts disableCopy=true
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import { GraphQLCodegenDataMasking } from "@apollo/client/masking"; // [!code ++]
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code ++]
 
 declare module "@apollo/client" {
-  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {} // [!code --]
-  export interface TypeOverrides // [!code ++:3]
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}// [!code --]
+  export interface TypeOverrides// [!code ++:3]
     extends Defer20220824Handler.TypeOverrides,
       GraphQLCodegenDataMasking.TypeOverrides {}
 }
@@ -708,11 +708,11 @@ As a result, in some previous use cases, we now recommend to use the core APIs o
 As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
 
 ```ts disableCopy=true
-const [execute] = useLazyQuery(MY_QUERY); // [!code --]
-const client = useApolloClient(); // [!code ++]
+const [execute] = useLazyQuery(MY_QUERY);// [!code --]
+const client = useApolloClient();// [!code ++]
 // ...
-await execute({ variables }); // [!code --]
-await client.query({ query: MY_QUERY, variables }); // [!code ++]
+await execute({ variables });// [!code --]
+await client.query({ query: MY_QUERY, variables });// [!code ++]
 ```
 
 ### changes to `useLazyQuery`
@@ -739,11 +739,11 @@ As a result, some major changes have been made:
 - The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, you should use `client.mutate` directly instead of using a hook.
 
 ```ts disableCopy=true
-const [mutate] = useMutation(MY_MUTATION); // [!code --]
-const client = useApolloClient(); // [!code ++]
+const [mutate] = useMutation(MY_MUTATION);// [!code --]
+const client = useApolloClient();// [!code ++]
 // ...
-await mutate({ variables }); // [!code --]
-await client.mutate({ mutation: MY_MUTATION, variables }); // [!code ++]
+await mutate({ variables });// [!code --]
+await client.mutate({ mutation: MY_MUTATION, variables });// [!code ++]
 ```
 
 ### `useQuery`: `notifyOnNetworkStatusChange` option defaults to `true`
@@ -881,19 +881,19 @@ The same snippet with Apollo Client 4 would look like this:
 
 ```tsx title="error handling with useQuery in Apollo Client 4"
 import { useQuery } from "@apollo/client/react";
-import { CombinedGraphQLErrors } from "@apollo/client"; // [!code highlight]
+import { CombinedGraphQLErrors } from "@apollo/client";// [!code highlight]
 
 function ShowingSomeErrors() {
   const { loading, error, data } = useQuery(MY_QUERY);
 
-  if (CombinedGraphQLErrors.is(error)) { // [!code highlight]
+  if (CombinedGraphQLErrors.is(error)) {// [!code highlight]
     return (
       <div>
         <h2>Error</h2>
         <pre>{error.errors.map(({ message }) => message).join(", ")}</pre>{/*[!code highlight]*/}
       </div>
     );
-  } else if (error) { // [!code highlight:9]
+  } else if (error) {// [!code highlight:9]
     // Handle non-GraphQL errors here
     return (
       <div>
@@ -974,11 +974,11 @@ This aligns this API with the `Array.from` and `Array.prototype.concat` methods,
 
 ```ts disableCopy=true
 import { ApolloLink } from "@apollo/client/link";
-ApolloLink.concat(firstLink, secondLink); // [!code --]
-ApolloLink.from([firstLink, secondLink]); // [!code ++]
+ApolloLink.concat(firstLink, secondLink);// [!code --]
+ApolloLink.from([firstLink, secondLink]);// [!code ++]
 
-link1.concat(link2).concat(link3); // [!code --]
-link1.concat(link2, link3); // [!code ++]
+link1.concat(link2).concat(link3);// [!code --]
+link1.concat(link2, link3);// [!code ++]
 ```
 
 ### `ApolloLink` `from,concat,split` static and instance methods now require `ApolloLink` instances
@@ -988,10 +988,10 @@ Now, they only accept `ApolloLink` instances.
 
 ```ts disableCopy=true
 ApolloLink.from(
-  (operation, forward) => { // [!code --:3]
+  (operation, forward) => {// [!code --:3]
     /*...*/
   },
-  new ApolloLink((operation, forward) => { // [!code ++:3]
+  new ApolloLink((operation, forward) => {// [!code ++:3]
     /*...*/
   }),
   nextLink
@@ -1007,12 +1007,12 @@ For external error types like `TypeError`, use `instanceof` or the more modern [
 
 ```ts disableCopy=true
 import {
-  onError, // [!code --]
-  ErrorLink, // [!code ++]
+  onError,// [!code --]
+  ErrorLink,// [!code ++]
 } from "@apollo/client/link/error";
-import { CombinedGraphQLErrors, ServerError } from "@apollo/client"; // [!code ++]
+import { CombinedGraphQLErrors, ServerError } from "@apollo/client";// [!code ++]
 
-const errorLink = onError( // [!code --:12]
+const errorLink = onError(// [!code --:12]
   ({ graphQLErrors, networkError, protocolErrors, response }) => {
     if (graphQLErrors) {
       graphQLErrors.forEach(({ message }) =>
@@ -1024,7 +1024,7 @@ const errorLink = onError( // [!code --:12]
     }
   }
 );
-const errorLink = new ErrorLink(({ error, result }) => { // [!code ++:11]
+const errorLink = new ErrorLink(({ error, result }) => {// [!code ++:11]
   if (CombinedGraphQLErrors.is(error)) {
     error.errors.forEach(({ message }) =>
       console.log(`GraphQL error: ${message}`)
@@ -1079,14 +1079,14 @@ If you were previously using the `map`, `filter`, `reduce`, `flatMap` or `concat
 Additionally, if you were using `Obervable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
 
 ```ts disableCopy=true
-import { of, from, map } from "rxjs"; // [!code ++]
+import { of, from, map } from "rxjs";// [!code ++]
 
-Observable.of(1, 2, 3); // [!code --]
-of(1, 2, 3); // [!code ++]
-Observable.from([1, 2, 3]); // [!code --]
-from([1, 2, 3]); // [!code ++]
-observable.map((x) => x * 2); // [!code --]
-observable.pipe(map((x) => x * 2)); // [!code ++]
+Observable.of(1, 2, 3);// [!code --]
+of(1, 2, 3);// [!code ++]
+Observable.from([1, 2, 3]);// [!code --]
+from([1, 2, 3]);// [!code ++]
+observable.map((x) => x * 2);// [!code --]
+observable.pipe(map((x) => x * 2));// [!code ++]
 ```
 
 A good way to find the operator you need is to follow the [rxjs operator decision tree](https://rxjs.dev/operator-decision-tree).

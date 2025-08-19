@@ -86,12 +86,8 @@ function handleCodeBlockWithSpecialComments(node, path, options) {
         insertPos--;
       }
 
-      // Move comment one space in, except if it's a JSX comment - in that case
-      // the space would format differently on re-formatting in the future.
-      const sep = stringResult[commentMatch.index] === "{" ? "" : " ";
       stringResult =
         stringResult.substring(0, insertPos + 1) +
-        sep +
         stringResult.substring(commentMatch.index);
     }
 

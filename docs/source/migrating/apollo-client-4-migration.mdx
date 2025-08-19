@@ -198,30 +198,32 @@ Your bundler is aware of the different module formats and uses the `exports` fie
 <summary><h3 style="display:inline">List of all changed imports</h3><br/>(click to expand)</summary>
 
 The following entry points have been renamed:
-| Previous entry point | New entry point |
-| --------------------- | -------------------- |
-| `@apollo/client/core` | `@apollo/client` |
-| `@apollo/client/link/core` | `@apollo/client/link` |
-| `@apollo/client/react/context` | `@apollo/client/react` |
-| `@apollo/client/react/hooks` | `@apollo/client/react` |
-| `@apollo/client/testing/core` | `@apollo/client/testing` |
+
+| Previous entry point           | New entry point          |
+| ------------------------------ | ------------------------ |
+| `@apollo/client/core`          | `@apollo/client`         |
+| `@apollo/client/link/core`     | `@apollo/client/link`    |
+| `@apollo/client/react/context` | `@apollo/client/react`   |
+| `@apollo/client/react/hooks`   | `@apollo/client/react`   |
+| `@apollo/client/testing/core`  | `@apollo/client/testing` |
 
 The following entry points have been removed:
-| Previous entry point | Reason |
-| --------------------- | -------------------- |
-| `@apollo/client/react/components` | The render prop components were already deprecated in Apollo Client 3.x and have been removed in 4. |
-| `@apollo/client/react/hoc` | The higher order components were already deprecated in Apollo Client 3.x and have been removed in 4. |
-| `@apollo/client/react/parser` | This module was an implementation detail of the render prop components and HOCs. |
-| `@apollo/client/testing/experimental` | This is available as [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library) |
-| `@apollo/client/utilities/globals` | This was an implementation detail and has been removed. Some of the exports are now available in other entry points. |
-| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql and is no longer included. |
+
+| Previous entry point                          | Reason                                                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `@apollo/client/react/components`             | The render prop components were already deprecated in Apollo Client 3.x and have been removed in 4.                  |
+| `@apollo/client/react/hoc`                    | The higher order components were already deprecated in Apollo Client 3.x and have been removed in 4.                 |
+| `@apollo/client/react/parser`                 | This module was an implementation detail of the render prop components and HOCs.                                     |
+| `@apollo/client/testing/experimental`         | This is available as [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library)     |
+| `@apollo/client/utilities/globals`            | This was an implementation detail and has been removed. Some of the exports are now available in other entry points. |
+| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql and is no longer included.                                                        |
 
 The following individual imports have been renamed, moved to new entry points and/or moved into namespaces:
 
 <table>
 <thead>
 <tr><th>Previous entry point</th><th>New entry point</th></tr>
-<tr><td>previous import name</td><td>new import name</td></tr>
+<tr><td>Previous import name</td><td>New import name</td></tr>
 </thead>
 <tbody>
 <tr><th>`@apollo/client`</th><th>(unchanged)</th></tr>
@@ -238,6 +240,7 @@ The following individual imports have been renamed, moved to new entry points an
 <tr><td>`ApolloQueryResult`</td><td>`ObservableQuery.Result`</td></tr>
 <tr><td>`FetchMoreOptions`</td><td>`ObservableQuery.FetchMoreOptions`</td></tr>
 <tr><td>`SubscribeToMoreOptions`</td><td>`ObservableQuery.SubscribeToMoreOptions`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client`</th><th>`@apollo/client/react`</th></tr>
 <tr><td>`ApolloProvider`</td><td>(unchanged)</td></tr>
 <tr><td>`createQueryPreloader`</td><td>(unchanged)</td></tr>
@@ -303,42 +306,56 @@ The following individual imports have been renamed, moved to new entry points an
 <tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
 <tr><td>`UseSuspenseQueryResult`</td><td>`useSuspenseQuery.Result`</td></tr>
 <tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/cache`</th><th>(unchanged)</th></tr>
 <tr><td>`WatchFragmentOptions`</td><td>`ApolloCache.WatchFragmentOptions`</td></tr>
 <tr><td>`WatchFragmentResult`</td><td>`ApolloCache.WatchFragmentResult`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link`</th><th>`@apollo/client/incremental`</th></tr>
 <tr><td>`ExecutionPatchIncrementalResult`</td><td>`Defer20220824Handler.SubsequentResult`</td></tr>
 <tr><td>`ExecutionPatchInitialResult`</td><td>`Defer20220824Handler.InitialResult`</td></tr>
 <tr><td>`ExecutionPatchResult`</td><td>`Defer20220824Handler.Chunk`</td></tr>
 <tr><td>`IncrementalPayload`</td><td>`Defer20220824Handler.IncrementalDeferPayload`</td></tr>
 <tr><td>`Path`</td><td>`Incremental.Path`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link`</th><th>(unchanged)</th></tr>
 <tr><td>`FetchResult`</td><td>`ApolloLink.Result`</td></tr>
 <tr><td>`GraphQLRequest`</td><td>`ApolloLink.Request`</td></tr>
 <tr><td>`NextLink`</td><td>`ApolloLink.ForwardFunction`</td></tr>
 <tr><td>`Operation`</td><td>`ApolloLink.Operation`</td></tr>
 <tr><td>`RequestHandler`</td><td>`ApolloLink.RequestHandler`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link`</th><th>`graphql`</th></tr>
 <tr><td>`SingleExecutionResult`</td><td>`FormattedExecutionResult`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/batch`</th><th>(unchanged)</th></tr>
 <tr><td>`BatchHandler`</td><td>`BatchLink.BatchHandler`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/context`</th><th>(unchanged)</th></tr>
 <tr><td>`ContextSetter`</td><td>`SetContextLink.LegacyContextSetter`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/error`</th><th>(unchanged)</th></tr>
 <tr><td>`ErrorHandler`</td><td>`ErrorLink.ErrorHandler`</td></tr>
 <tr><td>`ErrorResponse`</td><td>`ErrorLink.ErrorHandlerOptions`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/http`</th><th>`@apollo/client/errors`</th></tr>
 <tr><td>`ServerParseError`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/persisted-queries`</th><th>(unchanged)</th></tr>
 <tr><td>`ErrorResponse`</td><td>`PersistedQueryLink.DisableFunctionOptions`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/remove-typename`</th><th>(unchanged)</th></tr>
 <tr><td>`RemoveTypenameFromVariablesOptions`</td><td>`RemoveTypenameFromVariablesLink.Options`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/utils`</th><th>`@apollo/client/errors`</th></tr>
 <tr><td>`ServerError`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/link/ws`</th><th>(unchanged)</th></tr>
 <tr><td>`WebSocketParams`</td><td>`WebSocketLink.Configuration`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/react`</th><th>`@apollo/client`</th></tr>
 <tr><td>`Context`</td><td>`DefaultContext`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/react`</th><th>(unchanged)</th></tr>
 <tr><td>`QueryReference`</td><td>`QueryRef`</td></tr>
 <tr><td>`ApolloProviderProps`</td><td>`ApolloProvider.Props`</td></tr>
@@ -377,20 +394,25 @@ The following individual imports have been renamed, moved to new entry points an
 <tr><td>`UseReadQueryResult`</td><td>`useReadQuery.Result`</td></tr>
 <tr><td>`UseSuspenseFragmentOptions`</td><td>`useSuspenseFragment.Options`</td></tr>
 <tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/react`</th><th>`@apollo/client/utilities/internal`</th></tr>
 <tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
 <tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/react/internal`</th><th>`@apollo/client/react`</th></tr>
 <tr><td>`PreloadedQueryRef`</td><td>(unchanged)</td></tr>
 <tr><td>`QueryRef`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/testing`</th><th>(unchanged)</th></tr>
 <tr><td>`MockedRequest`</td><td>`MockLink.MockedRequest`</td></tr>
 <tr><td>`MockedResponse`</td><td>`MockLink.MockedResponse`</td></tr>
 <tr><td>`MockLinkOptions`</td><td>`MockLink.Options`</td></tr>
 <tr><td>`ResultFunction`</td><td>`MockLink.ResultFunction`</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/testing`</th><th>`@apollo/client/testing/react`</th></tr>
 <tr><td>`MockedProvider`</td><td>(unchanged)</td></tr>
 <tr><td>`MockedProviderProps`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/utilities`</th><th>`@apollo/client/utilities/internal`</th></tr>
 <tr><td>`argumentsObjectFromField`</td><td>(unchanged)</td></tr>
 <tr><td>`AutoCleanedStrongCache`</td><td>(unchanged)</td></tr>
@@ -456,12 +478,15 @@ The following individual imports have been renamed, moved to new entry points an
 <tr><td>`RejectedPromise`</td><td>(unchanged)</td></tr>
 <tr><td>`RemoveIndexSignature`</td><td>(unchanged)</td></tr>
 <tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/environment`</th></tr>
 <tr><td>`DEV`</td><td>`__DEV__`</td></tr>
 <tr><td>`__DEV__`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/internal/globals`</th></tr>
 <tr><td>`global`</td><td>(unchanged)</td></tr>
 <tr><td>`maybe`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
 <tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/invariant`</th></tr>
 <tr><td>`invariant`</td><td>(unchanged)</td></tr>
 <tr><td>`InvariantError`</td><td>(unchanged)</td></tr>

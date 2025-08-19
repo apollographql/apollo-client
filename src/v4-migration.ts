@@ -5,77 +5,6 @@
  * docblocks will explain the removal and suggest alternatives.
  */
 
-export declare namespace Removals {
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   */
-  export type removedValue = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   */
-  export type removedType = never;
-  /**
-   * @deprecated All higher-order components (HOCs) have been removed from Apollo Client 4.0 and are no longer available.
-   * Use the hooks exported from the `@apollo/client/react` package instead.
-   */
-  export type HOC = never;
-  /**
-   * @deprecated All render prop components have been removed from Apollo Client 4.0 and are no longer available.
-   * Use the hooks exported from the `@apollo/client/react` package instead.
-   */
-  export type renderProp = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * Error handling has been overhauled as a whole.
-   */
-  export type errors = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * The Observable implementation of Apollo Client has been moved from `zen-observable` to `rxjs`.
-   */
-  export type rxjs = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * This export was an implementation detail of \{\{of\}\} and is no longer available.
-   */
-  export type implementationDetail = never;
-  /**
-   * @deprecated The utility `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * It was an implementation detail that is no longer necessary and has been removed without replacement.
-   */
-  export type utility = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * The testing utilities have moved into their own package, [\@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library).
-   */
-  export type testingLibrary = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * This export is considered internal and is no longer exposed.
-   */
-  export type internal = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * This was an internal testing utility that was not meant for public use.
-   * It has been removed without replacement.
-   */
-  export type internalTesting = never;
-  /**
-   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
-   *
-   * This export was part of a specific `\@defer` protocol implementation.
-   * These implementations are now pluggable, so this export might not be relevant for all protocol specifications.
-   */
-  export type defer = never;
-}
-
 /**
  * {@inheritDoc @apollo/client/v4-migration!Removals.HOC:type }
  */
@@ -755,3 +684,74 @@ export type VariableValue = never;
  * {@inheritDoc @apollo/client/v4-migration!Removals.HOC:type }
  */
 export type WithApolloClient = never;
+
+export declare namespace Removals {
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   */
+  export type removedValue = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   */
+  export type removedType = never;
+  /**
+   * @deprecated All higher-order components (HOCs) have been removed from Apollo Client 4.0 and are no longer available.
+   * Use the hooks exported from the `@apollo/client/react` package instead.
+   */
+  export type HOC = never;
+  /**
+   * @deprecated All render prop components have been removed from Apollo Client 4.0 and are no longer available.
+   * Use the hooks exported from the `@apollo/client/react` package instead.
+   */
+  export type renderProp = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * Error handling has been overhauled as a whole.
+   */
+  export type errors = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * The Observable implementation of Apollo Client has been moved from `zen-observable` to `rxjs`.
+   */
+  export type rxjs = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export was an implementation detail of \{\{of\}\} and is no longer available.
+   */
+  export type implementationDetail = never;
+  /**
+   * @deprecated The utility `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * It was an implementation detail that is no longer necessary and has been removed without replacement.
+   */
+  export type utility = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * The testing utilities have moved into their own package, [\@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library).
+   */
+  export type testingLibrary = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export is considered internal and is no longer exposed.
+   */
+  export type internal = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This was an internal testing utility that was not meant for public use.
+   * It has been removed without replacement.
+   */
+  export type internalTesting = never;
+  /**
+   * @deprecated The export `{{name}}` has been removed from Apollo Client 4.0.
+   *
+   * This export was part of a specific `\@defer` protocol implementation.
+   * These implementations are now pluggable, so this export might not be relevant for all protocol specifications.
+   */
+  export type defer = never;
+}

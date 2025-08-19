@@ -47,6 +47,7 @@ export function handleModuleRename({
         let targetImport = findImportDeclarationFor({
           description: rename.to,
           context,
+          exact: true,
         })
           .filter(
             (declaration) =>

@@ -4,6 +4,8 @@ import type * as j from "jscodeshift/src/core.js";
 import type { IdentifierRename } from "../renames.js";
 import type { ImportKind, UtilContext } from "../types.js";
 
+import { entryPointAliases } from "./entryPointAliases.js";
+
 const typeImportsFirst = (
   a: j.ASTPath<namedTypes.ImportDeclaration>,
   b: j.ASTPath<namedTypes.ImportDeclaration>
@@ -16,6 +18,7 @@ export function findImportDeclarationFor({
   description,
   compatibleWith = "type",
   context: { j, source },
+  exact = false,
 }: {
   description: Pick<
     IdentifierRename["from"] & IdentifierRename["to"],
@@ -23,6 +26,7 @@ export function findImportDeclarationFor({
   >;
   compatibleWith?: ImportKind;
   context: UtilContext;
+  exact?: boolean;
 }): j.Collection<namedTypes.ImportDeclaration> {
   const test = (node: namedTypes.ImportDeclaration) => {
     const isValidImportKind =
@@ -48,12 +52,18 @@ export function findImportDeclarationFor({
     )
     .paths()
     .sort(typeImportsFirst);
-  return j(perfectMatch.concat(...alternativeMatches));
-  /**
-   * {
-   * const moduleMatches =
-   * description.module == "" + node.source.value ||
-   * description.alternativeModules?.includes("" + node.source.value) ||
-   * false;
-   */
+  const fallback =
+    entryPointAliases[description.module as keyof typeof entryPointAliases];
+  const fallbackMatches =
+    exact ?
+      []
+    : source
+        .find(
+          j.ImportDeclaration,
+          (node) =>
+            (test(node) && fallback?.includes("" + node.source.value)) || false
+        )
+        .paths()
+        .sort(typeImportsFirst);
+  return j(perfectMatch.concat(...alternativeMatches, ...fallbackMatches));
 }

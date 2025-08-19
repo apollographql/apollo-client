@@ -5,6 +5,47 @@ description: Receive query response data incrementally
 
 The [`@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md) enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
+## Prerequisites
+
+To use `@defer` with Apollo Client, you need to configure an incremental delivery format handler using the format you want to use.
+
+<Note>
+
+The incremental delivery format used by `@defer` has not yet been standardized. There have been multiple proposals and varying implementations in the `graphql` package. Apollo Client does not default to a specific format for this reason.
+
+</Note>
+
+### Available handlers
+
+Apollo Client provides the following incremental delivery handlers that are all exported from `@apollo/client/incremental`:
+
+- `NotImplementedHandler` (default) - Throws when `@defer` is detected
+- `Defer20220824Handler` - Implements the `@defer` transport format that ships with [Apollo Router](https://www.apollographql.com/docs/graphos/routing/operations/defer)
+- `GraphQL17Alpha2Handler` - Implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
+
+<Note>
+
+`Defer20220824Handler` and `GraphQL17Alpha2Handler` are aliases for the same delivery format and can be used interchangeably.
+
+</Note>
+
+### Configuration example
+
+To enable `@defer` support, configure your Apollo Client instance with an incremental handler:
+
+```ts
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { Defer20220824Handler } from "@apollo/client/incremental";
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
+  incrementalHandler: new Defer20220824Handler(),
+});
+```
+
+Without configuring an incremental handler, using the `@defer` directive results in an error.
+
 <Note>
 
 For a query to defer fields successfully, the queried endpoint must _also_ support the `@defer` directive. Entity-based `@defer` support is also at the General Availability stage in [GraphOS Router](/router/executing-operations/defer-support/) and is compatible with all [federation-compatible subgraph libraries](/federation/building-supergraphs/supported-subgraphs/).
@@ -126,42 +167,6 @@ As chunks arrive and replace existing data, data that cannot be merged, such as 
 ## Using with code generation
 
 If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, you'll need to use the Codegen version `4.0.0` or higher.
-
-## Setting up `@defer` support by choosing an `incrementalHandler`
-
-As the transport format for `@defer` has not been standardized yet and there have been multiple proposals over time, Apollo Client does not default to a specific format.
-Instead, you need to configure the incremental delivery format handler you want to use.
-
-### Available handlers
-
-Apollo Client provides the following incremental delivery handlers that are all exported from `@apollo/client/incremental`:
-
-- `NotImplementedHandler` (default) - Throws when `@defer` is detected
-- `Defer20220824Handler` - Implements the `@defer` transport format that ships with [Apollo Router](https://www.apollographql.com/docs/graphos/routing/operations/defer)
-- `GraphQL17Alpha2Handler` - Implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
-
-<Note>
-
-`Defer20220824Handler` and `GraphQL17Alpha2Handler` are aliases for the same delivery format and can be used interchangeably.
-
-</Note>
-
-### Configuration example
-
-To enable `@defer` support, configure your Apollo Client instance with an incremental handler:
-
-```ts
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-import { Defer20220824Handler } from "@apollo/client/incremental";
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
-  incrementalHandler: new Defer20220824Handler(),
-});
-```
-
-Without configuring an incremental handler, using the `@defer` directive results in an error.
 
 ## Usage in React Native
 

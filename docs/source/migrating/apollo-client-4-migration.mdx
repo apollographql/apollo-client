@@ -59,7 +59,7 @@ npm install @apollo/client graphql rxjs
 
 ## Codemod
 
-To ease the migration process, we have created a codemod that will automatically update your codebase to use the new imports and APIs in Apollo Client 4.
+To ease the migration process, we have provided a codemod that automatically updates your codebase.
 
 This codemod consists of the following steps:
 
@@ -76,8 +76,7 @@ This codemod consists of the following steps:
   fn<ApolloLink.Result>();
   ```
 - `links` step:
-  - In Apollo Client 4, the links have been unified to all be classes. This step updates your code to use the new class-based links.
-    For example, it will change:
+  - Updates the usage of Apollo-provided links to their associated class implementation. For example:
   ```ts
   import { createHttpLink } from "@apollo/client";
   const link = createHttpLink({ uri: "https://example.com/graphql" });
@@ -87,10 +86,34 @@ This codemod consists of the following steps:
   import { HttpLink } from "@apollo/client/link/http";
   const link = new HttpLink({ uri: "https://example.com/graphql" });
   ```
-  - The `from`, `split` and `concat` functions should now be used as methods on the `ApolloLink` class, so this step will also update your code to use these static methods.
+  - Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
+  ```ts
+  import { from } from "@apollo/client";
+  
+  const link = from([a, b, c]);
+  ```
+  becomes
+  ```ts
+  import { ApolloLink } from "@apollo/client";
+
+  const link = ApolloLink.from([a, b, c]);
+  ```
 - `removals`
-  In Apollo Client 4, a number of exports have been removed for various reasons.
-  This step will move all of those imports to point at `@apollo/client/v4-migration`, which is a special migration entry point. All imports from that entry point are type-only and have a DocBlock explaining why the specific export was removed. Many of those DocBlocks also contain migration instructions to help you move away from those removed exports.
+  - Updates exports removed from Apollo Client to a special `@apollo/client/v4-migration` entrypoint. This is a type-only entrypoint that contains doc blocks with migration instructions for each removed item.
+  ```ts
+  import { Concast } from "@apollo/client";
+  ```
+  becomes
+  ```ts
+  import { Concast } from "@apollo/client/v4-migration";
+  ```
+
+  <Note>
+
+  Any runtime values exported from `@apollo/client/v4-migration` will throw an error at runtime since their implementations do not exist.
+
+  </Note>
+```
 
 ### Running the codemod
 
@@ -100,9 +123,17 @@ To run the codemod, use the following command:
 npx @apollo/client-codemod-migrate-3-to-4 src
 ```
 
-which will behave just like the command line tool `jscodeshift` with a preselected codemod.
+<Note>
 
-Run `npx @apollo/client-codemod-migrate-3-to-4 --help` to see all available options.
+This command behaves similarly to [`jscodeshift`](https://github.com/facebook/jscodeshift) with a preselected codemod.
+
+</Note>
+
+For more details on the available options, run the command using the `--help` option.
+
+```sh
+npx @apollo/client-codemod-migrate-3-to-4 --help
+```
 
 ### Using the Codemod with TypeScript
 
@@ -113,9 +144,15 @@ npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
 npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
 
-### Running only specific steps
+<Note>
 
-You can also run the codemod with only specific steps by using the `--codemod` option. For example, to run only the `imports` and `links` steps, you can use:
+This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
+
+</Note>
+
+### Running specific modifications
+
+If you prefer to migrate your application more selectively instead of all at once, you can specify specific modifications using the `--codemod` option. For example, to run only the `imports` and `links` modifications, run the following command:
 
 ```sh
 npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
@@ -123,19 +160,22 @@ npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 
 ## Updating imports
 
-If you used the [Codemod](#running-the-codemod) to update your imports, you can skip this section.
-If you did not use the codemod, you will need to manually update your imports to point at the right files.
+<Note>
+
+This section contains instructions for manually updating imports. If you used the [Codemod](#running-the-codemod) to update your imports, you can safely skip this section. 
+
+</Note>
 
 ### Move from manual CJS/ESM imports to `exports`
 
-Apollo Client 4 now has an `exports` field in the `package.json`, which means that you previously used imports like `@apollo/client/react/index.js` or `@apollo/client/react/react.cjs`, you should now use the `@apollo/client/react` entry point.
-Your bundler will be aware of the different module formats provided and be able to resolve the right one for you, based on import conditions and the `exports` field of the `package.json`.
+Apollo Client 4 now includes an `exports` field in the package's `package.json` definition. Instead of importing `.js` or `.cjs` files directly (e.g. `@apollo/client/react/index.js`, `@apollo/client/react/react.cjs`, etc.), you now import from the entrypoint instead (e.g. `@apollo/client/react`).
+Your bundler is aware of the different module formats and uses the `exports` field of the package's `package.json` to resolve the right format.
 
 <details>
 <summary><h3 style="display:inline">List of all changed imports</h3><br/>(click to expand)</summary>
 
 The following entry points have been renamed:
-| previous entry point | new entry point |
+| Previous entry point | New entry point |
 | --------------------- | -------------------- |
 | `@apollo/client/core` | `@apollo/client` |
 | `@apollo/client/link/core` | `@apollo/client/link` |
@@ -144,7 +184,7 @@ The following entry points have been renamed:
 | `@apollo/client/testing/core` | `@apollo/client/testing` |
 
 The following entry points have been removed:
-| previous entry point | reason |
+| Previous entry point | Reason |
 | --------------------- | -------------------- |
 | `@apollo/client/react/components` | The render prop components were already deprecated in Apollo Client 3.x and have been removed in 4. |
 | `@apollo/client/react/hoc` | The higher order components were already deprecated in Apollo Client 3.x and have been removed in 4. |
@@ -157,7 +197,7 @@ The following individual imports have been renamed, moved to new entry points an
 
 <table>
 <thead>
-<tr><th>previous entry point</th><th>new entry point</th></tr>
+<tr><th>Previous entry point</th><th>New entry point</th></tr>
 <tr><td>previous import name</td><td>new import name</td></tr>
 </thead>
 <tbody>
@@ -408,20 +448,19 @@ The following individual imports have been renamed, moved to new entry points an
 
 </details>
 
-## Replacing removed exports
+### Replacing removed exports
 
-If you used the [Codemod](#running-the-codemod) to update your imports, all imports for removed exports have been replaced with imports from `@apollo/client/v4-migration`. You should get a TypeScript error everywhere you use a removed export, and hovering your mouse over it, you get more information about why the export was removed and what you can use instead.
+If you used the [Codemod](#running-the-codemod) to update your imports, all removed exports moved to the `@apollo/client/v4-migration` entry point. You should get a TypeScript error everywhere you use a removed export. When you hover over the export, you'll get more information about why the export was removed along with migration instructions.
 
 For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/v4-migration.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/files/v4-migration.d.ts)
 
-## Update your ApolloClient creation
+## Update the initialization of `ApolloClient`
 
-Some of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section will help you update your `ApolloClient` creation code to the new options.
+Several of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section provides instruction on migrating to the new options when initializing your `ApolloClient` instance.
 
-### Implicitly create a new `HttpLink`
+### Explicitly provide `HttpLink`
 
-The shorthand annotation where you could pass `uri`, `headers` or `credentials` directly into the `ApolloClient` constructor has been removed.
-Instead, you now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
+The `uri`, `headers`, and `credentials` options used to implicitly create an `HttpLink` have been removed. You now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
 
 Although it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change enables you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
 
@@ -442,7 +481,7 @@ const client = new ApolloClient({
 });
 ```
 
-### Move `name` and `version` into the `clientAwareness` option
+### Migrating client awareness options
 
 ```ts
 const client = new ApolloClient({
@@ -455,9 +494,9 @@ const client = new ApolloClient({
 });
 ```
 
-### If using local state: add a new `LocalState` instance
+### Updating local state
 
-If you are using `@client` fields, you should create a new `LocalState` instance and pass it to the `ApolloClient` constructor.
+When using `@client` fields, you now need to create a new `LocalState` instance and provide it as the `localState` option to the `ApolloClient` constructor.
 
 ```ts
 import {
@@ -472,7 +511,7 @@ const client = new ApolloClient({
 });
 ```
 
-Additionally, if you are using local resolvers, you should pass the `resolvers` option to the `LocalState` constructor instead of the `ApolloClient` constructor.
+Additionally, if you are using local resolvers with the `resolvers` option, you need to move the `resolvers` option to the `LocalState` constructor instead of the `ApolloClient` constructor.
 
 ```ts
 import {
@@ -493,7 +532,7 @@ const client = new ApolloClient({
 });
 ```
 
-### Change `connectToDevTools` to `devtools.enabled`
+### Change `connectToDevTools`
 
 The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.
 
@@ -506,9 +545,9 @@ const client = new ApolloClient({
 });
 ```
 
-### Change `disableNetworkFetches` to `prioritizeCacheValues`
+### Change `disableNetworkFetches`
 
-If you are using the `disableNetworkFetches` option, note that it has been renamed to `prioritizeCacheValues`.
+The `disableNetworkFetches` option has been renamed to `prioritizeCacheValues` to better describe its behavior.
 
 ```ts
 const client = new ApolloClient({

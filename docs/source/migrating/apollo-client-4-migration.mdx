@@ -81,10 +81,11 @@ import { useQuery } from "@apollo/client/react"; // [!code ++]
 Updates type references that have moved into namespaces.
 
 ```ts disableCopy=true
-import { FetchResult } from "@apollo/client"; // [!code --:2]
-fn<FetchResult>();
-import { ApolloLink } from "@apollo/client"; // [!code ++:2]
-fn<ApolloLink.Result>();
+import { FetchResult } from "@apollo/client"; // [!code --]
+import { ApolloLink } from "@apollo/client"; // [!code ++]
+// ...
+fn<FetchResult>(); // [!code --]
+fn<ApolloLink.Result>(); // [!code ++]
 ```
 
 </li></ul>
@@ -97,10 +98,11 @@ fn<ApolloLink.Result>();
 Updates the usage of Apollo-provided links to their associated class implementation.
 
 ```ts disableCopy=true
-import { createHttpLink } from "@apollo/client"; // [!code --:2]
-const link = createHttpLink({ uri: "https://example.com/graphql" });
-import { HttpLink } from "@apollo/client/link/http"; // [!code ++:2]
-const link = new HttpLink({ uri: "https://example.com/graphql" });
+import { createHttpLink } from "@apollo/client"; // [!code --]
+import { HttpLink } from "@apollo/client/link/http"; // [!code ++]
+// ...
+const link = createHttpLink({ uri: "https://example.com/graphql" }); // [!code --]
+const link = new HttpLink({ uri: "https://example.com/graphql" }); // [!code ++]
 ```
 
 </li><li>
@@ -108,10 +110,11 @@ const link = new HttpLink({ uri: "https://example.com/graphql" });
 Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
 
 ```ts disableCopy=true
-import { from } from "@apollo/client"; // [!code --:2]
-const link = from([a, b, c]);
-import { ApolloLink } from "@apollo/client"; // [!code ++:2]
-const link = ApolloLink.from([a, b, c]);
+import { from } from "@apollo/client"; // [!code --]
+import { ApolloLink } from "@apollo/client"; // [!code ++]
+// ...
+const link = from([a, b, c]); // [!code --]
+const link = ApolloLink.from([a, b, c]); // [!code ++]
 ```
 
 </li></ul>

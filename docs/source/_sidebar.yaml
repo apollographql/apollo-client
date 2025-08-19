@@ -15,7 +15,7 @@ items:
     href: ./get-started
   - label: Changelog
     href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
-  - label: Fetching
+  - label: Core concepts
     children:
       - label: Queries
         href: ./data/queries
@@ -25,6 +25,8 @@ items:
         href: ./data/fragments
       - label: Mutations
         href: ./data/mutations
+      - label: TypeScript
+        href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
       - label: Subscriptions
@@ -83,8 +85,8 @@ items:
     children:
       - label: Developer tools
         href: ./development-testing/developer-tooling
-      - label: Using TypeScript
-        href: ./development-testing/static-typing
+      - label: GraphQL Codegen
+        href: ./development-testing/graphql-codegen
       - label: Testing React components
         href: ./development-testing/testing
       - label: Schema-driven testing

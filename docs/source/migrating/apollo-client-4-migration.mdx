@@ -589,7 +589,7 @@ const client = new ApolloClient({
   // ...
 });
 ```
-
+Previously, all Apollo Client instances were bundled with local state management functionality, even if you didn't use the `@client` directive. This change means local state management is now opt-in and reduces the size of your bundle when you aren't using this feature.
 ### Change `connectToDevTools`
 
 The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.
@@ -618,8 +618,9 @@ const client = new ApolloClient({
 
 ### Enable incremental delivery (`@defer`)
 
-In Apollo Client 4, you can swap out the incremental delivery protocol implementation.
-That means if you were using `@defer` previously, you should now enable the new `Defer20220824Handler` by passing it to the `incrementalHandler` option.
+The incremental delivery protocol implementation is now configurable and requires you to opt-in to use the proper format. If you currently use `@defer` in your application, you need to configure an incremental handler and provide it to the `incrementalHandler` option to the `ApolloClient` constructor.
+
+Since Apollo Client 3 only supported an older version of the specification, initialize an instance of `Defer20220824Handler` and provide it as the `incrementalHandler` option.
 
 ```ts
 import { Defer20220824Handler } from "@apollo/client/incremental"; // [!code ++]
@@ -630,10 +631,9 @@ const client = new ApolloClient({
 });
 ```
 
-Additionally, you should enable the `TypeOverrides` for the `Defer20220824Handler`.
-This will add the deferred chunk types to `ApolloLink.Result` and ensures that you handle incremental results correctly in custom links that might access `result` directly.
+To provide accurate TypeScript types, you will also need tell Apollo Client to use the types associated with the `Defer20220824Handler` in order to provide accurate types for incremental chunks, used with the `ApolloLink.Result` type. This ensures that you properly handle incremental results in your custom links that might access the result directly.
 
-To do so, create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
+Create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
 
 ```ts title="apollo-client.d.ts
 import { Defer20220824Handler } from "@apollo/client/incremental"; // [!code highlight]
@@ -645,7 +645,7 @@ declare module "@apollo/client" {
 
 <Note>
 
-Over time, we will introduce additional incremental handlers to support different proposals of the protocol.
+Apollo Client only provides support for the older incremental specification at this time. Future versions will introduce new incremental handlers to support more recent versions of the specification.
 
 </Note>
 

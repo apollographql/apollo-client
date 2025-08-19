@@ -1,6 +1,5 @@
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
-import { applyTransform } from "jscodeshift/dist/testUtils.js";
 
 import type { IdentifierRename } from "./renames.js";
 import type { UtilContext } from "./types.js";
@@ -171,15 +170,3 @@ function* apolloClientConstructions({
     }
   }
 }
-
-/// ---
-
-const transform = ([source]: TemplateStringsArray) =>
-  applyTransform(
-    apolloClientInitializationTransform,
-    {},
-    {
-      source,
-    },
-    { parser: "ts" }
-  );

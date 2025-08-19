@@ -15,7 +15,7 @@ items:
     href: ./get-started
   - label: Changelog
     href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
-  - label: Core functionality
+  - label: Core concepts
     children:
       - label: Queries
         href: ./data/queries

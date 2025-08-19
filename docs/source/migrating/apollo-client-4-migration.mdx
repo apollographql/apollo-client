@@ -63,57 +63,80 @@ To ease the migration process, we have provided a codemod that automatically upd
 
 This codemod consists of the following steps:
 
-- `imports` step:
-  - Updates imports that have moved around, e.g. changing `import { useQuery } from '@apollo/client'` to `import { useQuery } from '@apollo/client/react'`.
-  - Updates type references that have moved into namespaces. For example:
-  ```ts
-  import { FetchResult } from "@apollo/client";
-  fn<FetchResult>();
-  ```
-  becomes
-  ```ts
-  import { ApolloLink } from "@apollo/client";
-  fn<ApolloLink.Result>();
-  ```
-- `links` step:
-  - Updates the usage of Apollo-provided links to their associated class implementation. For example:
-  ```ts
-  import { createHttpLink } from "@apollo/client";
-  const link = createHttpLink({ uri: "https://example.com/graphql" });
-  ```
-  to:
-  ```ts
-  import { HttpLink } from "@apollo/client/link/http";
-  const link = new HttpLink({ uri: "https://example.com/graphql" });
-  ```
-  - Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
-  ```ts
-  import { from } from "@apollo/client";
-  
-  const link = from([a, b, c]);
-  ```
-  becomes
-  ```ts
-  import { ApolloLink } from "@apollo/client";
+<ol><li>
 
-  const link = ApolloLink.from([a, b, c]);
-  ```
-- `removals`
-  - Updates exports removed from Apollo Client to a special `@apollo/client/v4-migration` entrypoint. This is a type-only entrypoint that contains doc blocks with migration instructions for each removed item.
-  ```ts
-  import { Concast } from "@apollo/client";
-  ```
-  becomes
-  ```ts
-  import { Concast } from "@apollo/client/v4-migration";
-  ```
+`imports` step:
 
-  <Note>
+<ul><li>
 
-  Any runtime values exported from `@apollo/client/v4-migration` will throw an error at runtime since their implementations do not exist.
+Updates imports that have moved around
 
-  </Note>
+```ts disableCopy=true
+import { useQuery } from "@apollo/client"; // [!code --]
+import { useQuery } from "@apollo/client/react"; // [!code ++]
 ```
+
+</li><li>
+
+Updates type references that have moved into namespaces.
+
+```ts disableCopy=true
+import { FetchResult } from "@apollo/client"; // [!code --:2]
+fn<FetchResult>();
+import { ApolloLink } from "@apollo/client"; // [!code ++:2]
+fn<ApolloLink.Result>();
+```
+
+</li></ul>
+</li><li>
+
+`links` step:
+
+<ul><li>
+
+Updates the usage of Apollo-provided links to their associated class implementation.
+
+```ts disableCopy=true
+import { createHttpLink } from "@apollo/client"; // [!code --:2]
+const link = createHttpLink({ uri: "https://example.com/graphql" });
+import { HttpLink } from "@apollo/client/link/http"; // [!code ++:2]
+const link = new HttpLink({ uri: "https://example.com/graphql" });
+```
+
+</li><li>
+
+Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
+
+```ts disableCopy=true
+import { from } from "@apollo/client"; // [!code --:2]
+const link = from([a, b, c]);
+import { ApolloLink } from "@apollo/client"; // [!code ++:2]
+const link = ApolloLink.from([a, b, c]);
+```
+
+</li></ul>
+</li><li>
+
+`removals` step
+
+<ul><li>
+
+Updates exports removed from Apollo Client to a special `@apollo/client/v4-migration` entrypoint. This is a type-only entrypoint that contains doc blocks with migration instructions for each removed item.
+
+```ts disableCopy=true
+import { Concast } from "@apollo/client"; // [!code --]
+import { Concast } from "@apollo/client/v4-migration"; // [!code ++]
+```
+
+</li></ul>
+
+<Note>
+
+Any runtime values exported from `@apollo/client/v4-migration` will throw an error at runtime since their implementations do not exist.
+
+</Note>
+
+</li></ol>
 
 ### Running the codemod
 
@@ -162,7 +185,7 @@ npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 
 <Note>
 
-This section contains instructions for manually updating imports. If you used the [Codemod](#running-the-codemod) to update your imports, you can safely skip this section. 
+This section contains instructions for manually updating imports. If you used the [Codemod](#running-the-codemod) to update your imports, you can safely skip this section.
 
 </Note>
 

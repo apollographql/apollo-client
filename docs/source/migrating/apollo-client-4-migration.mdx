@@ -510,8 +510,6 @@ Several of the constructor options of `ApolloClient` have changed in Apollo Clie
 
 The `uri`, `headers`, and `credentials` options used to implicitly create an `HttpLink` have been removed. You now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
 
-Although it was convenient, it created a direct coupling with `HttpLink`, so even users that were not using `HttpLink` had to ship it in their bundle. This change enables you to use any link implementation you want, without having to ship `HttpLink` if you don't need it.
-
 ```ts
 import {
   ApolloClient,
@@ -528,6 +526,8 @@ const client = new ApolloClient({
   // ...
 });
 ```
+
+Although the previous options were convenient, it meant all Apollo Client instances were bundled with `HttpLink`, even if it wasn't used in the link chain. This change enables you to use different terminating links without the increase in bundle size needed to include `HttpLink`. Most applications that scale moved away from these options anyways as soon as more complex link chains were needed.
 
 ### Migrating client awareness options
 

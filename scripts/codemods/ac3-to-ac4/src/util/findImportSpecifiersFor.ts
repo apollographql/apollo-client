@@ -1,3 +1,6 @@
+import type { namedTypes } from "ast-types";
+import type * as j from "jscodeshift";
+
 import type { IdentifierRename } from "../renames.js";
 import type { ImportKind, UtilContext } from "../types.js";
 
@@ -25,3 +28,9 @@ export function findImportSpecifiersFor({
     );
   });
 }
+
+findImportSpecifiersFor.isValue =
+  ({ j }: UtilContext) =>
+  (specPath: j.ASTPath<namedTypes.ImportSpecifier>) =>
+    specPath.node.importKind !== "type" &&
+    j(specPath).closest(j.ImportDeclaration).nodes()[0].importKind !== "type";

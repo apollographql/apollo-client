@@ -14,6 +14,9 @@ npx @apollo/client-codemod-migrate-3-to-4 --parser ts file1.ts file2.ts  --codem
 
 ### Available codemods:
 
+In the order they will be applied per default if you don't manually specify a codemod:
+
+- `legacyEntryPoints`: Moves imports from old legacy entry points like `@apollo/client/main.cjs` or `@apollo/client/react/react.cjs` to the new entry points like `@apollo/client` or `@apollo/client/react`.
 - `imports`: Moves imports that have been moved or renamed in Apollo Client 4. Also moves types into namespace imports where applicable.
 - `links`: Moves `split`, `from`, `concat` and `empty` onto the `ApolloLink` namespace, changes funtion link invocations like `createHttpLink(...)` to their class equivalents like (`new HttpLink(...)`).
   Does not change `setContext((operation, prevContext) => {})` to `new ContextLink((prevContext, operation) => {})` - this requires manual intervention, as the order of callback arguments is flipped and this is not reliable codemoddable.

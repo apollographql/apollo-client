@@ -35,6 +35,8 @@ items:
         href: ./data/directives
       - label: Error handling
         href: ./data/error-handling
+      - label: Persisted queries
+        href: ./data/persisted-queries
       - label: Document transforms
         href: ./data/document-transforms
       - label: Deferring response data
@@ -208,7 +210,7 @@ items:
           - label: HttpLink
             href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
-            href: ./api/link/persisted-queries
+            href: ./api/link/apollo-link-persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
           - label: RetryLink

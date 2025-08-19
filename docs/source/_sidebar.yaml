@@ -208,7 +208,7 @@ items:
           - label: HttpLink
             href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
-            href: ./api/link/persisted-queries
+            href: ./api/link/apollo-link-persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
           - label: RetryLink

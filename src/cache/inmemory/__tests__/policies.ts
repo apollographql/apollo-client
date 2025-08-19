@@ -661,7 +661,7 @@ describe("type policies", function () {
     ).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
   });
 
-  it("typePolicies can be inherited from supertypes with fuzzy possibleTypes", () => {
+  it.only("typePolicies can be inherited from supertypes with fuzzy possibleTypes", () => {
     const cache = new InMemoryCache({
       possibleTypes: {
         EntitySupertype: [".*Entity"],
@@ -833,6 +833,169 @@ describe("type policies", function () {
         __typename: "ManagerEntity",
         uid: "vbnm",
         name: "Hugh",
+      },
+    });
+  });
+
+  it.only("typePolicies can be inherited from supertypes with fuzzy possibleTypes, with null returned for a nullable field on a fragment", () => {
+    const cache = new InMemoryCache({
+      possibleTypes: {
+        EntitySupertype: [".*Entity"],
+      },
+      typePolicies: {
+        Query: {
+          fields: {
+            coworkers: {
+              merge(existing, incoming) {
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+
+        // The point of this test is to ensure keyFields: ["uid"] can be
+        // registered for all __typename strings matching the RegExp /.*Entity/,
+        // without manually enumerating all of them.
+        EntitySupertype: {
+          keyFields: ["uid"],
+        },
+      },
+    });
+
+    type WorkerEntity = {
+      uid: string;
+      name: string;
+    };
+
+    type Coworker = CoworkerEntity | ManagerEntity;
+
+    type CoworkerEntity = {
+      __typename: "CoworkerEntity";
+      foo: {
+        bar: string;
+      } | null;
+    } & WorkerEntity;
+
+    type ManagerEntity = {
+      __typename: "ManagerEntity";
+      foo: {
+        bar: string;
+      } | null;
+    } & WorkerEntity;
+
+    const query: TypedDocumentNode<{
+      coworkers: Coworker[];
+    }> = gql`
+      query {
+        coworkers {
+          uid
+          name
+          ...ManagerFields
+          ...CoworkerFields
+          # comment out fragment spreads and uncomment the following 3 lines
+          # to see the test passing
+          # foo {
+          #   bar
+          # }
+        }
+      }
+      fragment ManagerFields on ManagerEntity {
+        foo {
+          bar
+        }
+      }
+      fragment CoworkerFields on CoworkerEntity {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    // whether a `ManagerEntity` or `CoworkerEntity` appears first
+    // in coworkers array changes the result of the test
+    cache.writeQuery({
+      query,
+      data: {
+        coworkers: [
+          {
+            __typename: "CoworkerEntity",
+            uid: "qwer",
+            name: "Alessia",
+            foo: null,
+          },
+          {
+            __typename: "CoworkerEntity",
+            uid: "asdf",
+            name: "Jerel",
+            foo: null,
+          },
+          {
+            __typename: "CoworkerEntity",
+            uid: "zxcv",
+            name: "Lenz",
+            foo: null,
+          },
+          {
+            __typename: "ManagerEntity",
+            uid: "uiop",
+            name: "Jeff",
+            foo: null,
+          },
+        ],
+      },
+    });
+
+    // this assertion passes
+    expect(cache.readQuery({ query })).toEqual({
+      coworkers: [
+        {
+          __typename: "CoworkerEntity",
+          uid: "qwer",
+          name: "Alessia",
+          foo: null,
+        },
+        { __typename: "CoworkerEntity", uid: "asdf", name: "Jerel", foo: null },
+        { __typename: "CoworkerEntity", uid: "zxcv", name: "Lenz", foo: null },
+        { __typename: "ManagerEntity", uid: "uiop", name: "Jeff", foo: null },
+      ],
+    });
+
+    // this assertion fails: the ManagerEntity can no longer be normalized:
+    // the data appears inside of the coworkers array but the normalized object
+    // and reference are missing
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        coworkers: [
+          { __ref: 'CoworkerEntity:{"uid":"qwer"}' },
+          { __ref: 'CoworkerEntity:{"uid":"asdf"}' },
+          { __ref: 'CoworkerEntity:{"uid":"zxcv"}' },
+          { __ref: 'ManagerEntity:{"uid":"uiop"}' },
+        ],
+      },
+      'CoworkerEntity:{"uid":"qwer"}': {
+        __typename: "CoworkerEntity",
+        uid: "qwer",
+        name: "Alessia",
+        foo: null,
+      },
+      'CoworkerEntity:{"uid":"asdf"}': {
+        __typename: "CoworkerEntity",
+        uid: "asdf",
+        name: "Jerel",
+        foo: null,
+      },
+      'CoworkerEntity:{"uid":"zxcv"}': {
+        __typename: "CoworkerEntity",
+        uid: "zxcv",
+        name: "Lenz",
+        foo: null,
+      },
+      'ManagerEntity:{"uid":"uiop"}': {
+        __typename: "ManagerEntity",
+        uid: "uiop",
+        name: "Jeff",
+        foo: null,
       },
     });
   });

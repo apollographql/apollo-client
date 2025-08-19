@@ -100,7 +100,7 @@ package to ensure the configuration matches your usage of Apollo
 Client.<br/><br/>
 
 This might also occur when you're not using the `@apollo/persisted-query-lists`
-package with `PersistedQueryLink`. The most common source of mismatches occur
+package with `PersistedQueryLink`. The most common source of mismatches occurs
 because the `@apollo/generate-persisted-query-manifest` package sorts top-level
 definitions before generating the hash. If you're using a different terminating
 link, try using the `sortTopLevelDefinitions` function exported from

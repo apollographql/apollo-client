@@ -24,7 +24,7 @@ Apollo Client 3.14 introduces many deprecations and warnings that will help you 
   - Network errors are now passed through as-is without wrapping them in a separate error class, making them easier to debug
 - TypeScript improvements
   - The `variables` option used throughout various client APIs (e.g. `client.query` or `useQuery`) now requires that the `variables` option is provided if any variable is non-optional.
-  - return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
+  - Return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
   - A new `dataState` property has been added that contains information about the state of the `data` property which can be used to accurately narrow down the type of `data`.
   - Types are now generally colocated in a namespace with the API that owns them, making them more discoverable with clear ownership boundaries
   - Selective core types, such as those used for data masking, can now be overridden to provide your own type implementations
@@ -61,7 +61,7 @@ npm install @apollo/client graphql rxjs
 
 To ease the migration process, we have provided a codemod that automatically updates your codebase.
 
-This codemod consists of the following steps:
+This codemod runs modifications in the following order:
 
 <ol><li>
 
@@ -589,7 +589,9 @@ const client = new ApolloClient({
   // ...
 });
 ```
+
 Previously, all Apollo Client instances were bundled with local state management functionality, even if you didn't use the `@client` directive. This change means local state management is now opt-in and reduces the size of your bundle when you aren't using this feature.
+
 ### Change `connectToDevTools`
 
 The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.

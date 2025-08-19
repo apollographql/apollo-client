@@ -47,7 +47,7 @@ Apollo Client 4.0 is a major-version release that includes breaking changes. If 
 
 Install Apollo Client 4 along with its peer dependencies with the following command:
 
-```sh
+```sh showLineNumbers=false
 npm install @apollo/client graphql rxjs
 ```
 
@@ -142,7 +142,7 @@ Any runtime values exported from `@apollo/client/v4-migration` will throw an err
 
 To run the codemod, use the following command:
 
-```sh
+```sh showLineNumbers=false
 npx @apollo/client-codemod-migrate-3-to-4 src
 ```
 
@@ -154,7 +154,7 @@ This command behaves similarly to [`jscodeshift`](https://github.com/facebook/js
 
 For more details on the available options, run the command using the `--help` option.
 
-```sh
+```sh showLineNumbers=false
 npx @apollo/client-codemod-migrate-3-to-4 --help
 ```
 
@@ -162,7 +162,7 @@ npx @apollo/client-codemod-migrate-3-to-4 --help
 
 If you have a TypeScript project, we recommend running the codemod against `.ts` and `.tsx` files separately as those have slightly overlapping syntax and might otherwise be misinterpreted by the codemod.
 
-```sh
+```sh showLineNumbers=false
 npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
 npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
@@ -177,7 +177,7 @@ This example targets the `src` directory with the codemod. Replace `src` with th
 
 If you prefer to migrate your application more selectively instead of all at once, you can specify specific modifications using the `--codemod` option. For example, to run only the `imports` and `links` modifications, run the following command:
 
-```sh
+```sh showLineNumbers=false
 npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 ```
 
@@ -596,7 +596,7 @@ Previously, all Apollo Client instances were bundled with local state management
 
 The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.
 
-```ts
+```ts disableCopy=true
 const client = new ApolloClient({
   // ...
   connectToDevTools: true, // [!code --]
@@ -609,7 +609,7 @@ const client = new ApolloClient({
 
 The `disableNetworkFetches` option has been renamed to `prioritizeCacheValues` to better describe its behavior.
 
-```ts
+```ts disableCopy=true
 const client = new ApolloClient({
   // ...
   disableNetworkFetches: ..., // [!code --]
@@ -670,7 +670,7 @@ declare module "@apollo/client" {
 
 You can always combine multiple `TypeOverrides` of different kinds, so you can also combine this with the `Defer20220824Handler` type overrides from the previous section.
 
-```ts title="apollo-client.d.ts
+```ts title="apollo-client.d.ts disableCopy=true
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { GraphQLCodegenDataMasking } from "@apollo/client/masking"; // [!code ++]
 
@@ -704,7 +704,7 @@ As a result, in some previous use cases, we now recommend to use the core APIs o
 
 As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
 
-```ts
+```ts disableCopy=true
 const [execute] = useLazyQuery(MY_QUERY); // [!code --]
 const client = useApolloClient(); // [!code ++]
 // ...
@@ -735,7 +735,7 @@ As a result, some major changes have been made:
 
 - The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, you should use `client.mutate` directly instead of using a hook.
 
-```ts
+```ts disableCopy=true
 const [mutate] = useMutation(MY_MUTATION); // [!code --]
 const client = useApolloClient(); // [!code ++]
 // ...
@@ -849,7 +849,7 @@ This way you can still receive cache updates or call `refetch` without having to
 
 So if you take this code snippet from Apollo Client 3:
 
-```tsx title="error handling with useQuery in Apollo Client 3"
+```tsx title="error handling with useQuery in Apollo Client 3" disableCopy=true
 import { useQuery } from "@apollo/client/react";
 
 function ShowingSomeErrors() {
@@ -946,7 +946,7 @@ All links are now available as classes. While the old function link creators are
 Pay attention when migrating from the old `setContext` creator to the new `SetContextLink` class.
 The arguments to the callback have changed, so you need to swap the order of `prevContext` and `operation`.
 
-```ts
+```ts disableCopy=true
 import { setContext } from "@apollo/client/link/context"; // [!code --]
 import { SetContextLink } from "@apollo/client/link/context"; // [!code ++]
 
@@ -969,7 +969,7 @@ Instead, use the static `ApolloLink.from` method.
 
 This aligns this API with the `Array.from` and `Array.prototype.concat` methods, which should make these methods more familiar to to work with for JavaScript developers.
 
-```ts
+```ts disableCopy=true
 import { ApolloLink } from "@apollo/client/link";
 ApolloLink.concat(firstLink, secondLink); // [!code --]
 ApolloLink.from([firstLink, secondLink]); // [!code ++]
@@ -983,7 +983,7 @@ link1.concat(link2, link3); // [!code ++]
 These methods previously accepted `ApolloLink` instances or operator functions as arguments.
 Now, they only accept `ApolloLink` instances.
 
-```ts
+```ts disableCopy=true
 ApolloLink.from(
   (operation, forward) => { // [!code --:3]
     /*...*/
@@ -1002,7 +1002,7 @@ The `ErrorLink` (previously created with `onError`) now uses a single `error` pr
 With built-in error classes, use `ErrorClass.is` to check for specific error types.
 For external error types like `TypeError`, use `instanceof` or the more modern [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError#instanceof_vs._error.iserror) in combination with a check for `error.name` to check the kind of error.
 
-```ts
+```ts disableCopy=true
 import {
   onError, // [!code --]
   ErrorLink, // [!code ++]
@@ -1075,7 +1075,7 @@ If you were previously using the `map`, `filter`, `reduce`, `flatMap` or `concat
 
 Additionally, if you were using `Obervable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
 
-```ts
+```ts disableCopy=true
 import { of, from, map } from "rxjs"; // [!code ++]
 
 Observable.of(1, 2, 3); // [!code --]

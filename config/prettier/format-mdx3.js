@@ -37,7 +37,6 @@ const specialCommentPattern = new RegExp(
   `(${patterns.map((p) => `(${p.source})`).join("|")})`,
   "gm"
 );
-console.log(specialCommentPattern.source);
 
 /**
  * Applied to code blocks to preserve special comments like `// [!code ...]` on the same line.

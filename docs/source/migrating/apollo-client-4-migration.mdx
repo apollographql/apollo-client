@@ -14,24 +14,28 @@ Apollo Client 3.14 introduces many deprecations and warnings that will help you 
 ## What’s new in 4.0
 
 - Bundling changes
-  - Apollo Client 4.0 now has an `exports` field in its `package.json` for better ESM support
-  - `@apollo/client/core` and `@apollo/client` are now identical and framework-agnostic. React-related exports are now only available in `@apollo/client/react`.
+  - Apollo Client 4.0 now includes an `exports` field in its `package.json` for better ESM support
+  - `@apollo/client` is now framework-agnostic. React-related exports have been removed and are now only available in `@apollo/client/react`
+    - As a result `@apollo/client/core` and `@apollo/client` are now identical
 - Enhanced Error Handling
-  - network errors are now handled the same way as GraphQL errors and populate the `error` field of a query result
-  - the throwing behaviour between network errors and GraphQL errors has been unified
-  - `ApolloError` has been removed. A number of new error classes have been introduced, and external errors are now passed through as-is without wrapping them, which enables easier debugging.
+  - Network errors and GraphQL errors have been unified into a single `error` property of a query result
+  - Network errors now adhere to the `errorPolicy` in the same way as GraphQL errors
+  - `ApolloError` has been removed in favor of more granular error classes
+  - Network errors are now passed through as-is without wrapping them in a separate error class, making them easier to debug
 - TypeScript improvements
-  - APIs like `client.query` or `useQuery` that accept variables in options will now require the variables to be passed in if any option is non-optional.
+  - The `variables` option used throughout various client APIs (e.g. `client.query` or `useQuery`) now requires that the `variables` option is provided if any variable is non-optional.
   - return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
-  - added a new `dataState` property that contains information about the state of the `data` property of a return value. This property can be used to narrow down the type of `data`.
-  - most types are now colocated within the API that they relate to, so it is much easier to find the right type for the right situation.
-  - some core types like types for `DataMasking` or types representing the that `dataState` narrows down to can now be overwritten.
+  - A new `dataState` property has been added that contains information about the state of the `data` property which can be used to accurately narrow down the type of `data`.
+  - Types are now generally colocated in a namespace with the API that owns them, making them more discoverable with clear ownership boundaries
+  - Selective core types, such as those used for data masking, can now be overridden to provide your own type implementations
 - Local State changes
-  - The local resolver implementation is now a pluggable `LocalState` class to save on bundle size for everyone who doesn't use it.
+  - Local state management (e.g. the `@client` directive) is now an opt-in feature to reduce the bundle size of client when local state is not used
   - Many improvements and bug fixes in the new `LocalState` implementation
-- The `Observable` implementation has been changed to `rxjs`.
-- The incremental delivery implementation has been made pluggable, so in the future we can support multiple different versions of the incremental delivery protocol.
-- For a full list of changes, see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
+- The `Observable` implementation now uses `rxjs` instead of `zen-observable`.
+- The incremental delivery implementation is now pluggable. This makes it possible to support multiple versions of the incremental delivery protocol thoughout.
+
+For a full list of changes, see the [changelog]
+(https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
 ## Installation
 
@@ -43,9 +47,15 @@ Apollo Client 4.0 is a major-version release that includes breaking changes. If 
 
 Install Apollo Client 4 along with its peer dependencies with the following command:
 
-```
+```sh
 npm install @apollo/client graphql rxjs
 ```
+
+<Note>
+
+`rxjs` is a new peer dependency with Apollo Client 4.0.
+
+</Note>
 
 ## Codemod
 

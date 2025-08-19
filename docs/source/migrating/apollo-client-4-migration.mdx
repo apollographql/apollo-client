@@ -531,6 +531,8 @@ Although the previous options were convenient, it meant all Apollo Client instan
 
 ### Migrating client awareness options
 
+The `name` and `version` options, which are a part of the client awareness feature, have been moved into the `clientAwareness` option.
+
 ```ts
 const client = new ApolloClient({
   // ...
@@ -541,6 +543,14 @@ const client = new ApolloClient({
   // ...
 });
 ```
+
+This change reduced confusion on what the `name` and `version` options were meant for and provides better future-proofing for additional features that might be added later.
+
+<Note>
+
+This option only has an effect if you are using the client-awareness-capable `HttpLink` or `BatchHttpLink`, or if you manually combine the `ClientAwarenessLink` with a compatible terminating link.
+
+</Note>
 
 ### Updating local state
 

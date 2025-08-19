@@ -238,7 +238,7 @@ function MyComponent() {
 
 The `gql` template literal tag is used in Apollo Client apps to define GraphQL documents for use with Apollo Client APIs. Its purpose is to parse the GraphQL string into a standard GraphQL AST. Parsing occurs when the module is executed which adds startup time to your application. Additionally, the GraphQL document returned by `gql` is typed as a `DocumentNode` which doesn't include type information about its data or variables.
 
-The [`typed-document-node`](https://the-guild.dev/graphql/codegen/plugins/typescript/typed-document-node) plugin makes it possible to generate precompiled GraphQL documents preconfigured with [`TypedDocumentNode`](#using-typeddocumentnode).
+The [`typed-document-node`](https://the-guild.dev/graphql/codegen/plugins/typescript/typed-document-node) plugin makes it possible to generate precompiled GraphQL documents preconfigured with the `TypedDocumentNode` type.
 
 ```bash
 npm install -D @graphql-codegen/typed-document-node

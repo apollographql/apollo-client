@@ -33,6 +33,8 @@ items:
         href: ./data/directives
       - label: Error handling
         href: ./data/error-handling
+      - label: Persisted queries
+        href: ./data/persisted-queries
       - label: Document transforms
         href: ./data/document-transforms
       - label: Deferring response data

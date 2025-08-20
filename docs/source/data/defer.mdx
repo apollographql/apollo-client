@@ -119,7 +119,7 @@ When our call to the `useQuery` hook first resolves with an initial payload of d
 
 <Note>
 
-While the response is streaming, the `loading` flag remains `true` to indicate that the query has not yet fully completed. The `networkStatus` field starts as `NetworkStatus.loading` and changes to `NetworkStatus.streaming` as the initial chunk arrives. After all deferred data is received, `loading` becomes `false` and `networkStatus` is `NetworkStatus.ready`.
+This example does not use the `loading` boolean to render the loading state. While the response is streaming, the `loading` flag remains `true` to indicate that the query has not yet fully completed. The `networkStatus` field starts as `NetworkStatus.loading` and changes to `NetworkStatus.streaming` as the initial chunk arrives. After all deferred data is received, `loading` becomes `false` and `networkStatus` is `NetworkStatus.ready`.
 
 </Note>
 

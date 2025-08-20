@@ -955,6 +955,26 @@ new ApolloClient({
 
 In line with the change to the default `notifyOnNetworkStatusChange` value, the first value emitted from an `ObservableQuery` instance (created by `client.watchQuery`), sets `loading` to `true` when the query cannot be fulfilled by data in the cache. Previously, the initial loading state was not emitted.
 
+```ts disableCopy=true
+const observable = client.watchQuery({ query: QUERY });
+
+observable.subscribe({
+  next: (result) => {
+    // The first result emitted is the loading state
+    console.log(result);
+    /*
+     {
+       data: undefined,
+       dataState: "empty"
+       loading: true,
+       networkStatus: NetworkStatus.loading,
+       partial: false
+     }
+     */
+  },
+});
+```
+
 ### Changes in tracking of active queries and active observables
 
 In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.

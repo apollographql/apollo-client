@@ -69,7 +69,7 @@ Deliver tomorrow's roadmap today with our comprehensive suite of API orchestrati
 
 ## Versioning Policy
 
-While Apollo Client follows SemVer, it might introduce changes like changing transpilation targets, updating dependencies or dropping support for older versions of dependencies in minor releases. For more details, see our [Versioning Policy](./VERSIONING.md).
+While Apollo Client follows SemVer, it might introduce changes like changing transpilation targets, updating dependencies or dropping support for older versions of dependencies in minor releases. For more details, see our [Versioning Policy](./VERSIONING_POLICY.md).
 
 ## 🗺️ Roadmap
 

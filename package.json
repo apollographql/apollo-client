@@ -258,7 +258,7 @@
     "access": "public"
   },
   "files": [
-    "VERSIONING.md",
+    "VERSIONING_POLICY.md",
     "**/*.md",
     "**/*.cjs",
     "**/*.cjs.map",

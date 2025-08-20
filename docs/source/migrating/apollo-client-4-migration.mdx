@@ -107,6 +107,12 @@ const link = createHttpLink({ uri: "https://example.com/graphql" });// [!code --
 const link = new HttpLink({ uri: "https://example.com/graphql" });// [!code ++]
 ```
 
+<Note>
+
+If you use the `setContext` link, you will need to migrate to the `SetContextLink` class manually because the order of arguments has changed. This is not automatically performed by the codemod.
+
+</Note>
+
 </li><li>
 
 Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
@@ -658,7 +664,7 @@ Apollo Client only provides support for the older incremental specification at t
 
 ## Enable data masking types
 
-In Apollo Client 4, the data masking types are now pluggable to allow for more flexibility when working with different solutions like GraphQL Code Generator or `gql.tadqa` - which might have different typings for data masking.
+In Apollo Client 4, the data masking types are now configurable to allow for more flexibility when working with different tools like GraphQL Code Generator or `gql.tada` - which might have different typings for data masking.
 
 To configure the data masking types to be the same as they were in Apollo Client 3, create a `.d.ts` file in your project with the following content:
 
@@ -673,7 +679,7 @@ declare module "@apollo/client" {
 
 <Note>
 
-You can always combine multiple `TypeOverrides` of different kinds, so you can also combine this with the `Defer20220824Handler` type overrides from the previous section.
+You can combine multiple `TypeOverrides` of different kinds. For example, you can combine the data masking types with the `Defer20220824Handler` type overrides from the previous section.
 
 ```ts title="apollo-client.d.ts disableCopy=true
 import { Defer20220824Handler } from "@apollo/client/incremental";
@@ -702,29 +708,28 @@ Previously, this initial loading state would have been skipped.
 
 ## For React users
 
-One of Apollo Client 4's focus points is to be more opinionated about how to use Apollo Client.
-A big part of that is to ensure that the React hooks are more straightforward to use, for a very specific use case.
-We believe that hooks should be used to synchronize data with your component, and not trigger side effects that won't synchronize with your component.
-As a result, in some previous use cases, we now recommend to use the core APIs of Apollo Client directly where synchronization with a component is not intended.
+Apollo Client 4 is more opinionated about how to use it.
+We believe that React hooks should be used to synchronize data with your component and avoid side effects that don't achieve this goal. As a result, we now recommend the use of core APIs directly in several use cases where synchronization with a component is not needed or intended.
 
 As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
 
 ```ts disableCopy=true
-const [execute] = useLazyQuery(MY_QUERY);// [!code --]
-const client = useApolloClient();// [!code ++]
+const [execute] = useLazyQuery(MY_QUERY);// [!code --:3]
 // ...
-await execute({ variables });// [!code --]
-await client.query({ query: MY_QUERY, variables });// [!code ++]
+await execute({ variables });
+const client = useApolloClient();// [!code ++:3]
+// ...
+await client.query({ query: MY_QUERY, variables });
 ```
 
-### changes to `useLazyQuery`
+### Changes to `useLazyQuery`
 
-`useLazyQuery` has undergone a big rewrite to have a more predictable behaviour.
-In Apollo Client 3, once the `useLazyQuery` execute function was called for the first time, it would behave like a regular `useQuery` hook, meaning it would automatically make network requests once options were changed.
+`useLazyQuery` has been rewritten to have more predictable and intuitive behavior based on years of user feedback.
+In Apollo Client 3, the `useLazyQuery` behaved like the `useQuery` hook after the execute function was called the first time. Changes to options often triggered unintended network requests as a result of this behavior.
 
-In Apollo Client 4, the focus of `useLazyQuery` is more to execute a query on demand in response to user interactions, and synchronize data with the component.
+In Apollo Client 4, `useLazyQuery` focuses on user interaction and more predictable data synchronization with the component. Network requests are now initiated only when the execute function is called. This makes it safe to re-render your component with new options provided to `useLazyQuery` without the unintended network requests. New options are used the next time the execute function is called.
 
-As a result, some major changes have been made:
+To facilitate this change in behavior, the following major changes were introduced:
 
 - `useLazyQuery` no longer accepts a `variables` or `context` option. The previous behaviour where these options were merged together with the `variables` and `context` passed to the execute function has been removed, as it was confusing and hard to predict.
   Instead, you should pass `variables` and `context` directly to the execute function, which will then be used to execute the query.

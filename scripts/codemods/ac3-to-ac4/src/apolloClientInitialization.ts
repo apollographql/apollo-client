@@ -3,11 +3,11 @@ import assert from "node:assert";
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
-import type { IdentifierRename } from "./renames.js";
-import type { ImportKind, UtilContext } from "./types.js";
-import { findImportDeclarationFor } from "./util/findImportDeclarationFor.js";
+import type { UtilContext } from "./types.js";
 import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
+import { findOrInsertImport } from "./util/findOrInsertImport.js";
 import { findReferences } from "./util/findReferences.js";
+import { getProperty } from "./util/getProperty.js";
 
 const steps = {
   explicitLinkConstruction,
@@ -243,73 +243,6 @@ function prioritizeCacheValues({
     node.shorthand = false;
   }
   node.key = j.identifier("prioritizeCacheValues");
-}
-
-function findOrInsertImport({
-  context,
-  context: { j, source },
-  description,
-  compatibleWith,
-  after,
-}: {
-  context: UtilContext;
-  description: IdentifierRename["from"];
-  compatibleWith: ImportKind;
-  after?: j.Collection<any>;
-}) {
-  const found = findImportSpecifiersFor({
-    description,
-    context,
-    compatibleWith,
-  }).nodes()[0];
-  if (found) {
-    return found;
-  }
-  let addInto = findImportDeclarationFor({
-    description,
-    context,
-    compatibleWith,
-  }).nodes()[0];
-  if (!addInto) {
-    addInto = j.importDeclaration.from({
-      specifiers: [],
-      source: j.literal(description.module),
-      importKind: compatibleWith,
-    });
-    if (!after) {
-      after = source.find(j.ImportDeclaration);
-    }
-    if (!after || after.size() === 0) {
-      const program = source.find(j.Program).nodes()[0]!;
-      program.body.unshift(addInto);
-    } else {
-      after.at(-1).insertAfter(addInto);
-    }
-  }
-  const spec = j.importSpecifier.from({
-    imported: j.identifier(description.identifier),
-  });
-  (addInto.specifiers ??= []).push(spec);
-  return spec;
-}
-
-function getProperty({
-  context: { j },
-  objectPath,
-  name,
-}: {
-  objectPath: j.ASTPath<namedTypes.ObjectExpression>;
-  context: UtilContext;
-  name: string;
-}): j.ASTPath<namedTypes.ObjectProperty> | null {
-  return (
-    (objectPath.get("properties") as j.ASTPath).filter(
-      (path: j.ASTPath) =>
-        j.ObjectProperty.check(path.node) &&
-        j.Identifier.check(path.node.key) &&
-        path.node.key.name === name
-    )[0] || null
-  );
 }
 
 interface ConstructorCall {

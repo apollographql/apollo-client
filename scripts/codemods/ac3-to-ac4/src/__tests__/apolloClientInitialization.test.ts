@@ -47,6 +47,7 @@ export const client = new ApolloClient({
     `).toMatchInlineSnapshot(`
       "import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 
+      import { Defer20220824Handler } from "@apollo/client/incremental";
       import { LocalState } from "@apollo/client/local-state";
 
       export const client = new ApolloClient({
@@ -88,7 +89,14 @@ export const client = new ApolloClient({
 
         devtools: {
           enabled: true
-        }
+        },
+
+        /*
+        Inserted by Apollo Client 3->4 migration codemod.
+        If you are not using the \`@defer\` directive in your application,
+        you can safely remove this option.
+        */
+        incrementalHandler: new Defer20220824Handler()
       })
 
       /*
@@ -103,6 +111,25 @@ export const client = new ApolloClient({
 
       declare module "@apollo/client" {
         export interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
+      }
+
+      /*
+      End: Inserted by Apollo Client 3->4 migration codemod.
+      */
+
+
+      /*
+      Start: Inserted by Apollo Client 3->4 migration codemod.
+      Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+      If you do not use the \`@defer\` directive in your application, you can safely remove this block.
+      */
+
+
+      import "@apollo/client";
+      import { Defer20220824Handler } from "@apollo/client/incremental";
+
+      declare module "@apollo/client" {
+        export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
       }
 
       /*
@@ -802,6 +829,65 @@ new ApolloClient({
   link: someLink,
   /* @apollo/client-codemod-migrate-3-to-4 applied */
   dataMasking: true,
+})
+      `).toMatchInlineSnapshot(`""`);
+  });
+});
+
+describe("incrementalHandler", () => {
+  test("added to ApolloClient constructor options", () => {
+    expect(transform("incrementalHandler")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+})
+      `).toMatchInlineSnapshot(`
+        "import { ApolloClient } from "@apollo/client";
+
+        import { Defer20220824Handler } from "@apollo/client/incremental";
+
+        new ApolloClient({
+          cache: new InMemoryCache(),
+          link: someLink,
+
+          /*
+          Inserted by Apollo Client 3->4 migration codemod.
+          If you are not using the \`@defer\` directive in your application,
+          you can safely remove this option.
+          */
+          incrementalHandler: new Defer20220824Handler()
+        })
+
+        /*
+        Start: Inserted by Apollo Client 3->4 migration codemod.
+        Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+        If you do not use the \`@defer\` directive in your application, you can safely remove this block.
+        */
+
+
+        import "@apollo/client";
+        import { Defer20220824Handler } from "@apollo/client/incremental";
+
+        declare module "@apollo/client" {
+          export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
+        }
+
+        /*
+        End: Inserted by Apollo Client 3->4 migration codemod.
+        */"
+      `);
+  });
+
+  test("not added to ApolloClient constructor options if an `incrementalHandler` option is already present", () => {
+    expect(transform("incrementalHandler")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  incrementalHandler: undefined
 })
       `).toMatchInlineSnapshot(`""`);
   });

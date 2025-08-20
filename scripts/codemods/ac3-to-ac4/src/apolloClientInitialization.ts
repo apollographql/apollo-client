@@ -3,6 +3,7 @@ import assert from "node:assert";
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
+import type { IdentifierRename } from "./renames.js";
 import type { UtilContext } from "./types.js";
 import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
 import { findOrInsertImport } from "./util/findOrInsertImport.js";
@@ -16,6 +17,7 @@ const steps = {
   devtoolsOption,
   prioritizeCacheValues,
   dataMasking,
+  incrementalHandler,
 } satisfies Record<string, (options: StepOptions) => void>;
 
 export type Steps = keyof typeof steps;
@@ -268,6 +270,7 @@ interface ConstructorCall {
 }
 
 function dataMasking({
+  context,
   context: { j, source },
   onModified,
   prop,
@@ -305,8 +308,91 @@ ${CODEMOD_MARKER} applied
 `,
     })
   );
-  const program = source.find(j.Program).nodes()[0]!;
 
+  insertTypeOverrideBlock({
+    context,
+    leadingComment: `Copy the contents of this block into a \`.d.ts\` file in your project
+to enable data masking types.`,
+    overridingType: {
+      module: "@apollo/client/masking",
+      namespace: "GraphQLCodegenDataMasking",
+      identifier: "TypeOverrides",
+    },
+  });
+}
+
+function incrementalHandler({
+  context,
+  context: { j, source },
+  constructorCall: { specPath, optionsPath },
+  onModified,
+  prop,
+  file,
+}: StepOptions) {
+  if (prop("incrementalHandler")) {
+    return;
+  }
+  onModified();
+
+  const deferHandlerSpec = findOrInsertImport({
+    context,
+    description: {
+      module: "@apollo/client/incremental",
+      identifier: "Defer20220824Handler",
+    },
+    compatibleWith: "value",
+    after: j(specPath).closest(j.ImportDeclaration),
+  });
+
+  optionsPath.node.properties.push(
+    j.objectProperty.from({
+      key: j.identifier("incrementalHandler"),
+      value: j.newExpression.from({
+        callee: deferHandlerSpec.local || deferHandlerSpec.imported,
+        arguments: [],
+      }),
+      comments: [
+        j.commentBlock.from({
+          leading: true,
+          value: `
+Inserted by Apollo Client 3->4 migration codemod.
+If you are not using the \`@defer\` directive in your application,
+you can safely remove this option.
+`,
+        }),
+      ],
+    })
+  );
+
+  if (!file.path.endsWith(".ts") && !file.path.endsWith(".tsx")) {
+    // avoid inserting defer types in non-TypeScript files
+    return;
+  }
+
+  insertTypeOverrideBlock({
+    context,
+    leadingComment: `Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+If you do not use the \`@defer\` directive in your application, you can safely remove this block.`,
+    overridingType: {
+      module: "@apollo/client/incremental",
+      namespace: "Defer20220824Handler",
+      identifier: "TypeOverrides",
+    },
+  });
+}
+
+function insertTypeOverrideBlock({
+  context: { source, j },
+  leadingComment,
+  overridingType: { identifier, module, namespace },
+}: {
+  context: UtilContext;
+  leadingComment: string;
+  overridingType: Required<
+    Pick<IdentifierRename["to"], "module" | "namespace" | "identifier">
+  >;
+}) {
+  const program = source.find(j.Program).nodes()[0]!;
   program.body.push(
     j.emptyStatement.from({
       comments: [
@@ -314,8 +400,7 @@ ${CODEMOD_MARKER} applied
           leading: true,
           value: `
 Start: Inserted by Apollo Client 3->4 migration codemod.
-Copy the contents of this block into a \`.d.ts\` file in your project
-to enable data masking types.
+${leadingComment}
 `,
         }),
       ],
@@ -324,10 +409,10 @@ to enable data masking types.
     j.importDeclaration.from({
       specifiers: [
         j.importSpecifier.from({
-          imported: j.identifier("GraphQLCodegenDataMasking"),
+          imported: j.identifier(namespace),
         }),
       ],
-      source: j.literal("@apollo/client/masking"),
+      source: j.literal(module),
     }),
     j.tsModuleDeclaration.from({
       id: j.stringLiteral("@apollo/client"),
@@ -339,9 +424,10 @@ to enable data masking types.
               id: j.identifier("TypeOverrides"),
               extends: [
                 j.tsExpressionWithTypeArguments.from({
-                  expression: j.identifier(
-                    "GraphQLCodegenDataMasking.TypeOverrides"
-                  ),
+                  expression: j.tsQualifiedName.from({
+                    left: j.identifier(namespace),
+                    right: j.identifier(identifier),
+                  }),
                 }),
               ],
               body: j.tsInterfaceBody.from({ body: [] }),

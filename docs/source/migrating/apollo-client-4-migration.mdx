@@ -721,6 +721,8 @@ Previously, this initial loading state would have been skipped.
 
 ## For React users
 
+### A note about hook usage
+
 Apollo Client 4 is more opinionated about how to use it.
 We believe that React hooks should be used to synchronize data with your component and avoid side effects that don't achieve this goal. As a result, we now recommend the use of core APIs directly in several use cases where synchronization with a component is not needed or intended.
 
@@ -749,10 +751,10 @@ To facilitate this change in behavior, the following major changes were introduc
 - The `execute` function no longer accepts any other options than `variables` and `context`. Those options should be passed directly to the hook instead.
 - Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error. This change also means that it is no longer possible to make queries with `useLazyQuery` during SSR. If you need to execute the query during render, use `useQuery` instead.
 - `onCompleted` and `onError` callbacks have been removed from the hook options - if you need to programmatically react to the result of the query, `await` the promise returned by the `execute` function.
-- if a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.
-  This means it is no longer possible to have multiple queries in flight at the same time.
-In some cases, you may need the query to complete, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function. Note that the result returned from the hook only reflects state from the latest call of the execute function. Any previously retained queries are not synchronized to the hook state.
-That said, this can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
+- If a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.<br/>
+  This means it is no longer possible to have multiple queries in flight at the same time.<br/>
+  In some cases, you may need the query to complete, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function. Note that the result returned from the hook only reflects state from the latest call of the execute function. Any previously retained queries are not synchronized to the hook state.<br/>
+  That said, this can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
 
 ### Changes to `useMutation`
 
@@ -772,7 +774,7 @@ The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` in
 
 ### `useQuery`: removal of the deprecated `onCompleted` and `onError` options
 
-The `onCompleted` and `onError` callback options have been removed. Their behavior was ambiguous and made it easy to introduce subtle bugs in your application. 
+The `onCompleted` and `onError` callback options have been removed. Their behavior was ambiguous and made it easy to introduce subtle bugs in your application.
 
 You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 

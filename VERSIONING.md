@@ -46,6 +46,11 @@ However, we consider the following features to be supported widely enough that A
 > [!NOTE]
 > Not all of the these features are currently used at this time. Usage of these features might fluctuate between minor versions.
 
+## TypeScript types
+
+We reserve the right to update TypeScript types as needed, such as to fix bugs, align types with actual runtime behavior or add compatibility with changes in upcoming TypeScript versions.
+Updates to types might requires changes to your application, and while we are careful to keep such changes to a minimum, we do not consider these breaking changes in the sense of SemVer.
+
 ## Dependencies
 
 ### TypeScript

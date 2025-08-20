@@ -1,11 +1,11 @@
 # Apollo Client Versioning Policy
 
-Apollo Client itself tries to follow SemVer versioning.
+Apollo Client tries to follow SemVer versioning.
 
-However, we reserve the right to change transpilation targets, drop polyfills or update required dependencies in minor releases.
+However, we reserve the right to change transpilation targets, drop polyfills or update required dependencies. These changes will be released in minor versions.
 This is to ensure that Apollo Client can take advantage of the latest JavaScript features, performance improvements, and security fixes.
 
-This document tries to outline the versioning strategy for Apollo Client's dependencies.
+This document outlines the versioning strategy for Apollo Client's dependencies.
 
 ## Syntax transpilation target
 
@@ -23,19 +23,19 @@ That means Apollo Client supports the following environments and their derivativ
 | Samsung Internet | 17+     |
 | Node.js          | 20+     |
 
-Using Apollo Client in different environments may require transpiling the syntax to a lower version, or polyfilling missing APIs.
+Using Apollo Client in different environments may require you to transpile the syntax using a lower version, or polyfilling missing APIs.
 
-This transpilation target might be updated in minor releases, but we commit to always include at least two years of browser support and the officially supported Node.js versions in the target.
+We reserve the right to update the transpilation target in minor releases, but we commit to always include at least two years of browser support and the officially supported Node.js versions in the target.
 
 ## Language features
 
-Between minor releases, Apollo Client might start using new APIs and language features that are considered ["Baseline: Widely available"](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility) by MDN.
+Apollo Client might start using new APIs and language features that are considered ["Baseline: Widely available"](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility) by MDN. Usage of new language features will be released in a new minor version.
 
-## Non-polyfillable, non-transpilable language features
+### Non-polyfillable, non-transpilable language features
 
 We try to avoid new features that cannot be transpiled or polyfilled.
 
-However, we consider the following features to be supported widely enough that even though we do presently not use all of them, we might start using them in a minor and will not consider it a major breaking change.
+However, we consider the following features to be supported widely enough that Apollo Client can use them at any time without considering it a major breaking change.
 
 - [`WeakMap`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap) (already used in Apollo Client)
 - [`WeakSet`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet) (already used in Apollo Client)
@@ -43,36 +43,41 @@ However, we consider the following features to be supported widely enough that e
 - [`FinalizationRegistry`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry) (already used by dependencies)
 - [`Proxy`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
 
+> [!NOTE]
+> Not all of the these features are currently used at this time. Usage of these features might fluctuate between minor versions.
+
 ## Dependencies
 
 ### TypeScript
 
-We make an effort to only use TypeScript features that have been available as stable for at least one year. This usually means that if you stay within the [last four minor versions](https://github.com/microsoft/TypeScript/wiki/TypeScript%27s-Release-Process#how-often-does-typescript-release) of TypeScript, you will not run into issues with Apollo Client.
+We make an effort to only use TypeScript features that have been available as stable for at least one year. This generally means we support the [last four minor versions](https://github.com/microsoft/TypeScript/wiki/TypeScript%27s-Release-Process#how-often-does-typescript-release) of TypeScript. If you use a TypeScript version older than these, you might experience some type compatibility issues with Apollo Client.
 
 > Note that this is a shorter support window than [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped#support-window).
 
-However, we do reserve the right to use newer syntax in new features, in a way that doesn't break compilation with older TypeScript versions. These new features might not be available to consumers on older TypeScript versions.
+However, we reserve the right to use newer syntax in new features, in a way that doesn't break compilation with older TypeScript versions. These new features might not be available to consumers on older TypeScript versions.
 
 ### React
 
-We aim to support at least the latest two major versions of React.
-Some Apollo Client features might require the latest major version of React and might not be available to consumers on older React versions.
+We aim to support, at minimum, the latest two major versions of React.
+Some Apollo Client features might require the latest major version of React and won't be available to consumers on older React versions (e.g. `useSuspenseQuery` which relies on React Suspense).
 
-> Please note that the React team almost never backports bugfixes to older major versions. You might encounter bugs in Apollo Client that are fixed in the latest React version, but not in older versions. We strongly recommend to always stay on the latest React version.
+We will note when such a case occurs so that you understand when a feature requires a specific React version.
+
+> Please note that the React team almost never backports bugfixes to older major versions. From time to time, you might encounter bugs when using Apollo Client caused by React itself that are fixed in recent React versions, but are unavailable in older major versions. We strongly recommend you keep up-to-date with the latest React version.
 
 ### React Native
 
-We try to support at least the latest version of React Native. Note that React Native relies a lot of polyfills that might slightly differ from the implementations of other platforms, of completely miss some APIs.
+We try to support, at minimum, the latest version of React Native. Note that React Native relies on many polyfills that might differ from the implementations of other platforms. Some polyfills might also be missing.
 
 Where possible, we try to avoid using APIs that are not available in React Native.
-If this is not available, we will try to provide workarounds behind [the `react-native` exports condition](https://reactnative.dev/blog/2023/06/21/package-exports-support#the-new-react-native-condition).
+If an API is not available, we will try to provide workarounds using the [`react-native` exports condition](https://reactnative.dev/blog/2023/06/21/package-exports-support#the-new-react-native-condition).
 
 ### The `graphql` package
 
 We commit to supporting the latest major version of the `graphql` package, with a grace period of at least one year before we drop support for older versions.
 
-Within a `graphql` major, we can only guarantee compatibility with the latest minor versions, and strongly encourage consumers to regularly update the `graphql` package to get the latest bugfixes and features.
+Within a `graphql` major, we only guarantee compatibility with the latest minor version. We strongly encourage consumers to regularly update the `graphql` package to get the latest bugfixes and features.
 
-### other dependencies
+### Other dependencies
 
 We reserve the right to update dependencies in minor releases of Apollo Client, as well as dropping support for older versions of dependencies.

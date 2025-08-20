@@ -1,3 +1,5 @@
+import assert from "node:assert";
+
 import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
@@ -20,25 +22,42 @@ const apolloClientInitializationTransform: j.Transform = function transform(
     modified = true;
   }
   for (const constructorCall of apolloClientConstructions({ context })) {
-    explicitLinkConstruction({ context, onModified, constructorCall });
+    const options = {
+      context,
+      onModified,
+      constructorCall,
+      prop: (name: string) =>
+        getProperty({
+          context,
+          objectPath: constructorCall.optionsPath,
+          name,
+        }),
+    };
+    explicitLinkConstruction(options);
+    clientAwareness(options);
+    localState(options);
+    devtoolsOption(options);
+    prioritizeCacheValues(options);
   }
 
   return modified ? source.toSource() : undefined;
 };
 export default apolloClientInitializationTransform;
 
+interface StepOptions {
+  context: UtilContext;
+  constructorCall: ConstructorCall;
+  onModified: () => void;
+  prop: (name: string) => j.ASTPath<namedTypes.ObjectProperty> | null;
+}
+
 function explicitLinkConstruction({
   context,
   context: { j },
   constructorCall: { optionsPath },
   onModified,
-}: {
-  context: UtilContext;
-  constructorCall: ConstructorCall;
-  onModified: () => void;
-}) {
-  const prop = (name: string) => getProperty({ context, optionsPath, name });
-
+  prop,
+}: StepOptions) {
   if (prop("link")) {
     return;
   }
@@ -81,6 +100,134 @@ function explicitLinkConstruction({
   );
 }
 
+function clientAwareness({
+  context: { j },
+  constructorCall: { optionsPath },
+  onModified,
+  prop,
+}: StepOptions) {
+  const namePath = prop("name");
+  const name = namePath?.node;
+  namePath?.replace();
+
+  const versionPath = prop("version");
+  const version = versionPath?.node;
+  versionPath?.replace();
+
+  if (!namePath && !versionPath) {
+    return;
+  }
+  onModified();
+
+  optionsPath.node.properties.push(
+    j.objectProperty.from({
+      key: j.identifier("clientAwareness"),
+      value: j.objectExpression.from({
+        properties: [name, version].filter((prop) => !!prop),
+      }),
+    })
+  );
+}
+
+function localState({
+  context,
+  context: { j },
+  constructorCall: { specPath, optionsPath },
+  onModified,
+  prop,
+}: StepOptions) {
+  const resolversPath = prop("resolvers");
+  const resolvers = resolversPath?.node;
+  resolversPath?.replace();
+
+  const typeDefsPath = prop("typeDefs");
+  typeDefsPath?.replace();
+
+  const fragmentMatcherPath = prop("fragmentMatcher");
+  fragmentMatcherPath?.replace();
+
+  if (!resolversPath && !typeDefsPath && !fragmentMatcherPath) {
+    return;
+  }
+  onModified();
+  if (!resolvers) {
+    return;
+  }
+  const localStateSpec = findOrInsertImport({
+    context,
+    description: {
+      module: "@apollo/client/local-state",
+      identifier: "LocalState",
+    },
+    compatibleWith: "value",
+    after: j(specPath).closest(j.ImportDeclaration),
+  });
+
+  optionsPath.node.properties.push(
+    j.objectProperty.from({
+      key: j.identifier("link"),
+      value: j.newExpression.from({
+        callee: localStateSpec.local || localStateSpec.imported,
+        arguments: [
+          j.objectExpression.from({
+            properties: [resolvers],
+          }),
+        ],
+      }),
+    })
+  );
+}
+
+function devtoolsOption({
+  context: { j },
+  constructorCall: { optionsPath },
+  onModified,
+  prop,
+}: StepOptions) {
+  const devtoolsPath = prop("connectToDevTools");
+  const node = devtoolsPath?.node;
+  devtoolsPath?.replace();
+  if (!devtoolsPath) {
+    return;
+  }
+  onModified();
+
+  assert(node);
+
+  if (node.shorthand) {
+    node.value = node.key;
+    node.shorthand = false;
+  }
+  node.key = j.identifier("enabled");
+  optionsPath.node.properties.push(
+    j.objectProperty.from({
+      key: j.identifier("devtools"),
+      value: j.objectExpression.from({
+        properties: [node],
+      }),
+    })
+  );
+}
+
+function prioritizeCacheValues({
+  context: { j },
+  onModified,
+  prop,
+}: StepOptions) {
+  const devtoolsPath = prop("disableNetworkFetches");
+  if (!devtoolsPath) {
+    return;
+  }
+  onModified();
+
+  const node = devtoolsPath.node;
+  if (node.shorthand) {
+    node.value = node.key;
+    node.shorthand = false;
+  }
+  node.key = j.identifier("prioritizeCacheValues");
+}
+
 function findOrInsertImport({
   context,
   context: { j, source },
@@ -91,7 +238,7 @@ function findOrInsertImport({
   context: UtilContext;
   description: IdentifierRename["from"];
   compatibleWith: ImportKind;
-  after?: j.ASTPath<namedTypes.ImportDeclaration>;
+  after?: j.Collection<any>;
 }) {
   const found = findImportSpecifiersFor({
     description,
@@ -113,13 +260,13 @@ function findOrInsertImport({
       importKind: compatibleWith,
     });
     if (!after) {
-      after = source.find(j.ImportDeclaration).paths().at(-1);
+      after = source.find(j.ImportDeclaration);
     }
-    if (!after) {
+    if (!after || after.size() === 0) {
       const program = source.find(j.Program).nodes()[0]!;
       program.body.unshift(addInto);
     } else {
-      after.insertAfter(addInto);
+      after.at(-1).insertAfter(addInto);
     }
   }
   const spec = j.importSpecifier.from({
@@ -131,15 +278,15 @@ function findOrInsertImport({
 
 function getProperty({
   context: { j },
-  optionsPath,
+  objectPath,
   name,
 }: {
-  optionsPath: j.ASTPath<namedTypes.ObjectExpression>;
+  objectPath: j.ASTPath<namedTypes.ObjectExpression>;
   context: UtilContext;
   name: string;
 }): j.ASTPath<namedTypes.ObjectProperty> | null {
   return (
-    (optionsPath.get("properties") as j.ASTPath).filter(
+    (objectPath.get("properties") as j.ASTPath).filter(
       (path: j.ASTPath) =>
         j.ObjectProperty.check(path.node) &&
         j.Identifier.check(path.node.key) &&

@@ -168,3 +168,400 @@ new ApolloClient({
     ).toMatchInlineSnapshot(`""`);
   });
 });
+
+describe("client awareness", () => {
+  test("name and version", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  name: "my-client",
+  version: "1.0.0",
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+
+        clientAwareness: {
+          name: "my-client",
+          version: "1.0.0"
+        }
+      })"
+    `);
+  });
+  test("name only", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  name: "my-client",
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        clientAwareness: {
+          name: "my-client"
+        },
+      })"
+    `);
+  });
+  test("version only", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  version: "1.0.0",
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        clientAwareness: {
+          version: "1.0.0"
+        },
+      })"
+    `);
+  });
+});
+
+describe("local state", () => {
+  test("with resolvers inline", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  resolvers: {
+    foo: () => "bar",
+  }
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      import { LocalState } from "@apollo/client/local-state";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        link: new LocalState({
+          resolvers: {
+            foo: () => "bar",
+          }
+        })
+      })"
+    `);
+  });
+  test("with resolvers variable", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const myResolvers = {}
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  resolvers: myResolvers
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      import { LocalState } from "@apollo/client/local-state";
+
+      const myResolvers = {}
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        link: new LocalState({
+          resolvers: myResolvers
+        })
+      })"
+    `);
+  });
+  test("with resolvers variable (shorthand)", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const resolvers = {}
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  resolvers
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      import { LocalState } from "@apollo/client/local-state";
+
+      const resolvers = {}
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        link: new LocalState({
+          resolvers
+        })
+      })"
+    `);
+  });
+  test("without resolvers", () => {
+    // TODO: should we insert `LocalState` by default, with a comment to remove it if not using client state?
+  });
+});
+
+describe("devtools option", () => {
+  test("`true`", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  connectToDevTools: true
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        devtools: {
+          enabled: true
+        }
+      })"
+    `);
+  });
+  test("`false`", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  connectToDevTools: false
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        devtools: {
+          enabled: false
+        }
+      })"
+    `);
+  });
+  test("variable", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const shouldConnectToDevTools = process.env.NODE_ENV === 'development';
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  // see if this comment moves around too
+  connectToDevTools: shouldConnectToDevTools
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      const shouldConnectToDevTools = process.env.NODE_ENV === 'development';
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        devtools: {
+          // see if this comment moves around too
+          enabled: shouldConnectToDevTools
+        }
+      })"
+    `);
+  });
+  test("process.env.NODE_ENV === 'development'", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  connectToDevTools: process.env.NODE_ENV === 'development'
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        devtools: {
+          enabled: process.env.NODE_ENV === 'development'
+        }
+      })"
+    `);
+  });
+  test("shorthand", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const connectToDevTools = process.env.NODE_ENV === 'development';
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  connectToDevTools
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      const connectToDevTools = process.env.NODE_ENV === 'development';
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        devtools: {
+          enabled: connectToDevTools
+        }
+      })"
+    `);
+  });
+});
+
+describe("disableNetworkFetches option", () => {
+  test("`true`", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  disableNetworkFetches: true
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        prioritizeCacheValues: true
+      })"
+    `);
+  });
+  test("`false`", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  disableNetworkFetches: false
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        prioritizeCacheValues: false
+      })"
+    `);
+  });
+  test("variable", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const onServer = typeof window === "undefined";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  disableNetworkFetches: onServer
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      const onServer = typeof window === "undefined";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        prioritizeCacheValues: onServer
+      })"
+    `);
+  });
+  test("shorthand", () => {
+    expect(
+      transform`
+import { ApolloClient } from "@apollo/client";
+
+const disableNetworkFetches = typeof window === "undefined";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  disableNetworkFetches
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      const disableNetworkFetches = typeof window === "undefined";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+        prioritizeCacheValues: disableNetworkFetches
+      })"
+    `);
+  });
+});

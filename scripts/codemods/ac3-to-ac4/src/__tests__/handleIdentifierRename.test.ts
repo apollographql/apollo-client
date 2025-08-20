@@ -9,7 +9,7 @@ declare module "jscodeshift/dist/testUtils" {
   export function applyTransform(
     module: import("jscodeshift").Transform,
     options: Options,
-    input: { source: string },
+    input: { source: string; path?: string },
     testOptions?: Record<string, unknown>
   ): string;
 }

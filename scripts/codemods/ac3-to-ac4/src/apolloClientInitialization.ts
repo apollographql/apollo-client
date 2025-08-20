@@ -15,6 +15,7 @@ const steps = {
   localState,
   devtoolsOption,
   prioritizeCacheValues,
+  dataMasking,
 } satisfies Record<string, (options: StepOptions) => void>;
 
 export type Steps = keyof typeof steps;
@@ -51,6 +52,7 @@ const apolloClientInitializationTransform: j.Transform = function transform(
           objectPath: constructorCall.optionsPath,
           name,
         }),
+      file,
     };
     for (const step of Object.values(enabledSteps)) {
       step(options);
@@ -66,6 +68,7 @@ interface StepOptions {
   constructorCall: ConstructorCall;
   onModified: () => void;
   prop: (name: string) => j.ASTPath<namedTypes.ObjectProperty> | null;
+  file: j.FileInfo;
 }
 
 function explicitLinkConstruction({
@@ -264,6 +267,102 @@ interface ConstructorCall {
   optionsPath: j.ASTPath<namedTypes.ObjectExpression>;
 }
 
+function dataMasking({
+  context: { j, source },
+  onModified,
+  prop,
+  file,
+}: StepOptions) {
+  if (!file.path.endsWith(".ts") && !file.path.endsWith(".tsx")) {
+    // avoid inserting data masking types in non-TypeScript files
+    return;
+  }
+
+  const dataMaskingPath = prop("dataMasking");
+  const dataMasking = dataMaskingPath?.node;
+  if (
+    !dataMasking ||
+    (j.BooleanLiteral.check(dataMasking.value) &&
+      dataMasking.value.value === false) ||
+    dataMasking.comments?.some((comment) =>
+      CODEMOD_MARKER_REGEX("applied").test(comment.value)
+    )
+  ) {
+    return;
+  }
+
+  onModified();
+  dataMasking.comments ??= [];
+  dataMasking.comments.push(
+    j.commentBlock.from({
+      leading: true,
+      value: `
+Inserted by Apollo Client 3->4 migration codemod.
+Keep this comment here if you intend to run the codemod again,
+to avoid changes from being reapplied.
+Delete this comment once you are done with the migration.
+${CODEMOD_MARKER} applied
+`,
+    })
+  );
+  const program = source.find(j.Program).nodes()[0]!;
+
+  program.body.push(
+    j.emptyStatement.from({
+      comments: [
+        j.commentBlock.from({
+          leading: true,
+          value: `
+Start: Inserted by Apollo Client 3->4 migration codemod.
+Copy the contents of this block into a \`.d.ts\` file in your project
+to enable data masking types.
+`,
+        }),
+      ],
+    }),
+    j.importDeclaration.from({ source: j.literal("@apollo/client") }),
+    j.importDeclaration.from({
+      specifiers: [
+        j.importSpecifier.from({
+          imported: j.identifier("GraphQLCodegenDataMasking"),
+        }),
+      ],
+      source: j.literal("@apollo/client/masking"),
+    }),
+    j.tsModuleDeclaration.from({
+      id: j.stringLiteral("@apollo/client"),
+      declare: true,
+      body: j.tsModuleBlock.from({
+        body: [
+          j.exportNamedDeclaration.from({
+            declaration: j.tsInterfaceDeclaration.from({
+              id: j.identifier("TypeOverrides"),
+              extends: [
+                j.tsExpressionWithTypeArguments.from({
+                  expression: j.identifier(
+                    "GraphQLCodegenDataMasking.TypeOverrides"
+                  ),
+                }),
+              ],
+              body: j.tsInterfaceBody.from({ body: [] }),
+            }),
+          }),
+        ],
+      }),
+    }),
+    j.emptyStatement.from({
+      comments: [
+        j.commentBlock.from({
+          leading: true,
+          value: `
+End: Inserted by Apollo Client 3->4 migration codemod.
+`,
+        }),
+      ],
+    })
+  );
+}
+
 function* apolloClientConstructions({
   context,
   context: { j },
@@ -299,3 +398,7 @@ function* apolloClientConstructions({
     }
   }
 }
+
+const CODEMOD_MARKER = `@apollo/client-codemod-migrate-3-to-4`;
+const CODEMOD_MARKER_REGEX = (keyword: string) =>
+  new RegExp(`^\\s*(?:[*]?\\s*)${CODEMOD_MARKER} ${keyword}\\s*$`, "m");

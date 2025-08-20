@@ -13,7 +13,7 @@ const transform =
         apolloClientInitialization:
           enabledSteps.length > 0 ? enabledSteps : undefined,
       },
-      { source },
+      { source, path: "test.ts" },
       { parser: "ts" }
     );
 
@@ -58,6 +58,14 @@ export const client = new ApolloClient({
         defaultContext: {},
         assumeImmutableResults: true,
         documentTransform: myDocumentTransform,
+
+        /*
+        Inserted by Apollo Client 3->4 migration codemod.
+        Keep this comment here if you intend to run the codemod again,
+        to avoid changes from being reapplied.
+        Delete this comment once you are done with the migration.
+        @apollo/client-codemod-migrate-3-to-4 applied
+        */
         dataMasking: true,
 
         link: new HttpLink({
@@ -81,7 +89,25 @@ export const client = new ApolloClient({
         devtools: {
           enabled: true
         }
-      })"
+      })
+
+      /*
+      Start: Inserted by Apollo Client 3->4 migration codemod.
+      Copy the contents of this block into a \`.d.ts\` file in your project
+      to enable data masking types.
+      */
+
+
+      import "@apollo/client";
+      import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+
+      declare module "@apollo/client" {
+        export interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
+      }
+
+      /*
+      End: Inserted by Apollo Client 3->4 migration codemod.
+      */"
     `);
   });
 });
@@ -429,7 +455,7 @@ new ApolloClient({
         /*
         Inserted by Apollo Client 3->4 migration codemod.
         If you are not using the \`@client\` directive in your application,
-        you can safely remove this property.
+        you can safely remove this option.
         */
         localState: new LocalState({})
       })"
@@ -663,5 +689,120 @@ new ApolloClient({
         prioritizeCacheValues: disableNetworkFetches
       })"
     `);
+  });
+});
+describe("dataMasking types", () => {
+  test("applied if `dataMasking` is set", () => {
+    expect(transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  dataMasking: true,
+})
+      `).toMatchInlineSnapshot(`
+        "import { ApolloClient } from "@apollo/client";
+
+        new ApolloClient({
+          cache: new InMemoryCache(),
+          link: someLink,
+          /*
+          Inserted by Apollo Client 3->4 migration codemod.
+          Keep this comment here if you intend to run the codemod again,
+          to avoid changes from being reapplied.
+          Delete this comment once you are done with the migration.
+          @apollo/client-codemod-migrate-3-to-4 applied
+          */
+          dataMasking: true,
+        })
+
+        /*
+        Start: Inserted by Apollo Client 3->4 migration codemod.
+        Copy the contents of this block into a \`.d.ts\` file in your project
+        to enable data masking types.
+        */
+
+
+        import "@apollo/client";
+        import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+
+        declare module "@apollo/client" {
+          export interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
+        }
+
+        /*
+        End: Inserted by Apollo Client 3->4 migration codemod.
+        */"
+      `);
+  });
+
+  test("not applied if `dataMasking` is not set`", () => {
+    expect(transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+})
+      `).toMatchInlineSnapshot(`""`);
+  });
+
+  test("not applied if `dataMasking` is set to `false`", () => {
+    expect(transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  dataMasking: false,
+})
+      `).toMatchInlineSnapshot(`""`);
+  });
+
+  test("does not reapply on a second run (full comment in place)", () => {
+    const once = transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  dataMasking: true,
+})
+      `;
+    const twice = transform("dataMasking")([once] as any);
+    expect(twice).toEqual("" /* empty string -> no transformation */);
+  });
+
+  test("does not reapply on a second run (full comment in place, added code moved out)", () => {
+    expect(transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  /*
+  Inserted by Apollo Client 3->4 migration codemod.
+  Keep this comment here if you intend to run the codemod again,
+  to avoid changes from being reapplied.
+  Delete this comment once you are done with the migration.
+  @apollo/client-codemod-migrate-3-to-4 applied
+  */
+  dataMasking: true,
+})
+      `).toMatchInlineSnapshot(`""`);
+  });
+
+  test("does not reapply on a second run (only marker left in place, added code moved out)", () => {
+    expect(transform("dataMasking")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+  /* @apollo/client-codemod-migrate-3-to-4 applied */
+  dataMasking: true,
+})
+      `).toMatchInlineSnapshot(`""`);
   });
 });

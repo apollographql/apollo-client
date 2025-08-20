@@ -43,14 +43,15 @@
   "dependencies": {
     "@apollo/client": "*",
     "@apollo/client-ai": "*",
-    "ai": "^5.0.17"
+    "ai": "^5.0.17",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/jest": "^29.5.12",
-    "rimraf": "^5.0.9"
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.9",
+    "ts-jest": "^29.2.3",
+    "typescript": "^5.8.3"
   }
 }

@@ -750,7 +750,7 @@ new ApolloClient({
 When you create an `ObservableQuery` with `client.watchQuery`, unless you explicitly disable `notifyOnNetworkStatusChange`, the first emitted value will now always have `loading: true` if the query is not already in the cache.
 Previously, this initial loading state would have been skipped.
 
-## Changes in tracking of active queries and active observables
+### Changes in tracking of active queries and active observables
 
 In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.
 
@@ -760,6 +760,10 @@ In Apollo Client 4, a query is only considered `inactive` if it is currently sub
 passing a `skipToken`, or setting the `fetchPolicy` to `standby`. Other subscribed queries are considered `active`, and any unsubscribed query is not tracked at all.
 
 This changes the behaviour of the `client.getObservableQueries` and `client.refetchQueries` methods, along with the `refetchQueries` option of `client.mutate` and `useMutation`.
+
+### `InMemoryCache` `canonizeResults` option removed
+
+The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
 
 ## New error handling
 
@@ -1612,10 +1616,6 @@ Now, development mode is primarily controlled by the `development` export condit
 If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behaviour, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
 
 ## Other notable breaking changes
-
-### `InMemoryCache` `canonizeResults` option removed
-
-The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
 
 ### New requirements for custom cache implementations
 

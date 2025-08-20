@@ -9,9 +9,20 @@ import { findImportDeclarationFor } from "./util/findImportDeclarationFor.js";
 import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
 import { findReferences } from "./util/findReferences.js";
 
+const steps = {
+  explicitLinkConstruction,
+  clientAwareness,
+  localState,
+  devtoolsOption,
+  prioritizeCacheValues,
+} satisfies Record<string, (options: StepOptions) => void>;
+
+export type Steps = keyof typeof steps;
+
 const apolloClientInitializationTransform: j.Transform = function transform(
   file,
-  api
+  api,
+  options = {}
 ) {
   const j = api.jscodeshift;
   const source = j(file.source);
@@ -21,6 +32,14 @@ const apolloClientInitializationTransform: j.Transform = function transform(
   function onModified() {
     modified = true;
   }
+  const enabledStepNames =
+    Array.isArray(options.apolloClientInitialization) ?
+      options.apolloClientInitialization
+    : Object.keys(steps);
+  const enabledSteps = Object.fromEntries(
+    Object.entries(steps).filter(([name]) => enabledStepNames.includes(name))
+  );
+
   for (const constructorCall of apolloClientConstructions({ context })) {
     const options = {
       context,
@@ -33,11 +52,9 @@ const apolloClientInitializationTransform: j.Transform = function transform(
           name,
         }),
     };
-    explicitLinkConstruction(options);
-    clientAwareness(options);
-    localState(options);
-    devtoolsOption(options);
-    prioritizeCacheValues(options);
+    for (const step of Object.values(enabledSteps)) {
+      step(options);
+    }
   }
 
   return modified ? source.toSource() : undefined;

@@ -1,20 +1,26 @@
 import { applyTransform } from "jscodeshift/dist/testUtils";
 import { describe, expect, test } from "vitest";
 
+import type { Steps } from "../apolloClientInitialization.js";
 import apolloClientInitializationTransform from "../apolloClientInitialization.js";
 
-const transform = ([source]: TemplateStringsArray) =>
-  applyTransform(
-    apolloClientInitializationTransform,
-    {},
-    { source },
-    { parser: "ts" }
-  );
+const transform =
+  (...enabledSteps: Steps[]) =>
+  ([source]: TemplateStringsArray) =>
+    applyTransform(
+      apolloClientInitializationTransform,
+      {
+        apolloClientInitialization:
+          enabledSteps.length > 0 ? enabledSteps : undefined,
+      },
+      { source },
+      { parser: "ts" }
+    );
 
 describe("http link intialization", () => {
   test("all options", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -48,7 +54,7 @@ new ApolloClient({
 
   test("only uri", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 new ApolloClient({
@@ -72,7 +78,7 @@ new ApolloClient({
 
   test("HttpLink import already there", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient } from "@apollo/client";
 import { HttpLink } from "@apollo/client/link/http";
 
@@ -103,7 +109,7 @@ new ApolloClient({
 
   test("HttpLink entry point already there", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient } from "@apollo/client";
 import { defaultPrinter } from "@apollo/client/link/http";
 
@@ -134,7 +140,7 @@ new ApolloClient({
 
   test("link already present inline", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient } from "@apollo/client";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 
@@ -151,7 +157,7 @@ new ApolloClient({
 
   test("link already present shorthand", () => {
     expect(
-      transform`
+      transform("explicitLinkConstruction")`
 import { ApolloClient } from "@apollo/client";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 
@@ -172,7 +178,7 @@ new ApolloClient({
 describe("client awareness", () => {
   test("name and version", () => {
     expect(
-      transform`
+      transform("clientAwareness")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -198,7 +204,7 @@ new ApolloClient({
   });
   test("name only", () => {
     expect(
-      transform`
+      transform("clientAwareness")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -221,7 +227,7 @@ new ApolloClient({
   });
   test("version only", () => {
     expect(
-      transform`
+      transform("clientAwareness")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -247,7 +253,7 @@ new ApolloClient({
 describe("local state", () => {
   test("with resolvers inline", () => {
     expect(
-      transform`
+      transform("localState")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -276,7 +282,7 @@ new ApolloClient({
   });
   test("with resolvers variable", () => {
     expect(
-      transform`
+      transform("localState")`
 import { ApolloClient } from "@apollo/client";
 
 const myResolvers = {}
@@ -305,7 +311,7 @@ new ApolloClient({
   });
   test("with resolvers variable (shorthand)", () => {
     expect(
-      transform`
+      transform("localState")`
 import { ApolloClient } from "@apollo/client";
 
 const resolvers = {}
@@ -340,7 +346,7 @@ new ApolloClient({
 describe("devtools option", () => {
   test("`true`", () => {
     expect(
-      transform`
+      transform("devtoolsOption")`
 import { ApolloClient } from "@apollo/client";
 
 
@@ -365,7 +371,7 @@ new ApolloClient({
   });
   test("`false`", () => {
     expect(
-      transform`
+      transform("devtoolsOption")`
 import { ApolloClient } from "@apollo/client";
 
 
@@ -390,7 +396,7 @@ new ApolloClient({
   });
   test("variable", () => {
     expect(
-      transform`
+      transform("devtoolsOption")`
 import { ApolloClient } from "@apollo/client";
 
 const shouldConnectToDevTools = process.env.NODE_ENV === 'development';
@@ -419,7 +425,7 @@ new ApolloClient({
   });
   test("process.env.NODE_ENV === 'development'", () => {
     expect(
-      transform`
+      transform("devtoolsOption")`
 import { ApolloClient } from "@apollo/client";
 
 
@@ -444,7 +450,7 @@ new ApolloClient({
   });
   test("shorthand", () => {
     expect(
-      transform`
+      transform("devtoolsOption")`
 import { ApolloClient } from "@apollo/client";
 
 const connectToDevTools = process.env.NODE_ENV === 'development';
@@ -474,7 +480,7 @@ new ApolloClient({
 describe("disableNetworkFetches option", () => {
   test("`true`", () => {
     expect(
-      transform`
+      transform("prioritizeCacheValues")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -495,7 +501,7 @@ new ApolloClient({
   });
   test("`false`", () => {
     expect(
-      transform`
+      transform("prioritizeCacheValues")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient({
@@ -516,7 +522,7 @@ new ApolloClient({
   });
   test("variable", () => {
     expect(
-      transform`
+      transform("prioritizeCacheValues")`
 import { ApolloClient } from "@apollo/client";
 
 const onServer = typeof window === "undefined";
@@ -541,7 +547,7 @@ new ApolloClient({
   });
   test("shorthand", () => {
     expect(
-      transform`
+      transform("prioritizeCacheValues")`
 import { ApolloClient } from "@apollo/client";
 
 const disableNetworkFetches = typeof window === "undefined";

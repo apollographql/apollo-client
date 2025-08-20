@@ -977,14 +977,23 @@ observable.subscribe({
 
 ### Changes in tracking of active queries and active observables
 
-In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.
+In Apollo Client 3, `ObservableQuery` instances were tracked by the client from the moment they were created until they were unsubscribed from. In cases where the `ObservableQuery` instance was never subscribed to, this caused memory leaks and unintended behavior with APIs such as `refetchQueries` when refetching active queries, because the `ObservableQuery` instances were never properly cleaned up.
 
-In Apollo Client 4, this behaviour has changed. We only track queries that are currently subscribed to, and once they are unsubscribed from, they are removed from the tracking list.
-This changes the meaning of `active` and `inactive` queries from what they were in Apollo Client 3.
-In Apollo Client 4, a query is only considered `inactive` if it is currently subscribed to, but skipped by setting the `skip` option in a hook,
-passing a `skipToken`, or setting the `fetchPolicy` to `standby`. Other subscribed queries are considered `active`, and any unsubscribed query is not tracked at all.
+In Apollo Client 4, `ObservableQuery` instances are now tracked by the client only when they are subscribed to until they are unsubscribed from. This allows for more efficient memory management by the garbage collector to free memory if the `ObservableQuery` instance is never subscribed to and no longer referenced by other code. Additionally, this avoids situations where `refetchQueries` might execute unnecessary network requests due to the tracking behavior.
 
-This changes the behaviour of the `client.getObservableQueries` and `client.refetchQueries` methods, along with the `refetchQueries` option of `client.mutate` and `useMutation`.
+As a result of this change, the definitions for _active_ and _inactive_ queries have changed.
+
+- A query is considered active if it is observed by at least one subscriber and not in standby
+- An query is considered inactive if it is observed by at least one subscriber and in standby
+- All other `ObservableQuery` instances that don't have at least one subscriber are not tracked or accessible through the client
+
+<Note>
+
+A query is in standby if it is skipped with the `skip` option or `skipToken` in a React hook, or if the `fetchPolicy` is set to `standby`.
+
+</Note>
+
+This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
 
 ### `InMemoryCache` `canonizeResults` option removed
 

@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 
 export default {
   rootDir: "src",
-  preset: "ts-jest",
+  preset: "ts-jest/presets/default-esm",
+  extensionsToTreatAsEsm: [".ts"],
   testEnvironment: fileURLToPath(
     import.meta.resolve("../../config/FixJSDOMEnvironment.js")
   ),
@@ -21,8 +22,15 @@ export default {
       {
         isolatedModules: true,
         tsconfig: join(import.meta.dirname, "tsconfig.json"),
+        useESM: true,
       },
     ],
+  },
+  resolver: fileURLToPath(
+    import.meta.resolve("../../src/config/jest/resolver.ts")
+  ),
+  moduleNameMapper: {
+    "^@apollo/client-ai$": join(import.meta.dirname, "../ai/src/index.ts"),
   },
   transformIgnorePatterns: ["/node_modules/(?!(rxjs)/)"],
   prettierPath: null,

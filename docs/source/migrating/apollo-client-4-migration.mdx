@@ -734,19 +734,19 @@ To facilitate this change in behavior, the following major changes were introduc
 - `useLazyQuery` no longer accepts a `variables` or `context` option. The previous behaviour where these options were merged together with the `variables` and `context` passed to the execute function has been removed, as it was confusing and hard to predict.
   Instead, you should pass `variables` and `context` directly to the execute function, which will then be used to execute the query.
 - The `execute` function no longer accepts any other options than `variables` and `context`. Those options should be passed directly to the hook instead.
-- calling the `execute` function of `useLazyQuery` during render is no longer allowed. This also means that it is no longer possible to make queries with `useLazyQuery` during SSR.
+- Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error. This change also means that it is no longer possible to make queries with `useLazyQuery` during SSR. If you need to execute the query during render, use `useQuery` instead.
 - `onCompleted` and `onError` callbacks have been removed from the hook options - if you need to programmatically react to the result of the query, `await` the promise returned by the `execute` function.
 - if a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.
-  This means that you can no longer have multiple queries in flight at the same time with `useLazyQuery`.
-  To indicate that you are still interested in a query finishing even if it will not reflect in your component UI, you can call `.retain()` on the promise returned by the `execute` function.
-  That said, this is usually a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component - in that case, you should not use a hook at all, but instead call `client.query` directly.
+  This means it is no longer possible to have multiple queries in flight at the same time.
+In some cases, you may need the query to complete, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function. Note that the result returned from the hook only reflects state from the latest call of the execute function. Any previously retained queries are not synchronized to the hook state.
+That said, this can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
 
-### changes to `useMutation`
+### Changes to `useMutation`
 
-- The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, you should use `client.mutate` directly instead of using a hook.
+- The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, use `client.mutate` directly.
 
 ```ts disableCopy=true
-const [mutate] = useMutation(MY_MUTATION);// [!code --]
+const [mutate] = useMutation(MY_MUTATION, { ignoreResults: true });// [!code --]
 const client = useApolloClient();// [!code ++]
 // ...
 await mutate({ variables });// [!code --]
@@ -759,9 +759,9 @@ The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` in
 
 ### `useQuery`: removal of the deprecated `onCompleted` and `onError` options
 
-The `useQuery` callback options `onCompleted` and `onError` have been removed, as they were easy to accidentally use differently than intended and cause bugs in your application.
+The `onCompleted` and `onError` callback options have been removed. Their behavior was ambiguous and made it easy to introduce subtle bugs in your application. 
 
-You can read up more on this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
+You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
 ### (optional, but recommended) Stop using generated hooks
 
@@ -787,7 +787,7 @@ Note that this is still only a step towards full support for streaming SSR, and 
 
 ### Moving types into namespaces
 
-Most types are now colocated within the API that they relate to, so it is much easier to find the right type for the right situation.
+Most types are now colocated with the API that they belong to. This makes them more discoverable, adds consistency to the naming of each type, and provides clear ownership boundaries.
 
 Some examples:
 
@@ -799,7 +799,7 @@ Some examples:
 - `QueryResult` is now `useQuery.Result`
 - `LazyQueryResult` is now `useLazyQuery.Result`
 
-These renames should be taken care of by running the codemod, but if you are not using the codemod, most of these types will still be available under their old names, with a deprecation note pointing to the new location.
+Many of the old, most-used types are still available in Apollo Client 4 (including the examples above), but are now deprecated in favor of the new namespaced types. We suggest running the codemod to update your code to use the new namespaced types.
 
 ### Removal of `<TContext>` and `<TCacheShape>` generics
 

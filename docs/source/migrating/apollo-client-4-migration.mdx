@@ -730,7 +730,7 @@ The following individual imports have been renamed, moved to new entry points an
 
 </details>
 
-### Replacing removed exports
+### Replace removed exports
 
 If you used the [Codemod](#running-the-codemod) to update your imports, all removed exports moved to the `@apollo/client/v4-migration` entry point. You should get a TypeScript error everywhere you use a removed export. When you hover over the export, you'll get more information about why the export was removed along with migration instructions.
 
@@ -765,7 +765,7 @@ const client = new ApolloClient({
 
 Although the previous options were convenient, it meant all Apollo Client instances were bundled with `HttpLink`, even if it wasn't used in the link chain. This change enables you to use different terminating links without the increase in bundle size needed to include `HttpLink`. Most applications that scale moved away from these options anyways as soon as more complex link chains were needed.
 
-### Migrating client awareness options
+### Migrate client awareness options
 
 > This change is performed by the codemod
 
@@ -790,7 +790,7 @@ This option only has an effect if you are using the client-awareness-capable `Ht
 
 </Note>
 
-### Updating local state
+### Update local state
 
 > This change is performed by the codemod
 
@@ -975,7 +975,7 @@ observable.subscribe({
 });
 ```
 
-### Changes in tracking of active queries and active observables
+### Tracking of active and active queries
 
 In Apollo Client 3, `ObservableQuery` instances were tracked by the client from the moment they were created until they were unsubscribed from. In cases where the `ObservableQuery` instance was never subscribed to, this caused memory leaks and unintended behavior with APIs such as `refetchQueries` when refetching active queries, because the `ObservableQuery` instances were never properly cleaned up.
 
@@ -995,7 +995,7 @@ A query is in standby if it is skipped with the `skip` option or `skipToken` in 
 
 This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
 
-### `InMemoryCache` `canonizeResults` option removed
+### Removal of the `canonizeResults` option in `InMemoryCache`
 
 The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
 
@@ -1016,12 +1016,12 @@ You can read up on all available error classes and how to handle them in the [Er
 Additionally, previously errors from the link chain were handled differently than GraphQL errors.
 In Apollo Client 4, all errors are handled in the same way, so you can use `errorPolicy` to control how all kinds of error are handled, not only GraphQL errors.
 
-### Core API error handling changes
+### Core-specific changes
 
 If you use `client.watchQuery` to get an `ObservableQuery`, that will now emit an object with an `error` property instead of throwing an error.
 This way you can still receive cache updates or call `refetch` without having to resubscribe to the observable.
 
-### React-specific error handling changes
+### React-specific changes
 
 So if you take this code snippet from Apollo Client 3:
 
@@ -1103,7 +1103,7 @@ These hooks will not expose errors to your component but instead throw them, so 
 
 </Tip>
 
-## For React users
+## Updates to React APIs
 
 ### A note about hook usage
 
@@ -1359,7 +1359,7 @@ Note that that codemod is a separate package and not maintained by the Apollo Cl
 
 ## TypeScript changes
 
-### Moving types into namespaces
+### Namespaced types
 
 Most types are now colocated with the API that they belong to. This makes them more discoverable, adds consistency to the naming of each type, and provides clear ownership boundaries.
 
@@ -1398,7 +1398,7 @@ Similar to `TContext`, the `TCacheShape` generic has been removed from the `Apol
 
 ## Apollo Link changes
 
-### All links are now available as classes
+### New class-based links
 
 All links are now available as classes. While the old function link creators are still around, they are deprecated and will be removed in a future version.
 
@@ -1425,7 +1425,7 @@ const authLink = new SetContextLink((prevContext, operation) => { /*...*/ }  // 
 
 </Caution>
 
-### `from`, `concat`, and `split` exports deprecated
+### Deprecation of `from`, `concat`, and `split`
 
 Instead of using the `from`, `concat`, and `split` exports from `@apollo/client/link/core`, please now use the `ApolloLink.from`, `ApolloLink.concat`, and `ApolloLink.split` methods.
 
@@ -1447,7 +1447,7 @@ link1.concat(link2).concat(link3);// [!code --]
 link1.concat(link2, link3);// [!code ++]
 ```
 
-### `ApolloLink` `from,concat,split` static and instance methods now require `ApolloLink` instances
+### `from`,`concat`,`split` static and instance methods now require `ApolloLink` instances
 
 These methods previously accepted `ApolloLink` instances or operator functions as arguments.
 Now, they only accept `ApolloLink` instances.

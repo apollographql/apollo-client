@@ -219,3 +219,5 @@ items:
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links
+  - label: Versioning Policy
+    href: ./versioning-policy

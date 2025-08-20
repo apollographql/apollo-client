@@ -724,7 +724,7 @@ Previously, this initial loading state would have been skipped.
 Apollo Client 4 is more opinionated about how to use it.
 We believe that React hooks should be used to synchronize data with your component and avoid side effects that don't achieve this goal. As a result, we now recommend the use of core APIs directly in several use cases where synchronization with a component is not needed or intended.
 
-As an example, if you were using `useLazyQuery` to trigger many queries in quick succession, but were not interested in synchronizing the result with your component, you should now use `client.query` directly instead of using a hook.
+As an example, if you used `useLazyQuery` to execute queries but don't read the state values returned in the result tuple, we recommend that you now use `client.query` directly. This avoids unnecessary re-renders in your component for state that you don't consume.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(MY_QUERY);// [!code --:3]

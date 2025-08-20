@@ -6,7 +6,7 @@ The JavaScript ecosystem has evolved dramatically since Apollo Client 3.0's rele
 
 ## Dramatically Smaller Bundles
 
-Bundle size has been a top concern in community feedback, and we've taken it seriously. Apollo Client 4.0 introduces opt-in architecture for features that not everyone needs. The most impactful change is making local state management opt-in. If you're not using `@client` directives for local state, you no longer carry that code in your bundle. When you do need it, importing `LocalState` from `@apollo/client/local-state` gives you the same powerful local state management you're used to, but only when you actually use it.
+Bundle size has been a top concern in community feedback, and we've taken it seriously. Apollo Client 4.0 introduces opt-in architecture for features that not everyone needs. The most impactful change is making local state management opt-in. If you're not using `@client` directives for local state, you no longer carry that code in your bundle. This same principle extends to other commonly-unused features like `HttpLink`, which is no longer bundled by default when you're using custom terminating links. When you do need these features, importing them explicitly gives you the same powerful functionality, but only when you actually use it.
 
 We've also modernized our build targets. Apollo Client 4.0 ships JavaScript transpiled for browsers from 2023 and Node.js 20+, taking advantage of native language features instead of polyfills. Combined with proper ESM support and improved tree-shaking, most applications will see a **20-30%** reduction in Apollo Client's bundle size contribution. For teams fighting to stay under performance budgets, this improvement alone makes upgrading worthwhile.
 
@@ -14,20 +14,31 @@ We've also modernized our build targets. Apollo Client 4.0 ships JavaScript tran
 
 We've completely reimagined our TypeScript architecture based on a simple principle: types should be discoverable where you use them. Instead of hunting through documentation for type names, types now live alongside their APIs through namespaces. When you import `useQuery`, you get `useQuery.Options` and `useQuery.Result` right there. It's a small change that makes a big difference in day-to-day development.
 
+But the improvements go deeper. Apollo Client 4.0 now enforces required variables at the type level—if your query has required variables, TypeScript won't let you forget them. The fragile `TContext` generic has been replaced with module augmentation for defining custom context types across your link chain. And with the new `TypeOverrides` interface, you can customize how Apollo Client handles partial data, streaming responses, and more, all while maintaining type safety.
+
 ```typescript
 import { useQuery } from "@apollo/client/react";
 
-function UserProfile(props: {
-  userId: string;
-  options?: useQuery.Options<UserData, UserVariables>
-}) {
-  const { data, dataState } = useQuery(USER_QUERY, props.options);
+// Variables are now required when the query needs them
+function UserProfile({ userId }: { userId: string }) {
+  // TypeScript error if variables are missing when required!
+  const { data, dataState } = useQuery(USER_QUERY, {
+    variables: { id: userId } // Required by TypeScript
+  });
   
   if (dataState === 'complete') {
     // TypeScript knows data is fully populated
     return <Profile user={data.user} />;
   }
   // ...
+}
+
+// Define context types once for your entire app
+declare module "@apollo/client" {
+  interface DefaultContext {
+    authToken?: string;
+    requestId?: number;
+  }
 }
 ```
 

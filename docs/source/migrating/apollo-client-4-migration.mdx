@@ -1085,18 +1085,15 @@ In Apollo Client 3, the `useLazyQuery` behaved like the `useQuery` hook after th
 
 In Apollo Client 4, `useLazyQuery` focuses on user interaction and more predictable data synchronization with the component. Network requests are now initiated only when the execute function is called. This makes it safe to re-render your component with new options provided to `useLazyQuery` without the unintended network requests. New options are used the next time the execute function is called.
 
-To facilitate this change in behavior, the following major changes were introduced:
+#### Changes to the `variables` and `context` options
 
-<ul><li>
-
-`useLazyQuery` no longer accepts a `variables` or `context` option. The previous behaviour where these options were merged together with the `variables` and `context` passed to the execute function has been removed, as it was confusing and hard to predict.<br/>
-Instead, you should pass `variables` and `context` directly to the execute function, which will then be used to execute the query.
+The `useLazyQuery` hook no longer accepts the `variables` or `context` options. These options have been moved to the execute function instead. This removes the variable merging behavior which was confusing and hard to predict with the new behavior.
 
 To migrate, move the `variables` and `context` options from the hook to the execute function:
 
 {/* prettier-ignore */}
 ```ts disableCopy=true
-const [execute] = useLazyQuery(QUERY, {
+const [execute, { data }] = useLazyQuery(QUERY, {
   variables: {/* ... */},// [!code --]
   context: { /* ... */},// [!code --]
 });
@@ -1109,13 +1106,13 @@ function onUserInteraction(){
 }
 ```
 
-</li><li>
+#### Changes to the execute function
 
 The `execute` function no longer accepts any other options than `variables` and `context`. Those options should be passed directly to the hook instead.
 
 {/* prettier-ignore */}
 ```ts disableCopy=true
-const [execute] = useLazyQuery(QUERY, {
+const [execute, { data }] = useLazyQuery(QUERY, {
   fetchPolicy: "no-cache", // [!code ++]
 });
 // ...
@@ -1126,23 +1123,89 @@ function onUserInteraction(){
 }
 ```
 
-</li><li>
+If you need to change the value of an option, rerender the component with the new option value before calling the `execute` function again.
 
-Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error. This change also means that it is no longer possible to make queries with `useLazyQuery` during SSR. If you need to execute the query during render, use `useQuery` instead.
+#### Executing the query during render
 
-</li><li>
+Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error.
 
-`onCompleted` and `onError` callbacks have been removed from the hook options - if you need to programmatically react to the result of the query, `await` the promise returned by the `execute` function.
+```ts disableCopy=true
+function MyComponent() {
+  const [execute, { data }] = useLazyQuery(QUERY);
+
+  // This throws an error
+  execute();
+
+  return /* ... */;
+}
+```
+
+We recommend instead migrating to `useQuery` instead which executes the query during render automatically.
+
+```ts
+function MyComponent() {
+  const [execute, { data }] = useLazyQuery(QUERY);// [!code --:2]
+  execute();
+
+  const { data } = useQuery(QUERY);// [!code ++]
+
+  return /* ... */;
+}
+```
+
+<Tip>
+
+We don't recommend calling the `execute` function in a `useEffect` hook as a replacement. Instead, migrate to `useQuery`. If you need to hold the execution of the query beyond the initial render, consider using the `skip` option.
+
+```ts disableCopy=true
+function MyComponent({ dependentValue }) {
+  const [execute, { data }] = useLazyQuery(QUERY);// [!code --]
+
+  useEffect(() => {// [!code --:5]
+    if (dependentValue) {
+      execute();
+    }
+  }, [dependentValue]);
+
+  const { data } = useQuery(QUERY, { skip: !dependentValue });// [!code ++]
+
+  return /* ... */;
+}
+```
+
+Calling `execute` inside a `useEffect` delays the execution of the query unnecessarily. Reserve the use of `useLazyQuery` for user interaction in callback functions.
+
+</Tip>
+
+##### A note about SSR
+
+This change also means that it is no longer possible to make queries with `useLazyQuery` during SSR. If you need to execute the query during render, use `useQuery` instead.
+
+```ts disableCopy=true
+function MySSRComponent() {
+  const [execute, { data, loading, error }] = useLazyQuery(QUERY);// [!code --]
+  execute();// [!code --]
+
+  const { data, loading, error } = useQuery(QUERY);// [!code ++]
+
+  // ...
+}
+```
+
+#### Removal of `onCompleted` and `onError` callbacks
+
+The `onCompleted` and `onError` callbacks have been removed from the hook options. If you need to execute a side effect when the query completes, `await` the promise returned by the `execute` function and perform side effects there.
 
 {/* prettier-ignore */}
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY, {
-  onCompleted(data){ /* handle success */ }, // [!code --]
-  onError(error){ /* handle error */ }, // [!code --]
+  onCompleted(data) { /* handle success */ }, // [!code --]
+  onError(error) { /* handle error */ }, // [!code --]
 });
 
 async function onUserInteraction(){
   await execute({ variables })// [!code --]
+
   try {// [!code ++:6]
     const { data } = await execute({ variables })
     // handle success
@@ -1152,11 +1215,16 @@ async function onUserInteraction(){
 }
 ```
 
-</li><li>
+#### Changes to behavior for in-flight queries
 
-If a new query is started with `execute` while the previous query is still in flight, the previous query will be cancelled and the new query will be started. The previous promise returned by the `execute` function will be rejected with an `AbortError`.<br/>
-This means it is no longer possible to have multiple queries in flight at the same time.<br/>
-In some cases, you may need the query to complete, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function. Note that the result returned from the hook only reflects state from the latest call of the execute function. Any previously retained queries are not synchronized to the hook state.<br/>
+In-flight queries are now aborted more frequently. This occurs under two conditions:
+
+- The component unmounts while the query is in flight
+- A new query is started by calling the `execute` function while a previous query is in flight
+
+In each of these cases, the promise returned by the `execute` function is rejected with an [`AbortError`](https://developer.mozilla.org/en-US/docs/Web/API/DOMException#aborterror). This change means it is no longer possible to run multiple queries simultaneously.
+
+In some cases, you may need the query to run to completion, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY);
@@ -1171,7 +1239,13 @@ async function onUserInteraction() {
 
 <Note>
 
-Usage of `.retain` can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
+Even though in-flight queries run to completion when using `.retain()`, the result returned from the hook only reflects state from the latest call of the `execute` function. Any previously retained queries are not synchronized to the hook state.
+
+</Note>
+
+<Tip>
+
+Usage of `.retain()` can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY);// [!code --]
@@ -1185,9 +1259,7 @@ async function onUserInteraction() {
 }
 ```
 
-</Note>
-
-</li></ul>
+</Tip>
 
 ### Changes to `useMutation`
 

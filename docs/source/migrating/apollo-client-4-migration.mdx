@@ -1300,15 +1300,17 @@ The `onCompleted` and `onError` callback options have been removed. Their behavi
 
 You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
-### (optional, but recommended) Stop using generated hooks
+### Recommended: Avoid using generated hooks
 
-Apollo Client 4 comes with a lot of improvements to our hook types. If you are using generated hooks, you will not be able to benefit from these improvements, so we recommend to stop using generated hooks and use our hooks directly with `TypedDocumentNode` instead.
+Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen](https://the-guild.dev/graphql/codegen), you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
+
+Use the hooks exported from Apollo Client directly with `TypedDocumentNode` instead.
 
 <Note>
 
-The GraphQL Code Generator team is providing a codemod to help you migrate off of generated hooks - you can watch [this video](https://www.youtube.com/watch?v=GGmt0hvnQNU) that introduces it.
+The GraphQL Codegen team has created a codemod that helps you migrate away from generated hooks. Learn more about migrating your code using the new codemod by watching the [tutorial video](https://www.youtube.com/watch?v=GGmt0hvnQNU).<br/><br/>
 
-Note that that codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend to use a manual codegen configuration over the client preset shown in the video, as the client preset has some overlapping features with Apollo Client that do not play well together. If you choose to go this route, see [our recommended configuration for the GraphQL Code Generator Client Preset](https://www.apollographql.com/docs/deploy-preview/74d89f8b5deec991d04de44f/react/development-testing/static-typing#the-client-preset), but in the long run also consider rolling your own configuration.
+Note that that codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend that you use a manual codegen configuration over the client preset as shown in the video because the client preset includes some features that are incompatible with Apollo Client. If you choose to use the client preset, see our [recommended configuration for the client preset](../development-testing/graphql-codegen#a-note-about-the-client-preset). In the long term, consider using the plugins directly with our [recommended starter configuration](../development-testing/graphql-codegen#recommended-starter-configuration).
 
 </Note>
 

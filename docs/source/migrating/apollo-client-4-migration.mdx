@@ -1277,11 +1277,13 @@ await mutate({ variables });// [!code --]
 await client.mutate({ mutation: MY_MUTATION, variables });// [!code ++]
 ```
 
-### `useQuery`: `notifyOnNetworkStatusChange` option defaults to `true`
+### Changes to `useQuery`
+
+#### `notifyOnNetworkStatusChange` option defaults to `true`
 
 The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` instead of `false` in Apollo Client 3.
 
-### `useQuery`: removal of the deprecated `onCompleted` and `onError` options
+#### Removal of the `onCompleted` and `onError` callbacks
 
 The `onCompleted` and `onError` callback options have been removed. Their behavior was ambiguous and made it easy to introduce subtle bugs in your application.
 

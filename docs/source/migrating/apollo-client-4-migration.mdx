@@ -417,13 +417,13 @@ The following codemods are available:
 
 ## Updating imports
 
+### Move from manual CJS/ESM imports to `exports`
+
 <Note>
 
 This section contains instructions for manually updating imports. If you used the [Codemod](#running-the-codemod) to update your imports, you can safely skip this section.
 
 </Note>
-
-### Move from manual CJS/ESM imports to `exports`
 
 Apollo Client 4 now includes an `exports` field in the package's `package.json` definition. Instead of importing `.js` or `.cjs` files directly (e.g. `@apollo/client/react/index.js`, `@apollo/client/react/react.cjs`, etc.), you now import from the entrypoint instead (e.g. `@apollo/client/react`).
 Your bundler is aware of the different module formats and uses the `exports` field of the package's `package.json` to resolve the right format.

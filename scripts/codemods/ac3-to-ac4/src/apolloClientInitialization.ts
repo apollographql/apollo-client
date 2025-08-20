@@ -88,15 +88,19 @@ function findOrInsertImport({
   context: UtilContext;
   description: IdentifierRename["from"];
 }) {
-  const found = findImportSpecifiersFor({ description, context })
-    .filter(findImportSpecifiersFor.isValue(context))
-    .nodes()[0];
+  const found = findImportSpecifiersFor({
+    description,
+    context,
+    compatibleWith: "value",
+  }).nodes()[0];
   if (found) {
     return found;
   }
-  let addInto = findImportDeclarationFor({ description, context })
-    .filter((path) => path.node.importKind !== "type")
-    .nodes()[0];
+  let addInto = findImportDeclarationFor({
+    description,
+    context,
+    compatibleWith: "value",
+  }).nodes()[0];
   if (!addInto) {
     addInto = j.importDeclaration([], j.literal(description.module));
     const program = source.find(j.Program).nodes()[0]!;
@@ -146,10 +150,9 @@ function* apolloClientConstructions({
       identifier: "ApolloClient",
       alternativeModules: ["@apollo/client/core"],
     },
+    compatibleWith: "value",
     context,
-  })
-    .filter(findImportSpecifiersFor.isValue(context))
-    .paths()) {
+  }).paths()) {
     for (const newExprPath of findReferences({
       context,
       identifier: (specPath.node.local || specPath.node.imported).name + "",

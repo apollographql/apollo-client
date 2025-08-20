@@ -28,9 +28,3 @@ export function findImportSpecifiersFor({
     );
   });
 }
-
-findImportSpecifiersFor.isValue =
-  ({ j }: UtilContext) =>
-  (specPath: j.ASTPath<namedTypes.ImportSpecifier>) =>
-    specPath.node.importKind !== "type" &&
-    j(specPath).closest(j.ImportDeclaration).nodes()[0].importKind !== "type";

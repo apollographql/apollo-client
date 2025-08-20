@@ -94,8 +94,8 @@ function App() {
     },
   });
 
-  if (dataState === "empty") return "Loading...";
   if (error) return `Error! ${error.message}`;
+  if (dataState === "empty") return "Loading...";
 
   return (
     <>

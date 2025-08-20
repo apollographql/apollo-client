@@ -13,9 +13,7 @@ items:
     href: ./why-apollo
   - label: Get started
     href: ./get-started
-  - label: Changelog
-    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
-  - label: Fetching
+  - label: Core concepts
     children:
       - label: Queries
         href: ./data/queries
@@ -25,6 +23,8 @@ items:
         href: ./data/fragments
       - label: Mutations
         href: ./data/mutations
+      - label: TypeScript
+        href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
       - label: Subscriptions
@@ -33,6 +33,8 @@ items:
         href: ./data/directives
       - label: Error handling
         href: ./data/error-handling
+      - label: Persisted queries
+        href: ./data/persisted-queries
       - label: Document transforms
         href: ./data/document-transforms
       - label: Deferring response data
@@ -81,8 +83,8 @@ items:
     children:
       - label: Developer tools
         href: ./development-testing/developer-tooling
-      - label: Using TypeScript
-        href: ./development-testing/static-typing
+      - label: GraphQL Codegen
+        href: ./development-testing/graphql-codegen
       - label: Testing React components
         href: ./development-testing/testing
       - label: Schema-driven testing
@@ -204,7 +206,7 @@ items:
           - label: HttpLink
             href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
-            href: ./api/link/persisted-queries
+            href: ./api/link/apollo-link-persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
           - label: RetryLink
@@ -217,3 +219,7 @@ items:
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links
+  - label: Changelog
+    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
+  - label: Versioning Policy
+    href: ./versioning-policy

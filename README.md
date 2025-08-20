@@ -67,6 +67,10 @@ Deliver tomorrow's roadmap today with our comprehensive suite of API orchestrati
 | Jerel Miller      | [@jerelmiller](https://github.com/jerelmiller) |
 | Lenz Weber-Tronic | [@phryneas](https://github.com/phryneas)       |
 
+## Versioning Policy
+
+While Apollo Client follows SemVer, it might introduce changes like changing transpilation targets, updating dependencies or dropping support for older versions of dependencies in minor releases. For more details, see our [Versioning Policy](./VERSIONING_POLICY.md).
+
 ## 🗺️ Roadmap
 
 We regularly update our [public roadmap](https://github.com/apollographql/apollo-client/blob/main/ROADMAP.md) with the status of our work-in-progress and upcoming features.

@@ -1,22 +1,9 @@
 ---
-title: PersistedQueryLink
-description: Secure your graph while minimizing request latency.
+title: Persisted queries
+description: Secure your graph while minimizing request latency
+redirectFrom:
+  - /react/api/link/persisted-queries
 ---
-
-<DocBlock
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink:class"
-  customOrder={["summary", "remarks", "example"]}
-/>
-
-## Constructor signature
-
-```ts
-constructor(
-  options: PersistedQueryLink.Options
-): PersistedQueryLink
-```
-
-## Problems to solve
 
 Unlike REST APIs that use a fixed URL to load data, GraphQL provides a rich query language that can be used to express the shape of application data requirements. This is a marvelous advancement in technology, but it comes at a cost: GraphQL query strings are often much longer than REST URLS—in some cases by many kilobytes.
 
@@ -105,10 +92,38 @@ You can optionally create a configuration file in the root of your project to ov
 To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
 
 <Tip>
-  If you see a difference in the `id` generated in the manifest and the one your
-  client is sending at runtime, read the options available in the
-  [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
-  package to ensure the configuration matches your usage of Apollo Client.
+
+If you see a difference in the `id` generated in the manifest and the one your
+client is sending at runtime, read the options available in the
+[`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
+package to ensure the configuration matches your usage of Apollo
+Client.<br/><br/>
+
+This might also occur when you're not using the `@apollo/persisted-query-lists`
+package with `PersistedQueryLink`. The most common source of mismatches occurs
+because the `@apollo/generate-persisted-query-manifest` package sorts top-level
+definitions before generating the hash. If you're using a different terminating
+link, try using the `sortTopLevelDefinitions` function exported from
+`@apollo/persisted-query-lists` before generating the hash.
+
+<ExpansionPanel title="Example">
+
+The following example uses `sortTopLevelDefinitions` before generating the query
+hash to ensure the hash matches the manifest file.
+
+```ts {3,6} title="Your custom link"
+import { print } from "graphql";
+import { sha256 } from "crypto-hash";
+import { sortTopLevelDefinitions } from "@apollo/persisted-query-lists";
+
+const link = new ApolloLink((operation, forward) => {
+  const hash = sha256(print(sortTopLevelDefinitions(operation.query)));
+  // ...
+});
+```
+
+</ExpansionPanel>
+
 </Tip>
 
 ## 2. Publish manifests to a PQL
@@ -201,16 +216,7 @@ const client = new ApolloClient({
 
 Thats it! By including the persisted queries link in your client instantiation, your client sends operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
 
-#### `PersistedQueryLink` options
-
-The `PersistedQueryLink` class takes a configuration object:
-
-- `sha256`: a SHA-256 hashing function. Can be sync or async. Providing a SHA-256 hashing function is required, unless you're defining a fully custom hashing approach via `generateHash`.
-- `generateHash`: an optional function that takes the query document and returns the hash. If provided this custom function will override the default hashing approach that uses the supplied `sha256` function. If not provided, the persisted queries link will use a fallback hashing approach leveraging the `sha256` function.
-- `useGETForHashedQueries`: set to `true` to use the HTTP `GET` method when sending the hashed version of queries (but not for mutations). `GET` requests are not compatible with `@apollo/client/link/batch-http`.
-  > If you want to use `GET` for non-mutation queries whether or not they are hashed, pass `useGETForQueries: true` option to `HttpLink` instead. If you want to use `GET` for all requests, pass `fetchOptions: {method: 'GET'}` to `HttpLink`.
-- `disable`: a function which takes a [`PersistedQueryLink.DisableFunctionOptions`](#persistedquerylinkdisablefunctionoptions) object and returns a boolean to disable any future persisted queries for that session. This defaults to disabling on `PersistedQueryNotSupported` error.
-- `retry`: a function which takes a [`PersistedQueryLink.RetryFunctionOptions`](#persistedquerylinkretryfunctionoptions) object and returns a boolean to retry the request with the full query text included. This defaults to `true` on `PersistedQueryNotSupported` or `PersistedQueryNotFound` errors.
+For more details on the options available to `PersistedQueryLink`, see its [API reference documentation](../api/link/persisted-queries).
 
 ## Apollo Studio
 
@@ -301,42 +307,3 @@ _Missing hash path_
 If you want to avoid hashing in the browser, you can use a build script to include the hash as part of the request, then pass a function to retrieve that hash when the operation is run. This works well with projects like [GraphQL Persisted Document Loader](https://github.com/leoasis/graphql-persisted-document-loader) which uses webpack to generate hashes at build time.
 
 If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `PersistedQueryLink` class.
-
-## Types
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.DisableFunctionOptions:interface"
-  headingLevel={3}
-  displayName="PersistedQueryLink.DisableFunctionOptions"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.ErrorMeta:interface"
-  headingLevel={3}
-  displayName="PersistedQueryLink.ErrorMeta"
-/>
-
-<FunctionDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.PersistedQueryLinkDocumentationTypes.GenerateHashFunction:function(1)"
-  headingLevel={3}
-  result={false}
-  displayName="PersistedQueryLink.GenerateHashFunction"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.GenerateHashOptions:interface"
-  headingLevel={3}
-  displayName="PersistedQueryLink.GenerateHashOptions"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.RetryFunctionOptions:interface"
-  headingLevel={3}
-  displayName="PersistedQueryLink.RetryFunctionOptions"
-/>
-
-<InterfaceDetails
-  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.SHA256Options:interface"
-  headingLevel={3}
-  displayName="PersistedQueryLink.SHA256Options"
-/>

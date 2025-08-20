@@ -205,7 +205,7 @@ export interface QueryResultDocumentation {
    */
   error: unknown;
   /**
-   * If `true`, the query is still in flight and results have not yet been returned.
+   * If `true`, the query is still in flight.
    *
    * @docGroup 2. Network info
    */

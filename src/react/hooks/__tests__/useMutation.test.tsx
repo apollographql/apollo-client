@@ -27,9 +27,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
@@ -4623,7 +4621,7 @@ describe.skip("Type Tests", () => {
     });
 
     expectTypeOf(data).toMatchTypeOf<any>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<ApolloLink.Result<any>>>();
   });
 
   test("uses TData type when using plain TypedDocumentNode", () => {
@@ -4690,10 +4688,12 @@ describe.skip("Type Tests", () => {
     });
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    expectTypeOf(mutate()).toMatchTypeOf<
+      Promise<ApolloLink.Result<Mutation>>
+    >();
   });
 
-  test("uses masked/unmasked type when using Masked<TData>", async () => {
+  test("uses proper masked/unmasked type", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -4718,7 +4718,7 @@ describe.skip("Type Tests", () => {
       id: string;
     }
 
-    const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+    const mutation: TypedDocumentNode<Mutation, Variables> = gql`
       mutation ($id: ID!) {
         updateUser(id: $id) {
           id
@@ -4774,7 +4774,7 @@ describe.skip("Type Tests", () => {
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
     expectTypeOf(mutate({ variables: { id: "1" } })).toMatchTypeOf<
-      Promise<FetchResult<Mutation>>
+      Promise<ApolloLink.Result<Mutation>>
     >();
   });
 

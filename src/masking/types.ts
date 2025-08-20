@@ -1,43 +1,23 @@
 import type { TypeOverrides } from "@apollo/client";
 import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities/internal";
 
-import type { GraphQLCodegenDataMasking } from "./GraphQLCodegenDataMasking.js";
-
-type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
-
-export interface DataMasking {}
+import type { PreserveTypes } from "./PreserveTypes.js";
 
 /**
- * Returns TData as either masked or unmasked depending on whether masking is
- * enabled.
+ * Type used with [fragments](https://apollographql.com/docs/react/data/fragments#using-with-fragments) to ensure parent objects contain the fragment spread from the type.
  */
-export type Masked<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Masked",
-  DefaultImplementation,
-  TData
->;
-
-/**
- * Marks a type as masked. This is a shortcut for
- * `TypedDocumentNode<Masked<TData>, TVariables>`
- */
-export type MaskedDocumentNode<
-  TData = { [key: string]: any },
-  // eslint-disable-next-line local-rules/variables-should-extend-operation-variables
-  TVariables = { [key: string]: any },
-> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "MaskedDocumentNode",
-  DefaultImplementation,
-  TData,
-  TVariables
->;
-
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
+export type FragmentType<TFragmentData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "FragmentType",
-  DefaultImplementation,
+  PreserveTypes.TypeOverrides,
+  TFragmentData
+>;
+
+/** Unwraps `TData` into its unmasked type. */
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
+  TypeOverrides,
+  "Unmasked",
+  PreserveTypes.TypeOverrides,
   TData
 >;
 
@@ -48,16 +28,6 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
 export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
   TypeOverrides,
   "MaybeMasked",
-  DefaultImplementation,
-  TData
->;
-
-/**
- * Unmasks a type to provide its full result.
- */
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
-  TypeOverrides,
-  "Unmasked",
-  DefaultImplementation,
+  PreserveTypes.TypeOverrides,
   TData
 >;

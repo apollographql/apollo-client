@@ -14,20 +14,23 @@ export namespace ClientAwarenessLink {
         transport?: "headers" | false;
         version?: string;
     }
+    export interface ContextOptions {
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+    }
     // (undocumented)
     export interface EnhancedClientAwarenessOptions {
         transport?: "extensions" | false;
     }
     // (undocumented)
     export interface Options {
-        clientAwareness?: ClientAwarenessOptions;
-        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+        enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     }
 }
 
-// @public (undocumented)
+// @public
 export class ClientAwarenessLink extends ApolloLink {
-    constructor(constructorOptions?: ClientAwarenessLink.Options);
+    constructor(options?: ClientAwarenessLink.Options);
 }
 
 // (No @packageDocumentation comment for this package)

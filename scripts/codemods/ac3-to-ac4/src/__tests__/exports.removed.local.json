@@ -1,0 +1,265 @@
+{
+  "@apollo/client/cache": {
+    "value": [{ "from": "DataProxy" }],
+    "type": []
+  },
+  "@apollo/client": {
+    "value": [
+      { "from": "isApolloError" },
+      { "from": "ApolloError" },
+      { "from": "DataProxy" },
+      { "from": "fromError" },
+      { "from": "toPromise" },
+      { "from": "fromPromise" },
+      { "from": "throwServerError" },
+      { "from": "Observer" },
+      { "from": "ObservableSubscription" },
+      { "from": "serializeFetchParameter" }
+    ],
+    "type": [
+      { "from": "FetchMoreQueryOptions" },
+      { "from": "Resolver" },
+      { "from": "FragmentMatcher" },
+      { "from": "MethodKeys" },
+      { "from": "PureQueryOptions" },
+      { "from": "MutationUpdaterFn" },
+      { "from": "Resolvers" },
+      { "from": "ClientParseError" }
+    ]
+  },
+  "@apollo/client/dev": { "value": [], "type": [] },
+  "@apollo/client/errors": {
+    "value": [{ "from": "isApolloError" }, { "from": "ApolloError" }],
+    "type": [
+      { "from": "ApolloErrorOptions" },
+      { "from": "GraphQLErrors" },
+      { "from": "NetworkError" }
+    ]
+  },
+  "@apollo/client/link/batch": {
+    "value": [{ "from": "OperationBatcher" }],
+    "type": [{ "from": "BatchableRequest" }]
+  },
+  "@apollo/client/link/batch-http": { "value": [], "type": [] },
+  "@apollo/client/link/context": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/core": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/error": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/http": {
+    "value": [{ "from": "serializeFetchParameter" }],
+    "type": [{ "from": "ClientParseError" }]
+  },
+  "@apollo/client/link/persisted-queries": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/retry": { "value": [], "type": [] },
+  "@apollo/client/link/remove-typename": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/schema": { "value": [], "type": [] },
+  "@apollo/client/link/subscriptions": { "value": [], "type": [] },
+  "@apollo/client/link/utils": {
+    "value": [
+      { "from": "fromError" },
+      { "from": "toPromise" },
+      { "from": "fromPromise" },
+      { "from": "throwServerError" },
+      { "from": "validateOperation" },
+      { "from": "transformOperation" }
+    ],
+    "type": []
+  },
+  "@apollo/client/link/ws": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/masking": { "value": [], "type": [] },
+  "@apollo/client/react": {
+    "value": [
+      { "from": "ApolloConsumer" },
+      { "from": "resetApolloContext" },
+      { "from": "DocumentType" },
+      { "from": "operationName" },
+      { "from": "parser" }
+    ],
+    "type": [
+      { "from": "IDocumentDefinition" },
+      { "from": "CommonOptions" },
+      { "from": "BaseQueryOptions" },
+      { "from": "ObservableQueryFields" },
+      { "from": "QueryDataOptions" },
+      { "from": "QueryLazyOptions" },
+      { "from": "RefetchQueriesFunction" },
+      { "from": "BaseMutationOptions" },
+      { "from": "MutationDataOptions" },
+      { "from": "SubscriptionCurrentObservable" }
+    ]
+  },
+  "@apollo/client/react/components": {
+    "value": [
+      { "from": "Query" },
+      { "from": "Mutation" },
+      { "from": "Subscription" }
+    ],
+    "type": [
+      { "from": "QueryComponentOptions" },
+      { "from": "MutationComponentOptions" },
+      { "from": "SubscriptionComponentOptions" }
+    ]
+  },
+  "@apollo/client/react/context": {
+    "value": [{ "from": "ApolloConsumer" }, { "from": "resetApolloContext" }],
+    "type": [{ "from": "ApolloConsumerProps" }]
+  },
+  "@apollo/client/react/hoc": {
+    "value": [
+      { "from": "graphql" },
+      { "from": "withQuery" },
+      { "from": "withMutation" },
+      { "from": "withSubscription" },
+      { "from": "withApollo" }
+    ],
+    "type": [
+      { "from": "QueryControls" },
+      { "from": "DataValue" },
+      { "from": "DataProps" },
+      { "from": "MutateProps" },
+      { "from": "ChildProps" },
+      { "from": "ChildDataProps" },
+      { "from": "ChildMutateProps" },
+      { "from": "OptionProps" },
+      { "from": "OperationOption" },
+      { "from": "WithApolloClient" }
+    ]
+  },
+  "@apollo/client/react/hooks": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/react/internal": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/react/parser": {
+    "value": [
+      { "from": "operationName" },
+      { "from": "parser" },
+      { "from": "verifyDocumentType" },
+      { "from": "DocumentType" }
+    ],
+    "type": [{ "from": "IDocumentDefinition" }]
+  },
+  "@apollo/client/react/ssr": {
+    "value": [{ "from": "RenderPromises" }],
+    "type": []
+  },
+  "@apollo/client/testing": {
+    "value": [
+      { "from": "mockSingleLink" },
+      { "from": "mockObservableLink" },
+      { "from": "createMockClient" },
+      { "from": "subscribeAndCount" },
+      { "from": "itAsync" },
+      { "from": "tick" },
+      { "from": "withErrorSpy" },
+      { "from": "withWarningSpy" },
+      { "from": "withLogSpy" },
+      { "from": "wait" }
+    ],
+    "type": []
+  },
+  "@apollo/client/testing/core": {
+    "value": [
+      { "from": "mockSingleLink" },
+      { "from": "mockObservableLink" },
+      { "from": "createMockClient" },
+      { "from": "subscribeAndCount" },
+      { "from": "itAsync" },
+      { "from": "tick" },
+      { "from": "withErrorSpy" },
+      { "from": "withWarningSpy" },
+      { "from": "withLogSpy" }
+    ],
+    "type": []
+  },
+  "@apollo/client/testing/experimental": {
+    "value": [{ "from": "createTestSchema" }, { "from": "createSchemaFetch" }],
+    "type": []
+  },
+  "@apollo/client/utilities": {
+    "value": [
+      { "from": "hasAnyDirectives" },
+      { "from": "hasAllDirectives" },
+      { "from": "hasClientExports" },
+      { "from": "getDirectiveNames" },
+      { "from": "getInclusionDirectives" },
+      { "from": "getFragmentMaskMode" },
+      { "from": "isFullyUnmaskedOperation" },
+      { "from": "isInlineFragment" },
+      { "from": "valueToObjectRepresentation" },
+      { "from": "getTypenameFromResult" },
+      { "from": "addNonReactiveToNamedFragments" },
+      { "from": "buildQueryFromSelectionSet" },
+      { "from": "removeConnectionDirectiveFromDocument" },
+      { "from": "removeArgumentsFromDocument" },
+      { "from": "removeFragmentSpreadFromDocument" },
+      { "from": "removeClientSetsFromDocument" },
+      { "from": "Observer" },
+      { "from": "ObservableSubscription" },
+      { "from": "isStatefulPromise" },
+      { "from": "defaultCacheSizes" },
+      { "from": "iterateObserversSafely" },
+      { "from": "asyncMap" },
+      { "from": "Concast" },
+      { "from": "fixObservableSubclass" },
+      { "from": "canUseWeakMap" },
+      { "from": "canUseWeakSet" },
+      { "from": "canUseSymbol" },
+      { "from": "canUseAsyncIteratorSymbol" },
+      { "from": "canUseLayoutEffect" },
+      { "from": "isExecutionPatchIncrementalResult" },
+      { "from": "isExecutionPatchInitialResult" },
+      { "from": "isExecutionPatchResult" },
+      { "from": "isApolloPayloadResult" },
+      { "from": "mergeIncrementalData" }
+    ],
+    "type": [
+      { "from": "DirectiveInfo" },
+      { "from": "InclusionDirectives" },
+      { "from": "Directives" },
+      { "from": "VariableValue" },
+      { "from": "RemoveNodeConfig" },
+      { "from": "GetNodeConfig" },
+      { "from": "RemoveDirectiveConfig" },
+      { "from": "GetDirectiveConfig" },
+      { "from": "RemoveArgumentsConfig" },
+      { "from": "GetFragmentSpreadConfig" },
+      { "from": "RemoveFragmentSpreadConfig" },
+      { "from": "RemoveFragmentDefinitionConfig" },
+      { "from": "RemoveVariableDefinitionConfig" },
+      { "from": "PromiseWithState" },
+      { "from": "OnlyRequiredProperties" },
+      { "from": "UnionToIntersection" },
+      { "from": "TupleToIntersection" },
+      { "from": "ReconcilerFunction" },
+      { "from": "ConcastSourcesIterable" },
+      { "from": "ConcastSourcesArray" },
+      { "from": "IsStrictlyAny" }
+    ]
+  },
+  "@apollo/client/utilities/globals": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/utilities/subscriptions/relay": { "value": [], "type": [] }
+}

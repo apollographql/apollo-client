@@ -6,17 +6,15 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { Client } from 'graphql-ws';
-import type { FetchResult } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
-// @public (undocumented)
+// @public
 export class GraphQLWsLink extends ApolloLink {
     constructor(client: Client);
     // (undocumented)
     readonly client: Client;
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
 }
 
 // (No @packageDocumentation comment for this package)

@@ -1,21 +1,18 @@
 import type { Subscription } from "rxjs";
-import { EMPTY, Observable } from "rxjs";
+import { Observable } from "rxjs";
 
-import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 
-export type BatchHandler = (
-  operations: Operation[],
-  forward?: (NextLink | undefined)[]
-) => Observable<FetchResult[]> | null;
+import type { BatchLink } from "./batchLink.js";
 
 export interface BatchableRequest {
-  operation: Operation;
-  forward?: NextLink;
+  operation: ApolloLink.Operation;
+  forward: ApolloLink.ForwardFunction;
 }
 
 type QueuedRequest = BatchableRequest & {
-  observable?: Observable<FetchResult>;
-  next: Array<(result: FetchResult) => void>;
+  observable?: Observable<ApolloLink.Result>;
+  next: Array<(result: ApolloLink.Result) => void>;
   error: Array<(error: Error) => void>;
   complete: Array<() => void>;
   subscribers: Set<object>;
@@ -43,8 +40,8 @@ export class OperationBatcher {
   private batchMax: number;
 
   //This function is called to the queries in the queue to the server.
-  private batchHandler: BatchHandler;
-  private batchKey: (operation: Operation) => string;
+  private batchHandler: BatchLink.BatchHandler;
+  private batchKey: (operation: ApolloLink.Operation) => string;
 
   constructor({
     batchDebounce,
@@ -56,8 +53,8 @@ export class OperationBatcher {
     batchDebounce?: boolean;
     batchInterval?: number;
     batchMax?: number;
-    batchHandler: BatchHandler;
-    batchKey?: (operation: Operation) => string;
+    batchHandler: BatchLink.BatchHandler;
+    batchKey?: (operation: ApolloLink.Operation) => string;
   }) {
     this.batchDebounce = batchDebounce;
     this.batchInterval = batchInterval;
@@ -66,7 +63,9 @@ export class OperationBatcher {
     this.batchKey = batchKey || (() => "");
   }
 
-  public enqueueRequest(request: BatchableRequest): Observable<FetchResult> {
+  public enqueueRequest(
+    request: BatchableRequest
+  ): Observable<ApolloLink.Result> {
     const requestCopy: QueuedRequest = {
       ...request,
       next: [],
@@ -78,7 +77,7 @@ export class OperationBatcher {
     const key = this.batchKey(request.operation);
 
     if (!requestCopy.observable) {
-      requestCopy.observable = new Observable<FetchResult>((observer) => {
+      requestCopy.observable = new Observable<ApolloLink.Result>((observer) => {
         let batch = this.batchesByKey.get(key)!;
         if (!batch) this.batchesByKey.set(key, (batch = new Set()));
 
@@ -139,7 +138,7 @@ export class OperationBatcher {
   // Returns a list of promises (one for each query).
   public consumeQueue(
     key: string = ""
-  ): (Observable<FetchResult> | undefined)[] | undefined {
+  ): (Observable<ApolloLink.Result> | undefined)[] | undefined {
     const batch = this.batchesByKey.get(key);
     // Delete this batch and process it below.
     this.batchesByKey.delete(key);
@@ -167,7 +166,7 @@ export class OperationBatcher {
       completes.push(request.complete);
     });
 
-    const batchedObservable = this.batchHandler(operations, forwards) || EMPTY;
+    const batchedObservable = this.batchHandler(operations, forwards);
 
     const onError = (error: Error) => {
       //each callback list in batch

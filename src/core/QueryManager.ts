@@ -34,7 +34,7 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { Incremental } from "@apollo/client/incremental";
-import type { ExecuteContext, FetchResult } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -852,7 +852,7 @@ export class QueryManager {
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
-    observable?: Observable<FetchResult<any>>;
+    observable?: Observable<ApolloLink.Result<any>>;
     restart?: () => void;
   }>(false);
 
@@ -864,9 +864,12 @@ export class QueryManager {
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
-  ): { restart: () => void; observable: Observable<FetchResult<TData>> } {
+  ): {
+    restart: () => void;
+    observable: Observable<ApolloLink.Result<TData>>;
+  } {
     let entry: {
-      observable?: Observable<FetchResult<TData>>;
+      observable?: Observable<ApolloLink.Result<TData>>;
       // The restart function has to be on a mutable object that way if multiple
       // client.subscribe() calls are made before the first one subscribes to
       // the observable, the `restart` function can be updated for all
@@ -878,7 +881,7 @@ export class QueryManager {
       this.getDocumentInfo(query);
 
     const operationName = getOperationName(query);
-    const executeContext: ExecuteContext = {
+    const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
 
@@ -889,8 +892,6 @@ export class QueryManager {
         const operation = this.incrementalHandler.prepareRequest({
           query: serverQuery,
           variables,
-          operationName,
-          operationType,
           context: {
             ...this.defaultContext,
             ...context,
@@ -901,8 +902,8 @@ export class QueryManager {
 
         context = operation.context;
 
-        function withRestart(source: Observable<FetchResult>) {
-          return new Observable<FetchResult>((observer) => {
+        function withRestart(source: Observable<ApolloLink.Result>) {
+          return new Observable<ApolloLink.Result>((observer) => {
             function subscribe() {
               return source.subscribe({
                 next: observer.next.bind(observer),
@@ -947,18 +948,18 @@ export class QueryManager {
               operationType === OperationTypeNode.SUBSCRIPTION ?
                 share()
               : shareReplay({ refCount: true })
-            ) as Observable<FetchResult<TData>>;
+            ) as Observable<ApolloLink.Result<TData>>;
           }
         } else {
           entry.observable = execute(link, operation, executeContext).pipe(
             withRestart
-          ) as Observable<FetchResult<TData>>;
+          ) as Observable<ApolloLink.Result<TData>>;
         }
       } catch (error) {
         entry.observable = throwError(() => error);
       }
     } else {
-      entry.observable = of({ data: {} } as FetchResult<TData>);
+      entry.observable = of({ data: {} } as ApolloLink.Result<TData>);
     }
 
     if (clientQuery) {

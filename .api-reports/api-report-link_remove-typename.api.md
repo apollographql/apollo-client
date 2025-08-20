@@ -6,29 +6,26 @@
 
 import { ApolloLink } from '@apollo/client/link';
 
-// @public (undocumented)
+// @public
 export const KEEP = "__KEEP";
 
-// @public (undocumented)
-interface KeepTypenameConfig {
-    // (undocumented)
-    [key: string]: typeof KEEP | KeepTypenameConfig;
-}
-
 // @public @deprecated (undocumented)
-export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): RemoveTypenameFromVariablesLink;
+export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesLink.Options): RemoveTypenameFromVariablesLink;
 
 // @public (undocumented)
-export class RemoveTypenameFromVariablesLink extends ApolloLink {
-    constructor(options?: RemoveTypenameFromVariablesOptions);
+export namespace RemoveTypenameFromVariablesLink {
+    export interface KeepTypenameConfig {
+        // (undocumented)
+        [key: string]: typeof KEEP | RemoveTypenameFromVariablesLink.KeepTypenameConfig;
+    }
+    export interface Options {
+        except?: RemoveTypenameFromVariablesLink.KeepTypenameConfig;
+    }
 }
 
-// @public (undocumented)
-export interface RemoveTypenameFromVariablesOptions {
-    // Warning: (ae-forgotten-export) The symbol "KeepTypenameConfig" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    except?: KeepTypenameConfig;
+// @public
+export class RemoveTypenameFromVariablesLink extends ApolloLink {
+    constructor(options?: RemoveTypenameFromVariablesLink.Options);
 }
 
 // (No @packageDocumentation comment for this package)

@@ -9,9 +9,8 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
-import { ErrorLink, onError } from "@apollo/client/link/error";
+import { ErrorLink } from "@apollo/client/link/error";
 import {
   executeWithDefaultContext as execute,
   mockDeferStream,
@@ -34,7 +33,7 @@ describe("error handling", () => {
     const error: GraphQLFormattedError = { message: "resolver blew up" };
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => of({ errors: [error] }));
 
@@ -64,7 +63,7 @@ describe("error handling", () => {
     const error = new Error("app is crashing");
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       throw error;
@@ -99,7 +98,7 @@ describe("error handling", () => {
     const error = new Error("app is crashing");
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       return new Observable((observer) => {
@@ -134,7 +133,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       return new Observable((observer) => {
@@ -172,7 +171,7 @@ describe("error handling", () => {
 
     for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
       const callback = jest.fn();
-      const errorLink = onError(callback);
+      const errorLink = new ErrorLink(callback);
 
       const mockLink = new ApolloLink(() => {
         return new Observable((observer) => {
@@ -212,7 +211,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
       mockDeferStream();
@@ -290,7 +289,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
@@ -363,7 +362,7 @@ describe("error handling", () => {
 
     const callback = jest.fn();
     const error = new Error("app is crashing");
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       return new Observable(() => {
@@ -398,7 +397,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
     const error = new ServerError("app is crashing", {
       response: new Response("", { status: 500 }),
       bodyText: "ServerError",
@@ -440,7 +439,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       return of({ data: { foo: { id: 1 } } });
@@ -464,7 +463,7 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ result }) => {
+    const errorLink = new ErrorLink(({ result }) => {
       // ignore errors
       if (isFormattedExecutionResult(result)) {
         delete result!.errors;
@@ -497,7 +496,7 @@ describe("error handling", () => {
     `;
 
     const callback = jest.fn();
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() => {
       return new Observable((obs) => {
@@ -529,7 +528,7 @@ describe("error handling", () => {
 
     const callback = jest.fn();
     const error: GraphQLFormattedError = { message: "resolver blew up" };
-    const errorLink = onError(callback);
+    const errorLink = new ErrorLink(callback);
 
     const mockLink = new ApolloLink(() =>
       of({
@@ -563,7 +562,8 @@ describe("error handling", () => {
       }),
     });
 
-    const operation = callback.mock.calls[0][0].operation as Operation;
+    const operation = callback.mock.calls[0][0]
+      .operation as ApolloLink.Operation;
     expect(operation.getContext().bar).toBe(true);
   });
 });
@@ -805,10 +805,10 @@ describe("support for request retrying", () => {
   `;
   const ERROR_RESPONSE = {
     errors: [{ message: "resolver blew up" }],
-  } satisfies FetchResult;
+  } satisfies ApolloLink.Result;
   const GOOD_RESPONSE = {
     data: { foo: true },
-  } satisfies FetchResult;
+  } satisfies ApolloLink.Result;
   const NETWORK_ERROR = new Error("some other error");
 
   it("returns the retried request when forward(operation) is called", async () => {

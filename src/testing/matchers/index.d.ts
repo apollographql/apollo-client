@@ -8,10 +8,9 @@ import type { MatcherHintOptions } from "jest-matcher-utils";
 import type {
   ApolloClient,
   DocumentNode,
-  FetchResult,
   ObservableQuery,
   OperationVariables,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { QueryRef } from "@apollo/client/react";
 
 import type { ObservableStream } from "../internal/index.js";

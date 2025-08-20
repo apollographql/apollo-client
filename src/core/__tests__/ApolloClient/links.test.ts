@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
 
-import type { NextLink, Operation, Reference } from "@apollo/client";
+import type { Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
@@ -31,13 +31,16 @@ describe("Link interactions", () => {
       },
     };
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { client } = operation;
       expect(client).toBeDefined();
       return (forward(operation) as Observable<FormattedExecutionResult>).pipe(
         map((result) => {
           setTimeout(() => {
-            const cacheResult = client.cache.read({ query, optimistic: true });
+            const cacheResult = client.cache.read({
+              query,
+              optimistic: true,
+            });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
             if (count === 2) {
@@ -47,7 +50,7 @@ describe("Link interactions", () => {
           return result;
         })
       );
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
@@ -230,12 +233,12 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { client } = operation;
       expect(client).toBeDefined();
       done();
       return forward(operation);
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
@@ -259,12 +262,12 @@ describe("Link interactions", () => {
       }
     `;
 
-    const evictionLink = (operation: Operation, forward: NextLink) => {
+    const evictionLink = new ApolloLink((operation, forward) => {
       const { planet } = operation.getContext();
       expect(planet).toBe("Tatooine");
       done();
       return forward(operation);
-    };
+    });
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
@@ -348,7 +351,7 @@ describe("Link interactions", () => {
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
-    const result: { current: Operation | undefined } = {
+    const result: { current: ApolloLink.Operation | undefined } = {
       current: undefined,
     };
 
@@ -397,7 +400,7 @@ describe("Link interactions", () => {
   });
 
   it("passes all expected properties into links", async () => {
-    let operation!: Operation;
+    let operation!: ApolloLink.Operation;
     const link = new ApolloLink((op) => {
       operation = op;
       return of({ data: { hello: "world" } });
@@ -424,18 +427,18 @@ describe("Link interactions", () => {
       query,
     });
     expect(Object.keys(operation)).toEqual([
+      "query",
       "variables",
       "extensions",
       "operationName",
       "operationType",
-      "query",
     ]);
     expect(Object.getOwnPropertyNames(operation)).toEqual([
+      "query",
       "variables",
       "extensions",
       "operationName",
       "operationType",
-      "query",
       "setContext",
       "getContext",
       "client",

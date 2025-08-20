@@ -25,11 +25,7 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import type {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
@@ -2225,6 +2221,37 @@ describe("useLazyQuery Hook", () => {
     // We don't see an extra render here since the result is deeply equal to the
     // previous result.
     await expect(takeSnapshot).not.toRerender();
+  });
+
+  it("in-flight request promises reject with an `AbortError` when a new request is started before it could finish`", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result } = renderHook(() => useLazyQuery(helloQuery), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [execute] = result.current;
+
+    let promise1: ReturnType<typeof execute>;
+    act(() => {
+      promise1 = execute();
+    });
+    let promise2: ReturnType<typeof execute>;
+    act(() => {
+      promise2 = execute();
+    });
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+
+    await expect(promise1!).rejects.toStrictEqual(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
+    await expect(promise2!).resolves.toStrictEqual({
+      data: { hello: "Greetings" },
+    });
   });
 
   it("in-flight request promises reject with an `AbortError` when component unmounts`", async () => {
@@ -6278,7 +6305,7 @@ describe.skip("Type Tests", () => {
       };
     }
 
-    const query: MaskedDocumentNode<Query> = gql``;
+    const query: TypedDocumentNode<Query> = gql``;
 
     const [
       execute,
@@ -6286,9 +6313,9 @@ describe.skip("Type Tests", () => {
     ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<
-      Masked<Query> | DataValue.Streaming<Masked<Query>> | undefined
+      Query | DataValue.Streaming<Query> | undefined
     >();
-    expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
@@ -6327,7 +6354,7 @@ describe.skip("Type Tests", () => {
     {
       const { data } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
@@ -6341,13 +6368,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
   });
 

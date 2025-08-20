@@ -1,14 +1,25 @@
 import type { API, FileInfo, Options, Transform } from "jscodeshift";
 
 import imports from "./imports.js";
+import legacyEntrypoints from "./legacyEntrypoints.js";
+import links from "./links.js";
+import removals from "./removals.js";
+import { monkeyPatchAstTypes } from "./util/monkeyPatchAstTypes.js";
 
-export const codemods = { imports } satisfies Record<string, Transform>;
+export const codemods = {
+  legacyEntrypoints,
+  imports,
+  links,
+  removals,
+} satisfies Record<string, Transform>;
 
 export default async function transform(
   file: FileInfo,
   api: API,
   options: Options
 ): Promise<string | undefined> {
+  monkeyPatchAstTypes(api.jscodeshift);
+
   const run =
     "codemod" in options ?
       Array.isArray(options.codemod) ?

@@ -12,13 +12,11 @@ import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
-import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
 import { concat } from '@apollo/client/link';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
-import { DataMasking } from '@apollo/client/masking';
 import type { DeepPartial } from '@apollo/client/utilities';
 import { defaultDataIdFromObject } from '@apollo/client/cache';
 import { defaultPrinter } from '@apollo/client/link/http';
@@ -59,13 +57,10 @@ import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
 import { makeVar } from '@apollo/client/cache';
-import { Masked } from '@apollo/client/masking';
-import { MaskedDocumentNode } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
-import { NextLink } from '@apollo/client/link';
 import type { NextNotification } from 'rxjs';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
@@ -74,7 +69,6 @@ import { Observable as Observable_2 } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
-import { OperationContext } from '@apollo/client/link';
 import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
@@ -90,7 +84,6 @@ import { rewriteURIForGET } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBodyInternal } from '@apollo/client/link/http';
 import { selectURI } from '@apollo/client/link/http';
-import { serializeFetchParameter } from '@apollo/client/link/http';
 import { ServerError } from '@apollo/client/errors';
 import { ServerParseError } from '@apollo/client/errors';
 import { setVerbosity as setLogVerbosity } from '@apollo/client/utilities/invariant';
@@ -319,7 +312,7 @@ export class ApolloClient {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable_2<FetchResult<unknown>>;
+    __requestRaw(request: ApolloLink.Request): Observable_2<ApolloLink.Result<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -390,8 +383,6 @@ export { Cache_2 as Cache }
 
 export { checkFetcher }
 
-export { ClientParseError }
-
 export { CombinedGraphQLErrors }
 
 export { CombinedProtocolErrors }
@@ -401,8 +392,6 @@ export { concat }
 export { createHttpLink }
 
 export { createSignalIfSupported }
-
-export { DataMasking }
 
 // @public (undocumented)
 export type DataState<TData> = {
@@ -551,10 +540,6 @@ export { LocalStateError }
 
 export { makeVar }
 
-export { Masked }
-
-export { MaskedDocumentNode }
-
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
@@ -648,8 +633,6 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     // (undocumented)
     reason: "after-fetch" | "variables-changed";
 }
-
-export { NextLink }
 
 export { NormalizedCache }
 
@@ -791,8 +774,6 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 
 export { Operation }
 
-export { OperationContext }
-
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
 
@@ -893,7 +874,7 @@ class QueryManager {
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable_2<FetchResult<any>>;
+        observable?: Observable_2<ApolloLink.Result<any>>;
         restart?: () => void;
     }>;
     // (undocumented)
@@ -1037,8 +1018,6 @@ export { selectHttpOptionsAndBodyInternal }
 
 export { selectURI }
 
-export { serializeFetchParameter }
-
 export { ServerError }
 
 export { ServerParseError }
@@ -1153,7 +1132,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

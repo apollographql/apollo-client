@@ -6,9 +6,8 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client/link';
+import { FormattedExecutionResult } from 'graphql';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 import type { OperationVariables } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
@@ -33,7 +32,7 @@ export namespace MockLink {
     // (undocumented)
     export type Delay = number | DelayFunction;
     // (undocumented)
-    export type DelayFunction = (operation: Operation) => number;
+    export type DelayFunction = (operation: ApolloLink.Operation) => number;
     // (undocumented)
     export interface MockedRequest<TVariables extends OperationVariables = OperationVariables> {
         // (undocumented)
@@ -54,7 +53,7 @@ export namespace MockLink {
         // (undocumented)
         request: MockedRequest<TVariables>;
         // (undocumented)
-        result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
+        result?: ApolloLink.Result<Unmasked<TData>> | ResultFunction<ApolloLink.Result<Unmasked<TData>>, TVariables>;
     }
     // (undocumented)
     export interface Options {
@@ -77,9 +76,9 @@ export class MockLink extends ApolloLink {
     // (undocumented)
     static defaultOptions: MockLink.DefaultOptions;
     // (undocumented)
-    operation: Operation;
+    operation: ApolloLink.Operation;
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult> | null;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
     // (undocumented)
     showWarnings: boolean;
 }
@@ -96,7 +95,7 @@ export namespace MockSubscriptionLink {
         // (undocumented)
         error?: Error;
         // (undocumented)
-        result?: FetchResult;
+        result?: ApolloLink.Result;
     }
 }
 
@@ -108,9 +107,9 @@ export class MockSubscriptionLink extends ApolloLink {
     // (undocumented)
     onUnsubscribe(listener: any): void;
     // (undocumented)
-    operation?: Operation;
+    operation?: ApolloLink.Operation;
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
+    request(operation: ApolloLink.Operation): Observable<FormattedExecutionResult<Record<string, any>, Record<string, any>>>;
     // (undocumented)
     setups: any[];
     // (undocumented)

@@ -11,13 +11,12 @@ import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { DefaultContext, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, concat } from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
-import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -573,7 +572,7 @@ describe("useSubscription Hook", () => {
       return forward(operation);
     });
     const client = new ApolloClient({
-      link: concat(contextLink, link),
+      link: ApolloLink.concat(contextLink, link),
       cache: new Cache(),
     });
 
@@ -637,7 +636,7 @@ describe("useSubscription Hook", () => {
       return forward(operation);
     });
     const client = new ApolloClient({
-      link: concat(extensionsLink, link),
+      link: ApolloLink.concat(extensionsLink, link),
       cache: new Cache(),
     });
 
@@ -3587,17 +3586,15 @@ describe.skip("Type Tests", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const subscription: MaskedDocumentNode<Subscription> = gql``;
+    const subscription: TypedDocumentNode<Subscription> = gql``;
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<
-          Masked<Subscription> | undefined
-        >();
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Masked<Subscription> | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
 
   test("uses unmodified type when using TypedDocumentNode", async () => {

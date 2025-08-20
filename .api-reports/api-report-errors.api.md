@@ -4,8 +4,8 @@
 
 ```ts
 
+import type { ApolloLink } from '@apollo/client/link';
 import { ErrorLike } from '@apollo/client';
-import type { FetchResult } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 
@@ -26,14 +26,14 @@ export namespace CombinedGraphQLErrors {
     // (undocumented)
     export interface MessageFormatterOptions {
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
-        result: FetchResult<unknown>;
+        result: ApolloLink.Result<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FormattedExecutionResult<any>);
-    constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
+    constructor(result: ApolloLink.Result<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     readonly extensions: Record<string, unknown> | undefined;

@@ -2,6 +2,7 @@ import { gql } from "graphql-tag";
 import { Observable, of, throwError } from "rxjs";
 
 import { CombinedProtocolErrors } from "@apollo/client";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { RetryLink } from "@apollo/client/link/retry";
 import {
@@ -25,7 +26,7 @@ describe("RetryLink", () => {
     const max = 10;
     const retry = new RetryLink({ delay: { initial: 1 }, attempts: { max } });
     const stub = jest.fn(() => throwError(() => standardError)) as any;
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitError(standardError, { timeout: 1000 });
@@ -37,7 +38,7 @@ describe("RetryLink", () => {
     const retry = new RetryLink();
     const data = { data: { hello: "world" } };
     const stub = jest.fn(() => of(data));
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitTypedValue(data);
@@ -55,7 +56,7 @@ describe("RetryLink", () => {
     const stub = jest.fn();
     stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(of(data));
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitTypedValue(data);
@@ -92,7 +93,7 @@ describe("RetryLink", () => {
     const stub = jest.fn();
     stub.mockReturnValueOnce(firstTry);
     stub.mockReturnValueOnce(secondTry);
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
 
     const subscription = execute(link, { query }).subscribe({});
     await untilSecondTry;
@@ -118,7 +119,7 @@ describe("RetryLink", () => {
     stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(of(data));
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
 
     const observable = execute(link, { query });
     observable.subscribe(subscriber);
@@ -136,7 +137,7 @@ describe("RetryLink", () => {
       attempts: { max: 5 },
     });
     const stub = jest.fn(() => throwError(() => standardError)) as any;
-    const link = ApolloLink.from([retry, stub]);
+    const link = ApolloLink.from([retry, new ApolloLink(stub)]);
     const stream1 = new ObservableStream(execute(link, { query }));
     const stream2 = new ObservableStream(execute(link, { query }));
 
@@ -152,7 +153,7 @@ describe("RetryLink", () => {
     const delayStub = jest.fn(() => 1);
     const retry = new RetryLink({ delay: delayStub, attempts: { max: 3 } });
     const linkStub = jest.fn(() => throwError(() => standardError)) as any;
-    const link = ApolloLink.from([retry, linkStub]);
+    const link = ApolloLink.from([retry, new ApolloLink(linkStub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitError(standardError);
@@ -175,7 +176,7 @@ describe("RetryLink", () => {
       attempts: attemptStub,
     });
     const linkStub = jest.fn(() => throwError(() => standardError)) as any;
-    const link = ApolloLink.from([retry, linkStub]);
+    const link = ApolloLink.from([retry, new ApolloLink(linkStub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitError(standardError);
@@ -201,7 +202,7 @@ describe("RetryLink", () => {
     const linkStub = jest.fn(
       () => new Observable((o) => o.error(standardError))
     ) as any;
-    const link = ApolloLink.from([retry, linkStub]);
+    const link = ApolloLink.from([retry, new ApolloLink(linkStub)]);
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitError(standardError);
@@ -270,5 +271,46 @@ describe("RetryLink", () => {
         },
       ])
     );
+  });
+
+  it("calls observer.next when not retrying a protocol error", async () => {
+    const subscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const retryLink = new RetryLink({
+      delay: { initial: 1 },
+      attempts: {
+        retryIf: () => false,
+      },
+    });
+
+    const { httpLink, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+    const link = ApolloLink.from([retryLink, httpLink]);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitTypedValue({
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+          {
+            message: "Error field",
+            extensions: { code: "INTERNAL_SERVER_ERROR" },
+          },
+        ]),
+      } as any,
+    });
   });
 });

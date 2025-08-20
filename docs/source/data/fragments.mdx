@@ -1286,71 +1286,30 @@ To migrate from CodeGen's fragment masking feature to Apollo Client's data maski
 
 3. [Enable data masking](#enabling-data-masking) in Apollo Client.
 
-#### Setting a types mode for masked types
+#### Setting data masking types
 
-Apollo Client provides different modes to work with operation types throughout your application. You change the mode by modifying the `DataMasking` exported type from the `@apollo/client` package using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability. Specifying a mode is optional and only needed when you prefer to use a different mode other than the default.
+By default, Apollo Client makes no modification to the operation types provided to its APIs, regardless of whether the type definitions are masked or unmasked. This provides a simpler upgrade path when you're ready to [incrementally adopt](#incremental-adoption-in-an-existing-application) data masking.
 
-To modify the data masking mode used in the client, first create a TypeScript file that will be used to modify the `DataMasking` type.
+To use GraphQL Codegen's masking format with your operation types, you need to tell Apollo Client to use the associated GraphQL Codegen masking types. You do this by defining a [type override](../development-testing/static-typing#overriding-type-implementations-of-built-in-types) that uses the GraphQL Codegen masking format.
+
+Create a TypeScript file that will be used to modify the `TypeOverrides` interface. Extend `TypeOverrides` with the `GraphQLCodegenDataMasking.TypeOverrides` interface.
 
 ```ts title="apollo-client.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
+import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
 
 declare module "@apollo/client" {
-  interface DataMasking {
-    mode: "preserveTypes";
-  }
+  interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
 }
 ```
 
 <Note>
-  This example uses `apollo-client.d.ts` as the file name to make it easily
-  identifiable. You can name this file as you wish.
+
+This example uses `apollo-client.d.ts` as the file name to make it easily identifiable. You can give this file any name.
+
 </Note>
-
-##### Modes
-
-###### `preserveTypes` (default)
-
-The default `preserveTypes` mode makes no modification to the operation types regardless of whether the type definitions are masked or unmasked. This provides a simpler upgrade path when you're ready to [incrementally adopt](#incremental-adoption-in-an-existing-application) data masking.
-
-###### `unmask`
-
-Setting the mode to `unmask` will unwrap masked types and provide the full result type. Use this mode when you [generate masked types](#generating-masked-types) but need to maintain access to the full result type, such as using this with [per-operation masked types](#using-per-operation-masked-types).
-
-##### Using per-operation masked types
-
-<Note>
-  This is only useful if you have changed the types mode to `unmask`. Using this
-  with `preserveTypes` has no effect.
-</Note>
-
-If you prefer an incremental approach, you can opt in to use masked types per operation. This can be useful when your application creates multiple Apollo Client instances where only a subset enables data masking.
-
-Apollo Client provides a `Masked` helper type that tells the client to use the masked type directly. You can use this with `TypedDocumentNode` or with generic arguments.
-
-```ts
-import { Masked, TypedDocumentNode } from "@apollo/client";
-
-// With TypedDocumentNode
-const QUERY: TypedDocumentNode<Masked<QueryType>, VarsType> = gql`
-  # ...
-`;
-
-// with generic arguments
-const { data } = useQuery<Masked<QueryType>, VarsType>(QUERY);
-```
-
-The use of `TypedDocumentNode` with the `Masked` type is common enough that Apollo Client provides a `MaskedDocumentNode` convenience type as a replacement for `TypedDocumentNode`. It is simply a shortcut for `TypedDocumentNode<Masked<QueryType>, VarsType>`.
-
-```ts
-import { MaskedDocumentNode } from "@apollo/client";
-
-const QUERY: MaskedDocumentNode<QueryType, VarsType> = gql`
-  # ...
-`;
-```
 
 #### Using with fragments
 
@@ -1585,3 +1544,137 @@ query GetPosts {
 Repeat this process until all `@unmask` directives have been removed from your codebase.
 
 Congratulations 🎉! Your application is now using data masking everywhere 😎.
+
+### Defining your own masking types using higher-kinded types
+
+<Note>
+
+If you are using the [data masking types generated from GraphQL Codegen](#setting-data-masking-types), you can safely skip this section.
+
+</Note>
+
+Apollo Client provides an [integration](#setting-data-masking-types) with GraphQL Codegen's [fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#fragment-masking) output and orients its masking utility types around this format. If you aren't using GraphQL Codegen to generate your types, or your types are generated in a different format, the type implementations built into Apollo Client might be incompatible which results in inaccurate types.
+
+You can use a technique called _higher-kinded types_ (HKT) to provide your own type implementations for Apollo Client's masking types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
+
+#### Example
+
+Let's add our own type overrides for the `MaybeMasked` and `Unmasked` utility types.
+
+The `MaybeMasked` type is used throughout Apollo Client to return the masked or unmasked type definition for a given type, assuming they have data masking types enabled and are maskable. Otherwise, it returns the unmasked type that is passed in.
+
+The `Unmasked` type unwraps a masked type to its full result type and is used throughout Apollo Client where the full data type is needed for a given API (e.g. `client.writeQuery`).
+
+For this example, we'll assume the data masking types are enabled and the operation types are generated using two variations:
+
+1. Data masked types are generated with a `__masked` virtual property. Its value is the operation type with any masked fields removed from the type.
+
+   ```ts
+   type MaskedQuery = {
+     // The masked variant of the operation type is provided under the
+     // `__masked` virtual property
+     __masked?: { user: { __typename: "User"; id: number } };
+
+     // The full result type includes all other fields in the type
+     user: { __typename: "User"; id: number; name: string };
+   };
+   ```
+
+2. Unmasked types are generated as their full result type with no `__masked` virtual property applied to them.
+
+   ```ts
+   type UnmaskedQuery = {
+     user: { __typename: "User"; id: number; name: string };
+   };
+   ```
+
+<Note>
+
+This is a hypothetical format that doesn't exist in Apollo Client or any known code generation tool. This format is used specifically for this example to illustrate how to provide type overrides to Apollo Client.
+
+</Note>
+
+First, let's define our custom implementation of the `MaybeMasked` type. The implementation works by checking if the `__masking` virtual property exists on the type. If so, it returns the value on the `__masked` property as the type, otherwise it returns the input type unmodified.
+
+```ts title="masked-types.ts"
+type MaybeMasked<TData> =
+  TData extends { __masked?: infer TMaskedData } ? TMaskedData : TData;
+```
+
+Now let's provide an implementation for the `Unmasked` type that works in contrast to `MaybeMasked` by returning the unwrapped full result type. The implementation works by removing the `__masked` virtual property on the input type. This can be accomplished using the built-in [`Omit`](https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys) type.
+
+```ts {4} title="masked-types.ts"
+type MaybeMasked<TData> =
+  TData extends { __masked?: infer TMaskedData } ? TMaskedData : TData;
+
+type Unmasked<TData> = Omit<TData, "__masked">;
+```
+
+Now that our custom type implementations are in place, we need to define higher-kinded types for each of these custom types. This provides the bridge needed by Apollo Client to use our custom type implementations. This is done by extending the `HKT` interface exported by `@apollo/client/utilities`.
+
+Let's provide HKTs for our `MaybeMasked` and `Unmasked` types. We'll put these in the same file as our type implementations.
+
+```ts {1,8-11,13-16} title="masked-types.ts"
+import { HKT } from "@apollo/client/utilities";
+
+type MaybeMasked<TData> =
+  TData extends { __masked?: infer TMaskedData } ? TMaskedData : TData;
+
+type Unmasked<TData> = Omit<TData, "__masked">;
+
+export interface MaybeMaskedHKT extends HKT {
+  arg1: unknown; // TData
+  return: MaybeMasked<this["arg1"]>;
+}
+
+export interface UnmaskedHKT extends HKT {
+  arg1: unknown; // TData
+  return: Unmasked<this["arg1"]>;
+}
+```
+
+With our HKT types in place, we now need to tell Apollo Client about them.
+
+Apollo Client uses [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) to provide a hook point for overridable types. The `TypeOverrides` interface exported by the `@apollo/client` package is used for this purpose. Each property in the `TypeOverrides` interface corresponds to an overridable type in Apollo Client.
+
+Let's add type overrides for our custom type implementations. Create a TypeScript file and define a `TypeOverrides` interface for the `@apollo/client` module.
+
+```ts title=apollo-client.d.ts
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    // Type overrides will go here
+  }
+}
+```
+
+Now we'll import our HKT types and add them as keys in the `TypeOverrides` interface.
+
+```ts {4,8-9} title=apollo-client.d.ts
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+import { MaybeMaskedHKT, UnmaskedHKT } from "./masked-types.ts";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    MaybeMasked: MaybeMaskedHKT;
+    Unmasked: UnmaskedHKT;
+  }
+}
+```
+
+And that's it! Now when Apollo Client uses the `MaybeMasked` or `Unmasked` types in its APIs, our custom implementation will be used instead 🎉.
+
+#### Available type overrides
+
+The following masking utility types are available to override:
+
+- `FragmentType<TFragmentData>` - Type used with [fragments](#using-with-fragments) to ensure parent objects contain the fragment spread from the type.
+- `MaybeMasked<TData>` - Conditionally returns `TData` as either its masked type or unmasked type
+- `Unmasked<TData>` - Unwraps `TData` into the full result type
+
+For more information about other overridable types in Apollo Client, see the [TypeScript guide](../development-testing/static-typing).

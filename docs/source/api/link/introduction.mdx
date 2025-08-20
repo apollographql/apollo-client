@@ -281,7 +281,7 @@ The `request` method is called for each GraphQL operation sent through the link 
 The `Operation` object includes the following fields:
 
 <PropertySignatureTable
-  canonicalReference="@apollo/client!Operation:interface"
+  canonicalReference="@apollo/client!ApolloLink.Operation:interface"
   idPrefix="operation"
 />
 
@@ -516,6 +516,12 @@ const link = new OperationCountLink();
 ## Managing context
 
 As an operation moves along the link chain, it maintains a `context` that each link can read and modify. This enables both links and request-based APIs (such as [`useQuery`](../react/useQuery)) to pass metadata along the chain that other links use in their execution logic. Context is not included in the terminating link's request to the GraphQL server or other destination.
+
+<Note>
+
+If your application is built using TypeScript, we recommend reading the [Defining context types](../../development-testing/static-typing#defining-context-types) guide to learn how to provide types for the context object.
+
+</Note>
 
 ### Reading context
 

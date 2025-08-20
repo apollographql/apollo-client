@@ -1,0 +1,810 @@
+---
+title: TypeScript with Apollo Client
+description: How to use TypeScript in your application
+redirectFrom:
+  - /react/development-testing/static-typing
+---
+
+As your application grows, a type system becomes an essential tool for catching bugs early and improving your overall developer experience.
+
+GraphQL uses a type system to clearly define the available data for each type and field in a GraphQL schema. You can add type safety for your GraphQL operations using TypeScript.
+
+This guide provides detail on how Apollo Client integrates TypeScript to provide you with type safety throughout your application.
+
+<Note>
+
+This article covers general usage with TypeScript in Apollo Client. If you'd like to generate your GraphQL types automatically, read the [GraphQL Codegen](../development-testing/graphql-codegen) guide to learn how to use GraphQL Codegen with Apollo Client.
+
+</Note>
+
+## Using operation types
+
+By default, Apollo Client sets the type of the `data` property to `unknown` type when the data type cannot be determined. This provides a layer of safety to avoid accessing properties on `data` that TypeScript doesn't know about.
+
+The following example uses `gql` to create a GraphQL document for a query. The query is typed as a `DocumentNode` which doesn't provide type information about its data or variables.
+
+```tsx
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
+// This is of type `DocumentNode`
+const GET_ROCKET_INVENTORY = gql`
+  query GetRocketInventory {
+    rocketInventory {
+      id
+      model
+      year
+      stock
+    }
+  }
+`;
+
+function RocketInventory() {
+  const { data } = useQuery(GET_ROCKET_INVENTORY);
+  //      ^? unknown
+
+  return (
+    <div>
+      {/* ❌ TypeScript Error: 'data' is of type 'unknown'. */}
+      {data.rocketInventory.map((rocket) => (
+        <Rocket key={rocket.id} rocket={rocket} />
+      ))}
+    </div>
+  );
+}
+```
+
+This however makes it difficult to work with the `data` property. You either need to type cast each property on `data` to suppress the error, or cast `data` as an `any` type (not recommended) which removes type safety entirely.
+
+Instead, we can leverage the `TypedDocumentNode` type to provide types for GraphQL documents. `TypedDocumentNode` includes generic arguments for data and variables:
+
+```ts
+import { TypedDocumentNode } from "@apollo/client";
+
+type QueryType = TypedDocumentNode<DataType, VariablesType>;
+```
+
+Apollo Client allows for the use of `TypedDocumentNode` everywhere a `DocumentNode` is accepted. This enables Apollo Client APIs to infer the data and variable types using the GraphQL document.
+
+The following adds types to the query from the previous example using `TypedDocumentNode`.
+
+```tsx {5-13,15,17-20}
+import { useQuery, TypedDocumentNode } from "@apollo/client";
+
+// In a real application, consider generating types from your schema
+// instead of writing them by hand
+type GetRocketInventoryQuery = {
+  rocketInventory: {
+    __typename: "Rocket";
+    id: string;
+    model: string;
+    year: number;
+    stock: number;
+  };
+};
+
+type GetRocketInventoryQueryVariables = Record<string, never>;
+
+const GET_ROCKET_INVENTORY: TypedDocumentNode<
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables
+> = gql`
+  query GetRocketInventory {
+    rocketInventory {
+      id
+      model
+      year
+      stock
+    }
+  }
+`;
+
+function RocketInventory() {
+  const { data } = useQuery(GET_ROCKET_INVENTORY);
+  //      ^? GetRocketInventoryQuery | undefined
+
+  // checks for loading and error states are omitted for brevity
+
+  return (
+    <div>
+      {/* No more 'unknown' type error */}
+      {data.rocketInventory.map((rocket) => (
+        <Rocket key={rocket.id} rocket={rocket} />
+      ))}
+    </div>
+  );
+}
+```
+
+<Tip>
+
+We recommend using `TypedDocumentNode` and relying on type inference throughout your application for your GraphQL operations instead of specifying the generic type arguments on Apollo Client APIs, such as `useQuery`. This makes GraphQL documents more portable and provides better type safety wherever the document is used.
+
+<ExpansionPanel title="Example">
+
+```ts
+// ❌ Don't leave GraphQL documents as plain `DocumentNode`s
+const query = gql`
+  # ...
+`;
+// ❌ Don't provide generic arguments to Apollo Client APIs
+const { data } = useQuery<QueryType, VariablesType>(query);
+
+// ✅ Add the type for the GraphQL document with `TypedDocumentNode`
+const query: TypedDocumentNode<QueryType, VariablesType> = gql`
+  # ...
+`;
+const { data } = useQuery(query);
+```
+
+</ExpansionPanel>
+
+</Tip>
+
+<Tip>
+
+We recommend that you always provide the variables type to `TypedDocumentNode`, even when the GraphQL operation doesn't define any variables. This ensures you don't provide variable values to your query which results in runtime errors from your GraphQL server. Additionally, this ensures that TypeScript catches errors when you update your query over time and include required variables.<br/><br/>
+
+If you use GraphQL Codegen, an empty variables type is generated for you using the type `Record<string, never>`.
+
+</Tip>
+
+### Type narrowing `data` with `dataState`
+
+Throughout the lifecycle of your component, the value of `data` changes. `data` is influenced by several factors that affect its value such as different options or the query's current state.
+
+Some examples of options that influence the value of `data` include:
+
+- `returnPartialData` which might return partial data from the cache
+- `errorPolicy` which affects the value of `data` when an error is returned
+- `variables` which affects when the query is re-executed as variables change
+- `fetchPolicy` which might provide a result from the cache
+- `skip` which waits to execute the query
+
+Some examples of the query state that influence the value of `data` include:
+
+- The query is currently loading
+- The query successfully loads its result
+- The query returns partial data from the cache when `returnPartialData` is `true`
+- The query returns an error
+- The query is currently streaming additional data while using [`@defer`](../data/defer)
+
+The combination of these states and options make it difficult to provide robust types for `data` based solely on the `loading` and `error` properties.
+
+Apollo Client provides a `dataState` property for this purpose. `dataState` provides information about the completeness of the `data` property and includes type narrowing to give you better type safety without the need to add additional completeness checks.
+
+The `dataState` property has the following values:
+
+- `"empty"` - No data is available. `data` is `undefined`
+- `"partial"` - Partial data is returned from the cache. `data` is `DeepPartial<TData>`
+- `"streaming"` - Data from a deferred query is incomplete and still streaming. `data` is `TData`
+- `"complete"` - Data fully satisfies the query. `data` is `TData`
+
+The following demonstrates how `dataState` affects the type of `data`.
+
+<Note>
+
+This example uses `returnPartialData: true` to demonstrate the type of `data` when `dataState` is `partial`. When `returnPartialData` is `false` or omitted, `dataState` does not include the `partial` value and the type of `data` does not include `DeepPartial<TData>`.
+
+</Note>
+
+```tsx
+const { data, dataState } = useQuery(GET_ROCKET_INVENTORY, {
+  returnPartialData: true,
+});
+
+data;
+// ^? GetRocketInventoryQuery | DeepPartial<GetRocketInventoryQuery> | undefined
+
+if (dataState === "empty") {
+  data;
+  // ^? undefined
+}
+
+if (dataState === "partial") {
+  data;
+  // ^? DeepPartial<GetRocketInventoryQuery>
+}
+
+if (dataState === "streaming") {
+  data;
+  // ^? GetRocketInventoryQuery
+}
+
+if (dataState === "complete") {
+  data;
+  // ^? GetRocketInventoryQuery
+}
+```
+
+<Note>
+
+The type of `data` is the same when `dataState` is either `streaming` or `complete`. Additionally, `dataState` always includes `streaming` as a value, even when `@defer` is not used and isn't seen at runtime. This is because it is difficult to determine whether a query uses `@defer` based solely on the output format of the query type.<br/><br/>
+
+If you use a type format that makes this possible, you can provide your own type implementations for the `complete` and `streaming` states to provide a corrected type. See the guide on [overriding types](#overriding-types) to learn how to provide your own type implementations.
+
+</Note>
+
+### Working with variables
+
+When your GraphQL operations include variables, TypeScript ensures you provide all required variables with the correct types. Additionally, TypeScript ensures you omit variables that aren't included in the operation.
+
+The following adds a non-null variable to the `GetRocketInventory` query used in previous examples.
+
+```tsx {5-6}
+const GET_ROCKET_INVENTORY: TypedDocumentNode<
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables
+> = gql`
+  query GetRocketInventory($year: Int!) {
+    rocketInventory(year: $year) {
+      id
+      model
+      year
+      stock
+    }
+  }
+`;
+
+function RocketInventory() {
+  // ❌ TypeScript Error: Expected 2 arguments, but got 1.
+  const { data } = useQuery(GET_ROCKET_INVENTORY);
+
+  // ❌ TypeScript Error: Property 'variables' is missing in type '{}'
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {});
+
+  // ❌ TypeScript Error: Property 'year' is missing in type '{}'
+  const { data } = useQuery(GET_ROCKET_INVENTORY, { variables: {} });
+
+  // ✅ Correct: Required variable provided
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: 2024 },
+  });
+
+  // ❌ TypeScript Error: Type 'string' is not assignable to type 'number'
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: "2024" },
+  });
+
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ id: string }'
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: "2024", notAVariable: true },
+  });
+}
+```
+
+For operations with optional variables, TypeScript allows you to omit them:
+
+```tsx
+const GET_ROCKET_INVENTORY: TypedDocumentNode<
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables
+> = gql`
+  query GetRocketInventory($model: String, $year: Int) {
+    rocketInventory(model: $model, year: $year) {
+      id
+      model
+    }
+  }
+`;
+
+function RocketInventory() {
+  // ✅ All valid - all variables are optional
+  const { data } = useQuery(GET_ROCKET_INVENTORY);
+
+  // ✅ All valid - All variables satisfy the variables type
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { model: "Falcon" },
+  });
+
+  // ✅ All valid - All variables satisfy the variables type
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { year: 2024 },
+  });
+
+  // ✅ All valid - All variables satisfy the variables type
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { model: "Falcon", year: 2024 },
+  });
+
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ id: string }'
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    variables: { model: "Falcon", year: 2024, notAVariable: true },
+  });
+}
+```
+
+### Mutations
+
+> For a more comprehensive guide on using mutations, see the [Mutations guide](../data/mutations).
+
+Like `useQuery`, you provide `useMutation` a `TypedDocumentNode`. This adds the query type for the `data` property and ensures that `variables` are validated by TypeScript.
+
+```tsx
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
+// In a real application, consider generating types from your schema
+// instead of writing them by hand
+type SaveRocketMutation = {
+  saveRocket: {
+    model: string;
+  } | null;
+};
+
+type SaveRocketMutationVariables = {
+  rocket: {
+    model: string;
+    year: number;
+    stock: number;
+  };
+};
+
+const SAVE_ROCKET: TypedDocumentNode<
+  SaveRocketMutation,
+  SaveRocketMutationVariables
+> = gql`
+  mutation SaveRocket($rocket: RocketInput!) {
+    saveRocket(rocket: $rocket) {
+      model
+    }
+  }
+`;
+
+export function NewRocketForm() {
+  const [model, setModel] = useState("");
+  const [year, setYear] = useState(0);
+  const [stock, setStock] = useState(0);
+
+  const [addRocket, { data }] = useMutation(SAVE_ROCKET, {
+    //                ^? SaveRocketMutation | null | undefined
+    variables: { rocket: { model, year, stock } },
+  });
+
+  return (
+    <form>
+      <p>
+        <label>Model</label>
+        <input name="model" onChange={(e) => setModel(e.target.value)} />
+      </p>
+      <p>
+        <label>Year</label>
+        <input
+          type="number"
+          name="year"
+          onChange={(e) => setYear(+e.target.value)}
+        />
+      </p>
+      <p>
+        <label>Stock</label>
+        <input
+          type="number"
+          name="stock"
+          onChange={(e) => setStock(e.target.value)}
+        />
+      </p>
+      <button onClick={() => addRocket()}>Add rocket</button>
+    </form>
+  );
+}
+```
+
+<Note>
+
+Unlike `useQuery`, `useMutation` doesn't provide a `dataState` property. `data` isn't tracked the same way as `useQuery` because its value is not read from the cache. The value of `data` is a set result of the last execution of the mutation.
+
+</Note>
+
+#### Using variables with `useMutation`
+
+`useMutation` allows you to provide variables to either the hook or the mutate function returned in the result tuple. When variables are provided to both the hook and mutate function, they are shallowly merged (see the [Mutations guide](../data/mutations#option-precedence) for more information).
+
+This behavior affects how TypeScript checks required variables with `useMutation`. Required variables must be provided to either the hook or the mutate function. If a required variable is not provided to the hook, the mutate function must include it. Required variables provided to the hook make them optional in the mutate function.
+
+The following uses the previous example but flattens the variable declarations to demonstrate how required variables affect TypeScript validation.
+
+```tsx
+const SAVE_ROCKET: TypedDocumentNode<
+  SaveRocketMutation,
+  SaveRocketMutationVariables
+> = gql`
+  mutation SaveRocket($model: String!, $year: Int!, $stock: Int) {
+    saveRocket(rocket: { model: $model, year: $year, stock: $stock }) {
+      model
+    }
+  }
+`;
+
+export function NewRocketForm() {
+  // No required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET);
+
+  // ❌ TypeScript Error: Expected 1 argument, but got 0.
+  addRocket();
+  // ❌ TypeScript Error: Property 'variables' is missing in type '{}'
+  addRocket({});
+  // ❌ TypeScript Error: Type '{}' is missing the following properties from '{ year: number; model: string;, stock?: number }': model, year
+  addRocket({ variables: {} });
+  // ❌ TypeScript Error: Property 'year' is missing in type '{ model: string }'
+  addRocket({ variables: { model: "Falcon" } });
+  // ✅ Correct: All required variables provided
+  addRocket({ variables: { model: "Falcon", year: 2025 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year: number; model: string;, stock?: number }'
+  addRocket({ variables: { model: "Falcon", year: 2025, notAVariable: true } });
+
+  // Some required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET, {
+    variables: { model: "Falcon" },
+  });
+
+  // ❌ TypeScript Error: Expected 1 argument, but got 0.
+  addRocket();
+  // ❌ TypeScript Error: Property 'variables' is missing in type '{}'
+  addRocket({});
+  // ❌ TypeScript Error: Property 'year' is missing in type '{}'
+  addRocket({ variables: {} });
+  // ✅ Correct: All remaining required variables provided
+  addRocket({ variables: { year: 2025 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year: number; model?: string;, stock?: number }'
+  addRocket({ variables: { year: 2025, notAVariable: true } });
+
+  // All required variables provided to the hook
+  const [addRocket] = useMutation(SAVE_ROCKET, {
+    variables: { model: "Falcon", year: 2025 },
+  });
+
+  // ✅ Correct: All required variables are provided to the hook
+  addRocket();
+  // ✅ Correct: All required variables are provided to the hook
+  addRocket({ variables: { stock: 10 } });
+  // ❌ TypeScript Error: 'notAVariable' does not exist in type '{ year?: number; model?: string;, stock?: number }'
+  addRocket({ variables: { notAVariable: true } });
+}
+```
+
+### Subscriptions
+
+> For a more comprehensive guide on using subscriptions, see the [Subscriptions guide](../data/subscriptions).
+
+Like `useQuery`, you provide `useSubscription` a `TypedDocumentNode`. This adds the query type for the `data` property and ensures that `variables` are validated by TypeScript.
+
+```tsx
+import { gql, TypedDocumentNode } from "@apollo/client";
+import { useSubscription } from "@apollo/client/react";
+
+// In a real application, consider generating types from your schema
+// instead of writing them by hand
+type GetLatestNewsSubscription = {
+  latestNews: {
+    content: string;
+  };
+};
+
+type GetLatestNewsSubscriptionVariables = Record<string, never>;
+
+const LATEST_NEWS: TypedDocumentNode<
+  GetLatestNewsSubscription,
+  GetLatestNewsSubscriptionVariables
+> = gql`
+  subscription GetLatestNews {
+    latestNews {
+      content
+    }
+  }
+`;
+
+export function LatestNews() {
+  const { data } = useSubscription(LATEST_NEWS);
+  //      ^? GetLatestNewsSubscription | undefined
+
+  return (
+    <div>
+      <h5>Latest News</h5>
+      <p>{data?.latestNews.content}</p>
+    </div>
+  );
+}
+```
+
+Variables are validated the same as `useQuery`. See [working with variables](#working-with-variables) to learn more about how required variables are validated.
+
+## Defining context types
+
+Apollo Client enables you to pass [custom context](../api/link/introduction#managing-context) through to the link chain. By default, context is typed as `Record<string, any>` to allow for any arbitrary value as context. However, this default has a few downsides. You don't get proper type safety and you don't get autocomplete suggestions in your editor to understand what context options are available to you.
+
+You can define your own context types for better type safety in Apollo Client using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html).
+
+### Adding custom context properties
+
+To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext {
+    myProperty?: string;
+    requestId?: number;
+  }
+}
+```
+
+Now when you pass context for operations, TypeScript will validate the types:
+
+```tsx
+const { data } = useQuery(MY_QUERY, {
+  context: {
+    myProperty: "value", // ✅ Valid value
+    requestId: "123", // ❌ Type 'string' is not assignable to type 'number | undefined'
+  },
+});
+```
+
+<Tip>
+
+We recommend all custom context properties are optional by default. If a context value is necessary for the operation of your application (such as an authentication token used in request headers), we recommend that you try to provide the value with [`SetContextLink`](../api/link/apollo-link-context) or a [custom link](../api/link/introduction#creating-a-custom-link) first. Reserve required properties for options that are truly meant to be provided to every hook or request to your server and cannot be provided by a link in your link chain.
+
+</Tip>
+
+<Note>
+
+Apollo Client doesn't validate that the `context` option is provided when it contains required properties like it does with the [`variables` option](#working-with-variables). However, adding the `context` option might result in a TypeScript error when any required properties are not provided.
+
+</Note>
+
+### Using context from built-in links
+
+Some links provided by Apollo Client have built-in context option types. You can extend `DefaultContext` with these types to get proper type checking for link-specific options.
+
+The following example adds `HttpLink`'s context types to `DefaultContext`:
+
+```ts title="apollo-client.d.ts"
+import "@apollo/client";
+import { HttpLink } from "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext extends HttpLink.ContextOptions {}
+}
+```
+
+Now when you pass context for operations, TypeScript will validate the types:
+
+```tsx
+const { data } = useQuery(MY_QUERY, {
+  context: {
+    headers: {
+      "X-Custom-Header": "value", // ✅ Valid header value
+    },
+    credentials: "include", // ✅ Valid RequestCredentials value
+    fetchOptions: {
+      mode: "none", // ❌ Type "none" is not assignable to type 'RequestMode | undefined'
+    },
+  },
+});
+```
+
+If you are using more than one link that has context options, you can extend from each link's context options:
+
+```ts title="apollo-client.d.ts"
+import "@apollo/client";
+import type { BaseHttpLink } from "@apollo/client/link/http";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+
+declare module "@apollo/client" {
+  interface DefaultContext
+    extends BaseHttpLink.ContextOptions,
+      ClientAwarenessLink.ContextOptions {}
+}
+```
+
+The following built-in links provide context option types:
+
+- [`HttpLink.ContextOptions`](../api/link/apollo-link-http#httplinkcontextoptions)
+- [`BaseHttpLink.ContextOptions`](../api/link/apollo-link-base-http#basehttplinkcontextoptions)
+- [`BatchHttpLink.ContextOptions`](../api/link/apollo-link-batch-http#batchhttplinkcontextoptions)
+- [`BaseBatchHttpLink.ContextOptions`](../api/link/apollo-link-base-batch-http#basebatchhttplinkcontextoptions)
+- [`ClientAwarenessLink.ContextOptions`](../api/link/apollo-link-client-awareness#clientawarenesslinkcontextoptions)
+
+### Using context in custom links
+
+With context types defined, context properties accessed in custom links are properly type checked when reading or writing context.
+
+```ts
+import { ApolloLink } from "@apollo/client";
+
+const customLink = new ApolloLink((operation, forward) => {
+  const context = operation.getContext();
+
+  // TypeScript knows about your custom properties
+  console.log(context.myProperty); // string | undefined
+  console.log(context.requestId); // number | undefined
+
+  operation.setContext({
+    requestId: "123", // ❌ Type 'string' is not assignable to type 'number | undefined'
+  });
+
+  return forward(operation);
+});
+```
+
+## Data masking
+
+Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).
+
+## `@defer`
+
+Learn more about integrating TypeScript with incremental responses the [`@defer` docs](../data/defer).
+
+## Overriding type implementations for built-in types
+
+Apollo Client makes it possible to use custom implementations of certain built-in utility types. This enables you to work with custom type outputs that might otherwise be incompatible with the default type implementations in Apollo Client.
+
+You use a technique called _higher-kinded types_ (HKT) to provide your own type implementations for Apollo Client's utility types. You can think of higher-kinded types as a way to define types and interfaces with generics that can be filled in by Apollo Client internals at a later time. Passing around un-evaluated types is otherwise not possible in TypeScript.
+
+### Anatomy of HKTs
+
+HKTs in Apollo Client consist of two parts:
+
+- The HKT type definition - This provides the plumbing necessary to use your custom type implementation with Apollo Client
+- The `TypeOverrides` interface - An interface used with [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) to provide the mapping for the overridden types to your HKT types
+
+#### Creating an HKT type
+
+You create HKT types by extending the `HKT` interface exported by `@apollo/client/utilities`.
+
+```ts
+import { HKT } from "@apollo/client/utilities";
+
+// The implementation of the type
+type MyCustomImplementation<GenericArg1, GenericArg2> = SomeOtherUtility<
+  GenericArg1,
+  GenericArg2
+>;
+
+interface MyTypeOverride extends HKT {
+  arg1: unknown; // GenericArg1
+  arg2: unknown; // GenericArg2
+  return: MyCustomImplementation<this["arg1"], this["arg2"]>;
+}
+```
+
+You can think of each property on the `HKT` type as a placeholder. Each `arg*` property corresponds to a generic argument used for the implementation. The `return` property provides the mapping to the actual implementation of the type, using the `arg*` values as generic arguments.
+
+#### Mapping HKT types to its type override
+
+Once your HKT type is created, you tell Apollo Client about it by using [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) using the `TypeOverrides` interface. This interface is included in Apollo Client to enable you to provide mappings to your custom type implementations.
+
+Create a TypeScript file that defines the `TypeOverrides` interface for the `@apollo/client` module.
+
+```ts title=apollo-client.d.ts
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    TypeOverride1: MyTypeOverride;
+  }
+}
+```
+
+Each key in the `TypeOverrides` interface corresponds to an overridable type in Apollo Client and its value maps to an HKT type that provides the definition for that type.
+
+<Note>
+
+`TypeOverride1` is used as an example in the previous code block but is not a valid overridable type so it is ignored. See the [available type overrides](#available-type-overrides) for more information on which types can be overridden.
+
+</Note>
+
+### Example: Custom `dataState` types
+
+Let's add our own type overrides for the `Complete` and `Streaming` utility types. These types are used to provide types for the `data` property when [`dataState`](#type-narrowing-data-with-datastate) is set to specific values. The `Complete` type is used when `dataState` is `"complete"`, and `Streaming` is used when `dataState` is `"streaming"`.
+
+For this example, we'll assume a custom type generation format where:
+
+- Streamed types (i.e. operation types that use the `@defer` directive) include a `__streaming` virtual property. Its value is the operation type that should be used when the result is still streaming from the server.
+
+  ```ts
+  type StreamedQuery = {
+    // The streamed variant of the operation type is provided under the
+    // `__streaming` virtual property
+    __streaming?: {
+      user: { __typename: "User"; id: number } & (
+        | { name: string }
+        | { name?: never }
+      );
+    };
+
+    // The full result type includes all other fields in the type
+    user: { __typename: "User"; id: number; name: string };
+  };
+  ```
+
+- Complete types which provide the full type of a query
+
+  ```ts
+  type CompleteQuery = {
+    user: { __typename: "User"; id: number; name: string };
+  };
+  ```
+
+<Note>
+
+This is a hypothetical format that doesn't exist in Apollo Client or any known code generation tool. This format is used specifically for this example to illustrate how to provide type overrides to Apollo Client.
+
+</Note>
+
+First, let's define our custom implementation of the `Streaming` type. The implementation works by checking if the `__streaming` virtual property exists on the type. If so, it returns the value on the `__streaming` property as the type, otherwise it returns the input type unmodified.
+
+```ts title="custom-types.ts"
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+```
+
+Now let's define our custom implementation of the `Complete` type. The implementation works by removing the `__streaming` virtual property on the input type. This can be accomplished using the built-in [`Omit`](https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys) type.
+
+```ts {4} title="custom-types.ts"
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+
+type Complete<TData> = Omit<TData, "__streaming">;
+```
+
+Now we need to define higher-kinded types for each of these implementations. This provides the bridge needed by Apollo Client to use our custom type implementations. This is done by extending the `HKT` interface exported by `@apollo/client/utilities`.
+
+Let's provide HKTs for our `Complete` and `Streaming` types. We'll put these in the same file as our type implementations.
+
+```ts {8-11,13-16} title="custom-types.ts"
+import { HKT } from "@apollo/client/utilities";
+
+type Streaming<TData> =
+  TData extends { __streaming?: infer TStreamingData } ? TStreamingData : TData;
+
+type Complete<TData> = Omit<TData, "__streaming">;
+
+export interface StreamingHKT extends HKT {
+  arg1: unknown; // TData
+  return: Streaming<this["arg1"]>;
+}
+
+export interface CompleteHKT extends HKT {
+  arg1: unknown; // TData
+  return: Complete<this["arg1"]>;
+}
+```
+
+With our HKT types in place, we now need to tell Apollo Client about them. We'll need to provide our type overrides on the `TypeOverrides` interface.
+
+Create a TypeScript file and define a `TypeOverrides` interface for the `@apollo/client` module.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+import { CompleteHKT, StreamingHKT } from "./custom-types";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    Complete: CompleteHKT;
+    Streaming: StreamingHKT;
+  }
+}
+```
+
+And that's it! Now when `dataState` is `"complete"` or `"streaming"`, Apollo Client will use our custom type implementations 🎉.
+
+### Available type overrides
+
+The following utility types are available to override:
+
+- `FragmentType<TFragmentData>` - Type used with fragments to ensure parent objects contain the fragment spread
+- `Unmasked<TData>` - Unwraps masked types into the full result type
+- `MaybeMasked<TData>` - Conditionally returns either masked or unmasked type
+- `Complete<TData>` - Type returned when `dataState` is `"complete"`
+- `Streaming<TData>` - Type returned when `dataState` is `"streaming"` (for `@defer` queries)
+- `Partial<TData>` - Type returned when `dataState` is `"partial"`
+- `AdditionalApolloLinkResultTypes<TData, TExtensions>` - Additional types that can be returned from Apollo Link operations
+
+For more information about data masking types specifically, see the [data masking guide](../data/fragments#defining-your-own-masking-types-using-higher-kinded-types).

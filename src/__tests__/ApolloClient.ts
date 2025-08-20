@@ -13,7 +13,6 @@ import type {
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
-import type { Masked } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -3189,7 +3188,7 @@ describe("ApolloClient", () => {
       >();
     });
 
-    test("client.mutate uses masked/unmasked type when using Masked<TData>", async () => {
+    test("client.mutate proper uses masked/unmasked type", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -3214,7 +3213,7 @@ describe("ApolloClient", () => {
         id: string;
       }
 
-      const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+      const mutation: TypedDocumentNode<Mutation, Variables> = gql`
         mutation ($id: ID!) {
           updateUser(id: $id) {
             id
@@ -3271,7 +3270,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(result.data).toEqualTypeOf<Masked<Mutation> | undefined>();
+      expectTypeOf(result.data).toEqualTypeOf<Mutation | undefined>();
     });
 
     test("client.query uses correct masked/unmasked types", async () => {
@@ -3290,7 +3289,7 @@ describe("ApolloClient", () => {
         id: string;
       }
 
-      const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
+      const query: TypedDocumentNode<Query, Variables> = gql`
         query ($id: ID!) {
           user(id: $id) {
             id
@@ -3352,7 +3351,7 @@ describe("ApolloClient", () => {
         id: string;
       }
 
-      const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
+      const query: TypedDocumentNode<Query, Variables> = gql`
         query ($id: ID!) {
           user(id: $id) {
             id
@@ -3365,10 +3364,7 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const subscription: TypedDocumentNode<
-        Masked<Subscription>,
-        Variables
-      > = gql`
+      const subscription: TypedDocumentNode<Subscription, Variables> = gql`
         subscription ($id: ID!) {
           updatedUser(id: $id) {
             id
@@ -3400,18 +3396,16 @@ describe("ApolloClient", () => {
       observableQuery.subscribe({
         next: (result) => {
           if (result.dataState === "complete") {
-            expectTypeOf(result.data).toEqualTypeOf<Masked<Query>>();
+            expectTypeOf(result.data).toEqualTypeOf<Query>();
           }
 
           if (result.dataState === "partial") {
-            expectTypeOf(result.data).toEqualTypeOf<
-              DeepPartial<Masked<Query>>
-            >();
+            expectTypeOf(result.data).toEqualTypeOf<DeepPartial<Query>>();
           }
 
           if (result.dataState === "streaming") {
             expectTypeOf(result.data).toEqualTypeOf<
-              DataValue.Streaming<Masked<Query>>
+              DataValue.Streaming<Query>
             >();
           }
 
@@ -3422,7 +3416,7 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(observableQuery.getCurrentResult()).toEqualTypeOf<
-        ObservableQuery.Result<Masked<Query>>
+        ObservableQuery.Result<Query>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({
@@ -3435,31 +3429,23 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toEqualTypeOf<
-        Masked<Query> | undefined
-      >();
+      expectTypeOf(fetchMoreResult.data).toEqualTypeOf<Query | undefined>();
 
       const refetchResult = await observableQuery.refetch();
 
-      expectTypeOf(refetchResult.data).toEqualTypeOf<
-        Masked<Query> | undefined
-      >();
+      expectTypeOf(refetchResult.data).toEqualTypeOf<Query | undefined>();
 
       const setVariablesResult = await observableQuery.setVariables({
         id: "2",
       });
 
-      expectTypeOf(setVariablesResult?.data).toEqualTypeOf<
-        Masked<Query> | undefined
-      >();
+      expectTypeOf(setVariablesResult?.data).toEqualTypeOf<Query | undefined>();
 
       const reobserveResult = await observableQuery.reobserve({
         variables: { id: "2" },
       });
 
-      expectTypeOf(reobserveResult.data).toEqualTypeOf<
-        Masked<Query> | undefined
-      >();
+      expectTypeOf(reobserveResult.data).toEqualTypeOf<Query | undefined>();
 
       observableQuery.updateQuery(
         (_previousData, { complete, previousData }) => {
@@ -3496,8 +3482,8 @@ describe("ApolloClient", () => {
         },
       });
     });
-    test("ApolloClient and ApolloCache methods with the same name should have compatible signatures", <TData, TVariables extends
-      OperationVariables>() => {
+    test("ApolloClient and ApolloCache methods with the same name should have compatible signatures", function <TData, TVariables extends
+      OperationVariables>() {
       // specific set of common methods
       expectTypeOf<keyof ApolloClient & keyof ApolloCache>().toEqualTypeOf<
         | "readQuery"

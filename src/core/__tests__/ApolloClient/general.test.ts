@@ -10,7 +10,6 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockLink } from "@apollo/client/testing";
@@ -42,7 +41,7 @@ describe("ApolloClient", () => {
     variables?: Object;
     queryOptions?: Object;
     error?: Error;
-    result?: FetchResult;
+    result?: ApolloLink.Result;
     delay?: number;
   }) => {
     const client = new ApolloClient({
@@ -3022,7 +3021,7 @@ describe("ApolloClient", () => {
       cache,
       link: new ApolloLink(
         () =>
-          new Observable((observer: Observer<FetchResult>) => {
+          new Observable((observer: Observer<ApolloLink.Result>) => {
             setTimeout(() => {
               observer.next!({ data: { info: { c: "see" } } });
               observer.complete!();
@@ -4287,11 +4286,13 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -4859,12 +4860,14 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            return;
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              return;
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -4909,12 +4912,14 @@ describe("ApolloClient", () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        () =>
-          new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-          }),
+        new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              timesFired += 1;
+              observer.next({ data });
+              observer.complete();
+            })
+        ),
       ]);
 
       const client = new ApolloClient({
@@ -7561,7 +7566,7 @@ describe("ApolloClient", () => {
       `;
 
       const outgoingRequestSpy = jest.fn(((operation, forward) =>
-        forward(operation)) satisfies RequestHandler);
+        forward(operation)) satisfies ApolloLink.RequestHandler);
       const defer = mockDeferStream();
       const client = new ApolloClient({
         cache: new InMemoryCache({}),

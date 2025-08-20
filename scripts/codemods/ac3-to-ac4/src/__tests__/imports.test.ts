@@ -1,14 +1,29 @@
-import { defineInlineTest } from "jscodeshift/dist/testUtils";
+import { applyTransform } from "jscodeshift/dist/testUtils";
+import { describe, expect, test } from "vitest";
 
 import imports from "../imports.js";
 
-function ts(code: TemplateStringsArray): string {
-  return code[0];
-}
+const transform = ([source]: TemplateStringsArray) =>
+  applyTransform(imports, {}, { source }, { parser: "ts" });
 
-defineInlineTest(
-  imports,
-  {},
-  ts`import {useQuery} from '@apollo/client'`,
-  ts`import {useQuery} from "@apollo/client/react"`
-);
+describe("aliases if `legacyEntryPoints` transform was not applied", () => {
+  test('moves into existing compatible "legacy" entry point', () => {
+    expect(
+      transform`
+    import { useQuery } from "@apollo/client/index.js";
+    import { somethingElse } from "@apollo/client/react/react.cjs";
+    `
+    ).toMatchInlineSnapshot(
+      `"import { somethingElse, useQuery } from "@apollo/client/react/react.cjs";"`
+    );
+  });
+  test("if nonexistant, creates new modern entry points", () => {
+    expect(
+      transform`
+    import { useQuery } from "@apollo/client/index.js";
+    `
+    ).toMatchInlineSnapshot(
+      `"import { useQuery } from "@apollo/client/react";"`
+    );
+  });
+});

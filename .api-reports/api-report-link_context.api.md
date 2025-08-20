@@ -5,23 +5,23 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { Operation } from '@apollo/client/link';
-import type { OperationContext } from '@apollo/client/link';
 
 // @public @deprecated (undocumented)
 export function setContext(setter: SetContextLink.LegacyContextSetter): SetContextLink;
 
 // @public (undocumented)
 export namespace SetContextLink {
+    export type ContextSetter = (prevContext: Readonly<ApolloLink.OperationContext>, operation: SetContextLink.SetContextOperation) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
+    // @deprecated (undocumented)
+    export type LegacyContextSetter = (operation: SetContextLink.SetContextOperation, prevContext: Readonly<ApolloLink.OperationContext>) => Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
     // (undocumented)
-    export type ContextSetter = (prevContext: OperationContext, operation: SetContextOperation) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
-    // (undocumented)
-    export type LegacyContextSetter = (operation: SetContextOperation, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
-    // (undocumented)
-    export type SetContextOperation = Omit<Operation, "getContext" | "setContext">;
+    export namespace SetContextLinkDocumentationTypes {
+        export function ContextSetter(prevContext: Readonly<ApolloLink.OperationContext>, operation: SetContextLink.SetContextOperation): Promise<Partial<ApolloLink.OperationContext>> | Partial<ApolloLink.OperationContext>;
+    }
+    export type SetContextOperation = Omit<ApolloLink.Operation, "getContext" | "setContext">;
 }
 
-// @public (undocumented)
+// @public
 export class SetContextLink extends ApolloLink {
     constructor(setter: SetContextLink.ContextSetter);
 }

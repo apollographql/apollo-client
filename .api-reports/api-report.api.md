@@ -7,7 +7,7 @@
 import type { ASTNode } from 'graphql';
 import { disableExperimentalFragmentVariables } from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
-import type { DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
@@ -21,6 +21,7 @@ import { Observable } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { OperationTypeNode } from 'graphql';
+import type { print as print_2 } from 'graphql';
 import { resetCaches } from 'graphql-tag';
 import type { SelectionSetNode } from 'graphql';
 import type { Subscribable } from 'rxjs';
@@ -326,7 +327,7 @@ export class ApolloClient {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<FetchResult<unknown>>;
+    __requestRaw(request: ApolloLink.Request): Observable<ApolloLink.Result<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -383,32 +384,65 @@ export class ApolloClient {
 export type ApolloClientOptions = ApolloClient.Options;
 
 // @public (undocumented)
-export class ApolloLink {
-    constructor(request?: RequestHandler);
-    // (undocumented)
-    static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    concat(next: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    static empty(): ApolloLink;
-    // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
+export namespace ApolloLink {
+    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
+    export type AdditionalResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> = ApplyHKTImplementationWithDefault<TypeOverrides, "AdditionalApolloLinkResultTypes", NotImplementedHandler.TypeOverrides, TData, TExtensions>;
     // (undocumented)
-    static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    export namespace DocumentationTypes {
+        export function ForwardFunction(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
+        export function RequestHandler(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
+    }
+    export interface ExecuteContext {
+        client: ApolloClient;
+    }
+    export type ForwardFunction = (operation: ApolloLink.Operation) => Observable<ApolloLink.Result>;
+    export interface Operation {
+        readonly client: ApolloClient;
+        extensions: Record<string, any>;
+        getContext: () => Readonly<ApolloLink.OperationContext>;
+        operationName: string | undefined;
+        operationType: OperationTypeNode;
+        query: DocumentNode;
+        setContext: {
+            (context: Partial<ApolloLink.OperationContext>): void;
+            (updateContext: (previousContext: Readonly<ApolloLink.OperationContext>) => Partial<ApolloLink.OperationContext>): void;
+        };
+        variables: OperationVariables;
+    }
+    export interface OperationContext extends DefaultContext {
+    }
+    export interface Request {
+        context?: DefaultContext;
+        extensions?: Record<string, any>;
+        query: DocumentNode;
+        variables?: OperationVariables;
+    }
+    export type RequestHandler = (operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction) => Observable<ApolloLink.Result>;
+    // (undocumented)
+    export type Result<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalResultTypes<TData, TExtensions>;
+}
+
+// @public
+export class ApolloLink {
+    constructor(request?: ApolloLink.RequestHandler);
+    // @deprecated
+    static concat(...links: ApolloLink[]): ApolloLink;
+    concat(...links: ApolloLink[]): ApolloLink;
+    static empty(): ApolloLink;
+    static execute(link: ApolloLink, request: ApolloLink.Request, context: ApolloLink.ExecuteContext): Observable<ApolloLink.Result>;
+    static from(links: ApolloLink[]): ApolloLink;
     // @internal @deprecated
     getMemoryInternals?: () => unknown;
     // @internal @deprecated
     readonly left?: ApolloLink;
-    // (undocumented)
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    request(operation: ApolloLink.Operation, forward: ApolloLink.ForwardFunction): Observable<ApolloLink.Result>;
     // @internal @deprecated
     readonly right?: ApolloLink;
-    // (undocumented)
-    static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
+    static split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink, right?: ApolloLink): ApolloLink;
+    split(test: (op: ApolloLink.Operation) => boolean, left: ApolloLink, right?: ApolloLink): ApolloLink;
 }
 
 // @public (undocumented)
@@ -450,6 +484,61 @@ type AsStoreObject<T extends {
 }> = {
     [K in keyof T]: T[K];
 };
+
+// @public (undocumented)
+namespace BaseHttpLink {
+    // (undocumented)
+    interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: BaseHttpLink.HttpOptions;
+        uri?: string | BaseHttpLink.UriFunction;
+    }
+    interface HttpOptions {
+        accept?: string[];
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    // Warning: (ae-forgotten-export) The symbol "BaseHttpLink" needs to be exported by the entry point index.d.ts
+    interface Options extends Shared.Options {
+        useGETForQueries?: boolean;
+    }
+    // (undocumented)
+    type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    namespace Shared {
+        interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: BaseHttpLink.Printer;
+            uri?: string | BaseHttpLink.UriFunction;
+        }
+    }
+    // (undocumented)
+    type UriFunction = (operation: ApolloLink.Operation) => string;
+}
+
+// @public
+class BaseHttpLink extends ApolloLink {
+    constructor(options?: BaseHttpLink.Options);
+}
 
 // @public (undocumented)
 type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" | "onWatchUpdated">;
@@ -627,41 +716,24 @@ namespace ClientAwarenessLink {
         transport?: "headers" | false;
         version?: string;
     }
+    interface ContextOptions {
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+    }
     // (undocumented)
     interface EnhancedClientAwarenessOptions {
         transport?: "extensions" | false;
     }
     // (undocumented)
     interface Options {
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        clientAwareness?: ClientAwarenessOptions;
-        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+        clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+        enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     }
 }
 
-// @public (undocumented)
-class ClientAwarenessLink extends ApolloLink {
-    constructor(constructorOptions?: ClientAwarenessLink.Options);
-}
-
-// Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type ClientParseError = InvariantError & {
-    parseError: Error;
-};
-
-// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
-//
 // @public
-type CombineByTypeName<T extends {
-    __typename?: string;
-}> = {
-    [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
-}[NonNullable<T["__typename"]>];
+class ClientAwarenessLink extends ApolloLink {
+    constructor(options?: ClientAwarenessLink.Options);
+}
 
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
@@ -680,14 +752,14 @@ export namespace CombinedGraphQLErrors {
     // (undocumented)
     export interface MessageFormatterOptions {
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
-        result: FetchResult<unknown>;
+        result: ApolloLink.Result<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FormattedExecutionResult<any>);
-    constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
+    constructor(result: ApolloLink.Result<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     readonly extensions: Record<string, unknown> | undefined;
@@ -720,27 +792,11 @@ export class CombinedProtocolErrors extends Error {
     static is(error: unknown): error is CombinedProtocolErrors;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
-//
-// @public
-type CombineIntersection<T> = Exclude<T, {
-    __typename?: string;
-}> | CombineByTypeName<Extract<T, {
-    __typename?: string;
-}>>;
-
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const concat: typeof ApolloLink.concat;
 
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
-
 // @public @deprecated (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
+export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -750,10 +806,6 @@ export const createSignalIfSupported: () => {
     controller: AbortController;
     signal: AbortSignal;
 };
-
-// @public (undocumented)
-export interface DataMasking {
-}
 
 // @public (undocumented)
 export type DataState<TData> = {
@@ -772,7 +824,6 @@ export type DataState<TData> = {
 
 // @public (undocumented)
 export namespace DataValue {
-    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
     export type Complete<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Complete", OverridableTypes.Defaults, TData>;
     export type Partial<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Partial", OverridableTypes.Defaults, TData>;
@@ -825,16 +876,13 @@ export interface DefaultContext extends Record<string, any> {
 // @public (undocumented)
 export function defaultDataIdFromObject({ __typename, id, _id }: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
 
-// Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
-
 // @public @deprecated (undocumented)
 export type DefaultOptions = ApolloClient.DefaultOptions;
 
+// Warning: (ae-forgotten-export) The symbol "BaseHttpLink" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export const defaultPrinter: HttpLink.Printer;
+export const defaultPrinter: BaseHttpLink.Printer;
 
 // @public (undocumented)
 interface DeleteModifier {
@@ -857,31 +905,24 @@ export { disableExperimentalFragmentVariables }
 
 export { disableFragmentWarnings }
 
-// @public (undocumented)
-type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Required<U> ? Required<U> extends Required<T> ? never : T : T : T;
-
 export { DocumentNode }
 
-// @public (undocumented)
+// @public
 export class DocumentTransform {
     // Warning: (ae-forgotten-export) The symbol "TransformFn" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "DocumentTransformOptions" needs to be exported by the entry point index.d.ts
     constructor(transform: TransformFn, options?: DocumentTransformOptions);
-    // (undocumented)
     concat(otherTransform: DocumentTransform): DocumentTransform;
-    // (undocumented)
     static identity(): DocumentTransform;
     // @internal @deprecated
     readonly left?: DocumentTransform;
     resetCache(): void;
     // @internal @deprecated
     readonly right?: DocumentTransform;
-    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
         left: DocumentTransform;
         right: DocumentTransform;
     };
-    // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
 
@@ -894,7 +935,7 @@ interface DocumentTransformOptions {
     getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const empty: typeof ApolloLink.empty;
 
 export { enableExperimentalFragmentVariables }
@@ -993,27 +1034,11 @@ export interface ErrorLike {
 export type ErrorPolicy = "none" | "ignore" | "all";
 
 // @public (undocumented)
-type Exact<in out T> = (x: T) => T;
-
-// @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
 // @public (undocumented)
-interface ExecuteContext {
-    // (undocumented)
-    client: ApolloClient;
-}
-
-// @public
-type ExtractByMatchingTypeNames<Union extends {
-    __typename?: string;
-}, TypeName extends string> = Union extends any ? TypeName extends NonNullable<Union["__typename"]> ? Omit<Union, "__typename"> & {
-    [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
-} : never : never;
-
-// @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpLink.HttpOptions;
+    http: BaseHttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -1026,8 +1051,8 @@ export const fallbackHttpConfig: {
 // @public
 export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
-// @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
+// @public @deprecated (undocumented)
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ApolloLink.Result<TData, TExtensions>;
 
 // @public (undocumented)
 export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> {
@@ -1119,12 +1144,12 @@ interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
-// Warning: (ae-forgotten-export) The symbol "DefaultImplementation" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", DefaultImplementation, TData>;
+// @public
+export type FragmentType<TFragmentData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentData>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;
 
 // @internal @deprecated
@@ -1195,112 +1220,8 @@ const getInMemoryCacheMemoryInternals: (() => {
 
 export { gql }
 
-// @public (undocumented)
-namespace GraphQLCodegenDataMasking {
-    // (undocumented)
-    type FragmentType<TData> = [
-    TData
-    ] extends [{
-        " $fragmentName"?: infer TKey;
-    }] ? TKey extends string ? {
-        " $fragmentRefs"?: {
-            [key in TKey]: TData;
-        };
-    } : never : never;
-    // (undocumented)
-    namespace HKTImplementation {
-        // (undocumented)
-        interface FragmentType extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
-        }
-        // (undocumented)
-        interface Masked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.Masked<this["arg1"]>;
-        }
-        // (undocumented)
-        interface MaskedDocumentNode extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            arg2: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.MaskedDocumentNode<this["arg1"], this["arg2"]>;
-        }
-        // (undocumented)
-        interface MaybeMasked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.MaybeMasked<this["arg1"]>;
-        }
-        // (undocumented)
-        interface Unmasked extends HKT {
-            // (undocumented)
-            arg1: unknown;
-            // (undocumented)
-            return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
-        }
-    }
-    // (undocumented)
-    interface Implementation {
-        // (undocumented)
-        FragmentType: HKTImplementation.FragmentType;
-        // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        Masked: HKTImplementation.Masked;
-        // (undocumented)
-        MaskedDocumentNode: HKTImplementation.MaskedDocumentNode;
-        // (undocumented)
-        MaybeMasked: HKTImplementation.MaybeMasked;
-        // (undocumented)
-        Unmasked: HKTImplementation.Unmasked;
-    }
-    type Masked<TData> = TData & {
-        __masked?: true;
-    };
-    // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-    type MaskedDocumentNode<TData = {
-        [key: string]: any;
-    }, TVariables = {
-        [key: string]: any;
-    }> = TypedDocumentNode<Masked<TData>, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "GraphQLCodegenDataMasking" needs to be exported by the entry point index.d.ts
-    type MaybeMasked<TData> = DataMasking extends {
-        mode: "unmask";
-    } ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
-        __masked?: true;
-    } ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
-        mode: "preserveTypes";
-    } ? TData : TData;
-    // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
-    type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
-}
-
-// @public (undocumented)
-export interface GraphQLRequest<TVariables extends OperationVariables = Record<string, any>> {
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    operationType?: OperationTypeNode;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    variables?: TVariables;
-}
+// @public @deprecated (undocumented)
+export type GraphQLRequest = ApolloLink.Request;
 
 // @beta
 interface HKT {
@@ -1323,60 +1244,22 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpLink.HttpOptions;
+    http?: BaseHttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
 export namespace HttpLink {
-    // (undocumented)
-    export interface Body {
-        // (undocumented)
-        extensions?: Record<string, any>;
-        // (undocumented)
-        operationName?: string;
-        // (undocumented)
-        query?: string;
-        // (undocumented)
-        variables?: Record<string, any>;
+    export interface ContextOptions extends BaseHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
     }
-    export interface ContextOptions {
-        credentials?: RequestCredentials;
-        fetchOptions?: RequestInit;
-        headers?: Record<string, string>;
-        http?: HttpLink.HttpOptions;
-        uri?: string | UriFunction;
+    export interface Options extends BaseHttpLink.Options, ClientAwarenessLink.Options {
     }
-    export interface HttpOptions {
-        accept?: string[];
-        includeExtensions?: boolean;
-        includeQuery?: boolean;
-        preserveHeaderCase?: boolean;
-    }
-    export interface Options {
-        credentials?: string;
-        fetch?: typeof fetch;
-        fetchOptions?: any;
-        headers?: Record<string, string>;
-        includeExtensions?: boolean;
-        includeUnusedVariables?: boolean;
-        preserveHeaderCase?: boolean;
-        print?: Printer;
-        uri?: string | UriFunction;
-        useGETForQueries?: boolean;
-    }
-    // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
-    // (undocumented)
-    export type UriFunction = (operation: Operation) => string;
 }
 
-// @public (undocumented)
+// @public
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
+    constructor(options?: HttpLink.Options);
 }
 
 // @public (undocumented)
@@ -1406,11 +1289,11 @@ namespace Incremental {
     // @internal @deprecated (undocumented)
     interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        extractErrors: (result: FetchResult<any>) => readonly GraphQLFormattedError[] | undefined | void;
+        extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
-        isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
+        isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
         // (undocumented)
-        prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+        prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
@@ -1550,11 +1433,6 @@ interface InvalidateModifier {
 
 // @public (undocumented)
 const _invalidateModifier: unique symbol;
-
-// @public (undocumented)
-class InvariantError extends Error {
-    constructor(message?: string);
-}
 
 // @internal @deprecated (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -1737,16 +1615,6 @@ export class LocalStateError extends Error {
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
-// @public
-export type Masked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Masked", DefaultImplementation, TData>;
-
-// @public
-export type MaskedDocumentNode<TData = {
-    [key: string]: any;
-}, TVariables = {
-    [key: string]: any;
-}> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaskedDocumentNode", DefaultImplementation, TData, TVariables>;
-
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
@@ -1769,8 +1637,10 @@ interface MaskOperationOptions<TData> {
 }
 
 // @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", DefaultImplementation, TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.TypeOverrides, TData>;
 
+// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
     context: LocalState.ContextFunction<TContext>;
@@ -1786,19 +1656,6 @@ export interface MergeInfo {
     typename: string | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeObjects<T, U> = Prettify<{
-    [k in keyof T]: k extends keyof U ? [
-    NonNullable<T[k]>,
-    NonNullable<U[k]>
-    ] extends ([
-    infer TK extends object,
-    infer UK extends object
-    ]) ? TK extends unknown[] ? UK extends unknown[] ? CombineIntersection<TK[number] | UK[number]>[] | Extract<T[k] | U[k], undefined | null> : T[k] : CombineIntersection<TK | UK> | Extract<T[k] | U[k], undefined | null> : T[k] : T[k];
-} & Pick<U, Exclude<keyof U, keyof T>>>;
-
 // @public (undocumented)
 type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
 
@@ -1809,22 +1666,6 @@ export interface MergeTree {
     // (undocumented)
     map: Map<string | number, MergeTree>;
 }
-
-// Warning: (ae-forgotten-export) The symbol "MergeUnionsAcc" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "takeOneFromUnion" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, never>;
-
-// Warning: (ae-forgotten-export) The symbol "DistributedRequiredExclude" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeObjects" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnionsAcc<TUnion, Curr, Merged> = [
-Curr
-] extends [never] ? Merged : MergeUnionsAcc<DistributedRequiredExclude<TUnion, Curr>, takeOneFromUnion<DistributedRequiredExclude<TUnion, Curr>>, [
-Merged
-] extends [never] ? Curr : MergeObjects<Curr, Merged>>;
 
 // @public (undocumented)
 export class MissingFieldError extends Error {
@@ -1936,9 +1777,6 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     reason: "after-fetch" | "variables-changed";
 }
 
-// @public (undocumented)
-export type NextLink = (operation: Operation) => Observable<FetchResult>;
-
 // @public @deprecated
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
@@ -1987,6 +1825,38 @@ export interface NormalizedCacheObject {
 
 // @public
 export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & GetDataState<TData, "streaming" | "complete">;
+
+// @public (undocumented)
+namespace NotImplementedHandler {
+    // (undocumented)
+    interface NotImplementedResult extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        arg2: unknown;
+        // (undocumented)
+        return: never;
+    }
+    // (undocumented)
+    interface TypeOverrides {
+        // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        AdditionalApolloLinkResultTypes: NotImplementedResult;
+    }
+}
+
+// @public (undocumented)
+class NotImplementedHandler implements Incremental.Handler<never> {
+    // (undocumented)
+    extractErrors(): void;
+    // (undocumented)
+    isIncrementalResult(_: any): _ is never;
+    // (undocumented)
+    prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
+    // (undocumented)
+    startRequest: any;
+}
 
 export { Observable }
 
@@ -2119,24 +1989,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
-// @public (undocumented)
-export interface Operation {
-    readonly client: ApolloClient;
-    extensions: Record<string, any>;
-    getContext: () => OperationContext;
-    operationName: string;
-    operationType: OperationTypeNode | undefined;
-    query: DocumentNode;
-    setContext: {
-        (context: Partial<OperationContext>): void;
-        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
-    };
-    variables: Record<string, any>;
-}
-
-// @public (undocumented)
-export interface OperationContext extends DefaultContext {
-}
+// @public @deprecated (undocumented)
+export type Operation = ApolloLink.Operation;
 
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
@@ -2189,7 +2043,7 @@ namespace OverridableTypes {
 }
 
 // @public (undocumented)
-export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
+export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
 class Policies {
@@ -2238,18 +2092,53 @@ export type PossibleTypesMap = {
     [supertype: string]: string[];
 };
 
-// @internal @deprecated (undocumented)
-type Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
+// @public (undocumented)
+namespace PreserveTypes {
+    // (undocumented)
+    type FragmentType<_TData> = never;
+    // (undocumented)
+    namespace HKTImplementation {
+        // (undocumented)
+        interface FragmentType extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: never;
+        }
+        // (undocumented)
+        interface MaybeMasked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: this["arg1"];
+        }
+        // (undocumented)
+        interface Unmasked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: this["arg1"];
+        }
+    }
+    // (undocumented)
+    type MaybeMasked<TData> = TData;
+    // (undocumented)
+    interface TypeOverrides {
+        // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        FragmentType: HKTImplementation.FragmentType;
+        // (undocumented)
+        MaybeMasked: HKTImplementation.MaybeMasked;
+        // (undocumented)
+        Unmasked: HKTImplementation.Unmasked;
+    }
+    // (undocumented)
+    type Unmasked<TData> = TData;
+}
 
 // @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-
-// @public
-const print_2: ((ast: ASTNode) => string) & {
-    reset(): void;
-};
 
 // @public (undocumented)
 class QueryManager {
@@ -2302,7 +2191,7 @@ class QueryManager {
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable<FetchResult<any>>;
+        observable?: Observable<ApolloLink.Result<any>>;
         restart?: () => void;
     }>;
     // (undocumented)
@@ -2471,6 +2360,8 @@ type RefetchQueriesIncludeShorthand = "all" | "active";
 // @public @deprecated (undocumented)
 export type RefetchQueriesOptions<TCache extends ApolloCache, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
+// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloClient.QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
@@ -2483,24 +2374,18 @@ export type RefetchQueryDescriptor = string | DocumentNode;
 // @public (undocumented)
 export type RefetchWritePolicy = "merge" | "overwrite";
 
-// @public (undocumented)
-type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
-
 // @internal @deprecated (undocumented)
 type RemoveIndexSignature<T> = {
     [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
 };
 
-// @public (undocumented)
-type RemoveMaskedMarker<T> = Omit<T, "__masked">;
-
-// @public (undocumented)
-export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
+// @public @deprecated (undocumented)
+export type RequestHandler = ApolloLink.RequestHandler;
 
 export { resetCaches }
 
 // @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -2535,22 +2420,19 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
+export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: BaseHttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: HttpLink.Body;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export const selectURI: (operation: Operation, fallbackURI?: string | ((operation: Operation) => string)) => any;
-
-// @public (undocumented)
-export const serializeFetchParameter: (p: any, label: string) => string;
+export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
 
 // @public (undocumented)
 export namespace ServerError {
@@ -2615,7 +2497,7 @@ export class ServerParseError extends Error {
 // @public (undocumented)
 export function setLogVerbosity(level: VerbosityLevel): VerbosityLevel;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const split: typeof ApolloLink.split;
 
 // @public (undocumented)
@@ -2674,11 +2556,6 @@ export interface SubscriptionObservable<T> extends Observable<T> {
 
 // @public @deprecated (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.SubscribeOptions<TData, TVariables>;
-
-// Warning: (ae-forgotten-export) The symbol "unionToIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
 
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
@@ -2744,18 +2621,8 @@ export class UnconventionalError extends Error {
     static is(error: unknown): error is UnconventionalError;
 }
 
-// @public (undocumented)
-type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
-
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", DefaultImplementation, TData>;
-
-// @public (undocumented)
-type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
-    " $fragmentRefs"?: infer FragmentRefs;
-} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
-    [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData : never;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", PreserveTypes.TypeOverrides, TData>;
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -2844,8 +2711,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:163:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:357:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:159:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:147:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

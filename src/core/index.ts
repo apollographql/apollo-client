@@ -116,9 +116,7 @@ export type {
   DocumentNode,
   FetchResult,
   GraphQLRequest,
-  NextLink,
   Operation,
-  OperationContext,
   RequestHandler,
 } from "@apollo/client/link";
 
@@ -135,16 +133,11 @@ export {
   // TODO remove: needed by @apollo/client/link/batch-http but not public
   selectHttpOptionsAndBodyInternal,
   selectURI,
-  serializeFetchParameter,
 } from "@apollo/client/link/http";
-export type { ClientParseError } from "@apollo/client/link/http";
 
 /* Masking */
 export type {
-  DataMasking,
   FragmentType,
-  Masked,
-  MaskedDocumentNode,
   MaybeMasked,
   Unmasked,
 } from "@apollo/client/masking";

@@ -4,24 +4,16 @@
 
 ```ts
 
+import type { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
-import type { ExecuteContext } from '@apollo/client/link';
-import type { GraphQLRequest } from '@apollo/client/link';
-import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
-export function createOperation(starting: any, operation: GraphQLRequest, { client }: ExecuteContext): Operation;
+export function createOperation(request: ApolloLink.Request, { client }: ApolloLink.ExecuteContext): ApolloLink.Operation;
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {
     [x: string]: any;
 };
-
-// @public (undocumented)
-export function transformOperation(operation: GraphQLRequest): GraphQLRequest;
-
-// @public (undocumented)
-export function validateOperation(operation: GraphQLRequest): GraphQLRequest;
 
 // (No @packageDocumentation comment for this package)
 

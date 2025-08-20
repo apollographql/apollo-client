@@ -1,16 +1,16 @@
-import type { Operation } from "@apollo/client/link";
+import type { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 
-import type { HttpLink } from "./HttpLink.js";
+import type { BaseHttpLink } from "./BaseHttpLink.js";
 
 interface HttpConfig {
-  http?: HttpLink.HttpOptions;
+  http?: BaseHttpLink.HttpOptions;
   options?: any;
   headers?: Record<string, string>;
   credentials?: any;
 }
 
-const defaultHttpOptions: HttpLink.HttpOptions = {
+const defaultHttpOptions: BaseHttpLink.HttpOptions = {
   includeQuery: true,
   includeExtensions: true,
   preserveHeaderCase: false,
@@ -44,10 +44,11 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const defaultPrinter: HttpLink.Printer = (ast, printer) => printer(ast);
+export const defaultPrinter: BaseHttpLink.Printer = (ast, printer) =>
+  printer(ast);
 
 export function selectHttpOptionsAndBody(
-  operation: Operation,
+  operation: ApolloLink.Operation,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
 ) {
@@ -60,12 +61,12 @@ export function selectHttpOptionsAndBody(
 }
 
 export function selectHttpOptionsAndBodyInternal(
-  operation: Operation,
-  printer: HttpLink.Printer,
+  operation: ApolloLink.Operation,
+  printer: BaseHttpLink.Printer,
   ...configs: HttpConfig[]
 ) {
   let options = {} as HttpConfig & Record<string, any>;
-  let http = {} as HttpLink.HttpOptions;
+  let http = {} as BaseHttpLink.HttpOptions;
 
   configs.forEach((config) => {
     options = {
@@ -98,7 +99,7 @@ export function selectHttpOptionsAndBodyInternal(
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
-  const body: HttpLink.Body = { operationName, variables };
+  const body: BaseHttpLink.Body = { operationName, variables };
 
   if (http.includeExtensions && Object.keys(extensions || {}).length)
     (body as any).extensions = extensions;

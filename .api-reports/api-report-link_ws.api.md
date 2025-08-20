@@ -6,31 +6,23 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { ClientOptions } from 'subscriptions-transport-ws';
-import type { FetchResult } from '@apollo/client/link';
 import type { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 // @public (undocumented)
 export namespace WebSocketLink {
-    export interface WebSocketParams {
+    export interface Configuration {
         options?: ClientOptions;
         uri: string;
         webSocketImpl?: any;
     }
 }
 
-// @public (undocumented)
+// @public @deprecated
 export class WebSocketLink extends ApolloLink {
     constructor(paramsOrClient: WebSocketLink.Configuration | SubscriptionClient);
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult> | null;
-}
-
-export interface WebSocketParams {
-    options?: ClientOptions;
-    uri: string;
-    webSocketImpl?: any;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
 }
 
 // (No @packageDocumentation comment for this package)

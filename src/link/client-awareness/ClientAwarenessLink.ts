@@ -2,6 +2,21 @@ import { ApolloLink } from "@apollo/client/link";
 import { compact } from "@apollo/client/utilities/internal";
 
 export declare namespace ClientAwarenessLink {
+  /**
+   * Options passed to `ClientAwarenessLink` through [request context](https://apollographql.com/docs/react/api/link/introduction#managing-context). Previous
+   * non-terminating links in the link chain also can set these values to
+   * customize the behavior of `ClientAwarenessLink` for each operation.
+   *
+   * > [!NOTE]
+   * > Some of these values can also be provided to the `ClientAwarenessLink`
+   * > constructor. If a value is provided to both, the value in `context` takes
+   * > precedence.
+   */
+  export interface ContextOptions {
+    /** {@inheritDoc @apollo/client/link/client-awareness!ClientAwarenessLink.Options#clientAwareness:member} */
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+  }
+
   export interface ClientAwarenessOptions {
     /**
      * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
@@ -49,19 +64,52 @@ export declare namespace ClientAwarenessLink {
      * and Apollo Server logs (and other monitoring or analytics tools) by adding
      * information about the your application to outgoing requests.
      */
-    clientAwareness?: ClientAwarenessOptions;
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     /**
      * Configures the "enhanced client awareness" feature.
      * This feature allows you to identify the version of the Apollo Client library
      * used in your application in Apollo Studio (and other monitoring or analytics tools)
      * by adding information about the Apollo Client library to outgoing requests.
      */
-    enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
   }
 }
 
+/**
+ * `ClientAwarenessLink` provides support for providing client awareness
+ * features.
+ *
+ * @remarks
+ *
+ * Client awareness adds identifying information about the client to HTTP
+ * requests for use with metrics reporting tools, such as [Apollo GraphOS](https://apollographql.com/docs/graphos/platform).
+ * It is included in the functionality of [`HttpLink`](https://apollographql.com/docs/react/api/link/apollo-link-http) by default.
+ *
+ * Client awareness distinguishes between user-provided client awareness
+ * (provided by the `clientAwareness` option) and enhanced client awareness
+ * (provided by the `enhancedClientAwareness` option). User-provided client
+ * awareness enables you to set a customized client name and version for
+ * identification in metrics reporting tools. Enhanced client awareness enables
+ * the identification of the Apollo Client package name and version.
+ *
+ * @example
+ *
+ * ```ts
+ * import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+ *
+ * const link = new ClientAwarenessLink({
+ *   clientAwareness: {
+ *     name: "My Client",
+ *     version: "1",
+ *   },
+ *   enhancedClientAwareness: {
+ *     transport: "extensions",
+ *   },
+ * });
+ * ```
+ */
 export class ClientAwarenessLink extends ApolloLink {
-  constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
+  constructor(options: ClientAwarenessLink.Options = {}) {
     super((operation, forward) => {
       const client = operation.client;
 
@@ -75,7 +123,7 @@ export class ClientAwarenessLink extends ApolloLink {
         } = compact(
           {},
           clientOptions.clientAwareness,
-          constructorOptions.clientAwareness,
+          options.clientAwareness,
           context.clientAwareness
         );
 
@@ -98,7 +146,7 @@ export class ClientAwarenessLink extends ApolloLink {
         const { transport = "extensions" } = compact(
           {},
           clientOptions.enhancedClientAwareness,
-          constructorOptions.enhancedClientAwareness
+          options.enhancedClientAwareness
         );
         if (transport === "extensions") {
           operation.extensions = compact(

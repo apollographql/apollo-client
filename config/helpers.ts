@@ -248,6 +248,7 @@ export function patchApiExtractorInternals() {
         for (const excerpt of item.excerptTokens) {
           const stringified = excerpt.canonicalReference?.toString();
           if (stringified?.startsWith("@apollo/client!entrypoint_")) {
+            // @ts-ignore
             excerpt["_canonicalReference"] = DeclarationReference.parse(
               stringified.replace(
                 /(@apollo\/client!entrypoint_[^.]+)[.:]/,

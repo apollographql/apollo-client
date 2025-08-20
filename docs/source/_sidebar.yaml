@@ -15,7 +15,7 @@ items:
     href: ./get-started
   - label: Changelog
     href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
-  - label: Fetching
+  - label: Core concepts
     children:
       - label: Queries
         href: ./data/queries
@@ -25,6 +25,8 @@ items:
         href: ./data/fragments
       - label: Mutations
         href: ./data/mutations
+      - label: TypeScript
+        href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
       - label: Subscriptions
@@ -33,6 +35,8 @@ items:
         href: ./data/directives
       - label: Error handling
         href: ./data/error-handling
+      - label: Persisted queries
+        href: ./data/persisted-queries
       - label: Document transforms
         href: ./data/document-transforms
       - label: Deferring response data
@@ -81,8 +85,8 @@ items:
     children:
       - label: Developer tools
         href: ./development-testing/developer-tooling
-      - label: Using TypeScript
-        href: ./development-testing/static-typing
+      - label: GraphQL Codegen
+        href: ./development-testing/graphql-codegen
       - label: Testing React components
         href: ./development-testing/testing
       - label: Schema-driven testing
@@ -187,27 +191,35 @@ items:
         children:
           - label: Overview
             href: ./api/link/introduction
-          - label: HttpLink
-            href: ./api/link/apollo-link-http
+          - label: ApolloLink
+            href: ./api/link/apollo-link
+          - label: BaseHttpLink
+            href: ./api/link/apollo-link-base-http
+          - label: BaseBatchHttpLink
+            href: ./api/link/apollo-link-base-batch-http
           - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
-          - label: SetContextLink
-            href: ./api/link/apollo-link-context
+          - label: BatchLink
+            href: ./api/link/apollo-link-batch
+          - label: ClientAwarenessLink
+            href: ./api/link/apollo-link-client-awareness
           - label: ErrorLink
             href: ./api/link/apollo-link-error
+          - label: GraphQLWsLink
+            href: ./api/link/apollo-link-subscriptions
+          - label: HttpLink
+            href: ./api/link/apollo-link-http
           - label: PersistedQueryLink
-            href: ./api/link/persisted-queries
+            href: ./api/link/apollo-link-persisted-queries
           - label: RemoveTypenameFromVariablesLink
             href: ./api/link/apollo-link-remove-typename
-          - label: RestLink
-            href: ./api/link/apollo-link-rest
           - label: RetryLink
             href: ./api/link/apollo-link-retry
           - label: SchemaLink
             href: ./api/link/apollo-link-schema
-          - label: GraphQLWsLink (newer protocol)
-            href: ./api/link/apollo-link-subscriptions
-          - label: WebSocketLink (older protocol)
+          - label: SetContextLink
+            href: ./api/link/apollo-link-context
+          - label: WebSocketLink (deprecated)
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links

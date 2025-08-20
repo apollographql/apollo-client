@@ -5,33 +5,32 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
 import type { GraphQLSchema } from 'graphql';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export namespace SchemaLink {
-    // (undocumented)
     export interface Options {
-        context?: ResolverContext | ResolverContextFunction;
+        context?: SchemaLink.ResolverContext | SchemaLink.ResolverContextFunction;
         rootValue?: any;
         schema: GraphQLSchema;
         validate?: boolean;
     }
-    // (undocumented)
     export type ResolverContext = Record<string, any>;
+    export type ResolverContextFunction = (operation: ApolloLink.Operation) => SchemaLink.ResolverContext | PromiseLike<SchemaLink.ResolverContext>;
     // (undocumented)
-    export type ResolverContextFunction = (operation: Operation) => ResolverContext | PromiseLike<ResolverContext>;
+    export namespace SchemaLinkDocumentationTypes {
+        export function ResolverContextFunction(operation: ApolloLink.Operation): SchemaLink.ResolverContext | PromiseLike<SchemaLink.ResolverContext>;
+    }
 }
 
-// @public (undocumented)
+// @public
 export class SchemaLink extends ApolloLink {
     constructor(options: SchemaLink.Options);
     // (undocumented)
     context: SchemaLink.Options["context"];
     // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
+    request(operation: ApolloLink.Operation): Observable<ApolloLink.Result>;
     // (undocumented)
     rootValue: SchemaLink.Options["rootValue"];
     // (undocumented)

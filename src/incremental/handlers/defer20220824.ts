@@ -4,8 +4,8 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "@apollo/client";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { ApolloLink } from "@apollo/client/link";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
 import {
   DeepMerger,
   hasDirectives,
@@ -15,6 +15,15 @@ import {
 import type { Incremental } from "../types.js";
 
 export declare namespace Defer20220824Handler {
+  interface Defer20220824Result extends HKT {
+    arg1: unknown; // TData
+    arg2: unknown; // TExtensions
+    return: Defer20220824Handler.Chunk<Record<string, unknown>>;
+  }
+  export interface TypeOverrides {
+    AdditionalApolloLinkResultTypes: Defer20220824Result;
+  }
+
   export type InitialResult<TData = Record<string, unknown>> = {
     data?: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
@@ -41,12 +50,6 @@ export declare namespace Defer20220824Handler {
     path?: Incremental.Path;
     label?: string;
   };
-}
-
-declare module "@apollo/client/link" {
-  export interface AdditionalFetchResultTypes {
-    Defer20220824Handler: Defer20220824Handler.Chunk<Record<string, unknown>>;
-  }
 }
 
 class DeferRequest<TData extends Record<string, unknown>>
@@ -136,7 +139,7 @@ export class Defer20220824Handler
     return "hasNext" in result;
   }
 
-  extractErrors(result: FetchResult<any>) {
+  extractErrors(result: ApolloLink.Result<any>) {
     const acc: GraphQLFormattedError[] = [];
     const push = ({
       errors,
@@ -158,7 +161,7 @@ export class Defer20220824Handler
     }
   }
 
-  prepareRequest(request: GraphQLRequest): GraphQLRequest {
+  prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
     if (hasDirectives(["defer"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});

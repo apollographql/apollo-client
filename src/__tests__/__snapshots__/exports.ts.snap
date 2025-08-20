@@ -43,7 +43,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
   "split",
   "version",
@@ -110,7 +109,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
   "split",
   "version",
@@ -165,7 +163,6 @@ Array [
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
 Array [
   "BatchLink",
-  "OperationBatcher",
 ]
 `;
 
@@ -210,7 +207,6 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
 ]
 `;
 
@@ -252,8 +248,6 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "transformOperation",
-  "validateOperation",
 ]
 `;
 
@@ -493,3 +487,5 @@ Array [
   "setVerbosity",
 ]
 `;
+
+exports[`exports of public entry points @apollo/client/v4-migration 1`] = `Array []`;

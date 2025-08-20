@@ -251,4 +251,152 @@ describe("multipart responses", () => {
       await expect(observableStream).toEmitError(mockError.throws);
     });
   });
+
+  describe("final boundary handling", () => {
+    test("should handle final boundary correctly", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      void writer.write("-");
+      await expect(observableStream).not.toEmitAnything();
+      void writer.write("-");
+      await expect(observableStream).toComplete();
+      // writer has forcibly been closed by `reader.cancel`
+      await expect(writer.closed).rejects.toBe(undefined);
+    });
+
+    test("content after final boundary is ignored", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await expect(observableStream).toComplete();
+    });
+
+    test("stream is closed on final boundary", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await expect(observableStream).toComplete();
+      await expect(
+        writer.write(
+          `Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+        )
+      ).rejects.toBe(undefined);
+    });
+
+    test("link errors if stream is closed without final boundary", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await writer.close();
+      await expect(observableStream).toEmitError(
+        new Error("premature end of multipart body")
+      );
+    });
+  });
 });

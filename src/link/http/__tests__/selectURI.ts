@@ -14,19 +14,19 @@ const query = gql`
 describe("selectURI", () => {
   it("returns a passed in string", () => {
     const uri = "/somewhere";
-    const operation = createOperation({ uri }, { query });
+    const operation = createOperation({ query, context: { uri } });
     expect(selectURI(operation)).toEqual(uri);
   });
 
   it("returns a fallback of /graphql", () => {
     const uri = "/graphql";
-    const operation = createOperation({}, { query });
+    const operation = createOperation({ query });
     expect(selectURI(operation)).toEqual(uri);
   });
 
   it("returns the result of a UriFunction", () => {
     const uri = "/somewhere";
-    const operation = createOperation({}, { query });
+    const operation = createOperation({ query });
     expect(selectURI(operation, () => uri)).toEqual(uri);
   });
 });

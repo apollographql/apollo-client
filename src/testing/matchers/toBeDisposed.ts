@@ -1,6 +1,6 @@
 import type { MatcherFunction } from "expect";
 
-import type { QueryRef } from "@apollo/client/react/internal";
+import type { QueryRef } from "@apollo/client/react";
 import {
   assertWrappedQueryRef,
   unwrapQueryRef,

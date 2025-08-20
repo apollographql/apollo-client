@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.0-rc.13
+
+### Major Changes
+
+- [#12850](https://github.com/apollographql/apollo-client/pull/12850) [`268cd80`](https://github.com/apollographql/apollo-client/commit/268cd800a2d73305c0df8dd38b6bd1cee98f0fec) Thanks [@phryneas](https://github.com/phryneas)! - Introduce a versioning policy.
+
 ## 4.0.0-rc.12
 
 ### Minor Changes

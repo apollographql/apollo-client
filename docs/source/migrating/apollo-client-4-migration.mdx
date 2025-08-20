@@ -57,6 +57,47 @@ npm install @apollo/client graphql rxjs
 
 </Note>
 
+## Recommended migration approach
+
+We recommend following this order to help make your migration as smooth as possible.
+
+### Stage 1: Automated updates
+
+[Run the codemod](#codemod) first to handle import changes automatically.
+
+You can use the TypeScript-specific codemod or run specific modifications if you prefer a gradual approach.
+
+If you prefer a manual approach, you can still [update your imports](#updating-imports) manually.
+
+### Stage 2: Required setup changes
+
+The Apollo Client initialization has changed. Review the [new initialization options](#update-the-initialization-of-apolloclient) and update accordingly.
+
+If you use `@defer`, you need to [enable incremental delivery](#enable-incremental-delivery-defer).
+
+If you use data masking, you need to [configure the data masking types](#enable-data-masking-types).
+
+### Stage 3: Changes that may require refactoring
+
+These changes may require code refactoring depending on your usage.
+
+#### Changes affecting most users:
+
+- **[Core API changes](#core-api-changes)** - Query behavior changes
+
+#### Changes affecting React users:
+
+- **[React hook changes](#for-react-users)** - `useLazyQuery`, `useMutation`, `useQuery` updates
+- **[TypeScript improvements](#typescript-changes)** - New type locations and patterns
+- **[Error handling updates](#new-error-handling)** - New error classes and patterns
+
+#### Changes affecting fewer users:
+- **[Link API changes](#link-api-changes)** - If you use custom links
+- **[Local state changes](#local-state-changes)** - If you use `@client` directives
+- **[Testing changes](#testing-related-changes)** - MockedProvider updates
+- **[Bundling changes](#bundling-changes)** - New export patterns and transpilation
+- **[Development mode changes](#development-mode-changes)** - Automatic detection
+
 ## Codemod
 
 To ease the migration process, we have provided a codemod that automatically updates your codebase.

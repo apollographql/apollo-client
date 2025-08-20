@@ -1,5 +1,6 @@
 import type { API, FileInfo, Options, Transform } from "jscodeshift";
 
+import clientSetup from "./apolloClientInitialization.js";
 import imports from "./imports.js";
 import legacyEntrypoints from "./legacyEntrypoints.js";
 import links from "./links.js";
@@ -11,6 +12,7 @@ export const codemods = {
   imports,
   links,
   removals,
+  clientSetup,
 } satisfies Record<string, Transform>;
 
 export default async function transform(

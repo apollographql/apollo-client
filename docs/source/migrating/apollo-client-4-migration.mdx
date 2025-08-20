@@ -747,8 +747,7 @@ new ApolloClient({
 
 ### Immediate `loading` status emitted by `ObservableQuery`
 
-When you create an `ObservableQuery` with `client.watchQuery`, unless you explicitly disable `notifyOnNetworkStatusChange`, the first emitted value will now always have `loading: true` if the query is not already in the cache.
-Previously, this initial loading state would have been skipped.
+In line with the change to the default `notifyOnNetworkStatusChange` value, the first value emitted from an `ObservableQuery` instance (created by `client.watchQuery`), sets `loading` to `true` when the query cannot be fulfilled by data in the cache. Previously, the initial loading state was not emitted.
 
 ### Changes in tracking of active queries and active observables
 

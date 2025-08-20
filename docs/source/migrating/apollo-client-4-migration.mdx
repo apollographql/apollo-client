@@ -995,9 +995,15 @@ A query is in standby if it is skipped with the `skip` option or `skipToken` in 
 
 This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
 
-### Removal of the `canonizeResults` option in `InMemoryCache`
+### Removal of the `canonizeResults` option
 
-The `canonizeResults` option has been removed. It could easily lead to memory leaks. The results returned by `ObservableQuery` are already very stable, so this option rarely had any benefit.
+The `canonizeResults` option has been removed because it caused memory leaks. If you use `canonizeResults`, you may see some changes to the object identity of some objects that were previously referentially equal.
+
+```ts disableCopy=true
+useQuery(QUERY, {
+  canonizeResults: true,// [!code --]
+});
+```
 
 ## New error handling
 

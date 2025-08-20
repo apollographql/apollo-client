@@ -9627,23 +9627,26 @@ describe("useQuery Hook", () => {
       });
 
       setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: {
-                    name: "Alice",
-                    __typename: "Person",
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  data: {
+                    recipient: {
+                      name: "Alice",
+                      __typename: "Person",
+                    },
+                    __typename: "Greeting",
                   },
-                  __typename: "Greeting",
+                  path: ["greeting"],
                 },
-                path: ["greeting"],
-              },
-            ],
-            hasNext: false,
+              ],
+              hasNext: false,
+            },
           },
-        });
+          true
+        );
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -9785,23 +9788,26 @@ describe("useQuery Hook", () => {
       });
 
       setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: {
-                    name: "Bob",
-                    __typename: "Person",
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  data: {
+                    recipient: {
+                      name: "Bob",
+                      __typename: "Person",
+                    },
+                    __typename: "Greeting",
                   },
-                  __typename: "Greeting",
+                  path: ["greetings", 1],
                 },
-                path: ["greetings", 1],
-              },
-            ],
-            hasNext: false,
+              ],
+              hasNext: false,
+            },
           },
-        });
+          true
+        );
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10086,23 +10092,26 @@ describe("useQuery Hook", () => {
       });
 
       setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: {
-                    name: "Alice",
-                    __typename: "Person",
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  data: {
+                    recipient: {
+                      name: "Alice",
+                      __typename: "Person",
+                    },
+                    __typename: "Greeting",
                   },
-                  __typename: "Greeting",
+                  path: ["greeting"],
                 },
-                path: ["greeting"],
-              },
-            ],
-            hasNext: false,
+              ],
+              hasNext: false,
+            },
           },
-        });
+          true
+        );
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10221,32 +10230,35 @@ describe("useQuery Hook", () => {
       });
 
       setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                path: ["hero", "heroFriends", 0],
-                errors: [
-                  {
-                    message:
-                      "homeWorld for character with ID 1000 could not be fetched.",
-                    path: ["hero", "heroFriends", 0, "homeWorld"],
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  path: ["hero", "heroFriends", 0],
+                  errors: [
+                    {
+                      message:
+                        "homeWorld for character with ID 1000 could not be fetched.",
+                      path: ["hero", "heroFriends", 0, "homeWorld"],
+                    },
+                  ],
+                  data: {
+                    homeWorld: null,
                   },
-                ],
-                data: {
-                  homeWorld: null,
                 },
-              },
-              {
-                path: ["hero", "heroFriends", 1],
-                data: {
-                  homeWorld: "Alderaan",
+                {
+                  path: ["hero", "heroFriends", 1],
+                  data: {
+                    homeWorld: "Alderaan",
+                  },
                 },
-              },
-            ],
-            hasNext: false,
+              ],
+              hasNext: false,
+            },
           },
-        });
+          true
+        );
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10391,39 +10403,42 @@ describe("useQuery Hook", () => {
       });
 
       setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                path: ["hero", "heroFriends", 0],
-                errors: [
-                  new GraphQLError(
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                  ),
-                ],
-                data: {
-                  homeWorld: null,
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  path: ["hero", "heroFriends", 0],
+                  errors: [
+                    new GraphQLError(
+                      "homeWorld for character with ID 1000 could not be fetched.",
+                      { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                    ),
+                  ],
+                  data: {
+                    homeWorld: null,
+                  },
+                  extensions: {
+                    thing1: "foo",
+                    thing2: "bar",
+                  },
                 },
-                extensions: {
-                  thing1: "foo",
-                  thing2: "bar",
+                {
+                  path: ["hero", "heroFriends", 1],
+                  data: {
+                    homeWorld: "Alderaan",
+                  },
+                  extensions: {
+                    thing1: "foo",
+                    thing2: "bar",
+                  },
                 },
-              },
-              {
-                path: ["hero", "heroFriends", 1],
-                data: {
-                  homeWorld: "Alderaan",
-                },
-                extensions: {
-                  thing1: "foo",
-                  thing2: "bar",
-                },
-              },
-            ],
-            hasNext: false,
+              ],
+              hasNext: false,
+            },
           },
-        });
+          true
+        );
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10582,20 +10597,23 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      link.simulateResult({
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-                __typename: "Greeting",
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  recipient: { name: "Alice", __typename: "Person" },
+                  __typename: "Greeting",
+                },
+                path: ["greeting"],
               },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
+            ],
+            hasNext: false,
+          },
         },
-      });
+        true
+      );
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
@@ -10715,20 +10733,23 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      link.simulateResult({
-        result: {
-          incremental: [
-            {
-              data: {
-                __typename: "Greeting",
-                recipient: { name: "Alice", __typename: "Person" },
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  __typename: "Greeting",
+                  recipient: { name: "Alice", __typename: "Person" },
+                },
+                path: ["greeting"],
               },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
+            ],
+            hasNext: false,
+          },
         },
-      });
+        true
+      );
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {

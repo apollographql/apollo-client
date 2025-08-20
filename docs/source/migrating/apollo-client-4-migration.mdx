@@ -1279,9 +1279,20 @@ await client.mutate({ mutation: MY_MUTATION, variables });// [!code ++]
 
 ### Changes to `useQuery`
 
-#### `notifyOnNetworkStatusChange` option defaults to `true`
+#### New `notifyOnNetworkStatusChange` default value
 
-The `notifyOnNetworkStatusChange` option of `useQuery` now defaults to `true` instead of `false` in Apollo Client 3.
+The `notifyOnNetworkStatusChange` option now defaults to `true`. This change means you might see loading states more often, especially when used with `refetch` or other APIs that cause fetches. If this causes issues, you can revert to the v3 behavior by setting the global default back to `false`.
+
+```ts
+new ApolloClient({
+  // ...
+  defaultOptions: {// [!code ++:5]
+    watchQuery: {
+      notifyOnNetworkStatusChange: false,
+    },
+  },
+});
+```
 
 #### Removal of the `onCompleted` and `onError` callbacks
 

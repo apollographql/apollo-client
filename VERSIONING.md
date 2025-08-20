@@ -86,3 +86,8 @@ Within a `graphql` major, we only guarantee compatibility with the latest minor 
 ### Other dependencies
 
 We reserve the right to update dependencies in minor releases of Apollo Client, as well as dropping support for older versions of dependencies.
+
+### Peer dependencies
+
+The rules stated above apply to peer dependencies as well. Peer dependencies can be updated in minor releases, just like regular dependencies.
+However, we do commit to not adding new peer depenencies during the lifetime of a major - but if an existing peer dependency is renamed, we might follow that rename in a minor release.

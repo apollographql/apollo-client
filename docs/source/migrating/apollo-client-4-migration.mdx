@@ -25,7 +25,6 @@ Apollo Client 3.14 introduces many deprecations and warnings that will help you 
 - TypeScript: Stricter variable requirements, more precise return types, namespaced types, and customizable core types
 - Error Handling: Unified error property, granular error classes, and consistent errorPolicy behavior for all error types
 
-
 For a full list of changes, see the [changelog]
 (https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -76,14 +75,15 @@ These changes may require code refactoring depending on your usage.
 #### Changes affecting most users:
 
 - **[Core API changes](#core-api-changes)** - Query behavior changes
+- **[Error handling updates](#new-error-handling)** - New error classes and patterns
+- **[TypeScript improvements](#typescript-changes)** - New type locations and patterns
 
 #### Changes affecting React users:
 
 - **[React hook changes](#for-react-users)** - `useLazyQuery`, `useMutation`, `useQuery` updates
-- **[TypeScript improvements](#typescript-changes)** - New type locations and patterns
-- **[Error handling updates](#new-error-handling)** - New error classes and patterns
 
 #### Changes affecting fewer users:
+
 - **[Link API changes](#link-api-changes)** - If you use custom links
 - **[Local state changes](#local-state-changes)** - If you use `@client` directives
 - **[Testing changes](#testing-related-changes)** - MockedProvider updates
@@ -750,6 +750,121 @@ new ApolloClient({
 When you create an `ObservableQuery` with `client.watchQuery`, unless you explicitly disable `notifyOnNetworkStatusChange`, the first emitted value will now always have `loading: true` if the query is not already in the cache.
 Previously, this initial loading state would have been skipped.
 
+## Changes in tracking of active queries and active observables
+
+In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.
+
+In Apollo Client 4, this behaviour has changed. We only track queries that are currently subscribed to, and once they are unsubscribed from, they are removed from the tracking list.
+This changes the meaning of `active` and `inactive` queries from what they were in Apollo Client 3.
+In Apollo Client 4, a query is only considered `inactive` if it is currently subscribed to, but skipped by setting the `skip` option in a hook,
+passing a `skipToken`, or setting the `fetchPolicy` to `standby`. Other subscribed queries are considered `active`, and any unsubscribed query is not tracked at all.
+
+This changes the behaviour of the `client.getObservableQueries` and `client.refetchQueries` methods, along with the `refetchQueries` option of `client.mutate` and `useMutation`.
+
+## New error handling
+
+Error handling between Apollo Client 3 and 4 has changed significantly.
+In Apollo Client 3, every error was wrapped in an `ApolloError` instance, which made it hard to figure out where the error initially came from and could cause problems with observability services.
+In Apollo Client 4,
+
+- external errors are passed through if they are error-like objects (any object with a `message` and `name` property).
+- non-error-like objects are wrapped in a `UnconventionalError` object, with `name` of `UnconventionalError`, `message` of `"An error of unexpected shape occurred."` and the `cause` property pointing at the originally thrown value.
+- GraphQL errors are wrapped in a `CombinedGraphQLErrors` object
+- a few other error classes have been added to represent specific error cases, such as `ServerParseError`, and `ServerError`.
+- the `errors` property that was present next to the `error` property on some interfaces like `ApolloQueryResult` (returned by `ApollClient.query` and emitted by `ObservableQuery`) or `QueryResult` (returned by `useQuery`) has been removed. Instead, access these errors through the `error` property, which is now an instance of `CombinedGraphQLErrors` if there are any GraphQL errors.
+
+You can read up on all available error classes and how to handle them in the [Error Handling](../react/data/error-handling) documentation and the API reference "Errors" section.
+
+Additionally, previously errors from the link chain were handled differently than GraphQL errors.
+In Apollo Client 4, all errors are handled in the same way, so you can use `errorPolicy` to control how all kinds of error are handled, not only GraphQL errors.
+
+### Core API error handling changes
+
+If you use `client.watchQuery` to get an `ObservableQuery`, that will now emit an object with an `error` property instead of throwing an error.
+This way you can still receive cache updates or call `refetch` without having to resubscribe to the observable.
+
+### React-specific error handling changes
+
+So if you take this code snippet from Apollo Client 3:
+
+```tsx title="error handling with useQuery in Apollo Client 3" disableCopy=true
+import { useQuery } from "@apollo/client/react";
+
+function ShowingSomeErrors() {
+  const { loading, error, data } = useQuery(MY_QUERY);
+
+  if (error) {
+    return (
+      <div>
+        <h2>Error</h2>
+        <pre>
+          {error.graphQLErrors.map(({ message }) => message).join(", ")}
+        </pre>
+      </div>
+    );
+  }
+  // other logic
+}
+```
+
+We have two key observations here:
+
+- `error` was previously always guaranteed to be an `ApolloError` instance, so we could access `error.graphQLErrors` directly.
+- `errorPolicy` was only applied to GraphQL errors, so if a network error occurred, that would be `throw`n and needed to be handled outside of the component.
+
+The same snippet with Apollo Client 4 would look like this:
+
+```tsx title="error handling with useQuery in Apollo Client 4"
+import { useQuery } from "@apollo/client/react";
+import { CombinedGraphQLErrors } from "@apollo/client";// [!code highlight]
+
+function ShowingSomeErrors() {
+  const { loading, error, data } = useQuery(MY_QUERY);
+
+  if (CombinedGraphQLErrors.is(error)) {// [!code highlight]
+    return (
+      <div>
+        <h2>Error</h2>
+        <pre>{error.errors.map(({ message }) => message).join(", ")}</pre>{/*[!code highlight]*/}
+      </div>
+    );
+  } else if (error) {// [!code highlight:9]
+    // Handle non-GraphQL errors here
+    return (
+      <div>
+        <h2>Error</h2>
+        <pre>{error.message}</pre>
+      </div>
+    );
+  }
+  // other logic
+}
+```
+
+So the major changes are:
+
+- `error` is no longer guaranteed to be an `ApolloError` instance, so you need to check if it is a `CombinedGraphQLErrors` instance by calling `CombinedGraphQLErrors.is`
+- you can also pass `undefined` to `CombinedGraphQLErrors.is`, no need to check if `error` is defined first
+- `error.graphQLErrors` has been replaced with `error.errors`, which is an array of objects as returned from the server, with a shape of `GraphQLFormattedError`
+- all error classes shipping with Apollo-Client 4 have a static `is` method that you can use to check if an error is of that type, so you can use `ServerParseError.is(error)` or `ServerError.is(error)` to check for those specific error types.
+- additional error handling logic is needed to handle all the other possible errors.
+- previously, `result.errors` was available as a shortcut to access the `error.graphQLErrors` array, but this has been removed.
+
+<Note>
+
+If you want to distinguish if an error originated from the link chain or was thrown in a userland callback, you can use `LinkError.is`.
+While `LinkError` is not an actual error class (error-like link errors are just passed through), `LinkError.is` will destinguish between link errors and userland errors.
+
+</Note>
+
+<Tip>
+
+Going forward, we recommend using our suspenseful hooks `useSuspenseQuery` and `useBackgroundQuery`/`useReadQuery`.
+
+These hooks will not expose errors to your component but instead throw them, so you can handle all error in a surrounding `ErrorBoundary`.
+
+</Tip>
+
 ## For React users
 
 ### A note about hook usage
@@ -959,121 +1074,6 @@ declare module "@apollo/client" {
 ```
 
 Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, because it added a lot of mental overhead with very little benefit. There is no replacement for this generic.
-
-## Changes in tracking of active queries and active observables
-
-In Apollo Client 3, every `ObservableQuery` ever was tracked until it had been unsubscribed from. This could lead to situations where observables would be created, but never subscribed to - and as a result, never unsubscribed and cleaned up, causing memory leaks.
-
-In Apollo Client 4, this behaviour has changed. We only track queries that are currently subscribed to, and once they are unsubscribed from, they are removed from the tracking list.
-This changes the meaning of `active` and `inactive` queries from what they were in Apollo Client 3.
-In Apollo Client 4, a query is only considered `inactive` if it is currently subscribed to, but skipped by setting the `skip` option in a hook,
-passing a `skipToken`, or setting the `fetchPolicy` to `standby`. Other subscribed queries are considered `active`, and any unsubscribed query is not tracked at all.
-
-This changes the behaviour of the `client.getObservableQueries` and `client.refetchQueries` methods, along with the `refetchQueries` option of `client.mutate` and `useMutation`.
-
-## New error handling
-
-Error handling between Apollo Client 3 and 4 has changed significantly.
-In Apollo Client 3, every error was wrapped in an `ApolloError` instance, which made it hard to figure out where the error initially came from and could cause problems with observability services.
-In Apollo Client 4,
-
-- external errors are passed through if they are error-like objects (any object with a `message` and `name` property).
-- non-error-like objects are wrapped in a `UnconventionalError` object, with `name` of `UnconventionalError`, `message` of `"An error of unexpected shape occurred."` and the `cause` property pointing at the originally thrown value.
-- GraphQL errors are wrapped in a `CombinedGraphQLErrors` object
-- a few other error classes have been added to represent specific error cases, such as `ServerParseError`, and `ServerError`.
-- the `errors` property that was present next to the `error` property on some interfaces like `ApolloQueryResult` (returned by `ApollClient.query` and emitted by `ObservableQuery`) or `QueryResult` (returned by `useQuery`) has been removed. Instead, access these errors through the `error` property, which is now an instance of `CombinedGraphQLErrors` if there are any GraphQL errors.
-
-You can read up on all available error classes and how to handle them in the [Error Handling](../react/data/error-handling) documentation and the API reference "Errors" section.
-
-Additionally, previously errors from the link chain were handled differently than GraphQL errors.
-In Apollo Client 4, all errors are handled in the same way, so you can use `errorPolicy` to control how all kinds of error are handled, not only GraphQL errors.
-
-### Core API error handling changes
-
-If you use `client.watchQuery` to get an `ObservableQuery`, that will now emit an object with an `error` property instead of throwing an error.
-This way you can still receive cache updates or call `refetch` without having to resubscribe to the observable.
-
-### React-specific error handling changes
-
-So if you take this code snippet from Apollo Client 3:
-
-```tsx title="error handling with useQuery in Apollo Client 3" disableCopy=true
-import { useQuery } from "@apollo/client/react";
-
-function ShowingSomeErrors() {
-  const { loading, error, data } = useQuery(MY_QUERY);
-
-  if (error) {
-    return (
-      <div>
-        <h2>Error</h2>
-        <pre>
-          {error.graphQLErrors.map(({ message }) => message).join(", ")}
-        </pre>
-      </div>
-    );
-  }
-  // other logic
-}
-```
-
-We have two key observations here:
-
-- `error` was previously always guaranteed to be an `ApolloError` instance, so we could access `error.graphQLErrors` directly.
-- `errorPolicy` was only applied to GraphQL errors, so if a network error occurred, that would be `throw`n and needed to be handled outside of the component.
-
-The same snippet with Apollo Client 4 would look like this:
-
-```tsx title="error handling with useQuery in Apollo Client 4"
-import { useQuery } from "@apollo/client/react";
-import { CombinedGraphQLErrors } from "@apollo/client";// [!code highlight]
-
-function ShowingSomeErrors() {
-  const { loading, error, data } = useQuery(MY_QUERY);
-
-  if (CombinedGraphQLErrors.is(error)) {// [!code highlight]
-    return (
-      <div>
-        <h2>Error</h2>
-        <pre>{error.errors.map(({ message }) => message).join(", ")}</pre>{/*[!code highlight]*/}
-      </div>
-    );
-  } else if (error) {// [!code highlight:9]
-    // Handle non-GraphQL errors here
-    return (
-      <div>
-        <h2>Error</h2>
-        <pre>{error.message}</pre>
-      </div>
-    );
-  }
-  // other logic
-}
-```
-
-So the major changes are:
-
-- `error` is no longer guaranteed to be an `ApolloError` instance, so you need to check if it is a `CombinedGraphQLErrors` instance by calling `CombinedGraphQLErrors.is`
-- you can also pass `undefined` to `CombinedGraphQLErrors.is`, no need to check if `error` is defined first
-- `error.graphQLErrors` has been replaced with `error.errors`, which is an array of objects as returned from the server, with a shape of `GraphQLFormattedError`
-- all error classes shipping with Apollo-Client 4 have a static `is` method that you can use to check if an error is of that type, so you can use `ServerParseError.is(error)` or `ServerError.is(error)` to check for those specific error types.
-- additional error handling logic is needed to handle all the other possible errors.
-- previously, `result.errors` was available as a shortcut to access the `error.graphQLErrors` array, but this has been removed.
-
-<Note>
-
-If you want to distinguish if an error originated from the link chain or was thrown in a userland callback, you can use `LinkError.is`.
-While `LinkError` is not an actual error class (error-like link errors are just passed through), `LinkError.is` will destinguish between link errors and userland errors.
-
-</Note>
-
-<Tip>
-
-Going forward, we recommend using our suspenseful hooks `useSuspenseQuery` and `useBackgroundQuery`/`useReadQuery`.
-
-These hooks will not expose errors to your component but instead throw them, so you can handle all error in a surrounding `ErrorBoundary`.
-
-</Tip>
 
 ## Link API changes
 

@@ -103,6 +103,30 @@ This codemod runs modifications in the following order:
 
 <ol><li>
 
+`legacyEntrypoints` step:
+
+<ul><li>
+
+Updates CommonJS import statements using the `.cjs` extension to their associated entry point
+
+```ts disableCopy=true
+import { ApolloClient } from "@apollo/client/main.cjs";// [!code --]
+import { ApolloClient } from "@apollo/client";// [!code ++]
+```
+
+</li><li>
+
+Updates ESM import statements using the `.js` extension to their associated entry point
+
+```ts disableCopy=true
+import { ApolloClient } from "@apollo/client/index.js";// [!code --]
+import { ApolloClient } from "@apollo/client";// [!code ++]
+```
+
+</li></ul>
+
+</li><li>
+
 `imports` step:
 
 <ul><li>

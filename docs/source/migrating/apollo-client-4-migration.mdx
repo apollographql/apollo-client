@@ -742,6 +742,8 @@ Several of the constructor options of `ApolloClient` have changed in Apollo Clie
 
 ### Explicitly provide `HttpLink`
 
+> This change is performed by the codemod
+
 The `uri`, `headers`, and `credentials` options used to implicitly create an `HttpLink` have been removed. You now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
 
 ```ts
@@ -765,6 +767,8 @@ Although the previous options were convenient, it meant all Apollo Client instan
 
 ### Migrating client awareness options
 
+> This change is performed by the codemod
+
 The `name` and `version` options, which are a part of the client awareness feature, have been moved into the `clientAwareness` option.
 
 ```ts
@@ -787,6 +791,8 @@ This option only has an effect if you are using the client-awareness-capable `Ht
 </Note>
 
 ### Updating local state
+
+> This change is performed by the codemod
 
 When using `@client` fields, you now need to create a new `LocalState` instance and provide it as the `localState` option to the `ApolloClient` constructor.
 
@@ -828,6 +834,8 @@ Previously, all Apollo Client instances were bundled with local state management
 
 ### Change `connectToDevTools`
 
+> This change is performed by the codemod
+
 The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.
 
 ```ts disableCopy=true
@@ -841,6 +849,8 @@ const client = new ApolloClient({
 
 ### Change `disableNetworkFetches`
 
+> This change is performed by the codemod
+
 The `disableNetworkFetches` option has been renamed to `prioritizeCacheValues` to better describe its behavior.
 
 ```ts disableCopy=true
@@ -853,6 +863,8 @@ const client = new ApolloClient({
 ```
 
 ### Enable incremental delivery (`@defer`)
+
+> This change is performed by the codemod, however you may need to make some additional changes
 
 The incremental delivery protocol implementation is now configurable and requires you to opt-in to use the proper format. If you currently use `@defer` in your application, you need to configure an incremental handler and provide it to the `incrementalHandler` option to the `ApolloClient` constructor.
 
@@ -886,6 +898,8 @@ Apollo Client only provides support for the older incremental specification at t
 </Note>
 
 ## Enable data masking types
+
+> This change is performed by the codemod, however you may need to make some additional changes
 
 In Apollo Client 4, the data masking types are now configurable to allow for more flexibility when working with different tools like GraphQL Code Generator or `gql.tada` - which might have different typings for data masking.
 

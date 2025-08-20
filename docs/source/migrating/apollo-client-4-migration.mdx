@@ -699,7 +699,20 @@ declare module "@apollo/client" {
 
 ### New `notifyOnNetworkStatusChange` default value
 
-`notifyOnNetworkStatusChange` for `ObservableQuery` instances created by `client.watchQuery` now defaults to `true` instead of `false`.
+The `notifyOnNetworkStatusChange` option now defaults to `true`. This affects React hooks that provide this option (e.g. `useQuery`) and `ObservableQuery` instances created by `client.watchQuery`.
+
+This change means you might see loading states more often, especially when used with `refetch` or other APIs that cause fetches. If this causes issues, you can revert to the v3 behavior by setting the global default back to `false`.
+
+```ts title="Reverting notifyOnNetworkStatusChange to Apollo Client 3 behavior"
+new ApolloClient({
+  // ...
+  defaultOptions: {// [!code ++:5]
+    watchQuery: {
+      notifyOnNetworkStatusChange: false,
+    },
+  },
+});
+```
 
 ### Immediate `loading` status emitted by `ObservableQuery`
 

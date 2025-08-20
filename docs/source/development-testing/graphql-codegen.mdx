@@ -1,0 +1,319 @@
+---
+title: GraphQL Codegen
+description: How to generate TypeScript types for your application
+---
+
+Manually creating types for your GraphQL operations is error prone. As you introduce change, it becomes cumbersome to maintain correct types across your entire application. Additionally, changes to your schema might cause changes to your existing operations. This becomes difficult to track and maintain.
+
+Instead, you can generate your TypeScript definitions automatically with [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) using your application's schema to ensure type accuracy.
+
+This guide provides detail on how to set up GraphQL Codegen in your application to provide types for your GraphQL operations.
+
+<Note>
+
+This article covers GraphQL Codegen installation and configuration. If you'd like to learn how Apollo Client integrates with TypeScript more generally, read the [TypeScript with Apollo Client](../data/typescript) guide.
+
+</Note>
+
+## Setting up your project
+
+Install the following packages. This installation assumes you already have [installed `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
+
+```bash
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations
+```
+
+### Recommended starter configuration
+
+Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project. The following is a recommended minimal configuration for Apollo Client apps.
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript", "typescript-operations"],
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<Note>
+
+There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`. Use the method that best fits your project's needs.
+
+</Note>
+
+Finally, we'll add the script to our `package.json` file:
+
+```json title="package.json"
+{
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts"
+  }
+}
+```
+
+Running the script generates types based on the schema file or GraphQL API you provided in `codegen.ts`:
+
+```bash showLineNumbers=false
+$ npm run codegen
+✔ Parse Configuration
+✔ Generate outputs
+```
+
+### A note about the `client` preset
+
+If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
+
+We do not recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. Instead, we recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum), which focus on only generating types and don't include additional runtime code. Follow the steps in the preceding section to use a setup that includes these plugins.
+
+If you're already using the client preset, or you choose to use it instead of working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
+
+```ts
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}", "!src/gql/**/*"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/gql/": {
+      preset: "client",
+      presetConfig: {
+        // Disable fragment masking
+        fragmentMasking: false,
+      },
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<Caution>
+
+This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because it's incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or anything generated from the fragment masking feature, you need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
+
+</Caution>
+
+## Advanced GraphQL Codegen configuration
+
+### Generating relative types files
+
+As your application scales, a single types file that contains all operation types might become unwieldy. The [`near-operation-file-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/near-operation-file-preset) makes it possible to generate an operation types file relative to the file where the operation is defined.
+
+```bash
+npm install -D @graphql-codegen/near-operation-file-preset
+```
+
+The following is a recommended minimal configuration. See the [`near-operation-file-preset` documentation](https://the-guild.dev/graphql/codegen/plugins/presets/near-operation-file-preset) for additional configuration options, such as customizing the file name or extension.
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript"],
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      presetConfig: {
+        // This should be the file generated by the "typescript" plugin above,
+        // relative to the directory specified for this configuration
+        baseTypesPath: "./types/__generated__/graphql.ts",
+      },
+      plugins: ["typescript-operations"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+#### Usage
+
+The following example imports the generated types relative to the current file.
+
+```ts title="my-component.ts"
+import { useQuery, TypedDocumentNode } from "@apollo/client/react";
+// The query name and path might differ depending on your codegen config
+import {
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables,
+} from "./my-component.generated";
+
+const GET_ROCKET_INVENTORY: TypedDocumentNode<
+  GetRocketInventoryQuery,
+  GetRocketInventoryQueryVariables
+> = gql`
+  query GetRocketInventory($year: Int!) {
+    rocketInventory(year: $year) {
+      id
+      model
+      year
+      stock
+    }
+  }
+`;
+
+function MyComponent() {
+  const { data } = useQuery(GET_ROCKET_INVENTORY, {
+    //    ^? GetRocketInventoryQuery | undefined;
+    variables: { year: 2025 },
+  });
+
+  // ...
+}
+```
+
+### Generating precompiled GraphQL documents with their type definitions
+
+The `gql` template literal tag is used in Apollo Client apps to define GraphQL documents for use with Apollo Client APIs. Its purpose is to parse the GraphQL string into a standard GraphQL AST. Parsing occurs when the module is executed which adds startup time to your application. Additionally, the GraphQL document returned by `gql` is typed as a `DocumentNode` which doesn't include type information about its data or variables.
+
+The [`typed-document-node`](https://the-guild.dev/graphql/codegen/plugins/typescript/typed-document-node) plugin makes it possible to generate precompiled GraphQL documents preconfigured with the `TypedDocumentNode` type.
+
+```bash
+npm install -D @graphql-codegen/typed-document-node
+```
+
+The following is a recommended minimal configuration which uses the `near-operation-file-preset` configuration from the previous section. If you don't use `near-operation-file-preset`, add the plugin to the file config that uses the `typescript-operations` plugin.
+
+```ts {21} title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript"],
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      presetConfig: {
+        // This should be the file generated by the "typescript" plugin above,
+        // relative to the directory specified for this configuration
+        baseTypesPath: "./types/__generated__/graphql.ts",
+      },
+      plugins: ["typescript-operations", "typed-document-node"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<Note>
+
+You might need to change the structure of your application to avoid bundling the query more than once in your application. If you author GraphQL documents using the `gql` template tag, you won't consume the returned GraphQL document since you'll import and use the precompiled document generated by this plugin instead.<br/><br/>
+
+You may need to tweak your bundler settings to strip out unused variables from your bundle. Alternatively you can author GraphQL operations in `.graphql` files.
+
+</Note>
+
+#### Usage
+
+The following example imports the query definition from the generated file.
+
+```ts title="my-component.ts"
+import { useQuery } from "@apollo/client/react";
+// The query name and path might differ depending on your codegen config
+import { getRocketInventoryQuery } from "./my-component.generated";
+
+function MyComponent() {
+  const { data } = useQuery(getRocketInventoryQuery, {
+    //    ^? GetRocketInventoryQuery | undefined;
+    variables: { year: 2025 },
+  });
+
+  // ...
+}
+```

@@ -2,7 +2,7 @@ import type { namedTypes } from "ast-types";
 import type * as j from "jscodeshift";
 
 import type { IdentifierRename } from "./renames.js";
-import type { UtilContext } from "./types.js";
+import type { ImportKind, UtilContext } from "./types.js";
 import { findImportDeclarationFor } from "./util/findImportDeclarationFor.js";
 import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
 import { findReferences } from "./util/findReferences.js";
@@ -63,6 +63,7 @@ function explicitLinkConstruction({
       identifier: "HttpLink",
       alternativeModules: ["@apollo/client"],
     },
+    compatibleWith: "value",
   });
 
   optionsPath.node.properties.push(
@@ -84,14 +85,18 @@ function findOrInsertImport({
   context,
   context: { j, source },
   description,
+  compatibleWith,
+  after,
 }: {
   context: UtilContext;
   description: IdentifierRename["from"];
+  compatibleWith: ImportKind;
+  after?: j.ASTPath<namedTypes.ImportDeclaration>;
 }) {
   const found = findImportSpecifiersFor({
     description,
     context,
-    compatibleWith: "value",
+    compatibleWith,
   }).nodes()[0];
   if (found) {
     return found;
@@ -99,12 +104,23 @@ function findOrInsertImport({
   let addInto = findImportDeclarationFor({
     description,
     context,
-    compatibleWith: "value",
+    compatibleWith,
   }).nodes()[0];
   if (!addInto) {
-    addInto = j.importDeclaration([], j.literal(description.module));
-    const program = source.find(j.Program).nodes()[0]!;
-    program.body.unshift(addInto);
+    addInto = j.importDeclaration.from({
+      specifiers: [],
+      source: j.literal(description.module),
+      importKind: compatibleWith,
+    });
+    if (!after) {
+      after = source.find(j.ImportDeclaration).paths().at(-1);
+    }
+    if (!after) {
+      const program = source.find(j.Program).nodes()[0]!;
+      program.body.unshift(addInto);
+    } else {
+      after.insertAfter(addInto);
+    }
   }
   const spec = j.importSpecifier.from({
     imported: j.identifier(description.identifier),

@@ -74,7 +74,7 @@ export const client = new ApolloClient({
           version: "1.0.0"
         },
 
-        link: new LocalState({
+        localState: new LocalState({
           resolvers: myResolvers
         }),
 
@@ -341,7 +341,7 @@ new ApolloClient({
       new ApolloClient({
         cache: new InMemoryCache(),
         link: someLink,
-        link: new LocalState({
+        localState: new LocalState({
           resolvers: {
             foo: () => "bar",
           }
@@ -372,7 +372,7 @@ new ApolloClient({
       new ApolloClient({
         cache: new InMemoryCache(),
         link: someLink,
-        link: new LocalState({
+        localState: new LocalState({
           resolvers: myResolvers
         })
       })"
@@ -401,7 +401,7 @@ new ApolloClient({
       new ApolloClient({
         cache: new InMemoryCache(),
         link: someLink,
-        link: new LocalState({
+        localState: new LocalState({
           resolvers
         })
       })"

@@ -182,7 +182,7 @@ function localState({
 
   optionsPath.node.properties.push(
     j.objectProperty.from({
-      key: j.identifier("link"),
+      key: j.identifier("localState"),
       value: j.newExpression.from({
         callee: localStateSpec.local || localStateSpec.imported,
         arguments: [

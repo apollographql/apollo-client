@@ -188,7 +188,7 @@ const link = ApolloLink.from([a, b, c]);// [!code ++]
 </li></ul>
 </li><li>
 
-`removals` step
+`removals` step:
 
 <ul><li>
 
@@ -206,6 +206,161 @@ import { Concast } from "@apollo/client/v4-migration";// [!code ++]
 Any runtime values exported from `@apollo/client/v4-migration` will throw an error at runtime since their implementations do not exist.
 
 </Note>
+
+</li><li>
+
+`clientSetup` step:
+
+<ul><li>
+
+Moves `uri`, `headers` and `credentials` to the `link` option and creates a new `HttpLink` instance
+
+```ts disableCopy=true
+import { HttpLink } from "@apollo/client"; // [!code ++]
+
+new ApolloClient({
+  uri: "/graphql", // [!code --:5]
+  credentials: "include",
+  headers: {
+    "x-custom-header"
+  },
+  link: new HttpLink({ // [!code ++:6]
+    uri: "/graphql",
+    credentials: "include",
+    headers: {
+      "x-custom-header"
+    },
+  })
+})
+```
+
+</li><li>
+
+Moves `name` and `version` into a `clientAwareness` option
+
+```ts disableCopy=true
+new ApolloClient({
+  name: "my-client",// [!code --:2]
+  version: "1.0.0",
+  clientAwareness: {// [!code ++:4]
+    name: "my-client",
+    version: "1.0.0",
+  },
+});
+```
+
+</li><li>
+
+Adds a `localState` option with a new `LocalState` instance, moves the `resolvers` to `LocalState`, and removes the `typeDefs` and `fragmentMatcher` options
+
+```ts disableCopy=true
+import { LocalState } from "@apollo/client/local-state";// [!code ++]
+
+new ApolloClient({
+  typeDefs,// [!code --]
+  fragmentMatcher: () => true,// [!code --]
+  resolvers: {// [!code --:3]
+    /* ... */
+  },
+  localState: new LocalState({// [!code ++:5]
+    resolvers: {
+      /* ... */
+    },
+  }),
+});
+```
+
+</li><li>
+
+Updates the `connectToDevTools` option to `devtools.enabled`
+
+```ts disableCopy=true
+new ApolloClient({
+  connectToDevTools: true,// [!code --]
+  devtools: {// [!code ++:3]
+    enabled: true,
+  },
+});
+```
+
+</li><li>
+
+Renames `disableNetworkFetches` to `prioritizeCacheValues`
+
+```ts disableCopy=true
+new ApolloClient({
+  disableNetworkFetches: true,// [!code --]
+  prioritizeCacheValues: true,// [!code ++]
+});
+```
+
+</li><li>
+
+A template is added for global type augmentation to re-enable data masking types when the `dataMasking` option is set to `true`
+
+```ts disableCopy=true
+new ApolloClient({
+  // [!code ++:8]
+  /*
+  Inserted by Apollo Client 3->4 migration codemod.
+  Keep this comment here if you intend to run the codemod again,
+  to avoid changes from being reapplied.
+  Delete this comment once you are done with the migration.
+  @apollo/client-codemod-migrate-3-to-4 applied
+  */
+  dataMasking: true,
+});
+
+// [!code ++:15]
+/*
+Start: Inserted by Apollo Client 3->4 migration codemod.
+Copy the contents of this block into a \`.d.ts\` file in your project
+to enable data masking types.
+*/
+import "@apollo/client";
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+declare module "@apollo/client" {
+  export interface TypeOverrides
+    extends GraphQLCodegenDataMasking.TypeOverrides {}
+}
+/*
+End: Inserted by Apollo Client 3->4 migration codemod.
+*/
+```
+
+</li><li>
+
+Adds the `incrementalHandler` option and adds a template for global type augmentation to accordingly type network responses in custom links
+
+```ts disableCopy=true
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code ++]
+
+new ApolloClient({
+  // [!code ++:7]
+  /*
+  If you are not using the \`@defer\` directive in your application,
+  Inserted by Apollo Client 3->4 migration codemod.
+  you can safely remove this option.
+  */
+  incrementalHandler: new Defer20220824Handler(),
+});
+// [!code ++:14]
+/*
+Start: Inserted by Apollo Client 3->4 migration codemod.
+Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+If you do not use the \`@defer\` directive in your application, you can safely remove this block.
+*/
+import "@apollo/client";
+import { Defer20220824Handler } from "@apollo/client/incremental";
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
+}
+/*
+End: Inserted by Apollo Client 3->4 migration codemod.
+*/
+```
+
+</li></ul>
 
 </li></ol>
 

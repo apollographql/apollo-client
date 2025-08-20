@@ -127,7 +127,7 @@ When subsequent chunks of deferred data arrive, `useQuery` re-renders and `data`
 
 For this reason, `@defer` can be thought of as a tool to improve initial rendering speeds when some slower data will be displayed below the fold or offscreen. In this case, we're rendering the friends list inside a `<details>` element which is closed by default, avoiding any layout shift as the `friends` data arrives.
 
-## `loading`, `networkStatus`, `dataState` and `data` merging
+## `loading`, `networkStatus`, `dataState`, and `data` merging
 
 These tables represent how `loading`, `networkStatus`, `dataState`, and `data` change as a query with the `@defer` directive is executed.
 
@@ -166,7 +166,7 @@ As chunks arrive and replace existing data, data that cannot be merged, such as 
 
 ## Using with code generation
 
-If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, you'll need to use the Codegen version `4.0.0` or higher.
+If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, you'll need to use the Codegen version v4.0.0 or higher.
 
 ## Usage in React Native
 

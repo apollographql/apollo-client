@@ -1,0 +1,53 @@
+{
+  "name": "@apollo/client-ai",
+  "version": "0.1.0-alpha.0",
+  "description": "Apollo Client AI Tools",
+  "keywords": [
+    "apollo",
+    "client",
+    "ai",
+    "mocking"
+  ],
+  "author": "packages@apollographql.com",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-client.git",
+    "directory": "ai"
+  },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://www.apollographql.com/docs/react/",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "prepack": "npm run build",
+    "publint": "publint run --strict .",
+    "test": "node --expose-gc --experimental-import-meta-resolve --disable-warning=ExperimentalWarning ../../node_modules/jest/bin/jest.js --config jest.config.ts",
+    "test:watch": "npm run test -- --watch",
+    "test:coverage": "npm run test -- --coverage --watchAll=false"
+  },
+  "dependencies": {
+    "@apollo/client": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/jest": "^29.5.12",
+    "rimraf": "^5.0.9"
+  }
+}

@@ -96,6 +96,8 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
     "test:codegen": "npm run build -w codegen && graphql-codegen --config ./tests.codegen.ts",
+    "test:ai": "npm run test -w packages/ai",
+    "test:ai-vercel-adapter": "npm run test -w packages/ai-vercel-adapter",
     "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
@@ -275,6 +277,8 @@
   "workspaces": [
     ".",
     "codegen",
-    "scripts/codemods/ac3-to-ac4"
+    "scripts/codemods/ac3-to-ac4",
+    "packages/ai",
+    "packages/ai-vercel-adapter"
   ]
 }

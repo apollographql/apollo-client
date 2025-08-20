@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
+    "importHelpers": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["DOM", "ES2023"],
+    "types": ["jest", "node"],
+    "jsx": "react",
+    "strict": true,
+    "paths": {
+      // This entry point is not part of our public API, so we point it directly to the source.
+      "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "mdx": {
+    // Enable strict type checking in MDX files.
+    "checkMdx": true
+  }
+}

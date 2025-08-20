@@ -228,6 +228,14 @@ If you prefer to migrate your application more selectively instead of all at onc
 npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
 ```
 
+The following codemods are available:
+
+- `clientSetup` - Updates the options provided to the `ApolloClient` constructor to use their new counterparts
+- `legacyEntrypoints` - Renames import statements that target `.js` or `.cjs` imports to their associated entry point (e.g. `@apollo/client/main.cjs` becomes `@apollo/client`)
+- `imports` - Updates import statements that have moved entry points and updates type references that have moved into a namespace.
+- `links` - Updates provided Apollo Links to their class-based alternative (e.g. `createHttpLink()` becomes `new HttpLink()`).
+- `removals` - Updates import statements that contain removed features to a special `@apollo/client/v4-migration` entry point.
+
 ## Updating imports
 
 <Note>

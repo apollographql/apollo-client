@@ -408,7 +408,32 @@ new ApolloClient({
     `);
   });
   test("without resolvers", () => {
-    // TODO: should we insert `LocalState` by default, with a comment to remove it if not using client state?
+    expect(
+      transform("localState")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient({
+  cache: new InMemoryCache(),
+  link: someLink,
+})
+`
+    ).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      import { LocalState } from "@apollo/client/local-state";
+
+      new ApolloClient({
+        cache: new InMemoryCache(),
+        link: someLink,
+
+        /*
+        Inserted by Apollo Client 3->4 migration codemod.
+        If you are not using the \`@client\` directive in your application,
+        you can safely remove this property.
+        */
+        localState: new LocalState({})
+      })"
+    `);
   });
 });
 

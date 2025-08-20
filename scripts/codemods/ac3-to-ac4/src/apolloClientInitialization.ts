@@ -163,13 +163,13 @@ function localState({
   const fragmentMatcherPath = prop("fragmentMatcher");
   fragmentMatcherPath?.replace();
 
-  if (!resolversPath && !typeDefsPath && !fragmentMatcherPath) {
+  if (resolversPath || typeDefsPath || fragmentMatcherPath) {
+    onModified();
+  }
+  if (prop("localState")) {
     return;
   }
   onModified();
-  if (!resolvers) {
-    return;
-  }
   const localStateSpec = findOrInsertImport({
     context,
     description: {
@@ -187,10 +187,23 @@ function localState({
         callee: localStateSpec.local || localStateSpec.imported,
         arguments: [
           j.objectExpression.from({
-            properties: [resolvers],
+            properties: [resolvers].filter((prop) => !!prop),
           }),
         ],
       }),
+      comments:
+        resolvers ?
+          []
+        : [
+            j.commentBlock.from({
+              leading: true,
+              value: `
+Inserted by Apollo Client 3->4 migration codemod.
+If you are not using the \`@client\` directive in your application,
+you can safely remove this option.
+`,
+            }),
+          ],
     })
   );
 }

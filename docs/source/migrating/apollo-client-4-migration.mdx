@@ -30,7 +30,9 @@ Apollo Client 3.14 introduces many deprecations and warnings that will help you 
   - Selective core types, such as those used for data masking, can now be overridden to provide your own type implementations
 - Local State changes
   - Local state management (e.g. the `@client` directive) is now an opt-in feature to reduce the bundle size of client when local state is not used
-  - Many improvements and bug fixes in the new `LocalState` implementation
+  - Errors thrown in local resolvers are now captured and returned in the response as part of the `errors` array
+  - A GraphQL Codegen plugin is now provided to generate types for local resolvers
+  - Many improvements to validation to ensure proper usage
 - The `Observable` implementation now uses `rxjs` instead of `zen-observable`.
 - The incremental delivery implementation is now pluggable. This makes it possible to support multiple versions of the incremental delivery protocol thoughout.
 

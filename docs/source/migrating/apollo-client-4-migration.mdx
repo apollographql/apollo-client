@@ -1263,7 +1263,9 @@ async function onUserInteraction() {
 
 ### Changes to `useMutation`
 
-- The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, use `client.mutate` directly.
+#### Removal of the `ignoreResults` option
+
+The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, use `client.mutate` directly.
 
 ```ts disableCopy=true
 const [mutate] = useMutation(MY_MUTATION, { ignoreResults: true });// [!code --]

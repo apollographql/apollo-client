@@ -13,28 +13,18 @@ Apollo Client 3.14 introduces many deprecations and warnings that will help you 
 
 ## What’s new in 4.0
 
-- Bundling changes
-  - Apollo Client 4.0 now includes an `exports` field in its `package.json` for better ESM support
-  - `@apollo/client` is now framework-agnostic. React-related exports have been removed and are now only available in `@apollo/client/react`
-    - As a result `@apollo/client/core` and `@apollo/client` are now identical
-- Enhanced Error Handling
-  - Network errors and GraphQL errors have been unified into a single `error` property of a query result
-  - Network errors now adhere to the `errorPolicy` in the same way as GraphQL errors
-  - `ApolloError` has been removed in favor of more granular error classes
-  - Network errors are now passed through as-is without wrapping them in a separate error class, making them easier to debug
-- TypeScript improvements
-  - The `variables` option used throughout various client APIs (e.g. `client.query` or `useQuery`) now requires that the `variables` option is provided if any variable is non-optional.
-  - Return types are more precise, taking options into account - if you pass in the `returnPartialData` option, `data` on the return object will be `DeepPartial<TData>`
-  - A new `dataState` property has been added that contains information about the state of the `data` property which can be used to accurately narrow down the type of `data`.
-  - Types are now generally colocated in a namespace with the API that owns them, making them more discoverable with clear ownership boundaries
-  - Selective core types, such as those used for data masking, can now be overridden to provide your own type implementations
-- Local State changes
-  - Local state management (e.g. the `@client` directive) is now an opt-in feature to reduce the bundle size of client when local state is not used
-  - Errors thrown in local resolvers are now captured and returned in the response as part of the `errors` array
-  - A GraphQL Codegen plugin is now provided to generate types for local resolvers
-  - Many improvements to validation to ensure proper usage
-- The `Observable` implementation now uses `rxjs` instead of `zen-observable`.
-- The incremental delivery implementation is now pluggable. This makes it possible to support multiple versions of the incremental delivery protocol thoughout.
+1. Framework & Bundle Improvements
+
+- Framework-agnostic core with React exports moved to `@apollo/client/react`
+- Better ESM support with `exports` field in `package.json`
+- Observable implementation now uses `rxjs` instead of `zen-observable`
+- More features are opt-in to reduce bundle size when not used
+
+2. Enhanced Developer Experience
+
+- TypeScript: Stricter variable requirements, more precise return types, namespaced types, and customizable core types
+- Error Handling: Unified error property, granular error classes, and consistent errorPolicy behavior for all error types
+
 
 For a full list of changes, see the [changelog]
 (https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
@@ -58,6 +48,47 @@ npm install @apollo/client graphql rxjs
 `rxjs` is a new peer dependency with Apollo Client 4.0.
 
 </Note>
+
+## Recommended migration approach
+
+We recommend following this order to help make your migration as smooth as possible.
+
+### Stage 1: Automated updates
+
+[Run the codemod](#codemod) first to handle import changes automatically.
+
+You can use the TypeScript-specific codemod or run specific modifications if you prefer a gradual approach.
+
+If you prefer a manual approach, you can still [update your imports](#updating-imports) manually.
+
+### Stage 2: Required setup changes
+
+The Apollo Client initialization has changed. Review the [new initialization options](#update-the-initialization-of-apolloclient) and update accordingly.
+
+If you use `@defer`, you need to [enable incremental delivery](#enable-incremental-delivery-defer).
+
+If you use data masking, you need to [configure the data masking types](#enable-data-masking-types).
+
+### Stage 3: Changes that may require refactoring
+
+These changes may require code refactoring depending on your usage.
+
+#### Changes affecting most users:
+
+- **[Core API changes](#core-api-changes)** - Query behavior changes
+
+#### Changes affecting React users:
+
+- **[React hook changes](#for-react-users)** - `useLazyQuery`, `useMutation`, `useQuery` updates
+- **[TypeScript improvements](#typescript-changes)** - New type locations and patterns
+- **[Error handling updates](#new-error-handling)** - New error classes and patterns
+
+#### Changes affecting fewer users:
+- **[Link API changes](#link-api-changes)** - If you use custom links
+- **[Local state changes](#local-state-changes)** - If you use `@client` directives
+- **[Testing changes](#testing-related-changes)** - MockedProvider updates
+- **[Bundling changes](#bundling-changes)** - New export patterns and transpilation
+- **[Development mode changes](#development-mode-changes)** - Automatic detection
 
 ## Codemod
 

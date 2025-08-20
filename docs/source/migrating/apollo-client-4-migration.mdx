@@ -1314,14 +1314,6 @@ Note that that codemod is a separate package and not maintained by the Apollo Cl
 
 </Note>
 
-### New SSR api `prerenderStatic`
-
-A new `prerenderStatic` API has been added to the `@apollo/client/react/ssr` package.
-This API is a replacement for the previous `renderToStringWithData`, `getDataFromTree` and `getMarkupFromTree` APIs, which are now deprecated.
-
-`prerenderStatic` can be used together with the modern [`prerender`](https://react.dev/reference/react-dom/static/prerender) and [`prerenderToNodeStream`](https://react.dev/reference/react-dom/static/prerenderToNodeStream) React APIs, which will enable you to server-side render, even if you are using suspense in your application.
-Note that this is still only a step towards full support for streaming SSR, and you might need one of our [framework integrations](https://github.com/apollographql/apollo-client-integrations) to make full use of streaming SSR.
-
 ## TypeScript changes
 
 ### Moving types into namespaces

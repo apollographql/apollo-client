@@ -1263,6 +1263,8 @@ async function onUserInteraction() {
 
 ### Changes to `useMutation`
 
+`useMutation` has been modified to work with our [philosophy](#a-note-about-hook-usage) that React hooks should be used to synchronize hook state with your component.
+
 #### Removal of the `ignoreResults` option
 
 The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, use `client.mutate` directly.

@@ -21,6 +21,14 @@ In the order they will be applied per default if you don't manually specify a co
 - `links`: Moves `split`, `from`, `concat` and `empty` onto the `ApolloLink` namespace, changes funtion link invocations like `createHttpLink(...)` to their class equivalents like (`new HttpLink(...)`).
   Does not change `setContext((operation, prevContext) => {})` to `new ContextLink((prevContext, operation) => {})` - this requires manual intervention, as the order of callback arguments is flipped and this is not reliable codemoddable.
 - `removals`: Points all imports of values or types that have been removed in Apollo Client 4 to the `@apollo/client/v4-migration` entry point. That entry point contains context for each removal, oftentimes with migration instructions.
+- `clientSetup`: Applies the following steps from the migration guide to your Apollo Client setup code
+  - Moves `uri`, `headers` and `credentials` to the `link` option and creates a new `HttpLink` instance
+  - Moves `name` and `version` into a `clientAwareness` option
+  - Adds a `localState` option with a new `LocalState` instance, moves `resolvers`, and removes `typeDefs` and `fragmentMatcher` options
+  - Changes the `connectToDevTools` option to `devtools.enabled`
+  - Renames `disableNetworkFetches` to `prioritizeCacheValues`
+  - If `dataMasking` is enabled, adds a template for global type augmentation to re-enable data masking types
+  - Adds the `incrementalHandler` option and adds a template for global type augmentation to accordingly type network responses in custom links
 
 ### Usage against TypeScript/TSX
 

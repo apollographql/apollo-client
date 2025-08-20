@@ -1,3 +1,6 @@
+import type { namedTypes } from "ast-types";
+import type * as j from "jscodeshift";
+
 import type { IdentifierRename } from "../renames.js";
 import type { ImportKind, UtilContext } from "../types.js";
 

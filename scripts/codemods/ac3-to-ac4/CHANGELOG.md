@@ -1,5 +1,22 @@
 # @apollo/client-codemod-migrate-3-to-4
 
+## 1.0.0-rc.3
+
+### Major Changes
+
+- [#12851](https://github.com/apollographql/apollo-client/pull/12851) [`32bc830`](https://github.com/apollographql/apollo-client/commit/32bc8302f1a8a2107da275e72a20d64014247618) Thanks [@phryneas](https://github.com/phryneas)! - Add a new `clientSetup` codemod step which applies the following steps from the migration guide to your Apollo Client setup code:
+  - Moves `uri`, `headers` and `credentials` to the `link` option and creates a new `HttpLink` instance
+  - Moves `name` and `version` into a `clientAwareness` option
+  - Adds a `localState` option with a new `LocalState` instance, moves `resolvers`, and removes `typeDefs` and `fragmentMatcher` options
+  - Changes the `connectToDevTools` option to `devtools.enabled`
+  - Renames `disableNetworkFetches` to `prioritizeCacheValues`
+  - If `dataMasking` is enabled, adds a template for global type augmentation to re-enable data masking types
+  - Adds the `incrementalHandler` option and adds a template for global type augmentation to accordingly type network responses in custom links
+
+### Patch Changes
+
+- [#12846](https://github.com/apollographql/apollo-client/pull/12846) [`71ccfb5`](https://github.com/apollographql/apollo-client/commit/71ccfb5226937b14d4d4f59c46eea2a8cacd6700) Thanks [@phryneas](https://github.com/phryneas)! - Add a new `legacyEntryPoints` transformation step that moves imports from old legacy entry points like `@apollo/client/main.cjs` or `@apollo/client/react/react.cjs` to the new entry points like `@apollo/client` or `@apollo/client/react`.
+
 ## 1.0.0-rc.2
 
 ### Minor Changes

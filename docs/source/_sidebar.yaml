@@ -13,8 +13,6 @@ items:
     href: ./why-apollo
   - label: Get started
     href: ./get-started
-  - label: Changelog
-    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
   - label: Core concepts
     children:
       - label: Queries
@@ -223,3 +221,7 @@ items:
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links
+  - label: Changelog
+    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
+  - label: Versioning Policy
+    href: ./versioning-policy

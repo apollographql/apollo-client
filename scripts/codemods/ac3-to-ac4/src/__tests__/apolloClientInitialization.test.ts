@@ -17,6 +17,75 @@ const transform =
       { parser: "ts" }
     );
 
+describe("all transforms", () => {
+  test("kitchen sink 1", () => {
+    expect(transform()`
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+
+export const client = new ApolloClient({
+  uri: "/graphql",
+  credentials: "include",
+  headers: {
+    "x-custom-header": "value",
+  },
+  cache: new InMemoryCache(),
+  ssrForceFetchDelay: 50,
+  ssrMode: true,
+  connectToDevTools: true,
+  queryDeduplication: true,
+  defaultOptions: {},
+  defaultContext: {},
+  assumeImmutableResults: true,
+  resolvers: myResolvers,
+  typeDefs: mySchema,
+  fragmentMatcher: () => true,
+  name: "my-client",
+  version: "1.0.0",
+  documentTransform: myDocumentTransform,
+  dataMasking: true
+  })
+    `).toMatchInlineSnapshot(`
+      "import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+
+      import { LocalState } from "@apollo/client/local-state";
+
+      export const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        ssrForceFetchDelay: 50,
+        ssrMode: true,
+        queryDeduplication: true,
+        defaultOptions: {},
+        defaultContext: {},
+        assumeImmutableResults: true,
+        documentTransform: myDocumentTransform,
+        dataMasking: true,
+
+        link: new HttpLink({
+          uri: "/graphql",
+          credentials: "include",
+
+          headers: {
+            "x-custom-header": "value",
+          }
+        }),
+
+        clientAwareness: {
+          name: "my-client",
+          version: "1.0.0"
+        },
+
+        link: new LocalState({
+          resolvers: myResolvers
+        }),
+
+        devtools: {
+          enabled: true
+        }
+      })"
+    `);
+  });
+});
+
 describe("http link intialization", () => {
   test("all options", () => {
     expect(

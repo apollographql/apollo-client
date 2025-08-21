@@ -22,7 +22,7 @@ describe("all transforms", () => {
     expect(transform()`
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-export const client = new ApolloClient({
+export const client = new ApolloClient<MyCacheShape>({
   uri: "/graphql",
   credentials: "include",
   headers: {
@@ -891,4 +891,22 @@ new ApolloClient({
 })
       `).toMatchInlineSnapshot(`""`);
   });
+});
+
+test("remove constructor type argument", () => {
+  expect(transform("removeConstructorTypeArgument")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient<CacheShape>({
+  cache: new InMemoryCache(),
+  link: someLink,
+})
+      `).toMatchInlineSnapshot(`
+        "import { ApolloClient } from "@apollo/client";
+
+        new ApolloClient({
+          cache: new InMemoryCache(),
+          link: someLink,
+        })"
+      `);
 });

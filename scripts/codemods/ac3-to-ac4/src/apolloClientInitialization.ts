@@ -9,6 +9,7 @@ import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
 import { findOrInsertImport } from "./util/findOrInsertImport.js";
 import { findReferences } from "./util/findReferences.js";
 import { getProperty } from "./util/getProperty.js";
+import { monkeyPatchAstTypes } from "./util/monkeyPatchAstTypes.js";
 
 const steps = {
   explicitLinkConstruction,
@@ -18,6 +19,7 @@ const steps = {
   prioritizeCacheValues,
   dataMasking,
   incrementalHandler,
+  removeConstructorTypeArgument,
 } satisfies Record<string, (options: StepOptions) => void>;
 
 export type Steps = keyof typeof steps;
@@ -30,6 +32,8 @@ const apolloClientInitializationTransform: j.Transform = function transform(
   const j = api.jscodeshift;
   const source = j(file.source);
   const context = { j, source };
+
+  monkeyPatchAstTypes(j);
 
   let modified = false;
   function onModified() {
@@ -379,6 +383,17 @@ If you do not use the \`@defer\` directive in your application, you can safely r
       identifier: "TypeOverrides",
     },
   });
+}
+
+function removeConstructorTypeArgument({
+  constructorCall: { newExprPath },
+  onModified,
+}: StepOptions) {
+  const typeParameters = newExprPath.get("typeParameters");
+  if (typeParameters?.node?.params?.length) {
+    onModified();
+    typeParameters.prune();
+  }
 }
 
 function insertTypeOverrideBlock({

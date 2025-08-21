@@ -14,7 +14,7 @@ We've also modernized our build targets. Apollo Client 4.0 ships JavaScript tran
 
 We've completely reimagined our TypeScript architecture based on a simple principle: types should be discoverable where you use them. Instead of hunting through documentation for type names, types now live alongside their APIs through namespaces. When you import `useQuery`, you get `useQuery.Options` and `useQuery.Result` right there. It's a small change that makes a big difference in day-to-day development.
 
-But the improvements go deeper. Apollo Client 4.0 now enforces required variables at the type level—if your query has required variables, TypeScript won't let you forget them. The fragile `TContext` generic has been replaced with module augmentation for defining custom context types across your link chain. And with the new `TypeOverrides` interface, you can customize how Apollo Client handles partial data, streaming responses, and more, all while maintaining type safety.
+But the improvements go deeper. Apollo Client 4.0 now enforces required variables at the type level — if your query has required variables, TypeScript won't let you forget them. The fragile `TContext` generic has been replaced with module augmentation for defining custom context types across your link chain. And with the new `TypeOverrides` interface, you can customize how Apollo Client handles partial data, streaming responses, and more, all while maintaining type safety.
 
 ```typescript
 import { useQuery } from "@apollo/client/react";

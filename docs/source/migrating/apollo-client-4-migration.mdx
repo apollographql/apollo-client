@@ -1208,11 +1208,43 @@ observable.subscribe({
 });
 ```
 
-### TODO
+### `ServerError` and `ServerParseError` are error classes
 
-In Apollo Client 4,
+Apollo Client 3 threw special `ServerError` and `ServerParseError` types when the HTTP response was invalid. These types were plain `Error` instances with some added properties.
 
-- a few other error classes have been added to represent specific error cases, such as `ServerParseError`, and `ServerError`.
+Apollo Client 4 turns these types into proper error classes. You can check for these types using the `.is` static method available on each error class.
+
+```ts disableCopy=true
+const { error } = useQuery(QUERY);
+
+if (ServerError.is(error)) {
+  // handle the server error
+}
+
+if (ServerParseError.is(error)) {
+  // handle the server parse error
+}
+```
+
+### `ServerError` no longer parses the response text as JSON
+
+When a `ServerError` was thrown, such as when the server returned a non-2xx status code, Apollo Client 3 tried to parse the raw response text into JSON to determine if a valid GraphQL response was returned. If successful, the parsed JSON value was set as the `result` property on the error.
+
+Apollo Client 4 more strictly adheres to the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/) and does away with the automatic JSON parsing. As such, the `result` property is no longer accessible and is replaced by the `bodyText` property which contains the value of the raw response text.
+
+If you relied on the automatic JSON parsing, you will need to `JSON.parse` the `bodyText` intead.
+
+```ts disableCopy=true
+const { error } = useQuery(QUERY);
+
+if (ServerError.is(error)) {
+  try {
+    const json = JSON.parse(error.bodyText);
+  } catch (e) {
+    // handle invalid JSON
+  }
+}
+```
 
 ### React-specific changes
 

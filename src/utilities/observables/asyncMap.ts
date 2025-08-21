@@ -3,6 +3,19 @@ import { Observable } from "./Observable.js";
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).
+/**
+ * @deprecated `asyncMap` will be removed in Apollo Client 4.0. This function is
+ * safe to use in Apollo Client 3.x.
+ *
+ * **Recommended now**
+ *
+ * No action needed
+ *
+ * **When migrating**
+ *
+ * Prefer to use RxJS's built in helpers. Convert promises into observables
+ * using the [`from`](https://rxjs.dev/api/index/function/from) function.
+ */
 export function asyncMap<V, R>(
   observable: Observable<V>,
   mapFn: (value: V) => R | PromiseLike<R>,

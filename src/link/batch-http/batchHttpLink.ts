@@ -19,6 +19,7 @@ import {
 } from "../http/index.js";
 import { BatchLink } from "../batch/index.js";
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<
@@ -100,6 +101,14 @@ export class BatchHttpLink extends ApolloLink {
         credentials: context.credentials,
         headers: { ...clientAwarenessHeaders, ...context.headers },
       };
+
+      if (__DEV__) {
+        if (operations.some(({ query }) => hasDirectives(["client"], query))) {
+          invariant.warn(
+            "[BatchHttpLink]: Apollo Client 4.0 will no longer remove `@client` fields from queries sent through the link chain. Please open an issue if this warning is displayed under standard usage."
+          );
+        }
+      }
 
       const queries = operations.map(({ query }) => {
         if (hasDirectives(["client"], query)) {

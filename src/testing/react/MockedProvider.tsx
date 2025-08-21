@@ -9,9 +9,24 @@ import { MockLink } from "../core/index.js";
 import type { ApolloLink } from "../../link/core/index.js";
 import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
+import type { DevtoolsOptions } from "../../core/ApolloClient.js";
+import {
+  warnRemovedOption,
+  muteDeprecations,
+} from "../../utilities/deprecation/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
+  /**
+   * @deprecated `addTypename` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please set `addTypename` to `true` or remove the prop entirely to use the
+   * default. It is recommended to add `__typename` to your mock objects if it is
+   * not already defined. This ensures the cache more closely resembles the
+   * production environment.
+   */
   addTypename?: boolean;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache<TSerializedCache>;
@@ -23,8 +38,25 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   /**
    * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
    * Defaults to false.
+   *
+   * @deprecated `connectToDevTools` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Use the `devtools.enabled` option instead.
+   *
+   * ```ts
+   * <MockedProvider devtools={{ enabled: true }} />
+   * ```
    */
   connectToDevTools?: boolean;
+
+  /**
+   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+   *
+   * @since 3.14.0
+   */
+  devtools?: DevtoolsOptions;
 }
 
 export interface MockedProviderState {
@@ -35,30 +67,49 @@ export class MockedProvider extends React.Component<
   MockedProviderProps,
   MockedProviderState
 > {
-  public static defaultProps: MockedProviderProps = {
-    addTypename: true,
-  };
-
   constructor(props: MockedProviderProps) {
     super(props);
 
     const {
       mocks,
-      addTypename,
+      addTypename = true,
       defaultOptions,
       cache,
       resolvers,
       link,
       showWarnings,
+      devtools,
       connectToDevTools = false,
     } = this.props;
-    const client = new ApolloClient({
-      cache: cache || new Cache({ addTypename }),
-      defaultOptions,
-      connectToDevTools,
-      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
-      resolvers,
-    });
+    if (__DEV__) {
+      warnRemovedOption(
+        this.props,
+        "connectToDevTools",
+        "MockedProvider",
+        "Please use `devtools.enabled` instead."
+      );
+      warnRemovedOption(
+        this.props,
+        "addTypename",
+        "MockedProvider",
+        "Please remove the `addTypename` prop. For best results, ensure the provided `mocks` include a `__typename` property on all mock objects to ensure the cache more closely behaves like production."
+      );
+    }
+
+    const client = muteDeprecations(
+      ["connectToDevTools", "addTypename"],
+      () =>
+        new ApolloClient({
+          cache: cache || new Cache({ addTypename }),
+          defaultOptions,
+          devtools: devtools ?? {
+            enabled: connectToDevTools,
+          },
+          link:
+            link || new MockLink(mocks || [], addTypename, { showWarnings }),
+          resolvers,
+        })
+    );
 
     this.state = {
       client,

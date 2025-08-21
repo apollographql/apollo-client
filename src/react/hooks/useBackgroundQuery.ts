@@ -16,12 +16,13 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { wrapHook } from "./internal/index.js";
+import { useWarnRemovedOption, wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
+import { muteDeprecations } from "../../utilities/deprecation/index.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -206,6 +207,15 @@ function useBackgroundQuery_<
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
+  if (__DEV__) {
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useWarnRemovedOption(
+      typeof options === "symbol" ? {} : options,
+      "canonizeResults",
+      "useBackgroundQuery"
+    );
+  }
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
@@ -227,8 +237,10 @@ function useBackgroundQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
+  const queryRef = muteDeprecations("canonizeResults", () =>
+    suspenseCache.getQueryRef(cacheKey, () =>
+      client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
+    )
   );
 
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(

@@ -8,7 +8,7 @@ import { Observable } from 'zen-observable-ts';
 
 // Warning: (ae-forgotten-export) The symbol "CreateMultipartSubscriptionOptions" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function createFetchMultipartSubscription(uri: string, { fetch: preferredFetch, headers }?: CreateMultipartSubscriptionOptions): ({ query, variables, }: {
     query?: string;
     variables: undefined | Record<string, any>;

@@ -3515,6 +3515,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({

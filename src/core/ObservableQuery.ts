@@ -22,6 +22,7 @@ import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  InteropApolloQueryResult,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -41,6 +42,11 @@ import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
 import { Slot } from "optimism";
+import {
+  muteDeprecations,
+  warnDeprecated,
+  warnRemovedOption,
+} from "../utilities/deprecation/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -77,6 +83,15 @@ export class ObservableQuery<
   private static inactiveOnCreation = new Slot<boolean>();
 
   public readonly options: WatchQueryOptions<TVariables, TData>;
+  /**
+   * @deprecated `queryId` will be removed in Apollo Client 4.0. This value is
+   * safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * `ObservableQuery` does not have a unique identifier in 4.0. If you rely on
+   * this value, please try to migrate away from it.
+   */
   public readonly queryId: string;
   public readonly queryName?: string;
 
@@ -221,7 +236,31 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
+  /**
+   * @deprecated `result` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * If you continue to need this functionality, subscribe to `ObservableQuery`
+   * to get the first value emitted from the observable, then immediately unsubscribe.
+   *
+   * **When upgrading**
+   *
+   * Use RxJS's [`firstResultFrom`](https://rxjs.dev/api/index/function/firstValueFrom) function to mimic this functionality.
+   *
+   * ```ts
+   * const result = await firstValueFrom(from(observableQuery));
+   * ```
+   */
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    if (__DEV__) {
+      warnDeprecated("observableQuery.result", () => {
+        invariant.warn(
+          "[observableQuery.result]: `result` is deprecated and will be removed with Apollo Client 4.0."
+        );
+      });
+    }
+
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
@@ -264,7 +303,9 @@ export class ObservableQuery<
     saveAsLastResult = true
   ): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
-    const lastResult = this.getLastResult(true);
+    const lastResult = muteDeprecations("getLastResult", () =>
+      this.getLastResult(true)
+    );
 
     const networkStatus =
       this.queryInfo.networkStatus ||
@@ -399,22 +440,65 @@ export class ObservableQuery<
     }
   }
 
+  /**
+   * @deprecated `getLastResult` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public getLastResult(
     variablesMustMatch?: boolean
   ): ApolloQueryResult<TData> | undefined {
+    if (__DEV__) {
+      warnDeprecated("getLastResult", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     return this.getLast("result", variablesMustMatch);
   }
 
+  /**
+   * @deprecated `getLastError` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+    if (__DEV__) {
+      warnDeprecated("getLastError", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     return this.getLast("error", variablesMustMatch);
   }
 
+  /**
+   * @deprecated `resetLastResults` will be removed in Apollo Client 4.0. Please
+   * discontinue using this method.
+   */
   public resetLastResults(): void {
+    if (__DEV__) {
+      warnDeprecated("resetLastResults", () => {
+        invariant.warn(
+          "[ObservableQuery]: `getLastResult` is deprecated and will be removed in Apollo Client 4.0. Please discontinue using this method."
+        );
+      });
+    }
     delete this.last;
     this.isTornDown = false;
   }
 
+  /**
+   * @deprecated `resetQueryStoreErrors` will be removed in Apollo Client 4.0.
+   * Please discontinue using this method.
+   */
   public resetQueryStoreErrors() {
+    if (__DEV__) {
+      invariant.warn(
+        "[observableQuery.resetQueryStoreErrors]: `resetQueryStoreErrors` is deprecated and will be removed with Apollo Client 4.0. Please discontinue using this method."
+      );
+    }
+
     this.queryManager.resetErrors(this.queryId);
   }
   /**
@@ -426,7 +510,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -483,7 +567,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       ) => Unmasked<TData>;
     }
-  ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TFetchData>>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -692,9 +776,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
   }
 
+  /**
+   * @deprecated `setOptions` will be removed in Apollo Client 4.0. Please use
+   * `observableQuery.reobserve(newOptions)` instead.
+   */
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
+    if (__DEV__) {
+      warnRemovedOption(newOptions, "canonizeResults", "setOptions");
+      warnDeprecated("setOptions", () => {
+        invariant.warn(
+          "[observableQuery.setOptions] `setOptions` is deprecated and will be removed in Apollo Client 4.0. Please use `observableQuery.reobserve(newOptions)` instead."
+        );
+      });
+    }
+
     return this.reobserve(newOptions);
   }
 
@@ -725,12 +822,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>> | void> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.observers.size ? this.result() : Promise.resolve();
+      return this.observers.size ?
+          muteDeprecations("observableQuery.result", () => this.result())
+        : Promise.resolve();
     }
 
     this.options.variables = variables;
@@ -931,7 +1030,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newResult: ApolloQueryResult<TData>,
     variables = this.variables
   ) {
-    let error: ApolloError | undefined = this.getLastError();
+    let error: ApolloError | undefined = muteDeprecations("getLastError", () =>
+      this.getLastError()
+    );
     // Preserve this.last.error unless the variables have changed.
     if (error && this.last && !equal(variables, this.last.variables)) {
       error = void 0;
@@ -1059,7 +1160,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<TData>>> {
     return preventUnhandledRejection(
       this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
         this.maskResult as TODO
@@ -1085,7 +1186,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // the subscription, and restore the last value afterwards so that the
     // subscription has a chance to stay open.
     const last = this.last;
-    this.resetLastResults();
+    muteDeprecations("resetLastResults", () => this.resetLastResults());
 
     const subscription = this.subscribe(...args);
     this.last = last;
@@ -1110,7 +1211,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined
   ) {
-    const lastError = this.getLastError();
+    const lastError = muteDeprecations("getLastError", () =>
+      this.getLastError()
+    );
     const isDifferent = this.isDifferentFromLastResult(result, variables);
     // Update the last result even when isDifferentFromLastResult returns false,
     // because the query may be using the @nonreactive directive, and we want to
@@ -1128,7 +1231,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult = {
-      ...this.getLastResult(),
+      ...muteDeprecations("getLastResult", () => this.getLastResult()),
       error,
       errors: error.graphQLErrors,
       networkStatus: NetworkStatus.error,

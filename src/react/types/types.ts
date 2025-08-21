@@ -51,6 +51,14 @@ export type CommonOptions<TOptions> = TOptions & {
 
 /* Query types */
 
+/**
+ * @deprecated `BaseQueryOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
@@ -63,6 +71,14 @@ export interface BaseQueryOptions<
   context?: DefaultContext;
 }
 
+/**
+ * @deprecated `QueryFunctionOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface QueryFunctionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -93,6 +109,14 @@ export interface QueryFunctionOptions<
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
+/**
+ * @deprecated `ObservableQueryFields` will be removed in Apollo Client 4.0.
+ * Types have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface ObservableQueryFields<
   TData,
   TVariables extends OperationVariables,
@@ -109,7 +133,15 @@ export interface ObservableQueryFields<
   refetch: (
     variables?: Partial<TVariables>
   ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** @internal */
+  /**
+   * @internal
+   *
+   * @deprecated `reobserve` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Change options by rerendering the hook with new options.
+   */
   reobserve: (
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
@@ -160,6 +192,26 @@ export interface QueryResult<
   called: boolean;
 }
 
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions to add deprecations. Use `QueryResult` instead.
+ */
+export interface InteropQueryResult<
+  TData,
+  TVariables extends OperationVariables,
+> extends QueryResult<TData, TVariables> {
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
+   *
+   * @deprecated `called` will be removed from the `useQuery` result in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please remove the use of the `called` property.
+   */
+  called: boolean;
+}
+
 export interface QueryDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -179,22 +231,51 @@ export interface LazyQueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
   /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member}
+   *
+   * @deprecated `initialFetchPolicy` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please use `fetchPolicy` instead.
+   */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+  /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * @deprecated This option will be removed in Apollo Client 4.0.
    * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
    */
   onCompleted?: (data: MaybeMasked<TData>) => void;
   /**
    * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * @deprecated This option will be removed in Apollo Client 4.0.
    * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
    */
   onError?: (error: ApolloError) => void;
 
-  /** @internal */
+  /**
+   * @internal
+   *
+   * @deprecated `defaultOptions` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please pass options directly to `useLazyQuery` instead.
+   */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member}
+   *
+   * @deprecated `context` will be removed in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please pass `context` to the returned `execute` function instead.
+   */
+  context?: DefaultContext;
 }
 export interface LazyQueryHookExecOptions<
   TData = any,
@@ -328,12 +409,168 @@ export type QueryTuple<
   TVariables extends OperationVariables,
 > = LazyQueryResultTuple<TData, TVariables>;
 
+/**
+ * @deprecated This type does not exist in Apollo Client 4.0 and is meant as a
+ * bridge between versions to add deprecations. Use `QueryResult` instead.
+ */
+export interface InteropLazyQueryExecResult<
+  TData,
+  TVariables extends OperationVariables,
+> extends QueryResult<TData, TVariables> {
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#client:member}
+   *
+   * @deprecated `client` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `client` property returned
+   * from the hook instead.
+   */
+  client: ApolloClient<any>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member}
+   *
+   * @deprecated `observable` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `observable` property returned
+   * from the hook instead.
+   */
+  observable: ObservableQuery<TData, TVariables>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member}
+   *
+   * @deprecated `previousData` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `previousData` property returned
+   * from the hook instead.
+   */
+  previousData?: MaybeMasked<TData>;
+  /**
+   * @deprecated `errors` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. This value is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * `errors` has been consolidated to the `error` property. You will need to
+   * read any errors on the `error` property resolved from `execute` instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member}
+   *
+   * @deprecated `loading` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `loading` property returned
+   * from the hook instead.
+   */
+  loading: boolean;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member}
+   *
+   * @deprecated `networkStatus` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `networkStatus` property returned
+   * from the hook instead.
+   */
+  networkStatus: NetworkStatus;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#called:member}
+   *
+   * @deprecated `called` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `called` property returned
+   * from the hook instead.
+   */
+  called: boolean;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member}
+   *
+   * @deprecated `variables` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `variables` property returned
+   * from the hook instead.
+   */
+  variables: TVariables | undefined;
+
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member}
+   *
+   * @deprecated `startPolling` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `startPolling` function returned
+   * from the hook instead.
+   */
+  startPolling: (pollInterval: number) => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member}
+   *
+   * @deprecated `stopPolling` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `stopPolling` function returned
+   * from the hook instead.
+   */
+  stopPolling: () => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member}
+   *
+   * @deprecated `subscribeToMore` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `subscribeToMore` function returned
+   * from the hook instead.
+   */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member}
+   *
+   * @deprecated `updateQuery` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `updateQuery` function returned
+   * from the hook instead.
+   */
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member}
+   *
+   * @deprecated `refetch` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `refetch` function returned
+   * from the hook instead.
+   */
+  refetch: (
+    variables?: Partial<TVariables>
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /**
+   * @internal
+   *
+   * @deprecated `reobserve` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. To change options, rerender the hook with
+   * new options.
+   */
+  reobserve: (
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /**
+   * {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member}
+   *
+   * @deprecated `fetchMore` is no longer available on the result resolved from
+   * `execute` in Apollo Client 4.0. Please use the `fetchMore` function returned
+   * from the hook instead.
+   */
+  fetchMore: <
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+      updateQuery?: (
+        previousQueryResult: Unmasked<TData>,
+        options: {
+          fetchMoreResult: Unmasked<TFetchData>;
+          variables: TFetchVars;
+        }
+      ) => Unmasked<TData>;
+    }
+  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+}
+
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
   options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
-) => Promise<QueryResult<TData, TVariables>>;
+) => Promise<InteropLazyQueryExecResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<
   TData,
@@ -349,6 +586,14 @@ export type RefetchQueriesFunction = (
   ...args: any[]
 ) => InternalRefetchQueriesInclude;
 
+/**
+ * @deprecated `BaseMutationOptions` will be removed in Apollo Client 4.0. Types
+ * have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseMutationOptions<
   TData = any,
   TVariables = OperationVariables,
@@ -369,8 +614,10 @@ export interface BaseMutationOptions<
   /**
    * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
    *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
+   * @deprecated This option will be removed in Apollo Client 4.0. If you don't
+   * want to synchronize your component state with the mutation, please use
+   * `useApolloClient` to get your ApolloClient instance and call `client.mutate`
+   * directly.
    */
   ignoreResults?: boolean;
 }
@@ -451,6 +698,14 @@ export interface OnSubscriptionDataOptions<TData = any> {
   subscriptionData: SubscriptionResult<TData>;
 }
 
+/**
+ * @deprecated `BaseSubscriptionOptions` will be removed in Apollo Client 4.0.
+ * Types have been flattened in 4.0 and no longer extend this base type.
+ *
+ * **Recommended now**
+ *
+ * Copy all properties from this type into your type.
+ */
 export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -501,6 +756,12 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   // tests, but probably shouldn’t be added to the result.
   /**
    * @internal
+   *
+   * @deprecated `variables` will be removed from the returned value in Apollo Client 4.0.
+   *
+   * **Recommended now**
+   *
+   * Please remove any use of `variables` returned from `useSubscription`.
    */
   variables?: TVariables;
 }

@@ -14,6 +14,11 @@ import {
   defaultMapPropsToSkip,
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
+import invariant from "ts-invariant";
+import {
+  muteDeprecations,
+  warnDeprecated,
+} from "../../utilities/deprecation/index.js";
 
 /**
  * @deprecated
@@ -34,8 +39,15 @@ export function withQuery<
     TChildProps
   > = {}
 ) {
+  if (__DEV__) {
+    warnDeprecated("withQuery", () => {
+      invariant.warn(
+        "[withQuery]: The `withQuery` higher order component is deprecated and will be removed in Apollo Client 4.0. Please switch to an available React hook such as `useQuery`."
+      );
+    });
+  }
   // this is memoized so if coming from `graphql` there is nearly no extra cost
-  const operation = parser(document);
+  const operation = muteDeprecations("parser", parser, [document]);
   // extract options
   const {
     options = defaultMapPropsToOptions,

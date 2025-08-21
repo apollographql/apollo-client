@@ -110,6 +110,7 @@ import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "../masking/index.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { muteDeprecations } from "../utilities/deprecation/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -1008,7 +1009,9 @@ export class QueryManager<TStore> {
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery, queryId) => {
         const { fetchPolicy } = observableQuery.options;
-        observableQuery.resetLastResults();
+        muteDeprecations("resetLastResults", () =>
+          observableQuery.resetLastResults()
+        );
         if (
           includeStandby ||
           (fetchPolicy !== "standby" && fetchPolicy !== "cache-only")
@@ -1545,7 +1548,9 @@ export class QueryManager<TStore> {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            diff = this.cache.diff(oq["queryInfo"]["getDiffOptions"]());
+            diff = muteDeprecations("canonizeResults", () =>
+              this.cache.diff(oq["queryInfo"]["getDiffOptions"]())
+            );
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }

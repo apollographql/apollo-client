@@ -280,7 +280,7 @@ export type ReconcilerFunction = never;
 // @public @deprecated (undocumented)
 export type RefetchQueriesFunction = never;
 
-// @public
+// @public (undocumented)
 export namespace Removals {
     // @deprecated (undocumented)
     export type defer = never;

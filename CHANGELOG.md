@@ -2216,6 +2216,34 @@
 
 - [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
 
+## 3.14.0
+
+### Minor Changes
+
+- [#12752](https://github.com/apollographql/apollo-client/pull/12752) [`8b779b4`](https://github.com/apollographql/apollo-client/commit/8b779b428b9dc9dad3e78f02bba6646ff415631d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings to remaining APIs changed in Apollo Client 4.0.
+
+- [#12746](https://github.com/apollographql/apollo-client/pull/12746) [`0bcd2f4`](https://github.com/apollographql/apollo-client/commit/0bcd2f4ead372eb5928bbd5c00b0bd48e497a5e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add warnings and deprecations for options and methods for all React APIs.
+
+- [#12751](https://github.com/apollographql/apollo-client/pull/12751) [`567cad8`](https://github.com/apollographql/apollo-client/commit/567cad8fcc30ac3b82560abc24970d33f160622e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `@deprecated` tags to all properties returned from any query API (e.g. `client.query`, `observableQuery.refetch`, etc.), `client.mutate`, and `client.subscribe` that are no longer available in Apollo Client 4.0.
+
+- [#12746](https://github.com/apollographql/apollo-client/pull/12746) [`0bcd2f4`](https://github.com/apollographql/apollo-client/commit/0bcd2f4ead372eb5928bbd5c00b0bd48e497a5e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `preloadQuery.toPromise(queryRef)` as a replacement for `queryRef.toPromise()`. `queryRef.toPromise()` has been removed in Apollo Client 4.0 in favor of `preloadQuery.toPromise` and is now considered deprecated.
+
+- [#12736](https://github.com/apollographql/apollo-client/pull/12736) [`ea89440`](https://github.com/apollographql/apollo-client/commit/ea8944013278060ef87dfa4de6663a21b5204880) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and deprecation warnings for `ApolloClient` options and methods.
+
+- [#12763](https://github.com/apollographql/apollo-client/pull/12763) [`5de6a3d`](https://github.com/apollographql/apollo-client/commit/5de6a3d3189afa2a7c3bb2eb08d3c4394ae4a16d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump only to release latest as `rc`.
+
+- [#12459](https://github.com/apollographql/apollo-client/pull/12459) [`1c5a031`](https://github.com/apollographql/apollo-client/commit/1c5a0313d388945aeda93b2c1992ad77f4416fa1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reset `addTypenameTransform` and `fragments` caches when calling `cache.gc()` only when `resetResultCache` is `true`.
+
+- [#12743](https://github.com/apollographql/apollo-client/pull/12743) [`92ad409`](https://github.com/apollographql/apollo-client/commit/92ad4097e5c83e0a780ede20db34e9e63fb98e8b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings for `addTypename` in `InMemoryCache` and `MockedProvider`.
+
+- [#12743](https://github.com/apollographql/apollo-client/pull/12743) [`92ad409`](https://github.com/apollographql/apollo-client/commit/92ad4097e5c83e0a780ede20db34e9e63fb98e8b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add deprecations and warnings for `canonizeResults`.
+
+- [#12751](https://github.com/apollographql/apollo-client/pull/12751) [`567cad8`](https://github.com/apollographql/apollo-client/commit/567cad8fcc30ac3b82560abc24970d33f160622e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using a `standby` fetch policy with `client.query`.
+
+### Patch Changes
+
+- [#12750](https://github.com/apollographql/apollo-client/pull/12750) [`ecf3de1`](https://github.com/apollographql/apollo-client/commit/ecf3de1cc9a2cf3aaeba0c945909324b9e4b478a) Thanks [@phryneas](https://github.com/phryneas)! - Prevent field policies from overwriting/merging into supertype field policies.
+
 ## 3.14.0-rc.0
 
 ### Minor Changes

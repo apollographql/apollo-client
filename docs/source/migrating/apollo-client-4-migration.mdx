@@ -169,7 +169,7 @@ const link = new HttpLink({ uri: "https://example.com/graphql" });// [!code ++]
 
 <Note>
 
-If you use the `setContext` link, you will need to migrate to the `SetContextLink` class manually because the order of arguments has changed. This is not automatically performed by the codemod.
+If you use the `setContext` link, you will need to manually migrate to the `SetContextLink` class because the order of arguments has changed. This is not automatically performed by the codemod.
 
 </Note>
 
@@ -738,7 +738,7 @@ For a list of all removed imports and recommended actions, see [node_modules/@ap
 
 ## Update the initialization of `ApolloClient`
 
-Several of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section provides instruction on migrating to the new options when initializing your `ApolloClient` instance.
+Several of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section provides instructions on migrating to the new options when initializing your `ApolloClient` instance.
 
 ### Explicitly provide `HttpLink`
 
@@ -879,7 +879,7 @@ const client = new ApolloClient({
 });
 ```
 
-To provide accurate TypeScript types, you will also need tell Apollo Client to use the types associated with the `Defer20220824Handler` in order to provide accurate types for incremental chunks, used with the `ApolloLink.Result` type. This ensures that you properly handle incremental results in your custom links that might access the result directly.
+To provide accurate TypeScript types, you will also need to tell Apollo Client to use the types associated with the `Defer20220824Handler` in order to provide accurate types for incremental chunks, used with the `ApolloLink.Result` type. This ensures that you properly handle incremental results in your custom links that might access the result directly.
 
 Create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
 
@@ -975,7 +975,7 @@ observable.subscribe({
 });
 ```
 
-### Tracking of active and active queries
+### Tracking of active and inactive queries
 
 In Apollo Client 3, `ObservableQuery` instances were tracked by the client from the moment they were created until they were unsubscribed from. In cases where the `ObservableQuery` instance was never subscribed to, this caused memory leaks and unintended behavior with APIs such as `refetchQueries` when refetching active queries, because the `ObservableQuery` instances were never properly cleaned up.
 
@@ -984,7 +984,7 @@ In Apollo Client 4, `ObservableQuery` instances are now tracked by the client on
 As a result of this change, the definitions for _active_ and _inactive_ queries have changed.
 
 - A query is considered active if it is observed by at least one subscriber and not in standby
-- An query is considered inactive if it is observed by at least one subscriber and in standby
+- A query is considered inactive if it is observed by at least one subscriber and in standby
 - All other `ObservableQuery` instances that don't have at least one subscriber are not tracked or accessible through the client
 
 <Note>
@@ -1324,7 +1324,7 @@ function MyComponent() {
 }
 ```
 
-We recommend instead migrating to `useQuery` instead which executes the query during render automatically.
+We recommend instead migrating to `useQuery` which executes the query during render automatically.
 
 ```ts
 function MyComponent() {
@@ -1494,7 +1494,7 @@ Use the hooks exported from Apollo Client directly with `TypedDocumentNode` inst
 
 The GraphQL Codegen team has created a codemod that helps you migrate away from generated hooks. Learn more about migrating your code using the new codemod by watching the [tutorial video](https://www.youtube.com/watch?v=GGmt0hvnQNU).<br/><br/>
 
-Note that that codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend that you use a manual codegen configuration over the client preset as shown in the video because the client preset includes some features that are incompatible with Apollo Client. If you choose to use the client preset, see our [recommended configuration for the client preset](../development-testing/graphql-codegen#a-note-about-the-client-preset). In the long term, consider using the plugins directly with our [recommended starter configuration](../development-testing/graphql-codegen#recommended-starter-configuration).
+Note that the codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend that you use a manual codegen configuration over the client preset as shown in the video because the client preset includes some features that are incompatible with Apollo Client. If you choose to use the client preset, see our [recommended configuration for the client preset](../development-testing/graphql-codegen#a-note-about-the-client-preset). In the long term, consider using the plugins directly with our [recommended starter configuration](../development-testing/graphql-codegen#recommended-starter-configuration).
 
 </Note>
 
@@ -1554,7 +1554,7 @@ new ApolloClient({ // [!code ++]
 
 ### New class-based links
 
-All links are now available as classes. The old link creator functions are still provided, but are now are deprecated and will be removed in a future major version.
+All links are now available as classes. The old link creator functions are still provided, but are now deprecated and will be removed in a future major version.
 
 | Old link creator              | New link class                    |
 | ----------------------------- | --------------------------------- |
@@ -1689,7 +1689,7 @@ If the error thrown in the link chain is not an error-like object, it will be wr
 
 #### `operationName` as `undefined` for anonymous queries
 
-The `operationName` is now set to `undefined` when executing an anonymous query. Anonymous queries were previously was set as an empty string.
+The `operationName` is now set to `undefined` when executing an anonymous query. Anonymous queries were previously set as an empty string.
 
 If you use string methods on the `operationName`, you may need to check for `undefined` first.
 
@@ -1798,7 +1798,7 @@ This can affect custom link implementations that rely on the `Observable` API.
 
 If you were previously using the `map`, `filter`, `reduce`, `flatMap` or `concat` methods on the `Observable` instances, you will need to update your code to use the `rxjs` equivalents.
 
-Additionally, if you were using `Obervable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
+Additionally, if you were using `Observable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
 
 ```ts disableCopy=true
 import { of, from, map } from "rxjs";// [!code ++]
@@ -1869,7 +1869,7 @@ Now that local resolvers are part of the `LocalState` class, the following resol
 - `getResolvers`
 - `setResolvers`
 
-If you add resolvers after the initialization of the client, you may continue do so with your `LocalState` instance using the `addResolvers` method.
+If you add resolvers after the initialization of the client, you may continue to do so with your `LocalState` instance using the `addResolvers` method.
 
 ```ts
 const client = new ApolloClient({
@@ -2031,7 +2031,7 @@ if (someCondition) {
 }
 ```
 
-The exception is when running local resolvers to get values for exported variables for fields marked with the `@export` directive. For this case, You may return `undefined` to omit the variable from the outgoing request. If you need to know whether to return `undefined` or `null`, use the `phase` property provided to the context argument.
+The exception is when running local resolvers to get values for exported variables for fields marked with the `@export` directive. For this case, you may return `undefined` to omit the variable from the outgoing request. If you need to know whether to return `undefined` or `null`, use the `phase` property provided to the context argument.
 
 ```ts
 new LocalState({
@@ -2081,7 +2081,7 @@ Apollo Client 4 adds additional validation to fields and resolvers that use the 
 
 ##### Variable definitions
 
-Each `@export` field is now checked to ensure it can be associated to a variable definition in the GraphQL document. If the `@export` directive doesn't include the `as` argument, or the GraphQL document doesn't define a variable definition that matches the name provided to the `as` argument, a `LocalStateError` is thrown.
+Each `@export` field is now checked to ensure it can be associated with a variable definition in the GraphQL document. If the `@export` directive doesn't include the `as` argument, or the GraphQL document doesn't define a variable definition that matches the name provided to the `as` argument, a `LocalStateError` is thrown.
 
 You will need to ensure the GraphQL document includes variable definitions for all `@export` fields.
 
@@ -2175,7 +2175,7 @@ A lot of utilities that were previously part of the `@apollo/client/utilities` a
 
 #### Default "realistic" `delay`
 
-If no `delay` is specified in mocks, MockLink now default to the `realisticDelay` function, which uses a random delay between 20 and 50ms to ensure tests handle loading states.
+If no `delay` is specified in mocks, MockLink now defaults to the `realisticDelay` function, which uses a random delay between 20 and 50ms to ensure tests handle loading states.
 
 If you want to restore the previous behavior of "no delay", you can set it via
 

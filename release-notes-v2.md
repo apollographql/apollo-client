@@ -35,12 +35,7 @@ Apollo Client 4.0 completely reimagines error handling for better clarity and de
 
 ### ⚡ Modern Observable Implementation
 
-Apollo Client 4.0 migrates from `zen-observable` to **RxJS**, providing:
-
-- Industry-standard Observable implementation
-- Rich operator ecosystem
-- Better debugging tools
-- Improved performance
+Apollo Client 4.0 migrates from `zen-observable` to **RxJS**, providing the industry-standard Observable implementation backed by a rich ecosystem of utilities.
 
 ## Major Features
 

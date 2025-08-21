@@ -1009,6 +1009,12 @@ useQuery(QUERY, {
 
 Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.
 
+<Tip>
+
+We recommend reading the [Error handling](../data/error-handling) guide which lists all of the available error classes and provides details on how to check for specific kinds of errors. The following sections only detail the necessary requirements to migrate your existing code but does not cover general error handling.
+
+</Tip>
+
 ### Unification of the `error` property
 
 In Apollo Client 3, many result types returned both the `error` and `errors` properties. This includes the result emitted from `ObservableQuery` and some React hooks such as `useQuery`. This made it difficult to determine which property should be used to determine the source of the error. This was further complicated by the fact that the `errors` property was set only when `errorPolicy` was `all`!

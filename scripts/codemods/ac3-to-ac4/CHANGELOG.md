@@ -1,5 +1,11 @@
 # @apollo/client-codemod-migrate-3-to-4
 
+## 1.0.0-rc.4
+
+### Patch Changes
+
+- [#12858](https://github.com/apollographql/apollo-client/pull/12858) [`6440e8b`](https://github.com/apollographql/apollo-client/commit/6440e8bc6c42ed2f97ccabac987e10f3c81d90b4) Thanks [@phryneas](https://github.com/phryneas)! - adjust the `clientSetup` codemod so that it removes the `TCacheShape` type argument from all `ApolloClient` usages (types and constructor calls).
+
 ## 1.0.0-rc.3
 
 ### Major Changes

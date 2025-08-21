@@ -1120,7 +1120,7 @@ console.log(error.message);
 
 #### Non-error-like types
 
-All other object types (e.g. symbols, arrays, etc.) or primitives thrown as errors are wrapped in an `UnconventionalError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) property set to the original object. Additionally, `UnconventionalError` sets its `name` to `UnconventionalError` and its `message` to `"An error of unexpected shape occured."`.
+All other object types (e.g. symbols, arrays, etc.) or primitives thrown as errors are wrapped in an `UnconventionalError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) property set to the original object. Additionally, `UnconventionalError` sets its `name` to `UnconventionalError` and its `message` to `"An error of unexpected shape occurred."`.
 
 ```ts
 const client = new ApolloClient({
@@ -1137,7 +1137,7 @@ const client = new ApolloClient({
 const { error } = useQuery(query);
 
 // `error` is an `UnconventionalError` instance
-console.log(error.message); // => "An error of unexpected shape occured."
+console.log(error.message); // => "An error of unexpected shape occurred."
 // The `cause` returns the original object that was thrown
 console.log(error.cause); // => { message: "Not a proper error type" }
 ```
@@ -1230,7 +1230,7 @@ When a `ServerError` was thrown, such as when the server returned a non-2xx stat
 
 Apollo Client 4 more strictly adheres to the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/) and does away with the automatic JSON parsing. As such, the `result` property is no longer accessible and is replaced by the `bodyText` property which contains the value of the raw response text.
 
-If you relied on the automatic JSON parsing, you will need to `JSON.parse` the `bodyText` intead.
+If you relied on the automatic JSON parsing, you will need to `JSON.parse` the `bodyText` instead.
 
 ```ts disableCopy=true
 const { error } = useQuery(QUERY);
@@ -1604,7 +1604,7 @@ ApolloLink.split((operation) => check(operation), linkA, linkB);// [!code ++]
 
 ### Updated `concat` behavior
 
-The static `ApolloLink.concat` method and the `ApolloLink.prototype.concat` method now accept a dynamic number of arguments to allow for concatenation with more than one link. This aligns the API with more familiar APIs such as `Array.prototype.concat` which accepts a variable number of arguments and provides more succint code.
+The static `ApolloLink.concat` method and the `ApolloLink.prototype.concat` method now accept a dynamic number of arguments to allow for concatenation with more than one link. This aligns the API with more familiar APIs such as `Array.prototype.concat` which accepts a variable number of arguments and provides more succinct code.
 
 ```ts disableCopy=true
 link1.concat(link2).concat(link3);// [!code --]
@@ -1755,7 +1755,7 @@ new ApolloLink((operation, forward) => {
 
 Apollo Client 3 provided a `getCacheKey` function on the context object to obtain cache IDs. This function has been removed.
 
-Use the `client` property to get access to the `cache.identify` function to identity an object.
+Use the `client` property to get access to the `cache.identify` function to identify an object.
 
 ```ts disableCopy=true
 new ApolloLink((operation, forward) => {
@@ -1817,7 +1817,7 @@ A good way to find the operator you need is to follow the [rxjs operator decisio
 
 The `HttpLink` and `BatchHttpLink` links have been updated to add stricter compatibility with the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/).
 
-This changes means:
+This change means:
 
 - The default `Accept` header is now `application/graphql-response+json,application/json;q=0.9` for all outgoing requests
 - The `application/graphql-response+json` media type is now supported and the client handles the response according to the [`application/graphql-response+json` behavior](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json)
@@ -2177,7 +2177,7 @@ A lot of utilities that were previously part of the `@apollo/client/utilities` a
 
 If no `delay` is specified in mocks, MockLink now default to the `realisticDelay` function, which uses a random delay between 20 and 50ms to ensure tests handle loading states.
 
-If you want to restore the previous behaviour of "no delay", you can set it via
+If you want to restore the previous behavior of "no delay", you can set it via
 
 ```ts
 MockLink.defaultOptions = {
@@ -2209,7 +2209,7 @@ If you are targeting older browsers or special environments, you might need to a
 Previously, you had to set a global `__DEV__` variable to `false` to disable development mode.
 Now, development mode is primarily controlled by the `development` export condition of the `package.json` exports field. Most modern bundlers should now automatically pick correctly between the development and production version of Apollo Client based on your build environment.
 
-If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behaviour, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
+If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behavior, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
 
 ## Other notable breaking changes
 

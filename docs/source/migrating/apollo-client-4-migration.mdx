@@ -1817,7 +1817,7 @@ A good way to find the operator you need is to follow the [rxjs operator decisio
 
 Local state management (using `@client` fields) has been removed from core and is now an opt-in feature. This change helps reduce the bundle size of your application if you don't use local state management features.
 
-To opt-in to use local state management, either by managing `@client` fields with the cache, or with local resolvers, initialize an instance of `LocalState` and provide it as the `localState` option to the `ApolloClient` constructor. Apollo Client will throw an error if a `@client` field is used and `localState` is not provided.
+To opt-in to use local state management with the `@client` directive, initialize an instance of `LocalState` and provide it as the `localState` option to the `ApolloClient` constructor. Apollo Client will throw an error if a `@client` field is used and `localState` is not provided.
 
 ```ts
 import { LocalState } from "@apollo/client/local-state";// [!code ++]
@@ -1842,7 +1842,7 @@ new ApolloClient({
 });
 ```
 
-Now that local resolvers are part of the `LocalState` class, the following resolver methods were removed from `ApolloClient.prototype`:
+Now that local resolvers are part of the `LocalState` class, the following resolver methods were removed from the `ApolloClient` class:
 
 - `addResolvers`
 - `getResolvers`
@@ -1859,7 +1859,7 @@ client.addResolvers(resolvers);// [!code --]
 client.localState.addResolvers(resolvers);// [!code ++]
 ```
 
-Stop using the `getResolvers` and `setResolvers` methods because they have not been ported to the `LocalState` class.
+`getResolvers` and `setResolvers` have been removed without a replacement. Stop using them.
 
 ```ts
 const client = new ApolloClient({
@@ -1872,7 +1872,7 @@ client.setResolvers(resolvers);// [!code --]
 
 #### Resolver context
 
-The context argument (i.e. the 3rd argument) passed to resolver functions has been updated. Apollo Client 3 spread [request `context`](../api/link/introduction#managing-context) and overrode the `client` and `cache` properties.
+The context argument (i.e. the 3rd argument) passed to resolver functions has been updated. Apollo Client 3 spread [request `context`](../api/link/introduction#managing-context) and replaced any passed-in `client` and `cache` properties.
 
 Apollo Client 4 moves the request `context` to the `requestContext` key to avoid name clashes and updates the shape of the object. The context argument is now provided with the following object:
 
@@ -1894,7 +1894,7 @@ If you accessed properties from the request context, you will now need to read t
 ```ts
 new LocalState({
   resolvers: {
-    MyLocalType: {
+    MyType: {
       myLocalField: (parent, args, { someValue, cache }) { // [!code --]
       myLocalField: (parent, args, { requestContext, client }) { // [!code ++]
         const someValue = requestContext.someValue; // [!code ++]
@@ -1999,11 +1999,7 @@ This results in the following result:
 
 And a warning is emitted to the console:
 
-```
-The 'Query.localField' resolver returned `undefined` instead of a value.
-This is likely a bug in the resolver. If you didn't mean to return a
-value, return `null` instead.
-```
+> The 'Query.localField' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.
 
 Instead, the local resolver should return `null` instead.
 
@@ -2021,7 +2017,7 @@ new LocalState({
   resolvers: {
     Query: {
       localField: (parent, args, { phase }) => {
-        // `phase` is "resolve" when resolving the field for the response
+        // `phase` is "resolve" when resolving the field for the response  [!code highlight:4]
         return phase === "resolve" ? null : undefined;
         // `phase` is "exports" when getting variables for `@export` fields.
         return phase === "exports" ? undefined : null;
@@ -2033,13 +2029,19 @@ new LocalState({
 
 #### Enforced `__typename`
 
-`@client` fields are not limited to scalar values and can provide their own selection sets in order to handle data that includes objects and arrays. In these cases, a parent resolver can return the full object needed to satisfy the selection set to avoid the need to specify a local resolver for every sub-field.
+Apollo Client 4 now validates that a `__typename` property is returned from resolvers that return arrays or objects on non-scalar fields. If `__typename` is not included, an error is added to the `errors` array and the field value is set to `null`. This change ensures the object is cached properly to avoid bugs that might otherwise be difficult to track down.
 
-Apollo Client 4 now validates that a valid `__typename` is returned from resolvers that return arrays or objects. If `__typename` is not included, an error is added to the `errors` array and the field value is set to `null`. This change ensures the object is cached properly to avoid bugs that might otherwise be difficult to track down.
-
-If your local resolvers return an object or an array, make sure it includes the `__typename` field.
+If your local resolver returns an object or an array for a non-scalar field, make sure it includes the `__typename` field.
 
 ```ts
+const query = gql`
+  query {
+    localUser @client {
+      id
+    }
+  }
+`;
+
 new LocalState({
   resolvers: {
     Query: {

@@ -1556,9 +1556,9 @@ new ApolloClient({ // [!code ++]
 
 ### New class-based links
 
-All links are now available as classes. While the old function link creators are still around, they are deprecated and will be removed in a future version.
+All links are now available as classes. The old link creator functions are still provided, but are now are deprecated and will be removed in a future major version.
 
-| old link creator              | new link class                    |
+| Old link creator              | New link class                    |
 | ----------------------------- | --------------------------------- |
 | `setContext`                  | `SetContextLink`                  |
 | `onError`                     | `ErrorLink`                       |
@@ -1569,7 +1569,7 @@ All links are now available as classes. While the old function link creators are
 <Caution>
 
 Pay attention when migrating from the old `setContext` creator to the new `SetContextLink` class.
-The arguments to the callback have changed, so you need to swap the order of `prevContext` and `operation`.
+The argument order for the callback function has changed. To migrate, swap the order of the `prevContext` and `operation` arguments.
 
 ```ts disableCopy=true
 import { setContext } from "@apollo/client/link/context"; // [!code --]

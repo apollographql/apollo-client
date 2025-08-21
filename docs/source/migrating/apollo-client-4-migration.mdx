@@ -1604,28 +1604,31 @@ split((operation) => check(operation), linkA, linkB);// [!code --]
 ApolloLink.split((operation) => check(operation), linkA, linkB);// [!code ++]
 ```
 
-### `ApolloLink` usage pattern of `from` and `concat` now aligned with the native `Array` class
+### Updated `concat` behavior
 
-The static `ApolloLink.concat` method is now deprecated.
-Instead, use the static `ApolloLink.from` method.
-
-`ApolloLink.prototype.concat` now accepts a dynamic number of arguments.
-
-This aligns this API with the `Array.from` and `Array.prototype.concat` methods, which should make these methods more familiar to to work with for JavaScript developers.
+The static `ApolloLink.concat` method and the `ApolloLink.prototype.concat` method now accept a dynamic number of arguments to allow for concatenation with more than one link. This aligns the API with more familiar APIs such as `Array.prototype.concat` which accepts a variable number of arguments and provides more succint code.
 
 ```ts disableCopy=true
-import { ApolloLink } from "@apollo/client/link";
-ApolloLink.concat(firstLink, secondLink);// [!code --]
-ApolloLink.from([firstLink, secondLink]);// [!code ++]
-
 link1.concat(link2).concat(link3);// [!code --]
 link1.concat(link2, link3);// [!code ++]
 ```
 
+#### Deprecation of `ApolloLink.concat`
+
+The static `ApolloLink.concat` is now deprecated in favor of `ApolloLink.from`. With the change to allow for a variable number of arguments, `ApolloLink.concat(a, b)` is now an alias for `ApolloLink.from([a, b])` and provides no additional benefit. `ApolloLink.concat` will be removed in a future major version.
+
+```ts disableCopy=true
+import { ApolloLink } from "@apollo/client/link";
+
+ApolloLink.concat(firstLink, secondLink);// [!code --]
+ApolloLink.from([firstLink, secondLink]);// [!code ++]
+```
+
 ### `from`,`concat`,`split` static and instance methods now require `ApolloLink` instances
 
-These methods previously accepted `ApolloLink` instances or operator functions as arguments.
-Now, they only accept `ApolloLink` instances.
+These methods previously accepted `ApolloLink` instances or plain request handler functions as arguments. These APIs have been updated to require `ApolloLink` instances.
+
+To migrate, wrap the request handler functions in an `ApolloLink` instance.
 
 ```ts disableCopy=true
 ApolloLink.from(
@@ -1639,7 +1642,7 @@ ApolloLink.from(
 );
 ```
 
-### ErrorLink argument changes
+### Changes to `ErrorLink`
 
 The `ErrorLink` (previously created with `onError`) now uses a single `error` property instead of separate `graphQLErrors`, `networkError`, and `protocolErrors`.
 

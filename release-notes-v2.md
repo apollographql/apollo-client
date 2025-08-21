@@ -14,6 +14,16 @@ Apollo Client 4.0 separates React functionality from the core library, making `@
 - **Modern Build Target**: Transpiled to target `since 2023, node >= 20, not dead`, leveraging modern JavaScript features for better performance
 - **Improved Tree-Shaking**: Proper `exports` field in package.json enables better dead code elimination
 
+### 💥 Unified Error Handling
+
+Apollo Client 4.0 completely reimagines error handling for better clarity and debugging:
+
+- `ApolloError` removed in favor of specific error classes
+- Unification of errors to a single `error` property
+- Network errors now respect `errorPolicy` settings
+- External errors passed through without wrapping
+- New, more granular error classes with static `.is()` methods for robust type narrowing
+
 ### 🔧 Enhanced TypeScript Support
 
 - **Namespaced Types**: Types are now colocated with their APIs (e.g., `useQuery.Options` instead of `QueryHookOptions`)
@@ -21,7 +31,7 @@ Apollo Client 4.0 separates React functionality from the core library, making `@
 - **Stricter Type Safety**: Required variables are now enforced more consistently throughout the client
 - **New `dataState` Property**: Enables accurate type narrowing of query results
 - **Module Augmentation**: Custom context types via declaration merging instead of fragile generics
-- **Customizable Type Implementations**: Select types can be customized to provide your own type implementation to seamlessly integrate with external tools such as GraphQL Codegen or `gql.tada`
+- **Customizable Type Implementations**: Select types can now be customized to provide your own type implementation to seamlessly integrate with external tools such as GraphQL Codegen or `gql.tada`
 
 ### ⚡ Modern Observable Implementation
 
@@ -334,4 +344,3 @@ npm install @apollo/client graphql rxjs
 ## Acknowledgments
 
 Apollo Client 4.0 represents years of community feedback and contributions. Thank you to all our contributors, early adopters, and the entire GraphQL community for making this release possible.
-

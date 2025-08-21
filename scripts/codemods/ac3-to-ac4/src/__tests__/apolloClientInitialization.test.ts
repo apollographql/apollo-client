@@ -22,7 +22,7 @@ describe("all transforms", () => {
     expect(transform()`
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-export const client = new ApolloClient({
+export const client = new ApolloClient<MyCacheShape>({
   uri: "/graphql",
   credentials: "include",
   headers: {
@@ -51,6 +51,177 @@ export const client = new ApolloClient({
       import { LocalState } from "@apollo/client/local-state";
 
       export const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        ssrForceFetchDelay: 50,
+        ssrMode: true,
+        queryDeduplication: true,
+        defaultOptions: {},
+        defaultContext: {},
+        assumeImmutableResults: true,
+        documentTransform: myDocumentTransform,
+
+        /*
+        Inserted by Apollo Client 3->4 migration codemod.
+        Keep this comment here if you intend to run the codemod again,
+        to avoid changes from being reapplied.
+        Delete this comment once you are done with the migration.
+        @apollo/client-codemod-migrate-3-to-4 applied
+        */
+        dataMasking: true,
+
+        link: new HttpLink({
+          uri: "/graphql",
+          credentials: "include",
+
+          headers: {
+            "x-custom-header": "value",
+          }
+        }),
+
+        clientAwareness: {
+          name: "my-client",
+          version: "1.0.0"
+        },
+
+        localState: new LocalState({
+          resolvers: myResolvers
+        }),
+
+        devtools: {
+          enabled: true
+        },
+
+        /*
+        Inserted by Apollo Client 3->4 migration codemod.
+        If you are not using the \`@defer\` directive in your application,
+        you can safely remove this option.
+        */
+        incrementalHandler: new Defer20220824Handler()
+      })
+
+      /*
+      Start: Inserted by Apollo Client 3->4 migration codemod.
+      Copy the contents of this block into a \`.d.ts\` file in your project
+      to enable data masking types.
+      */
+
+
+      import "@apollo/client";
+      import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+
+      declare module "@apollo/client" {
+        export interface TypeOverrides extends GraphQLCodegenDataMasking.TypeOverrides {}
+      }
+
+      /*
+      End: Inserted by Apollo Client 3->4 migration codemod.
+      */
+
+
+      /*
+      Start: Inserted by Apollo Client 3->4 migration codemod.
+      Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+      If you do not use the \`@defer\` directive in your application, you can safely remove this block.
+      */
+
+
+      import "@apollo/client";
+      import { Defer20220824Handler } from "@apollo/client/incremental";
+
+      declare module "@apollo/client" {
+        export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
+      }
+
+      /*
+      End: Inserted by Apollo Client 3->4 migration codemod.
+      */"
+    `);
+  });
+
+  test("Apollo Client renamed", () => {
+    expect(transform()`
+import { ApolloClient as RenamedApolloClient, SomethingElse as ApolloClient, InMemoryCache } from "@apollo/client";
+
+export const dontTouchThis: ApolloClient<MyCacheShape> = new ApolloClient<MyCacheShape>({
+  uri: "/graphql",
+  credentials: "include",
+  headers: {
+    "x-custom-header": "value",
+  },
+  cache: new InMemoryCache(),
+  ssrForceFetchDelay: 50,
+  ssrMode: true,
+  connectToDevTools: true,
+  queryDeduplication: true,
+  defaultOptions: {},
+  defaultContext: {},
+  assumeImmutableResults: true,
+  resolvers: myResolvers,
+  typeDefs: mySchema,
+  fragmentMatcher: () => true,
+  name: "my-client",
+  version: "1.0.0",
+  documentTransform: myDocumentTransform,
+  dataMasking: true
+  })
+
+  export const transformThis: RenamedApolloClient<MyCacheShape> = new RenamedApolloClient<MyCacheShape>({
+  uri: "/graphql",
+  credentials: "include",
+  headers: {
+    "x-custom-header": "value",
+  },
+  cache: new InMemoryCache(),
+  ssrForceFetchDelay: 50,
+  ssrMode: true,
+  connectToDevTools: true,
+  queryDeduplication: true,
+  defaultOptions: {},
+  defaultContext: {},
+  assumeImmutableResults: true,
+  resolvers: myResolvers,
+  typeDefs: mySchema,
+  fragmentMatcher: () => true,
+  name: "my-client",
+  version: "1.0.0",
+  documentTransform: myDocumentTransform,
+  dataMasking: true
+  })
+    `).toMatchInlineSnapshot(`
+      "import {
+        ApolloClient as RenamedApolloClient,
+        SomethingElse as ApolloClient,
+        InMemoryCache,
+        HttpLink,
+      } from "@apollo/client";
+
+      import { Defer20220824Handler } from "@apollo/client/incremental";
+      import { LocalState } from "@apollo/client/local-state";
+
+      export const dontTouchThis: ApolloClient<MyCacheShape> = new ApolloClient<MyCacheShape>({
+        uri: "/graphql",
+        credentials: "include",
+        headers: {
+          "x-custom-header": "value",
+        },
+        cache: new InMemoryCache(),
+        ssrForceFetchDelay: 50,
+        ssrMode: true,
+        connectToDevTools: true,
+        queryDeduplication: true,
+        defaultOptions: {},
+        defaultContext: {},
+        assumeImmutableResults: true,
+        resolvers: myResolvers,
+        typeDefs: mySchema,
+        fragmentMatcher: () => true,
+        name: "my-client",
+        version: "1.0.0",
+        documentTransform: myDocumentTransform,
+        dataMasking: true
+        })
+
+      export const transformThis: RenamedApolloClient = new RenamedApolloClient({
         cache: new InMemoryCache(),
         ssrForceFetchDelay: 50,
         ssrMode: true,
@@ -890,5 +1061,41 @@ new ApolloClient({
   incrementalHandler: undefined
 })
       `).toMatchInlineSnapshot(`""`);
+  });
+});
+
+describe("removeTypeArguments", () => {
+  test("remove constructor type argument", () => {
+    expect(transform("removeTypeArguments")`
+import { ApolloClient } from "@apollo/client";
+
+new ApolloClient<CacheShape>({
+  cache: new InMemoryCache(),
+  link: someLink,
+})
+      `).toMatchInlineSnapshot(`
+        "import { ApolloClient } from "@apollo/client";
+
+        new ApolloClient({
+          cache: new InMemoryCache(),
+          link: someLink,
+        })"
+      `);
+  });
+
+  test("removes type arguments for usages of `ApolloClient` as a type", () => {
+    expect(transform("removeTypeArguments")`
+import { ApolloClient } from "@apollo/client";
+
+function test(client: ApolloClient<unknown>): ApolloClient<any> {
+  return client;
+}
+    `).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      function test(client: ApolloClient): ApolloClient {
+        return client;
+      }"
+    `);
   });
 });

@@ -9,6 +9,7 @@ import { findImportSpecifiersFor } from "./util/findImportSpecifiersFor.js";
 import { findOrInsertImport } from "./util/findOrInsertImport.js";
 import { findReferences } from "./util/findReferences.js";
 import { getProperty } from "./util/getProperty.js";
+import { monkeyPatchAstTypes } from "./util/monkeyPatchAstTypes.js";
 
 const steps = {
   explicitLinkConstruction,
@@ -20,7 +21,7 @@ const steps = {
   incrementalHandler,
 } satisfies Record<string, (options: StepOptions) => void>;
 
-export type Steps = keyof typeof steps;
+export type Steps = keyof typeof steps | "removeTypeArguments";
 
 const apolloClientInitializationTransform: j.Transform = function transform(
   file,
@@ -31,6 +32,8 @@ const apolloClientInitializationTransform: j.Transform = function transform(
   const source = j(file.source);
   const context = { j, source };
 
+  monkeyPatchAstTypes(j);
+
   let modified = false;
   function onModified() {
     modified = true;
@@ -38,7 +41,7 @@ const apolloClientInitializationTransform: j.Transform = function transform(
   const enabledStepNames =
     Array.isArray(options.apolloClientInitialization) ?
       options.apolloClientInitialization
-    : Object.keys(steps);
+    : Object.keys(steps).concat("removeTypeArguments");
   const enabledSteps = Object.fromEntries(
     Object.entries(steps).filter(([name]) => enabledStepNames.includes(name))
   );
@@ -58,6 +61,31 @@ const apolloClientInitializationTransform: j.Transform = function transform(
     };
     for (const step of Object.values(enabledSteps)) {
       step(options);
+    }
+  }
+
+  // removes `TCacheShape` parameter from all `ApolloClient` usages, not just constructor calls
+  if (enabledStepNames.includes("removeTypeArguments")) {
+    for (const specPath of findImportSpecifiersFor({
+      description: apolloClientDescription,
+      context,
+    }).paths()) {
+      for (const refParent of findReferences({
+        context,
+        identifier: (specPath.node.local || specPath.node.imported).name + "",
+        scope: specPath.scope,
+      })
+        .map((refPath) => {
+          const parentPath = refPath.parentPath;
+          return j.ImportSpecifier.check(parentPath.node) ? null : parentPath;
+        })
+        .paths()) {
+        const typeParameters = refParent.get("typeParameters");
+        if (typeParameters?.node?.params?.length) {
+          modified = true;
+          typeParameters.prune();
+        }
+      }
     }
   }
 
@@ -456,11 +484,7 @@ function* apolloClientConstructions({
   context: UtilContext;
 }): Generator<ConstructorCall> {
   for (const specPath of findImportSpecifiersFor({
-    description: {
-      module: "@apollo/client",
-      identifier: "ApolloClient",
-      alternativeModules: ["@apollo/client/core"],
-    },
+    description: apolloClientDescription,
     compatibleWith: "value",
     context,
   }).paths()) {
@@ -488,3 +512,16 @@ function* apolloClientConstructions({
 const CODEMOD_MARKER = `@apollo/client-codemod-migrate-3-to-4`;
 const CODEMOD_MARKER_REGEX = (keyword: string) =>
   new RegExp(`^\\s*(?:[*]?\\s*)${CODEMOD_MARKER} ${keyword}\\s*$`, "m");
+
+const apolloClientDescription = {
+  module: "@apollo/client",
+  identifier: "ApolloClient",
+  alternativeModules: [
+    "@apollo/client/core",
+    "@apollo/client-react-streaming",
+    "@apollo/experimental-nextjs-app-support",
+    "@apollo/client-integration-nextjs",
+    "@apollo/client-integration-react-router",
+    "@apollo/client-integration-tanstack-start",
+  ],
+};

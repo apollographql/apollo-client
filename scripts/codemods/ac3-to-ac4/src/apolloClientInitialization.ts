@@ -459,7 +459,14 @@ function* apolloClientConstructions({
     description: {
       module: "@apollo/client",
       identifier: "ApolloClient",
-      alternativeModules: ["@apollo/client/core"],
+      alternativeModules: [
+        "@apollo/client/core",
+        "@apollo/client-react-streaming",
+        "@apollo/experimental-nextjs-app-support",
+        "@apollo/client-integration-nextjs",
+        "@apollo/client-integration-react-router",
+        "@apollo/client-integration-tanstack-start",
+      ],
     },
     compatibleWith: "value",
     context,

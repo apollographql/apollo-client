@@ -1685,18 +1685,40 @@ If the error thrown in the link chain is not an error-like object, it will be wr
 
 </Note>
 
-### `ApolloLink` operation and context changes
+### Changes to `operation`
 
-The `operation` object passed to the `ApolloLink` methods has changed.
+#### `operationName` as `undefined` for anonymous queries
 
-- the `cache` property has been removed
-- instead, the `client` property is now available, which contains the `ApolloClient` instance
-- you can now access the cache instance via `operation.client.cache`
-- `operationName` is now a string if the operation has a name, or `undefined` if it does not
-- a new property `operationType` has been added, which can be used to more easily determine if an operation is a `"query"`, `"mutation"` or `"subscription"`.
-- the `context` property returned by `operation.getContext()` is now typed as `ReadOnly` to prevent accidental mutations that might not propagate correctly
-- the `context` type can be extended by declaration merging to allow for custom properties to align with your links.
-  For example, to make your context type-safe for usage with `HttpLink`, place this snippet in a `.d.ts` file in your project:
+The `operationName` is now set to `undefined` when executing an anonymous query. Anonymous queries were previously was set as an empty string.
+
+If you use string methods on the `operationName`, you may need to check for `undefined` first.
+
+#### New `operation.operationType` property
+
+In some cases, you might have needed to determine the GraphQL operation type of the request. This is common when using `ApolloLink.split` to route subscription operations to a WebSocket-based link.
+
+A new `operationType` property has been introduced to reduce the boilerplate needed to determine the operation type of the GraphQL document.
+
+```ts disableCopy=true
+import { getMainDefinition } from "@apollo/client";// [!code --]
+import { OperationTypeNode } from "graphql";// [!code ++]
+
+new ApolloLink((operation, forward) => {
+  const definition = getMainDefinition(query);// [!code --:4]
+  const isSubscription =
+    definition.kind === "OperationDefinition" &&
+    definition.operation === "subscription";
+
+  const isSubscription =// [!code ++:2]
+    operation.operationType === OperationTypeNode.SUBSCRIPTION;
+});
+```
+
+#### Type safety
+
+The `context` type can be extended by using declaration merging to allow you to define custom properties used by your links.
+
+For example, to make your context type-safe for usage with `HttpLink`, place this snippet in a `.d.ts` file in your project:
 
 ```ts title="apollo-client.d.ts"
 import { HttpLink } from "@apollo/client";
@@ -1704,6 +1726,42 @@ import { HttpLink } from "@apollo/client";
 declare module "@apollo/client" {
   interface DefaultContext extends HttpLink.ContextOptions {}
 }
+```
+
+For more information on how to setup context types, see the [TypeScript](../data/typescript#defining-context-types) guide.
+
+### Changes to `operation.getContext`
+
+#### Readonly context
+
+The `context` object returned by `operation.getContext()` is now frozen and `Readonly`. This prevents mutations to the context object that aren't propagated to downstream links and could cause subtle bugs.
+
+To make changes to context, use `operation.setContext()`.
+
+#### Removal of the `cache` property
+
+Apollo Client 3 provided a reference to the cache on the context object for use with links via the `cache` property. This property has been removed and replaced with a `client` property on the `operation` which references the `client` instance that initiated the request.
+
+Access the `cache` through the `client` property instead.
+
+```ts disableCopy=true
+new ApolloLink((operation, forward) => {
+  const cache = operation.getContext().cache;// [!code --]
+  const cache = operation.client.cache;// [!code ++]
+});
+```
+
+#### Removal of the `getCacheKey` function
+
+Apollo Client 3 provided a `getCacheKey` function on the context object to obtain cache IDs. This function has been removed.
+
+Use the `client` property to get access to the `cache.identify` function to identity an object.
+
+```ts disableCopy=true
+new ApolloLink((operation, forward) => {
+  const cacheID = operation.getContext().getCacheKey(obj);// [!code --]
+  const cacheID = operation.client.cache.identify(obj);// [!code ++]
+});
 ```
 
 ### `ApolloLink.execute` and `execute` method changes

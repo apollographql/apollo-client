@@ -1118,7 +1118,7 @@ const { error } = useQuery(query);
 console.log(error.message);
 ```
 
-#### Non-error types
+#### Non-error-like types
 
 All other object types (e.g. symbols, arrays, etc.) or primitives thrown as errors are wrapped in an `UnconventionalError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) property set to the original object. Additionally, `UnconventionalError` sets its `name` to `UnconventionalError` and its `message` to `"An error of unexpected shape occured."`.
 

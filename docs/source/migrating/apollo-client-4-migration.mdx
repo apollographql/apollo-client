@@ -1144,28 +1144,54 @@ console.log(error.message); // => "An error of unexpected shape occured."
 console.log(error.cause); // => { message: "Not a proper error type" }
 ```
 
-#### X
+### Network errors adhere to the `errorPolicy`
 
-Apollo Client also provides more granular error classes for errors thrown by the client.
+Apollo Client 3 always treated network errors as if the `errorPolicy` was set to `none`. This meant network errors were always thrown even if a different `errorPolicy` was specified.
 
-For a more comprehensive look at all of the available error classes and how to check for specific kinds of errors, read the [Error handling](../data/error-handling) guide.
+Apollo Client 4 unifies the behavior of network errors and GraphQL errors so that network errors now adhere to the `errorPolicy`. Network errors now resolve promises when the `errorPolicy` is set to anything other than `none`.
 
-### Network errors now adhere to the `errorPolicy`
+#### `errorPolicy`: `all`
+
+The promise is resolved. The error is accessible on the `error` property.
+
+```ts disableCopy=true
+const { data, error } = await client.query({ query, errorPolicy: "all" });
+
+console.log(data); // => undefined
+console.log(error); // => new Error("...")
+```
+
+<Note>
+
+Network errors always set `data` to `undefined`.
+
+</Note>
+
+#### `errorPolicy`: `ignore`
+
+The promise is resolved and the error is ignored.
+
+```ts
+const { data, error } = await client.query({ query, errorPolicy: "ignore" });
+
+console.log(data); // => undefined
+console.log(error); // => undefined
+```
+
+<Note>
+
+`data` is always set to `undefined` because a GraphQL result wasn't returned.
+
+</Note>
 
 ### TODO
 
 In Apollo Client 4,
 
-- external errors are passed through if they are error-like objects (any object with a `message` and `name` property).
-- non-error-like objects are wrapped in a `UnconventionalError` object, with `name` of `UnconventionalError`, `message` of `"An error of unexpected shape occurred."` and the `cause` property pointing at the originally thrown value.
-- GraphQL errors are wrapped in a `CombinedGraphQLErrors` object
 - a few other error classes have been added to represent specific error cases, such as `ServerParseError`, and `ServerError`.
 - the `errors` property that was present next to the `error` property on some interfaces like `ApolloQueryResult` (returned by `ApollClient.query` and emitted by `ObservableQuery`) or `QueryResult` (returned by `useQuery`) has been removed. Instead, access these errors through the `error` property, which is now an instance of `CombinedGraphQLErrors` if there are any GraphQL errors.
 
-You can read up on all available error classes and how to handle them in the [Error Handling](../react/data/error-handling) documentation and the API reference "Errors" section.
-
 Additionally, previously errors from the link chain were handled differently than GraphQL errors.
-In Apollo Client 4, all errors are handled in the same way, so you can use `errorPolicy` to control how all kinds of error are handled, not only GraphQL errors.
 
 ### Core-specific changes
 

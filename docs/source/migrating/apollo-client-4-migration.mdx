@@ -1813,6 +1813,27 @@ observable.pipe(map((x) => x * 2));// [!code ++]
 
 A good way to find the operator you need is to follow the [rxjs operator decision tree](https://rxjs.dev/operator-decision-tree).
 
+## GraphQL over HTTP spec compatibility
+
+The `HttpLink` and `BatchHttpLink` links have been updated to add stricter compatibility with the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/).
+
+This changes means:
+
+- The default `Accept` header is now `application/graphql-response+json,application/json;q=0.9` for all outgoing requests
+- The `application/graphql-response+json` media type is now supported and the client handles the response according to the [`application/graphql-response+json` behavior](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json)
+- The `application/json` media type behaves according to the [`application/json` behavior](https://graphql.github.io/graphql-over-http/draft/#sec-application-json)
+
+The client now does the following when `application/json` media type is returned.
+
+- The client will throw a `ServerError` when the server encodes a `content-type` using `application/json` and returns a non-200 status code
+- The client will now throw a `ServerError` when the server encodes using any other `content-type` and returns a non-200 status code
+
+<Note>
+
+If you use a testing utility to mock requests in your test, you may experience different behavior than production if your testing utility responds as `application/json` but your production server responds as `application/graphql-response+json`. If a `content-type` header is not set, the client interprets the response as `application/json` by default.
+
+</Note>
+
 ## Local state changes
 
 Local state management (using `@client` fields) has been removed from core and is now an opt-in feature. This change helps reduce the bundle size of your application if you don't use local state management features.

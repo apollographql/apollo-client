@@ -1,0 +1,2218 @@
+---
+title: Migrating to Apollo Client 4.0
+---
+
+This article walks you through migrating your application to Apollo Client 4.0 from a previous installation of Apollo Client 3.14.
+
+<Note>
+
+If you are migrating from older versions of Apollo Client 3, we generally recommend updating to Apollo Client 3.14 first.
+Apollo Client 3.14 introduces many deprecations and warnings that will help you prepare your application for a smooth migration to Apollo Client 4.0.
+
+</Note>
+
+## What’s new in 4.0
+
+1. Framework & Bundle Improvements
+
+- Framework-agnostic core with React exports moved to `@apollo/client/react`
+- Better ESM support with `exports` field in `package.json`
+- Observable implementation now uses `rxjs` instead of `zen-observable`
+- More features are opt-in to reduce bundle size when not used
+
+2. Enhanced Developer Experience
+
+- TypeScript: Stricter variable requirements, more precise return types, namespaced types, and customizable core types
+- Error Handling: Unified error property, granular error classes, and consistent errorPolicy behavior for all error types
+
+For a full list of changes, see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
+
+## Installation
+
+<Caution>
+
+Apollo Client 4.0 is a major-version release that includes breaking changes. If you are updating an existing application to use Apollo Client 4.0, see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md) for details about these changes.
+
+</Caution>
+
+Install Apollo Client 4 along with its peer dependencies with the following command:
+
+```sh showLineNumbers=false
+npm install @apollo/client graphql rxjs
+```
+
+<Note>
+
+`rxjs` is a new peer dependency with Apollo Client 4.0.
+
+</Note>
+
+## Recommended migration approach
+
+We recommend following this order to help make your migration as smooth as possible.
+
+### Stage 1: Automated updates
+
+[Run the codemod](#codemod) first to handle import changes automatically.
+
+You can use the TypeScript-specific codemod or run specific modifications if you prefer a gradual approach.
+
+If you prefer a manual approach, you can still [update your imports](#updating-imports) manually.
+
+### Stage 2: Required setup changes
+
+The Apollo Client initialization has changed. Review the [new initialization options](#update-the-initialization-of-apolloclient) and update accordingly.
+
+If you use `@defer`, you need to [enable incremental delivery](#enable-incremental-delivery-defer).
+
+If you use data masking, you need to [configure the data masking types](#enable-data-masking-types).
+
+### Stage 3: Changes that may require refactoring
+
+These changes may require code refactoring depending on your usage.
+
+#### Changes affecting most users:
+
+- **[Core API changes](#core-api-changes)** - Query behavior changes
+- **[Error handling updates](#new-error-handling)** - New error classes and patterns
+- **[TypeScript improvements](#typescript-changes)** - New type locations and patterns
+
+#### Changes affecting React users:
+
+- **[React hook changes](#for-react-users)** - `useLazyQuery`, `useMutation`, `useQuery` updates
+
+#### Changes affecting fewer users:
+
+- **[Link API changes](#link-api-changes)** - If you use custom links
+- **[Local state changes](#local-state-changes)** - If you use `@client` directives
+- **[Testing changes](#testing-related-changes)** - MockedProvider updates
+- **[Bundling changes](#bundling-changes)** - New export patterns and transpilation
+- **[Development mode changes](#development-mode-changes)** - Automatic detection
+
+## Codemod
+
+To ease the migration process, we have provided a codemod that automatically updates your codebase.
+
+<Note>
+
+The codemod doesn't update your code with every breaking change. We recommend reading through the full migration guide for any additional changes that need refactoring.
+
+</Note>
+
+This codemod runs modifications in the following order:
+
+<ol><li>
+
+`legacyEntrypoints` step:
+
+<ul><li>
+
+Updates CommonJS import statements using the `.cjs` extension to their associated entry point
+
+```ts disableCopy=true
+import { ApolloClient } from "@apollo/client/main.cjs";// [!code --]
+import { ApolloClient } from "@apollo/client";// [!code ++]
+```
+
+</li><li>
+
+Updates ESM import statements using the `.js` extension to their associated entry point
+
+```ts disableCopy=true
+import { ApolloClient } from "@apollo/client/index.js";// [!code --]
+import { ApolloClient } from "@apollo/client";// [!code ++]
+```
+
+</li></ul>
+
+</li><li>
+
+`imports` step:
+
+<ul><li>
+
+Updates imports that have moved around
+
+```ts disableCopy=true
+import { useQuery } from "@apollo/client";// [!code --]
+import { useQuery } from "@apollo/client/react";// [!code ++]
+```
+
+</li><li>
+
+Updates type references that have moved into namespaces.
+
+```ts disableCopy=true
+import { FetchResult } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
+// ...
+fn<FetchResult>();// [!code --]
+fn<ApolloLink.Result>();// [!code ++]
+```
+
+</li></ul>
+</li><li>
+
+`links` step:
+
+<ul><li>
+
+Updates the usage of Apollo-provided links to their associated class implementation.
+
+```ts disableCopy=true
+import { createHttpLink } from "@apollo/client";// [!code --]
+import { HttpLink } from "@apollo/client/link/http";// [!code ++]
+// ...
+const link = createHttpLink({ uri: "https://example.com/graphql" });// [!code --]
+const link = new HttpLink({ uri: "https://example.com/graphql" });// [!code ++]
+```
+
+<Note>
+
+If you use the `setContext` link, you will need to manually migrate to the `SetContextLink` class because the order of arguments has changed. This is not automatically performed by the codemod.
+
+</Note>
+
+</li><li>
+
+Updates the usage of `from`, `split` and `concat` functions from `@apollo/client/link` to use the static methods on the `ApolloLink` class. For example:
+
+```ts disableCopy=true
+import { from } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
+// ...
+const link = from([a, b, c]);// [!code --]
+const link = ApolloLink.from([a, b, c]);// [!code ++]
+```
+
+</li></ul>
+</li><li>
+
+`removals` step:
+
+<ul><li>
+
+Updates exports removed from Apollo Client to a special `@apollo/client/v4-migration` entrypoint. This is a type-only entrypoint that contains doc blocks with migration instructions for each removed item.
+
+```ts disableCopy=true
+import { Concast } from "@apollo/client";// [!code --]
+import { Concast } from "@apollo/client/v4-migration";// [!code ++]
+```
+
+</li></ul>
+
+<Note>
+
+Any runtime values exported from `@apollo/client/v4-migration` will throw an error at runtime since their implementations do not exist.
+
+</Note>
+
+</li><li>
+
+`clientSetup` step:
+
+<ul><li>
+
+Moves `uri`, `headers` and `credentials` to the `link` option and creates a new `HttpLink` instance
+
+```ts disableCopy=true
+import { HttpLink } from "@apollo/client"; // [!code ++]
+
+new ApolloClient({
+  uri: "/graphql", // [!code --:5]
+  credentials: "include",
+  headers: {
+    "x-custom-header"
+  },
+  link: new HttpLink({ // [!code ++:6]
+    uri: "/graphql",
+    credentials: "include",
+    headers: {
+      "x-custom-header"
+    },
+  })
+})
+```
+
+</li><li>
+
+Moves `name` and `version` into a `clientAwareness` option
+
+```ts disableCopy=true
+new ApolloClient({
+  name: "my-client",// [!code --:2]
+  version: "1.0.0",
+  clientAwareness: {// [!code ++:4]
+    name: "my-client",
+    version: "1.0.0",
+  },
+});
+```
+
+</li><li>
+
+Adds a `localState` option with a new `LocalState` instance, moves the `resolvers` to `LocalState`, and removes the `typeDefs` and `fragmentMatcher` options
+
+```ts disableCopy=true
+import { LocalState } from "@apollo/client/local-state";// [!code ++]
+
+new ApolloClient({
+  typeDefs,// [!code --]
+  fragmentMatcher: () => true,// [!code --]
+  resolvers: {// [!code --:3]
+    /* ... */
+  },
+  localState: new LocalState({// [!code ++:5]
+    resolvers: {
+      /* ... */
+    },
+  }),
+});
+```
+
+</li><li>
+
+Updates the `connectToDevTools` option to `devtools.enabled`
+
+```ts disableCopy=true
+new ApolloClient({
+  connectToDevTools: true,// [!code --]
+  devtools: {// [!code ++:3]
+    enabled: true,
+  },
+});
+```
+
+</li><li>
+
+Renames `disableNetworkFetches` to `prioritizeCacheValues`
+
+```ts disableCopy=true
+new ApolloClient({
+  disableNetworkFetches: true,// [!code --]
+  prioritizeCacheValues: true,// [!code ++]
+});
+```
+
+</li><li>
+
+Adds a template for global type augmentation to re-enable data masking types when the `dataMasking` option is set to `true`
+
+```ts disableCopy=true
+new ApolloClient({
+  // [!code ++:8]
+  /*
+  Inserted by Apollo Client 3->4 migration codemod.
+  Keep this comment here if you intend to run the codemod again,
+  to avoid changes from being reapplied.
+  Delete this comment once you are done with the migration.
+  @apollo/client-codemod-migrate-3-to-4 applied
+  */
+  dataMasking: true,
+});
+
+// [!code ++:15]
+/*
+Start: Inserted by Apollo Client 3->4 migration codemod.
+Copy the contents of this block into a \`.d.ts\` file in your project
+to enable data masking types.
+*/
+import "@apollo/client";
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";
+declare module "@apollo/client" {
+  export interface TypeOverrides
+    extends GraphQLCodegenDataMasking.TypeOverrides {}
+}
+/*
+End: Inserted by Apollo Client 3->4 migration codemod.
+*/
+```
+
+</li><li>
+
+Adds the `incrementalHandler` option and adds a template for global type augmentation to accordingly type network responses in custom links
+
+```ts disableCopy=true
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code ++]
+
+new ApolloClient({
+  // [!code ++:7]
+  /*
+  If you are not using the \`@defer\` directive in your application,
+  Inserted by Apollo Client 3->4 migration codemod.
+  you can safely remove this option.
+  */
+  incrementalHandler: new Defer20220824Handler(),
+});
+// [!code ++:14]
+/*
+Start: Inserted by Apollo Client 3->4 migration codemod.
+Copy the contents of this block into a \`.d.ts\` file in your project to enable correct response types in your custom links.
+If you do not use the \`@defer\` directive in your application, you can safely remove this block.
+*/
+import "@apollo/client";
+import { Defer20220824Handler } from "@apollo/client/incremental";
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}
+}
+/*
+End: Inserted by Apollo Client 3->4 migration codemod.
+*/
+```
+
+</li></ul>
+
+</li></ol>
+
+### Running the codemod
+
+To run the codemod, use the following command:
+
+```sh showLineNumbers=false
+npx @apollo/client-codemod-migrate-3-to-4 src
+```
+
+<Note>
+
+This command behaves similarly to [`jscodeshift`](https://github.com/facebook/jscodeshift) with a preselected codemod.
+
+</Note>
+
+For more details on the available options, run the command using the `--help` option.
+
+```sh showLineNumbers=false
+npx @apollo/client-codemod-migrate-3-to-4 --help
+```
+
+### Using the Codemod with TypeScript
+
+If you have a TypeScript project, we recommend running the codemod against `.ts` and `.tsx` files separately as those have slightly overlapping syntax and might otherwise be misinterpreted by the codemod.
+
+```sh showLineNumbers=false
+npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
+npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
+```
+
+<Note>
+
+This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
+
+</Note>
+
+### Running specific modifications
+
+If you prefer to migrate your application more selectively instead of all at once, you can specify specific modifications using the `--codemod` option. For example, to run only the `imports` and `links` modifications, run the following command:
+
+```sh showLineNumbers=false
+npx @apollo/client-codemod-migrate-3-to-4 --codemod imports --codemod links src
+```
+
+The following codemods are available:
+
+- `clientSetup` - Updates the options provided to the `ApolloClient` constructor to use their new counterparts
+- `legacyEntrypoints` - Renames import statements that target `.js` or `.cjs` imports to their associated entry point (e.g. `@apollo/client/main.cjs` becomes `@apollo/client`)
+- `imports` - Updates import statements that have moved entry points and updates type references that have moved into a namespace.
+- `links` - Updates provided Apollo Links to their class-based alternative (e.g. `createHttpLink()` becomes `new HttpLink()`).
+- `removals` - Updates import statements that contain removed features to a special `@apollo/client/v4-migration` entry point.
+
+## Updating imports
+
+### Move from manual CJS/ESM imports to `exports`
+
+<Note>
+
+This section contains instructions for manually updating imports. If you used the [Codemod](#running-the-codemod) to update your imports, you can safely skip this section.
+
+</Note>
+
+Apollo Client 4 now includes an `exports` field in the package's `package.json` definition. Instead of importing `.js` or `.cjs` files directly (e.g. `@apollo/client/react/index.js`, `@apollo/client/react/react.cjs`, etc.), you now import from the entrypoint instead (e.g. `@apollo/client/react`).
+Your bundler is aware of the different module formats and uses the `exports` field of the package's `package.json` to resolve the right format.
+
+<details>
+<summary><h3 style="display:inline">List of all changed imports</h3><br/>(click to expand)</summary>
+
+The following entry points have been renamed:
+
+| Previous entry point           | New entry point          |
+| ------------------------------ | ------------------------ |
+| `@apollo/client/core`          | `@apollo/client`         |
+| `@apollo/client/link/core`     | `@apollo/client/link`    |
+| `@apollo/client/react/context` | `@apollo/client/react`   |
+| `@apollo/client/react/hooks`   | `@apollo/client/react`   |
+| `@apollo/client/testing/core`  | `@apollo/client/testing` |
+
+The following entry points have been removed:
+
+| Previous entry point                          | Reason                                                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `@apollo/client/react/components`             | The render prop components were already deprecated in Apollo Client 3.x and have been removed in 4.                  |
+| `@apollo/client/react/hoc`                    | The higher order components were already deprecated in Apollo Client 3.x and have been removed in 4.                 |
+| `@apollo/client/react/parser`                 | This module was an implementation detail of the render prop components and HOCs.                                     |
+| `@apollo/client/testing/experimental`         | This is available as [@apollo/graphql-testing-library](https://github.com/apollographql/graphql-testing-library)     |
+| `@apollo/client/utilities/globals`            | This was an implementation detail and has been removed. Some of the exports are now available in other entry points. |
+| `@apollo/client/utilities/subscriptions/urql` | This is supported natively by urql and is no longer included.                                                        |
+
+The following individual imports have been renamed, moved to new entry points and/or moved into namespaces:
+
+<table>
+<thead>
+<tr><th>Previous entry point</th><th>New entry point</th></tr>
+<tr><td>Previous import name</td><td>New import name</td></tr>
+</thead>
+<tbody>
+<tr><th>`@apollo/client`</th><th>(unchanged)</th></tr>
+<tr><td>`ApolloClientOptions`</td><td>`ApolloClient.Options`</td></tr>
+<tr><td>`DefaultOptions`</td><td>`ApolloClient.DefaultOptions`</td></tr>
+<tr><td>`DevtoolsOptions`</td><td>`ApolloClient.DevtoolsOptions`</td></tr>
+<tr><td>`MutateResult`</td><td>`ApolloClient.MutateResult`</td></tr>
+<tr><td>`MutationOptions`</td><td>`ApolloClient.MutateOptions`</td></tr>
+<tr><td>`QueryOptions`</td><td>`ApolloClient.QueryOptions`</td></tr>
+<tr><td>`RefetchQueriesOptions`</td><td>`ApolloClient.RefetchQueriesOptions`</td></tr>
+<tr><td>`RefetchQueriesResult`</td><td>`ApolloClient.RefetchQueriesResult`</td></tr>
+<tr><td>`SubscriptionOptions`</td><td>`ApolloClient.SubscribeOptions`</td></tr>
+<tr><td>`WatchQueryOptions`</td><td>`ApolloClient.WatchQueryOptions`</td></tr>
+<tr><td>`ApolloQueryResult`</td><td>`ObservableQuery.Result`</td></tr>
+<tr><td>`FetchMoreOptions`</td><td>`ObservableQuery.FetchMoreOptions`</td></tr>
+<tr><td>`SubscribeToMoreOptions`</td><td>`ObservableQuery.SubscribeToMoreOptions`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client`</th><th>`@apollo/client/react`</th></tr>
+<tr><td>`ApolloProvider`</td><td>(unchanged)</td></tr>
+<tr><td>`createQueryPreloader`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloContext`</td><td>(unchanged)</td></tr>
+<tr><td>`skipToken`</td><td>(unchanged)</td></tr>
+<tr><td>`useApolloClient`</td><td>(unchanged)</td></tr>
+<tr><td>`useBackgroundQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useFragment`</td><td>(unchanged)</td></tr>
+<tr><td>`useLazyQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useLoadableQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useMutation`</td><td>(unchanged)</td></tr>
+<tr><td>`useQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useQueryRefHandlers`</td><td>(unchanged)</td></tr>
+<tr><td>`useReactiveVar`</td><td>(unchanged)</td></tr>
+<tr><td>`useReadQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`useSubscription`</td><td>(unchanged)</td></tr>
+<tr><td>`useSuspenseFragment`</td><td>(unchanged)</td></tr>
+<tr><td>`useSuspenseQuery`</td><td>(unchanged)</td></tr>
+<tr><td>`ApolloContextValue`</td><td>(unchanged)</td></tr>
+<tr><td>`BackgroundQueryHookFetchPolicy`</td><td>`useBackgroundQuery.FetchPolicy`</td></tr>
+<tr><td>`BackgroundQueryHookOptions`</td><td>`useBackgroundQuery.Options`</td></tr>
+<tr><td>`BaseSubscriptionOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`Context`</td><td>(unchanged)</td></tr>
+<tr><td>`LazyQueryExecFunction`</td><td>`useLazyQuery.ExecFunction`</td></tr>
+<tr><td>`LazyQueryHookExecOptions`</td><td>`useLazyQuery.ExecOptions`</td></tr>
+<tr><td>`LazyQueryHookOptions`</td><td>`useLazyQuery.Options`</td></tr>
+<tr><td>`LazyQueryResult`</td><td>`useLazyQuery.Result`</td></tr>
+<tr><td>`LazyQueryResultTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`LoadableQueryHookFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookOptions`</td><td>`useLoadableQuery.Options`</td></tr>
+<tr><td>`LoadQueryFunction`</td><td>`useLoadableQuery.LoadQueryFunction`</td></tr>
+<tr><td>`MutationFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`MutationFunctionOptions`</td><td>`useMutation.MutationFunctionOptions`</td></tr>
+<tr><td>`MutationHookOptions`</td><td>`useMutation.Options`</td></tr>
+<tr><td>`MutationResult`</td><td>`useMutation.Result`</td></tr>
+<tr><td>`MutationTuple`</td><td>`useMutation.ResultTuple`</td></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`OnDataOptions`</td><td>`useSubscription.OnDataOptions`</td></tr>
+<tr><td>`OnSubscriptionDataOptions`</td><td>`useSubscription.OnSubscriptionDataOptions`</td></tr>
+<tr><td>`PreloadedQueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryFetchPolicy`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`PreloadQueryOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryFunctionOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryHookOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryReference`</td><td>`QueryRef`</td></tr>
+<tr><td>`QueryResult`</td><td>`useQuery.Result`</td></tr>
+<tr><td>`QueryTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`SkipToken`</td><td>(unchanged)</td></tr>
+<tr><td>`SubscriptionDataOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`SubscriptionHookOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`SubscriptionResult`</td><td>`useSubscription.Result`</td></tr>
+<tr><td>`SuspenseQueryHookFetchPolicy`</td><td>`useSuspenseQuery.FetchPolicy`</td></tr>
+<tr><td>`SuspenseQueryHookOptions`</td><td>`useSuspenseQuery.Options`</td></tr>
+<tr><td>`UseBackgroundQueryResult`</td><td>`useBackgroundQuery.Result`</td></tr>
+<tr><td>`UseFragmentOptions`</td><td>`useFragment.Options`</td></tr>
+<tr><td>`UseFragmentResult`</td><td>`useFragment.Result`</td></tr>
+<tr><td>`UseLoadableQueryResult`</td><td>`useLoadableQuery.Result`</td></tr>
+<tr><td>`UseQueryRefHandlersResult`</td><td>`useQueryRefHandlers.Result`</td></tr>
+<tr><td>`UseReadQueryResult`</td><td>`useReadQuery.Result`</td></tr>
+<tr><td>`UseSuspenseFragmentOptions`</td><td>`useSuspenseFragment.Options`</td></tr>
+<tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
+<tr><td>`UseSuspenseQueryResult`</td><td>`useSuspenseQuery.Result`</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/cache`</th><th>(unchanged)</th></tr>
+<tr><td>`WatchFragmentOptions`</td><td>`ApolloCache.WatchFragmentOptions`</td></tr>
+<tr><td>`WatchFragmentResult`</td><td>`ApolloCache.WatchFragmentResult`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link`</th><th>`@apollo/client/incremental`</th></tr>
+<tr><td>`ExecutionPatchIncrementalResult`</td><td>`Defer20220824Handler.SubsequentResult`</td></tr>
+<tr><td>`ExecutionPatchInitialResult`</td><td>`Defer20220824Handler.InitialResult`</td></tr>
+<tr><td>`ExecutionPatchResult`</td><td>`Defer20220824Handler.Chunk`</td></tr>
+<tr><td>`IncrementalPayload`</td><td>`Defer20220824Handler.IncrementalDeferPayload`</td></tr>
+<tr><td>`Path`</td><td>`Incremental.Path`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link`</th><th>(unchanged)</th></tr>
+<tr><td>`FetchResult`</td><td>`ApolloLink.Result`</td></tr>
+<tr><td>`GraphQLRequest`</td><td>`ApolloLink.Request`</td></tr>
+<tr><td>`NextLink`</td><td>`ApolloLink.ForwardFunction`</td></tr>
+<tr><td>`Operation`</td><td>`ApolloLink.Operation`</td></tr>
+<tr><td>`RequestHandler`</td><td>`ApolloLink.RequestHandler`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link`</th><th>`graphql`</th></tr>
+<tr><td>`SingleExecutionResult`</td><td>`FormattedExecutionResult`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/batch`</th><th>(unchanged)</th></tr>
+<tr><td>`BatchHandler`</td><td>`BatchLink.BatchHandler`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/context`</th><th>(unchanged)</th></tr>
+<tr><td>`ContextSetter`</td><td>`SetContextLink.LegacyContextSetter`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/error`</th><th>(unchanged)</th></tr>
+<tr><td>`ErrorHandler`</td><td>`ErrorLink.ErrorHandler`</td></tr>
+<tr><td>`ErrorResponse`</td><td>`ErrorLink.ErrorHandlerOptions`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/http`</th><th>`@apollo/client/errors`</th></tr>
+<tr><td>`ServerParseError`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/persisted-queries`</th><th>(unchanged)</th></tr>
+<tr><td>`ErrorResponse`</td><td>`PersistedQueryLink.DisableFunctionOptions`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/remove-typename`</th><th>(unchanged)</th></tr>
+<tr><td>`RemoveTypenameFromVariablesOptions`</td><td>`RemoveTypenameFromVariablesLink.Options`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/utils`</th><th>`@apollo/client/errors`</th></tr>
+<tr><td>`ServerError`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/link/ws`</th><th>(unchanged)</th></tr>
+<tr><td>`WebSocketParams`</td><td>`WebSocketLink.Configuration`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/react`</th><th>`@apollo/client`</th></tr>
+<tr><td>`Context`</td><td>`DefaultContext`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/react`</th><th>(unchanged)</th></tr>
+<tr><td>`QueryReference`</td><td>`QueryRef`</td></tr>
+<tr><td>`ApolloProviderProps`</td><td>`ApolloProvider.Props`</td></tr>
+<tr><td>`BackgroundQueryHookFetchPolicy`</td><td>`useBackgroundQuery.FetchPolicy`</td></tr>
+<tr><td>`BackgroundQueryHookOptions`</td><td>`useBackgroundQuery.Options`</td></tr>
+<tr><td>`UseBackgroundQueryResult`</td><td>`useBackgroundQuery.Result`</td></tr>
+<tr><td>`LazyQueryExecFunction`</td><td>`useLazyQuery.ExecFunction`</td></tr>
+<tr><td>`LazyQueryHookExecOptions`</td><td>`useLazyQuery.ExecOptions`</td></tr>
+<tr><td>`LazyQueryHookOptions`</td><td>`useLazyQuery.Options`</td></tr>
+<tr><td>`LazyQueryResult`</td><td>`useLazyQuery.Result`</td></tr>
+<tr><td>`LazyQueryResultTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`QueryTuple`</td><td>`useLazyQuery.ResultTuple`</td></tr>
+<tr><td>`LoadableQueryFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookFetchPolicy`</td><td>`useLoadableQuery.FetchPolicy`</td></tr>
+<tr><td>`LoadableQueryHookOptions`</td><td>`useLoadableQuery.Options`</td></tr>
+<tr><td>`LoadQueryFunction`</td><td>`useLoadableQuery.LoadQueryFunction`</td></tr>
+<tr><td>`UseLoadableQueryResult`</td><td>`useLoadableQuery.Result`</td></tr>
+<tr><td>`MutationFunctionOptions`</td><td>`useMutation.MutationFunctionOptions`</td></tr>
+<tr><td>`MutationHookOptions`</td><td>`useMutation.Options`</td></tr>
+<tr><td>`MutationResult`</td><td>`useMutation.Result`</td></tr>
+<tr><td>`MutationTuple`</td><td>`useMutation.ResultTuple`</td></tr>
+<tr><td>`BaseSubscriptionOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`OnDataOptions`</td><td>`useSubscription.OnDataOptions`</td></tr>
+<tr><td>`OnSubscriptionDataOptions`</td><td>`useSubscription.OnSubscriptionDataOptions`</td></tr>
+<tr><td>`SubscriptionHookOptions`</td><td>`useSubscription.Options`</td></tr>
+<tr><td>`SubscriptionResult`</td><td>`useSubscription.Result`</td></tr>
+<tr><td>`QueryFunctionOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryHookOptions`</td><td>`useQuery.Options`</td></tr>
+<tr><td>`QueryResult`</td><td>`useQuery.Result`</td></tr>
+<tr><td>`SuspenseQueryHookFetchPolicy`</td><td>`useSuspenseQuery.FetchPolicy`</td></tr>
+<tr><td>`SuspenseQueryHookOptions`</td><td>`useSuspenseQuery.Options`</td></tr>
+<tr><td>`UseSuspenseQueryResult`</td><td>`useSuspenseQuery.Result`</td></tr>
+<tr><td>`UseQueryRefHandlersResult`</td><td>`useQueryRefHandlers.Result`</td></tr>
+<tr><td>`UseFragmentOptions`</td><td>`useFragment.Options`</td></tr>
+<tr><td>`UseFragmentResult`</td><td>`useFragment.Result`</td></tr>
+<tr><td>`UseReadQueryResult`</td><td>`useReadQuery.Result`</td></tr>
+<tr><td>`UseSuspenseFragmentOptions`</td><td>`useSuspenseFragment.Options`</td></tr>
+<tr><td>`UseSuspenseFragmentResult`</td><td>`useSuspenseFragment.Result`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/react`</th><th>`@apollo/client/utilities/internal`</th></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/react/internal`</th><th>`@apollo/client/react`</th></tr>
+<tr><td>`PreloadedQueryRef`</td><td>(unchanged)</td></tr>
+<tr><td>`QueryRef`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/testing`</th><th>(unchanged)</th></tr>
+<tr><td>`MockedRequest`</td><td>`MockLink.MockedRequest`</td></tr>
+<tr><td>`MockedResponse`</td><td>`MockLink.MockedResponse`</td></tr>
+<tr><td>`MockLinkOptions`</td><td>`MockLink.Options`</td></tr>
+<tr><td>`ResultFunction`</td><td>`MockLink.ResultFunction`</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/testing`</th><th>`@apollo/client/testing/react`</th></tr>
+<tr><td>`MockedProvider`</td><td>(unchanged)</td></tr>
+<tr><td>`MockedProviderProps`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/utilities`</th><th>`@apollo/client/utilities/internal`</th></tr>
+<tr><td>`argumentsObjectFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`AutoCleanedStrongCache`</td><td>(unchanged)</td></tr>
+<tr><td>`AutoCleanedWeakCache`</td><td>(unchanged)</td></tr>
+<tr><td>`canUseDOM`</td><td>(unchanged)</td></tr>
+<tr><td>`checkDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`cloneDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`compact`</td><td>(unchanged)</td></tr>
+<tr><td>`createFragmentMap`</td><td>(unchanged)</td></tr>
+<tr><td>`createFulfilledPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`createRejectedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`dealias`</td><td>(unchanged)</td></tr>
+<tr><td>`decoratePromise`</td><td>(unchanged)</td></tr>
+<tr><td>`DeepMerger`</td><td>(unchanged)</td></tr>
+<tr><td>`filterMap`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloCacheMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getApolloClientMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getDefaultValues`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentDefinitions`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentFromSelection`</td><td>(unchanged)</td></tr>
+<tr><td>`getFragmentQueryDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`getGraphQLErrorsFromResult`</td><td>(unchanged)</td></tr>
+<tr><td>`getInMemoryCacheMemoryInternals`</td><td>(unchanged)</td></tr>
+<tr><td>`getOperationDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getOperationName`</td><td>(unchanged)</td></tr>
+<tr><td>`getQueryDefinition`</td><td>(unchanged)</td></tr>
+<tr><td>`getStoreKeyName`</td><td>(unchanged)</td></tr>
+<tr><td>`graphQLResultHasError`</td><td>(unchanged)</td></tr>
+<tr><td>`hasDirectives`</td><td>(unchanged)</td></tr>
+<tr><td>`hasForcedResolvers`</td><td>(unchanged)</td></tr>
+<tr><td>`isArray`</td><td>(unchanged)</td></tr>
+<tr><td>`isDocumentNode`</td><td>(unchanged)</td></tr>
+<tr><td>`isField`</td><td>(unchanged)</td></tr>
+<tr><td>`isNonEmptyArray`</td><td>(unchanged)</td></tr>
+<tr><td>`isNonNullObject`</td><td>(unchanged)</td></tr>
+<tr><td>`isPlainObject`</td><td>(unchanged)</td></tr>
+<tr><td>`makeReference`</td><td>(unchanged)</td></tr>
+<tr><td>`makeUniqueId`</td><td>(unchanged)</td></tr>
+<tr><td>`maybeDeepFreeze`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeDeepArray`</td><td>(unchanged)</td></tr>
+<tr><td>`mergeOptions`</td><td>(unchanged)</td></tr>
+<tr><td>`omitDeep`</td><td>(unchanged)</td></tr>
+<tr><td>`preventUnhandledRejection`</td><td>(unchanged)</td></tr>
+<tr><td>`registerGlobalCache`</td><td>(unchanged)</td></tr>
+<tr><td>`removeDirectivesFromDocument`</td><td>(unchanged)</td></tr>
+<tr><td>`resultKeyNameFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`shouldInclude`</td><td>(unchanged)</td></tr>
+<tr><td>`storeKeyNameFromField`</td><td>(unchanged)</td></tr>
+<tr><td>`stringifyForDisplay`</td><td>(unchanged)</td></tr>
+<tr><td>`toQueryResult`</td><td>(unchanged)</td></tr>
+<tr><td>`DecoratedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`DeepOmit`</td><td>(unchanged)</td></tr>
+<tr><td>`FragmentMap`</td><td>(unchanged)</td></tr>
+<tr><td>`FragmentMapFunction`</td><td>(unchanged)</td></tr>
+<tr><td>`FulfilledPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`IsAny`</td><td>(unchanged)</td></tr>
+<tr><td>`NoInfer`</td><td>(unchanged)</td></tr>
+<tr><td>`PendingPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`Prettify`</td><td>(unchanged)</td></tr>
+<tr><td>`Primitive`</td><td>(unchanged)</td></tr>
+<tr><td>`RejectedPromise`</td><td>(unchanged)</td></tr>
+<tr><td>`RemoveIndexSignature`</td><td>(unchanged)</td></tr>
+<tr><td>`VariablesOption`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/environment`</th></tr>
+<tr><td>`DEV`</td><td>`__DEV__`</td></tr>
+<tr><td>`__DEV__`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/internal/globals`</th></tr>
+<tr><td>`global`</td><td>(unchanged)</td></tr>
+<tr><td>`maybe`</td><td>(unchanged)</td></tr>
+</tbody><tbody>
+<tr><th>`@apollo/client/utilities/global`</th><th>`@apollo/client/utilities/invariant`</th></tr>
+<tr><td>`invariant`</td><td>(unchanged)</td></tr>
+<tr><td>`InvariantError`</td><td>(unchanged)</td></tr>
+<tr><td>`newInvariantError`</td><td>(unchanged)</td></tr>
+</tbody>
+</table>
+
+</details>
+
+### Replace removed exports
+
+If you used the [Codemod](#running-the-codemod) to update your imports, all removed exports moved to the `@apollo/client/v4-migration` entry point. You should get a TypeScript error everywhere you use a removed export. When you hover over the export, you'll get more information about why the export was removed along with migration instructions.
+
+For a list of all removed imports and recommended actions, see [node_modules/@apollo/client/v4-migration.d.ts](https://app.unpkg.com/@apollo/client@^4.0.0-rc/files/v4-migration.d.ts)
+
+## Update the initialization of `ApolloClient`
+
+Several of the constructor options of `ApolloClient` have changed in Apollo Client 4. This section provides instructions on migrating to the new options when initializing your `ApolloClient` instance.
+
+### Explicitly provide `HttpLink`
+
+> This change is performed by the codemod
+
+The `uri`, `headers`, and `credentials` options used to implicitly create an `HttpLink` have been removed. You now need to create a new `HttpLink` instance and pass it to the `link` option of `ApolloClient`.
+
+```ts
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,// [!code ++]
+} from "@apollo/client/core";
+const client = new ApolloClient({
+  // ...
+  link: new HttpLink({// [!code ++]
+    uri: "https://example.com/graphql",
+    credentials: "include",
+    headers: { "x-custom-header": "value" },
+  }),// [!code ++]
+  // ...
+});
+```
+
+Although the previous options were convenient, it meant all Apollo Client instances were bundled with `HttpLink`, even if it wasn't used in the link chain. This change enables you to use different terminating links without the increase in bundle size needed to include `HttpLink`. Most applications that scale moved away from these options anyways as soon as more complex link chains were needed.
+
+### Migrate client awareness options
+
+> This change is performed by the codemod
+
+The `name` and `version` options, which are a part of the client awareness feature, have been moved into the `clientAwareness` option.
+
+```ts
+const client = new ApolloClient({
+  // ...
+  clientAwareness: {// [!code ++]
+    name: "My Apollo Client App",
+    version: "1.0.0",
+  },// [!code ++]
+  // ...
+});
+```
+
+This change reduced confusion on what the `name` and `version` options were meant for and provides better future-proofing for additional features that might be added later.
+
+<Note>
+
+This option only has an effect if you are using the client-awareness-capable `HttpLink` or `BatchHttpLink`, or if you manually combine the `ClientAwarenessLink` with a compatible terminating link.
+
+</Note>
+
+### Update local state
+
+> This change is performed by the codemod
+
+When using `@client` fields, you now need to create a new `LocalState` instance and provide it as the `localState` option to the `ApolloClient` constructor.
+
+```ts
+import {
+  ApolloClient,
+  InMemoryCache,
+  LocalState,// [!code ++]
+} from "@apollo/client/core";
+const client = new ApolloClient({
+  // ...
+  localState: new LocalState(),// [!code ++]
+  // ...
+});
+```
+
+Additionally, if you are using local resolvers with the `resolvers` option, you need to move the `resolvers` option to the `LocalState` constructor instead of the `ApolloClient` constructor.
+
+```ts
+import {
+  ApolloClient,
+  InMemoryCache,
+  LocalState,// [!code ++]
+} from "@apollo/client/core";
+const client = new ApolloClient({
+  // ...
+  localState: new LocalState({// [!code ++]
+    resolvers: {
+      Query: {
+        myField: () => "Hello World",
+      },
+    },
+  }),// [!code ++]
+  // ...
+});
+```
+
+Previously, all Apollo Client instances were bundled with local state management functionality, even if you didn't use the `@client` directive. This change means local state management is now opt-in and reduces the size of your bundle when you aren't using this feature.
+
+### Change `connectToDevTools`
+
+> This change is performed by the codemod
+
+The `connectToDevTools` option has been replaced with a new `devtools` option that contains an `enabled` property.
+
+```ts disableCopy=true
+const client = new ApolloClient({
+  // ...
+  connectToDevTools: true,// [!code --]
+  devtools: { enabled: true },// [!code ++]
+  // ...
+});
+```
+
+### Change `disableNetworkFetches`
+
+> This change is performed by the codemod
+
+The `disableNetworkFetches` option has been renamed to `prioritizeCacheValues` to better describe its behavior.
+
+```ts disableCopy=true
+const client = new ApolloClient({
+  // ...
+  disableNetworkFetches: ..., // [!code --]
+  prioritizeCacheValues: ..., // [!code ++]
+  // ...
+});
+```
+
+### Enable incremental delivery (`@defer`)
+
+> This change is performed by the codemod, however you may need to make some additional changes
+
+The incremental delivery protocol implementation is now configurable and requires you to opt-in to use the proper format. If you currently use `@defer` in your application, you need to configure an incremental handler and provide it to the `incrementalHandler` option to the `ApolloClient` constructor.
+
+Since Apollo Client 3 only supported an older version of the specification, initialize an instance of `Defer20220824Handler` and provide it as the `incrementalHandler` option.
+
+```ts
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code ++]
+const client = new ApolloClient({
+  // ...
+  incrementalHandler: new Defer20220824Handler(),// [!code ++]
+  // ...
+});
+```
+
+To provide accurate TypeScript types, you will also need to tell Apollo Client to use the types associated with the `Defer20220824Handler` in order to provide accurate types for incremental chunks, used with the `ApolloLink.Result` type. This ensures that you properly handle incremental results in your custom links that might access the result directly.
+
+Create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
+
+```ts title="apollo-client.d.ts
+import { Defer20220824Handler } from "@apollo/client/incremental";// [!code highlight]
+
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}// [!code highlight]
+}
+```
+
+<Note>
+
+Apollo Client only provides support for the older incremental specification at this time. Future versions will introduce new incremental handlers to support more recent versions of the specification.
+
+</Note>
+
+## Enable data masking types
+
+> This change is performed by the codemod, however you may need to make some additional changes
+
+In Apollo Client 4, the data masking types are now configurable to allow for more flexibility when working with different tools like GraphQL Code Generator or `gql.tada` - which might have different typings for data masking.
+
+To configure the data masking types to be the same as they were in Apollo Client 3, create a `.d.ts` file in your project with the following content:
+
+```ts title="apollo-client.d.ts
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code highlight]
+
+declare module "@apollo/client" {
+  export interface TypeOverrides// [!code highlight:2]
+    extends GraphQLCodegenDataMasking.TypeOverrides {}
+}
+```
+
+<Note>
+
+You can combine multiple `TypeOverrides` of different kinds. For example, you can combine the data masking types with the `Defer20220824Handler` type overrides from the previous section.
+
+```ts title="apollo-client.d.ts disableCopy=true
+import { Defer20220824Handler } from "@apollo/client/incremental";
+import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code ++]
+
+declare module "@apollo/client" {
+  export interface TypeOverrides extends Defer20220824Handler.TypeOverrides {}// [!code --]
+  export interface TypeOverrides// [!code ++:3]
+    extends Defer20220824Handler.TypeOverrides,
+      GraphQLCodegenDataMasking.TypeOverrides {}
+}
+```
+
+</Note>
+
+## Core API changes
+
+### New `notifyOnNetworkStatusChange` default value
+
+The `notifyOnNetworkStatusChange` option now defaults to `true`. This affects React hooks that provide this option (e.g. `useQuery`) and `ObservableQuery` instances created by `client.watchQuery`.
+
+This change means you might see loading states more often, especially when used with `refetch` or other APIs that cause fetches. If this causes issues, you can revert to the v3 behavior by setting the global default back to `false`.
+
+```ts title="Reverting notifyOnNetworkStatusChange to Apollo Client 3 behavior"
+new ApolloClient({
+  // ...
+  defaultOptions: {// [!code ++:5]
+    watchQuery: {
+      notifyOnNetworkStatusChange: false,
+    },
+  },
+});
+```
+
+### Immediate `loading` status emitted by `ObservableQuery`
+
+In line with the change to the default `notifyOnNetworkStatusChange` value, the first value emitted from an `ObservableQuery` instance (created by `client.watchQuery`), sets `loading` to `true` when the query cannot be fulfilled by data in the cache. Previously, the initial loading state was not emitted.
+
+```ts disableCopy=true
+const observable = client.watchQuery({ query: QUERY });
+
+observable.subscribe({
+  next: (result) => {
+    // The first result emitted is the loading state
+    console.log(result);
+    /*
+     {
+       data: undefined,
+       dataState: "empty"
+       loading: true,
+       networkStatus: NetworkStatus.loading,
+       partial: false
+     }
+     */
+  },
+});
+```
+
+### Tracking of active and inactive queries
+
+In Apollo Client 3, `ObservableQuery` instances were tracked by the client from the moment they were created until they were unsubscribed from. In cases where the `ObservableQuery` instance was never subscribed to, this caused memory leaks and unintended behavior with APIs such as `refetchQueries` when refetching active queries, because the `ObservableQuery` instances were never properly cleaned up.
+
+In Apollo Client 4, `ObservableQuery` instances are now tracked by the client only when they are subscribed to until they are unsubscribed from. This allows for more efficient memory management by the garbage collector to free memory if the `ObservableQuery` instance is never subscribed to and no longer referenced by other code. Additionally, this avoids situations where `refetchQueries` might execute unnecessary network requests due to the tracking behavior.
+
+As a result of this change, the definitions for _active_ and _inactive_ queries have changed.
+
+- A query is considered active if it is observed by at least one subscriber and not in standby
+- A query is considered inactive if it is observed by at least one subscriber and in standby
+- All other `ObservableQuery` instances that don't have at least one subscriber are not tracked or accessible through the client
+
+<Note>
+
+A query is in standby if it is skipped with the `skip` option or `skipToken` in a React hook, or if the `fetchPolicy` is set to `standby`.
+
+</Note>
+
+This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
+
+### Removal of the `canonizeResults` option
+
+The `canonizeResults` option has been removed because it caused memory leaks. If you use `canonizeResults`, you may see some changes to the object identity of some objects that were previously referentially equal.
+
+```ts disableCopy=true
+useQuery(QUERY, {
+  canonizeResults: true,// [!code --]
+});
+```
+
+## New error handling
+
+Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.
+
+<Tip>
+
+We recommend reading the [Error handling](../data/error-handling) guide which lists all of the available error classes and provides details on how to check for specific kinds of errors. The following sections only detail the necessary requirements to migrate your existing code but does not cover general error handling.
+
+</Tip>
+
+### Unification of the `error` property
+
+In Apollo Client 3, many result types returned both the `error` and `errors` properties. This includes the result emitted from `ObservableQuery` and some React hooks such as `useQuery`. This made it difficult to determine which property should be used to determine the source of the error. This was further complicated by the fact that the `errors` property was set only when `errorPolicy` was `all`!
+
+Apollo Client 4 unifies all errors into a single `error` property. If you check for `errors`, remove this check and use `error` instead.
+
+```ts
+const { error, errors } = useQuery(QUERY);// [!code --]
+const { error } = useQuery(QUERY);// [!code ++]
+
+if (error) {
+  // ...
+} else if (errors) {// [!code --:2]
+  // ...
+}
+```
+
+### Removal of `ApolloError`
+
+In Apollo Client 3, every error was wrapped in an `ApolloError` instance. This made it difficult to debug the source of the error, especially when reported by error tracking services, because the stack trace pointed to the `ApolloError` class. Additionally, it was unclear whether error types wrapped in `ApolloError` were mutually exclusive because it contained `graphQLErrors`, `protocolErrors`, `networkError`, and `clientErrors` properties that were all optional.
+
+Apollo Client 4 removes the `ApolloError` class entirely.
+
+#### Migrate from `graphQLErrors`
+
+GraphQL errors are now encapsulated in a `CombinedGraphQLErrors` instance. You can access the raw GraphQL errors with the `errors` property. To migrate, use `CombinedGraphQLErrors.is(error)` to first check if the error is caused by one or more GraphQL errors, then access the `errors` property.
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+import { CombinedGraphQLErrors } from "@apollo/client"; // [!code ++]
+
+const { error } = useQuery(QUERY);
+
+if (error.graphQLErrors) { // [!code --]
+  error.graphQLErrors.map((graphQLError) => {/* ... */}); // [!code --]
+if (CombinedGraphQLErrors.is(error)) { // [!code ++]
+  error.errors.map((graphQLError) => {/* ... */}); // [!code ++]
+}
+```
+
+#### Migrate from `networkError`
+
+Network errors are no longer wrapped and instead returned as-is. This makes it easier to debug the source of the error as the stack trace now points to the location of the error.
+
+To migrate, use the `error` property directly.
+
+```ts disableCopy=true
+const { error } = useQuery(QUERY);
+
+if (error.networkError) { // [!code --]
+  console.log(error.networkError.message); // [!code --]
+if (error) { // [!code ++]
+  console.log(error.message); // [!code ++]
+}
+```
+
+#### Migrate from `protocolErrors`
+
+Protocol errors are now encapsulated in a `CombinedProtocolErrors` instance. You can access the raw protocol errors with the `errors` property. To migrate, use `CombinedProtocolErrors.is(error)` to first check if the error is caused by one or more protocol errors, then access the `errors` property.
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+import { CombinedProtocolErrors } from "@apollo/client"; // [!code ++]
+
+const { error } = useQuery(QUERY);
+
+if (error.protocolErrors) { // [!code --]
+  error.graphQLErrors.map((graphQLError) => {/* ... */}); // [!code --]
+if (CombinedProtocolErrors.is(error)) { // [!code ++]
+  error.errors.map((graphQLError) => {/* ... */}); // [!code ++]
+}
+```
+
+#### Migrate from `clientErrors`
+
+The `clientErrors` property was not used by Apollo Client and therefore has no replacement. Any non-GraphQL errors or non-protocol errors are passed through as-is.
+
+### Errors as guaranteed error-like objects
+
+Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property. This avoids the need to check the type of `error` before consuming it. To make such a guarantee, thrown non-error-like values are wrapped.
+
+#### String errors
+
+Strings thrown as errors are wrapped in an `Error` instance for you. The string is set as the error's `message`.
+
+```ts
+const client = new ApolloClient({
+  link: new ApolloLink(() => {
+    return new Observable((observer) => {
+      // Oops we sent a string instead of wrapping it in an `Error`
+      observer.error("Test error");
+    });
+  }),
+});
+
+// ...
+
+const { error } = useQuery(query);
+
+// `error` is `new Error("Test error")`
+console.log(error.message);
+```
+
+#### Non-error-like types
+
+All other object types (e.g. symbols, arrays, etc.) or primitives thrown as errors are wrapped in an `UnconventionalError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) property set to the original object. Additionally, `UnconventionalError` sets its `name` to `UnconventionalError` and its `message` to `"An error of unexpected shape occurred."`.
+
+```ts
+const client = new ApolloClient({
+  link: new ApolloLink(() => {
+    return new Observable((observer) => {
+      // Oops we sent a string instead of wrapping it in an `Error`
+      observer.error({ message: "Not a proper error type" });
+    });
+  }),
+});
+
+// ...
+
+const { error } = useQuery(query);
+
+// `error` is an `UnconventionalError` instance
+console.log(error.message); // => "An error of unexpected shape occurred."
+// The `cause` returns the original object that was thrown
+console.log(error.cause); // => { message: "Not a proper error type" }
+```
+
+### Network errors adhere to the `errorPolicy`
+
+Apollo Client 3 always treated network errors as if the `errorPolicy` was set to `none`. This meant network errors were always thrown even if a different `errorPolicy` was specified.
+
+Apollo Client 4 unifies the behavior of network errors and GraphQL errors so that network errors now adhere to the `errorPolicy`. Network errors now resolve promises when the `errorPolicy` is set to anything other than `none`.
+
+#### `errorPolicy`: `all`
+
+The promise is resolved. The error is accessible on the `error` property.
+
+```ts disableCopy=true
+const { data, error } = await client.query({ query, errorPolicy: "all" });
+
+console.log(data); // => undefined
+console.log(error); // => new Error("...")
+```
+
+<Note>
+
+Network errors always set `data` to `undefined`.
+
+</Note>
+
+#### `errorPolicy`: `ignore`
+
+The promise is resolved and the error is ignored.
+
+```ts
+const { data, error } = await client.query({ query, errorPolicy: "ignore" });
+
+console.log(data); // => undefined
+console.log(error); // => undefined
+```
+
+<Note>
+
+`data` is always set to `undefined` because a GraphQL result wasn't returned.
+
+</Note>
+
+### Network errors never terminate `ObservableQuery`
+
+In Apollo Client 3, network errors emitted an `error` notification on the `ObservableQuery` instance. Because error notifications terminate observables, this meant you needed special handling to restart the `ObservableQuery` instance so that it listened for new results. Network errors were emitted to the `error` callback.
+
+Apollo Client 4 changes this and no longer emits an `error` notification. This ensures `ObservableQuery` doesn't terminate on errors and can continue listening for new results, such as calling `refetch` after an error.
+
+Access the error on the `error` property emitted in the `next` callback. It is safe to remove the `error` callback entirely as it is no longer used.
+
+```ts
+const observable = client.watchQuery({ query });
+
+observable.subscribe({
+  next: (result) => {
+    if (result.error) {// [!code ++:3]
+      // handle error
+    }
+    // ...
+  },
+  error: (error) => {// [!code --:3]
+    // handle error
+  },
+});
+```
+
+### `ServerError` and `ServerParseError` are error classes
+
+Apollo Client 3 threw special `ServerError` and `ServerParseError` types when the HTTP response was invalid. These types were plain `Error` instances with some added properties.
+
+Apollo Client 4 turns these types into proper error classes. You can check for these types using the `.is` static method available on each error class.
+
+```ts disableCopy=true
+const { error } = useQuery(QUERY);
+
+if (ServerError.is(error)) {
+  // handle the server error
+}
+
+if (ServerParseError.is(error)) {
+  // handle the server parse error
+}
+```
+
+### `ServerError` no longer parses the response text as JSON
+
+When a `ServerError` was thrown, such as when the server returned a non-2xx status code, Apollo Client 3 tried to parse the raw response text into JSON to determine if a valid GraphQL response was returned. If successful, the parsed JSON value was set as the `result` property on the error.
+
+Apollo Client 4 more strictly adheres to the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/) and does away with the automatic JSON parsing. As such, the `result` property is no longer accessible and is replaced by the `bodyText` property which contains the value of the raw response text.
+
+If you relied on the automatic JSON parsing, you will need to `JSON.parse` the `bodyText` instead.
+
+```ts disableCopy=true
+const { error } = useQuery(QUERY);
+
+if (ServerError.is(error)) {
+  try {
+    const json = JSON.parse(error.bodyText);
+  } catch (e) {
+    // handle invalid JSON
+  }
+}
+```
+
+## Updates to React APIs
+
+### A note about hook usage
+
+Apollo Client 4 is more opinionated about how to use it.
+We believe that React hooks should be used to synchronize data with your component and avoid side effects that don't achieve this goal. As a result, we now recommend the use of core APIs directly in several use cases where synchronization with a component is not needed or intended.
+
+As an example, if you used `useLazyQuery` to execute queries but don't read the state values returned in the result tuple, we recommend that you now use `client.query` directly. This avoids unnecessary re-renders in your component for state that you don't consume.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(MY_QUERY);// [!code --:3]
+// ...
+await execute({ variables });
+const client = useApolloClient();// [!code ++:3]
+// ...
+await client.query({ query: MY_QUERY, variables });
+```
+
+### Changes to `useLazyQuery`
+
+`useLazyQuery` has been rewritten to have more predictable and intuitive behavior based on years of user feedback.
+In Apollo Client 3, the `useLazyQuery` behaved like the `useQuery` hook after the execute function was called the first time. Changes to options often triggered unintended network requests as a result of this behavior.
+
+In Apollo Client 4, `useLazyQuery` focuses on user interaction and more predictable data synchronization with the component. Network requests are now initiated only when the execute function is called. This makes it safe to re-render your component with new options provided to `useLazyQuery` without the unintended network requests. New options are used the next time the execute function is called.
+
+#### Changes to the `variables` and `context` options
+
+The `useLazyQuery` hook no longer accepts the `variables` or `context` options. These options have been moved to the execute function instead. This removes the variable merging behavior which was confusing and hard to predict with the new behavior.
+
+To migrate, move the `variables` and `context` options from the hook to the execute function:
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+const [execute, { data }] = useLazyQuery(QUERY, {
+  variables: {/* ... */},// [!code --]
+  context: { /* ... */},// [!code --]
+});
+
+function onUserInteraction(){
+  execute({
+    variables: {/* ... */}, // [!code ++]
+    context: {/* ... */}, // [!code ++]
+  })
+}
+```
+
+#### Changes to the execute function
+
+The `execute` function no longer accepts any other options than `variables` and `context`. Those options should be passed directly to the hook instead.
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+const [execute, { data }] = useLazyQuery(QUERY, {
+  fetchPolicy: "no-cache", // [!code ++]
+});
+// ...
+function onUserInteraction(){
+  execute({
+    fetchPolicy: "no-cache", // [!code --]
+  })
+}
+```
+
+If you need to change the value of an option, rerender the component with the new option value before calling the `execute` function again.
+
+#### Executing the query during render
+
+Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error.
+
+```ts disableCopy=true
+function MyComponent() {
+  const [execute, { data }] = useLazyQuery(QUERY);
+
+  // This throws an error
+  execute();
+
+  return /* ... */;
+}
+```
+
+We recommend instead migrating to `useQuery` which executes the query during render automatically.
+
+```ts
+function MyComponent() {
+  const [execute, { data }] = useLazyQuery(QUERY);// [!code --:2]
+  execute();
+
+  const { data } = useQuery(QUERY);// [!code ++]
+
+  return /* ... */;
+}
+```
+
+<Tip>
+
+We don't recommend calling the `execute` function in a `useEffect` hook as a replacement. Instead, migrate to `useQuery`. If you need to hold the execution of the query beyond the initial render, consider using the `skip` option.
+
+```ts disableCopy=true
+function MyComponent({ dependentValue }) {
+  const [execute, { data }] = useLazyQuery(QUERY);// [!code --]
+
+  useEffect(() => {// [!code --:5]
+    if (dependentValue) {
+      execute();
+    }
+  }, [dependentValue]);
+
+  const { data } = useQuery(QUERY, { skip: !dependentValue });// [!code ++]
+
+  return /* ... */;
+}
+```
+
+Calling `execute` inside a `useEffect` delays the execution of the query unnecessarily. Reserve the use of `useLazyQuery` for user interaction in callback functions.
+
+</Tip>
+
+##### A note about SSR
+
+This change also means that it is no longer possible to make queries with `useLazyQuery` during SSR. If you need to execute the query during render, use `useQuery` instead.
+
+```ts disableCopy=true
+function MySSRComponent() {
+  const [execute, { data, loading, error }] = useLazyQuery(QUERY);// [!code --]
+  execute();// [!code --]
+
+  const { data, loading, error } = useQuery(QUERY);// [!code ++]
+
+  // ...
+}
+```
+
+#### Removal of `onCompleted` and `onError` callbacks
+
+The `onCompleted` and `onError` callbacks have been removed from the hook options. If you need to execute a side effect when the query completes, `await` the promise returned by the `execute` function and perform side effects there.
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  onCompleted(data) { /* handle success */ }, // [!code --]
+  onError(error) { /* handle error */ }, // [!code --]
+});
+
+async function onUserInteraction(){
+  await execute({ variables })// [!code --]
+
+  try {// [!code ++:6]
+    const { data } = await execute({ variables })
+    // handle success
+  } catch (error) {
+    // handle error
+  }
+}
+```
+
+#### Changes to behavior for in-flight queries
+
+In-flight queries are now aborted more frequently. This occurs under two conditions:
+
+- The component unmounts while the query is in flight
+- A new query is started by calling the `execute` function while a previous query is in flight
+
+In each of these cases, the promise returned by the `execute` function is rejected with an [`AbortError`](https://developer.mozilla.org/en-US/docs/Web/API/DOMException#aborterror). This change means it is no longer possible to run multiple queries simultaneously.
+
+In some cases, you may need the query to run to completion, even if a new query is started or your component unmounts. In these cases, you can call the `.retain()` function on the promise returned by the `execute` function.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY);
+
+async function onUserInteraction() {
+  try {
+    const { data } = await execute({ variables });// [!code --]
+    const { data } = await execute({ variables }).retain();// [!code ++]
+  } catch (error) {}
+}
+```
+
+<Note>
+
+Even though in-flight queries run to completion when using `.retain()`, the result returned from the hook only reflects state from the latest call of the `execute` function. Any previously retained queries are not synchronized to the hook state.
+
+</Note>
+
+<Tip>
+
+Usage of `.retain()` can be a sign that you are using `useLazyQuery` to trigger queries and are not interested in synchronizing the result with your component. In that case, we recommend using `client.query` directly.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY);// [!code --]
+const client = useApolloClient();// [!code ++]
+
+async function onUserInteraction() {
+  try {
+    const { data } = await execute({ variables }).retain();// [!code --]
+    const { data } = await client.query({ query: QUERY, variables });// [!code ++]
+  } catch (error) {}
+}
+```
+
+</Tip>
+
+### Changes to `useMutation`
+
+`useMutation` has been modified to work with our [philosophy](#a-note-about-hook-usage) that React hooks should be used to synchronize hook state with your component.
+
+#### Removal of the `ignoreResults` option
+
+The `ignoreResults` option of `useMutation` has been removed. If you want to trigger a mutation, but are not interested in synchronizing the result with your component, use `client.mutate` directly.
+
+```ts disableCopy=true
+const [mutate] = useMutation(MY_MUTATION, { ignoreResults: true });// [!code --]
+const client = useApolloClient();// [!code ++]
+// ...
+await mutate({ variables });// [!code --]
+await client.mutate({ mutation: MY_MUTATION, variables });// [!code ++]
+```
+
+### Changes to `useQuery`
+
+#### New `notifyOnNetworkStatusChange` default value
+
+The `notifyOnNetworkStatusChange` option now defaults to `true`. This change means you might see loading states more often, especially when used with `refetch` or other APIs that cause fetches. If this causes issues, you can revert to the v3 behavior by setting the global default back to `false`.
+
+```ts
+new ApolloClient({
+  // ...
+  defaultOptions: {// [!code ++:5]
+    watchQuery: {
+      notifyOnNetworkStatusChange: false,
+    },
+  },
+});
+```
+
+#### Removal of the `onCompleted` and `onError` callbacks
+
+The `onCompleted` and `onError` callback options have been removed. Their behavior was ambiguous and made it easy to introduce subtle bugs in your application.
+
+You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
+
+### Recommended: Avoid using generated hooks
+
+Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen](https://the-guild.dev/graphql/codegen), you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
+
+Use the hooks exported from Apollo Client directly with `TypedDocumentNode` instead.
+
+<Note>
+
+The GraphQL Codegen team has created a codemod that helps you migrate away from generated hooks. Learn more about migrating your code using the new codemod by watching the [tutorial video](https://www.youtube.com/watch?v=GGmt0hvnQNU).<br/><br/>
+
+Note that the codemod is a separate package and not maintained by the Apollo Client team. Generally, we recommend that you use a manual codegen configuration over the client preset as shown in the video because the client preset includes some features that are incompatible with Apollo Client. If you choose to use the client preset, see our [recommended configuration for the client preset](../development-testing/graphql-codegen#a-note-about-the-client-preset). In the long term, consider using the plugins directly with our [recommended starter configuration](../development-testing/graphql-codegen#recommended-starter-configuration).
+
+</Note>
+
+## TypeScript changes
+
+### Namespaced types
+
+Most types are now colocated with the API that they belong to. This makes them more discoverable, adds consistency to the naming of each type, and provides clear ownership boundaries.
+
+Some examples:
+
+- `FetchResult` is now `ApolloLink.Result`
+- `ApolloClientOptions` is now `ApolloClient.Options`
+- `QueryOptions` is now `ApolloClient.QueryOptions`
+- `ApolloQueryResult` is now `ObservableQuery.Result`
+- `QueryHookOptions` is now `useQuery.Options`
+- `QueryResult` is now `useQuery.Result`
+- `LazyQueryResult` is now `useLazyQuery.Result`
+
+Many of the old, most-used types are still available in Apollo Client 4 (including the examples above), but are now deprecated in favor of the new namespaced types. We suggest running the codemod to update your code to use the new namespaced types.
+
+### Removal of `<TContext>` generic argument
+
+Many APIs in Apollo Client 3 provided a `TContext` generic argument that allowed you to provide the type for the `context` option. However, this generic argument was not consistently applied across all APIs that provided a `context` option and was easily forgotten.
+
+Apollo Client 4 removes the `TContext` generic argument in favor of using [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `DefaultContext` interface to provide types for the `context` option. This provides type safety throughout all Apollo Client APIs when using context.
+
+To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
+
+```ts title="apollo-client.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext {
+    myProperty?: string;
+    requestId?: number;
+  }
+}
+```
+
+### Removal of `<TCacheShape>` generic argument
+
+The `TCacheShape` generic argument has been removed from the `ApolloClient` constructor. Most users set this type to `any` which provided little benefit for type safety. APIs that previously relied on `TCacheShape` are now set to `unknown`.
+
+To migrate, remove the `TCacheShape` generic argument when initializing `ApolloClient`.
+
+```ts
+new ApolloClient<any>({ // [!code --]
+new ApolloClient({ // [!code ++]
+  // ...
+});
+```
+
+## Apollo Link changes
+
+### New class-based links
+
+All links are now available as classes. The old link creator functions are still provided, but are now deprecated and will be removed in a future major version.
+
+| Old link creator              | New link class                    |
+| ----------------------------- | --------------------------------- |
+| `setContext`                  | `SetContextLink`                  |
+| `onError`                     | `ErrorLink`                       |
+| `createHttpLink`              | `HttpLink`                        |
+| `createPersistedQueryLink`    | `PersistedQueryLink`              |
+| `removeTypenameFromVariables` | `RemoveTypenameFromVariablesLink` |
+
+<Caution>
+
+Pay attention when migrating from the old `setContext` creator to the new `SetContextLink` class.
+The argument order for the callback function has changed. To migrate, swap the order of the `prevContext` and `operation` arguments.
+
+```ts disableCopy=true
+import { setContext } from "@apollo/client/link/context"; // [!code --]
+import { SetContextLink } from "@apollo/client/link/context"; // [!code ++]
+
+const authLink = setContext((operation, prevContext) => { /*...*/ } // [!code --]
+const authLink = new SetContextLink((prevContext, operation) => { /*...*/ }  // [!code ++]
+```
+
+</Caution>
+
+### Deprecation of bare `empty`, `from`, `concat`, and `split` functions
+
+> This change is performed by the codemod
+
+The bare `empty`, `from`, `concat`, and `split` functions exported from `@apollo/client` and `@apollo/client/link` are now deprecated in favor of using the equivalent static methods on the `ApolloLink` class.
+
+```ts disableCopy=true
+import { empty, from, concat, split } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
+
+const link = empty();// [!code --]
+const link = ApolloLink.empty();// [!code ++]
+
+from([linkA, linkB]);// [!code --]
+ApolloLink.from([linkA, linkB]);// [!code ++]
+
+concat(linkA, linkB);// [!code --]
+ApolloLink.concat(linkA, linkB);// [!code ++]
+
+split((operation) => check(operation), linkA, linkB);// [!code --]
+ApolloLink.split((operation) => check(operation), linkA, linkB);// [!code ++]
+```
+
+### Updated `concat` behavior
+
+The static `ApolloLink.concat` method and the `ApolloLink.prototype.concat` method now accept a dynamic number of arguments to allow for concatenation with more than one link. This aligns the API with more familiar APIs such as `Array.prototype.concat` which accepts a variable number of arguments and provides more succinct code.
+
+```ts disableCopy=true
+link1.concat(link2).concat(link3);// [!code --]
+link1.concat(link2, link3);// [!code ++]
+```
+
+#### Deprecation of `ApolloLink.concat`
+
+The static `ApolloLink.concat` is now deprecated in favor of `ApolloLink.from`. With the change to allow for a variable number of arguments, `ApolloLink.concat(a, b)` is now an alias for `ApolloLink.from([a, b])` and provides no additional benefit. `ApolloLink.concat` will be removed in a future major version.
+
+```ts disableCopy=true
+import { ApolloLink } from "@apollo/client/link";
+
+ApolloLink.concat(firstLink, secondLink);// [!code --]
+ApolloLink.from([firstLink, secondLink]);// [!code ++]
+```
+
+### `from`,`concat`,`split` static and instance methods now require `ApolloLink` instances
+
+These methods previously accepted `ApolloLink` instances or plain request handler functions as arguments. These APIs have been updated to require `ApolloLink` instances.
+
+To migrate, wrap the request handler functions in an `ApolloLink` instance.
+
+```ts disableCopy=true
+ApolloLink.from(
+  (operation, forward) => {// [!code --:3]
+    /*...*/
+  },
+  new ApolloLink((operation, forward) => {// [!code ++:3]
+    /*...*/
+  }),
+  nextLink
+);
+```
+
+### Changes to `ErrorLink`
+
+The `ErrorLink` (previously created with `onError`) now uses a single `error` property instead of separate `graphQLErrors`, `networkError`, and `protocolErrors`.
+
+With built-in error classes, use `ErrorClass.is` to check for specific error types.
+For external error types like `TypeError`, use `instanceof` or the more modern [`Error.isError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError#instanceof_vs._error.iserror) in combination with a check for `error.name` to check the kind of error.
+
+```ts disableCopy=true
+import {
+  onError,// [!code --]
+  ErrorLink,// [!code ++]
+} from "@apollo/client/link/error";
+import { CombinedGraphQLErrors, ServerError } from "@apollo/client";// [!code ++]
+
+const errorLink = onError(// [!code --:12]
+  ({ graphQLErrors, networkError, protocolErrors, response }) => {
+    if (graphQLErrors) {
+      graphQLErrors.forEach(({ message }) =>
+        console.log(`GraphQL error: ${message}`)
+      );
+    }
+    if (networkError) {
+      console.log(`Network error: ${networkError.message}`);
+    }
+  }
+);
+const errorLink = new ErrorLink(({ error, result }) => {// [!code ++:11]
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach(({ message }) =>
+      console.log(`GraphQL error: ${message}`)
+    );
+  } else if (ServerError.is(error)) {
+    console.log(`Server error: ${error.message}`);
+  } else if (error) {
+    console.log(`Other error: ${error.message}`);
+  }
+});
+```
+
+<Note>
+
+If the error thrown in the link chain is not an error-like object, it will be wrapped in an `UnconventionalError` class - so it is always safe to access `error.message` and `error.name` on the `error` object.
+
+</Note>
+
+### Changes to `operation`
+
+#### `operationName` as `undefined` for anonymous queries
+
+The `operationName` is now set to `undefined` when executing an anonymous query. Anonymous queries were previously set as an empty string.
+
+If you use string methods on the `operationName`, you may need to check for `undefined` first.
+
+#### New `operation.operationType` property
+
+In some cases, you might have needed to determine the GraphQL operation type of the request. This is common when using `ApolloLink.split` to route subscription operations to a WebSocket-based link.
+
+A new `operationType` property has been introduced to reduce the boilerplate needed to determine the operation type of the GraphQL document.
+
+```ts disableCopy=true
+import { getMainDefinition } from "@apollo/client";// [!code --]
+import { OperationTypeNode } from "graphql";// [!code ++]
+
+new ApolloLink((operation, forward) => {
+  const definition = getMainDefinition(query);// [!code --:4]
+  const isSubscription =
+    definition.kind === "OperationDefinition" &&
+    definition.operation === "subscription";
+
+  const isSubscription =// [!code ++:2]
+    operation.operationType === OperationTypeNode.SUBSCRIPTION;
+});
+```
+
+#### Type safety
+
+The `context` type can be extended by using declaration merging to allow you to define custom properties used by your links.
+
+For example, to make your context type-safe for usage with `HttpLink`, place this snippet in a `.d.ts` file in your project:
+
+```ts title="apollo-client.d.ts"
+import { HttpLink } from "@apollo/client";
+
+declare module "@apollo/client" {
+  interface DefaultContext extends HttpLink.ContextOptions {}
+}
+```
+
+For more information on how to setup context types, see the [TypeScript](../data/typescript#defining-context-types) guide.
+
+### Changes to `operation.getContext`
+
+#### Readonly context
+
+The `context` object returned by `operation.getContext()` is now frozen and `Readonly`. This prevents mutations to the context object that aren't propagated to downstream links and could cause subtle bugs.
+
+To make changes to context, use `operation.setContext()`.
+
+#### Removal of the `cache` property
+
+Apollo Client 3 provided a reference to the cache on the context object for use with links via the `cache` property. This property has been removed and replaced with a `client` property on the `operation` which references the `client` instance that initiated the request.
+
+Access the `cache` through the `client` property instead.
+
+```ts disableCopy=true
+new ApolloLink((operation, forward) => {
+  const cache = operation.getContext().cache;// [!code --]
+  const cache = operation.client.cache;// [!code ++]
+});
+```
+
+#### Removal of the `getCacheKey` function
+
+Apollo Client 3 provided a `getCacheKey` function on the context object to obtain cache IDs. This function has been removed.
+
+Use the `client` property to get access to the `cache.identify` function to identify an object.
+
+```ts disableCopy=true
+new ApolloLink((operation, forward) => {
+  const cacheID = operation.getContext().getCacheKey(obj);// [!code --]
+  const cacheID = operation.client.cache.identify(obj);// [!code ++]
+});
+```
+
+### `execute` now requires the `client`
+
+If you use the `execute` function directly to run the link chain, the `execute` function now requires a 3rd argument that provides the `ApolloClient` instance that represents the client that initiated the request.
+
+Provide a context argument with the `client` option to the 3rd argument of the `execute` function.
+
+```ts
+import { execute } from "@apollo/client";
+
+const client = new ApolloClient({
+  // ...
+});
+
+execute(
+  link,
+  { query /* ... */ },
+  { client }// [!code ++]
+);
+```
+
+<Tip>
+
+If you use the `execute` function to unit-test custom links, provide a dummy `ApolloClient` instance. The `ApolloClient` instance does not need any special configuration unless your unit tests require it.
+
+</Tip>
+
+#### Observable API changes
+
+In Apollo Client 4, the underlying `Observable` implementation has changed from using `zen-observable` to using `rxjs` `Observable` instances.
+
+This can affect custom link implementations that rely on the `Observable` API.
+
+If you were previously using the `map`, `filter`, `reduce`, `flatMap` or `concat` methods on the `Observable` instances, you will need to update your code to use the `rxjs` equivalents.
+
+Additionally, if you were using `Observable.of` or `Observable.from`, you will need to use the `rxjs` `of` or `from` functions instead.
+
+```ts disableCopy=true
+import { of, from, map } from "rxjs";// [!code ++]
+
+Observable.of(1, 2, 3);// [!code --]
+of(1, 2, 3);// [!code ++]
+Observable.from([1, 2, 3]);// [!code --]
+from([1, 2, 3]);// [!code ++]
+observable.map((x) => x * 2);// [!code --]
+observable.pipe(map((x) => x * 2));// [!code ++]
+```
+
+A good way to find the operator you need is to follow the [rxjs operator decision tree](https://rxjs.dev/operator-decision-tree).
+
+## GraphQL over HTTP spec compatibility
+
+The `HttpLink` and `BatchHttpLink` links have been updated to add stricter compatibility with the [GraphQL over HTTP specification](https://graphql.github.io/graphql-over-http/draft/).
+
+This change means:
+
+- The default `Accept` header is now `application/graphql-response+json,application/json;q=0.9` for all outgoing requests
+- The `application/graphql-response+json` media type is now supported and the client handles the response according to the [`application/graphql-response+json` behavior](https://graphql.github.io/graphql-over-http/draft/#sec-application-graphql-response-json)
+- The `application/json` media type behaves according to the [`application/json` behavior](https://graphql.github.io/graphql-over-http/draft/#sec-application-json)
+
+The client now does the following when `application/json` media type is returned.
+
+- The client will throw a `ServerError` when the server encodes a `content-type` using `application/json` and returns a non-200 status code
+- The client will now throw a `ServerError` when the server encodes using any other `content-type` and returns a non-200 status code
+
+<Note>
+
+If you use a testing utility to mock requests in your test, you may experience different behavior than production if your testing utility responds as `application/json` but your production server responds as `application/graphql-response+json`. If a `content-type` header is not set, the client interprets the response as `application/json` by default.
+
+</Note>
+
+## Local state changes
+
+Local state management (using `@client` fields) has been removed from core and is now an opt-in feature. This change helps reduce the bundle size of your application if you don't use local state management features.
+
+To opt-in to use local state management with the `@client` directive, initialize an instance of `LocalState` and provide it as the `localState` option to the `ApolloClient` constructor. Apollo Client will throw an error if a `@client` field is used and `localState` is not provided.
+
+```ts
+import { LocalState } from "@apollo/client/local-state";// [!code ++]
+
+new ApolloClient({
+  // ...
+  localState: new LocalState(),// [!code ++]
+  // ...
+});
+```
+
+### Local resolvers
+
+The `resolvers` option has been removed from the `ApolloClient` constructor and is now part of the `LocalState` class. Move local resolvers to the `LocalState` class.
+
+```ts
+new ApolloClient({
+  resolvers: {...}, // [!code --]
+  localState: new LocalState({
+    resolvers: {...} // [!code ++]
+  })
+});
+```
+
+Now that local resolvers are part of the `LocalState` class, the following resolver methods were removed from the `ApolloClient` class:
+
+- `addResolvers`
+- `getResolvers`
+- `setResolvers`
+
+If you add resolvers after the initialization of the client, you may continue to do so with your `LocalState` instance using the `addResolvers` method.
+
+```ts
+const client = new ApolloClient({
+  // ...
+});
+
+client.addResolvers(resolvers);// [!code --]
+client.localState.addResolvers(resolvers);// [!code ++]
+```
+
+`getResolvers` and `setResolvers` have been removed without a replacement. Stop using them.
+
+```ts
+const client = new ApolloClient({
+  // ...
+});
+
+const resolvers = client.getResolvers();// [!code --]
+client.setResolvers(resolvers);// [!code --]
+```
+
+#### Resolver context
+
+The context argument (i.e. the 3rd argument) passed to resolver functions has been updated. Apollo Client 3 spread [request `context`](../api/link/introduction#managing-context) and replaced any passed-in `client` and `cache` properties.
+
+Apollo Client 4 moves the request `context` to the `requestContext` key to avoid name clashes and updates the shape of the object. The context argument is now provided with the following object:
+
+```ts
+{
+  // the request context. By default `TContextValue` is of type `DefaultContext`,
+  // but can be changed if a `context` function is provided.
+  requestContext: TContextValue,
+  // The client instance making the request
+  client: ApolloClient,
+  // Whether the resolver is run as a result of gathering exported variables
+  // or resolving the value as part of the result
+  phase: "exports" | "resolve"
+}
+```
+
+If you accessed properties from the request context, you will now need to read those properties from the `requestContext` key. If you used the `cache` property, you will need to get the `cache` from the `client` property.
+
+```ts
+new LocalState({
+  resolvers: {
+    MyType: {
+      myLocalField: (parent, args, { someValue, cache }) { // [!code --]
+      myLocalField: (parent, args, { requestContext, client }) { // [!code ++]
+        const someValue = requestContext.someValue; // [!code ++]
+        const cache = client.cache; // [!code ++]
+      }
+    }
+  }
+})
+```
+
+#### Thrown errors
+
+Errors thrown in local resolvers are now handled properly and predictably. Errors are now added to the `errors` array in the GraphQL response and the field value is set to `null`.
+
+The following example throws an error in a local resolver.
+
+```ts
+new LocalState({
+  resolvers: {
+    Query: {
+      localField: () => {
+        throw new Error("Could not get localField");
+      },
+    },
+  },
+});
+```
+
+This results in the following result:
+
+```ts
+{
+  data: {
+    localField: null,
+  },
+  errors: [
+    {
+      message: "Could not get localField",
+      path: ["localField"],
+      extensions: {
+        localState: {
+          resolver: "Query.localField",
+          cause: new Error("Could not get localField"),
+        },
+      },
+    },
+  ],
+};
+```
+
+As a result of this change, it is now safe to throw, or allow thrown errors in your resolvers. If your local resolvers catch errors to avoid issues in Apollo Client 3, these can be removed in cases where you want the error to be returned in the GraphQL result.
+
+```ts
+new LocalState({
+  resolvers: {
+    Query: {
+      localField: () => {
+        try {// [!code --]
+          throw new Error("Could not get localField");
+        } catch (e) {// [!code --]
+          console.log(e);// [!code --]
+        }// [!code --]
+      },
+    },
+  },
+});
+```
+
+#### Returned values
+
+Apollo Client 4 now checks the return value of local resolvers to ensure it returns a value or `null`. `undefined` is no longer a valid value.
+
+When `undefined` is returned from a local resolver, the value is set to `null` and a warning is logged to the console.
+
+This example returns `undefined` due to the early return.
+
+```ts
+new LocalState({
+  resolvers: {
+    Query: {
+      localField: () => {
+        if (someCondition) {
+          return;
+        }
+
+        return "value";
+      },
+    },
+  },
+});
+```
+
+This results in the following result:
+
+```ts
+{
+  data: {
+    localField: null,
+  },
+};
+```
+
+And a warning is emitted to the console:
+
+> The 'Query.localField' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.
+
+Instead, the local resolver should return `null` instead.
+
+```ts
+if (someCondition) {
+  return;// [!code --]
+  return null;// [!code ++]
+}
+```
+
+The exception is when running local resolvers to get values for exported variables for fields marked with the `@export` directive. For this case, you may return `undefined` to omit the variable from the outgoing request. If you need to know whether to return `undefined` or `null`, use the `phase` property provided to the context argument.
+
+```ts
+new LocalState({
+  resolvers: {
+    Query: {
+      localField: (parent, args, { phase }) => {
+        // `phase` is "resolve" when resolving the field for the response  [!code highlight:4]
+        return phase === "resolve" ? null : undefined;
+        // `phase` is "exports" when getting variables for `@export` fields.
+        return phase === "exports" ? undefined : null;
+      },
+    },
+  },
+});
+```
+
+#### Enforced `__typename`
+
+Apollo Client 4 now validates that a `__typename` property is returned from resolvers that return arrays or objects on non-scalar fields. If `__typename` is not included, an error is added to the `errors` array and the field value is set to `null`. This change ensures the object is cached properly to avoid bugs that might otherwise be difficult to track down.
+
+If your local resolver returns an object or an array for a non-scalar field, make sure it includes the `__typename` field.
+
+```ts
+const query = gql`
+  query {
+    localUser @client {
+      id
+    }
+  }
+`;
+
+new LocalState({
+  resolvers: {
+    Query: {
+      localUser: () => ({
+        __typename: "LocalUser",// [!code ++]
+        // ...
+      }),
+    },
+  },
+});
+```
+
+#### Behavior changes with `@export` fields
+
+Apollo Client 4 adds additional validation to fields and resolvers that use the `@export` directive before the request is sent to the server.
+
+##### Variable definitions
+
+Each `@export` field is now checked to ensure it can be associated with a variable definition in the GraphQL document. If the `@export` directive doesn't include the `as` argument, or the GraphQL document doesn't define a variable definition that matches the name provided to the `as` argument, a `LocalStateError` is thrown.
+
+You will need to ensure the GraphQL document includes variable definitions for all `@export` fields.
+
+```ts
+// This throws because "someVar" is not defined
+const query = gql`
+  query {
+    field @client @export(as: "someVar")
+  }
+`;
+
+// This is valid
+const query = gql`
+  query ($someVar: String) {
+    field @client @export(as: "someVar")
+  }
+`;
+```
+
+##### Required variables
+
+Resolvers that return values for required variables are now checked to ensure the value isn't nullable. If a resolver returns `null` or `undefined` for a required variable, a `LocalStateError` is thrown. This would otherwise cause an error on the server.
+
+##### Errors in local resolvers
+
+Local resolvers are not allowed to throw errors when resolving values for variables to avoid ambiguity on how to handle the error. If an error is thrown from a local resolver, it is wrapped in a `LocalStateError` and rethrown.
+
+Since local resolvers are allowed to throw errors when resolving field data, you can use the `phase` property provided to the context argument to determine whether to rethrow the error or return a different value.
+
+```ts
+new LocalState({
+  resolvers: {
+    Query: {
+      localField: (parent, args, { phase }) => {
+        try {
+          throw new Error("Oops couldn't get local field");
+        } catch (error) {
+          // Omit the variable value in the request
+          if (phase === "exports") {
+            return;
+          }
+
+          // Rethrow the error to add it to the `errors` array
+          throw error;
+        }
+      },
+    },
+  },
+});
+```
+
+##### Handling Local state errors
+
+Each validation error throws an instance of `LocalStateError`. You can check if an error is a result of a local state error by using `LocalStateError.is` method. The error instance provides additional information about the path in the GraphQL document that caused the error.
+
+```ts
+import { LocalStateError } from "@apollo/client";
+
+// ...
+
+const { error } = useQuery(QUERY);
+
+if (LocalStateError.is(error)) {
+  console.log(error.path, error.message);
+}
+```
+
+### Custom fragment matchers
+
+Apollo Client 3 allowed for custom fragment matchers using the `fragmentMatcher` option provided to the `ApolloClient` constructor. This made it possible to add your own custom logic to match fragment spreads used with client field selection sets. Fragment matching is now part of the cache with the `fragmentMatches` API.
+
+Apollo Client 4 removes the `fragmentMatcher` option and the associated `setLocalStateFragmentMatcher` method that allows you to set a fragment matcher after the client was initialized. Remove the use of these APIs.
+
+```ts
+const client = new ApolloClient({
+  fragmentMatcher: (rootValue, typeCondition, context) => true,// [!code --]
+});
+
+client.setLocalStateFragmentMatcher(() => true);// [!code --]
+```
+
+If you're using `InMemoryCache`, you're all set. `InMemoryCache` implements `fragmentMatches` for you. We recommend checking your [`possibleTypes` configuration](../data/fragments#using-fragments-with-unions-and-interfaces) to ensure it is up-to-date with your local schema.
+
+If you're using a custom cache implementation, you will need to check if it [meets the new requirements for custom cache implementations](#new-requirements-for-custom-cache-implementations). `LocalState` requires that the cache implements the `fragmentMatches` API. If the custom cache does not implement `fragmentMatches`, an error is thrown.
+
+## Testing-related changes
+
+A lot of utilities that were previously part of the `@apollo/client/utilities` and `@apollo/client/testing` packages have been removed. They were used for internal testing purposes and we are not using them anymore, so we removed them.
+
+### `MockedProvider` changes
+
+#### Default "realistic" `delay`
+
+If no `delay` is specified in mocks, MockLink now defaults to the `realisticDelay` function, which uses a random delay between 20 and 50ms to ensure tests handle loading states.
+
+If you want to restore the previous behavior of "no delay", you can set it via
+
+```ts
+MockLink.defaultOptions = {
+  delay: 0,
+};
+```
+
+#### Removed `createMockClient` and `mockSingleLink`
+
+The `createMockClient` and `mockSingleLink` utilities have been removed. Instead, you can now use the `MockLink` class directly to create a mock link and pass it into a new `ApolloClient` instance.
+
+## Bundling changes
+
+### `exports` field in package.json
+
+Apollo Client 4 now uses the `exports` field in its `package.json` to define which files are available for import. This means you should now be able to use `import { ApolloClient } from "@apollo/client"` instead of `import { ApolloClient } from "@apollo/client/index.js"` or `import { ApolloClient } from "@apollo/client/main.cjs"`.
+
+### New transpilation target, no shipped polyfills
+
+Apollo Client is now transpiled to target a `since 2023, node >= 20, not dead` target. This means that Apollo Client can now use modern JavaScript features without downlevel transpilation, which will generally result in better performance and smaller bundle size.
+We also have stopped the practice of shipping polyfills.
+
+Please note that we might bump the transpilation target to more modern targets in upcoming minor versions. See our [versioning policy](../versioning-policy) for more details on the supported environments.
+
+If you are targeting older browsers or special environments, you might need to adjust your build configuration to transpile the Apollo Client library itself to a lower target, or polyfill the missing features yourself.
+
+### Development mode changes
+
+Previously, you had to set a global `__DEV__` variable to `false` to disable development mode.
+Now, development mode is primarily controlled by the `development` export condition of the `package.json` exports field. Most modern bundlers should now automatically pick correctly between the development and production version of Apollo Client based on your build environment.
+
+If your build tooling does not support the `development` or `production` export condition, Apollo Client falls back to the previous behavior, meaning that you can still set the `__DEV__` global variable to `false` to disable development mode in those cases.
+
+## Other notable breaking changes
+
+### New requirements for custom cache implementations
+
+Custom cache implementations must now implement the `fragmentMatches` method, which is required for fragment matching in Apollo Client 4.

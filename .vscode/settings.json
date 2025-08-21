@@ -5,9 +5,10 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "node_modules/typescript/lib",
+  "mdx.server.enable": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "never"
   },
   "cSpell.enableFiletypes": ["mdx"],
-  "jest.jestCommandLine": "node --expose-gc  node_modules/.bin/jest --config ./config/jest.config.js --ignoreProjects 'ReactDOM 17' --runInBand"
+  "jest.jestCommandLine": "node --expose-gc  node_modules/.bin/jest --config ./config/jest.config.ts --ignoreProjects 'ReactDOM 17' --ignoreProjects 'ReactDOM 18' --ignoreProjects 'Core Tests - RxJS min version' --runInBand"
 }

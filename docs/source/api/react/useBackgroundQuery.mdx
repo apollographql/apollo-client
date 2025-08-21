@@ -1,0 +1,47 @@
+---
+title: useBackgroundQuery
+description: Apollo Client API reference
+---
+
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+<FunctionDetails
+  canonicalReference="@apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:function(1)"
+  headingLevel={2}
+
+>
+
+```ts
+[
+  QueryRef<TData, TVariables> | undefined,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+```
+
+A tuple of two values:
+
+  <ManualTuple>
+
+    <ManualTupleItem
+      idPrefix="usebackgroundquery-result"
+      name="queryRef"
+      type="QueryRef<TData, TVariables> | undefined"
+    >
+      A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="usebackgroundquery-result"
+      name="result"
+      type="useBackgroundQuery.Result<TData, TVariables>"
+      canonicalReference={"@apollo/client/react!useBackgroundQuery.Result:interface"}
+    >
+      An object containing helper functions for the query:
+      - `refetch`: A function to re-execute the query
+      - `fetchMore`: A function to fetch more results for pagination
+      - `subscribeToMore`: A function to subscribe to updates
+    </ManualTupleItem>
+
+  </ManualTuple>
+</FunctionDetails>
+
+If no query has been executed yet and you skip the query, the hook will return `undefined` instead of a `queryRef`.

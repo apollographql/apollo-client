@@ -1,13 +1,15 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
 
-import { ApolloLink } from "../../core";
-import { Observable } from "../../../utilities/observables/Observable";
-import { execute } from "../../core/execute";
-import { setContext } from "../index";
-import { wait } from "../../../testing";
-import { ObservableStream } from "../../../testing/internal";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloLink } from "@apollo/client/link";
+import { setContext, SetContextLink } from "@apollo/client/link/context";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+  wait,
+} from "@apollo/client/testing/internal";
 
-const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`
   query Test {
     foo {
@@ -20,60 +22,75 @@ const data = {
 };
 
 it("can be used to set the context with a simple function", async () => {
-  const withContext = setContext(() => ({ dynamicallySet: true }));
+  const withContext = new SetContextLink(() => ({ dynamicallySet: true }));
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
+});
+
+test("`setContext` can be used to create a `SetContextLink`", async () => {
+  const withContext = setContext(() => ({ dynamicallySet: true }));
+  expect(withContext).toBeInstanceOf(SetContextLink);
+
+  const mockLink = new ApolloLink((operation) => {
+    expect(operation.getContext().dynamicallySet).toBe(true);
+    return of({ data });
+  });
+
+  const link = withContext.concat(mockLink);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise", async () => {
-  const withContext = setContext(() =>
+  const withContext = new SetContextLink(() =>
     Promise.resolve({ dynamicallySet: true })
   );
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise that is delayed", async () => {
-  const withContext = setContext(() =>
-    sleep(25).then(() => ({ dynamicallySet: true }))
+  const withContext = new SetContextLink(() =>
+    wait(25).then(() => ({ dynamicallySet: true }))
   );
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
-it("handles errors in the lookup correclty", async () => {
-  const withContext = setContext(() =>
-    sleep(5).then(() => {
+it("handles errors in the lookup correctly", async () => {
+  const withContext = new SetContextLink(() =>
+    wait(5).then(() => {
       throw new Error("dang");
     })
   );
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -84,12 +101,12 @@ it("handles errors in the lookup correclty", async () => {
 });
 
 it("handles errors in the lookup correctly with a normal function", async () => {
-  const withContext = setContext(() => {
+  const withContext = new SetContextLink(() => {
     throw new Error("dang");
   });
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -99,14 +116,15 @@ it("handles errors in the lookup correctly with a normal function", async () => 
 });
 
 it("has access to the request information", async () => {
-  const withContext = setContext(({ operationName, query, variables }) =>
-    sleep(1).then(() =>
-      Promise.resolve({
-        variables: variables ? true : false,
-        operation: query ? true : false,
-        operationName: operationName!.toUpperCase(),
-      })
-    )
+  const withContext = new SetContextLink(
+    (_, { operationName, query, variables }) =>
+      wait(1).then(() =>
+        Promise.resolve({
+          variables: variables ? true : false,
+          operation: query ? true : false,
+          operationName: operationName!.toUpperCase(),
+        })
+      )
   );
 
   const mockLink = new ApolloLink((op) => {
@@ -114,7 +132,7 @@ it("has access to the request information", async () => {
     expect(variables).toBe(true);
     expect(operation).toBe(true);
     expect(operationName).toBe("TEST");
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -122,18 +140,18 @@ it("has access to the request information", async () => {
     execute(link, { query, variables: { id: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("has access to the context at execution time", async () => {
-  const withContext = setContext((_, { count }) =>
-    sleep(1).then(() => ({ count: count + 1 }))
+  const withContext = new SetContextLink(({ count }) =>
+    wait(1).then(() => ({ count: count + 1 }))
   );
 
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -141,18 +159,18 @@ it("has access to the context at execution time", async () => {
     execute(link, { query, context: { count: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("unsubscribes correctly", async () => {
-  const withContext = setContext((_, { count }) =>
-    sleep(1).then(() => ({ count: count + 1 }))
+  const withContext = new SetContextLink(({ count }) =>
+    wait(1).then(() => ({ count: count + 1 }))
   );
 
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -164,15 +182,15 @@ it("unsubscribes correctly", async () => {
     })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
   stream.unsubscribe();
 });
 
 it("unsubscribes without throwing before data", async () => {
   let called!: boolean;
-  const withContext = setContext((_, { count }) => {
+  const withContext = new SetContextLink(({ count }) => {
     called = true;
-    return sleep(1).then(() => ({ count: count + 1 }));
+    return wait(1).then(() => ({ count: count + 1 }));
   });
 
   const mockLink = new ApolloLink((operation) => {
@@ -203,8 +221,8 @@ it("unsubscribes without throwing before data", async () => {
 
 it("does not start the next link subscription if the upstream subscription is already closed", async () => {
   let promiseResolved = false;
-  const withContext = setContext(() =>
-    sleep(5).then(() => {
+  const withContext = new SetContextLink(() =>
+    wait(5).then(() => {
       promiseResolved = true;
       return { dynamicallySet: true };
     })
@@ -231,4 +249,25 @@ it("does not start the next link subscription if the upstream subscription is al
   expect(promiseResolved).toBe(true);
   expect(mockLinkCalled).toBe(false);
   expect(subscriptionReturnedData).toBe(false);
+});
+
+test("can access the client from operation argument", async () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const withContext = new SetContextLink((_, operation) => {
+    return { client: operation.client };
+  });
+
+  const mockLink = new ApolloLink((operation) => {
+    return of({ data: operation.getContext() });
+  });
+
+  const link = withContext.concat(mockLink);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  const { data } = await stream.takeNext();
+  expect(data!.client).toBe(client);
 });

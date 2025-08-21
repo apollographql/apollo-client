@@ -1,12 +1,15 @@
-import gql from "graphql-tag";
-import { execute } from "../../core/execute";
-import { HttpLink } from "../HttpLink";
-import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
-import { ObservableStream } from "../../../testing/internal";
+import { TextDecoder } from "util";
 
-var Blob = require("blob-polyfill").Blob;
+import { gql } from "graphql-tag";
+import { ReadableStream } from "web-streams-polyfill";
+
+import { HttpLink } from "@apollo/client/link/http";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
@@ -46,20 +49,6 @@ describe("multipart responses", () => {
     `--${BOUNDARY}--`,
   ].join("\r\n");
 
-  const bodyDefaultBoundary = [
-    `---`,
-    "Content-Type: application/json; charset=utf-8",
-    "Content-Length: 43",
-    "",
-    '{"data":{"stub":{"id":"0"}},"hasNext":true}',
-    `---`,
-    "Content-Type: application/json; charset=utf-8",
-    "Content-Length: 58",
-    "",
-    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
-    `-----`,
-  ].join("\r\n");
-
   const bodyIncorrectChunkType = [
     `---`,
     "Content-Type: foo/bar; charset=utf-8",
@@ -72,22 +61,6 @@ describe("multipart responses", () => {
     "",
     '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `-----`,
-  ].join("\r\n");
-
-  const bodyBatchedResults = [
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"data":{"allProducts":[{"delivery":{"__typename":"DeliveryEstimates"},"sku":"federation","id":"apollo-federation","__typename":"Product"},{"delivery":{"__typename":"DeliveryEstimates"},"sku":"studio","id":"apollo-studio","__typename":"Product"}]},"hasNext":true}',
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"hasNext":true,"incremental":[{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",0,"delivery"]},{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",1,"delivery"]}]}',
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"hasNext":false}',
-    "--graphql--",
   ].join("\r\n");
 
   const results = [
@@ -109,53 +82,6 @@ describe("multipart responses", () => {
         },
       ],
       hasNext: false,
-    },
-  ];
-
-  const batchedResults = [
-    {
-      data: {
-        allProducts: [
-          {
-            __typename: "Product",
-            delivery: {
-              __typename: "DeliveryEstimates",
-            },
-            id: "apollo-federation",
-            sku: "federation",
-          },
-          {
-            __typename: "Product",
-            delivery: {
-              __typename: "DeliveryEstimates",
-            },
-            id: "apollo-studio",
-            sku: "studio",
-          },
-        ],
-      },
-      hasNext: true,
-    },
-    {
-      hasNext: true,
-      incremental: [
-        {
-          data: {
-            __typename: "DeliveryEstimates",
-            estimatedDelivery: "6/25/2021",
-            fastestDelivery: "6/24/2021",
-          },
-          path: ["allProducts", 0, "delivery"],
-        },
-        {
-          data: {
-            __typename: "DeliveryEstimates",
-            estimatedDelivery: "6/25/2021",
-            fastestDelivery: "6/24/2021",
-          },
-          path: ["allProducts", 1, "delivery"],
-        },
-      ],
     },
   ];
 
@@ -189,7 +115,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -214,13 +140,17 @@ describe("multipart responses", () => {
       },
     });
 
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
+    const fetch = jest.fn(async () => {
+      const val = {
+        status: 200,
+        body: stream,
+        headers: new Headers({
+          "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+        }),
+      };
+
+      return val;
+    });
 
     const link = new HttpLink({
       fetch: fetch as any,
@@ -230,187 +160,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (strings) with default boundary", async () => {
-    const stream = Readable.from(
-      bodyDefaultBoundary.split("\r\n").map((line) => line + "\r\n")
-    );
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      // if no boundary is specified, default to -
-      headers: new Headers({
-        "content-type": `multipart/mixed`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (strings) with arbitrary splits", async () => {
-    let chunks: Array<string> = [];
-    let chunkSize = 15;
-    for (let i = 0; i < bodyCustomBoundary.length; i += chunkSize) {
-      chunks.push(bodyCustomBoundary.slice(i, i + chunkSize));
-    }
-    const stream = Readable.from(chunks);
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (array buffers)", async () => {
-    const stream = Readable.from(
-      bodyDefaultBoundary
-        .split("\r\n")
-        .map((line) => new TextEncoder().encode(line + "\r\n"))
-    );
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      // if no boundary is specified, default to -
-      headers: new Headers({
-        "content-type": `multipart/mixed`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle node stream bodies (array buffers) with batched results", async () => {
-    const stream = Readable.from(
-      bodyBatchedResults
-        .split("\r\n")
-        .map((line) => new TextEncoder().encode(line + "\r\n"))
-    );
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      // if no boundary is specified, default to -
-      headers: new Headers({
-        "content-type": `multipart/mixed;boundary="graphql";deferSpec=20220824`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of batchedResults) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle streamable blob bodies", async () => {
-    const body = new Blob(bodyCustomBoundary.split("\r\n"), {
-      type: "application/text",
-    });
-    const stream = new ReadableStream({
-      async start(controller) {
-        const lines = bodyCustomBoundary.split("\r\n");
-        try {
-          for (const line of lines) {
-            controller.enqueue(line + "\r\n");
-          }
-        } finally {
-          controller.close();
-        }
-      },
-    });
-    body.stream = () => stream;
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle non-streamable blob bodies", async () => {
-    const body = new Blob(
-      bodyCustomBoundary.split("\r\n").map((i) => i + "\r\n"),
-      { type: "application/text" }
-    );
-    body.stream = undefined;
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -431,8 +181,8 @@ describe("multipart responses", () => {
     });
     const observable = execute(link, { query: sampleDeferredQuery });
     const mockError = {
-      throws: new Error(
-        "Unknown body type for responseIterator. Please pass a streamable response."
+      throws: new InvariantError(
+        "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
       ),
     };
 
@@ -493,14 +243,160 @@ describe("multipart responses", () => {
       });
       const observable = execute(link, { query: sampleDeferredQuery });
       const mockError = {
-        throws: new Error(
-          "TextDecoder must be defined in the environment: please import a polyfill."
-        ),
+        throws: new TypeError("TextDecoder is not a constructor"),
       };
 
       const observableStream = new ObservableStream(observable);
 
       await expect(observableStream).toEmitError(mockError.throws);
+    });
+  });
+
+  describe("final boundary handling", () => {
+    test("should handle final boundary correctly", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      void writer.write("-");
+      await expect(observableStream).not.toEmitAnything();
+      void writer.write("-");
+      await expect(observableStream).toComplete();
+      // writer has forcibly been closed by `reader.cancel`
+      await expect(writer.closed).rejects.toBe(undefined);
+    });
+
+    test("content after final boundary is ignored", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await expect(observableStream).toComplete();
+    });
+
+    test("stream is closed on final boundary", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await expect(observableStream).toComplete();
+      await expect(
+        writer.write(
+          `Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}--`
+        )
+      ).rejects.toBe(undefined);
+    });
+
+    test("link errors if stream is closed without final boundary", async () => {
+      const transform = new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk.replace(/\n/g, "\r\n"));
+        },
+      });
+      const link = new HttpLink({
+        fetch: jest.fn().mockResolvedValue(
+          new Response(transform.readable, {
+            status: 200,
+            headers: new Headers({
+              "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+            }),
+          })
+        ),
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const observableStream = new ObservableStream(observable);
+      const writer = transform.writable.getWriter();
+      void writer.write(
+        `--${BOUNDARY}
+Content-Type: application/json; charset=utf-8
+Content-Length: 43
+
+${JSON.stringify(results[0])}
+--${BOUNDARY}`
+      );
+      await expect(observableStream).toEmitTypedValue(results[0]);
+      await writer.close();
+      await expect(observableStream).toEmitError(
+        new Error("premature end of multipart body")
+      );
     });
   });
 });

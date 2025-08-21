@@ -1,9 +1,11 @@
 switcher:
   heading: "Apollo Client (Web)"
   versions:
-    - label: v3
+    - label: v4
       latest: true
       href: ./
+    - label: v3
+      href: ./v3
     - label: v2
       href: ./v2
 items:
@@ -13,9 +15,7 @@ items:
     href: ./why-apollo
   - label: Get started
     href: ./get-started
-  - label: Changelog
-    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
-  - label: Fetching
+  - label: Core concepts
     children:
       - label: Queries
         href: ./data/queries
@@ -25,6 +25,8 @@ items:
         href: ./data/fragments
       - label: Mutations
         href: ./data/mutations
+      - label: TypeScript
+        href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
       - label: Subscriptions
@@ -33,6 +35,8 @@ items:
         href: ./data/directives
       - label: Error handling
         href: ./data/error-handling
+      - label: Persisted queries
+        href: ./data/persisted-queries
       - label: Document transforms
         href: ./data/document-transforms
       - label: Deferring response data
@@ -75,16 +79,14 @@ items:
         href: ./local-state/managing-state-with-field-policies
       - label: Reactive variables
         href: ./local-state/reactive-variables
-      - label: Client-side schema
-        href: ./local-state/client-side-schema
       - label: Local resolvers
         href: ./local-state/local-resolvers
   - label: Development & Testing
     children:
       - label: Developer tools
         href: ./development-testing/developer-tooling
-      - label: Using TypeScript
-        href: ./development-testing/static-typing
+      - label: GraphQL Codegen
+        href: ./development-testing/graphql-codegen
       - label: Testing React components
         href: ./development-testing/testing
       - label: Schema-driven testing
@@ -119,12 +121,6 @@ items:
         href: ./networking/advanced-http-networking
       - label: Authentication
         href: ./networking/authentication
-  - label: Migrating
-    children:
-      - label: Migrating to Apollo Client 3.0
-        href: ./migrating/apollo-client-3-migration
-      - label: Hooks migration guide
-        href: ./migrating/hooks-migration
   - label: API Reference
     children:
       - label: Core
@@ -135,45 +131,97 @@ items:
             href: ./api/cache/InMemoryCache
           - label: ObservableQuery
             href: ./api/core/ObservableQuery
+      - label: Errors
+        children:
+          - label: CombinedGraphQLErrors
+            href: ./api/errors/CombinedGraphQLErrors
+          - label: CombinedProtocolErrors
+            href: ./api/errors/CombinedProtocolErrors
+          - label: LinkError
+            href: ./api/errors/LinkError
+          - label: LocalStateError
+            href: ./api/errors/LocalStateError
+          - label: ServerError
+            href: ./api/errors/ServerError
+          - label: ServerParseError
+            href: ./api/errors/ServerParseError
+          - label: UnconventionalError
+            href: ./api/errors/UnconventionalError
       - label: React
         children:
-          - label: Hooks
-            href: ./api/react/hooks
-          - label: Preloading
+          - label: ApolloProvider
+            href: ./api/react/ApolloProvider
+          - label: useQuery
+            href: ./api/react/useQuery
+          - label: useLazyQuery
+            href: ./api/react/useLazyQuery
+          - label: useMutation
+            href: ./api/react/useMutation
+          - label: useSubscription
+            href: ./api/react/useSubscription
+          - label: useFragment
+            href: ./api/react/useFragment
+          - label: useApolloClient
+            href: ./api/react/useApolloClient
+          - label: useReactiveVar
+            href: ./api/react/useReactiveVar
+          - label: useSuspenseQuery
+            href: ./api/react/useSuspenseQuery
+          - label: useBackgroundQuery
+            href: ./api/react/useBackgroundQuery
+          - label: useReadQuery
+            href: ./api/react/useReadQuery
+          - label: useLoadableQuery
+            href: ./api/react/useLoadableQuery
+          - label: useQueryRefHandlers
+            href: ./api/react/useQueryRefHandlers
+          - label: skipToken
+            href: ./api/react/skipToken
+          - label: createQueryPreloader
             href: ./api/react/preloading
-          - label: Testing
+          - label: MockProvider
             href: ./api/react/testing
           - label: SSR
             href: ./api/react/ssr
-          - label: Components (deprecated)
-            href: ./api/react/components
-          - label: HOC (deprecated)
-            href: ./api/react/hoc
       - label: Apollo Link
         children:
           - label: Overview
             href: ./api/link/introduction
-          - label: HTTP
-            href: ./api/link/apollo-link-http
-          - label: HTTP Batch
+          - label: ApolloLink
+            href: ./api/link/apollo-link
+          - label: BaseHttpLink
+            href: ./api/link/apollo-link-base-http
+          - label: BaseBatchHttpLink
+            href: ./api/link/apollo-link-base-batch-http
+          - label: BatchHttpLink
             href: ./api/link/apollo-link-batch-http
-          - label: Context
-            href: ./api/link/apollo-link-context
-          - label: Error
+          - label: BatchLink
+            href: ./api/link/apollo-link-batch
+          - label: ClientAwarenessLink
+            href: ./api/link/apollo-link-client-awareness
+          - label: ErrorLink
             href: ./api/link/apollo-link-error
-          - label: Persisted Queries
-            href: ./api/link/persisted-queries
-          - label: Remove Typename
-            href: ./api/link/apollo-link-remove-typename
-          - label: REST
-            href: ./api/link/apollo-link-rest
-          - label: Retry
-            href: ./api/link/apollo-link-retry
-          - label: Schema
-            href: ./api/link/apollo-link-schema
-          - label: Subscriptions (newer protocol)
+          - label: GraphQLWsLink
             href: ./api/link/apollo-link-subscriptions
-          - label: WebSocket (older protocol)
+          - label: HttpLink
+            href: ./api/link/apollo-link-http
+          - label: PersistedQueryLink
+            href: ./api/link/apollo-link-persisted-queries
+          - label: RemoveTypenameFromVariablesLink
+            href: ./api/link/apollo-link-remove-typename
+          - label: RetryLink
+            href: ./api/link/apollo-link-retry
+          - label: SchemaLink
+            href: ./api/link/apollo-link-schema
+          - label: SetContextLink
+            href: ./api/link/apollo-link-context
+          - label: WebSocketLink (deprecated)
             href: ./api/link/apollo-link-ws
           - label: Community links
             href: ./api/link/community-links
+  - label: Changelog
+    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
+  - label: Migrating to Apollo Client 4.0
+    href: ./migrating/apollo-client-4-migration
+  - label: Versioning Policy
+    href: ./versioning-policy

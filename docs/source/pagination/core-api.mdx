@@ -5,8 +5,8 @@ description: Fetching and caching paginated results
 
 Regardless of which pagination strategy your GraphQL server uses for a particular list field, your Apollo Client app needs to do the following to query that field effectively:
 
-* Call the [`fetchMore` function](#the-fetchmore-function) to fetch the next page of results when needed
-* [Merge individual pages of results](#merging-paginated-results) into a single list in the Apollo Client cache
+- Call the [`fetchMore` function](#the-fetchmore-function) to fetch the next page of results when needed
+- [Merge individual pages of results](#merging-paginated-results) into a single list in the Apollo Client cache
 
 This article describes these core requirements for paginated fields.
 
@@ -43,9 +43,8 @@ By default, `fetchMore` executes a query with the exact same shape and variables
 const FeedWithData() {
 // ...continuing from above...
 
-// If you want your component to rerender with loading:true whenever
-// fetchMore is called, add `notifyOnNetworkStatusChange:true` to the
-// options you pass to useQuery.
+// Your component will rerender with loading:true whenever fetchMore is called
+// because notifyOnNetworkStatusChange defaults to true.
 if (loading) return 'Loading...';
 
 return (
@@ -151,21 +150,21 @@ const cache = new InMemoryCache({
           merge(existing = [], incoming) {
             return [...existing, ...incoming];
           },
-        }
-      }
-    }
-  }
-})
+        },
+      },
+    },
+  },
+});
 ```
 
 This field policy specifies the field's `keyArgs`, along with a **`merge` function**. Both of these configurations are necessary for handling pagination:
 
-* `keyArgs` specifies which of the field's arguments cause the cache to store a _separate_ value for each unique combination of those arguments.
-  * In our case, the cache shouldn't store a separate result based on _any_ argument value (`offset` or `limit`). So, we disable this behavior entirely by passing `false`. An empty array (`keyArgs: []`) also works, but `keyArgs: false` is more expressive, and it results in a cleaner field key within the cache (`feed` in this case).
-  * If a particular argument's value could cause items from an _entirely different list_ to be returned in the field, that argument _should_ be included in `keyArgs`.
-  * For more information, see [Specifying key arguments](/react/caching/cache-field-behavior/#specifying-key-arguments) and [The `keyArgs` API](/react/pagination/key-args).
-* A `merge` function tells the Apollo Client cache how to combine `incoming` data with `existing` cached data for a particular field. Without this function, incoming field values _overwrite_ existing field values by default.
-  * For more information, see [The `merge` function](/react/caching/cache-field-behavior/#the-merge-function).
+- `keyArgs` specifies which of the field's arguments cause the cache to store a _separate_ value for each unique combination of those arguments.
+  - In our case, the cache shouldn't store a separate result based on _any_ argument value (`offset` or `limit`). So, we disable this behavior entirely by passing `false`. An empty array (`keyArgs: []`) also works, but `keyArgs: false` is more expressive, and it results in a cleaner field key within the cache (`feed` in this case).
+  - If a particular argument's value could cause items from an _entirely different list_ to be returned in the field, that argument _should_ be included in `keyArgs`.
+  - For more information, see [Specifying key arguments](/react/caching/cache-field-behavior/#specifying-key-arguments) and [The `keyArgs` API](/react/pagination/key-args).
+- A `merge` function tells the Apollo Client cache how to combine `incoming` data with `existing` cached data for a particular field. Without this function, incoming field values _overwrite_ existing field values by default.
+  - For more information, see [The `merge` function](/react/caching/cache-field-behavior/#the-merge-function).
 
 With this field policy in place, the cache automatically merges the results of _all_ queries that use the following structure, regardless of argument values:
 
@@ -200,7 +199,7 @@ const cache = new InMemoryCache({
       fields: {
         feed: {
           keyArgs: false,
-          merge(existing, incoming, { args: { offset = 0 }}) {
+          merge(existing, incoming, { args: { offset = 0 } }) {
             // Slicing is necessary because the existing data is
             // immutable, and frozen in development.
             const merged = existing ? existing.slice(0) : [];
@@ -235,7 +234,7 @@ Let's see the example above using `updateQuery` to merge results together instea
 ```ts
 fetchMore({
   variables: { offset: data.feed.length },
-  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+  updateQuery(previousData, { fetchMoreResult, variables: { offset } }) {
     // Slicing is necessary because the existing data is
     // immutable, and frozen in development.
     const updatedFeed = previousData.feed.slice(0);
@@ -244,7 +243,7 @@ fetchMore({
     }
     return { ...previousData, feed: updatedFeed };
   },
-})
+});
 ```
 
 <Tip>
@@ -263,8 +262,8 @@ You define a `read` function for a field within its [field policy](#defining-a-f
 
 A `read` function for a paginated field typically uses one of the following approaches:
 
-* [Re-pagination](#paginated-read-functions), in which the cached list is split back into pages, based on field arguments
-* [_No_ pagination](#non-paginated-read-functions), in which the cached list is always returned in full
+- [Re-pagination](#paginated-read-functions), in which the cached list is split back into pages, based on field arguments
+- [_No_ pagination](#non-paginated-read-functions), in which the cached list is always returned in full
 
 Although the "right" approach varies from field to field, a [non-paginated `read` function](#non-paginated-read-functions) often works best for infinitely scrolling feeds, because it gives your code full control over which elements to display at a given time, without requiring any additional cache reads.
 
@@ -280,7 +279,7 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         feed: {
-          read(existing, { args: { offset, limit }}) {
+          read(existing, { args: { offset, limit } }) {
             // A read function should always return undefined if existing is
             // undefined. Returning undefined signals that the field is
             // missing from the cache, which instructs Apollo Client to
@@ -290,7 +289,7 @@ const cache = new InMemoryCache({
 
           // The keyArgs list and merge function are the same as above.
           keyArgs: [],
-          merge(existing, incoming, { args: { offset = 0 }}) {
+          merge(existing, incoming, { args: { offset = 0 } }) {
             const merged = existing ? existing.slice(0) : [];
             for (let i = 0; i < incoming.length; ++i) {
               merged[offset + i] = incoming[i];
@@ -312,14 +311,17 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         feed: {
-          read(existing, {
-            args: {
-              // Default to returning the entire cached list,
-              // if offset and limit are not provided.
-              offset = 0,
-              limit = existing?.length,
-            } = {},
-          }) {
+          read(
+            existing,
+            {
+              args: {
+                // Default to returning the entire cached list,
+                // if offset and limit are not provided.
+                offset = 0,
+                limit = existing?.length,
+              } = {},
+            }
+          ) {
             return existing && existing.slice(offset, offset + limit);
           },
           // ... keyArgs, merge ...
@@ -357,7 +359,7 @@ Let's use the example above, but instead provide the `updateQuery` function to `
 ```ts
 fetchMore({
   variables: { offset: data.feed.length },
-  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+  updateQuery(previousData, { fetchMoreResult, variables: { offset } }) {
     // Slicing is necessary because the existing data is
     // immutable, and frozen in development.
     const updatedFeed = previousData.feed.slice(0);
@@ -366,7 +368,7 @@ fetchMore({
     }
     return { ...previousData, feed: updatedFeed };
   },
-})
+});
 ```
 
 <Note>

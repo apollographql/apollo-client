@@ -1,21 +1,23 @@
-import { Subscription } from "zen-observable-ts";
+import type { Subscription } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
+import type { OnQueryUpdated, TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
-  InMemoryCache,
   gql,
-  Observable,
-  TypedDocumentNode,
+  InMemoryCache,
+  NetworkStatus,
   ObservableQuery,
-} from "../core";
-import { ObservableStream } from "../testing/internal";
+} from "@apollo/client";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {
     expect.assertions(6);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
     expect(typeof client.refetchQueries).toBe("function");
     const onQueryUpdated = jest.fn();
@@ -63,16 +65,21 @@ describe("client.refetchQueries", () => {
         (operation) =>
           new Observable((observer) => {
             const data: Record<string, string> = {};
-            operation.operationName.split("").forEach((letter) => {
+            operation.operationName!.split("").forEach((letter) => {
               data[letter.toLowerCase()] = letter.toUpperCase();
             });
-            function finish() {
-              observer.next({ data });
-              observer.complete();
+            function finish(delay: number) {
+              // We need to add a delay here since RxJS emits synchronously.
+              // Some tests fail if this value is emitted synchronously.
+              // TODO: Determine root cause
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              }, delay);
             }
             if (typeof operation.variables.delay === "number") {
-              setTimeout(finish, operation.variables.delay);
-            } else finish();
+              finish(operation.variables.delay);
+            } else finish(0);
           })
       ),
     });
@@ -85,7 +92,10 @@ describe("client.refetchQueries", () => {
 
   function setup(client = makeClient()) {
     function watch<T>(query: TypedDocumentNode<T>) {
-      const obsQuery = client.watchQuery({ query });
+      const obsQuery = client.watchQuery({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
       return new Promise<ObservableQuery<T>>((resolve, reject) => {
         subs.push(
           obsQuery.subscribe({
@@ -114,10 +124,34 @@ describe("client.refetchQueries", () => {
     });
   }
 
+  function obsUpdatedCheck(cb: OnQueryUpdated<any>) {
+    const subject = new Subject<Parameters<OnQueryUpdated<unknown>>>();
+    const stream = new ObservableStream(subject);
+    const onQueryUpdated = (...args: Parameters<OnQueryUpdated<any>>) => {
+      subject.next(args);
+      return cb(...args);
+    };
+    const check = async (
+      expectations: [obs: ObservableQuery<any>, result: unknown][]
+    ) => {
+      for (const [obs, result] of expectations) {
+        const [obsResult, diff] = await stream.takeNext();
+        expect(obsResult).toBe(obs);
+        expect(diff.result).toEqual(result);
+      }
+
+      await expect(stream).not.toEmitAnything();
+    };
+    return { onQueryUpdated, check, stream };
+  }
+
   it("includes watched queries affected by updateCache", async () => {
-    expect.assertions(9);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
+
+    const ayyCheck = obsUpdatedCheck((obs, diff) =>
+      Promise.resolve(diff.result)
+    );
 
     const ayyResults = await client.refetchQueries({
       updateCache(cache) {
@@ -129,21 +163,13 @@ describe("client.refetchQueries", () => {
         });
       },
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          throw new Error("bQuery should not have been updated");
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: ayyCheck.onQueryUpdated,
     });
+
+    await ayyCheck.check([
+      [aObs, { a: "Ayy" }],
+      [abObs, { a: "Ayy", b: "B" }],
+    ]);
 
     sortObjects(ayyResults);
 
@@ -152,6 +178,8 @@ describe("client.refetchQueries", () => {
       { a: "Ayy", b: "B" },
       // Note that no bQuery result is included here.
     ]);
+
+    const beeOQU = obsUpdatedCheck((obs, diff) => diff.result);
 
     const beeResults = await client.refetchQueries({
       updateCache(cache) {
@@ -163,21 +191,13 @@ describe("client.refetchQueries", () => {
         });
       },
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          throw new Error("aQuery should not have been updated");
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "Bee" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return diff.result;
-      },
+      onQueryUpdated: beeOQU.onQueryUpdated,
     });
+
+    await beeOQU.check([
+      [bObs, { b: "Bee" }],
+      [abObs, { a: "Ayy", b: "Bee" }],
+    ]);
 
     sortObjects(beeResults);
 
@@ -191,10 +211,10 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes watched queries named in options.include", async () => {
-    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
+    const ayyOQU = obsUpdatedCheck((obs, diff) => Promise.resolve(diff.result));
     const ayyResults = await client.refetchQueries({
       updateCache(cache) {
         cache.writeQuery({
@@ -208,21 +228,14 @@ describe("client.refetchQueries", () => {
       // This is the options.include array mentioned in the test description.
       include: ["B"],
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: ayyOQU.onQueryUpdated,
     });
+
+    await ayyOQU.check([
+      [aObs, { a: "Ayy" }],
+      [abObs, { a: "Ayy", b: "B" }],
+      [bObs, { b: "B" }],
+    ]);
 
     sortObjects(ayyResults);
 
@@ -233,6 +246,7 @@ describe("client.refetchQueries", () => {
       { b: "B" },
     ]);
 
+    const beeOQU = obsUpdatedCheck((obs, diff) => diff.result);
     const beeResults = await client.refetchQueries({
       updateCache(cache) {
         cache.writeQuery({
@@ -247,21 +261,14 @@ describe("client.refetchQueries", () => {
       // redundant because that query is already included.
       include: ["A", "AB"],
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "Bee" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return diff.result;
-      },
+      onQueryUpdated: beeOQU.onQueryUpdated,
     });
+
+    await beeOQU.check([
+      [bObs, { b: "Bee" }],
+      [abObs, { a: "Ayy", b: "Bee" }],
+      [aObs, { a: "Ayy" }],
+    ]);
 
     sortObjects(beeResults);
 
@@ -275,10 +282,10 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes query DocumentNode objects specified in options.include", async () => {
-    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
+    const ayyOQU = obsUpdatedCheck((obs, diff) => Promise.resolve(diff.result));
     const ayyResults = await client.refetchQueries({
       updateCache(cache) {
         cache.writeQuery({
@@ -293,21 +300,14 @@ describe("client.refetchQueries", () => {
       // name strings, in this test.
       include: [bQuery, abQuery],
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: ayyOQU.onQueryUpdated,
     });
+
+    await ayyOQU.check([
+      [aObs, { a: "Ayy" }],
+      [abObs, { a: "Ayy", b: "B" }],
+      [bObs, { b: "B" }],
+    ]);
 
     sortObjects(ayyResults);
 
@@ -318,6 +318,7 @@ describe("client.refetchQueries", () => {
       { b: "B" },
     ]);
 
+    const beeOQU = obsUpdatedCheck((obs, diff) => diff.result);
     const beeResults = await client.refetchQueries({
       updateCache(cache) {
         cache.writeQuery({
@@ -332,21 +333,14 @@ describe("client.refetchQueries", () => {
       // important for aObs to be included.
       include: [abQuery, "AB", aQuery],
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "Bee" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return diff.result;
-      },
+      onQueryUpdated: beeOQU.onQueryUpdated,
     });
+
+    await beeOQU.check([
+      [bObs, { b: "Bee" }],
+      [abObs, { a: "Ayy", b: "Bee" }],
+      [aObs, { a: "Ayy" }],
+    ]);
 
     sortObjects(beeResults);
 
@@ -360,10 +354,10 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all queries when options.include === "all"', async () => {
-    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
+    const ayyOQU = obsUpdatedCheck((obs, diff) => Promise.resolve(diff.result));
     const ayyResults = await client.refetchQueries({
       include: "all",
 
@@ -376,21 +370,14 @@ describe("client.refetchQueries", () => {
         });
       },
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: ayyOQU.onQueryUpdated,
     });
+
+    await ayyOQU.check([
+      [aObs, { a: "Ayy" }],
+      [abObs, { a: "Ayy", b: "B" }],
+      [bObs, { b: "B" }],
+    ]);
 
     sortObjects(ayyResults);
 
@@ -400,6 +387,7 @@ describe("client.refetchQueries", () => {
       { b: "B" },
     ]);
 
+    const beeOQU = obsUpdatedCheck((obs, diff) => diff.result);
     const beeResults = await client.refetchQueries({
       include: "all",
 
@@ -412,21 +400,14 @@ describe("client.refetchQueries", () => {
         });
       },
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "Ayy" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "Bee" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return diff.result;
-      },
+      onQueryUpdated: beeOQU.onQueryUpdated,
     });
+
+    await beeOQU.check([
+      [bObs, { b: "Bee" }],
+      [abObs, { a: "Ayy", b: "Bee" }],
+      [aObs, { a: "Ayy" }],
+    ]);
 
     sortObjects(beeResults);
 
@@ -440,31 +421,26 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all active queries when options.include === "active"', async () => {
-    expect.assertions(15);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
     const extraObs = client.watchQuery({ query: abQuery });
     expect(extraObs.hasObservers()).toBe(false);
 
+    const activeOQU = obsUpdatedCheck((obs, diff) =>
+      Promise.resolve(diff.result)
+    );
     const activeResults = await client.refetchQueries({
       include: "active",
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: activeOQU.onQueryUpdated,
     });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
 
     sortObjects(activeResults);
 
@@ -473,32 +449,33 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqual({ a: "A", b: "B" });
+          expect(result).toStrictEqualTyped({
+            data: { a: "A", b: "B" },
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         },
       })
     );
     expect(extraObs.hasObservers()).toBe(true);
 
+    const afterSubscribeOQU = obsUpdatedCheck((obs, diff) =>
+      Promise.resolve(diff.result)
+    );
     const resultsAfterSubscribe = await client.refetchQueries({
       include: "active",
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else if (obs === extraObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: afterSubscribeOQU.onQueryUpdated,
     });
+
+    await afterSubscribeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+      [extraObs, { a: "A", b: "B" }],
+    ]);
 
     sortObjects(resultsAfterSubscribe);
 
@@ -514,65 +491,223 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
-  it("includes queries named in refetchQueries even if they have no observers", async () => {
-    expect.assertions(13);
+  it('does not include cache-only queries when options.include === "active"', async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
     const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
 
-    const aObs = client.watchQuery({ query: aQuery });
-    const bObs = client.watchQuery({ query: bQuery });
-    const abObs = client.watchQuery({ query: abQuery });
+    const [aObs, bObs, abObs] = await setup(client);
 
-    // These ObservableQuery objects have no observers yet, but should
-    // nevertheless be refetched if identified explicitly in an options.include
-    // array passed to client.refetchQueries.
-    expect(aObs.hasObservers()).toBe(false);
-    expect(bObs.hasObservers()).toBe(false);
-    expect(abObs.hasObservers()).toBe(false);
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    const activeResults = await client.refetchQueries({
+      include: "active",
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { data: { a: "A" } },
+      { data: { b: "B" } },
+      { data: { a: "A", b: "B" } },
+    ]);
+
+    unsubscribe();
+  });
+
+  it('does not include cache-only queries when options.include === "all"', async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const [aObs, bObs, abObs] = await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    const activeResults = await client.refetchQueries({
+      include: "all",
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { data: { a: "A" } },
+      { data: { b: "B" } },
+      { data: { a: "A", b: "B" } },
+    ]);
+
+    unsubscribe();
+  });
+
+  it("does not include cache-only queries when affected by updateCache", async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     const activeResults = await client.refetchQueries({
-      include: ["A", abQuery],
-
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
-        } else if (obs === abObs) {
-          expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
+      updateCache(cache) {
+        cache.writeQuery({
+          query: cQuery,
+          data: { c: "See" },
+        });
       },
     });
 
     sortObjects(activeResults);
-    expect(activeResults).toEqual([{}, {}]);
 
-    const stream = new ObservableStream(abObs);
-    subs.push(stream as unknown as Subscription);
-    expect(abObs.hasObservers()).toBe(true);
+    expect(activeResults).toEqual([]);
 
-    await expect(stream).toEmitMatchedValue({ data: { a: "A", b: "B" } });
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "See" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
+    unsubscribe();
+  });
+
+  it("includes queries named in refetchQueries even if they have `standby` fetchPolicy", async () => {
+    const client = makeClient();
+
+    const aObs = client.watchQuery({ query: aQuery, fetchPolicy: "standby" });
+    using aStream = new ObservableStream(aObs);
+    const bObs = client.watchQuery({ query: bQuery, fetchPolicy: "standby" });
+    using bStream = new ObservableStream(bObs);
+    const abObs = client.watchQuery({ query: abQuery, fetchPolicy: "standby" });
+    using abStream = new ObservableStream(abObs);
+
+    // These ObservableQuery objects fetchPolicy standby, but should
+    // nevertheless be refetched if identified explicitly in an options.include
+    // array passed to client.refetchQueries.
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    using OQUStream = activeOQU.stream;
+
+    await Promise.all([
+      expect(aStream).not.toEmitAnything(),
+      expect(bStream).not.toEmitAnything(),
+      expect(abStream).not.toEmitAnything(),
+    ]);
+
+    const activeResults = await client.refetchQueries({
+      include: ["A", abQuery],
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    {
+      const [observable, diff] = await OQUStream.takeNext();
+      expect(observable).toBe(aObs);
+      expect(diff.complete).toBe(false);
+      expect(diff.result).toEqual(null);
+    }
+    {
+      const [observable, diff] = await OQUStream.takeNext();
+      expect(observable).toBe(abObs);
+      expect(diff.complete).toBe(false);
+      expect(diff.result).toEqual(null);
+    }
+    await expect(OQUStream).not.toEmitAnything();
+
+    expect(activeResults).toEqual([
+      {
+        data: {
+          a: "A",
+        },
+      },
+      {
+        data: {
+          a: "A",
+          b: "B",
+        },
+      },
+    ]);
+
+    const afterSubscribeOQU = obsUpdatedCheck((obs, diff) =>
+      Promise.resolve(diff.result)
+    );
     const resultsAfterSubscribe = await client.refetchQueries({
       include: [aQuery, "B"],
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: afterSubscribeOQU.onQueryUpdated,
     });
+
+    await afterSubscribeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+    ]);
 
     sortObjects(resultsAfterSubscribe);
     expect(resultsAfterSubscribe).toEqual([{ a: "A" }, { b: "B" }]);
@@ -580,8 +715,68 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
+  it("does not include named cache-only queries in refetchQueries", async () => {
+    const cQuery = gql`
+      query C {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const aObs = client.watchQuery({
+      query: aQuery,
+      notifyOnNetworkStatusChange: false,
+    });
+
+    using aStream = new ObservableStream(aObs);
+
+    await expect(aStream).toEmitTypedValue({
+      data: { a: "A" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    using cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    await expect(
+      client.refetchQueries({
+        include: [aQuery, cQuery],
+        onQueryUpdated: activeOQU.onQueryUpdated,
+      })
+    ).resolves.toEqual([{ data: { a: "A" } }]);
+
+    await activeOQU.check([[aObs, { a: "A" }]]);
+
+    await expect(aStream).toEmitTypedValue({
+      data: { a: "A" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(aStream).not.toEmitAnything();
+    await expect(cStream).not.toEmitAnything();
+  });
+
   it("should not include unwatched single queries", async () => {
-    expect.assertions(18);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -597,69 +792,50 @@ describe("client.refetchQueries", () => {
       }
     `;
 
-    void client.query({
-      query: delayedQuery,
-      variables: {
-        // Delay this query by 10 seconds so it stays in-flight.
-        delay: 10000,
-      },
-    });
+    void client
+      .query({
+        query: delayedQuery,
+        variables: {
+          // Delay this query by 10 seconds so it stays in-flight.
+          delay: 10000,
+        },
+      })
+      .catch(() => {
+        // swallow error when QueryManager is stopped later
+      });
 
-    const queries = client["queryManager"]["queries"];
-    expect(queries.size).toBe(4);
+    const queries = client["queryManager"]["obsQueries"];
+    expect(queries.size).toBe(3);
 
-    queries.forEach((queryInfo, queryId) => {
-      if (queryId === "1" || queryId === "2" || queryId === "3") {
-        expect(queryInfo.observableQuery).toBeInstanceOf(ObservableQuery);
-      } else if (queryId === "4") {
-        // One-off client.query-style queries never get an ObservableQuery, so
-        // they should not be included by include: "active".
-        expect(queryInfo.observableQuery).toBe(null);
-        expect(queryInfo.document).toBe(delayedQuery);
-      }
-    });
-
+    const activeOQU = obsUpdatedCheck((obs, diff) =>
+      Promise.resolve(diff.result)
+    );
     const activeResults = await client.refetchQueries({
       include: "active",
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: activeOQU.onQueryUpdated,
     });
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
 
     sortObjects(activeResults);
 
     expect(activeResults).toEqual([{ a: "A" }, { a: "A", b: "B" }, { b: "B" }]);
 
+    const allOQU = obsUpdatedCheck((obs, diff) => Promise.resolve(diff.result));
     const allResults = await client.refetchQueries({
       include: "all",
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return Promise.resolve(diff.result);
-      },
+      onQueryUpdated: allOQU.onQueryUpdated,
     });
+    await allOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
 
     sortObjects(allResults);
 
@@ -672,7 +848,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("refetches watched queries if onQueryUpdated not provided", async () => {
-    expect.assertions(7);
+    expect.assertions(10);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -709,9 +885,8 @@ describe("client.refetchQueries", () => {
   });
 
   it("can run updateQuery function against optimistic cache layer", async () => {
-    expect.assertions(12);
     const client = makeClient();
-    const [aObs, bObs, abObs] = await setup(client);
+    const [aObs, _bObs, abObs] = await setup(client);
 
     client.cache.watch({
       query: abQuery,
@@ -729,6 +904,7 @@ describe("client.refetchQueries", () => {
       },
     });
 
+    const OQU = obsUpdatedCheck((obs, diff) => diff.result);
     const results = await client.refetchQueries({
       // This causes the update to run against a temporary optimistic layer.
       optimistic: true,
@@ -745,27 +921,13 @@ describe("client.refetchQueries", () => {
         expect(modified).toBe(true);
       },
 
-      onQueryUpdated(obs, diff) {
-        expect(diff.complete).toBe(true);
-
-        // Even though we evicted the Query.a field in the updateCache function,
-        // that optimistic layer was discarded before broadcasting results, so
-        // we're back to the original (non-optimistic) data.
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          throw new Error("bQuery should not have been updated");
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-
-        return diff.result;
-      },
+      onQueryUpdated: OQU.onQueryUpdated,
     });
+
+    await OQU.check([
+      [aObs, { a: "A" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
 
     sortObjects(results);
 
@@ -781,27 +943,18 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return true from onQueryUpdated to choose default refetching behavior", async () => {
-    expect.assertions(14);
     const client = makeClient();
-    const [aObs, bObs, abObs] = await setup(client);
+    const [aObs, bObs, _abObs] = await setup(client);
 
+    const refetchOQU = obsUpdatedCheck((obs, diff) => true);
     const refetchResult = client.refetchQueries({
       include: ["A", "B"],
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          throw new Error("abQuery should not have been updated");
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        return true;
-      },
+      onQueryUpdated: refetchOQU.onQueryUpdated,
     });
+    await refetchOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+    ]);
 
     expect(refetchResult.results.length).toBe(2);
     refetchResult.results.forEach((result) => {
@@ -819,11 +972,7 @@ describe("client.refetchQueries", () => {
 
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 
@@ -833,10 +982,10 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return true from onQueryUpdated when using options.updateCache", async () => {
-    expect.assertions(17);
     const client = makeClient();
-    const [aObs, bObs, abObs] = await setup(client);
+    const [_aObs, bObs, abObs] = await setup(client);
 
+    const refetchOQU = obsUpdatedCheck((obs, diff) => true);
     const refetchResult = client.refetchQueries({
       updateCache(cache) {
         cache.writeQuery({
@@ -847,19 +996,7 @@ describe("client.refetchQueries", () => {
         });
       },
 
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          throw new Error("aQuery should not have been updated");
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "Beetlejuice" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "Beetlejuice" });
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-
+      onQueryUpdated: (obs, diff, lastDiff) => {
         expect(client.cache.extract()).toEqual({
           ROOT_QUERY: {
             __typename: "Query",
@@ -867,10 +1004,14 @@ describe("client.refetchQueries", () => {
             b: "Beetlejuice",
           },
         });
-
-        return true;
+        return refetchOQU.onQueryUpdated(obs, diff, lastDiff);
       },
     });
+
+    await refetchOQU.check([
+      [bObs, { b: "Beetlejuice" }],
+      [abObs, { a: "A", b: "Beetlejuice" }],
+    ]);
 
     expect(refetchResult.results.length).toBe(2);
     refetchResult.results.forEach((result) => {
@@ -887,12 +1028,8 @@ describe("client.refetchQueries", () => {
     ).toEqual(["AB", "B"]);
 
     const results = (await refetchResult).map((result) => {
-      // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      // These results are QueryResult<any>, as inferred by TypeScript.
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 
@@ -915,28 +1052,18 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return false from onQueryUpdated to skip/ignore a query", async () => {
-    expect.assertions(11);
     const client = makeClient();
-    const [aObs, bObs, abObs] = await setup(client);
+    const [aObs, bObs, _abObs] = await setup(client);
 
+    const refetchOQU = obsUpdatedCheck((obs, diff) => obs.queryName === "B");
     const refetchResult = client.refetchQueries({
       include: ["A", "B"],
-      onQueryUpdated(obs, diff) {
-        if (obs === aObs) {
-          expect(diff.result).toEqual({ a: "A" });
-        } else if (obs === bObs) {
-          expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          throw new Error("abQuery should not have been updated");
-        } else {
-          throw new Error(
-            `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
-          );
-        }
-        // Skip refetching all but the B query.
-        return obs.queryName === "B";
-      },
+      onQueryUpdated: refetchOQU.onQueryUpdated,
     });
+    await refetchOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+    ]);
 
     expect(refetchResult.results.length).toBe(1);
     refetchResult.results.forEach((result) => {
@@ -954,11 +1081,7 @@ describe("client.refetchQueries", () => {
 
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 

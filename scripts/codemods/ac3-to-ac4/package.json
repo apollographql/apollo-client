@@ -1,0 +1,55 @@
+{
+  "name": "@apollo/client-codemod-migrate-3-to-4",
+  "version": "1.0.0-rc.3",
+  "description": "Apollo Client Codemod to migrate from version 3 to version 4",
+  "keywords": [
+    "apollo",
+    "client",
+    "graphql",
+    "codemod"
+  ],
+  "author": "packages@apollographql.com",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-client.git",
+    "directory": "codegen"
+  },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://www.apollographql.com/docs/react/",
+  "exports": {
+    ".": "./dist/index.js",
+    "./imports": "./dist/imports.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "bin": {
+    "apollo-client-codemod-migrate-3-to-4": "./dist/cli.js"
+  },
+  "scripts": {
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "publint": "publint run --strict .",
+    "test": "NODE_OPTIONS='--import ./src/devLoader.js' vitest run",
+    "test:watch": "NODE_OPTIONS='--import ./src/devLoader.js' vitest watch",
+    "local:cli": "node --import ./src/devLoader.js src/cli.ts"
+  },
+  "dependencies": {
+    "jscodeshift": "17.3.0"
+  },
+  "devDependencies": {
+    "@types/jscodeshift": "^17.3.0",
+    "@types/node": "20.9.0",
+    "diff": "^8.0.2",
+    "typescript": "^5.2.2",
+    "vitest": "^1.0.1"
+  }
+}

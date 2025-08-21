@@ -18,33 +18,7 @@ type Rocket {
 
 But what if our back-end team isn't finished adding support for the `description` field? By mocking the field's behavior, we can still start developing the feature in our client. To do so, we'll follow the steps below.
 
-## 1. Define a client-side schema (recommended)
-
-Our client application can define a [client-side schema](../local-state/client-side-schema/) that extends types from our server,  or even defines entirely new types. The syntax is identical to server-side schema definitions.
-
-> Although a client-side schema isn't _required_ for mocking, it helps team members understand your app's local capabilities. It also unlocks powerful local state support in tools like the [Apollo Client Devtools](./developer-tooling/#apollo-client-devtools) and the [Apollo extension for VS Code](/devtools/editor-plugins/).
-
-This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs` as shown):
-
-```js title="index.js"
-const typeDefs = gql`
-  extend type Rocket {
-    description: String
-  }
-`;
-```
-
-We can then provide this schema to the `ApolloClient` constructor, like so:
-
-```js {4} title="index.js"
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache(),
-  typeDefs
-});
-```
-
-## 2. Define a `read` function
+## 1. Define a `read` function
 
 Our client app doesn't yet know how to populate the `Rocket.description` field. To fix this, we can define a [`read` function](../caching/cache-field-behavior/#the-read-function) for the field. The Apollo Client cache calls this function whenever the field is queried, and the function's return value is used as the field's value.
 
@@ -56,9 +30,10 @@ const cache = new InMemoryCache({
     Rocket: {
       fields: {
         description: {
-          read() { // Read function for Rocket.description
-            return 'Placeholder rocket description';
-          }
+          read() {
+            // Read function for Rocket.description
+            return "Placeholder rocket description";
+          },
         },
       },
     },
@@ -87,7 +62,7 @@ read() {
 
 > Make sure to include libraries like faker.js only in your development build, because they can needlessly increase your production bundle size.
 
-## 3. Query with the `@client` directive
+## 2. Query with the `@client` directive
 
 We're ready to execute a query that includes our new field. Here's an abridged `GET_LAUNCH_DETAILS` query from the [full-stack quickstart](https://www.apollographql.com/tutorials/fullstack-quickstart/fetching-data-with-queries) with our `description` field added:
 
@@ -107,8 +82,8 @@ export const GET_LAUNCH_DETAILS = gql`
 
 Notice that this field includes the `@client` directive. This directive tells Apollo Client _not_ to include `description` in the query it sends to our server. This is important for two related reasons:
 
-* The `description` field is populated entirely locally, so including it in network requests isn't helpful.
-* The `description` field _isn't_ in our server-side schema yet, so including it will produce a GraphQL error.
+- The `description` field is populated entirely locally, so including it in network requests isn't helpful.
+- The `description` field _isn't_ in our server-side schema yet, so including it will produce a GraphQL error.
 
 We can now execute this query in a component with the `useQuery` hook as usual:
 
@@ -124,7 +99,7 @@ export default function LaunchDetails({ launchId }) {
 }
 ```
 
-## 4. Use live data when ready
+## 3. Use live data when ready
 
 When your server's support for the `Rocket.description` field is ready, you can begin using it by doing the following:
 
@@ -135,6 +110,5 @@ When your server's support for the `Rocket.description` field is ready, you can 
 
 For more information on the Apollo Client features used here, see the following:
 
-* [Client-side schema](../local-state/client-side-schema/)
-* [Local-only fields](../local-state/managing-state-with-field-policies/)
-* [The `read` function](../caching/cache-field-behavior/#the-read-function)
+- [Local-only fields](../local-state/managing-state-with-field-policies/)
+- [The `read` function](../caching/cache-field-behavior/#the-read-function)

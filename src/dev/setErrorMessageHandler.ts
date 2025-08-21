@@ -1,6 +1,8 @@
+import { global } from "@apollo/client/utilities/internal/globals";
+
 import type { ErrorCodes } from "../invariantErrorCodes.js";
-import { global } from "../utilities/globals/index.js";
-import { ApolloErrorMessageHandler } from "../utilities/globals/invariantWrappers.js";
+
+import { ApolloErrorMessageHandler } from "./symbol.js";
 
 /**
  * The error message handler is a function that is called when a message is
@@ -25,10 +27,10 @@ export type ErrorMessageHandler = {
    * output.
    *
    * @returns The error message to be logged or thrown. If it returns `undefined`,
-   *          the mechanism will fall back to the default:
-   *          A link to https://go.apollo.dev/c/err with Apollo Client version,
-   *          the error message number, and the error message arguments encoded into
-   *          the URL hash.
+   * the mechanism will fall back to the default:
+   * A link to https://go.apollo.dev/c/err with Apollo Client version,
+   * the error message number, and the error message arguments encoded into
+   * the URL hash.
    */ (message: string | number, args: string[]): string | undefined;
 };
 

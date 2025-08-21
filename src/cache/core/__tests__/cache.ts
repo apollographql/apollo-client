@@ -1,16 +1,20 @@
-import gql from "graphql-tag";
-import { ApolloCache } from "../cache";
-import { Cache, DataProxy } from "../..";
-import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
+import { gql } from "graphql-tag";
 
-class TestCache extends ApolloCache<unknown> {
+import type { OperationVariables, Unmasked } from "@apollo/client";
+import type { Cache } from "@apollo/client/cache";
+import { ApolloCache } from "@apollo/client/cache";
+
+import type { Reference } from "../../../utilities/graphql/storeUtils.js";
+
+class TestCache extends ApolloCache {
   constructor() {
     super();
   }
 
-  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
+  public diff<T>(query: Cache.DiffOptions<T>): Cache.DiffResult<T> {
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {
@@ -21,20 +25,26 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public fragmentMatches(
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
+    typename: string
+  ): boolean {
+    return true;
+  }
+
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
-  public read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>
-  ): T | null {
+  public read<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null {
     return null;
   }
 
   public recordOptimisticTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void,
+    transaction: (c: ApolloCache) => void,
     id: string
   ): void {}
 
@@ -44,17 +54,21 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown) {
     return this;
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<
+    T = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(watch: Cache.WatchOptions<T, TVariables>): () => void {
     return function () {};
   }
 
-  public write<TResult = any, TVariables = any>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
+  public write<
+    TResult = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(_: Cache.WriteOptions<TResult, TVariables>): Reference | undefined {
     return;
   }
 }

@@ -1,10 +1,10 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
 import {
-  selectHttpOptionsAndBody,
   fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+  selectHttpOptionsAndBody,
+} from "@apollo/client/link/http";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {
@@ -26,7 +26,7 @@ describe("headerNormalization", () => {
     };
 
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
+      createOperation({ query }),
       fallbackHttpConfig,
       config
     );
@@ -52,7 +52,7 @@ describe("headerNormalization", () => {
     };
 
     const { options } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
+      createOperation({ query }),
       fallbackHttpConfig,
       config
     );
@@ -79,7 +79,7 @@ describe("headerNormalization", () => {
       http: { preserveHeaderCase: false },
     };
     const { options } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
+      createOperation({ query }),
       fallbackHttpConfig,
       linkConfig,
       contextConfig
@@ -107,7 +107,7 @@ describe("headerNormalization", () => {
       http: { preserveHeaderCase: true },
     };
     const { options } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
+      createOperation({ query }),
       fallbackHttpConfig,
       linkConfig,
       contextConfig
@@ -135,7 +135,7 @@ describe("headerNormalization", () => {
     };
 
     const { options } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
+      createOperation({ query }),
       fallbackHttpConfig,
       linkConfig,
       contextConfig

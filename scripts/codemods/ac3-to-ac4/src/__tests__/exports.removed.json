@@ -1,0 +1,519 @@
+{
+  "@apollo/client/cache": {
+    "value": ["DataProxy", "makeReference"],
+    "type": []
+  },
+  "@apollo/client": {
+    "value": [
+      "mergeOptions",
+      "isApolloError",
+      "ApolloError",
+      "DataProxy",
+      "fromError",
+      "toPromise",
+      "fromPromise",
+      "throwServerError",
+      "Observer",
+      "ObservableSubscription",
+      "makeReference",
+      "serializeFetchParameter",
+      "ApolloProvider",
+      "ApolloConsumer",
+      "getApolloContext",
+      "resetApolloContext",
+      "DocumentType",
+      "operationName",
+      "parser",
+      "createQueryPreloader",
+      "useQuery",
+      "useSuspenseQuery",
+      "useBackgroundQuery",
+      "useSuspenseFragment",
+      "useLoadableQuery",
+      "useQueryRefHandlers",
+      "useReadQuery",
+      "skipToken",
+      "useApolloClient",
+      "useLazyQuery",
+      "useMutation",
+      "useSubscription",
+      "useReactiveVar",
+      "useFragment"
+    ],
+    "type": [
+      "FetchMoreOptions",
+      "FetchMoreQueryOptions",
+      "Resolver",
+      "FragmentMatcher",
+      "MethodKeys",
+      "PureQueryOptions",
+      "MutationUpdaterFn",
+      "Resolvers",
+      "Path",
+      "ExecutionPatchInitialResult",
+      "IncrementalPayload",
+      "ExecutionPatchIncrementalResult",
+      "ExecutionPatchResult",
+      "SingleExecutionResult",
+      "NextLink",
+      "ClientParseError",
+      "HttpOptions",
+      "UriFunction",
+      "ApolloContextValue",
+      "IDocumentDefinition",
+      "PreloadQueryOptions",
+      "PreloadQueryFetchPolicy",
+      "PreloadQueryFunction",
+      "UseSuspenseQueryResult",
+      "UseBackgroundQueryResult",
+      "UseSuspenseFragmentResult",
+      "UseSuspenseFragmentOptions",
+      "LoadQueryFunction",
+      "UseLoadableQueryResult",
+      "UseQueryRefHandlersResult",
+      "UseReadQueryResult",
+      "SkipToken",
+      "UseFragmentOptions",
+      "UseFragmentResult",
+      "QueryReference",
+      "QueryRef",
+      "PreloadedQueryRef",
+      "Context",
+      "CommonOptions",
+      "BaseQueryOptions",
+      "QueryFunctionOptions",
+      "ObservableQueryFields",
+      "QueryResult",
+      "QueryDataOptions",
+      "QueryHookOptions",
+      "LazyQueryHookOptions",
+      "LazyQueryHookExecOptions",
+      "SuspenseQueryHookFetchPolicy",
+      "SuspenseQueryHookOptions",
+      "BackgroundQueryHookFetchPolicy",
+      "BackgroundQueryHookOptions",
+      "LoadableQueryHookFetchPolicy",
+      "LoadableQueryHookOptions",
+      "QueryLazyOptions",
+      "LazyQueryResult",
+      "QueryTuple",
+      "LazyQueryExecFunction",
+      "LazyQueryResultTuple",
+      "RefetchQueriesFunction",
+      "BaseMutationOptions",
+      "MutationFunctionOptions",
+      "MutationResult",
+      "MutationFunction",
+      "MutationHookOptions",
+      "MutationDataOptions",
+      "MutationTuple",
+      "OnDataOptions",
+      "OnSubscriptionDataOptions",
+      "BaseSubscriptionOptions",
+      "SubscriptionResult",
+      "SubscriptionHookOptions",
+      "SubscriptionDataOptions",
+      "SubscriptionCurrentObservable",
+      "VariablesOption",
+      "NoInfer"
+    ]
+  },
+  "@apollo/client/core": {
+    "value": [
+      "mergeOptions",
+      "isApolloError",
+      "ApolloError",
+      "DataProxy",
+      "fromError",
+      "toPromise",
+      "fromPromise",
+      "throwServerError",
+      "Observer",
+      "ObservableSubscription",
+      "makeReference",
+      "serializeFetchParameter"
+    ],
+    "type": [
+      "FetchMoreOptions",
+      "FetchMoreQueryOptions",
+      "Resolver",
+      "FragmentMatcher",
+      "MethodKeys",
+      "PureQueryOptions",
+      "MutationUpdaterFn",
+      "Resolvers",
+      "Path",
+      "ExecutionPatchInitialResult",
+      "IncrementalPayload",
+      "ExecutionPatchIncrementalResult",
+      "ExecutionPatchResult",
+      "SingleExecutionResult",
+      "NextLink",
+      "ClientParseError",
+      "HttpOptions",
+      "UriFunction"
+    ]
+  },
+  "@apollo/client/dev": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/errors": {
+    "value": ["isApolloError", "ApolloError"],
+    "type": ["ApolloErrorOptions", "GraphQLErrors", "NetworkError"]
+  },
+  "@apollo/client/link/batch": {
+    "value": ["OperationBatcher"],
+    "type": ["BatchableRequest", "BatchHandler"]
+  },
+  "@apollo/client/link/batch-http": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/context": {
+    "value": [],
+    "type": ["ContextSetter"]
+  },
+  "@apollo/client/link/core": {
+    "value": [],
+    "type": [
+      "Path",
+      "ExecutionPatchInitialResult",
+      "IncrementalPayload",
+      "ExecutionPatchIncrementalResult",
+      "ExecutionPatchResult",
+      "SingleExecutionResult",
+      "NextLink"
+    ]
+  },
+  "@apollo/client/link/error": {
+    "value": [],
+    "type": ["ErrorResponse", "ErrorHandler"]
+  },
+  "@apollo/client/link/http": {
+    "value": ["serializeFetchParameter"],
+    "type": [
+      "ServerParseError",
+      "ClientParseError",
+      "HttpOptions",
+      "UriFunction"
+    ]
+  },
+  "@apollo/client/link/persisted-queries": {
+    "value": [],
+    "type": ["ErrorResponse"]
+  },
+  "@apollo/client/link/retry": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/remove-typename": {
+    "value": [],
+    "type": ["RemoveTypenameFromVariablesOptions"]
+  },
+  "@apollo/client/link/schema": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/subscriptions": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/link/utils": {
+    "value": [
+      "fromError",
+      "toPromise",
+      "fromPromise",
+      "throwServerError",
+      "validateOperation",
+      "transformOperation"
+    ],
+    "type": ["ServerError"]
+  },
+  "@apollo/client/link/ws": {
+    "value": [],
+    "type": ["WebSocketParams"]
+  },
+  "@apollo/client/masking": {
+    "value": [],
+    "type": []
+  },
+  "@apollo/client/react": {
+    "value": [
+      "ApolloConsumer",
+      "resetApolloContext",
+      "DocumentType",
+      "operationName",
+      "parser"
+    ],
+    "type": [
+      "IDocumentDefinition",
+      "QueryReference",
+      "Context",
+      "CommonOptions",
+      "BaseQueryOptions",
+      "QueryFunctionOptions",
+      "ObservableQueryFields",
+      "QueryDataOptions",
+      "LoadableQueryHookFetchPolicy",
+      "QueryLazyOptions",
+      "QueryTuple",
+      "RefetchQueriesFunction",
+      "BaseMutationOptions",
+      "MutationFunction",
+      "MutationDataOptions",
+      "BaseSubscriptionOptions",
+      "SubscriptionDataOptions",
+      "SubscriptionCurrentObservable",
+      "VariablesOption",
+      "NoInfer"
+    ]
+  },
+  "@apollo/client/react/components": {
+    "value": ["Query", "Mutation", "Subscription"],
+    "type": [
+      "QueryComponentOptions",
+      "MutationComponentOptions",
+      "SubscriptionComponentOptions"
+    ]
+  },
+  "@apollo/client/react/context": {
+    "value": [
+      "ApolloConsumer",
+      "getApolloContext",
+      "resetApolloContext",
+      "ApolloProvider"
+    ],
+    "type": ["ApolloConsumerProps", "ApolloContextValue", "ApolloProviderProps"]
+  },
+  "@apollo/client/react/hoc": {
+    "value": [
+      "graphql",
+      "withQuery",
+      "withMutation",
+      "withSubscription",
+      "withApollo"
+    ],
+    "type": [
+      "QueryControls",
+      "DataValue",
+      "DataProps",
+      "MutateProps",
+      "ChildProps",
+      "ChildDataProps",
+      "ChildMutateProps",
+      "OptionProps",
+      "OperationOption",
+      "WithApolloClient"
+    ]
+  },
+  "@apollo/client/react/hooks": {
+    "value": [
+      "useQuery",
+      "useSuspenseQuery",
+      "useBackgroundQuery",
+      "useSuspenseFragment",
+      "useLoadableQuery",
+      "useQueryRefHandlers",
+      "useReadQuery",
+      "skipToken",
+      "useApolloClient",
+      "useLazyQuery",
+      "useMutation",
+      "useSubscription",
+      "useReactiveVar",
+      "useFragment"
+    ],
+    "type": [
+      "UseSuspenseQueryResult",
+      "UseBackgroundQueryResult",
+      "UseSuspenseFragmentResult",
+      "UseSuspenseFragmentOptions",
+      "LoadQueryFunction",
+      "UseLoadableQueryResult",
+      "UseQueryRefHandlersResult",
+      "UseReadQueryResult",
+      "SkipToken",
+      "UseFragmentOptions",
+      "UseFragmentResult"
+    ]
+  },
+  "@apollo/client/react/internal": {
+    "value": [],
+    "type": ["QueryReference"]
+  },
+  "@apollo/client/react/parser": {
+    "value": ["operationName", "parser", "verifyDocumentType", "DocumentType"],
+    "type": ["IDocumentDefinition"]
+  },
+  "@apollo/client/react/ssr": {
+    "value": ["RenderPromises"],
+    "type": []
+  },
+  "@apollo/client/testing": {
+    "value": [
+      "MockedProvider",
+      "mockSingleLink",
+      "mockObservableLink",
+      "createMockClient",
+      "subscribeAndCount",
+      "itAsync",
+      "wait",
+      "tick",
+      "withErrorSpy",
+      "withWarningSpy",
+      "withLogSpy"
+    ],
+    "type": ["MockedProviderProps"]
+  },
+  "@apollo/client/testing/core": {
+    "value": [
+      "MockLink",
+      "mockSingleLink",
+      "MockSubscriptionLink",
+      "mockObservableLink",
+      "createMockClient",
+      "subscribeAndCount",
+      "itAsync",
+      "wait",
+      "tick",
+      "withErrorSpy",
+      "withWarningSpy",
+      "withLogSpy"
+    ],
+    "type": ["MockedResponse", "MockLinkOptions", "ResultFunction"]
+  },
+  "@apollo/client/testing/experimental": {
+    "value": ["createTestSchema", "createSchemaFetch"],
+    "type": []
+  },
+  "@apollo/client/utilities": {
+    "value": [
+      "DEV",
+      "maybe",
+      "shouldInclude",
+      "hasDirectives",
+      "hasAnyDirectives",
+      "hasAllDirectives",
+      "hasClientExports",
+      "getDirectiveNames",
+      "getInclusionDirectives",
+      "getFragmentMaskMode",
+      "createFragmentMap",
+      "getFragmentQueryDocument",
+      "getFragmentFromSelection",
+      "isFullyUnmaskedOperation",
+      "checkDocument",
+      "getOperationDefinition",
+      "getOperationName",
+      "getFragmentDefinitions",
+      "getQueryDefinition",
+      "getFragmentDefinition",
+      "getDefaultValues",
+      "makeReference",
+      "isDocumentNode",
+      "isField",
+      "isInlineFragment",
+      "valueToObjectRepresentation",
+      "storeKeyNameFromField",
+      "argumentsObjectFromField",
+      "resultKeyNameFromField",
+      "getStoreKeyName",
+      "getTypenameFromResult",
+      "addNonReactiveToNamedFragments",
+      "buildQueryFromSelectionSet",
+      "removeDirectivesFromDocument",
+      "removeConnectionDirectiveFromDocument",
+      "removeArgumentsFromDocument",
+      "removeFragmentSpreadFromDocument",
+      "removeClientSetsFromDocument",
+      "Observer",
+      "ObservableSubscription",
+      "isStatefulPromise",
+      "createFulfilledPromise",
+      "createRejectedPromise",
+      "wrapPromiseWithState",
+      "preventUnhandledRejection",
+      "maybeDeepFreeze",
+      "omitDeep",
+      "AutoCleanedStrongCache",
+      "AutoCleanedWeakCache",
+      "defaultCacheSizes",
+      "mergeDeep",
+      "mergeDeepArray",
+      "DeepMerger",
+      "cloneDeep",
+      "iterateObserversSafely",
+      "asyncMap",
+      "Concast",
+      "fixObservableSubclass",
+      "isNonEmptyArray",
+      "isArray",
+      "isNonNullObject",
+      "isPlainObject",
+      "graphQLResultHasError",
+      "getGraphQLErrorsFromResult",
+      "canUseWeakMap",
+      "canUseWeakSet",
+      "canUseSymbol",
+      "canUseAsyncIteratorSymbol",
+      "canUseDOM",
+      "canUseLayoutEffect",
+      "compact",
+      "makeUniqueId",
+      "stringifyForDisplay",
+      "mergeOptions",
+      "isExecutionPatchIncrementalResult",
+      "isExecutionPatchInitialResult",
+      "isExecutionPatchResult",
+      "isApolloPayloadResult",
+      "mergeIncrementalData"
+    ],
+    "type": [
+      "DirectiveInfo",
+      "InclusionDirectives",
+      "FragmentMap",
+      "FragmentMapFunction",
+      "Directives",
+      "VariableValue",
+      "RemoveNodeConfig",
+      "GetNodeConfig",
+      "RemoveDirectiveConfig",
+      "GetDirectiveConfig",
+      "RemoveArgumentsConfig",
+      "GetFragmentSpreadConfig",
+      "RemoveFragmentSpreadConfig",
+      "RemoveFragmentDefinitionConfig",
+      "RemoveVariableDefinitionConfig",
+      "PromiseWithState",
+      "DeepOmit",
+      "OnlyRequiredProperties",
+      "Prettify",
+      "Primitive",
+      "UnionToIntersection",
+      "NoInfer",
+      "RemoveIndexSignature",
+      "TupleToIntersection",
+      "ReconcilerFunction",
+      "ConcastSourcesIterable",
+      "ConcastSourcesArray",
+      "IsStrictlyAny"
+    ]
+  },
+  "@apollo/client/utilities/globals": {
+    "value": [
+      "maybe",
+      "global",
+      "invariant",
+      "newInvariantError",
+      "InvariantError",
+      "DEV",
+      "___DEV__"
+    ],
+    "type": []
+  },
+  "@apollo/client/utilities/subscriptions/relay": {
+    "value": [],
+    "type": []
+  }
+}

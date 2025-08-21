@@ -12,7 +12,7 @@ patterndiff(){
   count=0
   while IFS= read -r -d '' file
   do
-    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w)"; then
+    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file"))"; then
       (( count++ ))
       echo "$file"
       if [[ "$file" == *.min.* ]]; then
@@ -53,35 +53,54 @@ EOF
 git worktree add --force --detach --checkout "$comparison" "$upstream" || { cd "$comparison" && git checkout "$upstream"; } || exit 1
 
 cd "$comparison" || { echo "checkout failed"; exit 1; }
-cp -r "$root/node_modules" .
+[ -d node_modules ] || cp -r "$root/node_modules" .
 npm i >&2
 git status >&2
 npm run build >&2
+node config/apiExtractor.ts --main-only --generate docModel >&2
 cd "$root" || exit 1
 git status >&2
 npm run build >&2
+node config/apiExtractor.ts --main-only --generate docModel >&2
 
 set +e
 
 patterndiff "*.js"
 patterndiff "*.cjs"
 patterndiff "*.d.ts"
+patterndiff "*.d.cts"
 
 cat <<EOF
 
+## DocModel differences
+
+<details>
+  <summary>
+
+### $(diff -qr "$comparison/docs/public" "docs/public" | wc -l) files with differences
+
+  </summary>
+
+\`\`\`diff
+
+$(diff -r "$comparison/docs/public" "docs/public")
+
+\`\`\`
+
+</details>
 
 ## differences in other files
 
 <details>
   <summary>
 
-### $(diff -qr "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -w | wc -l) files with differences
+### $(diff -qr "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -x "*.d.cts" -w | wc -l) files with differences
 
   </summary>
 
 \`\`\`diff
 
-$(diff -r "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -w)
+$(diff -r "$comparison/dist" "dist" -x "*.map" -x "*.native.*" -x "*.js" -x "*.cjs" -x "*.d.ts" -x "*.d.cts" -w)
 
 \`\`\`
 

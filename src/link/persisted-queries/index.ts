@@ -1,103 +1,223 @@
-import { invariant } from "../../utilities/globals/index.js";
-
-import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
+import type { Observer, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
-import type { Operation } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import type {
-  Observer,
-  ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
+import type { ErrorLike } from "@apollo/client";
+import {
+  CombinedGraphQLErrors,
+  ServerError,
+  toErrorLike,
+} from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link";
+import { print } from "@apollo/client/utilities";
 import {
   cacheSizes,
+  isFormattedExecutionResult,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
   AutoCleanedWeakCache,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
+  compact,
+  isNonEmptyArray,
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
-export interface ErrorResponse {
+export declare namespace PersistedQueryLink {
+  namespace PersistedQueryLinkDocumentationTypes {
+    /**
+     * A SHA-256 hash function for hashing query strings.
+     *
+     * @param queryString - The query string to hash
+     * @returns The SHA-256 hash or a promise that resolves to the SHA-256 hash
+     *
+     * @example
+     *
+     * ```ts
+     * import { sha256 } from "crypto-hash";
+     *
+     * const link = new PersistedQueryLink({ sha256 });
+     * ```
+     */
+    function SHA256Function(queryString: string): string | PromiseLike<string>;
+
+    /**
+     * A function that generates a hash for a GraphQL document.
+     *
+     * @param document - The GraphQL document to hash
+     * @returns The hash string or a promise that resolves to the hash string
+     *
+     * @example
+     *
+     * ```ts
+     * import { print } from "graphql";
+     * import { sha256 } from "crypto-hash";
+     *
+     * const link = new PersistedQueryLink({
+     *   generateHash: async (document) => {
+     *     const query = print(document);
+     *     return sha256(query);
+     *   },
+     * });
+     * ```
+     */
+    function GenerateHashFunction(
+      document: DocumentNode
+    ): string | PromiseLike<string>;
+  }
+
+  namespace Base {
+    /**
+     * Base options shared between SHA256 and custom hash configurations.
+     */
+    interface Options {
+      /**
+       * A function to disable persisted queries for the current session.
+       *
+       * This function is called when an error occurs and determines whether
+       * to disable persisted queries for all future requests in this session.
+       *
+       * @defaultValue Disables on `PersistedQueryNotSupported` errors
+       */
+      disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+
+      /**
+       * A function to determine whether to retry a request with the full query.
+       *
+       * When a persisted query fails, this function determines whether to
+       * retry the request with the full query text included.
+       *
+       * @defaultValue Retries on `PersistedQueryNotSupported` or `PersistedQueryNotFound` errors
+       */
+      retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+
+      /**
+       * Whether to use HTTP GET for hashed queries (excluding mutations).
+       *
+       * > [!NOTE]
+       * > If you want to use `GET` for non-mutation queries whether or not they
+       * > are hashed, pass `useGETForQueries: true` option to `HttpLink`
+       * > instead. If you want to use GET for all requests, pass `fetchOptions: {method: 'GET'}`
+       * > to `HttpLink`.
+       *
+       * @defaultValue `false`
+       */
+      useGETForHashedQueries?: boolean;
+    }
+  }
+
   /**
-   * @deprecated `graphQLErrors` will no longer available in options in Apollo Client 4.0.
-   * This value is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When upgrading**
-   *
-   * `graphQLErrors` has been consolidated to the `error` property. You will need to
-   * read the error from the `error` property.
+   * Metadata about persisted query errors extracted from the response.
    */
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
+  export interface ErrorMeta {
+    /**
+     * Whether the server responded with a "PersistedQueryNotSupported" error.
+     *
+     * When `true`, indicates the server doesn't support persisted queries
+     * or has disabled them for this client.
+     */
+    persistedQueryNotSupported: boolean;
+
+    /**
+     * Whether the server responded with a "PersistedQueryNotFound" error.
+     *
+     * When `true`, indicates the server doesn't recognize the query hash
+     * and needs the full query text.
+     */
+    persistedQueryNotFound: boolean;
+  }
+
+  /** {@inheritDoc @apollo/client/link/persisted-queries!PersistedQueryLink.PersistedQueryLinkDocumentationTypes.GenerateHashFunction:function(1)} */
+  export type GenerateHashFunction = (
+    document: DocumentNode
+  ) => string | PromiseLike<string>;
+
+  /** {@inheritDoc @apollo/client/link/persisted-queries!PersistedQueryLink.PersistedQueryLinkDocumentationTypes.SHA256Function:function(1)} */
+  export type SHA256Function = (
+    queryString: string
+  ) => string | PromiseLike<string>;
+
   /**
-   * @deprecated `networkError` will no longer available in options in Apollo Client 4.0.
-   * This value is safe to use in Apollo Client 3.x.
+   * Options for using SHA-256 hashing with persisted queries.
    *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When upgrading**
-   *
-   * `networkError` has been consolidated to the `error` property. You will need to
-   * read the error from the `error` property.
+   * Use this configuration when you want the link to handle query
+   * printing and hashing using a SHA-256 function.
    */
-  networkError?: NetworkError;
-  /**
-   * @deprecated `response` has renamed to `result` in Apollo Client 4.0. This
-   * property is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When migrating**
-   *
-   * Use the `result` property instead of `response` inside your callback function.
-   */
-  response?: FormattedExecutionResult;
-  operation: Operation;
-  meta: ErrorMeta;
-}
-
-type ErrorMeta = {
-  persistedQueryNotSupported: boolean;
-  persistedQueryNotFound: boolean;
-};
-
-type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
-type GenerateHashFunction = (
-  document: DocumentNode
-) => string | PromiseLike<string>;
-
-interface BaseOptions {
-  disable?: (error: ErrorResponse) => boolean;
-  retry?: (error: ErrorResponse) => boolean;
-  useGETForHashedQueries?: boolean;
-}
-
-export namespace PersistedQueryLink {
-  interface SHA256Options extends BaseOptions {
-    sha256: SHA256Function;
+  export interface SHA256Options extends Base.Options {
+    /**
+     * The SHA-256 hash function to use for hashing queries. This function
+     * receives the printed query string and should return a SHA-256 hash. Can
+     * be synchronous or asynchronous.
+     */
+    sha256: PersistedQueryLink.SHA256Function;
     generateHash?: never;
   }
 
-  interface GenerateHashOptions extends BaseOptions {
+  /**
+   * Options for using custom hash generation with persisted queries.
+   *
+   * Use this configuration when you need custom control over how
+   * query hashes are generated (e.g., using pre-computed hashes).
+   */
+  export interface GenerateHashOptions extends Base.Options {
     sha256?: never;
-    generateHash: GenerateHashFunction;
+    /**
+     * A custom function for generating query hashes. This function receives
+     * the GraphQL document and should return a hash. Useful for custom hashing
+     * strategies or when using build-time generated hashes.
+     */
+    generateHash: PersistedQueryLink.GenerateHashFunction;
   }
 
-  export type Options = SHA256Options | GenerateHashOptions;
+  /**
+   * Configuration options for creating a `PersistedQueryLink`.
+   *
+   * You must provide either a `sha256` function or a custom `generateHash`
+   * function, but not both.
+   */
+  export type Options =
+    | PersistedQueryLink.SHA256Options
+    | PersistedQueryLink.GenerateHashOptions;
+
+  /**
+   * Options passed to the `retry` function when a persisted query request
+   * fails.
+   */
+  export interface RetryFunctionOptions {
+    /**
+     * The error that occurred during the request.
+     */
+    error: ErrorLike;
+
+    /**
+     * The GraphQL operation that failed.
+     */
+    operation: ApolloLink.Operation;
+
+    /**
+     * Metadata about the persisted query error.
+     */
+    meta: PersistedQueryLink.ErrorMeta;
+
+    /**
+     * The GraphQL result, if available.
+     */
+    result?: FormattedExecutionResult;
+  }
+
+  /**
+   * Options passed to the `disable` function when a persisted query request
+   * fails.
+   */
+  export interface DisableFunctionOptions
+    extends PersistedQueryLink.RetryFunctionOptions {}
 }
 
 function processErrors(
@@ -105,9 +225,9 @@ function processErrors(
     | GraphQLFormattedError[]
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
-): ErrorMeta {
-  const byMessage = Object.create(null),
-    byCode = Object.create(null);
+): PersistedQueryLink.ErrorMeta {
+  const byMessage: Record<string, GraphQLFormattedError> = {},
+    byCode: Record<string, GraphQLFormattedError> = {};
 
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {
@@ -127,82 +247,103 @@ function processErrors(
   };
 }
 
-const defaultOptions: Required<BaseOptions> = {
+const defaultOptions: Required<PersistedQueryLink.Base.Options> = {
   disable: ({ meta }) => meta.persistedQueryNotSupported,
   retry: ({ meta }) =>
     meta.persistedQueryNotSupported || meta.persistedQueryNotFound,
   useGETForHashedQueries: false,
 };
 
-function operationDefinesMutation(operation: Operation) {
+function operationDefinesMutation(operation: ApolloLink.Operation) {
   return operation.query.definitions.some(
     (d) => d.kind === "OperationDefinition" && d.operation === "mutation"
   );
 }
 
-export const createPersistedQueryLink = (
-  options: PersistedQueryLink.Options
-) => {
-  let hashesByQuery:
-    | AutoCleanedWeakCache<DocumentNode, Promise<string>>
-    | undefined;
-  function resetHashCache() {
-    hashesByQuery = undefined;
-  }
-  // Ensure a SHA-256 hash function is provided, if a custom hash
-  // generation function is not provided. We don't supply a SHA-256 hash
-  // function by default, to avoid forcing one as a dependency. Developers
-  // should pick the most appropriate SHA-256 function (sync or async) for
-  // their needs/environment, or provide a fully custom hash generation
-  // function (via the `generateHash` option) if they want to handle
-  // hashing with something other than SHA-256.
-  invariant(
-    options &&
-      (typeof options.sha256 === "function" ||
-        typeof options.generateHash === "function"),
-    'Missing/invalid "sha256" or "generateHash" function. Please ' +
-      'configure one using the "createPersistedQueryLink(options)" options ' +
-      "parameter."
-  );
+/**
+ * @deprecated
+ * Use `PersistedQueryLink` from `@apollo/client/link/persisted-queries` instead.
+ */
+export const createPersistedQueryLink = (options: PersistedQueryLink.Options) =>
+  new PersistedQueryLink(options);
 
-  const {
-    sha256,
-    // If both a `sha256` and `generateHash` option are provided, the
-    // `sha256` option will be ignored. Developers can configure and
-    // use any hashing approach they want in a custom `generateHash`
-    // function; they aren't limited to SHA-256.
-    generateHash = (query: DocumentNode) =>
-      Promise.resolve<string>(sha256!(print(query))),
-    disable,
-    retry,
-    useGETForHashedQueries,
-  } = compact(defaultOptions, options);
-
-  let supportsPersistedQueries = true;
-
-  const getHashPromise = (query: DocumentNode) =>
-    new Promise<string>((resolve) => resolve(generateHash(query)));
-
-  function getQueryHash(query: DocumentNode): Promise<string> {
-    if (!query || typeof query !== "object") {
-      // If the query is not an object, we won't be able to store its hash as
-      // a property of query[hashesKey], so we let generateHash(query) decide
-      // what to do with the bogus query.
-      return getHashPromise(query);
+/**
+ * `PersistedQueryLink` is a non-terminating link that enables the use of
+ * persisted queries, a technique that reduces bandwidth by sending query hashes
+ * instead of full query strings.
+ *
+ * @example
+ *
+ * ```ts
+ * import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
+ * import { sha256 } from "crypto-hash";
+ *
+ * const link = new PersistedQueryLink({
+ *   sha256: (queryString) => sha256(queryString),
+ * });
+ * ```
+ */
+export class PersistedQueryLink extends ApolloLink {
+  constructor(options: PersistedQueryLink.Options) {
+    let hashesByQuery:
+      | AutoCleanedWeakCache<DocumentNode, Promise<string>>
+      | undefined;
+    function resetHashCache() {
+      hashesByQuery = undefined;
     }
-    if (!hashesByQuery) {
-      hashesByQuery = new AutoCleanedWeakCache(
-        cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
-          defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
-      );
-    }
-    let hash = hashesByQuery.get(query);
-    if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
-    return hash;
-  }
+    // Ensure a SHA-256 hash function is provided, if a custom hash
+    // generation function is not provided. We don't supply a SHA-256 hash
+    // function by default, to avoid forcing one as a dependency. Developers
+    // should pick the most appropriate SHA-256 function (sync or async) for
+    // their needs/environment, or provide a fully custom hash generation
+    // function (via the `generateHash` option) if they want to handle
+    // hashing with something other than SHA-256.
+    invariant(
+      options &&
+        (typeof options.sha256 === "function" ||
+          typeof options.generateHash === "function"),
+      'Missing/invalid "sha256" or "generateHash" function. Please ' +
+        'configure one using the "createPersistedQueryLink(options)" options ' +
+        "parameter."
+    );
 
-  return Object.assign(
-    new ApolloLink((operation, forward) => {
+    const {
+      sha256,
+      // If both a `sha256` and `generateHash` option are provided, the
+      // `sha256` option will be ignored. Developers can configure and
+      // use any hashing approach they want in a custom `generateHash`
+      // function; they aren't limited to SHA-256.
+      generateHash = (query: DocumentNode) =>
+        Promise.resolve<string>(sha256!(print(query))),
+      disable,
+      retry,
+      useGETForHashedQueries,
+    } = compact(defaultOptions, options);
+
+    let enabled = true;
+
+    const getHashPromise = (query: DocumentNode) =>
+      new Promise<string>((resolve) => resolve(generateHash(query)));
+
+    function getQueryHash(query: DocumentNode): Promise<string> {
+      if (!query || typeof query !== "object") {
+        // If the query is not an object, we won't be able to store its hash as
+        // a property of query[hashesKey], so we let generateHash(query) decide
+        // what to do with the bogus query.
+        return getHashPromise(query);
+      }
+      if (!hashesByQuery) {
+        hashesByQuery = new AutoCleanedWeakCache(
+          cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
+            defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
+        );
+      }
+      let hash = hashesByQuery.get(query);
+      if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
+      return hash;
+    }
+
+    super((operation, forward) => {
       invariant(
         forward,
         "PersistedQueryLink cannot be the last link in the chain."
@@ -210,102 +351,117 @@ export const createPersistedQueryLink = (
 
       const { query } = operation;
 
-      return new Observable((observer: Observer<FormattedExecutionResult>) => {
-        let subscription: ObservableSubscription;
+      return new Observable((observer) => {
+        let subscription: Subscription | undefined;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;
-        const maybeRetry = (
-          {
-            response,
-            networkError,
-          }: {
-            response?: FormattedExecutionResult;
-            networkError?: ServerError;
-          },
+
+        function handleRetry(
+          options: PersistedQueryLink.RetryFunctionOptions,
           cb: () => void
-        ) => {
-          if (!retried && ((response && response.errors) || networkError)) {
-            retried = true;
-
-            const graphQLErrors: GraphQLFormattedError[] = [];
-
-            const responseErrors = response && response.errors;
-            if (isNonEmptyArray(responseErrors)) {
-              graphQLErrors.push(...responseErrors);
-            }
-
-            // Network errors can return GraphQL errors on for example a 403
-            let networkErrors;
-            if (typeof networkError?.result !== "string") {
-              networkErrors =
-                networkError &&
-                networkError.result &&
-                (networkError.result.errors as GraphQLFormattedError[]);
-            }
-            if (isNonEmptyArray(networkErrors)) {
-              graphQLErrors.push(...networkErrors);
-            }
-
-            const disablePayload: ErrorResponse = {
-              response,
-              networkError,
-              operation,
-              graphQLErrors:
-                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-              meta: processErrors(graphQLErrors),
-            };
-
-            // if the server doesn't support persisted queries, don't try anymore
-            supportsPersistedQueries = !disable(disablePayload);
-            if (!supportsPersistedQueries) {
-              // clear hashes from cache, we don't need them anymore
-              resetHashCache();
-            }
-
-            // if its not found, we can try it again, otherwise just report the error
-            if (retry(disablePayload)) {
-              // need to recall the link chain
-              if (subscription) subscription.unsubscribe();
-              // actually send the query this time
-              operation.setContext({
-                http: {
-                  includeQuery: true,
-                  includeExtensions: supportsPersistedQueries,
-                },
-                fetchOptions: {
-                  // Since we're including the full query, which may be
-                  // large, we should send it in the body of a POST request.
-                  // See issue #7456.
-                  method: "POST",
-                },
-              });
-              if (setFetchOptions) {
-                operation.setContext({ fetchOptions: originalFetchOptions });
-              }
-              subscription = forward(operation).subscribe(handler);
-
-              return;
-            }
+        ) {
+          if (retried) {
+            return cb();
           }
+
+          retried = true;
+
+          // if the server doesn't support persisted queries, don't try anymore
+          enabled = !disable(options);
+          if (!enabled) {
+            delete operation.extensions.persistedQuery;
+            // clear hashes from cache, we don't need them anymore
+            resetHashCache();
+          }
+
+          // if its not found, we can try it again, otherwise just report the error
+          if (retry(options)) {
+            // need to recall the link chain
+            if (subscription) subscription.unsubscribe();
+            // actually send the query this time
+            operation.setContext({
+              http: {
+                includeQuery: true,
+                ...(enabled ? { includeExtensions: true } : {}),
+              },
+              fetchOptions: {
+                // Since we're including the full query, which may be
+                // large, we should send it in the body of a POST request.
+                // See issue #7456.
+                method: "POST",
+              },
+            });
+            if (setFetchOptions) {
+              operation.setContext({ fetchOptions: originalFetchOptions });
+            }
+            subscription = forward(operation).subscribe(handler);
+
+            return;
+          }
+
           cb();
-        };
-        const handler = {
-          next: (response: FormattedExecutionResult) => {
-            maybeRetry({ response }, () => observer.next!(response));
+        }
+
+        const handler: Observer<ApolloLink.Result> = {
+          next: (result) => {
+            if (!isFormattedExecutionResult(result) || !result.errors) {
+              return observer.next(result);
+            }
+
+            handleRetry(
+              {
+                operation,
+                error: new CombinedGraphQLErrors(result),
+                meta: processErrors(result.errors),
+                result,
+              },
+              () => observer.next(result)
+            );
           },
-          error: (networkError: ServerError) => {
-            maybeRetry({ networkError }, () => observer.error!(networkError));
+          error: (incomingError) => {
+            const error = toErrorLike(incomingError);
+            const callback = () => observer.error(incomingError);
+
+            // This is persisted-query specific (see #9410) and deviates from the
+            // GraphQL-over-HTTP spec for application/json responses.
+            // This is intentional.
+            if (ServerError.is(error) && error.bodyText) {
+              try {
+                const result = JSON.parse(error.bodyText);
+
+                if (isFormattedExecutionResult(result)) {
+                  return handleRetry(
+                    {
+                      error: new CombinedGraphQLErrors(result),
+                      result,
+                      operation,
+                      meta: processErrors(result.errors),
+                    },
+                    callback
+                  );
+                }
+              } catch {}
+            }
+
+            handleRetry(
+              {
+                error,
+                operation,
+                meta: {
+                  persistedQueryNotSupported: false,
+                  persistedQueryNotFound: false,
+                },
+              },
+              callback
+            );
           },
-          complete: observer.complete!.bind(observer),
+          complete: observer.complete.bind(observer),
         };
 
         // don't send the query the first time
         operation.setContext({
-          http: {
-            includeQuery: !supportsPersistedQueries,
-            includeExtensions: supportsPersistedQueries,
-          },
+          http: enabled ? { includeQuery: false, includeExtensions: true } : {},
         });
 
         // If requested, set method to GET if there are no mutations. Remember the
@@ -313,7 +469,7 @@ export const createPersistedQueryLink = (
         // non-hashed request.
         if (
           useGETForHashedQueries &&
-          supportsPersistedQueries &&
+          enabled &&
           !operationDefinesMutation(operation)
         ) {
           operation.setContext(
@@ -330,7 +486,7 @@ export const createPersistedQueryLink = (
           setFetchOptions = true;
         }
 
-        if (supportsPersistedQueries) {
+        if (enabled) {
           getQueryHash(query)
             .then((sha256Hash) => {
               operation.extensions.persistedQuery = {
@@ -348,12 +504,9 @@ export const createPersistedQueryLink = (
           if (subscription) subscription.unsubscribe();
         };
       });
-    }),
-    {
-      resetHashCache,
-    },
-    __DEV__ ?
-      {
+    });
+    if (__DEV__) {
+      Object.assign(this, {
         getMemoryInternals() {
           return {
             PersistedQueryLink: {
@@ -361,7 +514,10 @@ export const createPersistedQueryLink = (
             },
           };
         },
-      }
-    : {}
-  );
-};
+      });
+    }
+    this.resetHashCache = resetHashCache;
+  }
+
+  resetHashCache: () => void;
+}

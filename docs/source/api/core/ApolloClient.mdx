@@ -2,13 +2,9 @@
 title: class ApolloClient
 description: API reference
 order: 11
-api_reference: true
-api_doc:
-  - "@apollo/client!ApolloClient:class"
-  - "@apollo/client!DefaultOptions:interface"
 ---
 
-import { InterfaceDetails, FunctionDetails, DocBlock, Example } from '../../../shared/ApiDoc';
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
 
 The `ApolloClient` class encapsulates Apollo's core client-side API. It backs all available view-layer integrations (React, iOS, and so on).
 
@@ -28,56 +24,110 @@ For more information on the `defaultOptions` object, see the [Default Options](#
 
 ## Functions
 
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#watchQuery:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#query:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#mutate:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#subscribe:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#readQuery:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#readFragment:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#writeQuery:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#writeFragment:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#watchFragment:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#resetStore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#onResetStore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#clearStore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#onClearStore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#stop:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#reFetchObservableQueries:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#refetchQueries:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ApolloClient#getObservableQueries:member(1)" headingLevel={3} />
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#watchQuery:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#query:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#mutate:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#subscribe:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#readQuery:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#readFragment:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#writeQuery:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#writeFragment:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#watchFragment:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#resetStore:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#onResetStore:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#clearStore:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#onClearStore:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#stop:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#refetchObservableQueries:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#refetchQueries:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#getObservableQueries:member(1)"
+  headingLevel={3}
+/>
 
 ## Types
 
 <InterfaceDetails
-canonicalReference="@apollo/client!ApolloClientOptions:interface"
-headingLevel={3}
-customPropertyOrder={[
-  "cache",
-  "link",
-  "uri",
-  "connectToDevTools",
-  "defaultOptions",
-  "name",
-  "version",
-]}
- />
+  canonicalReference="@apollo/client!ApolloClient.Options:interface"
+  headingLevel={3}
+  customPropertyOrder={[
+    "cache",
+    "link",
+    "uri",
+    "connectToDevTools",
+    "defaultOptions",
+    "name",
+    "version",
+  ]}
+/>
 
-<InterfaceDetails canonicalReference="@apollo/client!DefaultOptions:interface" headingLevel={3} />
+<InterfaceDetails
+  canonicalReference="@apollo/client!ApolloClient.DefaultOptions:interface"
+  headingLevel={3}
+/>
 
 ##### Example `defaultOptions` object
 
 ```js
 const defaultOptions = {
   watchQuery: {
-    fetchPolicy: 'cache-and-network',
-    errorPolicy: 'ignore',
+    fetchPolicy: "cache-and-network",
+    errorPolicy: "ignore",
   },
   query: {
-    fetchPolicy: 'network-only',
-    errorPolicy: 'all',
+    fetchPolicy: "network-only",
+    errorPolicy: "all",
   },
   mutate: {
-    errorPolicy: 'all',
+    errorPolicy: "all",
   },
 };
 ```

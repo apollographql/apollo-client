@@ -1,20 +1,27 @@
+import * as React from "react";
+
 import type {
   ApolloClient,
+  DataValue,
   DocumentNode,
   OperationVariables,
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "../../core/index.js";
-import { canonicalStringify } from "../../cache/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { getSuspenseCache } from "../internal/index.js";
-import * as React from "rehackt";
-import type { FragmentKey } from "../internal/cache/types.js";
+} from "@apollo/client";
+import { canonicalStringify } from "@apollo/client/cache";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { FragmentKey } from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+import type {
+  DocumentationTypes as UtilityDocumentationTypes,
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
+
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
-import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import type { NoInfer, VariablesOption } from "../types/types.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 type From<TData> =
   | StoreObject
@@ -23,85 +30,123 @@ type From<TData> =
   | string
   | null;
 
-export type UseSuspenseFragmentOptions<
-  TData,
-  TVariables extends OperationVariables,
-> = {
-  /**
-   * A GraphQL document created using the `gql` template string tag from
-   * `graphql-tag` with one or more fragments which will be used to determine
-   * the shape of data to read. If you provide more than one fragment in this
-   * document then you must also specify `fragmentName` to select a single.
-   */
-  fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+export declare namespace useSuspenseFragment {
+  import _self = useSuspenseFragment;
+  export namespace Base {
+    export type Options<TData, TVariables extends OperationVariables> = {
+      /**
+       * A GraphQL document created using the `gql` template string tag from
+       * `graphql-tag` with one or more fragments which will be used to determine
+       * the shape of data to read. If you provide more than one fragment in this
+       * document then you must also specify `fragmentName` to select a single.
+       */
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  /**
-   * The name of the fragment in your GraphQL document to be used. If you do
-   * not provide a `fragmentName` and there is only one fragment in your
-   * `fragment` document then that fragment will be used.
-   */
-  fragmentName?: string;
-  from: From<TData>;
-  // Override this field to make it optional (default: true).
-  optimistic?: boolean;
-  /**
-   * The instance of `ApolloClient` to use to look up the fragment.
-   *
-   * By default, the instance that's passed down via context is used, but you
-   * can provide a different instance here.
-   *
-   * @docGroup 1. Operation options
-   */
-  client?: ApolloClient<any>;
-} & VariablesOption<NoInfer<TVariables>>;
+      /**
+       * The name of the fragment in your GraphQL document to be used. If you do
+       * not provide a `fragmentName` and there is only one fragment in your
+       * `fragment` document then that fragment will be used.
+       */
+      fragmentName?: string;
+      from: From<TData>;
+      // Override this field to make it optional (default: true).
+      optimistic?: boolean;
+      /**
+       * The instance of `ApolloClient` to use to look up the fragment.
+       *
+       * By default, the instance that's passed down via context is used, but you
+       * can provide a different instance here.
+       *
+       * @docGroup 1. Operation options
+       */
+      client?: ApolloClient;
+    };
+  }
+  export type Options<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.Options<TData, TVariables> & VariablesOption<NoInfer<TVariables>>;
 
-export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
+  export namespace DocumentationTypes {
+    export namespace useSuspenseFragment {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+    }
+  }
+
+  export interface Result<TData> {
+    data: DataValue.Complete<MaybeMasked<TData>>;
+  }
+  export namespace DocumentationTypes {
+    export namespace useSuspenseFragment {
+      export interface Result<TData = unknown> extends _self.Result<TData> {}
+    }
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+    export function useSuspenseFragment<
+      TData,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      options: useSuspenseFragment.Options<TData, TVariables>
+    ): useSuspenseFragment.Result<TData>;
+  }
+}
 
 const NULL_PLACEHOLDER = [] as unknown as [
   FragmentKey,
   Promise<MaybeMasked<any> | null>,
 ];
 
+/** #TODO documentation */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+  options: useSuspenseFragment.Options<TData, TVariables> & {
     from: NonNullable<From<TData>>;
   }
-): UseSuspenseFragmentResult<TData>;
+): useSuspenseFragment.Result<TData>;
 
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+  options: useSuspenseFragment.Options<TData, TVariables> & {
     from: null;
   }
-): UseSuspenseFragmentResult<null>;
+): useSuspenseFragment.Result<null>;
 
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+  options: useSuspenseFragment.Options<TData, TVariables> & {
     from: From<TData>;
   }
-): UseSuspenseFragmentResult<TData | null>;
+): useSuspenseFragment.Result<TData | null>;
 
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables>
-): UseSuspenseFragmentResult<TData>;
+  options: useSuspenseFragment.Options<TData, TVariables>
+): useSuspenseFragment.Result<TData>;
 
 export function useSuspenseFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables>
-): UseSuspenseFragmentResult<TData | null> {
+  options: useSuspenseFragment.Options<TData, TVariables>
+): useSuspenseFragment.Result<TData | null> {
+  "use no memo";
   return wrapHook(
     "useSuspenseFragment",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -114,8 +159,8 @@ function useSuspenseFragment_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  options: UseSuspenseFragmentOptions<TData, TVariables>
-): UseSuspenseFragmentResult<TData | null> {
+  options: useSuspenseFragment.Options<TData, TVariables>
+): useSuspenseFragment.Result<TData | null> {
   const client = useApolloClient(options.client);
   const { from, variables } = options;
   const { cache } = client;

@@ -1,0 +1,8 @@
+{
+  "name": "size-limit-apollo-plugin",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  }
+}

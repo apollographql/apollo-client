@@ -1,35 +1,38 @@
-export * from "./disposables/index.js";
+export {
+  enableFakeTimers,
+  spyOnConsole,
+  withCleanup,
+  withProdMode,
+} from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
 
 export type {
-  SimpleCaseData,
+  MaskedVariablesCaseData,
   PaginatedCaseData,
   PaginatedCaseVariables,
+  SimpleCaseData,
   VariablesCaseData,
   VariablesCaseVariables,
 } from "./scenarios/index.js";
 export {
+  addDelayToMocks,
+  setupMaskedVariablesCase,
+  setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
-  setupPaginatedCase,
-  addDelayToMocks,
 } from "./scenarios/index.js";
-
-export type {
-  RenderWithClientOptions,
-  RenderWithMocksOptions,
-} from "./renderHelpers.js";
-export {
-  renderWithClient,
-  renderWithMocks,
-  createMockWrapper,
-  createClientWrapper,
-} from "./renderHelpers.js";
+export { createClientWrapper, createMockWrapper } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
 export { renderAsync } from "./rtl/renderAsync.js";
 export { renderHookAsync } from "./rtl/renderHookAsync.js";
 export {
-  mockIncrementalStream,
   mockDeferStream,
   mockMultipartSubscriptionStream,
 } from "./incremental.js";
+export { resetApolloContext } from "./resetApolloContext.js";
+export {
+  createOperationWithDefaultContext,
+  executeWithDefaultContext,
+} from "./link.js";
+export { markAsStreaming } from "./markAsStreaming.js";
+export { wait } from "./wait.js";

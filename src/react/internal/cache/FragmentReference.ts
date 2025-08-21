@@ -1,22 +1,17 @@
 import { equal } from "@wry/equality";
-import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
-} from "../../../cache/index.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { MaybeMasked } from "../../../masking/index.js";
+import type { Observable, Subscription } from "rxjs";
+
+import type { ApolloClient, OperationVariables } from "@apollo/client";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
   createFulfilledPromise,
-  wrapPromiseWithState,
-} from "../../../utilities/index.js";
-import type {
-  Observable,
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+  decoratePromise,
+} from "@apollo/client/utilities/internal";
+
 import type { FragmentKey } from "./types.js";
 
-type FragmentRefPromise<TData> = PromiseWithState<TData>;
+type FragmentRefPromise<TData> = DecoratedPromise<TData>;
 type Listener<TData> = (promise: FragmentRefPromise<TData>) => void;
 
 interface FragmentReferenceOptions {
@@ -26,24 +21,29 @@ interface FragmentReferenceOptions {
 
 export class FragmentReference<
   TData = unknown,
-  TVariables = Record<string, unknown>,
+  TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: Observable<WatchFragmentResult<TData>>;
+  public readonly observable: Observable<
+    ApolloClient.WatchFragmentResult<TData>
+  >;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 
   private resolve: ((result: MaybeMasked<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<MaybeMasked<TData>>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
   private references = 0;
 
   constructor(
-    client: ApolloClient<any>,
-    watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
+    client: ApolloClient,
+    watchFragmentOptions: ApolloClient.WatchFragmentOptions<
+      TData,
+      TVariables
+    > & {
       from: string;
     },
     options: FragmentReferenceOptions
@@ -113,7 +113,6 @@ export class FragmentReference<
 
   private dispose() {
     this.subscription.unsubscribe();
-    this.onDispose();
   }
 
   private onDispose() {
@@ -125,9 +124,13 @@ export class FragmentReference<
       this.handleNext.bind(this),
       this.handleError.bind(this)
     );
+    // call `onDispose` when the subscription is finalized, either because it is
+    // unsubscribed as a consequence of a `dispose` call or because the
+    // ObservableQuery completes because of a `ApolloClient.stop()` call.
+    this.subscription.add(this.onDispose);
   }
 
-  private handleNext(result: WatchFragmentResult<TData>) {
+  private handleNext(result: ApolloClient.WatchFragmentResult<TData>) {
     switch (this.promise.status) {
       case "pending": {
         if (result.complete) {
@@ -165,7 +168,7 @@ export class FragmentReference<
   }
 
   private createPendingPromise() {
-    return wrapPromiseWithState(
+    return decoratePromise(
       new Promise<MaybeMasked<TData>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -173,16 +176,21 @@ export class FragmentReference<
     );
   }
 
-  private getDiff<TData, TVariables>(
-    client: ApolloClient<any>,
-    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+  private getDiff<TData, TVariables extends OperationVariables>(
+    client: ApolloClient,
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    }
   ) {
     const { cache } = client;
     const { from, fragment, fragmentName } = options;
 
-    const diff = cache.diff({
+    const diff = cache.diff<TData, TVariables>({
       ...options,
-      query: cache["getFragmentDoc"](fragment, fragmentName),
+      query: cache["getFragmentDoc"](
+        client["transform"](fragment),
+        fragmentName
+      ),
       returnPartialData: true,
       id: from,
       optimistic: true,

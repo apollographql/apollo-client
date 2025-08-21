@@ -1,12 +1,9 @@
 ---
-title: Subscriptions Link
+title: GraphQLWsLink
 description: Execute subscriptions (or other operations) over WebSocket with the graphql-ws library
-api_reference: true
 ---
 
-> We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
-
-The `GraphQLWsLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
+<DocBlock canonicalReference="@apollo/client/link/subscriptions!GraphQLWsLink:class" />
 
 `GraphQLWsLink` requires the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library. Install it in your project like so:
 
@@ -14,27 +11,33 @@ The `GraphQLWsLink` is a [terminating link](./introduction/#the-terminating-link
 npm install graphql-ws
 ```
 
-> **Note**: This link works with the newer `graphql-ws` library. If your server uses the older `subscriptions-transport-ws`, you should use the [`WebSocketLink` link from `@apollo/client/link/ws`](./apollo-link-ws) instead.
+<DocBlock
+  canonicalReference="@apollo/client/link/subscriptions!GraphQLWsLink:class"
+  customOrder={["example"]}
+/>
 
-## Constructor
+## Constructor signature
+
+{/* TODO: Remove the custom signature once documentation supports rendering constructor functions */}
 
 ```js
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
-import { createClient } from "graphql-ws";
-
-const link = new GraphQLWsLink(
-  createClient({
-    url: "ws://localhost:3000/subscriptions",
-  }),
-);
+constructor(
+  client: Client
+): GraphQLWsLink
 ```
 
 ### Options
 
-The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
+The `GraphQLWsLink` constructor takes a single argument: a `Client` instance from the `graphql-ws` library. To create this instance, call the library's [`createClient`](https://the-guild.dev/graphql/ws/docs/client/functions/createClient) function. This function requires a `url` option, which is the URL to your WebSocket server. WebSocket URLs typically start with `ws://` or `wss://`.
 
-The `createClient` function can take many options, described in the [`graphql-ws` docs for `ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws), which is named `uri` instead of `url`.)
+See the [`ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions) documentation for more details on the supported options provided to the `createClient` function.
+
+#### Retrying failed connections
+
+See the [`graphql-ws` recipes](https://the-guild.dev/graphql/ws/recipes) for strategies on retrying failed connections from the client. We generally recommend this approach over retrying failed connections from the link chain or your components because it provides more detailed information on why the connection failed.
+
+Alternatively, you can handle retries more generically within the link chain by using [`RetryLink`](./apollo-link-retry). This link resends the operation to the terminating link upon failure.
 
 ## Usage
 
-See [Subscriptions](../../data/subscriptions/).
+See [Subscriptions](../../data/subscriptions/) for more information on using subscription operations in Apollo Client.

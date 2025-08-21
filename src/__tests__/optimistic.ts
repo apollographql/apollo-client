@@ -1,26 +1,30 @@
-import { from, ObservableInput } from "rxjs";
-import { take, toArray, map } from "rxjs/operators";
+import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import gql from "graphql-tag";
+import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
+import { map, take, toArray } from "rxjs/operators";
 
-import {
-  ApolloClient,
-  makeReference,
-  ApolloLink,
+import type {
   ApolloCache,
   MutationQueryReducersMap,
   TypedDocumentNode,
-  ApolloError,
-} from "../core";
+} from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
+import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
+import { InMemoryCache } from "@apollo/client/cache";
+import { MockLink } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
+import { addTypenameToDocument } from "@apollo/client/utilities";
+import { makeReference } from "@apollo/client/utilities/internal";
 
-import { QueryManager } from "../core/QueryManager";
+import type { QueryManager } from "../core/QueryManager.js";
 
-import { Cache, InMemoryCache } from "../cache";
-
-import { Observable, addTypenameToDocument } from "../utilities";
-
-import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream } from "../testing/internal";
+const mutationByAccessIndex = (queryManager: QueryManager) => {
+  return new Proxy(queryManager.mutationStore!, {
+    get: (mutationStore, idx) => {
+      return mutationStore[Object.keys(mutationStore)[(idx as any) - 1]];
+    },
+  });
+};
 
 describe("optimistic mutation results", () => {
   const query = gql`
@@ -106,14 +110,14 @@ describe("optimistic mutation results", () => {
     },
   };
 
-  async function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+  async function setup(...mockedResponses: MockLink.MockedResponse[]) {
+    const link = new MockLink([
       {
         request: { query },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -138,11 +142,21 @@ describe("optimistic mutation results", () => {
         },
       }),
       // Enable client.queryManager.mutationStore tracking.
-      connectToDevTools: true,
+      devtools: { enabled: true },
     });
 
-    const obsHandle = client.watchQuery({ query });
-    await obsHandle.result();
+    const obsHandle = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
+    // We can't use firstValueFrom here because we need to unsubscribe in the
+    // setTimeout
+    await new Promise((resolve) => {
+      const subscription = obsHandle.subscribe((value) => {
+        resolve(value);
+        setTimeout(() => subscription.unsubscribe());
+      });
+    });
 
     return client;
   }
@@ -221,7 +235,9 @@ describe("optimistic mutation results", () => {
         });
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(4);
           expect((dataInStore["Todo99"] as any).text).toBe(
             "Optimistically generated"
@@ -229,11 +245,13 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
           expect(dataInStore).not.toHaveProperty("Todo99");
         }
@@ -338,7 +356,7 @@ describe("optimistic mutation results", () => {
 
         await expect(stream).toEmitNext();
 
-        const queryManager: QueryManager<any> = (client as any).queryManager;
+        const queryManager = client["queryManager"];
 
         const promise = client
           .mutate({
@@ -352,8 +370,7 @@ describe("optimistic mutation results", () => {
               "Optimistically generated 2"
             );
 
-            // @ts-ignore
-            const latestState = queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(queryManager);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(true);
 
@@ -373,15 +390,14 @@ describe("optimistic mutation results", () => {
             );
 
             // @ts-ignore
-            const latestState = queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(queryManager);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
-        // @ts-ignore
-        const mutationsState = queryManager.mutationStore!;
+        const mutationsState = mutationByAccessIndex(queryManager);
         expect(mutationsState[1].loading).toBe(true);
         expect(mutationsState[2].loading).toBe(true);
 
@@ -455,7 +471,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
@@ -575,8 +591,7 @@ describe("optimistic mutation results", () => {
               "Optimistically generated 2"
             );
 
-            // @ts-ignore
-            const latestState = client.queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(client["queryManager"]);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(true);
 
@@ -595,16 +610,14 @@ describe("optimistic mutation results", () => {
               "Second mutation."
             );
 
-            // @ts-ignore
-            const latestState = client.queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(client["queryManager"]);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
-        // @ts-ignore
-        const mutationsState = client.queryManager.mutationStore!;
+        const mutationsState = mutationByAccessIndex(client["queryManager"]);
         expect(mutationsState[1].loading).toBe(true);
         expect(mutationsState[2].loading).toBe(true);
 
@@ -912,7 +925,9 @@ describe("optimistic mutation results", () => {
         "todos" in initialList &&
         Array.isArray(initialList.todos);
 
-      const initialList = client.cache.extract(true)[id];
+      const initialList = (client.cache.extract(true) as NormalizedCacheObject)[
+        id
+      ];
 
       if (!isTodoList(initialList)) {
         throw new Error("Expected TodoList");
@@ -953,7 +968,7 @@ describe("optimistic mutation results", () => {
         },
       });
 
-      const list = client.cache.extract(true)[id];
+      const list = (client.cache.extract(true) as NormalizedCacheObject)[id];
 
       if (!isTodoList(list)) {
         throw new Error("Expected TodoList");
@@ -963,7 +978,7 @@ describe("optimistic mutation results", () => {
 
       await promise;
 
-      const result = await client.query({ query });
+      const result = await client.query<any>({ query });
 
       stream.unsubscribe();
 
@@ -993,12 +1008,15 @@ describe("optimistic mutation results", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
       });
 
-      client.mutate({
-        mutation,
-        optimisticResponse: (vars, { IGNORE }) => IGNORE,
-      });
+      client
+        .mutate({
+          mutation,
+          optimisticResponse: (vars, { IGNORE }) => IGNORE,
+        })
+        .catch(() => {});
     });
   });
 
@@ -1068,12 +1086,45 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(8);
-      const client = await setup({
-        request: { query: mutation },
-        result: mutationResult,
+      expect.assertions(7);
+      const link = new MockLink([
+        {
+          request: { query },
+          result,
+        },
+        {
+          request: { query: mutation },
+          result: mutationResult,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            TodoList: {
+              fields: {
+                todos: {
+                  // Deliberately silence "Cache data may be lost..."
+                  // warnings by favoring the incoming data, rather than
+                  // (say) concatenating the arrays together.
+                  merge: false,
+                },
+              },
+            },
+          },
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        }),
       });
-      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      const stream = new ObservableStream(
+        client.watchQuery({ query, notifyOnNetworkStatusChange: false })
+      );
 
       await expect(stream).toEmitNext();
 
@@ -1279,11 +1330,11 @@ describe("optimistic mutation results", () => {
     });
 
     it("will handle dependent updates", async () => {
-      expect.assertions(1);
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1294,8 +1345,8 @@ describe("optimistic mutation results", () => {
           request: { query: mutation },
           result: mutationResult2,
           delay: 20,
-        }
-      );
+        },
+      ]);
 
       const customOptimisticResponse1 = {
         __typename: "Mutation",
@@ -1344,15 +1395,15 @@ describe("optimistic mutation results", () => {
       });
 
       // wrap the QueryObservable with an rxjs observable
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
-          map((value) => value.data.todoList.todos),
-          take(5),
-          toArray()
-        )
-        .toPromise();
+      const promise = lastValueFrom(
+        client
+          .watchQuery<any>({ query, notifyOnNetworkStatusChange: false })
+          .pipe(
+            map((value) => value.data.todoList.todos),
+            take(5),
+            toArray()
+          )
+      );
 
       // Mutations will not trigger a watchQuery with the results of an optimistic response
       // if set in the same tick of the event loop.
@@ -1497,7 +1548,7 @@ describe("optimistic mutation results", () => {
         "Optimistically generated"
       );
       await promise;
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       stream.unsubscribe();
       // There should be one more todo item than before
@@ -1712,10 +1763,11 @@ describe("optimistic mutation results", () => {
 
     it("will handle dependent updates", async () => {
       expect.assertions(1);
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1726,8 +1778,8 @@ describe("optimistic mutation results", () => {
           request: { query: mutation },
           result: mutationResult2,
           delay: 20,
-        }
-      );
+        },
+      ]);
 
       const customOptimisticResponse1 = {
         __typename: "Mutation",
@@ -1792,15 +1844,15 @@ describe("optimistic mutation results", () => {
         }),
       });
 
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
-          map((value) => value.data.todoList.todos),
-          take(5),
-          toArray()
-        )
-        .toPromise();
+      const promise = lastValueFrom(
+        client
+          .watchQuery<any>({ query, notifyOnNetworkStatusChange: false })
+          .pipe(
+            map((value) => value.data.todoList.todos),
+            take(5),
+            toArray()
+          )
+      );
 
       await new Promise((resolve) => setTimeout(resolve));
 
@@ -1856,7 +1908,7 @@ describe("optimistic mutation results", () => {
         ),
       });
 
-      const query = gql`
+      const query: TypedDocumentNode<Data> = gql`
         query {
           items {
             text
@@ -1875,8 +1927,8 @@ describe("optimistic mutation results", () => {
       type Item = ReturnType<typeof makeItem>;
       type Data = { items: Item[] };
 
-      function append(cache: ApolloCache<any>, item: Item) {
-        const data = cache.readQuery<Data>({ query });
+      function append(cache: ApolloCache, item: Item) {
+        const data = cache.readQuery({ query });
         cache.writeQuery({
           query,
           data: {
@@ -1945,8 +1997,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
       ]);
 
@@ -2136,8 +2188,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
         {
           complete: true,
@@ -2203,8 +2255,8 @@ describe("optimistic mutation - githunt comments", () => {
     },
   };
 
-  async function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+  async function setup(...mockedResponses: MockLink.MockedResponse[]) {
+    const link = new MockLink([
       {
         request: {
           query: addTypenameToDocument(query),
@@ -2219,8 +2271,8 @@ describe("optimistic mutation - githunt comments", () => {
         },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2237,9 +2289,10 @@ describe("optimistic mutation - githunt comments", () => {
     const obsHandle = client.watchQuery({
       query,
       variables,
+      notifyOnNetworkStatusChange: false,
     });
 
-    await obsHandle.result();
+    await firstValueFrom(from(obsHandle));
 
     return client;
   }

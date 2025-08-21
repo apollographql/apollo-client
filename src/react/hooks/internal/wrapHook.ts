@@ -1,28 +1,35 @@
-import type {
-  useQuery,
-  useSuspenseQuery,
-  useBackgroundQuery,
-  useReadQuery,
-  useFragment,
-  useQueryRefHandlers,
-  useSuspenseFragment,
-} from "../index.js";
-import type { QueryManager } from "../../../core/QueryManager.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { ObservableQuery } from "../../../core/ObservableQuery.js";
-import type { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
+import * as React from "react";
 
-const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
+import type { ApolloClient, InternalTypes } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
+import type { createQueryPreloader } from "@apollo/client/react";
+import type {
+  useBackgroundQuery,
+  useFragment,
+  useQuery,
+  useQueryRefHandlers,
+  useReadQuery,
+  useSuspenseFragment,
+  useSuspenseQuery,
+} from "@apollo/client/react";
+
+// direct import to avoid circular dependency
+import { getApolloContext } from "../../context/ApolloContext.js";
+
+export const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
+
+type FunctionSignature<T> =
+  T extends (...args: infer A) => infer R ? (...args: A) => R : never;
 
 interface WrappableHooks {
-  createQueryPreloader: typeof createQueryPreloader;
-  useQuery: typeof useQuery;
-  useSuspenseQuery: typeof useSuspenseQuery;
-  useSuspenseFragment: typeof useSuspenseFragment;
-  useBackgroundQuery: typeof useBackgroundQuery;
-  useReadQuery: typeof useReadQuery;
-  useFragment: typeof useFragment;
-  useQueryRefHandlers: typeof useQueryRefHandlers;
+  createQueryPreloader: FunctionSignature<typeof createQueryPreloader>;
+  useQuery: FunctionSignature<typeof useQuery>;
+  useSuspenseQuery: FunctionSignature<typeof useSuspenseQuery>;
+  useSuspenseFragment: FunctionSignature<typeof useSuspenseFragment>;
+  useBackgroundQuery: FunctionSignature<typeof useBackgroundQuery>;
+  useReadQuery: FunctionSignature<typeof useReadQuery>;
+  useFragment: FunctionSignature<typeof useFragment>;
+  useQueryRefHandlers: FunctionSignature<typeof useQueryRefHandlers>;
 }
 
 /**
@@ -36,7 +43,7 @@ export type HookWrappers = {
   ) => WrappableHooks[K];
 };
 
-interface QueryManagerWithWrappers<T> extends QueryManager<T> {
+interface QueryManagerWithWrappers extends InternalTypes.QueryManager {
   [wrapperSymbol]?: HookWrappers;
 }
 
@@ -47,6 +54,7 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  * That means that the Apollo Client instance can expose a "wrapper" that will be
  * used to wrap the original hook implementation with additional logic.
  * @example
+ *
  * ```tsx
  * // this is already done in `@apollo/client` for all wrappable hooks (see `WrappableHooks`)
  * // following this pattern
@@ -78,17 +86,34 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
 export function wrapHook<Hook extends (...args: any[]) => any>(
   hookName: keyof WrappableHooks,
   useHook: Hook,
-  clientOrObsQuery: ObservableQuery<any> | ApolloClient<any>
+  clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
-  const queryManager = (
-    clientOrObsQuery as unknown as {
-      // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
-      // but they're both `private`, so we have to cast around for a bit here.
-      queryManager: QueryManagerWithWrappers<any>;
+  // Priority-wise, the later entries in this array wrap
+  // previous entries and could prevent them (and in the end,
+  // even the original hook) from running
+  const wrapperSources = [
+    (
+      clientOrObsQuery as unknown as {
+        // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
+        // but they're both `private`, so we have to cast around for a bit here.
+        queryManager: QueryManagerWithWrappers;
+      }
+    )["queryManager"],
+    // if we are a hook (not `preloadQuery`), we are guaranteed to be inside of
+    // a React render and can use context
+    hookName.startsWith("use") ?
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      React.useContext(getApolloContext())
+    : undefined,
+  ];
+
+  let wrapped = useHook;
+  for (const source of wrapperSources) {
+    const wrapper = source?.[wrapperSymbol]?.[hookName];
+    if (wrapper) {
+      wrapped = wrapper(wrapped) as Hook;
     }
-  )["queryManager"];
-  const wrappers = queryManager && queryManager[wrapperSymbol];
-  const wrapper: undefined | ((wrap: Hook) => Hook) =
-    wrappers && (wrappers[hookName] as any);
-  return wrapper ? wrapper(useHook) : useHook;
+  }
+
+  return wrapped;
 }

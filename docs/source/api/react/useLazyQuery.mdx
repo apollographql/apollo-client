@@ -1,0 +1,30 @@
+---
+title: useLazyQuery
+description: Apollo Client API reference
+---
+
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+<FunctionDetails canonicalReference="@apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:function(1)" headingLevel={2}>
+  ```ts
+  [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
+  ```
+
+A tuple of two values:
+
+  <ManualTuple>
+    <ManualTupleItem
+      name="execute"
+      type="(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>"
+    >
+      Function that can be triggered to execute the query. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails.
+    </ManualTupleItem>
+    <ManualTupleItem
+      name="result"
+      type="QueryResult<TData, TVariables>"
+      canonicalReference="@apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery.Result:interface"
+    >
+      The result of the query. See the `useQuery` hook for more details.
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>

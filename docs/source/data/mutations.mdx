@@ -1,12 +1,9 @@
 ---
 title: Mutations in Apollo Client
 description: Modify data with the useMutation hook
-api_doc:
-  - "@apollo/client!MutationHookOptions:interface"
-  - "@apollo/client!MutationResult:interface"
 ---
 
-import { PropertySignatureTable } from '../../shared/ApiDoc';
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 Now that we've [learned how to query data](queries/) from our backend with Apollo Client, the natural next step is to learn how to _modify_ back-end data with **mutations**.
 
@@ -15,6 +12,12 @@ This article demonstrates how to send updates to your GraphQL server with the `u
 > To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/mutations-example-app-start-gm7i5) and [sample GraphQL server](https://codesandbox.io/s/mutations-example-app-server-sxewr) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/mutations-example-app-final-tjoje).
 
 ## Prerequisites
+
+<Note>
+
+If your application is built using TypeScript, we recommend reading the [TypeScript guide](../development-testing/static-typing) to learn how to use TypeScript with Apollo Client.
+
+</Note>
 
 This article assumes you're familiar with building basic GraphQL mutations. If you need a refresher, we recommend that you
 [read this guide](http://graphql.org/learn/queries/#mutations).
@@ -27,20 +30,22 @@ The `useMutation` [React hook](https://react.dev/reference/react) is the primary
 
 To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
-```jsx {13} title="my-component.jsx"
-import { gql, useMutation } from '@apollo/client';
+```jsx {15} title="my-component.jsx"
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 // Define mutation
 const INCREMENT_COUNTER = gql`
   # Increments a back-end counter and gets its resulting value
   mutation IncrementCounter {
-    currentValue
+    incrementCounter {
+      currentValue
+    }
   }
 `;
 
 function MyComponent() {
-  // Pass mutation to useMutation
-  const [mutateFunction, { data, loading, error }] = useMutation(INCREMENT_COUNTER);
+  const [mutate, { data, loading, error }] = useMutation(INCREMENT_COUNTER);
 }
 ```
 
@@ -48,17 +53,18 @@ As shown above, you use the `gql` function to parse the mutation string into a G
 
 When your component renders, `useMutation` returns a tuple that includes:
 
-* A **mutate function** that you can call at any time to execute the mutation
-    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead, you call this mutate function.
-* An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
-    * This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
+- A **mutate function** that you can call at any time to execute the mutation
+  - Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead, call the `mutate` function to execute the mutation.
+- An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
+  - This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
 
 ### Example
 
 Let's say we're creating a to-do list application and we want the user to be able to add items to their list. First, we'll create a corresponding GraphQL mutation named `ADD_TODO`. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 ```jsx title="add-todo.jsx"
-import { gql, useMutation } from '@apollo/client';
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -75,24 +81,25 @@ Next, we'll create a component named `AddTodo` that represents the submission fo
 
 ```jsx {3,13} title="add-todo.jsx"
 function AddTodo() {
-  let input;
+  const [value, setValue] = useState("");
   const [addTodo, { data, loading, error }] = useMutation(ADD_TODO);
 
-  if (loading) return 'Submitting...';
+  if (loading) return "Submitting...";
   if (error) return `Submission error! ${error.message}`;
 
   return (
     <div>
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
-          addTodo({ variables: { type: input.value } });
-          input.value = '';
+          addTodo({ variables: { type: value } });
+          setValue("");
         }}
       >
         <input
-          ref={node => {
-            input = node;
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
           }}
         />
         <button type="submit">Add Todo</button>
@@ -104,7 +111,11 @@ function AddTodo() {
 
 In this example, our form's `onSubmit` handler calls the **mutate function** (named `addTodo`) that's returned by the `useMutation` hook. This tells Apollo Client to execute the mutation by sending it to our GraphQL server.
 
-> Note that this behavior differs from [`useQuery`](./queries/), which executes its operation as soon as its component renders. This is because mutations are more commonly executed in response to a user action (such as submitting a form in this case).
+<Note>
+
+`useMutation` behaves differently than [`useQuery`](./queries/), which executes its operation as soon as its component renders. This is because mutations are more commonly executed in response to a user action (such as submitting a form in this case).
+
+</Note>
 
 ### Providing options
 
@@ -119,69 +130,84 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 });
 ```
 
-> All supported options are listed in [Options](#options).
-
 You can _also_ provide options directly to your mutate function, as demonstrated in this snippet from [the example above](#example):
 
 ```js
 addTodo({
   variables: {
-    type: input.value,
+    type: value,
   },
 });
 ```
 
 Here, we use the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `type` of the created to-do item).
 
+Learn more about the available options in [Options](#options).
+
 #### Option precedence
 
 If you provide the same option to both `useMutation` _and_ your mutate function, the mutate function's value takes precedence. In the specific case of the `variables` option, the two objects are merged _shallowly_, which means any variables provided only to `useMutation` are preserved in the resulting object. This helps you set default values for variables.
 
-In [the example snippets above](#providing-options), `input.value` would override `"placeholder"` as the value of the `type` variable. The value of `someOtherVariable` (`1234`) would be preserved.
+In [the example snippets above](#providing-options), `value` would override `"placeholder"` as the value of the `type` variable. The value of `someOtherVariable` (`1234`) would be preserved.
+
+<Note>
+
+When using TypeScript, you might see an error related to a missing variable when a required variable is not provided to either the hook or the `mutate` function. Providing required variables to the hook makes them optional in the `mutate` function. If a required variable is not provided to the hook, it is required in the `mutate` function.
+
+</Note>
 
 ### Tracking mutation status
 
-In addition to a mutate function, the `useMutation` hook returns an object that represents the current state of the mutation's execution. The fields of this object (listed in [Result](#result)) include booleans that indicate whether the mutate function has been `called` yet, and whether the mutation's result is currently `loading`.
+In addition to a mutate function, the `useMutation` hook returns an object that represents the current state of the mutation's execution. The fields of this object include booleans that indicate whether the mutate function has been `called` and whether the mutation's result is currently `loading`.
 
 [The example above](#example) destructures the `loading` and `error` fields from this object to render the `AddTodo` component differently depending on the mutation's current status:
 
 ```jsx
-if (loading) return 'Submitting...';
+if (loading) return "Submitting...";
 if (error) return `Submission error! ${error.message}`;
 ```
 
-> The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks. [See the API reference.](../api/react/hooks/#options-2)
+<Note>
+
+The `useMutation` hook supports `onCompleted` and `onError` options if you need to perform side effects when the mutation completes. See the [API reference](../api/react/useMutation) for more details.
+
+</Note>
+
+Learn more about result object in [Result](#result).
 
 ### Resetting mutation status
 
 The mutation result object returned by `useMutation` includes a [`reset` function](#mutationresult-interface-reset):
 
 ```js
-const [login, { data, loading, error, reset }] = useMutation(LOGIN_MUTATION);
+const [login, { reset }] = useMutation(LOGIN_MUTATION);
 ```
 
 Call `reset` to reset the mutation's result to its initial state (i.e., _before_ the mutate function was called). You can use this to enable users to dismiss mutation result data or errors in the UI.
 
-> Calling `reset` does _not_ remove any cached data returned by the mutation's execution. It only affects the state associated with the `useMutation` hook, causing the corresponding component to rerender.
+<Note>
 
-```js {2,15}
-function LoginPage () {
+Calling `reset` does _not_ remove any cached data returned by the mutation's execution. It only affects the state associated with the `useMutation` hook, causing the corresponding component to rerender.
+
+</Note>
+
+```js {2,14}
+function LoginPage() {
   const [login, { error, reset }] = useMutation(LOGIN_MUTATION);
 
   return (
     <>
       <form>
-        <input class="login"/>
-        <input class="password"/>
+        <input class="login" />
+        <input class="password" />
         <button onclick={login}>Login</button>
       </form>
-      {
-        error &&
+      {error && (
         <LoginFailedMessageWindow
           message={error.message}
           onDismiss={() => reset()}
         />
-      }
+      )}
     </>
   );
 }
@@ -195,43 +221,53 @@ When you execute a mutation, you modify back-end data. Usually, you then want to
 
 The most straightforward way to update your local data is to [refetch any queries](#refetching-queries) that might be affected by the mutation. However, this method requires additional network requests.
 
-If your mutation returns all of the objects and fields that it modified, you can [update your cache directly](#updating-the-cache-directly) _without_ making any followup network requests. However, this method increases in complexity as your mutations become more complex.
+If your mutation returns all of the objects and fields that it modified, you can [update your cache directly](#updating-the-cache-directly) _without_ making any followup network requests.
 
-If you're just getting started with Apollo Client, we recommend refetching queries to update your cached data. After you get that working, you can improve your app's responsiveness by updating the cache directly.
+We recommend reading the guide on [Caching in Apollo Client](../caching/overview) to understand how data is stored in the cache and how to perform updates to that data.
 
 ## Refetching queries
 
-If you know that your app usually needs to refetch certain queries after a particular mutation, you can include a `refetchQueries` array in that mutation's options:
+You can refetch queries after a mutation by providing a `refetchQueries` option to `useMutation`:
 
 ```js {3-6}
 // Refetches two queries after mutation completes
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   refetchQueries: [
     GET_POST, // DocumentNode object parsed with gql
-    'GetComments' // Query name
+    "GetComments", // Query name
   ],
 });
 ```
 
-> You can only refetch _active_ queries. Active queries are those used by components on the current page. If the data you want to update is not fetched by a component on the current page, it's best to [update your cache directly](#updating-the-cache-directly).
+You can provide one of the following values to `refetchQueries`:
 
-Each element in the `refetchQueries` array is one of the following:
+- A `refetchQueries` array to refetch specific queries
+- The shorthand `"active"` string to refetch all active queries
+- The shorthand `"all"` string to refetch all active and inactive queries
 
-* A `DocumentNode` object parsed with the `gql` function
-* The name of a query you've previously executed, as a string (e.g., `GetComments`)
-  * To refer to queries by name, make sure each of your app's queries have a _unique_ name.
+It is most common to provide a `refetchQueries` array when performing mutations. Learn more about active and inactive queries in the [Refetching](./refetching) guide.
+
+When providing `refetchQueries` as an array, each element in the `refetchQueries` array is one of the following:
+
+- A `DocumentNode` object parsed with the `gql` function
+- The name of a query as a string (e.g., `GetComments`)
+  - To refer to queries by name, make sure each of your app's queries have a _unique_ name.
+
+<Note>
+
+Each query in the `refetchQueries` array must be an _active_ query. If an inactive or unknown query is provided, a warning will be logged to the console.
+
+</Note>
 
 Each included query is executed with its most recently provided set of variables.
 
 You can provide the `refetchQueries` option either to `useMutation` or to the mutate function. For details, see [Option precedence](#option-precedence).
 
-Note that in an app with tens or hundreds of different queries, it can be challenging to determine exactly which queries to refetch after a particular mutation.
-
 ## Updating the cache directly
 
 ### Include modified objects in mutation responses
 
-In most cases, a mutation response should include any object(s) the mutation modified. This enables Apollo Client to normalize those objects and cache them according to their `__typename` and `id` fields ([by default](../caching/cache-configuration/#customizing-cache-ids)).
+As a best practice, a mutation response should include any object(s) the mutation modified. This enables Apollo Client to normalize those objects and cache them according to their `__typename` and [`keyFields`](../caching/cache-configuration/#customizing-cache-ids).
 
 [In the example above](#example), our `ADD_TODO` mutation might return a `Todo` object with the following structure:
 
@@ -243,7 +279,11 @@ In most cases, a mutation response should include any object(s) the mutation mod
 }
 ```
 
-> Apollo Client automatically adds the `__typename` field to every object in your queries and mutations by default.
+<Note>
+
+Apollo Client automatically adds the `__typename` field to every object in your queries and mutations by default.
+
+</Note>
 
 Upon receiving this response object, Apollo Client caches it with key `Todo:5`. If a cached object _already_ exists with this key, Apollo Client overwrites any existing fields that are also included in the mutation response (other existing fields are preserved).
 
@@ -278,26 +318,26 @@ function AddTodo() {
                   id
                   type
                 }
-              `
+              `,
             });
             return [...existingTodos, newTodoRef];
-          }
-        }
+          },
+        },
       });
-    }
+    },
   });
 
   return (
     <div>
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
           addTodo({ variables: { type: input.value } });
           input.value = "";
         }}
       >
         <input
-          ref={node => {
+          ref={(node) => {
             input = node;
           }}
         />
@@ -314,7 +354,11 @@ As shown, the `update` function is passed a `cache` object that represents the A
 
 The `update` function is _also_ passed an object with a `data` property that contains the result of the mutation. You can use this value to update the cache with `cache.writeQuery`, `cache.writeFragment`, or `cache.modify`.
 
-> If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your `update` function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
+<Note>
+
+If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your `update` function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
+
+</Note>
 
 When the `ADD_TODO` mutation executes in the above example, the newly added and returned `addTodo` object is automatically saved into the cache _before_ the `update` function runs. However, the cached list of `ROOT_QUERY.todos` (which is watched by the `GET_TODOS` query) is _not_ automatically updated. This means that the `GET_TODOS` query isn't notified of the new `Todo` object, which in turn means that the query doesn't update to show the new item.
 
@@ -340,7 +384,7 @@ addTodo({
       return observableQuery.refetch();
     }
   },
-})
+});
 ```
 
 After your `update` function completes, Apollo Client calls `onQueryUpdated` _once for each active query with cached fields that were updated_. Within `onQueryUpdated`, you can use any custom logic to determine whether you want to refetch the associated query.
@@ -361,7 +405,7 @@ addTodo({
     // If ReallyImportantQuery is active, it will be passed to onQueryUpdated.
     // If no query with that name is active, a warning will be logged.
   },
-})
+});
 ```
 
 If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` thanks to your `update` function, then it will only be passed once. Using `refetchQueries: ["ReallyImportantQuery"]` just guarantees the query will be included.
@@ -382,7 +426,10 @@ detail with usage examples, see the [API reference](../api/react/hooks/).
 
 The `useMutation` hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationHookOptions:interface" idPrefix="mutationhookoptions-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client/react!useMutation.Options:interface"
+  idPrefix="mutationhookoptions-interface"
+/>
 
 ### Result
 
@@ -390,7 +437,10 @@ The `useMutation` result is a tuple with a mutate function in the first position
 
 You call the mutate function to trigger the mutation from your UI.
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" idPrefix="mutationresult-interface" />
+<PropertySignatureTable
+  canonicalReference="@apollo/client/react!useMutation.Result:interface"
+  idPrefix="mutationresult-interface"
+/>
 
 ## Next steps
 

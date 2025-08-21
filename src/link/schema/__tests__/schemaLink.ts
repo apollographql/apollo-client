@@ -1,9 +1,11 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { execute } from "../../core/execute";
-import { SchemaLink } from "../";
-import { ObservableStream } from "../../../testing/internal";
+import { SchemaLink } from "@apollo/client/link/schema";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -26,20 +28,6 @@ type Query {
 const schema = makeExecutableSchema({ typeDefs });
 
 describe("SchemaLink", () => {
-  it("raises warning if called with concat", () => {
-    const link = new SchemaLink({ schema });
-    const _warn = console.warn;
-    console.warn = (...args) =>
-      expect(args).toEqual([
-        "You are calling concat on a terminating link, which will have no effect %o",
-        link,
-      ]);
-    expect(link.concat((operation, forward) => forward(operation))).toEqual(
-      link
-    );
-    console.warn = _warn;
-  });
-
   it("throws if no arguments given", () => {
     expect(() => new (SchemaLink as any)()).toThrow();
   });
@@ -81,7 +69,7 @@ describe("SchemaLink", () => {
     });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { sampleQuery: null },
       errors: [{ message: "Unauthorized", path: ["sampleQuery"] }],
     });
@@ -180,7 +168,7 @@ describe("SchemaLink", () => {
       `,
     });
     const stream = new ObservableStream(observable);
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       errors: [{ message: 'Cannot query field "unknown" on type "Query".' }],
     });
   });

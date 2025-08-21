@@ -1,0 +1,55 @@
+---
+title: useMutation
+description: Apollo Client API reference
+---
+
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+<FunctionDetails
+  canonicalReference="@apollo/client/react!useMutation:function(1)"
+  headingLevel={2}
+>
+  ```ts
+  [
+    mutate: (options?: MutationFunctionOptions<TData, TVariables>) => Promise<FetchResult<TData>>,
+    result: MutationResult<TData>
+  ]
+  ```
+  A tuple of two values:
+  <ManualTuple>
+    <ManualTupleItem
+      name="mutate"
+      type={`(
+        options?: MutationFunctionOptions<TData, TVariables>
+      ) => Promise<FetchResult<TData>>`}
+      idPrefix="usemutation-result"
+    >
+      A function to trigger the mutation from your UI. You can optionally pass this function any of the following options:
+
+      - `awaitRefetchQueries`
+      - `context`
+      - `fetchPolicy`
+      - `onCompleted`
+      - `onError`
+      - `optimisticResponse`
+      - `refetchQueries`
+      - `onQueryUpdated`
+      - `update`
+      - `variables`
+      - `client`
+
+      Any option you pass here overrides any existing value for that option that you passed to `useMutation`.
+
+      The mutate function returns a promise that fulfills with your mutation result.
+    </ManualTupleItem>
+    <ManualTupleItem
+      name="result"
+      type="MutationResult<TData>"
+      canonicalReference="@apollo/client/react!useMutation.Result:interface"
+      idPrefix="usemutation-result"
+    >
+      The result of the mutation.
+    </ManualTupleItem>
+
+  </ManualTuple>
+</FunctionDetails>

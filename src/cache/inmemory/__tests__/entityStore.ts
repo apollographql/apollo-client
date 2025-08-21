@@ -1,21 +1,30 @@
-import gql from "graphql-tag";
-import { EntityStore, supportsResultCaching } from "../entityStore";
-import { InMemoryCache } from "../inMemoryCache";
-import { DocumentNode } from "graphql";
-import { StoreObject } from "../types";
-import { ApolloCache } from "../../core/cache";
-import { Cache } from "../../core/types/Cache";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+
+import type { ApolloCache } from "@apollo/client/cache";
 import {
-  Reference,
+  EntityStore,
+  InMemoryCache,
+  MissingFieldError,
+} from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import { isReference } from "@apollo/client/utilities";
+import {
   makeReference,
-  isReference,
+  stringifyForDisplay,
+} from "@apollo/client/utilities/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import type {
+  Reference,
   StoreValue,
-} from "../../../utilities/graphql/storeUtils";
-import { MissingFieldError } from "../..";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { stringifyForDisplay } from "../../../utilities";
-import { InvariantError } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+} from "../../../utilities/graphql/storeUtils.js";
+import type { Cache } from "../../core/types/Cache.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { supportsResultCaching } from "../entityStore.js";
+import type { StoreObject } from "../types.js";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
@@ -97,222 +106,6 @@ describe("EntityStore", () => {
       query,
     };
   }
-
-  it("should reclaim no-longer-reachable, unretained entities", () => {
-    const { cache, query } = newBookAuthorCache();
-
-    cache.writeQuery({
-      query,
-      data: {
-        book: {
-          __typename: "Book",
-          isbn: "9781451673319",
-          title: "Fahrenheit 451",
-          author: {
-            __typename: "Author",
-            name: "Ray Bradbury",
-          },
-        },
-      },
-    });
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:9781451673319",
-        },
-      },
-      "Book:9781451673319": {
-        __typename: "Book",
-        title: "Fahrenheit 451",
-        author: {
-          __ref: "Author:Ray Bradbury",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        book: {
-          __typename: "Book",
-          isbn: "0312429215",
-          title: "2666",
-          author: {
-            __typename: "Author",
-            name: "Roberto Bolaño",
-          },
-        },
-      },
-    });
-
-    const snapshot = cache.extract();
-
-    expect(snapshot).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Book:9781451673319": {
-        __typename: "Book",
-        title: "Fahrenheit 451",
-        author: {
-          __ref: "Author:Ray Bradbury",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    function read() {
-      return cache.readQuery({ query, canonizeResults: true });
-    }
-
-    const resultBeforeGC = read();
-
-    expect(cache.gc().sort()).toEqual([
-      "Author:Ray Bradbury",
-      "Book:9781451673319",
-    ]);
-
-    const resultAfterGC = read();
-    expect(resultBeforeGC).toBe(resultAfterGC);
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    // Nothing left to collect, but let's also reset the result cache to
-    // demonstrate that the recomputed cache results are unchanged.
-    const originalReader = cache["storeReader"];
-    expect(
-      cache.gc({
-        resetResultCache: true,
-      })
-    ).toEqual([]);
-    expect(cache["storeReader"]).not.toBe(originalReader);
-    const resultAfterResetResultCache = read();
-    expect(resultAfterResetResultCache).toBe(resultBeforeGC);
-    expect(resultAfterResetResultCache).toBe(resultAfterGC);
-
-    // Now discard cache.storeReader.canon as well.
-    expect(
-      cache.gc({
-        resetResultCache: true,
-        resetResultIdentities: true,
-      })
-    ).toEqual([]);
-
-    const resultAfterFullGC = read();
-    expect(resultAfterFullGC).toEqual(resultBeforeGC);
-    expect(resultAfterFullGC).toEqual(resultAfterGC);
-    // These !== relations are triggered by passing resetResultIdentities:true
-    // to cache.gc, above.
-    expect(resultAfterFullGC).not.toBe(resultBeforeGC);
-    expect(resultAfterFullGC).not.toBe(resultAfterGC);
-    // Result caching immediately begins working again after the intial reset.
-    expect(read()).toBe(resultAfterFullGC);
-
-    // Go back to the pre-GC snapshot.
-    cache.restore(snapshot);
-    expect(cache.extract()).toEqual(snapshot);
-
-    // Reading a specific fragment causes it to be retained during garbage collection.
-    const authorNameFragment = gql`
-      fragment AuthorName on Author {
-        name
-      }
-    `;
-    const ray = cache.readFragment({
-      id: "Author:Ray Bradbury",
-      fragment: authorNameFragment,
-    });
-
-    expect(cache.retain("Author:Ray Bradbury")).toBe(1);
-
-    expect(ray).toEqual({
-      __typename: "Author",
-      name: "Ray Bradbury",
-    });
-
-    expect(cache.gc()).toEqual([
-      // Only Fahrenheit 451 (the book) is reclaimed this time.
-      "Book:9781451673319",
-    ]);
-
-    const rayMeta = {
-      extraRootIds: ["Author:Ray Bradbury"],
-    };
-
-    expect(cache.extract()).toEqual({
-      __META: rayMeta,
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    expect(cache.gc()).toEqual([]);
-
-    expect(cache.release("Author:Ray Bradbury")).toBe(0);
-
-    expect(cache.gc()).toEqual(["Author:Ray Bradbury"]);
-
-    expect(cache.gc()).toEqual([]);
-  });
 
   it("should respect optimistic updates, when active", () => {
     const { cache, query } = newBookAuthorCache();
@@ -1005,7 +798,7 @@ describe("EntityStore", () => {
     // Hacky way of injecting a stray __ref field into the Will Smith Person
     // object, clearing store.refs (which was populated by the previous GC).
     storeRootData[willId]!.__ref = willId;
-    store["refs"] = Object.create(null);
+    store["refs"] = {};
 
     expect(cache.extract()).toEqual({
       'Person:{"name":"Jaden Smith"}': {
@@ -1049,7 +842,6 @@ describe("EntityStore", () => {
     `;
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -1282,7 +1074,7 @@ describe("EntityStore", () => {
     const partialJennyResult = cache.diff<any>({
       query,
       returnPartialData: true,
-      optimistic: true, // required but not important
+      optimistic: false, // required but not important
       variables: {
         isbn: "1760641790",
       },
@@ -1321,21 +1113,19 @@ describe("EntityStore", () => {
       result: {
         authorOfBook: tedWithoutHobby,
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-          {
-            publisherOfBook:
-              "Can't find field 'publisherOfBook' on ROOT_QUERY object",
-            authorOfBook: {
-              hobby:
-                'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
+        {
+          publisherOfBook:
+            "Can't find field 'publisherOfBook' on ROOT_QUERY object",
+          authorOfBook: {
+            hobby:
+              'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     cache.evict({ id: "ROOT_QUERY", fieldName: "authorOfBook" });
@@ -1422,7 +1212,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1443,7 +1233,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1464,7 +1254,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1570,7 +1360,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1592,7 +1382,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1614,7 +1404,7 @@ describe("EntityStore", () => {
           name: "Isaac Asimov",
           hobby: "chemistry",
         },
-        "authorOfBook({})": {
+        authorOfBook: {
           __typename: "Author",
           name: "James S.A. Corey",
           hobby: "tabletop games",
@@ -1862,9 +1652,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithAliases,
+        {}
+      ),
+    });
 
     expect(
       cache.readQuery({
@@ -1872,9 +1671,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithoutAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithoutAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithoutAliases,
+        {}
+      ),
+    });
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {
@@ -1889,7 +1697,7 @@ describe("EntityStore", () => {
       }
     `;
 
-    function writeInitialData(cache: ApolloCache<any>) {
+    function writeInitialData(cache: ApolloCache) {
       cache.writeQuery({
         query,
         data: {
@@ -1952,18 +1760,16 @@ describe("EntityStore", () => {
 
     expect(cache.evict({ id: authorId })).toBe(false);
 
-    const missing = [
-      new MissingFieldError(
-        "Dangling reference to missing Author:2 object",
-        {
-          book: {
-            author: "Dangling reference to missing Author:2 object",
-          },
+    const missing = new MissingFieldError(
+      "Dangling reference to missing Author:2 object",
+      {
+        book: {
+          author: "Dangling reference to missing Author:2 object",
         },
-        expect.anything(), // query
-        expect.anything() // variables
-      ),
-    ];
+      },
+      expect.anything(), // query
+      expect.anything() // variables
+    );
 
     expect(
       cache.diff({
@@ -2241,19 +2047,17 @@ describe("EntityStore", () => {
           isbn: "031648637X",
         },
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-          {
-            book: {
-              title:
-                'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+        {
+          book: {
+            title:
+              'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     expect(cache.extract()).toEqual({
@@ -2460,7 +2264,6 @@ describe("EntityStore", () => {
     const isbnsWeHaveRead: string[] = [];
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -2653,7 +2456,7 @@ describe("EntityStore", () => {
         // runs again, adding "1449373321" again to isbnsWeHaveRead.
         optimistic: false,
       })
-    ).toBe(diffs[0].result);
+    ).toEqual(diffs[0].result);
 
     expect(isbnsWeHaveRead).toEqual(["1449373321", "1982103558", "1449373321"]);
   });

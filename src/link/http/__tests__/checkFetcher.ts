@@ -1,5 +1,6 @@
-import { checkFetcher } from "../checkFetcher";
-import { voidFetchDuringEachTest } from "./helpers";
+import { checkFetcher } from "@apollo/client/link/http";
+
+import { voidFetchDuringEachTest } from "./helpers.js";
 
 describe("checkFetcher", () => {
   voidFetchDuringEachTest();

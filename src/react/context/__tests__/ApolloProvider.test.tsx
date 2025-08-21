@@ -1,21 +1,23 @@
-import React, { useContext } from "react";
 import { render, screen } from "@testing-library/react";
+import React, { useContext } from "react";
+import { EMPTY } from "rxjs";
 
-import { ApolloLink } from "../../../link/core";
-import { ApolloClient } from "../../../core";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider, ApolloProviderProps } from "../ApolloProvider";
-import { ApolloContextValue, getApolloContext } from "../ApolloContext";
+import { ApolloClient } from "@apollo/client";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { ApolloLink } from "@apollo/client/link";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
+
+import type { ApolloContextValue } from "../ApolloContext.js";
 
 describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({
     cache: new Cache(),
-    link: new ApolloLink((o, f) => (f ? f(o) : null)),
+    link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
   });
 
   const anotherClient = new ApolloClient({
     cache: new Cache(),
-    link: new ApolloLink((o, f) => (f ? f(o) : null)),
+    link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
   });
 
   it("should render children components", () => {
@@ -30,7 +32,7 @@ describe("<ApolloProvider /> Component", () => {
 
   it("should support the 2.0", () => {
     render(
-      <ApolloProvider client={{} as ApolloClient<any>}>
+      <ApolloProvider client={{} as ApolloClient}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
@@ -100,7 +102,7 @@ describe("<ApolloProvider /> Component", () => {
 
     const newClient = new ApolloClient({
       cache: new Cache(),
-      link: new ApolloLink((o, f) => (f ? f(o) : null)),
+      link: new ApolloLink((o, f) => (f ? f(o) : EMPTY)),
     });
     clientToCheck = newClient;
     rerender(
@@ -113,8 +115,8 @@ describe("<ApolloProvider /> Component", () => {
   describe.each<
     [
       string,
-      Omit<ApolloProviderProps<any>, "children">,
-      Omit<ApolloProviderProps<any>, "children">,
+      Omit<ApolloProvider.Props, "children">,
+      Omit<ApolloProvider.Props, "children">,
     ]
   >([["client", { client }, { client: anotherClient }]])(
     "context value stability, %s prop",

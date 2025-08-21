@@ -1,28 +1,55 @@
 ---
-title: Context Link
+title: SetContextLink
 description: Easily set a context on your operation, which is used by other links further down the chain.
 ---
 
-## Overview
+<DocBlock
+  canonicalReference="@apollo/client/link/context!SetContextLink:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
 
-The `setContext` function accepts a function that returns either an object or a promise, which then returns an object to set the new context of a request. It receives two arguments: the GraphQL request being executed, and the previous context. This link makes it easy to perform the asynchronous lookup of things like authentication tokens and more.
+## Constructor signature
 
-```js
-import { setContext } from "@apollo/client/link/context";
+```ts
+constructor(
+  setter: SetContextLink.ContextSetter
+): SetContextLink
+```
 
-const setAuthorizationLink = setContext((request, previousContext) => ({
-  headers: {authorization: "1234"}
-}));
+## Usage examples
 
-const asyncAuthLink = setContext(
-  request =>
-    new Promise((success, fail) => {
-      // do some async lookup here
-      setTimeout(() => {
-        success({ token: "async found token" });
-      }, 10);
-    })
-);
+### Authentication
+
+The most common use case is adding authentication headers to requests:
+
+```ts
+const authLink = new SetContextLink((prevContext, operation) => {
+  const token = getAuthToken();
+
+  return {
+    headers: {
+      ...prevContext.headers,
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  };
+});
+```
+
+### Asynchronous token lookup
+
+You can also perform asynchronous operations to fetch tokens or other data:
+
+```ts
+const asyncAuthLink = new SetContextLink(async (prevContext, operation) => {
+  const token = await fetchAuthToken();
+
+  return {
+    headers: {
+      ...prevContext.headers,
+      authorization: `Bearer ${token}`,
+    },
+  };
+});
 ```
 
 ## Caching lookups
@@ -32,31 +59,61 @@ Typically async actions can be expensive and may not need to be called for every
 Take for example a user auth token being found, cached, then removed on a 401 response:
 
 ```js
-import { setContext } from "@apollo/client/link/context";
-import { onError } from "@apollo/client/link/error";
+import { ServerError } from "@apollo/client";
+import { SetContextLink } from "@apollo/client/link/context";
+import { ErrorLink } from "@apollo/client/link/error";
 
 // cached storage for the user token
 let token;
-const withToken = setContext(() => {
+const withToken = new SetContextLink(async (prevContext, operation) => {
   // if you have a cached value, return it immediately
-  if (token) return { token };
+  if (token) {
+    return {
+      headers: {
+        ...prevContext.headers,
+        authorization: `Bearer ${token}`,
+      },
+    };
+  }
 
-  return AsyncTokenLookup().then(userToken => {
-    token = userToken;
-    return { token };
-  });
+  const userToken = await AsyncTokenLookup();
+  token = userToken;
+  return {
+    headers: {
+      ...prevContext.headers,
+      authorization: `Bearer ${token}`,
+    },
+  };
 });
 
-const resetToken = onError(({ networkError }) => {
-  if (
-    networkError &&
-    networkError.name ==='ServerError' &&
-    networkError.statusCode === 401
-  ) {
+const resetToken = new ErrorLink(({ error }) => {
+  if (ServerError.is(error) && error.statusCode === 401) {
     // remove cached token on 401 from the server
     token = null;
   }
 });
 
 const authFlowLink = withToken.concat(resetToken);
+```
+
+## Types
+
+<FunctionDetails
+  canonicalReference="@apollo/client/link/context!SetContextLink.SetContextLinkDocumentationTypes.ContextSetter:function(1)"
+  headingLevel={3}
+  result={false}
+  displayName="SetContextLink.ContextSetter"
+/>
+
+### `SetContextLink.SetContextOperation`
+
+<DocBlock canonicalReference="@apollo/client/link/context!SetContextLink.SetContextOperation:type" />
+
+#### Signature
+
+```ts
+type SetContextOperation = Omit<
+  ApolloLink.Operation,
+  "getContext" | "setContext"
+>;
 ```

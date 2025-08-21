@@ -35,7 +35,7 @@ const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
-        feed: offsetLimitPagination()
+        feed: offsetLimitPagination(),
       },
     },
   },
@@ -43,8 +43,6 @@ const cache = new InMemoryCache({
 ```
 
 This defines a [`merge` function](../caching/cache-field-behavior/#the-merge-function) for the field that handles merging paginated results in the cache for you ([see the source](https://github.com/apollographql/apollo-client/blob/main/src/utilities/policies/pagination.ts#L33-L49)).
-
-
 
 ### Using with `fetchMore`
 
@@ -59,9 +57,8 @@ const FeedData() {
     },
   });
 
-  // If you want your component to rerender with loading:true whenever
-  // fetchMore is called, add notifyOnNetworkStatusChange:true to the
-  // options you pass to useQuery above.
+  // Your component will rerender with loading:true whenever fetchMore is called
+  // because notifyOnNetworkStatusChange defaults to true.
   if (loading) return <Loading/>;
 
   return (
@@ -99,8 +96,8 @@ const cache = new InMemoryCache({
           ...offsetLimitPagination(),
           read(existing, { args }) {
             // Implement here
-          }
-        }
+          },
+        },
       },
     },
   },
@@ -109,7 +106,7 @@ const cache = new InMemoryCache({
 
 > For example implementations, see [Paginated `read` functions](./core-api/#paginated-read-functions).
 
-If you use a paginated `read` function, you probably need to  update your `offset` and `limit` variables as required by your use case after you call `fetchMore`. Otherwise, you'll continue rendering only the first page of results.
+If you use a paginated `read` function, you probably need to update your `offset` and `limit` variables as required by your use case after you call `fetchMore`. Otherwise, you'll continue rendering only the first page of results.
 
 For example, to display all the data received so far, you could modify the previous example as follows:
 
@@ -123,7 +120,7 @@ const FeedData = () => {
     },
   });
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
 
   return (
     <Feed
@@ -135,7 +132,7 @@ const FeedData = () => {
             offset: currentLength,
             limit: 10,
           },
-        }).then(fetchMoreResult => {
+        }).then((fetchMoreResult) => {
           // Update variables.limit for the original query to include
           // the newly added feed items.
           setLimit(currentLength + fetchMoreResult.data.feed.length);
@@ -143,7 +140,7 @@ const FeedData = () => {
       }}
     />
   );
-}
+};
 ```
 
 This code uses a React `useState` Hook to store the current `limit` value, which it updates by calling `setLimit` in a callback attached to the `Promise` returned by `fetchMore`.

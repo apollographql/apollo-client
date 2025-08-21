@@ -2,6 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "NodeJS Attach",
+      "port": 9229,
+      "request": "attach",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Jest Attach Node Inspector for Current File",
@@ -11,7 +18,7 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "${relativeFile}",
         "--config",
-        "./config/jest.config.js",
+        "./config/jest.config.ts",
         "--runInBand",
         "--watch"
       ],

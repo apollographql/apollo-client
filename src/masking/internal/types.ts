@@ -1,10 +1,9 @@
 import type {
+  IsAny,
   Prettify,
   Primitive,
   RemoveIndexSignature,
-} from "../../utilities/index.js";
-
-export type IsAny<T> = 0 extends 1 & T ? true : false;
+} from "@apollo/client/utilities/internal";
 
 export type UnwrapFragmentRefs<TData> =
   true extends IsAny<TData> ? TData
@@ -34,39 +33,39 @@ export type UnwrapFragmentRefs<TData> =
   : never;
 
 /**
-```ts
-CombineIntersection<
-  | { foo: string }
-  | { __typename: "A"; a: string }
-  | { __typename: "B"; b1: number }
-  | { __typename: "B"; b2: string }
-> =>
-  | { foo: string }
-  | CombineByTypeName<
-    | { __typename: "A"; a: string }
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: string }
-  >
-```
+ * ```ts
+ * CombineIntersection<
+ *   | { foo: string }
+ *   | { __typename: "A"; a: string }
+ *   | { __typename: "B"; b1: number }
+ *   | { __typename: "B"; b2: string }
+ * > =>
+ *   | { foo: string }
+ *   | CombineByTypeName<
+ *     | { __typename: "A"; a: string }
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: string }
+ *   >
+ * ```
  */
 type CombineIntersection<T> =
   | Exclude<T, { __typename?: string }>
   | CombineByTypeName<Extract<T, { __typename?: string }>>;
 /**
-```ts
-  CombineByTypeName<
-    | { __typename: "A"; a: string }
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: string }
-  > =>
-  | CombineWithArrays<
-    | { __typename: "A"; a: string }
-  >
-  | CombineWithArrays<
-    | { __typename: "B"; b1: number }
-    | { __typename: "B"; b2: number }
-  >
-```
+ * ```ts
+ *   CombineByTypeName<
+ *     | { __typename: "A"; a: string }
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: string }
+ *   > =>
+ *   | CombineWithArrays<
+ *     | { __typename: "A"; a: string }
+ *   >
+ *   | CombineWithArrays<
+ *     | { __typename: "B"; b1: number }
+ *     | { __typename: "B"; b2: number }
+ *   >
+ * ```
  */
 type CombineByTypeName<T extends { __typename?: string }> = {
   [TypeName in NonNullable<T["__typename"]>]: Prettify<
@@ -75,48 +74,48 @@ type CombineByTypeName<T extends { __typename?: string }> = {
 }[NonNullable<T["__typename"]>];
 
 /**
-```ts
-CombineByTypeName<
-  | {
-      __typename: "Person" | "Animatronic" | "CartoonCharacter";
-      id: number;
-      name: string;
-    }
-  | {
-      __typename: "Person";
-      birthdate: string;
-    }
-  | {
-      __typename: "Animatronic";
-      manufacturer: string;
-      warrantyEndDate: string;
-    }
-  | {
-      __typename: "CartoonCharacter";
-      animator: string;
-      voiceActor: string;
-    }
->
-    =>
-{
-    id: number;
-    name: string;
-    __typename: "Person";
-    birthdate: string;
-} | {
-    id: number;
-    name: string;
-    __typename: "Animatronic";
-    manufacturer: string;
-    warrantyEndDate: string;
-} | {
-    id: number;
-    name: string;
-    __typename: "CartoonCharacter";
-    animator: string;
-    voiceActor: string;
-}
-```
+ * ```ts
+ * CombineByTypeName<
+ *   | {
+ *       __typename: "Person" | "Animatronic" | "CartoonCharacter";
+ *       id: number;
+ *       name: string;
+ *     }
+ *   | {
+ *       __typename: "Person";
+ *       birthdate: string;
+ *     }
+ *   | {
+ *       __typename: "Animatronic";
+ *       manufacturer: string;
+ *       warrantyEndDate: string;
+ *     }
+ *   | {
+ *       __typename: "CartoonCharacter";
+ *       animator: string;
+ *       voiceActor: string;
+ *     }
+ * >
+ *     =>
+ * {
+ *     id: number;
+ *     name: string;
+ *     __typename: "Person";
+ *     birthdate: string;
+ * } | {
+ *     id: number;
+ *     name: string;
+ *     __typename: "Animatronic";
+ *     manufacturer: string;
+ *     warrantyEndDate: string;
+ * } | {
+ *     id: number;
+ *     name: string;
+ *     __typename: "CartoonCharacter";
+ *     animator: string;
+ *     voiceActor: string;
+ * }
+ * ```
  */
 type ExtractByMatchingTypeNames<
   Union extends { __typename?: string },
@@ -183,7 +182,6 @@ type MergeObjects<T, U> = Prettify<
   } & Pick<U, Exclude<keyof U, keyof T>>
 >;
 
-export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;

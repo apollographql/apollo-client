@@ -1,16 +1,27 @@
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { format, join, parse } from "node:path";
+import { parseArgs } from "node:util";
 import * as path from "path";
+
+import type { IConfigFile } from "@microsoft/api-extractor";
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
-  IConfigFile,
 } from "@microsoft/api-extractor";
-import { parseArgs } from "node:util";
-import fs from "node:fs";
 
-// @ts-ignore
-import { map, buildDocEntryPoints } from "./entryPoints.js";
-import { readFileSync } from "fs";
+import pkg from "../dist/package.json" with { type: "json" };
+
+import type { ExportsCondition } from "./entryPoints.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
+import {
+  patchApiExtractorInternals,
+  withPseudoNodeModules,
+} from "./helpers.ts";
+
+patchApiExtractorInternals();
 
 const parsed = parseArgs({
   options: {
@@ -35,55 +46,124 @@ if (
 }
 
 // Load and parse the api-extractor.json file
-const configObjectFullPath = path.resolve(__dirname, "../api-extractor.json");
+const configObjectFullPath = path.resolve(
+  import.meta.dirname,
+  "../api-extractor.json"
+);
 const baseConfig = ExtractorConfig.loadFile(configObjectFullPath);
-const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+const packageJsonFullPath = path.resolve(
+  import.meta.dirname,
+  "../package.json"
+);
+const reportFolder = baseConfig.apiReport.reportFolder!.replace(
+  "<projectFolder>",
+  join(import.meta.dirname, "..")
+);
+
+const entryPoints = Object.entries(pkg.exports as ExportsCondition)
+  .filter(([key]) => !(key.includes("*") || key.includes(".json")))
+  .map(([key, value]) => {
+    return {
+      path: key.slice("./".length),
+      key,
+      value,
+    };
+  });
 
 process.exitCode = 0;
 
-const tempDir = fs.mkdtempSync("api-model");
+const tempDir = fs.mkdtempSync(
+  path.join(import.meta.dirname, "..", "dist", "api-model")
+);
 try {
   if (parsed.values.generate?.includes("docModel")) {
     console.log(
       "\n\nCreating API extractor docmodel for the a combination of all entry points"
     );
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+    fs.writeFileSync(
+      entryPointFile,
+      buildDocEntryPoints({
+        rootDir: path.resolve(import.meta.dirname, ".."),
+        targetDir: "dist",
+        jsExt: "js",
+      })
+    );
 
-    buildReport(entryPointFile, "docModel");
+    const result = await buildReport(
+      "@apollo/client",
+      entryPointFile,
+      "docModel"
+    );
     if (process.exitCode === 50) {
       process.exitCode = 0; // if there were only warnings, we still want to exit with 0
     }
+
+    console.log("Creating file with all possible canonical references...");
+    const canonicalReferences = new Set<string>();
+    const file = await readFile(result.extractorConfig.apiJsonFilePath, "utf8");
+    JSON.parse(file, (key, value) => {
+      if (
+        key === "canonicalReference" &&
+        typeof value === "string" &&
+        value.startsWith("@apollo/client")
+      ) {
+        canonicalReferences.add(value);
+      }
+      return undefined;
+    });
+    await writeFile(
+      format({
+        ...parse(result.extractorConfig.apiJsonFilePath),
+        base: "canonical-references.json",
+      }),
+      JSON.stringify([...canonicalReferences.values()], null, 2),
+      "utf8"
+    );
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
-    map((entryPoint: { dirs: string[] }) => {
-      const path = entryPoint.dirs.join("/");
-      const mainEntryPointFilePath =
-        `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
+    for (const entryPoint of entryPoints) {
+      let entry = entryPoint.value;
+      while (typeof entry === "object") {
+        entry = entry.types || Object.values(entry).at(-1);
+      }
+      const mainEntryPointFilePath = `<projectFolder>/dist/${entry}`
+        .replace("//", "/")
+        .replace(/\.cjs$/, ".d.cts")
+        .replace(/\.js$/, ".d.ts");
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
-      buildReport(
+      const reportFileName = `api-report${
+        entryPoint.path ? "-" + entryPoint.path.replace(/\//g, "_") : ""
+      }.api.md`;
+      await buildReport(
+        join("@apollo/client", entryPoint.key),
         mainEntryPointFilePath,
         "apiReport",
-        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
+        reportFileName
       );
-    });
+    }
   }
 } finally {
   fs.rmSync(tempDir, { recursive: true });
 }
 
-function buildReport(
+async function buildReport(
+  bundledPackages: string | string[],
   mainEntryPointFilePath: string,
   mode: "apiReport" | "docModel",
   reportFileName = ""
 ) {
+  if (!Array.isArray(bundledPackages)) {
+    bundledPackages = [bundledPackages];
+  }
   const configObject: IConfigFile = {
     ...(JSON.parse(JSON.stringify(baseConfig)) as IConfigFile),
     mainEntryPointFilePath,
   };
+  configObject.bundledPackages = bundledPackages;
 
   if (mode === "apiReport") {
     configObject.apiReport!.enabled = true;
@@ -109,32 +189,14 @@ function buildReport(
     configObjectFullPath,
   });
 
-  const extractorResult = Extractor.invoke(extractorConfig, {
-    localBuild: process.env.CI === undefined || process.env.CI === "false",
-    showVerboseMessages: true,
-  });
+  const extractorResult = await withPseudoNodeModules(() =>
+    Extractor.invoke(extractorConfig, {
+      localBuild: process.env.CI === undefined || process.env.CI === "false",
+      showVerboseMessages: true,
+    })
+  );
 
-  let succeededAdditionalChecks = true;
-  if (fs.existsSync(extractorConfig.reportFilePath)) {
-    const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
-    if (contents.includes("rehackt")) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the `rehackt` package!",
-        extractorConfig.reportFilePath
-      );
-    }
-    if (contents.includes('/// <reference types="react" />')) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the global `React` type!/n" +
-          'Use `import type * as ReactTypes from "react";` instead',
-        extractorConfig.reportFilePath
-      );
-    }
-  }
-
-  if (extractorResult.succeeded && succeededAdditionalChecks) {
+  if (extractorResult.succeeded) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
     process.exitCode = extractorResult.errorCount === 0 ? 50 : 1;
@@ -142,8 +204,18 @@ function buildReport(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
-    if (!succeededAdditionalChecks) {
-      console.error("Additional checks failed.");
+    if (extractorResult.apiReportChanged) {
+      spawnSync(
+        "diff",
+        [
+          join(reportFolder, reportFileName),
+          join(reportFolder, "temp", reportFileName),
+        ],
+        {
+          stdio: "inherit",
+        }
+      );
     }
   }
+  return extractorResult;
 }

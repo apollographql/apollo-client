@@ -1,31 +1,47 @@
-import * as React from "rehackt";
+import * as React from "react";
+
+import type { DataState, OperationVariables } from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
+import type { QueryRef } from "@apollo/client/react";
+import type {
+  FetchMoreFunction,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
-import type { OperationVariables } from "../../core/types.js";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
-import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
-import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { wrapHook } from "./internal/index.js";
-import type { ApolloClient } from "../../core/ApolloClient.js";
-import type { ObservableQuery } from "../../core/ObservableQuery.js";
+} from "@apollo/client/react/internal";
 
-export interface UseQueryRefHandlersResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
-  refetch: RefetchFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
-  fetchMore: FetchMoreFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+
+export declare namespace useQueryRefHandlers {
+  export interface Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
+    refetch: RefetchFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  }
+
+  export namespace DocumentationTypes {
+    /** {@inheritDoc @apollo/client/react!useQueryRefHandlers:function(1)} */
+    export function useQueryRefHandlers<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      queryRef: QueryRef<TData, TVariables>
+    ): useQueryRefHandlers.Result<TData, TVariables>;
+  }
 }
 
 /**
@@ -37,6 +53,7 @@ export interface UseQueryRefHandlersResult<
  * a different component are inaccessible.
  *
  * @example
+ *
  * ```tsx
  * const MyComponent({ queryRef }) {
  *   const { refetch, fetchMore } = useQueryRefHandlers(queryRef);
@@ -44,15 +61,16 @@ export interface UseQueryRefHandlersResult<
  *   // ...
  * }
  * ```
- * @since 3.9.0
+ *
  * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryRef<TData, TVariables>
-): UseQueryRefHandlersResult<TData, TVariables> {
+  queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
+): useQueryRefHandlers.Result<TData, TVariables> {
+  "use no memo";
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?
@@ -60,7 +78,7 @@ export function useQueryRefHandlers<
       // return any truthy value that is passed in as an override so we cast the result
       (unwrapped["observable"] as any)
     : undefined
-  ) as ApolloClient<any> | ObservableQuery<TData>;
+  ) as ApolloClient | ObservableQuery<TData>;
 
   return wrapHook(
     "useQueryRefHandlers",
@@ -74,8 +92,8 @@ function useQueryRefHandlers_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryRef<TData, TVariables>
-): UseQueryRefHandlersResult<TData, TVariables> {
+  queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
+): useQueryRefHandlers.Result<TData, TVariables> {
   assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
@@ -105,7 +123,7 @@ function useQueryRefHandlers_<
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = internalQueryRef.fetchMore(
-        options as FetchMoreQueryOptions<any, any>
+        options as ObservableQuery.FetchMoreOptions<any, any>
       );
 
       setWrappedQueryRef(wrapQueryRef(internalQueryRef));

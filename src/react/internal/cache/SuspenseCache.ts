@@ -1,13 +1,15 @@
 import { Trie } from "@wry/trie";
+
 import type {
   ApolloClient,
+  DataState,
   ObservableQuery,
-  WatchFragmentOptions,
-} from "../../../core/index.js";
-import { canUseWeakMap } from "../../../utilities/index.js";
+  OperationVariables,
+} from "@apollo/client";
+
+import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
-import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -24,25 +26,22 @@ export interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: InternalQueryReference }>(
-    canUseWeakMap
-  );
-  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
-    canUseWeakMap
-  );
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>();
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>();
 
   private options: SuspenseCacheOptions;
 
-  constructor(options: SuspenseCacheOptions = Object.create(null)) {
+  constructor(options: SuspenseCacheOptions = {}) {
     this.options = options;
   }
 
-  getQueryRef<TData = any>(
-    cacheKey: CacheKey,
-    createObservable: () => ObservableQuery<TData>
-  ) {
+  getQueryRef<
+    TData = unknown,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  >(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
-      current?: InternalQueryReference<TData>;
+      current?: InternalQueryReference<TData, TStates>;
     };
 
     if (!ref.current) {
@@ -57,10 +56,12 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  getFragmentRef<TData, TVariables>(
+  getFragmentRef<TData, TVariables extends OperationVariables>(
     cacheKey: FragmentCacheKey,
-    client: ApolloClient<any>,
-    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+    client: ApolloClient,
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    }
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {
       current?: FragmentReference<TData, TVariables>;
@@ -78,7 +79,7 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>) {
+  add(cacheKey: CacheKey, queryRef: InternalQueryReference<any, any>) {
     const ref = this.queryRefs.lookupArray(cacheKey);
     ref.current = queryRef;
   }

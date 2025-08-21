@@ -4,14 +4,33 @@
 
 ```ts
 
+import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
+import type { AsStoreObject } from '@apollo/client/utilities';
+import { canonicalStringify } from '@apollo/client/utilities';
+import type { DataValue } from '@apollo/client';
+import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
+import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
+import type { FragmentMap } from '@apollo/client/utilities/internal';
+import type { FragmentMapFunction } from '@apollo/client/utilities/internal';
+import type { FragmentType } from '@apollo/client/masking';
+import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { GetDataState } from '@apollo/client';
+import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { InlineFragmentNode } from 'graphql';
-import { Observable } from 'zen-observable-ts';
+import { isReference } from '@apollo/client/utilities';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
+import { Observable } from 'rxjs';
+import type { OperationVariables } from '@apollo/client';
+import { Reference } from '@apollo/client/utilities';
 import type { SelectionSetNode } from 'graphql';
+import type { StoreObject } from '@apollo/client/utilities';
+import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode } from '@apollo/client';
+import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
 //
@@ -19,23 +38,38 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[keyof Entity] extends infer Value ? StoreObjectValueMaybeReference<Exclude<Value, undefined>> : never>;
 
 // @public (undocumented)
-export abstract class ApolloCache<TSerialized> implements DataProxy {
+export namespace ApolloCache {
+    export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+        optimistic?: boolean;
+        variables?: TVariables;
+    }
+    export type WatchFragmentResult<TData = unknown> = ({
+        complete: true;
+        missing?: never;
+    } & GetDataState<TData, "complete">) | ({
+        complete: false;
+        missing: MissingTree;
+    } & GetDataState<TData, "partial">);
+}
+
+// @public (undocumented)
+export abstract class ApolloCache {
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     // (undocumented)
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
-    // (undocumented)
-    abstract diff<T>(query: Cache_2.DiffOptions): Cache_2.DiffResult<T>;
+    abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
     abstract evict(options: Cache_2.EvictOptions): boolean;
-    abstract extract(optimistic?: boolean): TSerialized;
+    abstract extract(optimistic?: boolean): unknown;
     // (undocumented)
-    fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
+    abstract fragmentMatches(fragment: InlineFragmentNode | FragmentDefinitionNode, typename: string): boolean;
     // (undocumented)
     gc(): string[];
-    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
-    //
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -44,53 +78,43 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // (undocumented)
-    abstract performTransaction(transaction: Transaction<TSerialized>, optimisticId?: string | null): void;
-    // Warning: (ae-forgotten-export) The symbol "Unmasked" needs to be exported by the entry point index.d.ts
-    //
+    abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
-    abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): Unmasked<TData> | null;
+    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
-    readFragment<FragmentType, TVariables = any>(options: Cache_2.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmasked<FragmentType> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
+    optimistic: boolean): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
+    optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)
-    readQuery<QueryType, TVariables = any>(options: Cache_2.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmasked<QueryType> | null;
-    // (undocumented)
-    recordOptimisticTransaction(transaction: Transaction<TSerialized>, optimisticId: string): void;
+    recordOptimisticTransaction(transaction: Transaction, optimisticId: string): void;
     // (undocumented)
     abstract removeOptimistic(id: string): void;
     // (undocumented)
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
-    abstract restore(serializedState: TSerialized): ApolloCache<TSerialized>;
+    abstract restore(serializedState: unknown): this;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
     transformForLink(document: DocumentNode): DocumentNode;
     // (undocumented)
-    updateFragment<TData = any, TVariables = any>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
+    updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
-    // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
-    watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
+    abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
     // (undocumented)
-    abstract write<TData = any, TVariables = any>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    // (undocumented)
-    writeFragment<TData = any, TVariables = any>({ id, data, fragment, fragmentName, ...options }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    // (undocumented)
-    writeQuery<TData = any, TVariables = any>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
 export type ApolloReducerConfig = {
     dataIdFromObject?: KeyFieldsFunction;
-    addTypename?: boolean;
-};
-
-// @public
-type AsStoreObject<T extends {
-    __typename?: string;
-}> = {
-    [K in keyof T]: T[K];
 };
 
 // @public (undocumented)
@@ -99,7 +123,7 @@ type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" |
 // @public (undocumented)
 namespace Cache_2 {
     // (undocumented)
-    interface BatchOptions<TCache extends ApolloCache<any>, TUpdateResult = void> {
+    interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {
         // (undocumented)
         onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         // (undocumented)
@@ -110,8 +134,20 @@ namespace Cache_2 {
         update(cache: TCache): TUpdateResult;
     }
     // (undocumented)
-    interface DiffOptions<TData = any, TVariables = any> extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+    interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadOptions<TData, TVariables>, "rootId"> {
     }
+    // (undocumented)
+    type DiffResult<TData> = {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DataValue.Partial<TData> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+    };
     // (undocumented)
     interface EvictOptions {
         // (undocumented)
@@ -137,17 +173,35 @@ namespace Cache_2 {
         optimistic?: boolean;
     }
     // (undocumented)
-    interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // @deprecated
-        canonizeResults?: boolean;
+    interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
+        fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        id?: string;
+        optimistic?: boolean;
+        returnPartialData?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface ReadOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        id?: string;
         // (undocumented)
         optimistic: boolean;
         // (undocumented)
         previousResult?: any;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
         returnPartialData?: boolean;
         // (undocumented)
         rootId?: string;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface ReadQueryOptions<TData, TVariables extends OperationVariables> {
+        id?: string;
+        optimistic?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        returnPartialData?: boolean;
+        variables?: TVariables;
     }
     // (undocumented)
     interface ResetOptions {
@@ -155,9 +209,15 @@ namespace Cache_2 {
         discardWatches?: boolean;
     }
     // (undocumented)
-    type WatchCallback<TData = any> = (diff: Cache_2.DiffResult<TData>, lastDiff?: Cache_2.DiffResult<TData>) => void;
+    interface UpdateFragmentOptions<TData, TVariables extends OperationVariables> extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data"> {
+    }
     // (undocumented)
-    interface WatchOptions<TData = any, TVariables = any> extends DiffOptions<TData, TVariables> {
+    interface UpdateQueryOptions<TData, TVariables extends OperationVariables> extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, "data"> {
+    }
+    // (undocumented)
+    type WatchCallback<TData = unknown> = (diff: Cache_2.DiffResult<TData>, lastDiff?: Cache_2.DiffResult<TData>) => void;
+    // (undocumented)
+    interface WatchOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends DiffOptions<TData, TVariables> {
         // (undocumented)
         callback: WatchCallback<TData>;
         // (undocumented)
@@ -168,20 +228,35 @@ namespace Cache_2 {
         watcher?: object;
     }
     // (undocumented)
-    interface WriteOptions<TResult = any, TVariables = any> extends Omit<DataProxy.Query<TVariables, TResult>, "id">, Omit<DataProxy.WriteOptions<TResult>, "data"> {
+    interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
+        broadcast?: boolean;
+        data: Unmasked<TData>;
+        fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        id?: string;
+        overwrite?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface WriteOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        overwrite?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
-        result: Unmasked<TResult>;
+        result: Unmasked<TData>;
+        variables?: TVariables;
     }
-    import DiffResult = DataProxy.DiffResult;
-    import ReadQueryOptions = DataProxy.ReadQueryOptions;
-    import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
-    import WriteQueryOptions = DataProxy.WriteQueryOptions;
-    import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
-    import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
-    import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
-    import Fragment = DataProxy.Fragment;
+    // (undocumented)
+    interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
+        broadcast?: boolean;
+        data: Unmasked<TData>;
+        id?: string;
+        overwrite?: boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        variables?: TVariables;
+    }
 }
 export { Cache_2 as Cache }
 
@@ -204,149 +279,17 @@ class CacheGroup {
 export const cacheSlot: {
     readonly id: string;
     hasValue(): boolean;
-    getValue(): ApolloCache<any> | undefined;
-    withValue<TResult, TArgs extends any[], TThis = any>(value: ApolloCache<any>, callback: (this: TThis, ...args: TArgs) => TResult, args?: TArgs | undefined, thisArg?: TThis | undefined): TResult;
+    getValue(): ApolloCache_2 | undefined;
+    withValue<TResult, TArgs extends any[], TThis = any>(value: ApolloCache_2, callback: (this: TThis, ...args: TArgs) => TResult, args?: TArgs | undefined, thisArg?: TThis | undefined): TResult;
 };
 
-// @public
-export const canonicalStringify: ((value: any) => string) & {
-    reset(): void;
-};
+export { canonicalStringify }
 
 // @public (undocumented)
 type CanReadFunction = (value: StoreValue) => boolean;
 
-// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
-//
-// @public
-type CombineByTypeName<T extends {
-    __typename?: string;
-}> = {
-    [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
-}[NonNullable<T["__typename"]>];
-
-// Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
-//
-// @public
-type CombineIntersection<T> = Exclude<T, {
-    __typename?: string;
-}> | CombineByTypeName<Extract<T, {
-    __typename?: string;
-}>>;
-
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
-
 // @public (undocumented)
 export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRegistryAPI;
-
-// @public (undocumented)
-interface DataMasking {
-}
-
-// @public (undocumented)
-export namespace DataProxy {
-    // (undocumented)
-    export type DiffResult<T> = {
-        result?: T;
-        complete?: boolean;
-        missing?: MissingFieldError[];
-        fromOptimisticTransaction?: boolean;
-    };
-    // (undocumented)
-    export interface Fragment<TVariables, TData> {
-        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        fragmentName?: string;
-        id?: string;
-        variables?: TVariables;
-    }
-    // (undocumented)
-    export interface Query<TVariables, TData> {
-        id?: string;
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        variables?: TVariables;
-    }
-    // (undocumented)
-    export interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
-        // @deprecated
-        canonizeResults?: boolean;
-        optimistic?: boolean;
-        returnPartialData?: boolean;
-    }
-    // (undocumented)
-    export interface ReadQueryOptions<TData, TVariables> extends Query<TVariables, TData> {
-        // @deprecated
-        canonizeResults?: boolean;
-        optimistic?: boolean;
-        returnPartialData?: boolean;
-    }
-    // (undocumented)
-    export interface UpdateFragmentOptions<TData, TVariables> extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data"> {
-    }
-    // (undocumented)
-    export interface UpdateQueryOptions<TData, TVariables> extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, "data"> {
-    }
-    // (undocumented)
-    export interface WriteFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData>, WriteOptions<TData> {
-    }
-    // (undocumented)
-    export interface WriteOptions<TData> {
-        broadcast?: boolean;
-        data: Unmasked<TData>;
-        overwrite?: boolean;
-    }
-    // (undocumented)
-    export interface WriteQueryOptions<TData, TVariables> extends Query<TVariables, TData>, WriteOptions<TData> {
-    }
-}
-
-// @public
-export interface DataProxy {
-    readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmasked<FragmentType> | null;
-    readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmasked<QueryType> | null;
-    writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
-}
-
-// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
-
-// Warning: (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// @public (undocumented)
-type DeepPartialObject<T extends object> = {
-    [K in keyof T]?: DeepPartial<T[K]>;
-};
-
-// Warning: (ae-forgotten-export) The symbol "Primitive" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type DeepPartialPrimitive = Primitive | Date | RegExp;
-
-// @public (undocumented)
-type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// @public (undocumented)
-type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
-
-// @public (undocumented)
-type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
 //
@@ -366,9 +309,6 @@ const _deleteModifier: unique symbol;
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
     returnPartialData?: boolean;
 };
-
-// @public (undocumented)
-type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Required<U> ? Required<U> extends Required<T> ? never : T : T : T;
 
 // @public (undocumented)
 export abstract class EntityStore implements NormalizedCache {
@@ -416,14 +356,14 @@ export abstract class EntityStore implements NormalizedCache {
     // (undocumented)
     protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined;
     makeCacheKey(document: DocumentNode, callback: Cache_2.WatchCallback<any>, details: string): object;
-    makeCacheKey(selectionSet: SelectionSetNode, parent: string | StoreObject, varString: string | undefined, canonizeResults: boolean): object;
+    makeCacheKey(selectionSet: SelectionSetNode, parent: string | StoreObject, varString: string | undefined): object;
     makeCacheKey(field: FieldNode, array: readonly any[], varString: string | undefined): object;
     // @deprecated (undocumented)
     makeCacheKey(...args: any[]): object;
     // (undocumented)
     merge(older: string | StoreObject, newer: StoreObject | string): void;
     // (undocumented)
-    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>): boolean;
+    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>, exact: boolean): boolean;
     // (undocumented)
     readonly policies: Policies;
     // (undocumented)
@@ -434,6 +374,12 @@ export abstract class EntityStore implements NormalizedCache {
     replace(newData: NormalizedCacheObject | null): void;
     // (undocumented)
     retain(rootId: string): number;
+    // Warning: (ae-forgotten-export) The symbol "Root" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    static Root: typeof Root;
+    // (undocumented)
+    get supportsResultCaching(): boolean;
     // (undocumented)
     toObject(): NormalizedCacheObject;
     // Warning: (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
@@ -443,41 +389,7 @@ export abstract class EntityStore implements NormalizedCache {
 }
 
 // @public (undocumented)
-export namespace EntityStore {
-    // (undocumented)
-    export class Root extends EntityStore {
-        constructor({ policies, resultCaching, seed, }: {
-            policies: Policies;
-            resultCaching?: boolean;
-            seed?: NormalizedCacheObject;
-        });
-        // (undocumented)
-        addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
-        // (undocumented)
-        getStorage(): StorageType;
-        // (undocumented)
-        removeLayer(): Root;
-        // (undocumented)
-        readonly storageTrie: Trie<StorageType>;
-        // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        readonly stump: Stump;
-    }
-}
-
-// @public (undocumented)
-type Exact<in out T> = (x: T) => T;
-
-// @public
-type ExtractByMatchingTypeNames<Union extends {
-    __typename?: string;
-}, TypeName extends string> = Union extends any ? TypeName extends NonNullable<Union["__typename"]> ? Omit<Union, "__typename"> & {
-    [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
-} : never : never;
-
-// @public (undocumented)
-export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Record<string, any>> {
+export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> {
     // (undocumented)
     args: TArgs | null;
     // (undocumented)
@@ -505,7 +417,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Recor
     // (undocumented)
     toReference: ToReferenceFunction;
     // (undocumented)
-    variables?: TVars;
+    variables?: TVariables;
 }
 
 // @public (undocumented)
@@ -546,15 +458,6 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
-// @public
-interface FragmentMap {
-    // (undocumented)
-    [fragmentName: string]: FragmentDefinitionNode;
-}
-
-// @public (undocumented)
-type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
-
 // @public (undocumented)
 export interface FragmentRegistryAPI {
     // (undocumented)
@@ -566,44 +469,6 @@ export interface FragmentRegistryAPI {
     // (undocumented)
     transform<D extends DocumentNode>(document: D): D;
 }
-
-// @public (undocumented)
-type FragmentType<TData> = [
-TData
-] extends [{
-    " $fragmentName"?: infer TKey;
-}] ? TKey extends string ? {
-    " $fragmentRefs"?: {
-        [key in TKey]: TData;
-    };
-} : never : never;
-
-// @internal
-const getApolloCacheMemoryInternals: (() => {
-    cache: {
-        fragmentQueryDocuments: number | undefined;
-    };
-}) | undefined;
-
-// @internal
-const getInMemoryCacheMemoryInternals: (() => {
-    addTypenameDocumentTransform: {
-        cache: number;
-    }[];
-    inMemoryCache: {
-        executeSelectionSet: number | undefined;
-        executeSubSelectedArray: number | undefined;
-        maybeBroadcastWatch: number | undefined;
-    };
-    fragmentRegistry: {
-        findFragmentSpreads: number | undefined;
-        lookup: number | undefined;
-        transform: number | undefined;
-    };
-    cache: {
-        fragmentQueryDocuments: number | undefined;
-    };
-}) | undefined;
 
 // @public (undocumented)
 export type IdGetter = (value: IdGetterObj) => string | undefined;
@@ -619,7 +484,16 @@ export interface IdGetterObj extends Object {
 }
 
 // @public (undocumented)
-export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
+export interface IgnoreModifier {
+    // (undocumented)
+    [_ignoreModifier]: true;
+}
+
+// @public (undocumented)
+const _ignoreModifier: unique symbol;
+
+// @public (undocumented)
+export class InMemoryCache extends ApolloCache {
     constructor(config?: InMemoryCacheConfig);
     // (undocumented)
     readonly assumeImmutableResults = true;
@@ -632,21 +506,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // (undocumented)
     protected config: InMemoryCacheConfig;
     // (undocumented)
-    diff<TData, TVariables extends OperationVariables = any>(options: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
+    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
     evict(options: Cache_2.EvictOptions): boolean;
     // (undocumented)
     extract(optimistic?: boolean): NormalizedCacheObject;
     // (undocumented)
-    fragmentMatches(fragment: InlineFragmentNode, typename: string): boolean;
+    fragmentMatches(fragment: InlineFragmentNode | FragmentDefinitionNode, typename: string): boolean;
     // (undocumented)
     gc(options?: {
         resetResultCache?: boolean;
-        resetResultIdentities?: boolean;
     }): string[];
-    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
-    //
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -661,7 +532,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // (undocumented)
     readonly policies: Policies;
     // (undocumented)
-    read<T>(options: Cache_2.ReadOptions): T | null;
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables> & {
+        returnPartialData: true;
+    }): TData | DeepPartial<TData> | null;
+    // (undocumented)
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables>): TData | null;
     // (undocumented)
     release(rootId: string, optimistic?: boolean): number;
     // (undocumented)
@@ -675,21 +550,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
-    watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
-    write(options: Cache_2.WriteOptions): Reference | undefined;
+    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // @deprecated
-    canonizeResults?: boolean;
     // (undocumented)
     fragments?: FragmentRegistryAPI;
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // @deprecated (undocumented)
-    resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;
     // (undocumented)
@@ -705,11 +576,7 @@ interface InvalidateModifier {
 // @public (undocumented)
 const _invalidateModifier: unique symbol;
 
-// @public (undocumented)
-type IsAny<T> = 0 extends 1 & T ? true : false;
-
-// @public (undocumented)
-export function isReference(obj: any): obj is Reference;
+export { isReference }
 
 // @public (undocumented)
 type KeyArgsFunction = (args: Record<string, any> | null, context: {
@@ -743,7 +610,7 @@ class Layer extends EntityStore {
     // (undocumented)
     findChildRefIds(dataId: string): Record<string, true>;
     // (undocumented)
-    getStorage(): StorageType;
+    getStorage(...args: Parameters<EntityStore["getStorage"]>): StorageType;
     // (undocumented)
     readonly group: CacheGroup;
     // (undocumented)
@@ -759,22 +626,7 @@ class Layer extends EntityStore {
 }
 
 // @public (undocumented)
-export function makeReference(id: string): Reference;
-
-// @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
-
-// Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-//
-// @public
-type MaybeMasked<TData> = DataMasking extends {
-    mode: "unmask";
-} ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
-    __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
-    mode: "preserveTypes";
-} ? TData : TData;
 
 // @public (undocumented)
 export interface MergeInfo {
@@ -786,19 +638,6 @@ export interface MergeInfo {
     typename: string | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeObjects<T, U> = Prettify<{
-    [k in keyof T]: k extends keyof U ? [
-    NonNullable<T[k]>,
-    NonNullable<U[k]>
-    ] extends ([
-    infer TK extends object,
-    infer UK extends object
-    ]) ? TK extends unknown[] ? UK extends unknown[] ? CombineIntersection<TK[number] | UK[number]>[] | Extract<T[k] | U[k], undefined | null> : T[k] : CombineIntersection<TK | UK> | Extract<T[k] | U[k], undefined | null> : T[k] : T[k];
-} & Pick<U, Exclude<keyof U, keyof T>>>;
-
 // @public (undocumented)
 type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
 
@@ -809,22 +648,6 @@ export interface MergeTree {
     // (undocumented)
     map: Map<string | number, MergeTree>;
 }
-
-// Warning: (ae-forgotten-export) The symbol "MergeUnionsAcc" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "takeOneFromUnion" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, never>;
-
-// Warning: (ae-forgotten-export) The symbol "DistributedRequiredExclude" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "MergeObjects" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type MergeUnionsAcc<TUnion, Curr, Merged> = [
-Curr
-] extends [never] ? Merged : MergeUnionsAcc<DistributedRequiredExclude<TUnion, Curr>, takeOneFromUnion<DistributedRequiredExclude<TUnion, Curr>>, [
-Merged
-] extends [never] ? Curr : MergeObjects<Curr, Merged>>;
 
 // @public (undocumented)
 export class MissingFieldError extends Error {
@@ -871,9 +694,6 @@ export type Modifiers<T extends Record<string, any> = Record<string, unknown>> =
 }>;
 
 // @public
-type NoInfer_2<T> = [T][T extends any ? 0 : never];
-
-// @public
 export interface NormalizedCache {
     // (undocumented)
     canRead: CanReadFunction;
@@ -896,7 +716,7 @@ export interface NormalizedCache {
     // (undocumented)
     merge(olderObject: StoreObject, newerId: string): void;
     // (undocumented)
-    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
+    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>, exact: boolean): boolean;
     // (undocumented)
     release(rootId: string): number;
     replace(newData: NormalizedCacheObject): void;
@@ -917,13 +737,10 @@ export interface NormalizedCacheObject {
 }
 
 // @public (undocumented)
-type OperationVariables = Record<string, any>;
-
-// @public (undocumented)
 export type OptimisticStoreItem = {
     id: string;
     data: NormalizedCacheObject;
-    transaction: Transaction<NormalizedCacheObject>;
+    transaction: Transaction;
 };
 
 // @public (undocumented)
@@ -972,14 +789,6 @@ export type PossibleTypesMap = {
 };
 
 // @public (undocumented)
-type Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
-
-// @public (undocumented)
-type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-
-// @public (undocumented)
 type ReactiveListener<T> = (value: T) => any;
 
 // @public (undocumented)
@@ -987,9 +796,9 @@ export interface ReactiveVar<T> {
     // (undocumented)
     (newValue?: T): T;
     // (undocumented)
-    attachCache(cache: ApolloCache<any>): this;
+    attachCache(cache: ApolloCache_2): this;
     // (undocumented)
-    forgetCache(cache: ApolloCache<any>): boolean;
+    forgetCache(cache: ApolloCache_2): boolean;
     // Warning: (ae-forgotten-export) The symbol "ReactiveListener" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1015,7 +824,7 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
-    variables?: Record<string, any>;
+    variables?: OperationVariables;
     // (undocumented)
     varString?: string;
 }
@@ -1026,27 +835,32 @@ export type ReadQueryOptions = {
     query: DocumentNode;
     variables?: Object;
     previousResult?: any;
-    canonizeResults?: boolean;
     rootId?: string;
     config?: ApolloReducerConfig;
 };
 
+export { Reference }
+
 // @public (undocumented)
-export interface Reference {
+class Root extends EntityStore {
+    constructor({ policies, resultCaching, seed, }: {
+        policies: Policies;
+        resultCaching?: boolean;
+        seed?: NormalizedCacheObject;
+    });
     // (undocumented)
-    readonly __ref: string;
+    addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer;
+    // (undocumented)
+    getStorage(): StorageType;
+    // (undocumented)
+    removeLayer(): Root;
+    // (undocumented)
+    readonly storageTrie: Trie<StorageType>;
+    // Warning: (ae-forgotten-export) The symbol "Stump" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly stump: Stump;
 }
-
-// @public (undocumented)
-type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
-
-// @public (undocumented)
-type RemoveIndexSignature<T> = {
-    [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
-};
-
-// @public (undocumented)
-type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -1054,43 +868,29 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 // @public (undocumented)
 type StorageType = Record<string, any>;
 
-// @public (undocumented)
-export interface StoreObject {
-    // (undocumented)
-    [storeFieldName: string]: StoreValue;
-    // (undocumented)
-    __typename?: string;
-}
+export { StoreObject }
 
-// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? [
 Item
 ] extends [Record<string, any>] ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
-// @public (undocumented)
-export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
+export { StoreValue }
 
 // @public (undocumented)
 class Stump extends Layer {
-    constructor(root: EntityStore.Root);
+    constructor(root: Root);
     // (undocumented)
     merge(older: string | StoreObject, newer: string | StoreObject): void;
     // (undocumented)
     removeLayer(): this;
 }
 
-// Warning: (ae-forgotten-export) The symbol "unionToIntersection" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
-
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
 
 // @public (undocumented)
-export type Transaction<T> = (c: ApolloCache<T>) => void;
+export type Transaction = (c: ApolloCache) => void;
 
 // @public (undocumented)
 export type TypePolicies = {
@@ -1109,44 +909,11 @@ export type TypePolicy = {
     };
 };
 
-// @public (undocumented)
-type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
+// @public @deprecated (undocumented)
+export type WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = ApolloCache_2.WatchFragmentOptions<TData, TVariables>;
 
-// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
-//
-// @public
-type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
-
-// @public (undocumented)
-type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
-    " $fragmentRefs"?: infer FragmentRefs;
-} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
-    [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData : never;
-
-// @public
-export interface WatchFragmentOptions<TData, TVars> {
-    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-    fragmentName?: string;
-    // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
-    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
-    optimistic?: boolean;
-    variables?: TVars;
-}
-
-// @public
-export type WatchFragmentResult<TData> = {
-    data: MaybeMasked<TData>;
-    complete: true;
-    missing?: never;
-} | {
-    data: DeepPartial<MaybeMasked<TData>>;
-    complete: false;
-    missing: MissingTree;
-};
+// @public @deprecated (undocumented)
+export type WatchFragmentResult<TData> = ApolloCache_2.WatchFragmentResult<TData>;
 
 // @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {
@@ -1166,8 +933,6 @@ interface WriteContext extends ReadMergeModifyContext {
         mergeTree?: MergeTree;
         fieldNodeSet: Set<FieldNode>;
     }>;
-    // Warning: (ae-forgotten-export) The symbol "FragmentMapFunction" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     lookupFragment: FragmentMapFunction;
     // (undocumented)
@@ -1182,11 +947,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:96:7 - (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:93:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

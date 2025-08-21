@@ -1,24 +1,49 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "importHelpers": true,
     "sourceMap": true,
+    "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
-    "target": "es5",
-    "module": "es2015",
+    "target": "ESNext",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable"],
+    "rootDir": "./src",
+    "lib": ["DOM", "ES2023"],
+    "types": [
+      "jest",
+      "node",
+      "./src/testing/matchers/index.d.ts",
+      "./src/testing/internal/declarations.d.ts",
+      "@testing-library/react-render-stream/expect"
+    ],
     "jsx": "react",
-    "strict": true
+    "strict": true,
+    "paths": {
+      // This entry point is not part of our public API, so we point it directly to the source.
+      "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*"]
+  "references": [
+    {
+      "path": "./config/tsconfig.json"
+    },
+    {
+      "path": "./docs/tsconfig.json"
+    }
+  ],
+  "mdx": {
+    // Enable strict type checking in MDX files.
+    "checkMdx": true
+  }
 }

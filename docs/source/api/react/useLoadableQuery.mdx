@@ -1,0 +1,48 @@
+---
+title: useLoadableQuery
+description: Apollo Client API reference
+---
+
+<FunctionDetails
+  canonicalReference="@apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:function(1)"
+  headingLevel={2}
+>
+  ```ts
+  [
+    loadQuery: LoadQueryFunction<TVariables>,
+    queryRef: QueryRef<TData, TVariables> | null,
+    {
+      fetchMore: FetchMoreFunction<TData, TVariables>;
+      refetch: RefetchFunction<TData, TVariables>;
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+      reset: ResetFunction;
+    }
+  ]
+  ```
+
+A tuple of three values:
+
+  <ManualTuple>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="loadQuery"
+      type="LoadQueryFunction<TVariables>"
+    >
+      A function used to imperatively load a query. Calling this function will create or update the `queryRef` returned by `useLoadableQuery`, which should be passed to `useReadQuery`.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="queryRef"
+      type="QueryRef<TData, TVariables> | null"
+    >
+      The `queryRef` used by `useReadQuery` to read the query result.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="handlers"
+      type="{ fetchMore: FetchMoreFunction<TData, TVariables>; refetch: RefetchFunction<TData, TVariables>; subscribeToMore: SubscribeToMoreFunction<TData, TVariables>; reset: ResetFunction; }"
+    >
+      Additional handlers used for the query, such as `refetch`.
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>

@@ -1,7 +1,6 @@
 ---
 title: Schema-driven testing
 description: Using createTestSchema and associated APIs
-minVersion: 3.10.0
 ---
 
 <Caution>
@@ -275,7 +274,7 @@ import { Products } from "../products";
 // configured just like your production Apollo Client instance - see the FAQ.
 import { makeClient } from "../client";
 
-const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
+const render = (renderedClient: ApolloClient) =>
   rtlRender(
     <ApolloProvider client={renderedClient}>
       <Suspense fallback="Loading...">
@@ -381,7 +380,7 @@ const schema = createTestSchema(staticSchema, {
 
 // This `render` helper function would typically be extracted and shared between
 // test files.
-const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
+const render = (renderedClient: ApolloClient) =>
   rtlRender(
     <ApolloProvider client={renderedClient}>
       <Suspense fallback="Loading...">

@@ -1,111 +1,24 @@
-import type { ASTNode } from "graphql";
-import { print } from "../../utilities/index.js";
+import type { ApolloLink } from "@apollo/client/link";
+import { print } from "@apollo/client/utilities";
 
-import type { Operation } from "../core/index.js";
+import type { BaseHttpLink } from "./BaseHttpLink.js";
 
-export interface Printer {
-  (node: ASTNode, originalPrint: typeof print): string;
-}
-
-export interface UriFunction {
-  (operation: Operation): string;
-}
-
-export interface Body {
-  query?: string;
-  operationName?: string;
-  variables?: Record<string, any>;
-  extensions?: Record<string, any>;
-}
-
-export interface HttpOptions {
-  /**
-   * The URI to use when fetching operations.
-   *
-   * Defaults to '/graphql'.
-   */
-  uri?: string | UriFunction;
-
-  /**
-   * Passes the extensions field to your graphql server.
-   *
-   * Defaults to false.
-   */
-  includeExtensions?: boolean;
-
-  /**
-   * A `fetch`-compatible API to use when making requests.
-   */
-  fetch?: typeof fetch;
-
-  /**
-   * An object representing values to be sent as headers on the request.
-   */
-  headers?: Record<string, string>;
-
-  /**
-   * If set to true, header names won't be automatically normalized to
-   * lowercase. This allows for non-http-spec-compliant servers that might
-   * expect capitalized header names.
-   */
-  preserveHeaderCase?: boolean;
-
-  /**
-   * The credentials policy you want to use for the fetch call.
-   */
-  credentials?: string;
-
-  /**
-   * Any overrides of the fetch options argument to pass to the fetch call.
-   */
-  fetchOptions?: any;
-
-  /**
-   * If set to true, use the HTTP GET method for query operations. Mutations
-   * will still use the method specified in fetchOptions.method (which defaults
-   * to POST).
-   */
-  useGETForQueries?: boolean;
-
-  /**
-   * If set to true, the default behavior of stripping unused variables
-   * from the request will be disabled.
-   *
-   * Unused variables are likely to trigger server-side validation errors,
-   * per https://spec.graphql.org/draft/#sec-All-Variables-Used, but this
-   * includeUnusedVariables option can be useful if your server deviates
-   * from the GraphQL specification by not strictly enforcing that rule.
-   */
-  includeUnusedVariables?: boolean;
-  /**
-   * A function to substitute for the default query print function. Can be
-   * used to apply changes to the results of the print function.
-   */
-  print?: Printer;
-}
-
-export interface HttpQueryOptions {
-  includeQuery?: boolean;
-  includeExtensions?: boolean;
-  preserveHeaderCase?: boolean;
-}
-
-export interface HttpConfig {
-  http?: HttpQueryOptions;
+interface HttpConfig {
+  http?: BaseHttpLink.HttpOptions;
   options?: any;
   headers?: Record<string, string>;
   credentials?: any;
 }
 
-const defaultHttpOptions: HttpQueryOptions = {
+const defaultHttpOptions: BaseHttpLink.HttpOptions = {
   includeQuery: true,
-  includeExtensions: false,
+  includeExtensions: true,
   preserveHeaderCase: false,
 };
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
-  accept: "*/*",
+  accept: "application/graphql-response+json,application/json;q=0.9",
   // The content-type header describes the type of the body of the request, and
   // so it typically only is sent with requests that actually have bodies. One
   // could imagine that Apollo Client would remove this header when constructing
@@ -131,10 +44,11 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const defaultPrinter: Printer = (ast, printer) => printer(ast);
+export const defaultPrinter: BaseHttpLink.Printer = (ast, printer) =>
+  printer(ast);
 
 export function selectHttpOptionsAndBody(
-  operation: Operation,
+  operation: ApolloLink.Operation,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
 ) {
@@ -147,12 +61,12 @@ export function selectHttpOptionsAndBody(
 }
 
 export function selectHttpOptionsAndBodyInternal(
-  operation: Operation,
-  printer: Printer,
+  operation: ApolloLink.Operation,
+  printer: BaseHttpLink.Printer,
   ...configs: HttpConfig[]
 ) {
   let options = {} as HttpConfig & Record<string, any>;
-  let http = {} as HttpQueryOptions;
+  let http = {} as BaseHttpLink.HttpOptions;
 
   configs.forEach((config) => {
     options = {
@@ -168,24 +82,27 @@ export function selectHttpOptionsAndBodyInternal(
       options.credentials = config.credentials;
     }
 
+    options.headers!.accept = (config.http?.accept || [])
+      .concat(options.headers!.accept)
+      .join(",");
+
     http = {
       ...http,
       ...config.http,
     };
   });
 
-  if (options.headers) {
-    options.headers = removeDuplicateHeaders(
-      options.headers,
-      http.preserveHeaderCase
-    );
-  }
+  options.headers = removeDuplicateHeaders(
+    options.headers!,
+    http.preserveHeaderCase
+  );
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
-  const body: Body = { operationName, variables };
+  const body: BaseHttpLink.Body = { operationName, variables };
 
-  if (http.includeExtensions) (body as any).extensions = extensions;
+  if (http.includeExtensions && Object.keys(extensions || {}).length)
+    (body as any).extensions = extensions;
 
   // not sending the query (i.e persisted queries)
   if (http.includeQuery) (body as any).query = printer(query, print);

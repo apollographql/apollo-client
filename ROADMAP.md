@@ -18,6 +18,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 ### Apollo Client
 
 #### 3.14.0 - August 21st, 2025
+
 _Release candidate - July 7th, 2025_
 
 - 4.0 compatibility release/deprecations
@@ -25,6 +26,7 @@ _Release candidate - July 7th, 2025_
 To be released together with 4.0.
 
 #### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - August 21st, 2025
+
 _Release candidate - June 18th 2025_
 
 ### GraphQL Testing Library
@@ -55,7 +57,9 @@ _These changes will take longer than anticipated due to prioritization on Apollo
 - Add compatibility for 4.0
 
 **TanStack Start**
+
 - Support for Apollo Client Streaming in TanStack Router - will stay alpha
 
 **React Router**
+
 - Support for Apollo Client Streaming in React Router 7 - will stay alpha

@@ -1,17 +1,17 @@
 export { getSuspenseCache } from "./cache/getSuspenseCache.js";
-export type { CacheKey, QueryKey } from "./cache/types.js";
-export type {
-  QueryReference,
-  QueryRef,
-  PreloadedQueryRef,
-} from "./cache/QueryReference.js";
+export type { CacheKey, FragmentKey, QueryKey } from "./cache/types.js";
+export type { PreloadedQueryRef, QueryRef } from "./cache/QueryReference.js";
 export {
-  InternalQueryReference,
+  assertWrappedQueryRef,
   getWrappedPromise,
+  InternalQueryReference,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-  assertWrappedQueryRef,
 } from "./cache/QueryReference.js";
 export type { SuspenseCacheOptions } from "./cache/SuspenseCache.js";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
 export type { HookWrappers } from "../hooks/internal/wrapHook.js";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
+export { wrapperSymbol } from "../hooks/internal/wrapHook.js";
+export type { FetchMoreFunction, RefetchFunction } from "./types.js";

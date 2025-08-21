@@ -1,35 +1,35 @@
-import gql from "graphql-tag";
+import type { FormattedExecutionResult } from "graphql";
 import { print } from "graphql";
+import { gql } from "graphql-tag";
+import { EMPTY, map, Observable, of } from "rxjs";
 
-import { ApolloLink, execute } from "../../core";
-import { Operation, FetchResult, GraphQLRequest } from "../../core/types";
-import { Observable } from "../../../utilities";
-import { wait } from "../../../testing";
+import { ApolloLink } from "@apollo/client/link";
+import { BatchLink } from "@apollo/client/link/batch";
 import {
-  BatchLink,
-  OperationBatcher,
-  BatchHandler,
-  BatchableRequest,
-} from "../batchLink";
-import { ObservableStream } from "../../../testing/internal";
+  executeWithDefaultContext as execute,
+  ObservableStream,
+  wait,
+} from "@apollo/client/testing/internal";
+
+import type { BatchableRequest } from "../batching.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { OperationBatcher } from "../batching.js";
 
 interface MockedResponse {
-  request: GraphQLRequest;
-  result?: FetchResult;
+  request: ApolloLink.Request;
+  result?: ApolloLink.Result;
   error?: Error;
   delay?: number;
+  maxUsageCount?: number;
 }
 
-function getKey(operation: GraphQLRequest) {
-  // XXX We're assuming here that query and variables will be serialized in
-  // the same order, which might not always be true.
-  const { query, variables, operationName } = operation;
-  return JSON.stringify([operationName, query, variables]);
-}
+const EMPTY_FORWARD: ApolloLink.ForwardFunction = () => EMPTY;
 
-const delay = (time: number) => new Promise((r) => setTimeout(r, time));
-
-function createOperation(starting: any, operation: GraphQLRequest): Operation {
+function createOperation(
+  starting: any,
+  operation: ApolloLink.Request
+): ApolloLink.Operation {
   let context = { ...starting };
   const setContext = (next: any) => {
     if (typeof next === "function") {
@@ -50,15 +50,10 @@ function createOperation(starting: any, operation: GraphQLRequest): Operation {
     value: getContext,
   });
 
-  Object.defineProperty(operation, "toKey", {
-    enumerable: false,
-    value: () => getKey(operation),
-  });
-
-  return operation as Operation;
+  return operation as ApolloLink.Operation;
 }
 
-function requestToKey(request: GraphQLRequest): string {
+function requestToKey(request: ApolloLink.Request): string {
   const queryString =
     typeof request.query === "string" ? request.query : print(request.query);
 
@@ -71,7 +66,9 @@ function requestToKey(request: GraphQLRequest): string {
 function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
   const mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
-  const mockBatchHandler: BatchHandler = (operations: Operation[]) => {
+  const mockBatchHandler: BatchLink.BatchHandler = (
+    operations: ApolloLink.Operation[]
+  ) => {
     return new Observable((observer) => {
       const results = operations.map((operation) => {
         const key = requestToKey(operation);
@@ -84,7 +81,16 @@ function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
           );
         }
 
-        const { result, error } = responses.shift()!;
+        let response: MockedResponse;
+
+        if (responses[0].maxUsageCount && responses[0].maxUsageCount > 1) {
+          responses[0].maxUsageCount--;
+          response = responses[0];
+        } else {
+          response = responses.shift()!;
+        }
+
+        const { result, error } = response;
 
         if (!result && !error) {
           throw new Error(
@@ -128,7 +134,7 @@ describe("OperationBatcher", () => {
     expect(() => {
       const querySched = new OperationBatcher({
         batchInterval: 10,
-        batchHandler: () => null,
+        batchHandler: () => EMPTY,
       });
       querySched.consumeQueue("");
     }).not.toThrow();
@@ -137,7 +143,7 @@ describe("OperationBatcher", () => {
   it("should not do anything when faced with an empty queue", () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => null,
+      batchHandler: () => EMPTY,
       batchKey: () => "yo",
     });
 
@@ -151,7 +157,7 @@ describe("OperationBatcher", () => {
   it("should be able to add to the queue", () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => null,
+      batchHandler: () => EMPTY,
     });
 
     const query = gql`
@@ -165,6 +171,7 @@ describe("OperationBatcher", () => {
 
     const request: BatchableRequest = {
       operation: createOperation({}, { query }),
+      forward: EMPTY_FORWARD,
     };
 
     expect(batcher["batchesByKey"].get("")).toBeUndefined();
@@ -189,17 +196,12 @@ describe("OperationBatcher", () => {
         lastName: "Smith",
       },
     };
-    const batchHandler = createMockBatchHandler(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-    const operation: Operation = createOperation(
+    const batchHandler = createMockBatchHandler({
+      request: { query },
+      result: { data },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    });
+    const operation = createOperation(
       {},
       {
         query,
@@ -212,20 +214,23 @@ describe("OperationBatcher", () => {
         batchHandler,
       });
 
-      const observable = myBatcher.enqueueRequest({ operation });
+      const observable = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
       const stream = new ObservableStream(observable);
 
-      const observables: (Observable<FetchResult> | undefined)[] =
+      const observables: (Observable<ApolloLink.Result> | undefined)[] =
         myBatcher.consumeQueue()!;
 
       expect(observables.length).toBe(1);
       expect(myBatcher["batchesByKey"].get("")).toBeUndefined();
 
-      await expect(stream).toEmitValue({ data });
+      await expect(stream).toEmitTypedValue({ data });
     });
 
     it("should be able to consume from a queue containing multiple queries", async () => {
-      const request2: Operation = createOperation(
+      const request2 = createOperation(
         {},
         {
           query,
@@ -248,27 +253,33 @@ describe("OperationBatcher", () => {
         batchMax: 10,
         batchHandler: BH,
       });
-      const observable1 = myBatcher.enqueueRequest({ operation });
-      const observable2 = myBatcher.enqueueRequest({ operation: request2 });
+      const observable1 = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
+      const observable2 = myBatcher.enqueueRequest({
+        operation: request2,
+        forward: EMPTY_FORWARD,
+      });
 
       const stream1 = new ObservableStream(observable1);
       const stream2 = new ObservableStream(observable2);
 
       expect(myBatcher["batchesByKey"].get("")!.size).toBe(2);
-      const observables: (Observable<FetchResult> | undefined)[] =
+      const observables: (Observable<ApolloLink.Result> | undefined)[] =
         myBatcher.consumeQueue()!;
       expect(myBatcher["batchesByKey"].get("")).toBeUndefined();
       expect(observables.length).toBe(2);
 
-      await expect(stream1).toEmitValue({ data });
-      await expect(stream2).toEmitValue({ data });
+      await expect(stream1).toEmitTypedValue({ data });
+      await expect(stream2).toEmitTypedValue({ data });
     });
 
     it("should be able to consume from a queue containing multiple queries with different batch keys", async () => {
       // NOTE: this test was added to ensure that queries don't "hang" when consumed by BatchLink.
       // "Hanging" in this case results in this test never resolving.  So
       // if this test times out it's probably a real issue and not a flake
-      const request2: Operation = createOperation(
+      const request2 = createOperation(
         {},
         {
           query,
@@ -299,16 +310,22 @@ describe("OperationBatcher", () => {
         batchKey,
       });
 
-      const observable1 = myBatcher.enqueueRequest({ operation });
-      const observable2 = myBatcher.enqueueRequest({ operation: request2 });
+      const observable1 = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
+      const observable2 = myBatcher.enqueueRequest({
+        operation: request2,
+        forward: EMPTY_FORWARD,
+      });
 
       const stream1 = new ObservableStream(observable1);
       const stream2 = new ObservableStream(observable2);
 
       jest.runAllTimers();
 
-      await expect(stream1).toEmitValue({ data });
-      await expect(stream2).toEmitValue({ data });
+      await expect(stream1).toEmitTypedValue({ data });
+      await expect(stream2).toEmitTypedValue({ data });
     });
 
     it("should return a promise when we enqueue a request and resolve it with a result", async () => {
@@ -320,12 +337,15 @@ describe("OperationBatcher", () => {
         batchInterval: 10,
         batchHandler: BH,
       });
-      const observable = myBatcher.enqueueRequest({ operation });
+      const observable = myBatcher.enqueueRequest({
+        operation,
+        forward: EMPTY_FORWARD,
+      });
       const stream = new ObservableStream(observable);
 
       myBatcher.consumeQueue();
 
-      await expect(stream).toEmitValue({ data });
+      await expect(stream).toEmitTypedValue({ data });
     });
 
     it("should be able to debounce requests", () => {
@@ -337,9 +357,15 @@ describe("OperationBatcher", () => {
       });
 
       // 1. Queue up 3 requests
-      myBatcher.enqueueRequest({ operation }).subscribe({});
-      myBatcher.enqueueRequest({ operation }).subscribe({});
-      myBatcher.enqueueRequest({ operation }).subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(3);
 
       // 2. Run the timer halfway.
@@ -347,7 +373,9 @@ describe("OperationBatcher", () => {
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(3);
 
       // 3. Queue a 4th request, causing the timer to reset.
-      myBatcher.enqueueRequest({ operation }).subscribe({});
+      myBatcher
+        .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(myBatcher["batchesByKey"].get("")!.size).toEqual(4);
 
       // 4. Run the timer to batchInterval + 1, at this point, if debounce were
@@ -385,9 +413,9 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
 
-    batcher.enqueueRequest({ operation }).subscribe({});
+    batcher.enqueueRequest({ operation, forward: EMPTY_FORWARD }).subscribe({});
     expect(batcher["batchesByKey"].get("")!.size).toBe(1);
 
     const promise = wait(20);
@@ -424,6 +452,7 @@ describe("OperationBatcher", () => {
     batcher
       .enqueueRequest({
         operation: createOperation({}, { query }),
+        forward: EMPTY_FORWARD,
       })
       .subscribe(() => {
         throw new Error("next should never be called");
@@ -454,9 +483,12 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
 
-    const observable = batcher.enqueueRequest({ operation });
+    const observable = batcher.enqueueRequest({
+      operation,
+      forward: EMPTY_FORWARD,
+    });
 
     const checkQueuedRequests = (expectedSubscriberCount: number) => {
       const batch = batcher["batchesByKey"].get("");
@@ -511,6 +543,7 @@ describe("OperationBatcher", () => {
     const subscription = batcher
       .enqueueRequest({
         operation: createOperation({}, { query }),
+        forward: EMPTY_FORWARD,
       })
       .subscribe(() => {
         throw new Error("next should never be called");
@@ -544,17 +577,21 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
-    const operation2: Operation = createOperation({}, { query });
-    const operation3: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
+    const operation2 = createOperation({}, { query });
+    const operation3 = createOperation({}, { query });
 
-    batcher.enqueueRequest({ operation }).subscribe({});
-    batcher.enqueueRequest({ operation: operation2 }).subscribe({});
+    batcher.enqueueRequest({ operation, forward: EMPTY_FORWARD }).subscribe({});
+    batcher
+      .enqueueRequest({ operation: operation2, forward: EMPTY_FORWARD })
+      .subscribe({});
     expect(batcher["batchesByKey"].get("")!.size).toBe(2);
 
     setTimeout(() => {
       // The batch shouldn't be fired yet, so we can add one more request.
-      batcher.enqueueRequest({ operation: operation3 }).subscribe({});
+      batcher
+        .enqueueRequest({ operation: operation3, forward: EMPTY_FORWARD })
+        .subscribe({});
       expect(batcher["batchesByKey"].get("")!.size).toBe(3);
     }, 5);
 
@@ -590,21 +627,25 @@ describe("OperationBatcher", () => {
       }
     `;
 
-    const operation: Operation = createOperation({}, { query });
-    const operation2: Operation = createOperation({}, { query });
-    const operation3: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
+    const operation2 = createOperation({}, { query });
+    const operation3 = createOperation({}, { query });
 
-    const sub1 = batcher.enqueueRequest({ operation }).subscribe(() => {
-      throw new Error("next should never be called");
-    });
-    batcher.enqueueRequest({ operation: operation2 }).subscribe((result) => {
-      expect(result.data).toBe(data2);
+    const sub1 = batcher
+      .enqueueRequest({ operation, forward: EMPTY_FORWARD })
+      .subscribe(() => {
+        throw new Error("next should never be called");
+      });
+    batcher
+      .enqueueRequest({ operation: operation2, forward: EMPTY_FORWARD })
+      .subscribe((result) => {
+        expect((result as FormattedExecutionResult).data).toBe(data2);
 
-      // The batch should've been fired by now.
-      expect(batcher["batchesByKey"].get("")).toBeUndefined();
+        // The batch should've been fired by now.
+        expect(batcher["batchesByKey"].get("")).toBeUndefined();
 
-      done();
-    });
+        done();
+      });
 
     expect(batcher["batchesByKey"].get("")!.size).toBe(2);
 
@@ -614,7 +655,7 @@ describe("OperationBatcher", () => {
     setTimeout(() => {
       // The batch shouldn't be fired yet, so we can add one more request.
       const sub3 = batcher
-        .enqueueRequest({ operation: operation3 })
+        .enqueueRequest({ operation: operation3, forward: EMPTY_FORWARD })
         .subscribe(() => {
           throw new Error("next should never be called");
         });
@@ -636,7 +677,7 @@ describe("OperationBatcher", () => {
         }
       }
     `;
-    const operation: Operation = createOperation({}, { query });
+    const operation = createOperation({}, { query });
     const error = new Error("Network error");
     const BH = createMockBatchHandler({
       request: { query },
@@ -647,7 +688,10 @@ describe("OperationBatcher", () => {
       batchHandler: BH,
     });
 
-    const observable = batcher.enqueueRequest({ operation });
+    const observable = batcher.enqueueRequest({
+      operation,
+      forward: EMPTY_FORWARD,
+    });
     const stream = new ObservableStream(observable);
     batcher.consumeQueue();
 
@@ -663,9 +707,7 @@ describe("BatchLink", () => {
   `;
 
   it("does not need any constructor arguments", () => {
-    expect(
-      () => new BatchLink({ batchHandler: () => Observable.of() })
-    ).not.toThrow();
+    expect(() => new BatchLink({ batchHandler: () => EMPTY })).not.toThrow();
   });
 
   it("passes forward on", async () => {
@@ -678,12 +720,12 @@ describe("BatchLink", () => {
           expect(forward!.length).toBe(1);
           expect(operation.length).toBe(1);
 
-          return forward![0]!(operation[0]).map((result) => [result]);
+          return forward![0]!(operation[0]).pipe(map((result) => [result]));
         },
       }),
       new ApolloLink((operation) => {
         expect(operation.query).toEqual(query);
-        return null;
+        return EMPTY;
       }),
     ]);
 
@@ -698,45 +740,11 @@ describe("BatchLink", () => {
     ).subscribe(() => {});
   });
 
-  it("raises warning if terminating", () => {
-    let calls = 0;
-    const link_full = new BatchLink({
-      batchHandler: (operation, forward) =>
-        forward![0]!(operation[0]).map((r) => [r]),
-    });
-    const link_one_op = new BatchLink({
-      batchHandler: (operation) => Observable.of(),
-    });
-    const link_no_op = new BatchLink({ batchHandler: () => Observable.of() });
-    const _warn = console.warn;
-    console.warn = (...args: any) => {
-      calls++;
-      expect(args).toEqual([
-        "You are calling concat on a terminating link, which will have no effect %o",
-        expect.any(BatchLink),
-      ]);
-    };
-    expect(
-      link_one_op.concat((operation, forward) => forward(operation))
-    ).toEqual(link_one_op);
-    expect(
-      link_no_op.concat((operation, forward) => forward(operation))
-    ).toEqual(link_no_op);
-    console.warn = (warning: any) => {
-      throw Error("non-terminating link should not throw");
-    };
-    expect(
-      link_full.concat((operation, forward) => forward(operation))
-    ).not.toEqual(link_full);
-    console.warn = _warn;
-    expect(calls).toBe(2);
-  });
-
   it("correctly uses batch size", async () => {
     const sizes = [1, 2, 3];
     const terminating = new ApolloLink((operation) => {
       expect(operation.query).toEqual(query);
-      return Observable.of(operation.variables.count);
+      return of(operation.variables.count);
     });
 
     let runBatchSize = async (size: number) => {
@@ -801,12 +809,12 @@ describe("BatchLink", () => {
       const batchInterval = intervals.pop();
       if (!batchInterval) return done();
 
-      const batchHandler = jest.fn((operation, forward) => {
+      const batchHandler = jest.fn(((operation, forward) => {
         expect(operation.length).toBe(1);
-        expect(forward.length).toBe(1);
+        expect(forward!.length).toBe(1);
 
-        return forward[0](operation[0]).map((d: any) => [d]);
-      });
+        return forward![0]!(operation[0]).pipe(map((d: any) => [d]));
+      }) as BatchLink.BatchHandler);
 
       const link = ApolloLink.from([
         new BatchLink({
@@ -814,7 +822,7 @@ describe("BatchLink", () => {
           batchMax: 0,
           batchHandler,
         }),
-        () => Observable.of(42) as any,
+        new ApolloLink(() => of(42) as any),
       ]);
 
       execute(
@@ -835,7 +843,7 @@ describe("BatchLink", () => {
       });
 
       const delayedBatchInterval = async () => {
-        await delay(batchInterval);
+        await wait(batchInterval);
 
         const checkCalls = mock.mock.calls.slice(0, -1);
         expect(checkCalls.length).toBe(2);
@@ -859,7 +867,7 @@ describe("BatchLink", () => {
   it("throws an error when more requests than results", () => {
     expect.assertions(4);
     const result = [{ data: {} }];
-    const batchHandler = jest.fn((op) => Observable.of(result));
+    const batchHandler = jest.fn((op) => of(result));
 
     const link = ApolloLink.from([
       new BatchLink({
@@ -894,7 +902,7 @@ describe("BatchLink", () => {
 
       const batchHandler = jest.fn((op) => {
         expect(op.length).toBe(2);
-        return Observable.of(result);
+        return of(result);
       });
       let key = true;
       const batchKey = () => {

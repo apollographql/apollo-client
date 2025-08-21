@@ -4,274 +4,61 @@
 
 ```ts
 
+import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
+import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
-import type { GraphQLFormattedError } from 'graphql';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
-
-// @public (undocumented)
-class ApolloLink {
-    constructor(request?: RequestHandler);
-    // (undocumented)
-    static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    concat(next: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    static empty(): ApolloLink;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
-    // Warning: (ae-forgotten-export) The symbol "RequestHandler" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // @internal
-    getMemoryInternals?: () => unknown;
-    // @internal
-    readonly left?: ApolloLink;
-    // @deprecated (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
-    // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // @internal
-    readonly right?: ApolloLink;
-    // @deprecated (undocumented)
-    setOnError(fn: ApolloLink["onError"]): this;
-    // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-}
-
-// @public (undocumented)
-interface BaseOptions {
-    // (undocumented)
-    disable?: (error: ErrorResponse) => boolean;
-    // (undocumented)
-    retry?: (error: ErrorResponse) => boolean;
-    // (undocumented)
-    useGETForHashedQueries?: boolean;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & ({
-    resetHashCache: () => void;
-} & ({
-    getMemoryInternals(): {
-        PersistedQueryLink: {
-            persistedQueryHashes: number;
-        };
-    };
-} | {
-    getMemoryInternals?: undefined;
-}));
-
-// @public (undocumented)
-interface DefaultContext extends Record<string, any> {
-}
-
-// @public (undocumented)
-type ErrorMeta = {
-    persistedQueryNotSupported: boolean;
-    persistedQueryNotFound: boolean;
-};
-
-// @public (undocumented)
-export interface ErrorResponse {
-    // @deprecated (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    meta: ErrorMeta;
-    // Warning: (ae-forgotten-export) The symbol "NetworkError" needs to be exported by the entry point index.d.ts
-    //
-    // @deprecated (undocumented)
-    networkError?: NetworkError;
-    // (undocumented)
-    operation: Operation;
-    // @deprecated (undocumented)
-    response?: FormattedExecutionResult;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data?: never;
-    // (undocumented)
-    errors?: never;
-    // (undocumented)
-    extensions?: never;
-    // Warning: (ae-forgotten-export) The symbol "IncrementalPayload" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    incremental?: IncrementalPayload<TData, TExtensions>[];
-}
 
 // @public @deprecated (undocumented)
-interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data: TData | null | undefined;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    incremental?: never;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface ExecutionPatchResultBase {
-    // (undocumented)
-    hasNext?: boolean;
-}
-
-// Warning: (ae-forgotten-export) The symbol "SingleExecutionResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResult" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
-
-// @public (undocumented)
-type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
-
-// @public (undocumented)
-interface GraphQLRequest<TVariables = Record<string, any>> {
-    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    variables?: TVariables;
-}
-
-// @public @deprecated (undocumented)
-interface IncrementalPayload<TData, TExtensions> {
-    // (undocumented)
-    data: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    label?: string;
-    // Warning: (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    path: Path;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ServerParseError" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ServerError" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type NetworkError = Error | ServerParseError | ServerError | null;
-
-// @public (undocumented)
-type NextLink = (operation: Operation) => Observable<FetchResult>;
-
-// @public (undocumented)
-interface Operation {
-    // (undocumented)
-    extensions: Record<string, any>;
-    // (undocumented)
-    getContext: () => DefaultContext;
-    // (undocumented)
-    operationName: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
-    };
-    // (undocumented)
-    variables: Record<string, any>;
-}
-
-// @public @deprecated (undocumented)
-type Path = ReadonlyArray<string | number>;
+export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
 
 // @public (undocumented)
 export namespace PersistedQueryLink {
     // (undocumented)
-    export interface GenerateHashOptions extends BaseOptions {
-        // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        generateHash: GenerateHashFunction;
+    export namespace Base {
+        export interface Options {
+            disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+            retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
+            useGETForHashedQueries?: boolean;
+        }
+    }
+    export interface DisableFunctionOptions extends PersistedQueryLink.RetryFunctionOptions {
+    }
+    export interface ErrorMeta {
+        persistedQueryNotFound: boolean;
+        persistedQueryNotSupported: boolean;
+    }
+    export type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
+    export interface GenerateHashOptions extends Base.Options {
+        generateHash: PersistedQueryLink.GenerateHashFunction;
         // (undocumented)
         sha256?: never;
     }
+    export type Options = PersistedQueryLink.SHA256Options | PersistedQueryLink.GenerateHashOptions;
     // (undocumented)
-    export type Options = SHA256Options | GenerateHashOptions;
-    // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    export interface SHA256Options extends BaseOptions {
+    export namespace PersistedQueryLinkDocumentationTypes {
+        export function GenerateHashFunction(document: DocumentNode): string | PromiseLike<string>;
+        export function SHA256Function(queryString: string): string | PromiseLike<string>;
+    }
+    export interface RetryFunctionOptions {
+        error: ErrorLike;
+        meta: PersistedQueryLink.ErrorMeta;
+        operation: ApolloLink.Operation;
+        result?: FormattedExecutionResult;
+    }
+    export type SHA256Function = (queryString: string) => string | PromiseLike<string>;
+    export interface SHA256Options extends Base.Options {
         // (undocumented)
         generateHash?: never;
-        // Warning: (ae-forgotten-export) The symbol "SHA256Function" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        sha256: SHA256Function;
+        sha256: PersistedQueryLink.SHA256Function;
     }
-        {};
 }
 
-// @public (undocumented)
-type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
-
-// @public (undocumented)
-type ServerError = Error & {
-    response: Response;
-    result: Record<string, any> | string;
-    statusCode: number;
-};
-
-// @public (undocumented)
-type ServerParseError = Error & {
-    response: Response;
-    statusCode: number;
-    bodyText: string;
-};
-
-// @public (undocumented)
-type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
-
-// @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
+// @public
+export class PersistedQueryLink extends ApolloLink {
+    constructor(options: PersistedQueryLink.Options);
     // (undocumented)
-    context?: TContext;
-    // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
+    resetHashCache: () => void;
 }
 
 // @public (undocumented)

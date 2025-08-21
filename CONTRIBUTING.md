@@ -56,7 +56,7 @@ For a small bug fix change (less than 20 lines of code changed), feel free to op
 
 ### Suggesting features
 
-Most of the features in Apollo Client came from suggestions by you, the community! We welcome any ideas about how to make Apollo  better for your use case. Head on over to the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), and open up a new feature request / discussion issue with your details.
+Most of the features in Apollo Client came from suggestions by you, the community! We welcome any ideas about how to make Apollo better for your use case. Head on over to the [Apollo Client Feature Request repo](https://github.com/apollographql/apollo-feature-requests), and open up a new feature request / discussion issue with your details.
 
 **Note:** Feature requests and non-bug related discussions are no longer managed in this repo's issue tracker. Feature request and/or discussions opened here will be closed.
 
@@ -117,14 +117,14 @@ npm run test:watch
 Call jest directly making sure to pass in the jest config, and use its `testRegex` option:
 
 ```
-jest --config ./config/jest.config.js --testRegex __tests__/useQuery.test.tsx
+jest --config ./config/jest.config.ts --testRegex __tests__/useQuery.test.tsx
 ```
 
 ### Wiring a checkout into an application
 
 It can be useful to link an Apollo Client checkout into an application, to test how Apollo Client development changes impact a real app. We'll use the [Apollo fullstack tutorial application](https://github.com/apollographql/fullstack-tutorial) to demonstrate this.
 
-1) Clone and install Apollo Client.
+1. Clone and install Apollo Client.
 
 ```
 git clone https://github.com/apollographql/apollo-client.git
@@ -135,7 +135,7 @@ cd ..
 
 > From this point forward `[apollo-client-root]` represents the root directory of your Apollo Client checkout (e.g. `/some/path/apollo-client`).
 
-2) Clone and install the fullstack tutorial.
+2. Clone and install the fullstack tutorial.
 
 ```
 git clone https://github.com/apollographql/fullstack-tutorial.git
@@ -148,7 +148,7 @@ npm i
 
 > From this point forward `[fullstack-tutorial-root]` represents the root directory of your Fullstack Tutorial checkout (e.g. `/some/path/fullstack-tutorial`).
 
-3) Link the application's `@apollo/client` package to your Apollo Client checkout's compiled files.
+3. Link the application's `@apollo/client` package to your Apollo Client checkout's compiled files.
 
 ```
 # ... assuming still in [fullstack-tutorial-root]/final/client from step 2
@@ -157,7 +157,7 @@ rm -Rf ./client
 ln -s [apollo-client-root]/dist client
 ```
 
-4) If using React, prevent a duplicate React version lookup error by telling your application to use Apollo Client's React version.
+4. If using React, prevent a duplicate React version lookup error by telling your application to use Apollo Client's React version.
 
 ```
 # ... assuming still in [fullstack-tutorial-root]/final/client/node_modules/@apollo from step 3
@@ -167,7 +167,7 @@ ln -s [apollo-client-root]/node_modules/react
 ln -s [apollo-client-root]/node_modules/react-dom
 ```
 
-5) Start the fullstack tutorial.
+5. Start the fullstack tutorial.
 
 Server:
 
@@ -185,7 +185,7 @@ cd [fullstack-tutorial-root]/final/client
 npm start
 ```
 
-6) Start building Apollo Client and watching for file changes.
+6. Start building Apollo Client and watching for file changes.
 
 ```
 # ... in a separate terminal window
@@ -193,7 +193,7 @@ cd [apollo-client-root]
 npm run watch
 ```
 
-7) Verify Apollo Client changes show up in the fullstack tutorial.
+7. Verify Apollo Client changes show up in the fullstack tutorial.
 
 ```
 # ... assuming still in [apollo-client-root] from step 6

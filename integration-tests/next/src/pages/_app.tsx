@@ -1,4 +1,4 @@
-import { ApolloProvider } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 import { useApollo } from "../libs/apolloClient.ts";
 import type { AppProps } from "next/app";
 

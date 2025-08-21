@@ -9,31 +9,14 @@
 # ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
 # PROJECT FILES.
 
-# ignores all files in /docs directory
-!/docs
-/docs/**
-
 # Ignore all mdx & md files:
-*.mdx
-*.md
 *.har
 *.snap
 
-!/docs/source
-/docs/source/**
-!/docs/source/development-testing
-/docs/source/development-testing/**
-!/docs/source/development-testing/reducing-bundle-size.mdx
-!/docs/source/development-testing/schema-driven-testing.mdx
-
-!docs/shared
-/docs/shared/**
-!/docs/shared/ApiDoc
-!/docs/shared/ApiDoc/**
-!/docs/shared/Overrides
-!/docs/shared/Overrides/**
-
 node_modules/
+.api-reports/
 .yalc/
 .next/
 .changeset/
+pnpm-lock.yaml
+scripts/codemods/ac3-to-ac4/src/__testfixtures__

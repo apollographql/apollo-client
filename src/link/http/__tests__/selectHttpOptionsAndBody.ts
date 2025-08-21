@@ -1,12 +1,13 @@
-import gql from "graphql-tag";
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode, print } from "graphql";
+import { stripIgnoredCharacters } from "graphql";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
 import {
+  fallbackHttpConfig,
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal,
-  fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+} from "@apollo/client/link/http";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {
@@ -18,7 +19,7 @@ const query = gql`
 
 describe("selectHttpOptionsAndBody", () => {
   it("includeQuery allows the query to be ignored", () => {
-    const { body } = selectHttpOptionsAndBody(createOperation({}, { query }), {
+    const { body } = selectHttpOptionsAndBody(createOperation({ query }), {
       http: { includeQuery: false },
     });
     expect(body).not.toHaveProperty("query");
@@ -27,7 +28,7 @@ describe("selectHttpOptionsAndBody", () => {
   it("includeExtensions allows the extensions to be added", () => {
     const extensions = { yo: "what up" };
     const { body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       { http: { includeExtensions: true } }
     );
     expect(body).toHaveProperty("extensions");
@@ -36,7 +37,7 @@ describe("selectHttpOptionsAndBody", () => {
 
   it("the fallbackConfig is used if no other configs are specified", () => {
     const defaultHeaders = {
-      accept: "*/*",
+      accept: "application/graphql-response+json,application/json;q=0.9",
       "content-type": "application/json",
     };
 
@@ -46,12 +47,12 @@ describe("selectHttpOptionsAndBody", () => {
 
     const extensions = { yo: "what up" };
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       fallbackHttpConfig
     );
 
     expect(body).toHaveProperty("query");
-    expect(body).not.toHaveProperty("extensions");
+    expect(body.extensions).toStrictEqual(extensions);
 
     expect(options.headers).toEqual(defaultHeaders);
     expect(options.method).toEqual(defaultOptions.method);
@@ -76,9 +77,43 @@ describe("selectHttpOptionsAndBody", () => {
     const extensions = { yo: "what up" };
 
     const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query, extensions }),
+      createOperation({ query, extensions }),
       fallbackHttpConfig,
       config
+    );
+
+    expect(body).toHaveProperty("query");
+    expect(body.extensions).toStrictEqual(extensions);
+
+    expect(options.headers).toEqual(headers);
+    expect(options.credentials).toEqual(credentials);
+    expect(options.opt).toEqual("hi");
+    expect(options.method).toEqual("POST"); //from default
+  });
+
+  it("can explicitly disable `includeExtensions`", () => {
+    const headers = {
+      accept: "application/json",
+      "content-type": "application/graphql",
+    };
+
+    const credentials = {
+      "X-Secret": "djmashko",
+    };
+
+    const extensions = { yo: "what up" };
+
+    const { options, body } = selectHttpOptionsAndBody(
+      createOperation({ query, extensions }),
+      fallbackHttpConfig,
+      {
+        headers,
+        credentials,
+        http: {
+          includeExtensions: false,
+        },
+        options: { opt: "hi" },
+      }
     );
 
     expect(body).toHaveProperty("query");
@@ -96,7 +131,7 @@ describe("selectHttpOptionsAndBody", () => {
     };
 
     const { body } = selectHttpOptionsAndBodyInternal(
-      createOperation({}, { query }),
+      createOperation({ query }),
       customPrinter,
       fallbackHttpConfig
     );

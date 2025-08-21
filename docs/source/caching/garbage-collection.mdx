@@ -19,23 +19,10 @@ To determine whether an object is reachable, the cache starts from all known roo
 In addition to pruning your GraphQL data, `cache.gc` can also release memory that the cache uses to preserve unchanged parts of previous cache results:
 
 ```js
-cache.gc({ resetResultCache: true })
+cache.gc({ resetResultCache: true });
 ```
 
 Freeing this memory temporarily slows down cache reads, because those reads don't benefit from any previous reading work.
-
-If you're using the [`canonizeResults: true`](../api/cache/InMemoryCache/#canonizeresults) option, `cache.gc` can also reset the memory used for looking up canonical result objects:
-
-```js
-cache.gc({
-  resetResultCache: true,
-  resetResultIdentities: true,
-})
-```
-
-> **⚠️ Deprecation warning for `canonizeResults**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
 
 These additional `cache.gc` options can be useful for investigating memory usage patterns or leaks. Before taking heap snapshots or recording allocation timelines, it's a good idea to force _JavaScript_ garbage collection using your browser's devtools, to ensure memory released by the cache has been fully collected and returned to the heap.
 
@@ -44,13 +31,13 @@ These additional `cache.gc` options can be useful for investigating memory usage
 You can use the `retain` method to prevent an object (and its children) from being garbage collected, even if the object isn't reachable:
 
 ```js
-cache.retain('my-object-id');
+cache.retain("my-object-id");
 ```
 
 If you later want a `retain`ed object to be garbage collected, use the `release` method:
 
 ```js
-cache.release('my-object-id');
+cache.release("my-object-id");
 ```
 
 If the object is unreachable, it will be garbage collected during next call to `gc`.
@@ -60,13 +47,13 @@ If the object is unreachable, it will be garbage collected during next call to `
 You can remove any normalized object from the cache using the `evict` method:
 
 ```js
-cache.evict({ id: 'my-object-id' })
+cache.evict({ id: "my-object-id" });
 ```
 
 You can also remove a _single field_ from a cached object by providing the name of the field to remove:
 
 ```js
-cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
+cache.evict({ id: "my-object-id", fieldName: "yearOfFounding" });
 ```
 
 Evicting an object often makes _other_ cached objects unreachable. Because of this, you should call [`cache.gc`](#cachegc) after `evict`ing one or more objects from the cache.
@@ -77,9 +64,9 @@ When an object is `evict`ed from the cache, references to that object might rema
 
 You can customize behavior for dangling references by defining a custom [`read` function](./cache-field-behavior/#the-read-function) for any field that might contain one. This function can perform whatever cleanup is necessary when the field's referenced object is missing. For example, the `read` function might:
 
-* Filter the referenced object out of a list of available objects
-* Set the field's value to `null`
-* Return a particular default value
+- Filter the referenced object out of a list of available objects
+- Set the field's value to `null`
+- Return a particular default value
 
 Every `read` function is passed a `canRead` function that helps it detect when its field currently contains a dangling reference.
 
@@ -117,8 +104,8 @@ new InMemoryCache({
 })
 ```
 
-* The `read` function for `Query.ruler` returns a default ruler (`Apollo`) if the `existingRuler` has been deposed.
-* The `read` function for `Deity.offspring` filters its array to return only offspring that are alive and well in the cache.
+- The `read` function for `Query.ruler` returns a default ruler (`Apollo`) if the `existingRuler` has been deposed.
+- The `read` function for `Deity.offspring` filters its array to return only offspring that are alive and well in the cache.
 
 Filtering dangling references out of a cached list field (like the `Deity.offspring` example above) is so common that the default `read` function for a list field performs this filtering _automatically_. You can define a custom `read` function to override this behavior.
 

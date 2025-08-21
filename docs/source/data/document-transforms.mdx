@@ -1,11 +1,9 @@
 ---
 title: Document transforms
 description: Make custom modifications to your GraphQL documents
-minVersion: 3.8.0
-api_doc:
-  - "@apollo/client!~DocumentTransformOptions:interface"
 ---
-import { InterfaceDetails } from '../../shared/ApiDoc';
+
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 > This article assumes you're familiar with the [anatomy of a GraphQL query](https://www.apollographql.com/blog/graphql/basics/the-anatomy-of-a-graphql-query/) and the concept of an [abstract syntax tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree). To explore a GraphQL AST, visit [AST Explorer](https://astexplorer.net/).
 
@@ -18,7 +16,7 @@ Apollo Client provides an advanced capability that lets you define your own Grap
 Document transforms allow you to programmatically modify GraphQL documents used to query data in your application. A GraphQL document is an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) that defines one or more operations and fragments, parsed from a raw GraphQL query string using the `gql` function. You can create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
 
 ```ts
-import { DocumentTransform } from '@apollo/client';
+import { DocumentTransform } from "@apollo/client";
 
 const documentTransform = new DocumentTransform((document) => {
   // modify the document
@@ -26,7 +24,7 @@ const documentTransform = new DocumentTransform((document) => {
 });
 
 const client = new ApolloClient({
-  documentTransform
+  documentTransform,
 });
 ```
 
@@ -56,7 +54,7 @@ As an example, let's write a document transform that ensures an `id` field is se
 First, we must create a new document transform using the `DocumentTransform` class provided by Apollo Client. The `DocumentTransform` constructor takes a callback function that runs for each GraphQL document transformed. The GraphQL `document` is passed as the only argument to this callback function.
 
 ```ts
-import { DocumentTransform } from '@apollo/client';
+import { DocumentTransform } from "@apollo/client";
 
 const documentTransform = new DocumentTransform((document) => {
   // Modify the document
@@ -66,8 +64,8 @@ const documentTransform = new DocumentTransform((document) => {
 To modify the document, we bring in the [`visit`](https://graphql.org/graphql-js/language/#visit) function from `graphql-js` that walks the AST and allows us to modify its nodes. The `visit` function takes a GraphQL AST as the first argument and a visitor as the second argument. The `visit` function returns our modified or unmodified GraphQL document, which we return from our document transform callback function.
 
 ```ts {5-9}
-import { DocumentTransform } from '@apollo/client';
-import { visit } from 'graphql';
+import { DocumentTransform } from "@apollo/client";
+import { visit } from "graphql";
 
 const documentTransform = new DocumentTransform((document) => {
   const transformedDocument = visit(document, {
@@ -84,33 +82,43 @@ Visitors allow you to visit many types of nodes in the AST, such as directives, 
 const transformedDocument = visit(document, {
   Field(field) {
     // ...
-  }
+  },
 });
 ```
 
-> This example uses the shorthand visitor syntax, which defines the `enter` function on this node for us. This is equivalent to the following:
-> ```ts
-> visit(document, {
->   Field: {
->     enter(field) {
->       // ...
->     }
->   }
-> });
-> ```
+<Note>
+
+This example uses the shorthand visitor syntax, which defines the `enter` function on this node for us. This is equivalent to the following:
+
+```ts
+visit(document, {
+  Field: {
+    enter(field) {
+      // ...
+    },
+  },
+});
+```
+
+</Note>
 
 Our document transform only needs to modify a field named `currentUser`, so we need to check the field's `name` property to determine if we are working with the `currentUser` field. Let's add a conditional check and return early if we encounter any field not named `currentUser`.
 
 ```ts
 const transformedDocument = visit(document, {
   Field(field) {
-    if (field.name.value !== 'currentUser') {
+    if (field.name.value !== "currentUser") {
       return;
     }
-  }
+  },
 });
 ```
-> Returning `undefined` from our `Field` visitor tells the `visit` function to leave the node unchanged.
+
+<Note>
+
+Returning `undefined` from our `Field` visitor tells the `visit` function to leave the node unchanged.
+
+</Note>
 
 Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. This ensures we don't accidentally select the field twice in our query.
 
@@ -121,7 +129,7 @@ It's important to note that a `selectionSet` may contain `selections` of both fi
 We will bring in both the [`Kind`](https://graphql.org/graphql-js/language/#kind) enum from `graphql-js`, which allows us to compare against the selection's `kind` property, and the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel, which directs the `visit` function to stop traversal of the AST.
 
 ```ts {1,6-15}
-import { visit, Kind, BREAK } from 'graphql';
+import { visit, Kind, BREAK } from "graphql";
 
 const transformedDocument = visit(document, {
   Field(field) {
@@ -129,18 +137,19 @@ const transformedDocument = visit(document, {
     const selections = field.selectionSet?.selections ?? [];
 
     for (const selection of selections) {
-      if (
-        selection.kind === Kind.FIELD &&
-        selection.name.value === 'id'
-      ) {
+      if (selection.kind === Kind.FIELD && selection.name.value === "id") {
         return BREAK;
       }
     }
-  }
+  },
 });
 ```
 
-> To keep our document transform simple, it does not traverse fragments within the `currentUser` field to determine if those fragments contain an `id` field. A more complete version of this document transform might perform this check.
+<Note>
+
+To keep our document transform simple, it does not traverse fragments within the `currentUser` field to determine if those fragments contain an `id` field. A more complete version of this document transform might perform this check.
+
+</Note>
 
 Now that we know the `id` field is missing, we can add it to our `currentUser` field's selection set. To do so, let's create a new field and give it a name of `id`. This is represented as a plain object with the `kind` property set to `Kind.FIELD` and a `name` node that defines the field's name.
 
@@ -149,7 +158,7 @@ const idField = {
   kind: Kind.FIELD,
   name: {
     kind: Kind.NAME,
-    value: 'id',
+    value: "id",
   },
 };
 ```
@@ -171,32 +180,33 @@ const transformedDocument = visit(document, {
         selections: [...selections, idField],
       },
     };
-  }
+  },
 });
 ```
 
-> This example adds the `id` field to the end of the selection set. Order doesn't matter—you may prefer to put the field elsewhere in the `selections` array.
+<Note>
+
+This example adds the `id` field to the end of the selection set. Order doesn't matter—you may prefer to put the field elsewhere in the `selections` array.
+
+</Note>
 
 Hooray! We now have a working document transform that ensures the `id` field is selected whenever a query containing the `currentUser` field is sent to our server. For completeness, here is the full definition of our custom document transform after completing this example.
 
 ```ts
-import { DocumentTransform } from '@apollo/client';
-import { visit, Kind, BREAK } from 'graphql';
+import { DocumentTransform } from "@apollo/client";
+import { visit, Kind, BREAK } from "graphql";
 
 const documentTransform = new DocumentTransform((document) => {
   const transformedDocument = visit(document, {
     Field(field) {
-      if (field.name.value !== 'currentUser') {
+      if (field.name.value !== "currentUser") {
         return;
       }
 
       const selections = field.selectionSet?.selections ?? [];
 
       for (const selection of selections) {
-        if (
-          selection.kind === Kind.FIELD &&
-          selection.name.value === 'id'
-        ) {
+        if (selection.kind === Kind.FIELD && selection.name.value === "id") {
           return BREAK;
         }
       }
@@ -205,7 +215,7 @@ const documentTransform = new DocumentTransform((document) => {
         kind: Kind.FIELD,
         name: {
           kind: Kind.NAME,
-          value: 'id',
+          value: "id",
         },
       };
 
@@ -228,7 +238,7 @@ const documentTransform = new DocumentTransform((document) => {
 We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it.
 
 ```ts
-import { print } from 'graphql';
+import { print } from "graphql";
 
 const query = gql`
   query TestQuery {
@@ -253,7 +263,11 @@ console.log(print(modifiedQuery));
 // }
 ```
 
-> We use the [`print`](https://graphql.org/graphql-js/language/#print) function exported by `graphql-js` to make the query human-readable.
+<Note>
+
+We use the [`print`](https://graphql.org/graphql-js/language/#print) function exported by `graphql-js` to make the query human-readable.
+
+</Note>
 
 Similarly, we can verify that passing a query that _doesn't_ query for `currentUser` is unaffected by our transform.
 
@@ -283,7 +297,7 @@ The `transformDocument` function is useful to spot check your document transform
 Let's add our document transform to Apollo Client and send a query to the server. The network request will contain the updated GraphQL query and the data returned from the server will include the `id` field.
 
 ```ts
-import { ApolloClient, DocumentTransform } from '@apollo/client';
+import { ApolloClient, DocumentTransform } from "@apollo/client";
 
 const query = gql`
   query TestQuery {
@@ -299,7 +313,7 @@ const documentTransform = new DocumentTransform((document) => {
 
 const client = new ApolloClient({
   // ...
-  documentTransform
+  documentTransform,
 });
 
 const result = await client.query({ query });
@@ -343,7 +357,7 @@ See the section on [document caching](#document-caching) to learn how Apollo Cli
 At times, you may need to conditionally run a document transform depending on the GraphQL document. You can conditionally run a transform by calling the `split()` static function on the `DocumentTransform` constructor.
 
 ```ts
-import { isSubscriptionOperation } from '@apollo/client/utilities';
+import { isSubscriptionOperation } from "@apollo/client/utilities";
 
 const subscriptionTransform = new DocumentTransform(transform);
 
@@ -353,7 +367,11 @@ const documentTransform = DocumentTransform.split(
 );
 ```
 
-> This example uses the `isSubscriptionOperation` utility function added to Apollo Client in 3.8. Similarly, `isQueryOperation` and `isMutationOperation` utility functions are available for use.
+<Note>
+
+This example uses the `isSubscriptionOperation` utility function. Similarly, `isQueryOperation` and `isMutationOperation` utility functions are available for use.
+
+</Note>
 
 Here the `subscriptionTransform` is only run for subscription operations. For all other operations, no modifications are made to the GraphQL document. The resulting document transform will first check to see if the `document` is a subscription operation, and if so, proceed to run `subscriptionTransform`. If not, `subscriptionTransform` is bypassed, and the GraphQL document is returned as-is.
 
@@ -361,7 +379,7 @@ The `split` function also allows you to pass a second document transform to its 
 
 ```ts
 const subscriptionTransform = new DocumentTransform(transform1);
-const defaultTransform = new DocumentTransform(transform2)
+const defaultTransform = new DocumentTransform(transform2);
 
 const documentTransform = DocumentTransform.split(
   (document) => isSubscriptionOperation(document),
@@ -382,10 +400,10 @@ For example, you can run a transform by adding a conditional check inside the tr
 const documentTransform = new DocumentTransform((document) => {
   if (shouldTransform(document)) {
     // ...
-    return transformedDocument
+    return transformedDocument;
   }
 
-  return document
+  return document;
 });
 ```
 
@@ -406,9 +424,7 @@ The `split()` function makes skipping the _entire_ chain of document transforms 
 ```ts
 const documentTransform = DocumentTransform.split(
   (document) => shouldTransform(document),
-  documentTransform1
-    .concat(documentTransform2)
-    .concat(documentTransform3)
+  documentTransform1.concat(documentTransform2).concat(documentTransform3)
 );
 ```
 
@@ -425,7 +441,11 @@ const transformed2 = documentTransform.transformDocument(transformed1);
 transformed1 === transformed2; // => true
 ```
 
-> In practice, this optimization is invisible to you. Apollo Client calls the `transformDocument` function on the document transform for you. This optimization primarily benefits the internals of Apollo Client where the transformed document is passed around several areas of the code base.
+<Note>
+
+In practice, this optimization is invisible to you. Apollo Client calls the `transformDocument` function on the document transform for you. This optimization primarily benefits the internals of Apollo Client where the transformed document is passed around several areas of the code base.
+
+</Note>
 
 ### Non-deterministic document transforms
 
@@ -447,12 +467,16 @@ const documentTransform = new DocumentTransform(
     }
   },
   {
-    getCacheKey: (document) => [document, window.navigator.onLine]
+    getCacheKey: (document) => [document, window.navigator.onLine],
   }
 );
 ```
 
-> ⚠️ **It is highly recommended you use the `document` as part of your cache key.** In this example, if the `document` is omitted from the cache key, the document transform will only output two transformed documents: one for the `true` condition and one for the `false` condition. Using the `document` in the cache key ensures that each unique document in your application will be transformed accordingly.
+<Caution>
+
+**It is highly recommended you use the `document` as part of your cache key.** In this example, if the `document` is omitted from the cache key, the document transform will only output two transformed documents: one for the `true` condition and one for the `false` condition. Using the `document` in the cache key ensures that each unique document in your application will be transformed accordingly.
+
+</Caution>
 
 You may conditionally disable the cache for select GraphQL documents by returning `undefined` from the `getCacheKey` function. This will force the document transform to run, regardless of whether the input GraphQL document has been seen.
 
@@ -465,9 +489,9 @@ const documentTransform = new DocumentTransform(
     getCacheKey: (document) => {
       // Always run the transform function when `shouldCache` is `false`
       if (shouldCache(document)) {
-        return [document]
+        return [document];
       }
-    }
+    },
   }
 );
 ```
@@ -480,7 +504,7 @@ const documentTransform = new DocumentTransform(
     // ...
   },
   {
-    cache: false
+    cache: false,
   }
 );
 ```
@@ -493,29 +517,32 @@ When you combine multiple document transforms using the `concat()` function, eac
 const cachedTransform = new DocumentTransform(transform);
 
 const varyingTransform = new DocumentTransform(transform, {
-  getCacheKey: (document) => [document, window.navigator.onLine]
+  getCacheKey: (document) => [document, window.navigator.onLine],
 });
 
 const conditionalCachedTransform = new DocumentTransform(transform, {
   getCacheKey: (document) => {
     if (shouldCache(document)) {
-      return [document]
+      return [document];
     }
-  }
+  },
 });
 
 const nonCachedTransform = new DocumentTransform(transform, {
-  cache: false
+  cache: false,
 });
 
-const documentTransform =
-  cachedTransform
-    .concat(varyingTransform)
-    .concat(conditionalCachedTransform)
-    .concat(nonCachedTransform);
+const documentTransform = cachedTransform
+  .concat(varyingTransform)
+  .concat(conditionalCachedTransform)
+  .concat(nonCachedTransform);
 ```
 
-> We recommend adding non-cached document transforms to the end of the `concat()` chain. Document caching relies on referential equality to determine if the GraphQL document has been seen. If a non-cached document transform is defined before a cached transform, the cached transform will store new GraphQL documents created by the non-cached document transform each run. This could result in a memory leak.
+<Note>
+
+We recommend adding non-cached document transforms to the end of the `concat()` chain. Document caching relies on referential equality to determine if the GraphQL document has been seen. If a non-cached document transform is defined before a cached transform, the cached transform will store new GraphQL documents created by the non-cached document transform each run. This could result in a memory leak.
+
+</Note>
 
 ## TypeScript and GraphQL Code Generator
 
@@ -526,30 +553,31 @@ Document transforms present a challenge for this tool. Because document transfor
 Thankfully, GraphQL Code Generator provides a [document transform](https://the-guild.dev/graphql/codegen/docs/advanced/document-transform) feature that allows you to connect Apollo Client document transforms to GraphQL Code Generator. Use your document transform inside the `transform` function passed to the GraphQL Code Generator config:
 
 ```ts title="codegen.ts" {2,12-18}
-import type { CodegenConfig } from '@graphql-codegen/cli';
-import { documentTransform } from './path/to/your/transform';
+import type { CodegenConfig } from "@graphql-codegen/cli";
+import { documentTransform } from "./path/to/your/transform";
 
 const config: CodegenConfig = {
-  schema: 'https://localhost:4000/graphql',
-  documents: ['src/**/*.tsx'],
+  schema: "https://localhost:4000/graphql",
+  documents: ["src/**/*.tsx"],
   generates: {
-    './src/gql/': {
-      preset: 'client',
+    "./src/gql/": {
+      preset: "client",
       documentTransforms: [
         {
           transform: ({ documents }) => {
             return documents.map((documentFile) => {
-              documentFile.document = documentTransform
-                .transformDocument(documentFile.document);
+              documentFile.document = documentTransform.transformDocument(
+                documentFile.document
+              );
 
               return documentFile;
             });
-          }
-        }
-      ]
-    }
-  }
-}
+          },
+        },
+      ],
+    },
+  },
+};
 ```
 
 ## You might not need document transforms
@@ -593,4 +621,7 @@ documentTransform.transformDocument(query);
 
 ### Options
 
-<InterfaceDetails canonicalReference="@apollo/client!~DocumentTransformOptions:interface" headingLevel={3} />
+<InterfaceDetails
+  canonicalReference="@apollo/client!~DocumentTransformOptions:interface"
+  headingLevel={3}
+/>

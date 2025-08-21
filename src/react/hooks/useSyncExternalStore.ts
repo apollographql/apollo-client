@@ -1,7 +1,9 @@
-import { invariant } from "../../utilities/globals/index.js";
-import * as React from "rehackt";
+import * as React from "react";
 
-import { canUseLayoutEffect } from "../../utilities/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { canUseDOM } from "@apollo/client/utilities/internal";
+import { maybe } from "@apollo/client/utilities/internal/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 let didWarnUncachedGetSnapshot = false;
 
@@ -17,6 +19,26 @@ type RealUseSESHookType =
 // to exist when using React 17 and earlier, and that's fine.
 const uSESKey = "useSyncExternalStore" as keyof typeof React;
 const realHook = React[uSESKey] as RealUseSESHookType | undefined;
+
+const isReactNative = maybe(() => navigator.product) == "ReactNative";
+const usingJSDOM: boolean =
+  // Following advice found in this comment from @domenic (maintainer of jsdom):
+  // https://github.com/jsdom/jsdom/issues/1537#issuecomment-229405327
+  //
+  // Since we control the version of Jest and jsdom used when running Apollo
+  // Client tests, and that version is recent enought to include " jsdom/x.y.z"
+  // at the end of the user agent string, I believe this case is all we need to
+  // check. Testing for "Node.js" was recommended for backwards compatibility
+  // with older version of jsdom, but we don't have that problem.
+  maybe(() => navigator.userAgent.indexOf("jsdom") >= 0) || false;
+
+// Our tests should all continue to pass if we remove this !usingJSDOM
+// condition, thereby allowing useLayoutEffect when using jsdom. Unfortunately,
+// if we allow useLayoutEffect, then useSyncExternalStore generates many
+// warnings about useLayoutEffect doing nothing on the server. While these
+// warnings are harmless, this !usingJSDOM condition seems to be the best way to
+// prevent them (i.e. skipping useLayoutEffect when using jsdom).
+const canUseLayoutEffect = (canUseDOM || isReactNative) && !usingJSDOM;
 
 // Adapted from https://www.npmjs.com/package/use-sync-external-store, with
 // Apollo Client deviations called out by "// DEVIATION ..." comments.

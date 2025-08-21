@@ -1,8 +1,12 @@
-import { gql, InMemoryCache } from "../../core/index.js";
-import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
-import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
-import { InvariantError } from "../../utilities/globals/index.js";
-import { maskOperation } from "../maskOperation.js";
+import { gql, InMemoryCache } from "@apollo/client";
+import { maskOperation } from "@apollo/client/masking";
+import { spyOnConsole, withProdMode } from "@apollo/client/testing/internal";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { deepFreeze } from "../../utilities/internal/deepFreeze.js";
 
 test("throws when passing document with no operation to maskOperation", () => {
   const document = gql`

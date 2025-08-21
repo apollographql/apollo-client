@@ -1,0 +1,20 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "echo Done",
+    "test:cjs": "node --no-experimental-require-module --trace-require-module=all --test test-cjs.cjs",
+    "test:require-esm": "node --test test-require-esm.cjs",
+    "test:esm": "node --test test-esm.mjs"
+  },
+  "dependencies": {
+    "@apollo/client": "3.13.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "resolve-esm": "^1.4.0"
+  }
+}

@@ -28,14 +28,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print } from "../../utilities/index.js";
-import type { Client, Sink } from "graphql-ws";
-
-import type { Operation, FetchResult } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import { isNonNullObject, Observable } from "../../utilities/index.js";
-import { ApolloError } from "../../errors/index.js";
 import type { FormattedExecutionResult } from "graphql";
+import type { Client, Sink } from "graphql-ws";
+import { Observable } from "rxjs";
+
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link";
+import { print } from "@apollo/client/utilities";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
 function isLikeCloseEvent(val: unknown): val is CloseEvent {
@@ -47,14 +47,39 @@ function isLikeErrorEvent(err: unknown): err is Event {
   return isNonNullObject(err) && err.target?.readyState === WebSocket.CLOSED;
 }
 
+/**
+ * The `GraphQLWsLink` is a terminating link sends GraphQL operations over a
+ * WebSocket connection using the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library. It's used most
+ * commonly with GraphQL [subscriptions](https://apollographql.com/docs/react/data/subscriptions/),
+ *
+ * > [!NOTE]
+ * > This link works with the `graphql-ws` library. If your server uses
+ * > the deprecated `subscriptions-transport-ws` library, use the deprecated
+ * > [`WebSocketLink`](https://apollographql.com/docs/react/api/link/apollo-link-ws) link instead.
+ *
+ * @example
+ *
+ * ```ts
+ * import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+ * import { createClient } from "graphql-ws";
+ *
+ * const link = new GraphQLWsLink(
+ *   createClient({
+ *     url: "ws://localhost:3000/subscriptions",
+ *   })
+ * );
+ * ```
+ */
 export class GraphQLWsLink extends ApolloLink {
   constructor(public readonly client: Client) {
     super();
   }
 
-  public request(operation: Operation): Observable<FetchResult> {
+  public request(
+    operation: ApolloLink.Operation
+  ): Observable<ApolloLink.Result> {
     return new Observable((observer) => {
-      return this.client.subscribe<FetchResult>(
+      return this.client.subscribe<ApolloLink.Result>(
         { ...operation, query: print(operation.query) },
         {
           next: observer.next.bind(observer),
@@ -76,8 +101,8 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new ApolloError({
-                graphQLErrors: Array.isArray(err) ? err : [err],
+              new CombinedGraphQLErrors({
+                errors: Array.isArray(err) ? err : [err],
               })
             );
           },

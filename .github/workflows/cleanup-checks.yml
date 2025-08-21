@@ -33,16 +33,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ">=23.6.0"
 
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
-
-      - name: Run build
-        run: npm run build
 
       - name: Run Api-Extractor
         run: npm run extract-api
@@ -51,6 +48,9 @@ jobs:
 
       - name: Run prettier
         run: npm run format
+
+      - name: Run build
+        run: npm run build
 
       - name: Update size-limit
         run: npm run update-size-limits

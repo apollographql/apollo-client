@@ -1,45 +1,49 @@
-import { invariant } from "../../utilities/globals/index.js";
-import type { OptimisticDependencyFunction } from "optimism";
-import { dep } from "optimism";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
+import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
+import type { OptimisticDependencyFunction } from "optimism";
+import { dep } from "optimism";
 
 import type {
-  StoreValue,
-  StoreObject,
   Reference,
-} from "../../utilities/index.js";
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import { isReference } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  isReference,
-  makeReference,
   DeepMerger,
-  maybeDeepFreeze,
-  canUseWeakMap,
   isNonNullObject,
-} from "../../utilities/index.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
-import { hasOwn, fieldNameFromStoreName } from "./helpers.js";
-import type { Policies, StorageType } from "./policies.js";
+  makeReference,
+  maybeDeepFreeze,
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { Cache } from "../core/types/Cache.js";
 import type {
-  SafeReadonly,
+  CanReadFunction,
+  DeleteModifier,
+  InvalidateModifier,
   Modifier,
+  ModifierDetails,
   Modifiers,
   ReadFieldOptions,
+  SafeReadonly,
   ToReferenceFunction,
-  CanReadFunction,
-  InvalidateModifier,
-  DeleteModifier,
-  ModifierDetails,
 } from "../core/types/common.js";
-import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
-const DELETE: DeleteModifier = Object.create(null);
+import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
+import type { Policies, StorageType } from "./policies.js";
+import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+
+const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: InvalidateModifier = Object.create(null);
+const INVALIDATE = {} as InvalidateModifier;
 
 export abstract class EntityStore implements NormalizedCache {
-  protected data: NormalizedCacheObject = Object.create(null);
+  public declare static Root: typeof Root;
+
+  protected data: NormalizedCacheObject = {};
 
   constructor(
     public readonly policies: Policies,
@@ -104,7 +108,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (this.policies.rootTypenamesById[dataId]) {
-      return Object.create(null);
+      return {};
     }
   }
 
@@ -139,7 +143,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
-        const fieldsToDirty: Record<string, 1> = Object.create(null);
+        const fieldsToDirty: Record<string, 1> = {};
 
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
@@ -202,12 +206,13 @@ export abstract class EntityStore implements NormalizedCache {
 
   public modify(
     dataId: string,
-    fields: Modifier<any> | Modifiers<Record<string, any>>
+    fields: Modifier<any> | Modifiers<Record<string, any>>,
+    exact: boolean
   ): boolean {
     const storeObject = this.lookup(dataId);
 
     if (storeObject) {
-      const changedFields: Record<string, any> = Object.create(null);
+      const changedFields: Record<string, any> = {};
       let needToMerge = false;
       let allDeleted = true;
 
@@ -238,7 +243,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (fieldValue === void 0) return;
         const modify: Modifier<StoreValue> | undefined =
           typeof fields === "function" ? fields : (
-            fields[storeFieldName] || fields[fieldName]
+            fields[storeFieldName] || (exact ? undefined : fields[fieldName])
           );
         if (modify) {
           let newValue =
@@ -354,7 +359,8 @@ export abstract class EntityStore implements NormalizedCache {
           {
             [storeFieldName]: delModifier,
           }
-        : delModifier
+        : delModifier,
+        !!args
       );
     }
     return false;
@@ -425,7 +431,7 @@ export abstract class EntityStore implements NormalizedCache {
   // entities they reference (even indirectly) from being garbage collected.
   private rootIds: {
     [rootId: string]: number;
-  } = Object.create(null);
+  } = {};
 
   public retain(rootId: string): number {
     return (this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1);
@@ -485,11 +491,11 @@ export abstract class EntityStore implements NormalizedCache {
   // Lazily tracks { __ref: <dataId> } strings contained by this.data[dataId].
   private refs: {
     [dataId: string]: Record<string, true>;
-  } = Object.create(null);
+  } = {};
 
   public findChildRefIds(dataId: string): Record<string, true> {
     if (!hasOwn.call(this.refs, dataId)) {
-      const found = (this.refs[dataId] = Object.create(null));
+      const found = (this.refs[dataId] = {} as Record<string, true>);
       const root = this.data[dataId];
       if (!root) return found;
 
@@ -533,8 +539,7 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(
     selectionSet: SelectionSetNode,
     parent: string /* = ( Reference.__ref ) */ | StoreObject,
-    varString: string | undefined,
-    canonizeResults: boolean
+    varString: string | undefined
   ): object;
   /** overload for `StoreReader.executeSubSelectedArray` */
   public makeCacheKey(
@@ -542,8 +547,10 @@ export abstract class EntityStore implements NormalizedCache {
     array: readonly any[],
     varString: string | undefined
   ): object;
-  /** @deprecated This is only meant for internal usage,
-   * in your own code please use a `Trie` instance instead. */
+  /**
+   * @deprecated This is only meant for internal usage,
+   * in your own code please use a `Trie` instance instead.
+   */
   public makeCacheKey(...args: any[]): object;
   public makeCacheKey() {
     return this.group.keyMaker.lookupArray(arguments);
@@ -593,6 +600,10 @@ export abstract class EntityStore implements NormalizedCache {
       return ref;
     }
   };
+
+  public get supportsResultCaching(): boolean {
+    return this.group.caching;
+  }
 }
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
@@ -626,7 +637,7 @@ class CacheGroup {
 
   public resetCaching() {
     this.d = this.caching ? dep<string>() : null;
-    this.keyMaker = new Trie(canUseWeakMap);
+    this.keyMaker = new Trie();
   }
 
   public depend(dataId: string, storeFieldName: string) {
@@ -688,45 +699,40 @@ export function maybeDependOnExistenceOfEntity(
   }
 }
 
-export namespace EntityStore {
-  // Refer to this class as EntityStore.Root outside this namespace.
-  export class Root extends EntityStore {
-    constructor({
-      policies,
-      resultCaching = true,
-      seed,
-    }: {
-      policies: Policies;
-      resultCaching?: boolean;
-      seed?: NormalizedCacheObject;
-    }) {
-      super(policies, new CacheGroup(resultCaching));
-      if (seed) this.replace(seed);
-    }
+class Root extends EntityStore {
+  constructor({
+    policies,
+    resultCaching = true,
+    seed,
+  }: {
+    policies: Policies;
+    resultCaching?: boolean;
+    seed?: NormalizedCacheObject;
+  }) {
+    super(policies, new CacheGroup(resultCaching));
+    if (seed) this.replace(seed);
+  }
 
-    public readonly stump = new Stump(this);
+  public readonly stump = new Stump(this);
 
-    public addLayer(
-      layerId: string,
-      replay: (layer: EntityStore) => any
-    ): Layer {
-      // Adding an optimistic Layer on top of the Root actually adds the Layer
-      // on top of the Stump, so the Stump always comes between the Root and
-      // any Layer objects that we've added.
-      return this.stump.addLayer(layerId, replay);
-    }
+  public addLayer(layerId: string, replay: (layer: EntityStore) => any): Layer {
+    // Adding an optimistic Layer on top of the Root actually adds the Layer
+    // on top of the Stump, so the Stump always comes between the Root and
+    // any Layer objects that we've added.
+    return this.stump.addLayer(layerId, replay);
+  }
 
-    public removeLayer(): Root {
-      // Never remove the root layer.
-      return this;
-    }
+  public removeLayer(): Root {
+    // Never remove the root layer.
+    return this;
+  }
 
-    public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
-    public getStorage(): StorageType {
-      return this.storageTrie.lookupArray(arguments);
-    }
+  public readonly storageTrie = new Trie<StorageType>();
+  public getStorage(): StorageType {
+    return this.storageTrie.lookupArray(arguments);
   }
 }
+EntityStore.Root = Root;
 
 // Not exported, since all Layer instances are created by the addLayer method
 // of the EntityStore.Root class.
@@ -819,14 +825,12 @@ class Layer extends EntityStore {
       : fromParent;
   }
 
-  public getStorage(): StorageType {
+  public getStorage(
+    ...args: Parameters<EntityStore["getStorage"]>
+  ): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(
-      p,
-      // @ts-expect-error
-      arguments
-    );
+    return p.getStorage(...args);
   }
 }
 
@@ -835,7 +839,7 @@ class Layer extends EntityStore {
 // no optimistic layers are currently active. The stump.group CacheGroup object
 // is shared by any/all Layer objects added on top of the Stump.
 class Stump extends Layer {
-  constructor(root: EntityStore.Root) {
+  constructor(root: Root) {
     super(
       "EntityStore.Stump",
       root,
@@ -876,5 +880,5 @@ function storeObjectReconciler(
 
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
-  return !!(store instanceof EntityStore && store.group.caching);
+  return !!(store && store.supportsResultCaching);
 }

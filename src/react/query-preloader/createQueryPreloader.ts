@@ -7,20 +7,20 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../core/index.js";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "../../utilities/index.js";
-import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
-import type { PreloadedQueryRef } from "../internal/index.js";
-import type { NoInfer, VariablesOption } from "../index.js";
-import { wrapHook } from "../hooks/internal/index.js";
+} from "@apollo/client";
+import type { PreloadedQueryRef } from "@apollo/client/react";
 import {
-  muteDeprecations,
-  warnRemovedOption,
-} from "../../utilities/deprecation/index.js";
+  assertWrappedQueryRef,
+  getWrappedPromise,
+  InternalQueryReference,
+  wrapQueryRef,
+} from "@apollo/client/react/internal";
+import type {
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
+
+import { wrapHook } from "../hooks/internal/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,
@@ -30,8 +30,6 @@ export type PreloadQueryFetchPolicy = Extract<
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
@@ -44,21 +42,6 @@ export type PreloadQueryOptions<
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 
-type PreloadQueryOptionsArg<
-  TVariables extends OperationVariables,
-  TOptions = unknown,
-> = [TVariables] extends [never] ?
-  [options?: PreloadQueryOptions<never> & TOptions]
-: {} extends OnlyRequiredProperties<TVariables> ?
-  [
-    options?: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ]
-: [
-    options: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ];
-
 /**
  * A function that will begin loading a query when called. It's result can be
  * read by `useReadQuery` which will suspend until the query is loaded.
@@ -66,6 +49,7 @@ type PreloadQueryOptionsArg<
  * outside of a React component.
  *
  * @example
+ *
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * const queryRef = preloadQuery(query, { variables, ...otherOptions });
@@ -86,56 +70,80 @@ type PreloadQueryOptionsArg<
  * ```
  */
 export interface PreloadQueryFunction {
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
-  <
-    TData,
-    TVariables extends OperationVariables,
-    TOptions extends Omit<PreloadQueryOptions, "variables">,
-  >(
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
+    options: PreloadQueryOptions<NoInfer<TVariables>> & {
+      returnPartialData: true;
+      errorPolicy: "ignore" | "all";
+    }
   ): PreloadedQueryRef<
-    TOptions["errorPolicy"] extends "ignore" | "all" ?
-      TOptions["returnPartialData"] extends true ?
-        DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-    : TData,
-    TVariables
+    TData,
+    TVariables,
+    "complete" | "streaming" | "partial" | "empty"
   >;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
-  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
-      returnPartialData: true;
-      errorPolicy: "ignore" | "all";
-    }
-  ): PreloadedQueryRef<DeepPartial<TData> | undefined, TVariables>;
-
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
-  ): PreloadedQueryRef<TData | undefined, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
     }
-  ): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial">;
 
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
+  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
-  ): PreloadedQueryRef<TData, TVariables>;
+    ...[options]: {} extends TVariables ?
+      [options?: PreloadQueryOptions<NoInfer<TVariables>>]
+    : [options: PreloadQueryOptions<NoInfer<TVariables>>]
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
 
-  toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+  /**
+   * A function that returns a promise that resolves when the query has finished
+   * loading. The promise resolves with the `QueryReference` itself.
+   *
+   * @remarks
+   * This method is useful for preloading queries in data loading routers, such
+   * as [React Router](https://reactrouter.com/en/main) or [TanStack Router](https://tanstack.com/router),
+   * to prevent routes from transitioning until the query has finished loading.
+   * `data` is not exposed on the promise to discourage using the data in
+   * `loader` functions and exposing it to your route components. Instead, we
+   * prefer you rely on `useReadQuery` to access the data to ensure your
+   * component can rerender with cache updates. If you need to access raw query
+   * data, use `client.query()` directly.
+   *
+   * @example
+   * Here's an example using React Router's `loader` function:
+   *
+   * ```ts
+   * import { createQueryPreloader } from "@apollo/client";
+   *
+   * const preloadQuery = createQueryPreloader(client);
+   *
+   * export async function loader() {
+   *   const queryRef = preloadQuery(GET_DOGS_QUERY);
+   *
+   *   return preloadQuery.toPromise(queryRef);
+   * }
+   *
+   * export function RouteComponent() {
+   *   const queryRef = useLoaderData();
+   *   const { data } = useReadQuery(queryRef);
+   *
+   *   // ...
+   * }
+   * ```
+   */
+  toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
     queryRef: TQueryRef
   ): Promise<TQueryRef>;
 }
@@ -153,13 +161,13 @@ export interface PreloadQueryFunction {
  * @returns The `preloadQuery` function.
  *
  * @example
+ *
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * ```
- * @since 3.9.0
  */
 export function createQueryPreloader(
-  client: ApolloClient<any>
+  client: ApolloClient
 ): PreloadQueryFunction {
   return wrapHook(
     "createQueryPreloader",
@@ -175,33 +183,32 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> &
-      VariablesOption<TVariables> = Object.create(null)
+      VariablesOption<TVariables> = {} as any
   ): PreloadedQueryRef<TData, TVariables> {
-    warnRemovedOption(options, "canonizeResults", "preloadQuery");
-
-    const queryRef = muteDeprecations(
-      "canonizeResults",
-      () =>
-        new InternalQueryReference(
-          client.watchQuery({
-            ...options,
-            query,
-          } as WatchQueryOptions<any, any>),
-          {
-            autoDisposeTimeoutMs:
-              client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
-          }
-        )
+    const queryRef = new InternalQueryReference(
+      client.watchQuery({
+        ...options,
+        query,
+        notifyOnNetworkStatusChange: false,
+      } as ApolloClient.WatchQueryOptions<any, any>),
+      {
+        autoDisposeTimeoutMs:
+          client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
+      }
     );
 
-    return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
+    return wrapQueryRef(queryRef) as unknown as PreloadedQueryRef<
+      TData,
+      TVariables
+    >;
   }
 
   return Object.assign(preloadQuery, {
-    toPromise<TQueryRef extends PreloadedQueryRef<any, any>>(
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
       queryRef: TQueryRef
-    ): Promise<TQueryRef> {
-      return queryRef.toPromise() as Promise<TQueryRef>;
+    ) {
+      assertWrappedQueryRef(queryRef);
+      return getWrappedPromise(queryRef).then(() => queryRef);
     },
   });
 };

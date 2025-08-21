@@ -1,19 +1,22 @@
-import type { SuspenseCacheOptions } from "../index.js";
-import { SuspenseCache } from "./SuspenseCache.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
+import type { ApolloClient } from "@apollo/client";
+import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 
-declare module "../../../core/ApolloClient.js" {
-  interface DefaultOptions {
-    react?: {
-      suspense?: Readonly<SuspenseCacheOptions>;
-    };
+import { SuspenseCache } from "./SuspenseCache.js";
+
+declare module "@apollo/client" {
+  namespace ApolloClient {
+    interface DefaultOptions {
+      react?: {
+        suspense?: Readonly<SuspenseCacheOptions>;
+      };
+    }
   }
 }
 
 const suspenseCacheSymbol = Symbol.for("apollo.suspenseCache");
 
 export function getSuspenseCache(
-  client: ApolloClient<object> & {
+  client: ApolloClient & {
     [suspenseCacheSymbol]?: SuspenseCache;
   }
 ) {

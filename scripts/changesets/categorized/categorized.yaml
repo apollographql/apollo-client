@@ -1,0 +1,6564 @@
+codemod:
+  big-paws-invent: >-
+    Add a codemod that renames old import locations from 3.x entrypoint to their
+    4.x entrypoint.
+
+
+    Run the codemod using the following command:
+
+
+    ```sh
+
+    npx @apollo/client-codemod-migrate-3-to-4 --parser tsx ./src/**/*.{ts,tsx}
+
+    ```
+
+
+    The codemod supports `.js`, `.jsx`, `.ts`, and `.tsx` files.
+bundling:
+  small-kids-film: >-
+    Rework package publish format (#12329, #12382)
+
+
+    We have reworked the way Apollo Client is packaged.
+
+
+    * shipping ESM and CJS
+
+    * fixing up source maps
+
+    * the build targets a modern runtime environment (browserslist query:
+    `"since 2023, node >= 20, not dead"`)
+
+    * removed the "proxy directory" `package.json` files, e.g.
+    `cache/core/package.json` and `react/package.json`. While these helped with
+    older build tools, modern build tooling uses the `exports` field in the root
+    `package.json` instead and the presence of these files can confuse modern
+    build tooling. If your build tooling still relies on those, please update
+    your imports to import from e.g. `@apollo/client/cache/core/index.js`
+    instead of `@apollo/client/cache/core` - but generally, this should not be
+    necessary.
+
+    * added an `exports` field to `package.json` to expose entry points
+
+    * instead of `globalThis.__DEV__`, Apollo Client now primarily relies on the
+    `development` and `production` exports conditions. It falls back to
+    `globalThis.__DEV__` if the bundler doesn't know these, though.
+  real-gorillas-move: >-
+    Apollo Client now defaults to production mode, not development mode, if the
+
+    environment cannot be determined.
+
+
+    In modern bundlers, this should automatically be handled by the bundler
+    loading
+
+    the bundler with the `development` export condition.
+
+
+    If neither the `production` nor the `development` export condition are
+
+    used by the bundler/runtime, Apollo Client will fall back to
+    `globalThis.__DEV__`
+
+    to determine if it should run in production or development mode.
+
+
+    Unlike Apollo Client 3 though, if `globalThis.__DEV__` is not set to `true`,
+
+    Apollo Client will now default to `production`, not to `development`,
+    behaviour.
+
+
+    This switch to *explicilty* requiring `true` also resolves a situation where
+
+    an HTML element with `id="__DEV__"` would create a global `__DEV__` variable
+
+    with a referent to the DOM element, which in the past was picked up as
+    "truthy" and
+
+    would have triggered development mode.
+  perfect-vans-give: |-
+    The `@apollo/client` and `@apollo/client/core` entry points are now equal.
+    In the next major, the `@apollo/client/core` entry point will be removed.
+    Please change imports over from `@apollo/client/core` to `@apollo/client`.
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  nasty-mayflies-smoke: |-
+    Ship React Compiler compiled React hooks in `@apollo/client/react/compiled`.
+
+    We now ship a React-Compiler compiled version of the React hooks in
+    `@apollo/client/react/compiled`.
+
+    This entry point contains everything that `@apollo/client/react` does,
+    so you can use it as a drop-in replacement in your whole application
+    if you choose to use the compiled hooks.
+  rare-houses-prove: Add `react-server` entry point with stubs for normal exports.
+  late-trainers-peel: >-
+    * dropped the deprecated `DEV` export from `@apollo/client/utilities` and
+    `@apollo/client/utilities/globals`
+
+    * moved the `__DEV__` export from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/environment`
+
+    * moved the `invariant`, `newInvariantError` and `InvariantError` exports
+    from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/invariant`
+  light-sloths-end: >-
+    Apollo Client is no longer using `ts-invariant`, but ships with a modified
+    variant of it.
+
+
+    The existing export `setLogVerbosity` from `@apollo/client` is still
+    available and
+
+    now points to this new integration.
+
+    **In most cases, you should be using this export.**
+
+    It will no longer adjust the verbosity of `ts-invariant` and as such no
+    longer
+
+    influence other packages relying on `ts-invariant`.
+
+
+    The new entry point `@apollo/client/utilities/invariant` now exports
+    `invariant`,
+
+    `InvariantError` and `setVerbosity`.
+
+    (Note that these tools are mostly meant to be used by Apollo Client and
+    libraries directly
+
+    based on Apollo Client like the `@apollo/client-integration-*` packages.)
+  sour-guests-poke: >-
+    Remove the `@apollo/client/testing/core` entrypoint in favor of
+    `@apollo/client/testing`.
+  sour-kids-deliver: Rename the `@apollo/client/link/core` entrypoint to `@apollo/client/link`.
+polyfills:
+  cool-bikes-shake: >-
+    Remove polyfills for Object.freeze,seal and preventExtensions in React
+    Native
+
+
+    These polyfills were only necessary until React Native 0.59, which
+
+    [patched the problem](https://github.com/facebook/react-native/pull/21492)
+    on
+
+    the React Native side.
+
+
+    With React Native 0.61, the `Map` function was [completely
+    replaced](https://github.com/facebook/react-native/commit/93b9ac74e59bbe84ea388d7c1879857b4acab114)
+
+    with a native implementation that never had the problems we guarded against.
+  smooth-pens-reply: >-
+    Require environments that support `WeakMap`, `WeakSet` and symbols. Apollo
+    Client would fallback to `Map` and `Set` if the weak versions were not
+    available. This has been removed and expects that these features are
+    available in the source environment.
+
+
+    If you are running in an environment without `WeakMap`, `WeakSet` or
+    symbols, you will need to find appropriate polyfills.
+dependencies:
+  silly-seas-confess: Drop `graphql` v15 as a valid peer dependency.
+  slow-ravens-explain: >-
+    Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
+    is now a peer dependency of Apollo Client which means you will now need to
+    install `rxjs` in addition to `@apollo/client`.
+
+
+    This change is mostly transparent, however transforming values on
+    observables, common in link implementations, differs in RxJS vs
+    `zen-observable`. For example, you could modify values in the link chain
+    emitted from a downstream link by using the `.map` function. In RxJS, this
+    is done with the `.pipe` function and passing a `map` operator instead.
+
+
+    ```ts
+
+    import { map } from "rxjs";
+
+
+    const link new ApolloLink((operation, forward) => {
+      return forward(operation).pipe(
+        map((result) => performTransform(result))
+      );
+    });
+
+    ```
+
+
+    For a full list of operators and comprehensive documentation on the
+    capabilities of RxJS, check out the [documentation](https://rxjs.dev/).
+  clean-sheep-hide: |-
+    Drop `rehackt` dependency.
+    We can now directly import from `react` without causing build errors in RSC.
+  gold-planets-cover: Downgrade minimum supported `rxjs` peer dependency version to 7.3.0.
+  light-sloths-end: >-
+    Apollo Client is no longer using `ts-invariant`, but ships with a modified
+    variant of it.
+
+
+    The existing export `setLogVerbosity` from `@apollo/client` is still
+    available and
+
+    now points to this new integration.
+
+    **In most cases, you should be using this export.**
+
+    It will no longer adjust the verbosity of `ts-invariant` and as such no
+    longer
+
+    influence other packages relying on `ts-invariant`.
+
+
+    The new entry point `@apollo/client/utilities/invariant` now exports
+    `invariant`,
+
+    `InvariantError` and `setVerbosity`.
+
+    (Note that these tools are mostly meant to be used by Apollo Client and
+    libraries directly
+
+    based on Apollo Client like the `@apollo/client-integration-*` packages.)
+errors:
+  good-dolphins-peel: >-
+    Apollo Client no longer wraps errors in `ApolloError`. `ApolloError` has
+    been replaced with separate error classes depending on the cause of the
+    error. As such, APIs that return an `error` property have been updated to
+    use the generic `Error` type. Use `instanceof` to check for more specific
+    error types.
+
+
+    ## Migration guide
+
+
+    `ApolloError` encapsulated 4 main error properties. The type of error would
+    determine which property was set:
+
+    - `graphqlErrors` - Errors returned from the `errors` field by the GraphQL
+    server
+
+    - `networkError` - Any non-GraphQL error that caused the query to fail
+
+    - `protocolErrors` - Transport-level errors that occur during [multipart
+    HTTP
+    subscriptions](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol)
+
+    - `clientErrors` - A space to define custom errors. Mostly unused.
+
+
+    These errors were mutally exclusive, meaning both `networkError` and
+    `graphqlErrors` were never set simultaneously. The following replaces each
+    of these fields from `ApolloError`.
+
+
+    ### `graphqlErrors`
+
+
+    GraphQL errors are now encapsulated in a `CombinedGraphQLErrors` instance.
+    You can access the raw GraphQL errors via the `errors` property.
+
+
+    ```js
+
+    import { CombinedGraphQLErrors } from '@apollo/client';
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    if (error && error instanceof CombinedGraphQLErrors) {
+      console.log(error.errors);
+    }
+
+    ```
+
+
+    ### `networkError`
+
+
+    Network errors are no longer wrapped and are instead passed through
+    directly.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error(new Error('Test error'));
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // error is `new Error('Test error')`;
+
+    ```
+
+
+    ### `protocolErrors`
+
+
+    Protocol errors are now encapsulated in a `CombinedProtocolErrors` instance.
+    You can access the raw protocol errors via the `errors` property.
+
+
+
+    ```js
+
+    import { CombinedProtocolErrors } from '@apollo/client';
+
+
+    // ...
+
+
+    const { error } = useSubscription(subscription);
+
+
+    if (error && error instanceof CombinedProtocolErrors) {
+      console.log(error.errors);
+    }
+
+    ```
+
+
+    ### `clientErrors`
+
+
+    These were unused by the client and have no replacement. Any non-GraphQL or
+    non-protocol errors are now passed through unwrapped.
+
+
+    ### Strings as errors
+
+
+    If the link sends a string error, Apollo Client will wrap this in an `Error`
+    instance. This ensures `error` properties are guaranteed to be of type
+    `Error`.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          // Oops we sent a string instead of wrapping it in an `Error`
+          observer.error('Test error');
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // The error string is wrapped and returned as `new Error('Test error')`;
+
+    ```
+
+
+    ### Non-error types
+
+
+    If the link chain sends any other object type as an error, Apollo Client
+    will wrap this in an `UnknownError` instance with the
+    [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    set to the original object. This ensures `error` properties are guaranteed
+    to be of type `Error`.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error({ message: 'Not a proper error type' });
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // error is an `UnknownError` instance. error.cause returns the original
+    object.
+
+    ```
+  curvy-shoes-refuse: >-
+    More strictly adhere to the [GraphQL over HTTP
+    spec](https://graphql.github.io/graphql-over-http/draft/). This change adds
+    support for the `application/graphql-response+json` media type and modifies
+    the behavior of the `application/json` media type.
+
+
+    - The client will parse the response as a well-formed GraphQL response when
+    the server encodes `content-type` using `application/graphql-response+json`
+    with a non-200 status code.
+
+    - The client will now throw a `ServerError` when the server encodes
+    `content-type` using `application/json` and returns a non-200 status code.
+
+    - The client will now throw a `ServerError` when the server encodes using
+    any other `content-type` and returns a non-200 status code.
+
+
+    NOTE: If you use a testing utility to mock requests in your test, you may
+    experience different behavior than production if your testing utility
+    responds as `application/json` but your production server responds as
+    `application/graphql-response+json`. If a `content-type` header is not set,
+    the client interprets the response as `application/json`.
+  four-ghosts-watch: >-
+    Network errors triggered by queries now adhere to the `errorPolicy`. This
+    means that GraphQL errors and network errors now behave the same way.
+    Previously promise-based APIs, such as `client.query`, would reject the
+    promise with the network error even if `errorPolicy` was set to `ignore`.
+    The promise is now resolved with the `error` property set to the network
+    error instead.
+  four-countries-clean: >-
+    Add a static `is` method to error types defined by Apollo Client. `is` makes
+    it simpler to determine whether an error is a specific type, which can be
+    helpful in cases where you'd like to narrow the error type in order to use
+    specific properties from that error.
+
+
+    This change applies to the following error types:
+
+    - `CombinedGraphQLErrors`
+
+    - `CombinedProtocolErrors`
+
+    - `ServerError`
+
+    - `ServerParseError`
+
+    - `UnconventionalError`
+
+
+    **Example**
+
+
+    ```ts
+
+    import { CombinedGraphQLErrors } from "@apollo/client";
+
+
+    if (CombinedGraphQLErrors.is(error)) {
+      console.log(error.message);
+      error.errors.forEach((graphQLError) => console.log(graphQLError.message))
+    }
+
+    ```
+  bright-ads-share: >-
+    Removes the `isApolloError` utility function to check if the error object is
+    an `ApolloError` instance. Use `instanceof` to check for more specific error
+    types that replace `ApolloError`.
+  odd-chicken-hide: >-
+    Add the ability to detect if an error was an error was emitted from the link
+    chain. This is useful if your application throws custom errors in other
+    areas of the application and you'd like to differentiate them from errors
+    emitted by the link chain itself.
+
+
+    To detect if an error was emitted from the link chain, use `LinkError.is`.
+
+
+    ```ts
+
+    import { LinkError } from "@apollo/client";
+
+
+    client.query({ query }).catch((error) => {
+      if (LinkError.is(error)) {
+        // This error originated from the link chain
+      }
+    });
+
+    ```
+  nervous-fireants-bow: >-
+    Add a `data` property to `CombinedGraphQLErrors` that captures any partial
+    data returned by the GraphQL response when `errors` are also returned.
+  beige-hornets-smash: >-
+    Add an `extensions` property to `CombinedGraphQLErrors` to capture any
+    extensions from the original response.
+  many-papayas-hide: >-
+    `ObservableQuery` will no longer terminate on errors and will instead emit a
+    `next` value with an `error` property. This ensures that `ObservableQuery`
+    instances can continue to receive updates after errors are returned in
+    requests without the need to resubscribe to the observable.
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  old-mangos-grin: >-
+    Fix type of `error` argument on the `onError` option for `subscribeToMore`
+    to `ErrorLike`.
+  calm-seals-relate: >-
+    Remove the deprecated `errors` property from `useQuery` and `useLazyQuery`.
+    Read errors from the `error` property instead.
+  seven-foxes-melt: >-
+    The promise returned when calling the execute function from `useLazyQuery`
+    will now reject when using an `errorPolicy` of `none` when GraphQL errors
+    are returned from the result.
+  clever-islands-talk: >-
+    An error is now thrown when trying to call `fetchMore` on a `cache-only`
+    query.
+  grumpy-vans-type: >-
+    Unify error behavior on mutations for GraphQL errors and network errors by
+    ensuring network errors are subject to the `errorPolicy`. Network errors
+    created when using an `errorPolicy` of `all` will now resolve the promise
+    and be returned on the `error` property of the result, or stripped away when
+    the `errorPolicy` is `none`.
+  little-spoons-kick: >-
+    `client.mutate` now returns a `MutateResult` instead of `FetchResult`. As a
+    result, the `errors` property has been removed in favor of `error` which is
+    set if either a network error occured or GraphQL errors are returned from
+    the server.
+
+
+    `useMutation` now also returns a `MutateResult` instead of a `FetchResult`.
+  poor-eels-punch: >-
+    Mutations no longer report errors if the GraphQL result from the server
+    contains an empty array of errors.
+  giant-bags-share: >-
+    Throw an error for queries and mutations if the link chain completes without
+    emitting a value.
+  many-buses-allow: >-
+    Fix an issue where passing `onError` to `useMutation` would resolve the
+    promise returned by the `mutate` function instead of rejecting when using an
+    `errorPolicy` of `none`.
+  warm-ties-sit: >-
+    Subscriptions no longer emit errors in the `error` callback and instead
+    provide errors on the `error` property on the result passed to the `next`
+    callback. As a result, errors will no longer automatically terminate the
+    connection allowing additional results to be emitted when the connection
+    stays open.
+
+
+    When an error terminates the downstream connection, a `next` event will be
+    emitted with an `error` property followed by a `complete` event instead.
+  forty-shrimps-fry: >-
+    Subscriptions now emit a `SubscribeResult` instead of a `FetchResult`. As a
+    result, the `errors` field has been removed in favor of `error`.
+  tricky-tables-shave: >-
+    GraphQL errors or network errors emitted while using an `errorPolicy` of
+    `ignore` in subscriptions will no longer emit a result if there is no `data`
+    emitted along with the error.
+  real-teachers-peel: >-
+    Unify error behavior on subscriptions for GraphQL errors and network errors
+    by ensuring network errors are subject to the `errorPolicy`. Network errors
+    that terminate the connection will now be emitted on the `error` property
+    passed to the `next` callback followed by a call to the `complete` callback.
+  sharp-glasses-sneeze: >-
+    The `ErrorResponse` object passed to the `disable` and `retry` callback
+    options provided to `createPersistedQueryLink` no longer provides separate
+    `graphQLErrors` and `networkError` properties and instead have been combined
+    to a single `error` property of type `ErrorLike`.
+
+
+
+    ```diff
+
+    // The following also applies to the `retry` function since it has the same
+    signature
+
+    createPersistedQueryLink({
+
+    - disable: ({ graphQLErrors, networkError }) => {
+
+    + disable: ({ error }) => {
+
+    -   if (graphQLErrors) {
+
+    +   if (CombinedGraphQLErrors.is(error)) {
+          // ... handle GraphQL errors
+        }
+
+    -   if (networkError) {
+
+    +   if (error) {
+          // ... handle link errors
+        }
+
+        // optionally check for a specific kind of error
+    -   if (networkError) {
+
+    +   if (ServerError.is(error)) {
+          // ... handle a server error
+        }
+    });
+
+    ```
+
+
+    The `response` property has also been renamed to `result`.
+
+
+    ```diff
+
+    createPersistedQueryLink({
+
+    -  disable: ({ response }) => {
+
+    +  disable: ({ result }) => {
+          // ... handle GraphQL errors
+        }
+      }
+    });
+
+    ```
+  beige-mirrors-talk: >-
+    `onError` link now uses a single `error` property to report the error that
+    caused the link callback to be called. This will be an instance of
+    `CombinedGraphQLErrors` in the event GraphQL errors were emitted from the
+    terminating link, `CombinedProtocolErrors` if the terminating link emitted
+    protocol errors, or the unwrapped error type if any other non-GraphQL error
+    was thrown or emitted.
+
+
+    ```diff
+
+    - const errorLink = onError(({ graphQLErrors, networkError, protocolErrors
+    }) => {
+
+    -   graphQLErrors.forEach(error => console.log(error.message));
+
+    + const errorLink = onError(({ error }) => {
+
+    +   if (error.name === 'CombinedGraphQLErrors') {
+
+    +     error.errors.forEach(rawError => console.log(rawError.message));
+
+    +   }
+
+    });
+
+    ```
+  afraid-penguins-sniff: >-
+    Replace the `result` property on `ServerError` with `bodyText`. `bodyText`
+    is set to the raw string body. `HttpLink` and `BatchHttpLink` no longer try
+    and parse the response body as JSON when a `ServerError` is thrown.
+  cool-kiwis-hunt: >-
+    Add ability to specify message formatter for `CombinedGraphQLErrors` and
+    `CombinedProtocolErrors`. To provide your own message formatter, override
+    the static `formatMessage` property on these classes.
+
+
+    ```ts
+
+    CombinedGraphQLErrors.formatMessage = (errors, { result,
+    defaultFormatMessage }) => {
+      return "Some formatted message"
+    };
+
+
+    CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) =>
+    {
+      return "Some formatted message"
+    };
+
+    ```
+  seven-dragons-repair: >-
+    Update format of the error message for `CombinedGraphQLErrors` and
+    `CombinedProtocolErrors` to be more like v3.x.
+
+
+    ```diff
+
+    console.log(error.message);
+
+    - `The GraphQL server returned with errors:
+
+    - - Email not found
+
+    - - Username already in use`
+
+    + `Email not found
+
+    + Username already in use`
+
+    ```
+  healthy-apes-sneeze: >-
+    Remove `fromError` utility function. Use
+    [`throwError`](https://rxjs.dev/api/index/function/throwError) instead.
+  mighty-penguins-wink: >-
+    Removes the `throwServerError` utility function. Now that `ServerError` is
+    an
+
+    `Error` subclass, you can throw these errors directly:
+
+
+    ```js
+
+    import { ServerError } from '@apollo/client';
+
+
+    // instead of
+
+    throwServerError(response, result, 'error message')
+
+
+    // Use
+
+    throw new ServerError('error message', { response, result })
+
+    ```
+  kind-fishes-develop: >-
+    Updates the `ServerError` and `ServerParseError` types to be proper `Error`
+    subclasses. Perviously these were plain `Error` intances with additional
+    properties added at runtime. All properties are retained, but `instanceof`
+    checks now work correctly.
+
+
+    ```js
+
+    import { ServerError, ServerParseError } from '@apollo/client';
+
+
+    if (error instanceof ServerError) {
+      // ...
+    }
+
+
+    if (error instanceof ServerParseError) {
+      // ...
+    }
+
+    ```
+rxjs:
+  slow-ravens-explain: >-
+    Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs`
+    is now a peer dependency of Apollo Client which means you will now need to
+    install `rxjs` in addition to `@apollo/client`.
+
+
+    This change is mostly transparent, however transforming values on
+    observables, common in link implementations, differs in RxJS vs
+    `zen-observable`. For example, you could modify values in the link chain
+    emitted from a downstream link by using the `.map` function. In RxJS, this
+    is done with the `.pipe` function and passing a `map` operator instead.
+
+
+    ```ts
+
+    import { map } from "rxjs";
+
+
+    const link new ApolloLink((operation, forward) => {
+      return forward(operation).pipe(
+        map((result) => performTransform(result))
+      );
+    });
+
+    ```
+
+
+    For a full list of operators and comprehensive documentation on the
+    capabilities of RxJS, check out the [documentation](https://rxjs.dev/).
+  metal-needles-search: >-
+    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
+    ensure `from(observableQuery)` stays possible
+  brave-radios-wait: >-
+    Remove the `asyncMap` utility function. Instead use one of the RxJS
+    operators that creates Observables from promises, such as `from`.
+  gold-planets-cover: Downgrade minimum supported `rxjs` peer dependency version to 7.3.0.
+  healthy-apes-sneeze: >-
+    Remove `fromError` utility function. Use
+    [`throwError`](https://rxjs.dev/api/index/function/throwError) instead.
+  smooth-coins-collect: >-
+    Remove `fromPromise` utility function. Use
+    [`from`](https://rxjs.dev/api/index/function/from) instead.
+  unlucky-sheep-change: >-
+    Remove `toPromise` utility function. Use
+    [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom)
+    instead.
+ObservableQuery:
+  __behaviour: null
+  metal-needles-search: >-
+    ObservableQuery: implement the `rxjs` `InteropObservable` interface to
+    ensure `from(observableQuery)` stays possible
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+
+    ```ts
+
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
+
+    ```
+  khaki-keys-deliver: >-
+    An initial loading state is now emitted from `ObservableQuery` when
+    subscribing if `notifyOnNetworkStatusChange` is set to `true`.
+  many-papayas-hide: >-
+    `ObservableQuery` will no longer terminate on errors and will instead emit a
+    `next` value with an `error` property. This ensures that `ObservableQuery`
+    instances can continue to receive updates after errors are returned in
+    requests without the need to resubscribe to the observable.
+  few-crabs-move: >-
+    `ObservableQuery` will now keep previous `data` around when emitting a
+    `loading` state, unless `query` or `variables` changed.
+
+    Note that `@exports` variables are not taken into account for this, so
+    `data` will stay around even if they change.
+  shy-experts-cough: >-
+    `ObservableQuery`s will now only be registered with the `ApolloClient` while
+    they
+
+    have subscribers.
+
+
+    That means that `ApolloClient.getObservableQueries` and
+    `ApolloClient.refetchQueries`
+
+    will only be able to return/refetch queries that have at least one
+    subscriber.
+
+
+    This changes the previous meaning of `active` and `inactive` queries:
+
+    * `inactive` queries are queries with a subscriber that are skipped from a
+      React hook or have a `fetchPolicy` of `standby`
+    * `active` queries are queries with at least one subscriber that are not
+    skipped or in `standby`.
+
+
+    `ObservableQuery`s without subscribers but with an active ongoing network
+    request
+
+    (e.g. caused by calling `reobserve`) will be handled as if they had a
+    subscriber
+
+    for the duration of the query.
+  sixty-bats-cry: >-
+    Reworked the logic for then a loading state is triggered. If the link chain
+    responds synchronously, a loading state will be omitted, otherwise it will
+    be triggered.
+
+    If local resolvers are used, the time window for "sync vs async" starts as
+    soon as `@exports` variables are resolved.
+  dirty-trees-pump: >-
+    Unusubscribing from `ObservableQuery` while a request is in flight will no
+    longer terminate the request by unsubscribing from the link observable.
+  gold-sloths-battle: >-
+    Unsubscribing from an `ObservableQuery` before a value has been emitted will
+    remove the query from the tracked list of queries and will no longer be
+    eligible for query deduplication.
+  great-scissors-jam: >-
+    `cache-only` queries will now initialize with `loading: false` and
+    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+
+    This means `useQuery` will no longer render a short initial loading state
+    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
+    will now return `loading: false` immediately.
+  sour-colts-tell: >-
+    `ObservableQuery` will now return a `loading: false` state for `fetchPolicy`
+    `standby`, even before subscription
+  __different_fn_behaviour: null
+  twelve-mangos-dance: >-
+    `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute`
+    function of `useLazyQuery` now return a
+
+    `ResultPromise` with an additional `.retain` method.
+
+    If this method is called, the underlying network operation will be kept
+    running even if the `ObservableQuery` itself does
+
+    not require the result anymore, and the Promise will resolve with the final
+    result instead of resolving with an intermediate
+
+    result in the case of early cancellation.
+  wicked-kiwis-buy: >-
+    A call to `ObservableQuery.setVariables` with different variables or a
+    `ObservableQuery.refetch` call will always now guarantee that a value will
+    be emitted from the observable, even if it is deep equal to the previous
+    value.
+  seven-jeans-trade: >-
+    Added a new `.stop` function on `ObservableQuery`.
+
+    Calling this method will unsubscribe all current subscribers by sending a
+    `complete` event from the observable and tear down the `ObservableQuery`.
+  forty-hairs-occur: >-
+    Calling `refetch` with new variables will now set the `networkStatus` to
+    `refetch` instead of `setVariables`.
+  four-tables-cheat: >-
+    `cache-only` queries are no longer refetched when calling
+    `client.reFetchObservableQueries` when `includeStandby` is `true`.
+  lemon-pans-sit: >-
+    `cache-only` queries are now excluded from `client.refetchQueries` in all
+    situations. `cache-only` queries affected by `updateCache` are also excluded
+    from `refetchQueries` when `onQueryUpdated` is not provided.
+  funny-terms-deny: >-
+    `ObservableQuery.variables` can now be reset back to empty when calling
+    `reobserve` with `variables: undefined`. Previously the `variables` key
+    would be ignored so `variables` would remain unchanged.
+  purple-lions-cough: >-
+    `ObservableQuery.setVariables` will now resolve with the last emitted result
+    instead of `undefined` when either the variables match the current variables
+    or there are no subscribers to the query.
+  itchy-chefs-run: >-
+    When passing a `variables` key with the value `undefined`, the value will be
+    replaced by the default value in the query, if it is provided, rather than
+    leave it as `undefined`.
+
+
+    ```ts
+
+    // given this query
+
+    const query = gql`
+      query PaginatedQuery($limit: Int! = 10, $offset: Int) {
+        list(limit: $limit, offset: $offset) {
+          id
+        }
+      }
+    `
+
+
+    const observable = client.query({ query, variables: { limit: 5, offset: 0
+    }});
+
+    console.log(observable.variables) // => { limit: 5, offset: 0 }
+
+
+    observable.reobserve({ variables: { limit: undefined, offset: 10 }})
+
+    // limit is now `10`. This would previously be `undefined`
+
+    console.log(observable.variables) // => { limit: 10, offset: 10 }
+
+    ```
+  __removals: null
+  tidy-squids-poke: >-
+    Removes `ObservableQuery.result()` method. If you use this method and need
+    similar functionality, use the `firstValueFrom` helper in RxJS.
+
+
+    ```ts
+
+    import { firstValueFrom, from } from "rxjs";
+
+
+    // The `from` is necessary to turn `observableQuery` into an RxJS observable
+
+    const result = await firstValueFrom(from(observableQuery))
+
+    ```
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  eighty-squids-fix: >-
+    `ObservableQuery.setOptions` has been removed as it was an alias of
+    `reobserve`. Prefer using `reobserve` directly instead.
+
+
+    ```diff
+
+    const observable = client.watchQuery(options);
+
+
+    // Use reobserve to set new options and reevaluate the query
+
+    - observable.setOptions(newOptions);
+
+    + observable.reobserve(newOptions);
+
+    ```
+
+
+    As a result of this change, `reobserve` has been marked for public use and
+    is no longer considered an internal API. The `newNetworkStatus` argument has
+    been removed to facilitate this change.
+  gold-oranges-double: >-
+    Removed `getLastResult`, `getLastError` and `resetLastResults` from
+    `ObservableQuery`
+  kind-crews-warn: >-
+    `ObservableQuery` no longer has a `queryId` property.
+
+    `ApolloClient.getObservableQueries` no longer returns a `Map<string,
+    ObservableQuery>`, but a `Set<ObservableQuery>`.
+  smart-rats-explode: >-
+    Remove `ObservableQuery.resetQueryStoreErrors` method. This method reset
+    some internal state that was not consumed elsewhere in the client and
+    resulted in a no-op.
+  spotty-mugs-poke: >-
+    Dropped the `saveAsLastResult` argument from
+    `ObservableQuery.getCurrentResult`
+  __fixes: null
+  fuzzy-tips-sit: >-
+    Ensure `ObservableQuery` stops polling if switching to a `standby`
+    `fetchPolicy`. When switching back to a non-`standby` `fetchPolicy`, polling
+    will resume.
+  rich-kids-carry: >-
+    Fix type of `data` property on `ApolloQueryResult`. Previously this field
+    was non-optional, non-null `TData`, however at runtime this value could be
+    set to `undefined`. This field is now reported as `TData | undefined`.
+
+
+    This will affect you in a handful of places:
+
+    - The `data` property emitted from the result passed to the `next` callback
+    from `client.watchQuery`
+
+    - Fetch-based APIs that return an `ApolloQueryResult` type such as
+    `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+  small-cycles-rescue: >-
+    Don't emit a partial cache result from `cache-only` queries when
+    `returnPartialData` is `false`.
+  small-poems-rest: Don't `broadcastQueries` when a query is torn down.
+  stupid-eagles-fetch: >-
+    `cache-only` queries no longer poll when a `pollInterval` is set. Instead a
+    warning is now emitted that polling has no effect. If the `fetchPolicy` is
+    changed to `cache-only` after polling is already active, polling is stopped.
+  tidy-pandas-punch: >-
+    `ObservableQuery.variables` has been updated to return `TVariables` rather
+    than `TVariables | undefined`. This is more consistent with the runtime
+    value where an empty object (`{}`) will be returned when the `variables`
+    option is not provided.
+  __unhandled: null
+observableQuery.fetchMore:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+observableQuery.refetch:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+observableQuery.reobserve:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+observableQuery.setVariables:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+network_status:
+  beige-kings-grow: >-
+    A `@defer` query that has not yet finished streaming is now considered
+    loading and thus the `loading` flag will be `true` until the response has
+    completed. A new `NetworkStatus.streaming` value has been introduced and
+    will be set as the `networkStatus` while the response is streaming.
+  forty-hairs-occur: >-
+    Calling `refetch` with new variables will now set the `networkStatus` to
+    `refetch` instead of `setVariables`.
+  forty-tomatoes-punch: >-
+    The returned `networkStatus` in `useLazyQuery` is now set to `setVariables`
+    when calling the `useLazyQuery` `execute` function for the first time with
+    variables.
+  great-scissors-jam: >-
+    `cache-only` queries will now initialize with `loading: false` and
+    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+
+    This means `useQuery` will no longer render a short initial loading state
+    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
+    will now return `loading: false` immediately.
+  khaki-keys-deliver: >-
+    An initial loading state is now emitted from `ObservableQuery` when
+    subscribing if `notifyOnNetworkStatusChange` is set to `true`.
+  large-plants-know: >-
+    Ensure a loading state is emitted when calling the `execute` function after
+    changing clients in `useLazyQuery`.
+  polite-bees-care: >-
+    `useLazyQuery` will no longer rerender with the loading state when calling
+    the execute function the first time unless the `notifyOnNetworkStatusChange`
+    option is set to `true` (which is the new default).
+
+
+    If you prefer the behavior from 3.x, rerender the component with
+
+    `notifyOnNetworkStatusChange` set to `false` after the execute function is
+
+    called the first time.
+
+
+    ```ts
+
+    function MyComponent() {
+      const [notifyOnNetworkStatusChange, setNotifyOnNetworkStatusChange] = useState(true);
+      const [execute] = useLazyQuery(query, { notifyOnNetworkStatusChange });
+
+      async function runExecute() {
+        await execute();
+
+        // Set to false after the initial fetch to stop receiving notifications
+        // about changes to the loading states.
+        setNotifyOnNetworkStatusChange(false);
+      }
+
+      // ...
+    }
+
+    ```
+fetch_policy:
+  clever-islands-talk: >-
+    An error is now thrown when trying to call `fetchMore` on a `cache-only`
+    query.
+  funny-jeans-invent: >-
+    `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been
+    reworked:
+
+
+    Previously, a `ObservableQuery` created by `client.query` or
+    `client.watchQuery`
+
+    while one of those were active would permanently be changed from a
+    `fetchPolicy`
+
+    of `"network-only"` or `"cache-and-network"` to `"cache-first"`, and stay
+    that way
+
+    even long after `disableNetworkFetches` would have been deactivated.
+
+
+    Now, the `ObservableQuery` will keep their original `fetchPolicy`, but
+    queries
+
+    made during `disableNetworkFetches` will just apply the `fetchPolicy`
+    replacement
+
+    at request time, just for that one request.
+
+
+    `ApolloClient.disableNetworkFetches` has been renamed to
+    `ApolloClient.prioritizeCacheValues` to better reflect this behaviour.
+  great-scissors-jam: >-
+    `cache-only` queries will now initialize with `loading: false` and
+    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+
+    This means `useQuery` will no longer render a short initial loading state
+    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
+    will now return `loading: false` immediately.
+  loud-cows-raise: >-
+    `useQuery` with `ssr: false` - previously, `skip` had a higher priortity
+    than `ssr: false` while `ssr: false` had a higher priority than
+    `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).
+
+
+    This priority has been adjusted so now both `skip` and `fetchPolicy:
+    "standby"` have a higher priority than `ssr: false` and will return
+    `loading: false`, while `ssr: false` will only come after those and will
+    return `loading: true` if those are not set.
+  sour-colts-tell: >-
+    `ObservableQuery` will now return a `loading: false` state for `fetchPolicy`
+    `standby`, even before subscription
+  young-snails-grin: >-
+    `client.query` no longer supports a `fetchPolicy` of `standby`. `standby`
+    does not fetch and did not return `data`. `standby` is meant for watched
+    queries where fetching should be on hold.
+fetchMore:
+  mighty-carrots-bathe: >-
+    Allow passing `errorPolicy` option to `fetchMore` and change default value
+    to "none".
+  old-melons-double: >-
+    Rework option handling for `fetchMore`.
+
+
+    * Previously, if the `query` option was specified, no options would be
+    inherited
+
+    from the underlying `ObservableQuery`.
+
+    Now, even if `query` is specified, all unspecified options except for
+    `variables` will be inherited from the underlying `ObservableQuery`.
+
+    * If `query` is not specified, `variables` will still be shallowly merged
+    with the `variables` of the underlying `ObservableQuery`. If a `query`
+    option is specified, the `variables` passed to `fetchMore` are used instead.
+
+    * `errorPolicy` of `fetchMore` will now always default to `"none"` instead
+    of inherited from the `ObservableQuery` options. This can prevent accidental
+    cache writes of partial data for a paginated query. To opt into receive
+    partial data that may be written to the cache, pass an `errorPolicy` to
+    `fetchMore` to override the default.
+polling:
+  fuzzy-tips-sit: >-
+    Ensure `ObservableQuery` stops polling if switching to a `standby`
+    `fetchPolicy`. When switching back to a non-`standby` `fetchPolicy`, polling
+    will resume.
+ApolloClient:
+  brave-moons-juggle: Remove the `typeDefs` option from `ApolloClient`.
+  empty-meals-swim: >-
+    The `ApolloClient` constructor options `name` and `version` that are used to
+
+    configure the client awareness feature have moved onto a `clientAwareness`
+    key.
+
+
+    ```diff
+
+    const client = new ApolloClient({
+      // ..
+    -  name: "my-app",
+
+    -  version: "1.0.0",
+
+    +  clientAwareness: {
+
+    +    name: "my-app",
+
+    +    version: "1.0.0",
+
+    +  },
+
+    });
+
+    ```
+  funny-jeans-invent: >-
+    `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been
+    reworked:
+
+
+    Previously, a `ObservableQuery` created by `client.query` or
+    `client.watchQuery`
+
+    while one of those were active would permanently be changed from a
+    `fetchPolicy`
+
+    of `"network-only"` or `"cache-and-network"` to `"cache-first"`, and stay
+    that way
+
+    even long after `disableNetworkFetches` would have been deactivated.
+
+
+    Now, the `ObservableQuery` will keep their original `fetchPolicy`, but
+    queries
+
+    made during `disableNetworkFetches` will just apply the `fetchPolicy`
+    replacement
+
+    at request time, just for that one request.
+
+
+    `ApolloClient.disableNetworkFetches` has been renamed to
+    `ApolloClient.prioritizeCacheValues` to better reflect this behaviour.
+  gentle-files-laugh: >-
+    Remove deprecated `connectToDevtools` option from `ApolloClientOptions`. Use
+    `devtools.enabled` instead.
+  gorgeous-chefs-tap: >-
+    Remove the `TCacheShape` generic argument to `ApolloClient`.
+    `client.extract()` now returns `unknown` by default. You will either need to
+    type-cast this to the expected serialized shape, or use the
+    `cache.extract()` directly from the subclass to get more specific types.
+  little-parrots-bow: >-
+    Removes the `resolvers` option from `ApolloClient`. Local resolvers have
+    instead been moved to the new `LocalState` instance which is assigned to the
+    `localState` option in `ApolloClient`. To migrate, move the `resolvers`
+    values into a `LocalState` instance and assign that instance to
+    `localState`.
+
+
+    ```diff
+
+    new ApolloClient({
+
+    - resolvers: { /* ... */ }
+
+    + localState: new LocalState({
+
+    +   resolvers: { /* ... */ }
+
+    + }),
+
+    });
+
+    ```
+  ninety-nails-compete: >-
+    Renamed `client.reFetchObservableQueries` to
+    `client.refetchObservableQueries`.
+
+    `client.reFetchObservableQueries` is still available as an alias, but is now
+
+    deprecated and will be removed in a future major version.
+  olive-cougars-ring: >-
+    Remove local resolvers APIs from `ApolloClient` in favor of `localState`.
+    Methods removed are:
+
+    - `addResolvers`
+
+    - `getResolvers`
+
+    - `setResolvers`
+
+    - `setLocalStateFragmentMatcher`
+  stupid-pumpkins-travel: >-
+    Apollo Client no longer ships with support for `@client` fields
+    out-of-the-box and now must be opt-in. To opt in to use `@client` fields,
+    pass an instantiated `LocalState` instance to the `localState` option. If a
+    query contains `@client` and local state hasn't been configured, an error
+    will be thrown.
+
+
+    ```ts
+
+    import { LocalState } from "@apollo/client/local-state";
+
+
+    new ApolloClient({
+      localState: new LocalState(),
+    });
+
+    ```
+  thirty-pens-jump: >-
+    Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment
+    matchers used with local state are no longer supported. Fragment matching is
+    now performed by the configured `cache` via the `cache.fragmentMatches` API.
+  wicked-queens-lick: >-
+    `ApolloClient.stop()` now cleans up more agressively to prevent memory
+    leaks:
+
+
+    * It will now unsubscribe all active `ObservableQuery` instances by emitting
+    a `completed` event.
+
+    * It will now reject all currently running queries with `"QueryManager
+    stopped while query was in flight"`.
+
+    * It will remove all queryRefs from the suspense cache.
+  witty-paws-marry: >-
+    Require the `link` option when instantiating `ApolloClient`. This removes
+    the `uri`, `credentials` and `headers` options from `ApolloClient` in favor
+    of passing an instantiated `HttpLink` directly. To migrate:
+
+
+    **If using `uri`, `credentials`, or `headers` options**
+
+    ```diff
+
+    new ApolloClient({
+      // ...
+    - uri,
+
+    - credentials,
+
+    - headers,
+
+    + link: new HttpLink({ uri, credentials, headers }),
+
+    // or if you prefer the function call approach:
+
+    + link: createHttpLink({ uri, credentials, headers }),
+
+    });
+
+    ```
+
+
+    **If creating a client without the `link` option**
+
+    ```diff
+
+    new ApolloClient({
+      // ...
+    + link: ApolloLink.empty()
+
+    });
+
+    ```
+client.watchQuery:
+  fluffy-shoes-applaud: Remove deprecated `partialRefetch` option.
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  rich-kids-carry: >-
+    Fix type of `data` property on `ApolloQueryResult`. Previously this field
+    was non-optional, non-null `TData`, however at runtime this value could be
+    set to `undefined`. This field is now reported as `TData | undefined`.
+
+
+    This will affect you in a handful of places:
+
+    - The `data` property emitted from the result passed to the `next` callback
+    from `client.watchQuery`
+
+    - Fetch-based APIs that return an `ApolloQueryResult` type such as
+    `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+
+    ```ts
+
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
+
+    ```
+client.subscribe:
+  forty-shrimps-fry: >-
+    Subscriptions now emit a `SubscribeResult` instead of a `FetchResult`. As a
+    result, the `errors` field has been removed in favor of `error`.
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  pink-ladybugs-cough: >-
+    Subscriptions created by `client.subscribe()` can now be restarted.
+    Restarting a subscription will terminate the connection with the link chain
+    and recreate the request. Restarts also work across deduplicated
+    subscriptions so calling `restart` on an `observable` who's request is
+    deduplicated will restart the connection for each observable.
+
+
+    ```ts
+
+    const observable = client.subscribe({ query: subscription });
+
+
+    // Restart the connection to the link
+
+    observable.restart();
+
+    ```
+  tough-tips-drop: >-
+    Subscriptions are no longer eagerly started after calling
+    `client.subscribe`. To kick off the subscription, you will now need to
+    subscribe to the returned observable.
+
+
+    ```ts
+
+    // Subscriptions are no longer started when calling subscribe on its own.
+
+    const subscriptionObservable = client.subscribe(...);
+
+
+    // Instead, subscribe to the returned observable to kick off the
+    subscription.
+
+    subscriptionObservable.subscribe({
+      next: (value) => console.log(value)
+    });
+
+    ```
+  warm-ties-sit: >-
+    Subscriptions no longer emit errors in the `error` callback and instead
+    provide errors on the `error` property on the result passed to the `next`
+    callback. As a result, errors will no longer automatically terminate the
+    connection allowing additional results to be emitted when the connection
+    stays open.
+
+
+    When an error terminates the downstream connection, a `next` event will be
+    emitted with an `error` property followed by a `complete` event instead.
+client.query:
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+  young-snails-grin: >-
+    `client.query` no longer supports a `fetchPolicy` of `standby`. `standby`
+    does not fetch and did not return `data`. `standby` is meant for watched
+    queries where fetching should be on hold.
+client.mutate:
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  tough-rockets-allow: >-
+    Fix an issue where additional response properties were returned on the
+    result returned from `client.mutate`, such as `@defer` payload fields. These
+    properties are now stripped out to correspond to the TypeScript type.
+client.refetchObservableQueries:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+client.resetStore:
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+client.refetchQueries:
+  lemon-pans-sit: >-
+    `cache-only` queries are now excluded from `client.refetchQueries` in all
+    situations. `cache-only` queries affected by `updateCache` are also excluded
+    from `refetchQueries` when `onQueryUpdated` is not provided.
+  shy-experts-cough: >-
+    `ObservableQuery`s will now only be registered with the `ApolloClient` while
+    they
+
+    have subscribers.
+
+
+    That means that `ApolloClient.getObservableQueries` and
+    `ApolloClient.refetchQueries`
+
+    will only be able to return/refetch queries that have at least one
+    subscriber.
+
+
+    This changes the previous meaning of `active` and `inactive` queries:
+
+    * `inactive` queries are queries with a subscriber that are skipped from a
+      React hook or have a `fetchPolicy` of `standby`
+    * `active` queries are queries with at least one subscriber that are not
+    skipped or in `standby`.
+
+
+    `ObservableQuery`s without subscribers but with an active ongoing network
+    request
+
+    (e.g. caused by calling `reobserve`) will be handled as if they had a
+    subscriber
+
+    for the duration of the query.
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+client.getObservableQueries:
+  shy-experts-cough: >-
+    `ObservableQuery`s will now only be registered with the `ApolloClient` while
+    they
+
+    have subscribers.
+
+
+    That means that `ApolloClient.getObservableQueries` and
+    `ApolloClient.refetchQueries`
+
+    will only be able to return/refetch queries that have at least one
+    subscriber.
+
+
+    This changes the previous meaning of `active` and `inactive` queries:
+
+    * `inactive` queries are queries with a subscriber that are skipped from a
+      React hook or have a `fetchPolicy` of `standby`
+    * `active` queries are queries with at least one subscriber that are not
+    skipped or in `standby`.
+
+
+    `ObservableQuery`s without subscribers but with an active ongoing network
+    request
+
+    (e.g. caused by calling `reobserve`) will be handled as if they had a
+    subscriber
+
+    for the duration of the query.
+types:
+  cuddly-spiders-tie: >-
+    Remove `TSerialized` generic argument to `ApolloCache`. The `ApolloCache`
+    base cache abstraction now returns `unknown` for `cache.extract` which can
+    be overridden by a cache subclass.
+  curvy-lamps-sing: >-
+    Provide a mechanism to override the DataMasking types.
+
+
+    Up until now, our types `Masked`, `MaskedDocumentNode`, `FragmentType`,
+    `MaybeMasked` and `Unmasked` would assume that you are stictly using the
+    type output format of GraphQL Codegen.
+
+
+    With this change, you can now modify the behaviour of those types if you use
+    a different form of codegen that produces different types for your queries.
+
+
+    A simple implementation that would override the `Masked` type to remove all
+    fields starting with `_` from a type would look like this:
+
+
+    ```ts
+
+    // your actual implementation of `Masked`
+
+    type CustomMaskedImplementation<TData> = {
+      [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
+    };
+
+
+    import { HKT } from "@apollo/client/utilities";
+
+    // transform this type into a higher kinded type that can be evaulated at a
+    later time
+
+    interface CustomMaskedType extends HKT {
+      arg1: unknown; // TData
+      return: CustomMaskedImplementation<this["arg1"]>;
+    }
+
+
+    // create an "implementation interface" for the types you want to override
+
+    export interface CustomDataMaskingImplementation {
+      Masked: CustomMaskedType;
+      // other possible keys: `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked`
+    }
+
+    ```
+
+    then you would use that `CustomDataMaskingImplementation` interface in your
+    project to extend the `TypeOverrides` interface exported by `@apollo/client`
+    with it's functionality:
+
+
+    ```ts
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides extends CustomDataMaskingImplementation {}
+    }
+
+    ```
+
+
+    After that, all internal usage of `Masked` in Apollo Client as well as all
+    usage in your code base will use the new `CustomMaskedType` implementation.
+
+
+    If you don't specify overrides, Apollo Client will still default to the
+    GraphQL Codegen data masking implementation.
+
+    The types for that are also explicitly exported as the
+    `GraphQLCodegenDataMasking` namespace in `@apollo/client/masking`.
+  eleven-candles-smoke: >-
+    Change the `unsafePreviousData` argument on `UpdateQueryMapFn` and
+    `SubscribeToMoreQueryFn` to a `DeepPartial` since the result may contain
+    partial data.
+  forty-shrimps-fry: >-
+    Subscriptions now emit a `SubscribeResult` instead of a `FetchResult`. As a
+    result, the `errors` field has been removed in favor of `error`.
+  fuzzy-plants-approve: |-
+    Remove these incremental-format-specific types:
+
+    * `ExecutionPatchIncrementalResult`
+    * `ExecutionPatchInitialResult`
+    * `ExecutionPatchResult`
+    * `IncrementalPayload`
+    * `Path`
+  gentle-badgers-train: >-
+    `never` is no longer supported as a valid `TVariables` generic argument for
+    APIs that require `variables` as part of its type. Use `Record<string,
+    never>` instead.
+  gorgeous-chefs-tap: >-
+    Remove the `TCacheShape` generic argument to `ApolloClient`.
+    `client.extract()` now returns `unknown` by default. You will either need to
+    type-cast this to the expected serialized shape, or use the
+    `cache.extract()` directly from the subclass to get more specific types.
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  healthy-books-flash: >-
+    The `TData` generic provided to types that return a `dataState` property is
+    now modified by the given `DataState` generic instead of passing a modified
+    `TData` type. For example, a `QueryRef` that could return partial data was
+    defined as `QueryRef<DeepPartial<TData>, TVariables>`. Now `TData` should be
+    provided unmodified and a set of allowed states should be given instead:
+    `QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>`.
+
+
+    To migrate, use the following guide to replace your type with the right set
+    of states (all types listed below are changed the same way):
+
+
+    ```diff
+
+    - QueryRef<TData, TVariables>
+
+    // `QueryRef`'s default is 'complete' | 'streaming' so this can also be left
+    alone if you prefer
+
+    // All other types affected by this change default to all states
+
+    + QueryRef<TData, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming'>
+
+
+    - QueryRef<TData | undefined, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'empty'>
+
+
+    - QueryRef<DeepPartial<TData>, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>
+
+
+    - QueryRef<DeepPartial<TData> | undefined, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial' |
+    'empty'>
+
+    ```
+
+
+    The following types are affected. Provide the allowed `dataState` values to
+    the `TDataState` generic:
+
+    - `ApolloQueryResult`
+
+    - `QueryRef`
+
+    - `PreloadedQueryRef`
+
+    - `useLazyQuery.Result`
+
+    - `useQuery.Result`
+
+    - `useReadQuery.Result`
+
+    - `useSuspenseQuery.Result`
+
+
+    All `*QueryRef` types default to `complete | streaming` states while the
+    rest of the types default to `'complete' | 'streaming' | 'partial' |
+    'empty'` states. You shouldn't need to provide the states unless you need to
+    either allow for partial data/empty values (`*QueryRef`) or a restricted set
+    of states.
+  healthy-ghosts-report: >-
+    The callback function that can be passed to the `ApolloClient.mutate`
+
+    `refetchQueries` option will now receive a `FormattedExecutionResult` with
+    an
+
+    additional `dataState` option that describes if the result is `"streaming"`
+
+    or `"complete"`.
+
+    This indicates whether the `data` value is of type
+
+    * `Unmasked<TData>` (if `"complete"`)
+
+    * `Streaming<Unmasked<TData>>` (if `"streaming"`)
+  hip-vans-act: >-
+    Default `TVariables` generic type to `OperationVariables` instead of `any`
+    throughout the client in areas that did not yet have the default as such.
+  hungry-bikes-cough: >-
+    Fix type of `variables` returned from `useLazyQuery`. When `called` is
+    `false`, `variables` is now `Partial<TVariables>` instead of `TVariables`.
+  khaki-spies-work: >-
+    Flatten out React hook types. As a result, the base types have been removed.
+    Prefer using the hook types instead. Removed types include:
+
+    - `BaseMutationOptions`
+
+    - `BaseQueryOptions`
+
+    - `BaseSubscriptionOptions`
+
+    - `ObservableQueryFields`
+
+    - `MutationSharedOptions`
+
+    - `QueryFunctionOptions`
+  little-spoons-kick: >-
+    `client.mutate` now returns a `MutateResult` instead of `FetchResult`. As a
+    result, the `errors` property has been removed in favor of `error` which is
+    set if either a network error occured or GraphQL errors are returned from
+    the server.
+
+
+    `useMutation` now also returns a `MutateResult` instead of a `FetchResult`.
+  lucky-sheep-explain: >-
+    Provide an extension to define types for `context` passed to the link chain.
+    To define your own types, use [declaration
+    merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
+    to add properties to the `DefaultContext` type.
+
+
+    ```ts
+
+    // @apollo-client.d.ts
+
+    // This import is necessary to ensure all Apollo Client imports
+
+    // are still available to the rest of the application.
+
+    import '@apollo/client';
+
+
+    declare module "@apollo/client" {
+      interface DefaultContext extends Record<string, any> {
+        myProperty: string;
+      }
+    }
+
+    ```
+
+
+    Links that provide context options can be used with this type to add those
+    context types to `DefaultContext`. For example, to add context options from
+    `HttpLink`, add the following code:
+
+
+    ```ts
+
+    import { HttpLink } from "@apollo/client";
+
+
+    declare module "@apollo/client" {
+      interface DefaultContext extends HttpLink.ContextOptions {
+        myProperty: string;
+      }
+    }
+
+    ```
+
+
+    At this time, the following built-in links support context options:
+
+    - `HttpLink.ContextOptions`
+
+    - `BatchHttpLink.ContextOptions`
+  modern-feet-do: >-
+    `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer
+    export an empty `Cache` runtime object. This is meant to be a type-only
+    namespace.
+  moody-lobsters-listen: >-
+    The `Cache.DiffResult<T>` type is now a union type with better type safety
+    for both complete and partial results. Checking `diff.complete` will now
+    narrow the type of `result` depending on whether the value is `true` or
+    `false`.
+
+
+    When `true`, `diff.result` will be a non-null value equal to the `T` generic
+    type. When `false`, `diff.result` now reports `result` as `DeepPartial<T> |
+    null` indicating that fields in the result may be missing (`DeepPartial<T>`)
+    or empty entirely (`null`).
+  new-apes-care: Remove the deprecated `QueryReference` type. Please use `QueryRef` instead.
+  nice-waves-work: >-
+    The result resolved from the promise returned from the execute function in
+    `useLazyQuery` is now an `ApolloQueryResult` type and no longer includes all
+    the fields returned from the `useLazyQuery` hook tuple.
+
+
+    If you need access to the additional properties such as `called`, `refetch`,
+    etc. not included in `ApolloQueryResult`, read them from the hook instead.
+  odd-lemons-relax: >-
+    Rename all React hook result types and options. These types have all moved
+    under a namespace that matches the hook name. For example, `useQuery`
+    exports `useQuery.Options` and `useQuery.Result` types. As such, the old
+    hook types have been deprecated and will be removed in v5.
+  old-mangos-grin: >-
+    Fix type of `error` argument on the `onError` option for `subscribeToMore`
+    to `ErrorLike`.
+  orange-suits-laugh: >-
+    Adjust `useMutation` types to better handle required variables. When
+    required variables are missing, TypeScript will now complain if they are not
+    provided either to the hook or the returned `mutate` function. Providing
+    required variables to `useMutation` will make them optional in the returned
+    `mutate` function.
+  plenty-deers-clean: >-
+    Added a new `Streaming` type that will mark `data` in results while
+    `dataState`
+
+    is `"streaming"`.
+
+
+    `Streaming<TData>` defaults to `TData`, but can be overwritten in userland
+    to
+
+    integrate with different codegen dialects.
+
+
+    You can override this type globally - this example shows how to override it
+
+    with `DeepPartial<TData>`:
+
+    ```ts
+
+    import { HKT, DeepPartial } from "@apollo/client/utilities";
+
+
+    type StreamingOverride<TData> = DeepPartial<TData>;
+
+
+    interface StreamingOverrideHKT extends HKT {
+      return: StreamingOverride<this["arg1"]>;
+    }
+
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides {
+        Streaming: StreamingOverrideHKT;
+      }
+    }
+
+    ```
+  poor-spiders-hunt: >-
+    Move `MockLink` types to `MockLink` namespace. This affects the
+    `MockedResponse`, `MockLinkOptions`, and `ResultFunction` types. These types
+    are still exported but are deprecated in favor of the namespace. To migrate,
+    use the types on the `MockLink` namespace instead.
+
+
+    ```diff
+
+    import {
+
+    - MockedResponse,
+
+    - MockLinkOptions,
+
+    - ResultFunction,
+
+    + MockLink
+
+    } from "@apollo/client/testing";
+
+
+    - const mocks: MockedResponse = [];
+
+    + const mocks: MockLink.MockedResponse = [];
+
+
+    - const result: ResultFunction = () => {/* ... */ }
+
+    + const result: MockLink.ResultFunction = () => {/* ... */ }
+
+
+    - const options: MockLinkOptions = {}
+
+    + const options: MockLink.Options = {}
+
+    ```
+  proud-walls-shave: >-
+    Overridable types for `dataState: "complete"`, `dataState: "streaming"` and
+
+    `dataState: "partial"` responses.
+
+
+    This adds the `DataValue` namespace exported from Apollo Client with the
+    three
+
+    types `DataValue.Complete`, `DataValue.Streaming` and `DataValue.Partial`.
+
+
+    These types will be used to mark `TData` in the respective states.
+
+
+    * `Complete` defaults to `TData`
+
+    * `Streaming` defaults to `TData`
+
+    * `Partial` defaults to `DeepPartial<TData>`
+
+
+    All three can be overwritten, e.g. to be `DeepReadonly` using higher kinded
+    types
+
+    by following this pattern:
+
+
+    ```ts
+
+    import { HKT, DeepPartial } from "@apollo/client/utilities";
+
+    import { DeepReadonly } from "some-type-helper-library";
+
+
+    interface CompleteOverride extends HKT {
+      return: DeepReadonly<this["arg1"]>;
+    }
+
+
+    interface StreamingOverride extends HKT {
+      return: DeepReadonly<this["arg1"]>;
+    }
+
+
+    interface PartialOverride extends HKT {
+      return: DeepReadonly<DeepPartial<this["arg1"]>>;
+    }
+
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides {
+        Complete: CompleteOverride;
+        Streaming: StreamingOverride;
+        Partial: PartialOverride;
+      }
+    }
+
+    ```
+  rich-kids-carry: >-
+    Fix type of `data` property on `ApolloQueryResult`. Previously this field
+    was non-optional, non-null `TData`, however at runtime this value could be
+    set to `undefined`. This field is now reported as `TData | undefined`.
+
+
+    This will affect you in a handful of places:
+
+    - The `data` property emitted from the result passed to the `next` callback
+    from `client.watchQuery`
+
+    - Fetch-based APIs that return an `ApolloQueryResult` type such as
+    `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+  rude-fans-study: >-
+    Deprecate the `partial` flag on `ApolloQueryResult` and make it a
+    non-optional property. Previously `partial` was only set conditionally if
+    the result emitted was partial. This value is now available with all results
+    that return an `ApolloQueryResult`.
+  selfish-spoons-approve: >-
+    Move internal testing utilities in `@apollo/client/testing` to
+    `@apollo/client/testing/internal` and remove deprecated testing utilities.
+    Some of the testing utilities exported from the `@apollo/client/testing`
+    endpoint were not considered stable. As a result of this change, testing
+    utilities or types exported from `@apollo/client/testing` are now considered
+    stable and will not undergo breaking changes.
+
+
+    The following APIs were removed. To migrate, update usages of the following
+    APIs as such:
+
+
+    **`createMockClient`**
+
+
+    ```diff
+
+    - const client = createMockClient(data, query, variables);
+
+    + const client = new ApolloClient({
+
+    +   cache: new InMemoryCache(),
+
+    +   link: new MockLink([
+
+    +     {
+
+    +       request: { query, variables },
+
+    +       result: { data },
+
+    +     }
+
+    +   ]),
+
+    + });
+
+    ```
+
+
+    **`mockObservableLink`**
+
+
+    ```diff
+
+    - const link = mockObservableLink();
+
+    + const link = new MockSubscriptionLink();
+
+    ```
+
+
+    **`mockSingleLink`**
+
+
+    ```diff
+
+    - const link = mockSingleLink({
+
+    -   request: { query, variables },
+
+    -   result: { data },
+
+    - });
+
+    + const link = new MockLink([
+
+    +   {
+
+    +     request: { query, variables },
+
+    +     result: { data },
+
+    +   }
+
+    + ]);
+
+    ```
+  short-tomatoes-attend: >-
+    Remove `TContext` generic argument from all types that use it. `TContext` is
+    replaced with `DefaultContext` which can be modified using declaration
+    merging.
+  sixty-bears-bathe: >-
+    The `FetchMoreQueryOptions` type has been inlined into `FetchMoreOptions`,
+    and
+
+    `FetchMoreQueryOptions` has been removed.
+  sour-donuts-sit: >-
+    Prioritize usage of `FormattedExecutionResult` over `FetchResult` where
+    applicable.
+
+
+    Many APIs used `FetchResult` in place of `FormattedExecutionResult`, which
+    could
+
+    cause inconsistencies.
+
+
+    * `FetchResult` is now used to refer to an unhandled "raw" result as
+    returned from
+      a link.
+      This can also include incremental results that use a different format.
+    * `FormattedExecutionResult` from the `graphql` package is now used to
+    represent
+      the execution of a standard GraphQL request without incremental results.
+
+    If your custom links access the `data` property, you might need to first
+    check if
+
+    the result is a standard GraphQL result by using the
+    `isFormattedExecutionResult`
+
+    helper from `@apollo/client/utilities`.
+  tidy-pandas-punch: >-
+    `ObservableQuery.variables` has been updated to return `TVariables` rather
+    than `TVariables | undefined`. This is more consistent with the runtime
+    value where an empty object (`{}`) will be returned when the `variables`
+    option is not provided.
+  young-phones-fold: >-
+    Default the `TData` generic type to `unknown` in all APIs that use a `TData`
+    generic argument such as `useQuery`, `client.query`, etc.
+  rude-crabs-eat: >-
+    The `operation` argument to the callback passed to `SetContextLink` is now
+    of type `SetContextLink.SetContextOperation` which is an `Operation` without
+    the `getContext` or `setContext` functions. Previously the type of
+    `operation` was `GraphQLRequest` which had access to a `context` property.
+    The `context` property was always `undefined` and could result in bugs when
+    using it instead of the `prevContext` argument.
+
+
+    This change means the `operation` argument now contains an accessible
+    `client` property.
+dataState:
+  healthy-books-flash: >-
+    The `TData` generic provided to types that return a `dataState` property is
+    now modified by the given `DataState` generic instead of passing a modified
+    `TData` type. For example, a `QueryRef` that could return partial data was
+    defined as `QueryRef<DeepPartial<TData>, TVariables>`. Now `TData` should be
+    provided unmodified and a set of allowed states should be given instead:
+    `QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>`.
+
+
+    To migrate, use the following guide to replace your type with the right set
+    of states (all types listed below are changed the same way):
+
+
+    ```diff
+
+    - QueryRef<TData, TVariables>
+
+    // `QueryRef`'s default is 'complete' | 'streaming' so this can also be left
+    alone if you prefer
+
+    // All other types affected by this change default to all states
+
+    + QueryRef<TData, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming'>
+
+
+    - QueryRef<TData | undefined, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'empty'>
+
+
+    - QueryRef<DeepPartial<TData>, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>
+
+
+    - QueryRef<DeepPartial<TData> | undefined, TVariables>
+
+    + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial' |
+    'empty'>
+
+    ```
+
+
+    The following types are affected. Provide the allowed `dataState` values to
+    the `TDataState` generic:
+
+    - `ApolloQueryResult`
+
+    - `QueryRef`
+
+    - `PreloadedQueryRef`
+
+    - `useLazyQuery.Result`
+
+    - `useQuery.Result`
+
+    - `useReadQuery.Result`
+
+    - `useSuspenseQuery.Result`
+
+
+    All `*QueryRef` types default to `complete | streaming` states while the
+    rest of the types default to `'complete' | 'streaming' | 'partial' |
+    'empty'` states. You shouldn't need to provide the states unless you need to
+    either allow for partial data/empty values (`*QueryRef`) or a restricted set
+    of states.
+  healthy-ghosts-report: >-
+    The callback function that can be passed to the `ApolloClient.mutate`
+
+    `refetchQueries` option will now receive a `FormattedExecutionResult` with
+    an
+
+    additional `dataState` option that describes if the result is `"streaming"`
+
+    or `"complete"`.
+
+    This indicates whether the `data` value is of type
+
+    * `Unmasked<TData>` (if `"complete"`)
+
+    * `Streaming<Unmasked<TData>>` (if `"streaming"`)
+  plenty-deers-clean: >-
+    Added a new `Streaming` type that will mark `data` in results while
+    `dataState`
+
+    is `"streaming"`.
+
+
+    `Streaming<TData>` defaults to `TData`, but can be overwritten in userland
+    to
+
+    integrate with different codegen dialects.
+
+
+    You can override this type globally - this example shows how to override it
+
+    with `DeepPartial<TData>`:
+
+    ```ts
+
+    import { HKT, DeepPartial } from "@apollo/client/utilities";
+
+
+    type StreamingOverride<TData> = DeepPartial<TData>;
+
+
+    interface StreamingOverrideHKT extends HKT {
+      return: StreamingOverride<this["arg1"]>;
+    }
+
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides {
+        Streaming: StreamingOverrideHKT;
+      }
+    }
+
+    ```
+  proud-walls-shave: >-
+    Overridable types for `dataState: "complete"`, `dataState: "streaming"` and
+
+    `dataState: "partial"` responses.
+
+
+    This adds the `DataValue` namespace exported from Apollo Client with the
+    three
+
+    types `DataValue.Complete`, `DataValue.Streaming` and `DataValue.Partial`.
+
+
+    These types will be used to mark `TData` in the respective states.
+
+
+    * `Complete` defaults to `TData`
+
+    * `Streaming` defaults to `TData`
+
+    * `Partial` defaults to `DeepPartial<TData>`
+
+
+    All three can be overwritten, e.g. to be `DeepReadonly` using higher kinded
+    types
+
+    by following this pattern:
+
+
+    ```ts
+
+    import { HKT, DeepPartial } from "@apollo/client/utilities";
+
+    import { DeepReadonly } from "some-type-helper-library";
+
+
+    interface CompleteOverride extends HKT {
+      return: DeepReadonly<this["arg1"]>;
+    }
+
+
+    interface StreamingOverride extends HKT {
+      return: DeepReadonly<this["arg1"]>;
+    }
+
+
+    interface PartialOverride extends HKT {
+      return: DeepReadonly<DeepPartial<this["arg1"]>>;
+    }
+
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides {
+        Complete: CompleteOverride;
+        Streaming: StreamingOverride;
+        Partial: PartialOverride;
+      }
+    }
+
+    ```
+  ten-sloths-punch: >-
+    The `mutationResult` option passed to the `updateQueries` callback now has
+    an
+
+    additional property, `dataState` with possible values of `"complete"` and
+    `"streaming"`.
+
+    This indicates whether the `data` value is of type
+
+    * `Unmasked<TData>` (if `"complete"`)
+
+    * `Streaming<Unmasked<TData>>` (if `"streaming"`)
+  wild-carpets-exercise: >-
+    Add a new `dataState` property that determines the completeness of the
+    `data` property. `dataState` helps narrow the type of `data`. `dataState` is
+    now emitted from `ObservableQuery` and returned from all React hooks that
+    return a `data` property.
+
+
+    The `dataState` values are:
+
+
+    - `empty`: No data could be fulfilled from the cache or the result is
+    incomplete. `data` is `undefined`.
+
+    - `partial`: Some data could be fulfilled from the cache but `data` is
+    incomplete. This is only possible when `returnPartialData` is `true`.
+
+    - `streaming`: `data` is incomplete as a result of a deferred query and the
+    result is still streaming in.
+
+    - `complete`: `data` is a fully satisfied query result fulfilled either from
+    the cache or network.
+
+
+    Example:
+
+
+    ```ts
+
+    const { data, dataState } = useQuery<TData>(query);
+
+
+    if (dataState === 'empty') {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+
+
+    if (dataState === 'partial') {
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<TData>>();
+    }
+
+
+    if (dataState === 'streaming') {
+      expectTypeOf(data).toEqualTypeOf<TData>();
+    }
+
+
+    if (dataState === 'complete') {
+      expectTypeOf(data).toEqualTypeOf<TData>();
+    }
+
+    ```
+queries:
+  empty-rats-cough: Aliasing any other field to `__typename` is now forbidden.
+  hot-seahorses-film: >-
+    Aliasing a field to an alias beginning with `__ac_` is now forbidden - this
+    namespace is now reserved for internal use.
+  itchy-chefs-run: >-
+    When passing a `variables` key with the value `undefined`, the value will be
+    replaced by the default value in the query, if it is provided, rather than
+    leave it as `undefined`.
+
+
+    ```ts
+
+    // given this query
+
+    const query = gql`
+      query PaginatedQuery($limit: Int! = 10, $offset: Int) {
+        list(limit: $limit, offset: $offset) {
+          id
+        }
+      }
+    `
+
+
+    const observable = client.query({ query, variables: { limit: 5, offset: 0
+    }});
+
+    console.log(observable.variables) // => { limit: 5, offset: 0 }
+
+
+    observable.reobserve({ variables: { limit: undefined, offset: 10 }})
+
+    // limit is now `10`. This would previously be `undefined`
+
+    console.log(observable.variables) // => { limit: 10, offset: 10 }
+
+    ```
+mutations:
+  ten-sloths-punch: >-
+    The `mutationResult` option passed to the `updateQueries` callback now has
+    an
+
+    additional property, `dataState` with possible values of `"complete"` and
+    `"streaming"`.
+
+    This indicates whether the `data` value is of type
+
+    * `Unmasked<TData>` (if `"complete"`)
+
+    * `Streaming<Unmasked<TData>>` (if `"streaming"`)
+data_masking:
+  curvy-lamps-sing: >-
+    Provide a mechanism to override the DataMasking types.
+
+
+    Up until now, our types `Masked`, `MaskedDocumentNode`, `FragmentType`,
+    `MaybeMasked` and `Unmasked` would assume that you are stictly using the
+    type output format of GraphQL Codegen.
+
+
+    With this change, you can now modify the behaviour of those types if you use
+    a different form of codegen that produces different types for your queries.
+
+
+    A simple implementation that would override the `Masked` type to remove all
+    fields starting with `_` from a type would look like this:
+
+
+    ```ts
+
+    // your actual implementation of `Masked`
+
+    type CustomMaskedImplementation<TData> = {
+      [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
+    };
+
+
+    import { HKT } from "@apollo/client/utilities";
+
+    // transform this type into a higher kinded type that can be evaulated at a
+    later time
+
+    interface CustomMaskedType extends HKT {
+      arg1: unknown; // TData
+      return: CustomMaskedImplementation<this["arg1"]>;
+    }
+
+
+    // create an "implementation interface" for the types you want to override
+
+    export interface CustomDataMaskingImplementation {
+      Masked: CustomMaskedType;
+      // other possible keys: `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked`
+    }
+
+    ```
+
+    then you would use that `CustomDataMaskingImplementation` interface in your
+    project to extend the `TypeOverrides` interface exported by `@apollo/client`
+    with it's functionality:
+
+
+    ```ts
+
+    declare module "@apollo/client" {
+      export interface TypeOverrides extends CustomDataMaskingImplementation {}
+    }
+
+    ```
+
+
+    After that, all internal usage of `Masked` in Apollo Client as well as all
+    usage in your code base will use the new `CustomMaskedType` implementation.
+
+
+    If you don't specify overrides, Apollo Client will still default to the
+    GraphQL Codegen data masking implementation.
+
+    The types for that are also explicitly exported as the
+    `GraphQLCodegenDataMasking` namespace in `@apollo/client/masking`.
+subscriptions:
+  rare-apes-drive: >-
+    Deduplicating subscription operations is now supported. Previously it was
+    possible to deduplicate a subscription only if the new subscription was
+    created before a previously subscribed subscription emitted any values. As
+    soon as a value was emitted from a subscription, new subscriptions would
+    create new connections. Deduplication is now active for as long as a
+    subscription connection is open (i.e. the source observable hasn't emitted a
+    `complete` or `error` notification yet.)
+
+
+    To disable deduplication and force a new connection, use the
+    `queryDeduplication` option in `context` like you would a query operation.
+
+
+    As a result of this change, calling the `restart` function returned from
+    `useSubscription` will now restart the connection on deduplicated
+    subscriptions.
+LocalState:
+  flat-readers-invite: >-
+    Introduce a new GraphQL Codegen plugin aimed at creating resolver types for
+    `LocalState`. This plugin is similar to
+    `@graphql-codegen/typescript-resolvers` but tailored to provide types that
+    work with `LocalState`.
+
+
+    To use the plugin, install `@apollo/client-graphql-codegen` and add the
+    following to your codegen config:
+
+
+    ```ts
+
+    // codegen.ts
+
+
+    const config: CodegenConfig = {
+      // ...
+      generates: {
+        "./path/to/local/resolvers.ts": {
+          schema: [
+            "./path/to/localSchema.graphql",
+          ],
+          plugins: [
+            "typescript",
+            "@apollo/client-graphql-codegen/local-state",
+          ],
+          // ...
+        }
+      }
+    }
+
+    ```
+
+
+    This will generate a `Resolvers` type in the generated file that can be used
+    to provide type information to `LocalState`.
+
+
+    ```ts
+
+    import type { Resolvers } from "./path/to/resolvers-types.ts";
+
+
+    const localState = new LocalState<Resolvers>({
+      // ...
+    });
+
+    ```
+
+
+    It is also recommended to add the following config:
+
+    ```ts
+
+    // codegen.ts
+
+    import type { LocalStatePluginConfig } from
+    "@apollo/client-graphql-codegen/local-state";
+
+
+    const config: CodegenConfig = {
+      // ...
+      generates: {
+        "./path/to/local/resolvers.ts": {
+          config: {
+            // Ensures you return a `__typename` for any `@client` fields that
+            // return object or array types
+            nonOptionalTypename: true,
+
+            // Required if your localSchema extends existing schema types.
+            baseTypesPath: "./relative/path/to/base/schema/types",
+
+            // If you provide a `context` function to customize the context value,
+            // provide the path or type here.
+            contextType: "./path/to/contextValue#ContextValue",
+          } satisfies LocalStatePluginConfig
+        }
+      }
+    }
+
+    ```
+
+
+    NOTE: It is recommended that the schema file passed to the `schema` option
+    is your local schema, not your entire app schema in order to only generate
+    resolver types for your local fields, otherwise the plugin will generate
+    resolver types for your entire remote schema as well.
+  funny-boats-wink: >-
+    Revamp local resolvers and fix several issues from the existing `resolvers`
+    option.
+
+    - Throwing errors in a resolver will set the field value as `null` and add
+    an error to the response's `errors` array.
+
+    - Remote results are dealiased before they are passed as the parent object
+    to a resolver so that you can access fields by their field name.
+
+    - You can now specify a `context` function that you can use to customize the
+    `requestContext` given to resolvers.
+
+    - The `LocalState` class accepts a `Resolvers` generic that provides
+    autocompletion and type checking against your resolver types to ensure your
+    resolvers are type-safe.
+
+    - `data: null` is now handled correctly and does not call your local
+    resolvers when the server does not provide a result.
+
+    - Additional warnings have been added to provide hints when resolvers behave
+    unexpectedly.
+
+
+    ```ts
+
+    import { LocalState } from "@apollo/client/local-state";
+
+
+    import { Resolvers } from "./path/to/local-resolvers-types.ts";
+
+
+    // LocalState now accepts a `Resolvers` generic.
+
+    const localState = new LocalState<Resolvers>({
+      // The return value of this funciton
+      context: (options) => ({
+        // ...
+      }),
+      resolvers: {
+        // ...
+      }
+    });
+
+
+    // You may also pass a `ContextValue` generic used to ensure the `context`
+
+    // function returns the correct type. This type is inferred from your
+    resolvers
+
+    // if not provided.
+
+    new LocalState<Resolvers, ContextValue>({
+      // ...
+    });
+
+    ```
+  kind-taxis-thank: >-
+    Don't warn about a missing resolver if a `@client` does not have a
+    configured resolver. It is possible the cache contains a `read` function for
+    the field and the warning added confusion.
+
+
+    Note that `read` functions without a defined resolver will receive the
+    `existing` argument as `null` instead of `undefined` even when data hasn't
+    been written to the cache. This is because `LocalState` sets a default value
+    of `null` when a resolver is not defined to ensure that the field contains a
+    value in case a `read` function is not defined rather than omitting the
+    field entirely.
+  little-parrots-bow: >-
+    Removes the `resolvers` option from `ApolloClient`. Local resolvers have
+    instead been moved to the new `LocalState` instance which is assigned to the
+    `localState` option in `ApolloClient`. To migrate, move the `resolvers`
+    values into a `LocalState` instance and assign that instance to
+    `localState`.
+
+
+    ```diff
+
+    new ApolloClient({
+
+    - resolvers: { /* ... */ }
+
+    + localState: new LocalState({
+
+    +   resolvers: { /* ... */ }
+
+    + }),
+
+    });
+
+    ```
+  olive-cougars-ring: >-
+    Remove local resolvers APIs from `ApolloClient` in favor of `localState`.
+    Methods removed are:
+
+    - `addResolvers`
+
+    - `getResolvers`
+
+    - `setResolvers`
+
+    - `setLocalStateFragmentMatcher`
+  strong-rivers-fry: >-
+    The resolver function's `context` argument (the 3rd argument) has changed to
+    provide additional information without the possibility of name clashes.
+    Previously the `context` argument would spread request context and override
+    the `client` and `cache` properties to give access to both inside of a
+    resolver. The `context` argument takes now takes the following shape:
+
+
+    ```ts
+
+    {
+      // the request context. By default `TContextValue` is of type `DefaultContext`,
+      // but can be changed if a `context` function is provided.
+      requestContext: TContextValue,
+      // The client instance making the request
+      client: ApolloClient,
+      // Whether the resolver is run as a result of gathering exported variables
+      // or resolving the value as part of the result
+      phase: "exports" | "resolve"
+    }
+
+    ```
+
+
+    To migrate, pull any request context from `requestContext` and the `cache`
+    from the `client` property:
+
+
+    ```diff
+
+    new LocalState({
+      resolvers: {
+        Query: {
+    -     myResolver: (parent, args, { someValue, cache }) => {
+
+    +     myResolver: (parent, args, { requestContext, client }) => {
+
+    +       const someValue = requestContext.someValue;
+
+    +       const cache = client.cache;
+          }
+        }
+      }
+    });
+
+    ```
+  stupid-pumpkins-travel: >-
+    Apollo Client no longer ships with support for `@client` fields
+    out-of-the-box and now must be opt-in. To opt in to use `@client` fields,
+    pass an instantiated `LocalState` instance to the `localState` option. If a
+    query contains `@client` and local state hasn't been configured, an error
+    will be thrown.
+
+
+    ```ts
+
+    import { LocalState } from "@apollo/client/local-state";
+
+
+    new ApolloClient({
+      localState: new LocalState(),
+    });
+
+    ```
+  thirty-pens-jump: >-
+    Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment
+    matchers used with local state are no longer supported. Fragment matching is
+    now performed by the configured `cache` via the `cache.fragmentMatches` API.
+codegen:
+  flat-readers-invite: >-
+    Introduce a new GraphQL Codegen plugin aimed at creating resolver types for
+    `LocalState`. This plugin is similar to
+    `@graphql-codegen/typescript-resolvers` but tailored to provide types that
+    work with `LocalState`.
+
+
+    To use the plugin, install `@apollo/client-graphql-codegen` and add the
+    following to your codegen config:
+
+
+    ```ts
+
+    // codegen.ts
+
+
+    const config: CodegenConfig = {
+      // ...
+      generates: {
+        "./path/to/local/resolvers.ts": {
+          schema: [
+            "./path/to/localSchema.graphql",
+          ],
+          plugins: [
+            "typescript",
+            "@apollo/client-graphql-codegen/local-state",
+          ],
+          // ...
+        }
+      }
+    }
+
+    ```
+
+
+    This will generate a `Resolvers` type in the generated file that can be used
+    to provide type information to `LocalState`.
+
+
+    ```ts
+
+    import type { Resolvers } from "./path/to/resolvers-types.ts";
+
+
+    const localState = new LocalState<Resolvers>({
+      // ...
+    });
+
+    ```
+
+
+    It is also recommended to add the following config:
+
+    ```ts
+
+    // codegen.ts
+
+    import type { LocalStatePluginConfig } from
+    "@apollo/client-graphql-codegen/local-state";
+
+
+    const config: CodegenConfig = {
+      // ...
+      generates: {
+        "./path/to/local/resolvers.ts": {
+          config: {
+            // Ensures you return a `__typename` for any `@client` fields that
+            // return object or array types
+            nonOptionalTypename: true,
+
+            // Required if your localSchema extends existing schema types.
+            baseTypesPath: "./relative/path/to/base/schema/types",
+
+            // If you provide a `context` function to customize the context value,
+            // provide the path or type here.
+            contextType: "./path/to/contextValue#ContextValue",
+          } satisfies LocalStatePluginConfig
+        }
+      }
+    }
+
+    ```
+
+
+    NOTE: It is recommended that the schema file passed to the `schema` option
+    is your local schema, not your entire app schema in order to only generate
+    resolver types for your local fields, otherwise the plugin will generate
+    resolver types for your entire remote schema as well.
+cache:
+  moody-lobsters-listen: >-
+    The `Cache.DiffResult<T>` type is now a union type with better type safety
+    for both complete and partial results. Checking `diff.complete` will now
+    narrow the type of `result` depending on whether the value is `true` or
+    `false`.
+
+
+    When `true`, `diff.result` will be a non-null value equal to the `T` generic
+    type. When `false`, `diff.result` now reports `result` as `DeepPartial<T> |
+    null` indicating that fields in the result may be missing (`DeepPartial<T>`)
+    or empty entirely (`null`).
+  rare-dingos-doubt: >-
+    Remove the check and warning for `cache.fragmentMatches` when applying data
+    masking. `cache.fragmentMatches` is a required API and data masking may
+    crash when `cache.fragmentMatches` does not exist.
+  serious-items-develop: >-
+    Third-party caches must now implement the `fragmentMatches` API.
+    Additionally `fragmentMatches` must be able to handle both
+    `InlineFragmentNode` and `FragmentDefinitionNode` nodes.
+
+
+    ```ts
+
+    class MyCache extends ApolloCache {
+      // This is now required
+      public fragmentMatches(
+        fragment: InlineFragmentNode | FragmentDefinitionNode,
+        typename: string
+      ): boolean {
+        return // ... logic to determine if typename matches fragment
+      }
+    }
+
+    ```
+  yellow-cats-judge: >-
+    ### Changes for users of `InMemoryCache`
+
+
+    `cache.diff` no longer throws when `returnPartialData` is set to `false`
+    without a complete result. Instead, `cache.diff` will return `null` when it
+    is unable to read a full cache result.
+
+
+    If you use `cache.diff` directly with `returnPartialData: false`, remove the
+    `try`/`catch` block and replace with a check for `null`.
+
+
+    ### Changes for third-party cache implementations
+
+
+    The client now expects `cache.diff` to return `null` instead of throwing
+    when the cache returns an incomplete result and `returnPartialData` is
+    `false`. The internal `try`/`catch` blocks have been removed around
+    `cache.diff`. If your cache implementation throws for incomplete results,
+    please update this to return `null`.
+  pretty-rocks-behave: >-
+    Deprecate second argument to `readFragment` and `readQuery` - `optimistic`
+    should be passed as part of the object in the first argument instead.
+  calm-frogs-remain: >-
+    Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`.
+    `__typename` is now always added to the outgoing query document when using
+    `InMemoryCache` and cannot be disabled.
+
+
+    If you are using `<MockedProvider />` with `addTypename={false}`, ensure
+    that your mocked responses include a `__typename` field. This will ensure
+    cache normalization kicks in and behaves more like production.
+  eleven-moons-heal: Remove deprecated `resultCacheMaxSize` option from `InMemoryCache` options.
+InMemoryCache:
+  tall-cups-suffer: >-
+    ### Changes for users of `InMemoryCache`
+
+
+    `cache.diff` now returns `null` instead of an empty object (`{}`) when
+    `returnPartialData` is `true` and the result is empty.
+
+
+    If you use `cache.diff` directly with `returnPartialData: true`, you will
+    need to check for `null` before accessing any other fields on the `result`
+    property. A non-null value indicates that at least one field was present in
+    the cache for the given query document.
+
+
+    ### Changes for third-party cache implementations
+
+
+    The client now expects `cache.diff` to return `null` instead of an empty
+    object when there is no data that can be fulfilled from the cache and
+    `returnPartialData` is `true`. If your cache implementation returns an empty
+    object, please update this to return `null`.
+  yellow-cats-judge: >-
+    ### Changes for users of `InMemoryCache`
+
+
+    `cache.diff` no longer throws when `returnPartialData` is set to `false`
+    without a complete result. Instead, `cache.diff` will return `null` when it
+    is unable to read a full cache result.
+
+
+    If you use `cache.diff` directly with `returnPartialData: false`, remove the
+    `try`/`catch` block and replace with a check for `null`.
+
+
+    ### Changes for third-party cache implementations
+
+
+    The client now expects `cache.diff` to return `null` instead of throwing
+    when the cache returns an incomplete result and `returnPartialData` is
+    `false`. The internal `try`/`catch` blocks have been removed around
+    `cache.diff`. If your cache implementation throws for incomplete results,
+    please update this to return `null`.
+imports:
+  afraid-grapes-call: Export `gql` from the `@apollo/client/react` entrypoint.
+  clean-sloths-travel: Export the `IgnoreModifier` type from `@apollo/client/cache`.
+  dirty-cobras-change: >-
+    Move most of the utilities in `@apollo/client/utilities` to
+    `@apollo/client/utilities/internal`. Many of the utilities exported from the
+    `@apollo/client/utilities` endpoint were not considered stable.
+
+
+    As a result of this change, utilities or types exported from
+    `@apollo/client/utilities` are now documented and considered stable and will
+    not undergo breaking changes.
+  dirty-eagles-poke: >-
+    Removed the `@apollo/client/react/context` and `@apollo/client/react/hooks`
+    entry points. Please use `@apollo/client/react` instead.
+  late-trainers-peel: >-
+    * dropped the deprecated `DEV` export from `@apollo/client/utilities` and
+    `@apollo/client/utilities/globals`
+
+    * moved the `__DEV__` export from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/environment`
+
+    * moved the `invariant`, `newInvariantError` and `InvariantError` exports
+    from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/invariant`
+  perfect-vans-give: |-
+    The `@apollo/client` and `@apollo/client/core` entry points are now equal.
+    In the next major, the `@apollo/client/core` entry point will be removed.
+    Please change imports over from `@apollo/client/core` to `@apollo/client`.
+testing:
+  afraid-moons-arrive: >-
+    Allow mocked responses passed to `MockLink` to accept a callback for the
+    `delay` option. The `delay` callback will be given the current operation
+    which can be used to determine what delay should be used for the mock.
+  calm-frogs-remain: >-
+    Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`.
+    `__typename` is now always added to the outgoing query document when using
+    `InMemoryCache` and cannot be disabled.
+
+
+    If you are using `<MockedProvider />` with `addTypename={false}`, ensure
+    that your mocked responses include a `__typename` field. This will ensure
+    cache normalization kicks in and behaves more like production.
+  early-eggs-develop: >-
+    Introduce a new `realisticDelay` helper function for use with the `delay`
+    callback for mocked responses used with `MockLink`. `realisticDelay` will
+    generate a random value between 20 and 50ms to provide an experience closer
+    to unpredictable network latency. `realisticDelay` can be configured with a
+    `min` and `max` to set different thresholds if the defaults are not
+    sufficient.
+
+
+    ```ts
+
+    import { realisticDelay } from '@apollo/client/testing';
+
+
+    new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' }},
+        delay: realisticDelay()
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' }},
+        delay: realisticDelay({ min: 10, max: 100 })
+      },
+    ]);
+
+    ```
+  friendly-olives-refuse: >-
+    Remove the `@apollo/client/testing/experimental` test utilities. Use
+    [GraphQL Testing
+    Library](https://github.com/apollographql/graphql-testing-library) instead.
+  ninety-bags-bake: >-
+    Mocked responses passed to `MockLink` now accept a callback for the
+    `request.variables` option. This is used to determine if the mock should be
+    matched for a set of request variables. With this change, the
+    `variableMatcher` option has been removed in favor of passing a callback to
+    `variables`. Update by moving the callback function from `variableMatcher`
+    to `request.variables`.
+
+
+    ```diff
+
+    new MockLink([
+      {
+        request: {
+          query,
+    +     variables: (requestVariables) => true
+        },
+    -   variableMatcher: (requestVariables) => true
+      }
+    ]);
+
+    ```
+  short-months-complain: >-
+    Throw an error when a client-only query is used in a mocked response passed
+    to `MockLink`.
+  sour-guests-poke: >-
+    Remove the `@apollo/client/testing/core` entrypoint in favor of
+    `@apollo/client/testing`.
+  swift-rivers-share: >-
+    Default the `delay` for all mocked responses passed to `MockLink` using
+    `realisticDelay`. This ensures your test handles loading states by default
+    and is not reliant on a specific timing.
+
+
+    If you would like to restore the old behavior, use a global default delay of
+    `0`.
+
+
+    ```ts
+
+    MockLink.defaultOptions = {
+      delay: 0
+    }
+
+    ```
+  wicked-forks-double: >-
+    Remove `newData` option for mocked responses passed to `MockLink` or the
+    `mocks` option on `MockedProvider`. This option was undocumented and was
+    nearly identical to using the `result` option as a callback.
+
+
+    To replicate the old behavior of `newData`, use `result` as a callback and
+    add the `maxUsageCount` option with a value set to
+    `Number.POSITIVE_INFINITY`.
+
+
+    **with `MockLink`**
+
+    ```diff
+
+    new MockLink([
+      {
+        request: { query, variables },
+    -   newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   maxUsageCount: Number.POSITIVE_INFINITY,
+      }
+    ])
+
+    ```
+
+
+    **with `MockedProvider`**
+
+    ```diff
+
+    <MockedProvider
+      mocks={[
+        {
+          request: { query, variables },
+    -     newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     maxUsageCount: Number.POSITIVE_INFINITY,
+        }
+      ]}
+    />
+
+    ```
+  shaggy-pugs-add: >-
+    Add ability to specify a default `delay` for all mocked responses passed to
+    `MockLink`. This `delay` can be configured globally (all instances of
+    `MockLink` will use the global defaults), or per-instance (all mocks in a
+    single instance will use the defaults). A `delay` defined on a single mock
+    will supercede all default delays. Per-instance defaults supercede global
+    defaults.
+
+
+    **Global defaults**
+
+
+    ```ts
+
+    MockLink.defaultOptions = {
+      // Use a default delay of 20ms for all mocks in all instances without a specified delay
+      delay: 20,
+
+      // altenatively use a callback which will be executed for each mock
+      delay: () => getRandomNumber(),
+
+      // or use the built-in `realisticDelay`. This is the default
+      delay: realisticDelay(),
+    }
+
+    ```
+
+
+    **Per-instance defaults**
+
+
+    ```ts
+
+    new MockLink(
+      [
+        // Use the default delay
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+        },
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+          // Override the default for this mock
+          delay: 10
+        },
+      ],
+      {
+        defaultOptions: {
+          // Use a default delay of 20ms for all mocks without a specified delay
+          delay: 20,
+
+          // altenatively use a callback which will be executed for each mock
+          delay: () => getRandomNumber(),
+
+          // or use the built-in `realisticDelay`. This is the default
+          delay: realisticDelay(),
+        }
+      }
+    );
+
+    ```
+links:
+  afraid-moons-arrive: >-
+    Allow mocked responses passed to `MockLink` to accept a callback for the
+    `delay` option. The `delay` callback will be given the current operation
+    which can be used to determine what delay should be used for the mock.
+  beige-houses-fail: >-
+    The `includeExtensions` option of `HttpLink` and `BatchHttpLink` now
+    defaults
+
+    to `true`.
+
+
+    If `includeExtensions` is `true`, but `extensions` is not set or empty,
+    extensions
+
+    will not be included in outgoing requests.
+  beige-mirrors-talk: >-
+    `onError` link now uses a single `error` property to report the error that
+    caused the link callback to be called. This will be an instance of
+    `CombinedGraphQLErrors` in the event GraphQL errors were emitted from the
+    terminating link, `CombinedProtocolErrors` if the terminating link emitted
+    protocol errors, or the unwrapped error type if any other non-GraphQL error
+    was thrown or emitted.
+
+
+    ```diff
+
+    - const errorLink = onError(({ graphQLErrors, networkError, protocolErrors
+    }) => {
+
+    -   graphQLErrors.forEach(error => console.log(error.message));
+
+    + const errorLink = onError(({ error }) => {
+
+    +   if (error.name === 'CombinedGraphQLErrors') {
+
+    +     error.errors.forEach(rawError => console.log(rawError.message));
+
+    +   }
+
+    });
+
+    ```
+  curvy-flies-accept: >-
+    The `getCacheKey` function is no longer available from
+    `operation.getContext()` in the link chain. Use
+    `operation.client.cache.identify(obj)` in the link chain instead.
+  early-eggs-develop: >-
+    Introduce a new `realisticDelay` helper function for use with the `delay`
+    callback for mocked responses used with `MockLink`. `realisticDelay` will
+    generate a random value between 20 and 50ms to provide an experience closer
+    to unpredictable network latency. `realisticDelay` can be configured with a
+    `min` and `max` to set different thresholds if the defaults are not
+    sufficient.
+
+
+    ```ts
+
+    import { realisticDelay } from '@apollo/client/testing';
+
+
+    new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' }},
+        delay: realisticDelay()
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' }},
+        delay: realisticDelay({ min: 10, max: 100 })
+      },
+    ]);
+
+    ```
+  fuzzy-seahorses-hunt: >-
+    Remove code that strips `@client` fields in `HttpLink` and `BatchHttpLink`.
+    This was unused code since core handles removing `@client` fields and should
+    have no observable change.
+  gentle-waves-cough: >-
+    The `cache` and `forceFetch` properties are no longer available on context
+    when calling `operation.getContext()`. `cache` can be accessed through the
+    `operation` with `operation.client.cache` instead. `forceFetch` has been
+    replaced with `queryDeduplication` which specifies whether
+    `queryDeduplication` was enabled for the request or not.
+  giant-apes-thank: >-
+    Remove the `onError` and `setOnError` methods from `ApolloLink`. `onError`
+    was only used by `MockLink` to rewrite errors if `setOnError` was used.
+  giant-bags-share: >-
+    Throw an error for queries and mutations if the link chain completes without
+    emitting a value.
+  khaki-bears-destroy: >-
+    Adds enhanced client awareness to the client.
+
+
+    `HttpLink` and `BatchHttpLink` will now per default send information about
+    the
+
+    client library you are using in `extensions`.
+
+
+    This could look like this:
+
+
+    ```json
+
+    {
+      "query": "query GetUser($id: ID!) { user(id: $id) { __typename id name } }",
+      "variables": {
+        "id": 5
+      },
+      "extensions": {
+        "clientLibrary": {
+          "name": "@apollo/client",
+          "version": "4.0.0"
+        }
+      }
+    }
+
+    ```
+
+
+    This feature can be disabled by passing `enhancedClientAwareness: {
+    transport: false }` to your
+
+    `ApolloClient`,  `HttpLink` or `BatchHttpLink` constructor options.
+  khaki-coats-prove: >-
+    The new `SetContextLink` flips the `prevContext` and `operation` arguments
+    in the callback. The `setContext` function has remained unchanged.
+
+
+    ```diff
+
+    - new SetContextLink((operation, prevContext) => {
+
+    + new SetContextLink((prevContext, operation) => {
+      // ...
+    })
+
+    ```
+  lazy-baboons-rescue: >-
+    Slightly rework multipart response parsing.
+
+
+    This removes last incremental-protocol-specific details from `HttpLink` and
+    `BatchHttpLink`.
+  lucky-sheep-explain: >-
+    Provide an extension to define types for `context` passed to the link chain.
+    To define your own types, use [declaration
+    merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
+    to add properties to the `DefaultContext` type.
+
+
+    ```ts
+
+    // @apollo-client.d.ts
+
+    // This import is necessary to ensure all Apollo Client imports
+
+    // are still available to the rest of the application.
+
+    import '@apollo/client';
+
+
+    declare module "@apollo/client" {
+      interface DefaultContext extends Record<string, any> {
+        myProperty: string;
+      }
+    }
+
+    ```
+
+
+    Links that provide context options can be used with this type to add those
+    context types to `DefaultContext`. For example, to add context options from
+    `HttpLink`, add the following code:
+
+
+    ```ts
+
+    import { HttpLink } from "@apollo/client";
+
+
+    declare module "@apollo/client" {
+      interface DefaultContext extends HttpLink.ContextOptions {
+        myProperty: string;
+      }
+    }
+
+    ```
+
+
+    At this time, the following built-in links support context options:
+
+    - `HttpLink.ContextOptions`
+
+    - `BatchHttpLink.ContextOptions`
+  mighty-penguins-wink: >-
+    Removes the `throwServerError` utility function. Now that `ServerError` is
+    an
+
+    `Error` subclass, you can throw these errors directly:
+
+
+    ```js
+
+    import { ServerError } from '@apollo/client';
+
+
+    // instead of
+
+    throwServerError(response, result, 'error message')
+
+
+    // Use
+
+    throw new ServerError('error message', { response, result })
+
+    ```
+  ninety-bags-bake: >-
+    Mocked responses passed to `MockLink` now accept a callback for the
+    `request.variables` option. This is used to determine if the mock should be
+    matched for a set of request variables. With this change, the
+    `variableMatcher` option has been removed in favor of passing a callback to
+    `variables`. Update by moving the callback function from `variableMatcher`
+    to `request.variables`.
+
+
+    ```diff
+
+    new MockLink([
+      {
+        request: {
+          query,
+    +     variables: (requestVariables) => true
+        },
+    -   variableMatcher: (requestVariables) => true
+      }
+    ]);
+
+    ```
+  odd-chicken-hide: >-
+    Add the ability to detect if an error was an error was emitted from the link
+    chain. This is useful if your application throws custom errors in other
+    areas of the application and you'd like to differentiate them from errors
+    emitted by the link chain itself.
+
+
+    To detect if an error was emitted from the link chain, use `LinkError.is`.
+
+
+    ```ts
+
+    import { LinkError } from "@apollo/client";
+
+
+    client.query({ query }).catch((error) => {
+      if (LinkError.is(error)) {
+        // This error originated from the link chain
+      }
+    });
+
+    ```
+  perfect-ducks-reflect: >-
+    `ApolloLink.execute` now requires a third argument which provides the
+    `client` that initiated the request to the link chain. If you use `execute`
+    directly, add a third argument with a `client` property:
+
+
+    ```ts
+
+    ApolloLink.execute(link, operation, { client });
+
+
+    // or if you import the `execute` function directly:
+
+    execute(link, operation, { client });
+
+    ```
+  rich-turtles-clap: >-
+    `HttpLink` and `BatchHttpLink` no longer emit a `next` notification with the
+    JSON-parsed response body when a well-formed GraphQL response is returned
+    and a `ServerError` is thrown.
+  rude-crabs-eat: >-
+    The `operation` argument to the callback passed to `SetContextLink` is now
+    of type `SetContextLink.SetContextOperation` which is an `Operation` without
+    the `getContext` or `setContext` functions. Previously the type of
+    `operation` was `GraphQLRequest` which had access to a `context` property.
+    The `context` property was always `undefined` and could result in bugs when
+    using it instead of the `prevContext` argument.
+
+
+    This change means the `operation` argument now contains an accessible
+    `client` property.
+  rude-parrots-suffer: >-
+    Add the new `ClientAwarenessLink`.
+
+
+    This link is already included in `HttpLink` and `BatchHttpLink` to enable
+    the
+
+    "client awareness" and "enhanced client awareness" features, but you can
+    also use
+
+    `ClientAwarenessLink` directly in your link chain to combine it with other
+
+    terminating links.
+
+
+    If you want to save the bundle size that `ClientAwarenessLink` adds to
+    `HttpLink`
+
+    and `BatchHttpLink`, you can use `BaseHttpLink` or `BaseBatchHttpLink`
+    instead.
+
+    These links come without the `ClientAwarenessLink` included.
+
+
+    For example:
+
+    ```diff
+
+    import {
+      ApolloClient,
+    -  HttpLink,
+
+    } from "@apollo/client";
+
+    +import { BaseHttpLink } from "@apollo/client/link/http";
+
+
+    const client = new ApolloClient({
+
+    -  link: new HttpLink({
+
+    +  link: new BaseHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    ```
+  seven-schools-carry: >-
+    Add a `client` property to the `operation` passed to the link chain. This
+    `client` is set as the `client` making the request to the link chain.
+  shaggy-pugs-add: >-
+    Add ability to specify a default `delay` for all mocked responses passed to
+    `MockLink`. This `delay` can be configured globally (all instances of
+    `MockLink` will use the global defaults), or per-instance (all mocks in a
+    single instance will use the defaults). A `delay` defined on a single mock
+    will supercede all default delays. Per-instance defaults supercede global
+    defaults.
+
+
+    **Global defaults**
+
+
+    ```ts
+
+    MockLink.defaultOptions = {
+      // Use a default delay of 20ms for all mocks in all instances without a specified delay
+      delay: 20,
+
+      // altenatively use a callback which will be executed for each mock
+      delay: () => getRandomNumber(),
+
+      // or use the built-in `realisticDelay`. This is the default
+      delay: realisticDelay(),
+    }
+
+    ```
+
+
+    **Per-instance defaults**
+
+
+    ```ts
+
+    new MockLink(
+      [
+        // Use the default delay
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+        },
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' }},
+          // Override the default for this mock
+          delay: 10
+        },
+      ],
+      {
+        defaultOptions: {
+          // Use a default delay of 20ms for all mocks without a specified delay
+          delay: 20,
+
+          // altenatively use a callback which will be executed for each mock
+          delay: () => getRandomNumber(),
+
+          // or use the built-in `realisticDelay`. This is the default
+          delay: realisticDelay(),
+        }
+      }
+    );
+
+    ```
+  sharp-glasses-sneeze: >-
+    The `ErrorResponse` object passed to the `disable` and `retry` callback
+    options provided to `createPersistedQueryLink` no longer provides separate
+    `graphQLErrors` and `networkError` properties and instead have been combined
+    to a single `error` property of type `ErrorLike`.
+
+
+
+    ```diff
+
+    // The following also applies to the `retry` function since it has the same
+    signature
+
+    createPersistedQueryLink({
+
+    - disable: ({ graphQLErrors, networkError }) => {
+
+    + disable: ({ error }) => {
+
+    -   if (graphQLErrors) {
+
+    +   if (CombinedGraphQLErrors.is(error)) {
+          // ... handle GraphQL errors
+        }
+
+    -   if (networkError) {
+
+    +   if (error) {
+          // ... handle link errors
+        }
+
+        // optionally check for a specific kind of error
+    -   if (networkError) {
+
+    +   if (ServerError.is(error)) {
+          // ... handle a server error
+        }
+    });
+
+    ```
+
+
+    The `response` property has also been renamed to `result`.
+
+
+    ```diff
+
+    createPersistedQueryLink({
+
+    -  disable: ({ response }) => {
+
+    +  disable: ({ result }) => {
+          // ... handle GraphQL errors
+        }
+      }
+    });
+
+    ```
+  short-months-complain: >-
+    Throw an error when a client-only query is used in a mocked response passed
+    to `MockLink`.
+  sour-donuts-sit: >-
+    Prioritize usage of `FormattedExecutionResult` over `FetchResult` where
+    applicable.
+
+
+    Many APIs used `FetchResult` in place of `FormattedExecutionResult`, which
+    could
+
+    cause inconsistencies.
+
+
+    * `FetchResult` is now used to refer to an unhandled "raw" result as
+    returned from
+      a link.
+      This can also include incremental results that use a different format.
+    * `FormattedExecutionResult` from the `graphql` package is now used to
+    represent
+      the execution of a standard GraphQL request without incremental results.
+
+    If your custom links access the `data` property, you might need to first
+    check if
+
+    the result is a standard GraphQL result by using the
+    `isFormattedExecutionResult`
+
+    helper from `@apollo/client/utilities`.
+  sour-kids-deliver: Rename the `@apollo/client/link/core` entrypoint to `@apollo/client/link`.
+  stupid-paws-jam: |-
+    The `response` property in `onError` link has been renamed to `result`.
+
+    ```diff
+    - onError(({ response }) => {
+    + onError(({ result }) => {
+        // ...
+    });
+    ```
+  swift-rivers-share: >-
+    Default the `delay` for all mocked responses passed to `MockLink` using
+    `realisticDelay`. This ensures your test handles loading states by default
+    and is not reliant on a specific timing.
+
+
+    If you would like to restore the old behavior, use a global default delay of
+    `0`.
+
+
+    ```ts
+
+    MockLink.defaultOptions = {
+      delay: 0
+    }
+
+    ```
+  tame-doors-shop: >-
+    Remove workarounds for streaming with non-WhatWG response bodies to reduce
+    bundle size.
+
+
+    This removes support for `fetch` implementations that return Node Streams,
+    Async Iterators or Blob instances as `Response.body`.
+
+
+    In the WhatWG Fetch specification,
+    [`Response.body`](https://fetch.spec.whatwg.org/#body) is specified as a
+    WhatWG [ReadableStream](https://streams.spec.whatwg.org/#readablestream).
+
+
+    At this point in time, this is natively supported in browsers, `node` and
+    React Native (via
+    [react-native-fetch-api](https://www.npmjs.com/package/react-native-fetch-api),
+    see our [setup instructions for React
+    Native](https://www.apollographql.com/docs/react/integrations/react-native#consuming-multipart-http-via-text-streaming)).
+
+
+    If you are using an older `fetch` polyfill that deviates from the spec, this
+    might not be compatible - for example,
+    [node-fetch](https://github.com/node-fetch/node-fetch?tab=readme-ov-file#interface-body)
+    returns a node `Readable` instead of a `ReadableStream`.
+
+    In those cases, please switch to a compatible alternative such as the
+    `node`-native `fetch`, or `undici`.
+  tame-rice-explain: >-
+    Adds an `accept` option to `HttpOptions` that allows to add additional
+    `Accept` headers to be merged in without overriding user-specified or
+    default accept headers.
+  thirty-lemons-rhyme: >-
+    Add `operationType` to `operation` in `ApolloLink`. This means that
+    determining whether a `query` is a specific operation type can now be
+    compared with this property instead of using `getMainDefinition`.
+
+
+    ```diff
+
+    - import { getMainDefinition } from "@apollo/client/utilities";
+
+    + import { OperationTypeNode } from "graphql";
+
+
+    ApolloLink.split(
+
+    - ({ query }) => {
+
+    -   const definition = getMainDefinition(query);
+
+    -   return (
+
+    -     definition.kind === 'OperationDefinition' &&
+
+    -     definition.operation === 'subscription'
+
+    -   );
+
+    -   return
+
+    - },
+
+    + ({ operationType }) => {
+
+    +   return operationType === OperationTypeNode.SUBSCRIPTION;
+
+    + },
+      conditionTrueLink,
+      conditionFalseLink,
+    );
+
+    ```
+  weak-owls-buy: >-
+    All links are now available as classes. The old creator functions have been
+    deprecated.
+
+
+    Please migrate these function calls to class creations:
+
+
+    ```diff
+
+    import {
+
+    - setContext
+
+    + SetContextLink
+
+    } from "@apollo/client/link/context"
+
+
+    -const link = setContext(...)
+
+    +const link = new SetContextLink(...)
+
+    ```
+
+
+    ```diff
+
+    import {
+
+    - createHttpLink
+
+    + HttpLink
+
+    } from "@apollo/client/link/http"
+
+
+    -const link = createHttpLink(...)
+
+    +const link = new HttpLink(...)
+
+    ```
+
+
+    ```diff
+
+    import {
+
+    - createPersistedQueryLink
+
+    + PersistedQueryLink
+
+    } from "@apollo/client/link/persisted-queries"
+
+
+    -const link = createPersistedQueryLink(...)
+
+    +const link = new PersistedQueryLink(...)
+
+    ```
+
+
+    ```diff
+
+    import {
+
+    - removeTypenameFromVariables
+
+    + RemoveTypenameFromVariablesLink
+
+    } from "@apollo/client/link/remove-typename"
+
+
+    -const link = removeTypenameFromVariables(...)
+
+    +const link = new RemoveTypenameFromVariablesLink(...)
+
+    ```
+  wicked-forks-double: >-
+    Remove `newData` option for mocked responses passed to `MockLink` or the
+    `mocks` option on `MockedProvider`. This option was undocumented and was
+    nearly identical to using the `result` option as a callback.
+
+
+    To replicate the old behavior of `newData`, use `result` as a callback and
+    add the `maxUsageCount` option with a value set to
+    `Number.POSITIVE_INFINITY`.
+
+
+    **with `MockLink`**
+
+    ```diff
+
+    new MockLink([
+      {
+        request: { query, variables },
+    -   newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   maxUsageCount: Number.POSITIVE_INFINITY,
+      }
+    ])
+
+    ```
+
+
+    **with `MockedProvider`**
+
+    ```diff
+
+    <MockedProvider
+      mocks={[
+        {
+          request: { query, variables },
+    -     newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     maxUsageCount: Number.POSITIVE_INFINITY,
+        }
+      ]}
+    />
+
+    ```
+  young-moons-admire: >-
+    Fixed a bug in `PersistedQueryLink` where the `persistedQuery` extension
+    would still be sent after a `PersistedQueryNotSupported` if
+    `includeExtensions` was enabled on `HttpLink`.
+features:
+  khaki-bears-destroy: >-
+    Adds enhanced client awareness to the client.
+
+
+    `HttpLink` and `BatchHttpLink` will now per default send information about
+    the
+
+    client library you are using in `extensions`.
+
+
+    This could look like this:
+
+
+    ```json
+
+    {
+      "query": "query GetUser($id: ID!) { user(id: $id) { __typename id name } }",
+      "variables": {
+        "id": 5
+      },
+      "extensions": {
+        "clientLibrary": {
+          "name": "@apollo/client",
+          "version": "4.0.0"
+        }
+      }
+    }
+
+    ```
+
+
+    This feature can be disabled by passing `enhancedClientAwareness: {
+    transport: false }` to your
+
+    `ApolloClient`,  `HttpLink` or `BatchHttpLink` constructor options.
+  pink-ladybugs-cough: >-
+    Subscriptions created by `client.subscribe()` can now be restarted.
+    Restarting a subscription will terminate the connection with the link chain
+    and recreate the request. Restarts also work across deduplicated
+    subscriptions so calling `restart` on an `observable` who's request is
+    deduplicated will restart the connection for each observable.
+
+
+    ```ts
+
+    const observable = client.subscribe({ query: subscription });
+
+
+    // Restart the connection to the link
+
+    observable.restart();
+
+    ```
+  rude-parrots-suffer: >-
+    Add the new `ClientAwarenessLink`.
+
+
+    This link is already included in `HttpLink` and `BatchHttpLink` to enable
+    the
+
+    "client awareness" and "enhanced client awareness" features, but you can
+    also use
+
+    `ClientAwarenessLink` directly in your link chain to combine it with other
+
+    terminating links.
+
+
+    If you want to save the bundle size that `ClientAwarenessLink` adds to
+    `HttpLink`
+
+    and `BatchHttpLink`, you can use `BaseHttpLink` or `BaseBatchHttpLink`
+    instead.
+
+    These links come without the `ClientAwarenessLink` included.
+
+
+    For example:
+
+    ```diff
+
+    import {
+      ApolloClient,
+    -  HttpLink,
+
+    } from "@apollo/client";
+
+    +import { BaseHttpLink } from "@apollo/client/link/http";
+
+
+    const client = new ApolloClient({
+
+    -  link: new HttpLink({
+
+    +  link: new BaseHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    ```
+  rare-apes-drive: >-
+    Deduplicating subscription operations is now supported. Previously it was
+    possible to deduplicate a subscription only if the new subscription was
+    created before a previously subscribed subscription emitted any values. As
+    soon as a value was emitted from a subscription, new subscriptions would
+    create new connections. Deduplication is now active for as long as a
+    subscription connection is open (i.e. the source observable hasn't emitted a
+    `complete` or `error` notification yet.)
+
+
+    To disable deduplication and force a new connection, use the
+    `queryDeduplication` option in `context` like you would a query operation.
+
+
+    As a result of this change, calling the `restart` function returned from
+    `useSubscription` will now restart the connection on deduplicated
+    subscriptions.
+graphql_over_http:
+  afraid-penguins-sniff: >-
+    Replace the `result` property on `ServerError` with `bodyText`. `bodyText`
+    is set to the raw string body. `HttpLink` and `BatchHttpLink` no longer try
+    and parse the response body as JSON when a `ServerError` is thrown.
+  curvy-shoes-refuse: >-
+    More strictly adhere to the [GraphQL over HTTP
+    spec](https://graphql.github.io/graphql-over-http/draft/). This change adds
+    support for the `application/graphql-response+json` media type and modifies
+    the behavior of the `application/json` media type.
+
+
+    - The client will parse the response as a well-formed GraphQL response when
+    the server encodes `content-type` using `application/graphql-response+json`
+    with a non-200 status code.
+
+    - The client will now throw a `ServerError` when the server encodes
+    `content-type` using `application/json` and returns a non-200 status code.
+
+    - The client will now throw a `ServerError` when the server encodes using
+    any other `content-type` and returns a non-200 status code.
+
+
+    NOTE: If you use a testing utility to mock requests in your test, you may
+    experience different behavior than production if your testing utility
+    responds as `application/json` but your production server responds as
+    `application/graphql-response+json`. If a `content-type` header is not set,
+    the client interprets the response as `application/json`.
+  old-avocados-cover: >-
+    Adjusted the accept header for multipart requests according to the new
+    GraphQL over HTTP spec with these changes:
+
+
+    ```diff
+
+    -multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json
+
+    +multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9
+
+    ```
+
+
+    ```diff
+
+    -multipart/mixed;deferSpec=20220824,application/json
+
+    +multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9
+
+    ```
+  popular-games-sleep: Changes the default `Accept` header to `application/graphql-response+json`.
+  real-onions-drive: >-
+    Change the default `Accept` header to
+    `application/graphql-response+json,application/json;q=0.9`.
+  rich-turtles-clap: >-
+    `HttpLink` and `BatchHttpLink` no longer emit a `next` notification with the
+    JSON-parsed response body when a well-formed GraphQL response is returned
+    and a `ServerError` is thrown.
+defer:
+  beige-kings-grow: >-
+    A `@defer` query that has not yet finished streaming is now considered
+    loading and thus the `loading` flag will be `true` until the response has
+    completed. A new `NetworkStatus.streaming` value has been introduced and
+    will be set as the `networkStatus` while the response is streaming.
+  lazy-baboons-rescue: >-
+    Slightly rework multipart response parsing.
+
+
+    This removes last incremental-protocol-specific details from `HttpLink` and
+    `BatchHttpLink`.
+  slimy-adults-attend: >-
+    The incremental delivery (`@defer` support) implementation is now pluggable.
+
+
+    `ApolloClient` now per default ships without an incremental format
+    implementation
+
+    and allows you to swap in the format that you want to use.
+
+
+    Usage looks like this:
+
+
+    ```ts
+
+    import {
+      // this is the default
+      NotImplementedHandler,
+      // this implements the `@defer` transport format that ships with Apollo Router
+      Defer20220824Handler,
+      // this implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
+      GraphQL17Alpha2Handler,
+    } from "@apollo/client/incremental";
+
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ /*...*/ }),
+      link: new HttpLink({ /*...*/ }),
+      incrementalHandler: new Defer20220824Handler(),
+    });
+
+    ```
+
+
+    We will add handlers for other response formats that can be swapped this way
+
+    during the lifetime of Apollo Client 4.0.
+react:
+  clever-zebras-mate: Drop support for React 16.
+  rare-houses-prove: Add `react-server` entry point with stubs for normal exports.
+  real-turtles-boil: Enable React compiler for hooks in ESM builds.
+useQuery:
+  beige-spiders-hope: >-
+    When updating `skip` from `false` to `true` in `useQuery`, retain `data` if
+    it is available rather than setting it to `undefined`.
+  calm-seals-relate: >-
+    Remove the deprecated `errors` property from `useQuery` and `useLazyQuery`.
+    Read errors from the `error` property instead.
+  fluffy-shoes-applaud: Remove deprecated `partialRefetch` option.
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  great-scissors-jam: >-
+    `cache-only` queries will now initialize with `loading: false` and
+    `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+
+    This means `useQuery` will no longer render a short initial loading state
+    before rendering `loading: false` and `ObservableQuery.getCurrentResult()`
+    will now return `loading: false` immediately.
+  light-apes-rescue: >-
+    `useQuery` no longer returns `reobserve` as part of its result. It was
+    possible to use `reobserve` to set new options on the underlying
+    `ObservableQuery` instance which differed from the options passed to the
+    hook. This could result in unexpected results. Instead prefer to rerender
+    the hook with new options.
+  loud-cows-raise: >-
+    `useQuery` with `ssr: false` - previously, `skip` had a higher priortity
+    than `ssr: false` while `ssr: false` had a higher priority than
+    `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).
+
+
+    This priority has been adjusted so now both `skip` and `fetchPolicy:
+    "standby"` have a higher priority than `ssr: false` and will return
+    `loading: false`, while `ssr: false` will only come after those and will
+    return `loading: true` if those are not set.
+  many-seas-call: >-
+    Changing most options when rerendering `useQuery` will no longer trigger a
+    `reobserve` which may cause network fetches. Instead, the changed options
+    will be applied to the next cache update or fetch.
+
+
+    Options that now trigger a `reobserve` when changed between renders are:
+
+    - `query`
+
+    - `variables`
+
+    - `skip`
+
+    - Changing `fetchPolicy` to or from `standby`
+  nervous-goats-allow: >-
+    Removes the `defaultOptions` option from `useQuery`. Use options directly or
+    use the global `ApolloClient` `defaultOptions`.
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  slimy-ants-bake: "`useQuery`: only advance `previousData` if `data` actually changed"
+  strange-walls-march: >-
+    The `error` property is no longer present when `skip` is `true` in
+    `useQuery`.
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+
+    ```ts
+
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
+
+    ```
+  tough-olives-fry: >-
+    Ensure `useQuery` rerenders when `notifyOnNetworkStatusChange` is `false`
+    and a `refetch` that changes variables returns a result deeply equal to
+    previous variables.
+  tough-taxis-smoke: >-
+    Remove the `onCompleted` and `onError` callbacks from `useQuery` and
+    `useLazyQuery`.
+
+
+    See [#12352](https://github.com/apollographql/apollo-client/issues/12352)
+    for more context on this change.
+  unlucky-kiwis-sell: Remove the `called` property from `useQuery`.
+useLazyQuery:
+  calm-seals-relate: >-
+    Remove the deprecated `errors` property from `useQuery` and `useLazyQuery`.
+    Read errors from the `error` property instead.
+  empty-rabbits-move: >-
+    The `previousData` property on `useLazyQuery` will now change only when
+    `data` changes. Previously `previousData` would change to the same value as
+    `data` while the query was loading.
+  forty-tomatoes-punch: >-
+    The returned `networkStatus` in `useLazyQuery` is now set to `setVariables`
+    when calling the `useLazyQuery` `execute` function for the first time with
+    variables.
+  hungry-bikes-cough: >-
+    Fix type of `variables` returned from `useLazyQuery`. When `called` is
+    `false`, `variables` is now `Partial<TVariables>` instead of `TVariables`.
+  large-plants-know: >-
+    Ensure a loading state is emitted when calling the `execute` function after
+    changing clients in `useLazyQuery`.
+  light-dolphins-taste: >-
+    `useLazyQuery` no longer supports SSR environments and will now throw if the
+    `execute` function is called in SSR. If you need to run a query in an SSR
+    environment, use `useQuery` instead.
+  lucky-hats-push: >-
+    The execute function returned from `useLazyQuery` now only supports the
+    `context` and `variables` options. This means that passing options supported
+    by the hook no longer override the hook value.
+
+
+    To change options, rerender the component with new options. These options
+    will take effect with the next query execution.
+  mean-lizards-think: >-
+    Ensure `useLazyQuery` does not return a `partial` property which is not
+    specified by the result type.
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  nice-waves-work: >-
+    The result resolved from the promise returned from the execute function in
+    `useLazyQuery` is now an `ApolloQueryResult` type and no longer includes all
+    the fields returned from the `useLazyQuery` hook tuple.
+
+
+    If you need access to the additional properties such as `called`, `refetch`,
+    etc. not included in `ApolloQueryResult`, read them from the hook instead.
+  polite-bees-care: >-
+    `useLazyQuery` will no longer rerender with the loading state when calling
+    the execute function the first time unless the `notifyOnNetworkStatusChange`
+    option is set to `true` (which is the new default).
+
+
+    If you prefer the behavior from 3.x, rerender the component with
+
+    `notifyOnNetworkStatusChange` set to `false` after the execute function is
+
+    called the first time.
+
+
+    ```ts
+
+    function MyComponent() {
+      const [notifyOnNetworkStatusChange, setNotifyOnNetworkStatusChange] = useState(true);
+      const [execute] = useLazyQuery(query, { notifyOnNetworkStatusChange });
+
+      async function runExecute() {
+        await execute();
+
+        // Set to false after the initial fetch to stop receiving notifications
+        // about changes to the loading states.
+        setNotifyOnNetworkStatusChange(false);
+      }
+
+      // ...
+    }
+
+    ```
+  purple-balloons-accept: >-
+    If the `execute` function of `useLazyQuery` is executed, previously started
+    queries
+
+    from the same `useLazyQuery` usage will be rejected with an `AbortError`
+    unless
+
+    `.retain()` is called on the promise returned by previous `execute` calls.
+
+
+    Please keep in mind that `useLazyQuery` is primarily meant as a means to
+    synchronize
+
+    your component to the status of a query and that it's purpose it not to make
+    a
+
+    series of network calls.
+
+    If you plan on making a series of network calls without the need to
+    synchronize
+
+    the result with your component, consider using `ApolloClient.query` instead.
+  rich-eagles-cross: >-
+    The `reobserve` option is no longer available in the result returned from
+    `useLazyQuery`. This was considered an internal API and should not be used
+    directly.
+  seven-foxes-melt: >-
+    The promise returned when calling the execute function from `useLazyQuery`
+    will now reject when using an `errorPolicy` of `none` when GraphQL errors
+    are returned from the result.
+  shaggy-singers-tickle: >-
+    Remove `context` from `useLazyQuery` hook options. If used, `context` must
+    now be provided to the `execute` function. `context` will reset to `{}` if
+    not provided as an option to `execute`.
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  soft-mails-clean: >-
+    `useLazyQuery` no longer supports calling the execute function in render and
+    will now throw. If you need to execute the query immediately, use `useQuery`
+    instead or move the call to a `useEffect`.
+  sour-pillows-guess: >-
+    The `defaultOptions` and `initialFetchPolicy` options are no longer
+    supported with `useLazyQuery`.
+
+
+    If you use `defaultOptions`, pass those options directly to the hook
+    instead. If you use `initialFetchPolicy`, use `fetchPolicy` instead.
+  strange-seahorses-impress: >-
+    `useLazyQuery` no longer supports `variables` in the hook options and
+    therefore no longer performs variable merging. The execute function must now
+    be called with `variables` instead.
+
+
+    ```ts
+
+    function MyComponent() {
+      const [execute] = useLazyQuery(query);
+
+      function runExecute() {
+        execute({ variables: { ... }});
+      }
+    }
+
+    ```
+
+
+    This change means the execute function returned from `useLazyQuery` is more
+    type-safe. The execute function will require you to pass a `variables`
+    option if the query type includes required variables.
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+  thin-peas-hear: >-
+    `notifyOnNetworkStatusChange` now defaults to `true`. This means that
+    loading states will be emitted (core API) or rendered (React) by default
+    when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set
+    `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+
+    ```ts
+
+    new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          // Use the v3 default
+          notifyOnNetworkStatusChange: false
+        }
+      }
+    })
+
+    ```
+  tough-taxis-smoke: >-
+    Remove the `onCompleted` and `onError` callbacks from `useQuery` and
+    `useLazyQuery`.
+
+
+    See [#12352](https://github.com/apollographql/apollo-client/issues/12352)
+    for more context on this change.
+  twelve-mangos-dance: >-
+    `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute`
+    function of `useLazyQuery` now return a
+
+    `ResultPromise` with an additional `.retain` method.
+
+    If this method is called, the underlying network operation will be kept
+    running even if the `ObservableQuery` itself does
+
+    not require the result anymore, and the Promise will resolve with the final
+    result instead of resolving with an intermediate
+
+    result in the case of early cancellation.
+  twenty-snakes-sort: >-
+    `useLazyQuery` will now only execute the query when the execute function is
+    called. Previously `useLazyQuery` would behave like `useQuery` after the
+    first call to the execute function which means changes to options might
+    perform network requests.
+
+
+    You can now safely rerender `useLazyQuery` with new options which will take
+    effect the next time you manually trigger the query.
+useBackgroundQuery:
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useSuspenseQuery:
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useApolloClient:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useFragment:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useLoadableQuery:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useQueryRefHandlers:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useReactiveVar:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useReadQuery:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useMutation:
+  curvy-pianos-count: >-
+    Remove deprecated `ignoreResults` option from `useMutation`. If you don't
+    want to synchronize component state with the mutation, use `useApolloClient`
+    to access your client instance and use `client.mutate` directly.
+  many-buses-allow: >-
+    Fix an issue where passing `onError` to `useMutation` would resolve the
+    promise returned by the `mutate` function instead of rejecting when using an
+    `errorPolicy` of `none`.
+  orange-suits-laugh: >-
+    Adjust `useMutation` types to better handle required variables. When
+    required variables are missing, TypeScript will now complain if they are not
+    provided either to the hook or the returned `mutate` function. Providing
+    required variables to `useMutation` will make them optional in the returned
+    `mutate` function.
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+useSubscription:
+  eleven-kangaroos-jump: Remove `variables` from the result returned from `useSubscription`.
+  great-roses-jog: >-
+    The `variables` option used with various APIs are now enforced more
+    consistently across the client when `TVariables` contains required
+    variables. If required `variables` are not provided, TypeScript will now
+    complain that it requires a `variables` option.
+
+
+    This change affects the following APIs:
+
+    - `client.query`
+
+    - `client.mutate`
+
+    - `client.subscribe`
+
+    - `client.watchQuery`
+
+    - `useBackgroundQuery`
+
+    - `useQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  slimy-chicken-melt: >-
+    Remove deprecated `onSubscriptionData` and `onSubscriptionComplete`
+    callbacks from `useSubscription`. Use `onData` and `onComplete` instead.
+  warm-ties-sit: >-
+    Subscriptions no longer emit errors in the `error` callback and instead
+    provide errors on the `error` property on the result passed to the `next`
+    callback. As a result, errors will no longer automatically terminate the
+    connection allowing additional results to be emitted when the connection
+    stays open.
+
+
+    When an error terminates the downstream connection, a `next` event will be
+    emitted with an `error` property followed by a `complete` event instead.
+createQueryPreloader:
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  six-jars-fix: >-
+    `queryRef`s created by `preloadQuery` no longer have a `.toPromise()`
+    function. Instead `preloadQuery` now has a `toPromise` function that accepts
+    a queryRef and will resolve when the underlying promise has been resolved.
+
+
+    ```diff
+
+    const queryRef = preloadQuery(query, options);
+
+
+    - await queryRef.toPromise();
+
+    + await preloadQuery.toPromise(queryRef);
+
+    ```
+ssr:
+  funny-jeans-invent: >-
+    `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been
+    reworked:
+
+
+    Previously, a `ObservableQuery` created by `client.query` or
+    `client.watchQuery`
+
+    while one of those were active would permanently be changed from a
+    `fetchPolicy`
+
+    of `"network-only"` or `"cache-and-network"` to `"cache-first"`, and stay
+    that way
+
+    even long after `disableNetworkFetches` would have been deactivated.
+
+
+    Now, the `ObservableQuery` will keep their original `fetchPolicy`, but
+    queries
+
+    made during `disableNetworkFetches` will just apply the `fetchPolicy`
+    replacement
+
+    at request time, just for that one request.
+
+
+    `ApolloClient.disableNetworkFetches` has been renamed to
+    `ApolloClient.prioritizeCacheValues` to better reflect this behaviour.
+  light-dolphins-taste: >-
+    `useLazyQuery` no longer supports SSR environments and will now throw if the
+    `execute` function is called in SSR. If you need to run a query in an SSR
+    environment, use `useQuery` instead.
+  loud-cows-raise: >-
+    `useQuery` with `ssr: false` - previously, `skip` had a higher priortity
+    than `ssr: false` while `ssr: false` had a higher priority than
+    `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).
+
+
+    This priority has been adjusted so now both `skip` and `fetchPolicy:
+    "standby"` have a higher priority than `ssr: false` and will return
+    `loading: false`, while `ssr: false` will only come after those and will
+    return `loading: true` if those are not set.
+  tame-points-work: >-
+    Add a new method for static SSR of React components, `prerenderStatic`.
+
+    The old methods, `getDataFromTree`, `getMarkupFromTree` and
+    `renderToStringWithData`
+
+    have been deprecated in favor of `prerenderStatic`.
+
+
+    If used with React 19 and the `prerender` or `prerenderToNodeStream` apis
+    from
+
+    `react-dom/static`, this method can now be used to SSR-prerender
+    suspense-enabled
+
+    hook APIs.
+  thick-books-grin: Split out SSR-specific code from useQuery hook, remove RenderPromises
+bugfix:
+  many-buses-allow: >-
+    Fix an issue where passing `onError` to `useMutation` would resolve the
+    promise returned by the `mutate` function instead of rejecting when using an
+    `errorPolicy` of `none`.
+  tough-olives-fry: >-
+    Ensure `useQuery` rerenders when `notifyOnNetworkStatusChange` is `false`
+    and a `refetch` that changes variables returns a result deeply equal to
+    previous variables.
+  tough-rockets-allow: >-
+    Fix an issue where additional response properties were returned on the
+    result returned from `client.mutate`, such as `@defer` payload fields. These
+    properties are now stripped out to correspond to the TypeScript type.
+  young-moons-admire: >-
+    Fixed a bug in `PersistedQueryLink` where the `persistedQuery` extension
+    would still be sent after a `PersistedQueryNotSupported` if
+    `includeExtensions` was enabled on `HttpLink`.
+debugging:
+  real-gorillas-move: >-
+    Apollo Client now defaults to production mode, not development mode, if the
+
+    environment cannot be determined.
+
+
+    In modern bundlers, this should automatically be handled by the bundler
+    loading
+
+    the bundler with the `development` export condition.
+
+
+    If neither the `production` nor the `development` export condition are
+
+    used by the bundler/runtime, Apollo Client will fall back to
+    `globalThis.__DEV__`
+
+    to determine if it should run in production or development mode.
+
+
+    Unlike Apollo Client 3 though, if `globalThis.__DEV__` is not set to `true`,
+
+    Apollo Client will now default to `production`, not to `development`,
+    behaviour.
+
+
+    This switch to *explicilty* requiring `true` also resolves a situation where
+
+    an HTML element with `id="__DEV__"` would create a global `__DEV__` variable
+
+    with a referent to the DOM element, which in the past was picked up as
+    "truthy" and
+
+    would have triggered development mode.
+removals:
+  brave-moons-juggle: Remove the `typeDefs` option from `ApolloClient`.
+  brave-radios-wait: >-
+    Remove the `asyncMap` utility function. Instead use one of the RxJS
+    operators that creates Observables from promises, such as `from`.
+  bright-ads-share: >-
+    Removes the `isApolloError` utility function to check if the error object is
+    an `ApolloError` instance. Use `instanceof` to check for more specific error
+    types that replace `ApolloError`.
+  calm-frogs-remain: >-
+    Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`.
+    `__typename` is now always added to the outgoing query document when using
+    `InMemoryCache` and cannot be disabled.
+
+
+    If you are using `<MockedProvider />` with `addTypename={false}`, ensure
+    that your mocked responses include a `__typename` field. This will ensure
+    cache normalization kicks in and behaves more like production.
+  chatty-planes-grin: Remove deprecated `resetApolloContext` export
+  clean-sheep-hide: |-
+    Drop `rehackt` dependency.
+    We can now directly import from `react` without causing build errors in RSC.
+  clever-zebras-mate: Drop support for React 16.
+  cool-bikes-shake: >-
+    Remove polyfills for Object.freeze,seal and preventExtensions in React
+    Native
+
+
+    These polyfills were only necessary until React Native 0.59, which
+
+    [patched the problem](https://github.com/facebook/react-native/pull/21492)
+    on
+
+    the React Native side.
+
+
+    With React Native 0.61, the `Map` function was [completely
+    replaced](https://github.com/facebook/react-native/commit/93b9ac74e59bbe84ea388d7c1879857b4acab114)
+
+    with a native implementation that never had the problems we guarded against.
+  curvy-flies-accept: >-
+    The `getCacheKey` function is no longer available from
+    `operation.getContext()` in the link chain. Use
+    `operation.client.cache.identify(obj)` in the link chain instead.
+  curvy-pianos-count: >-
+    Remove deprecated `ignoreResults` option from `useMutation`. If you don't
+    want to synchronize component state with the mutation, use `useApolloClient`
+    to access your client instance and use `client.mutate` directly.
+  dirty-cobras-change: >-
+    Move most of the utilities in `@apollo/client/utilities` to
+    `@apollo/client/utilities/internal`. Many of the utilities exported from the
+    `@apollo/client/utilities` endpoint were not considered stable.
+
+
+    As a result of this change, utilities or types exported from
+    `@apollo/client/utilities` are now documented and considered stable and will
+    not undergo breaking changes.
+  dirty-eagles-poke: >-
+    Removed the `@apollo/client/react/context` and `@apollo/client/react/hooks`
+    entry points. Please use `@apollo/client/react` instead.
+  eighty-squids-fix: >-
+    `ObservableQuery.setOptions` has been removed as it was an alias of
+    `reobserve`. Prefer using `reobserve` directly instead.
+
+
+    ```diff
+
+    const observable = client.watchQuery(options);
+
+
+    // Use reobserve to set new options and reevaluate the query
+
+    - observable.setOptions(newOptions);
+
+    + observable.reobserve(newOptions);
+
+    ```
+
+
+    As a result of this change, `reobserve` has been marked for public use and
+    is no longer considered an internal API. The `newNetworkStatus` argument has
+    been removed to facilitate this change.
+  eleven-kangaroos-jump: Remove `variables` from the result returned from `useSubscription`.
+  eleven-moons-heal: Remove deprecated `resultCacheMaxSize` option from `InMemoryCache` options.
+  fluffy-shoes-applaud: Remove deprecated `partialRefetch` option.
+  fresh-moose-hope: Remove the `iterateObserversSafely` utility function.
+  friendly-olives-refuse: >-
+    Remove the `@apollo/client/testing/experimental` test utilities. Use
+    [GraphQL Testing
+    Library](https://github.com/apollographql/graphql-testing-library) instead.
+  fuzzy-plants-approve: |-
+    Remove these incremental-format-specific types:
+
+    * `ExecutionPatchIncrementalResult`
+    * `ExecutionPatchInitialResult`
+    * `ExecutionPatchResult`
+    * `IncrementalPayload`
+    * `Path`
+  fuzzy-seahorses-hunt: >-
+    Remove code that strips `@client` fields in `HttpLink` and `BatchHttpLink`.
+    This was unused code since core handles removing `@client` fields and should
+    have no observable change.
+  gentle-files-laugh: >-
+    Remove deprecated `connectToDevtools` option from `ApolloClientOptions`. Use
+    `devtools.enabled` instead.
+  gentle-waves-cough: >-
+    The `cache` and `forceFetch` properties are no longer available on context
+    when calling `operation.getContext()`. `cache` can be accessed through the
+    `operation` with `operation.client.cache` instead. `forceFetch` has been
+    replaced with `queryDeduplication` which specifies whether
+    `queryDeduplication` was enabled for the request or not.
+  giant-apes-thank: >-
+    Remove the `onError` and `setOnError` methods from `ApolloLink`. `onError`
+    was only used by `MockLink` to rewrite errors if `setOnError` was used.
+  gold-oranges-double: >-
+    Removed `getLastResult`, `getLastError` and `resetLastResults` from
+    `ObservableQuery`
+  good-dolphins-peel: >-
+    Apollo Client no longer wraps errors in `ApolloError`. `ApolloError` has
+    been replaced with separate error classes depending on the cause of the
+    error. As such, APIs that return an `error` property have been updated to
+    use the generic `Error` type. Use `instanceof` to check for more specific
+    error types.
+
+
+    ## Migration guide
+
+
+    `ApolloError` encapsulated 4 main error properties. The type of error would
+    determine which property was set:
+
+    - `graphqlErrors` - Errors returned from the `errors` field by the GraphQL
+    server
+
+    - `networkError` - Any non-GraphQL error that caused the query to fail
+
+    - `protocolErrors` - Transport-level errors that occur during [multipart
+    HTTP
+    subscriptions](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol)
+
+    - `clientErrors` - A space to define custom errors. Mostly unused.
+
+
+    These errors were mutally exclusive, meaning both `networkError` and
+    `graphqlErrors` were never set simultaneously. The following replaces each
+    of these fields from `ApolloError`.
+
+
+    ### `graphqlErrors`
+
+
+    GraphQL errors are now encapsulated in a `CombinedGraphQLErrors` instance.
+    You can access the raw GraphQL errors via the `errors` property.
+
+
+    ```js
+
+    import { CombinedGraphQLErrors } from '@apollo/client';
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    if (error && error instanceof CombinedGraphQLErrors) {
+      console.log(error.errors);
+    }
+
+    ```
+
+
+    ### `networkError`
+
+
+    Network errors are no longer wrapped and are instead passed through
+    directly.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error(new Error('Test error'));
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // error is `new Error('Test error')`;
+
+    ```
+
+
+    ### `protocolErrors`
+
+
+    Protocol errors are now encapsulated in a `CombinedProtocolErrors` instance.
+    You can access the raw protocol errors via the `errors` property.
+
+
+
+    ```js
+
+    import { CombinedProtocolErrors } from '@apollo/client';
+
+
+    // ...
+
+
+    const { error } = useSubscription(subscription);
+
+
+    if (error && error instanceof CombinedProtocolErrors) {
+      console.log(error.errors);
+    }
+
+    ```
+
+
+    ### `clientErrors`
+
+
+    These were unused by the client and have no replacement. Any non-GraphQL or
+    non-protocol errors are now passed through unwrapped.
+
+
+    ### Strings as errors
+
+
+    If the link sends a string error, Apollo Client will wrap this in an `Error`
+    instance. This ensures `error` properties are guaranteed to be of type
+    `Error`.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          // Oops we sent a string instead of wrapping it in an `Error`
+          observer.error('Test error');
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // The error string is wrapped and returned as `new Error('Test error')`;
+
+    ```
+
+
+    ### Non-error types
+
+
+    If the link chain sends any other object type as an error, Apollo Client
+    will wrap this in an `UnknownError` instance with the
+    [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    set to the original object. This ensures `error` properties are guaranteed
+    to be of type `Error`.
+
+
+    ```js
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error({ message: 'Not a proper error type' });
+        })
+      })
+    })
+
+
+    // ...
+
+
+    const { error } = useQuery(query);
+
+
+    // error is an `UnknownError` instance. error.cause returns the original
+    object.
+
+    ```
+  gorgeous-chefs-tap: >-
+    Remove the `TCacheShape` generic argument to `ApolloClient`.
+    `client.extract()` now returns `unknown` by default. You will either need to
+    type-cast this to the expected serialized shape, or use the
+    `cache.extract()` directly from the subclass to get more specific types.
+  healthy-apes-sneeze: >-
+    Remove `fromError` utility function. Use
+    [`throwError`](https://rxjs.dev/api/index/function/throwError) instead.
+  hot-cycles-notice: >-
+    Remove the deprecated `graphql`, `withQuery`, `withMutation`,
+    `withSubscription`, and `withApollo` hoc components. Use the provided React
+    hooks instead.
+  itchy-drinks-refuse: Remove `itAsync` test utility.
+  khaki-spies-work: >-
+    Flatten out React hook types. As a result, the base types have been removed.
+    Prefer using the hook types instead. Removed types include:
+
+    - `BaseMutationOptions`
+
+    - `BaseQueryOptions`
+
+    - `BaseSubscriptionOptions`
+
+    - `ObservableQueryFields`
+
+    - `MutationSharedOptions`
+
+    - `QueryFunctionOptions`
+  kind-crews-warn: >-
+    `ObservableQuery` no longer has a `queryId` property.
+
+    `ApolloClient.getObservableQueries` no longer returns a `Map<string,
+    ObservableQuery>`, but a `Set<ObservableQuery>`.
+  late-trainers-peel: >-
+    * dropped the deprecated `DEV` export from `@apollo/client/utilities` and
+    `@apollo/client/utilities/globals`
+
+    * moved the `__DEV__` export from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/environment`
+
+    * moved the `invariant`, `newInvariantError` and `InvariantError` exports
+    from `@apollo/client/utilities/globals` to
+    `@apollo/client/utilities/invariant`
+  light-apes-rescue: >-
+    `useQuery` no longer returns `reobserve` as part of its result. It was
+    possible to use `reobserve` to set new options on the underlying
+    `ObservableQuery` instance which differed from the options passed to the
+    hook. This could result in unexpected results. Instead prefer to rerender
+    the hook with new options.
+  little-parrots-bow: >-
+    Removes the `resolvers` option from `ApolloClient`. Local resolvers have
+    instead been moved to the new `LocalState` instance which is assigned to the
+    `localState` option in `ApolloClient`. To migrate, move the `resolvers`
+    values into a `LocalState` instance and assign that instance to
+    `localState`.
+
+
+    ```diff
+
+    new ApolloClient({
+
+    - resolvers: { /* ... */ }
+
+    + localState: new LocalState({
+
+    +   resolvers: { /* ... */ }
+
+    + }),
+
+    });
+
+    ```
+  little-spoons-kick: >-
+    `client.mutate` now returns a `MutateResult` instead of `FetchResult`. As a
+    result, the `errors` property has been removed in favor of `error` which is
+    set if either a network error occured or GraphQL errors are returned from
+    the server.
+
+
+    `useMutation` now also returns a `MutateResult` instead of a `FetchResult`.
+  lucky-hats-push: >-
+    The execute function returned from `useLazyQuery` now only supports the
+    `context` and `variables` options. This means that passing options supported
+    by the hook no longer override the hook value.
+
+
+    To change options, rerender the component with new options. These options
+    will take effect with the next query execution.
+  mighty-penguins-wink: >-
+    Removes the `throwServerError` utility function. Now that `ServerError` is
+    an
+
+    `Error` subclass, you can throw these errors directly:
+
+
+    ```js
+
+    import { ServerError } from '@apollo/client';
+
+
+    // instead of
+
+    throwServerError(response, result, 'error message')
+
+
+    // Use
+
+    throw new ServerError('error message', { response, result })
+
+    ```
+  modern-feet-do: >-
+    `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer
+    export an empty `Cache` runtime object. This is meant to be a type-only
+    namespace.
+  nervous-goats-allow: >-
+    Removes the `defaultOptions` option from `useQuery`. Use options directly or
+    use the global `ApolloClient` `defaultOptions`.
+  new-apes-care: Remove the deprecated `QueryReference` type. Please use `QueryRef` instead.
+  nice-donkeys-reflect: >-
+    Remove the `errors` property from the results emitted from `ObservableQuery`
+    or returned from `client.query`. Read errors from the `error` property
+    instead.
+  nice-dots-matter: >-
+    Removed the `parser` cache. The functionality has been replaced in a way
+    that doesn't need caching.
+  olive-cougars-ring: >-
+    Remove local resolvers APIs from `ApolloClient` in favor of `localState`.
+    Methods removed are:
+
+    - `addResolvers`
+
+    - `getResolvers`
+
+    - `setResolvers`
+
+    - `setLocalStateFragmentMatcher`
+  purple-bears-flash: >-
+    Removed the `@apollo/client/react/parser` entry point. There is no
+    replacement.
+  rich-eagles-cross: >-
+    The `reobserve` option is no longer available in the result returned from
+    `useLazyQuery`. This was considered an internal API and should not be used
+    directly.
+  selfish-spoons-approve: >-
+    Move internal testing utilities in `@apollo/client/testing` to
+    `@apollo/client/testing/internal` and remove deprecated testing utilities.
+    Some of the testing utilities exported from the `@apollo/client/testing`
+    endpoint were not considered stable. As a result of this change, testing
+    utilities or types exported from `@apollo/client/testing` are now considered
+    stable and will not undergo breaking changes.
+
+
+    The following APIs were removed. To migrate, update usages of the following
+    APIs as such:
+
+
+    **`createMockClient`**
+
+
+    ```diff
+
+    - const client = createMockClient(data, query, variables);
+
+    + const client = new ApolloClient({
+
+    +   cache: new InMemoryCache(),
+
+    +   link: new MockLink([
+
+    +     {
+
+    +       request: { query, variables },
+
+    +       result: { data },
+
+    +     }
+
+    +   ]),
+
+    + });
+
+    ```
+
+
+    **`mockObservableLink`**
+
+
+    ```diff
+
+    - const link = mockObservableLink();
+
+    + const link = new MockSubscriptionLink();
+
+    ```
+
+
+    **`mockSingleLink`**
+
+
+    ```diff
+
+    - const link = mockSingleLink({
+
+    -   request: { query, variables },
+
+    -   result: { data },
+
+    - });
+
+    + const link = new MockLink([
+
+    +   {
+
+    +     request: { query, variables },
+
+    +     result: { data },
+
+    +   }
+
+    + ]);
+
+    ```
+  serious-moons-juggle: >-
+    `client.query` no longer supports `notifyOnNetworkStatusChange` in options.
+    An error will be thrown if this option is set. The effects of this option
+    were not observable by `client.query` since `client.query` emits a single
+    result.
+  shiny-carrots-invent: Remove `subscribeAndCount` testing utility from `@apollo/client/testing`.
+  short-jokes-jam: >-
+    Moves all React-related exports to the `@apollo/client/react` entrypoint and
+    out of the main `@apollo/client` entrypoint. This prevents the need to
+    install React in order to use the core client.
+
+
+    The following is a list of exports available in `@apollo/client` that should
+    now import from `@apollo/client/react`.
+
+    - `ApolloConsumer`
+
+    - `ApolloProvider`
+
+    - `createQueryPreloader`
+
+    - `getApolloContext`
+
+    - `skipToken`
+
+    - `useApolloClient`
+
+    - `useBackgroundQuery`
+
+    - `useFragment`
+
+    - `useLazyQuery`
+
+    - `useLoadableQuery`
+
+    - `useMutation`
+
+    - `useQuery`
+
+    - `useQueryRefHandlers`
+
+    - `useReactiveVar`
+
+    - `useReadQuery`
+
+    - `useSubscription`
+
+    - `useSuspenseQuery`
+
+
+    The following is a list of exports available in `@apollo/client/testing`
+    that should now import from `@apollo/client/testing/react`:
+
+    - `MockedProvider`
+  silly-knives-exist: >-
+    Removes the `urql` multipart subscriptions utilities. Use the native
+    multipart subscriptions support in `urql` instead.
+  silly-seas-confess: Drop `graphql` v15 as a valid peer dependency.
+  six-jars-fix: >-
+    `queryRef`s created by `preloadQuery` no longer have a `.toPromise()`
+    function. Instead `preloadQuery` now has a `toPromise` function that accepts
+    a queryRef and will resolve when the underlying promise has been resolved.
+
+
+    ```diff
+
+    const queryRef = preloadQuery(query, options);
+
+
+    - await queryRef.toPromise();
+
+    + await preloadQuery.toPromise(queryRef);
+
+    ```
+  sixty-bears-bathe: >-
+    The `FetchMoreQueryOptions` type has been inlined into `FetchMoreOptions`,
+    and
+
+    `FetchMoreQueryOptions` has been removed.
+  slimy-chicken-melt: >-
+    Remove deprecated `onSubscriptionData` and `onSubscriptionComplete`
+    callbacks from `useSubscription`. Use `onData` and `onComplete` instead.
+  small-buttons-rhyme: >-
+    Remove the deprecated `canonizeResults` option. It was prone to memory
+    leaks. As such, some results that were referentially equal when
+    `canonizeResults` option was set to `true` no longer retain the same object
+    identity.
+  smart-rats-explode: >-
+    Remove `ObservableQuery.resetQueryStoreErrors` method. This method reset
+    some internal state that was not consumed elsewhere in the client and
+    resulted in a no-op.
+  smooth-coins-collect: >-
+    Remove `fromPromise` utility function. Use
+    [`from`](https://rxjs.dev/api/index/function/from) instead.
+  sour-pillows-guess: >-
+    The `defaultOptions` and `initialFetchPolicy` options are no longer
+    supported with `useLazyQuery`.
+
+
+    If you use `defaultOptions`, pass those options directly to the hook
+    instead. If you use `initialFetchPolicy`, use `fetchPolicy` instead.
+  stupid-pumpkins-travel: >-
+    Apollo Client no longer ships with support for `@client` fields
+    out-of-the-box and now must be opt-in. To opt in to use `@client` fields,
+    pass an instantiated `LocalState` instance to the `localState` option. If a
+    query contains `@client` and local state hasn't been configured, an error
+    will be thrown.
+
+
+    ```ts
+
+    import { LocalState } from "@apollo/client/local-state";
+
+
+    new ApolloClient({
+      localState: new LocalState(),
+    });
+
+    ```
+  tall-bikes-develop: >-
+    Remove `resetResultIdentities` option from `InMemoryCache.gc()`. This
+    affected object canonization which has been removed.
+  tender-swans-flash: >-
+    Remove `loading`, `networkStatus`, and `partial` properties on all
+    promise-based query APIs. These properties were mostly static and were
+    unnecessary since promise resolution guaranteed that the query was not
+    longer loading.
+
+
+    This affects the following APIs:
+
+    - `client.query`
+
+    - `client.refetchQueries`
+
+    - `client.reFetchObservableQueries`
+
+    - `client.resetStore`
+
+    - `observableQuery.fetchMore`
+
+    - `observableQuery.refetch`
+
+    - `observableQuery.reobserve`
+
+    - `observableQuery.setVariables`
+
+    - The `useLazyQuery` `execute` function
+  tidy-squids-poke: >-
+    Removes `ObservableQuery.result()` method. If you use this method and need
+    similar functionality, use the `firstValueFrom` helper in RxJS.
+
+
+    ```ts
+
+    import { firstValueFrom, from } from "rxjs";
+
+
+    // The `from` is necessary to turn `observableQuery` into an RxJS observable
+
+    const result = await firstValueFrom(from(observableQuery))
+
+    ```
+  tough-taxis-smoke: >-
+    Remove the `onCompleted` and `onError` callbacks from `useQuery` and
+    `useLazyQuery`.
+
+
+    See [#12352](https://github.com/apollographql/apollo-client/issues/12352)
+    for more context on this change.
+  unlucky-kiwis-sell: Remove the `called` property from `useQuery`.
+  unlucky-sheep-change: >-
+    Remove `toPromise` utility function. Use
+    [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom)
+    instead.
+  wicked-forks-double: >-
+    Remove `newData` option for mocked responses passed to `MockLink` or the
+    `mocks` option on `MockedProvider`. This option was undocumented and was
+    nearly identical to using the `result` option as a callback.
+
+
+    To replicate the old behavior of `newData`, use `result` as a callback and
+    add the `maxUsageCount` option with a value set to
+    `Number.POSITIVE_INFINITY`.
+
+
+    **with `MockLink`**
+
+    ```diff
+
+    new MockLink([
+      {
+        request: { query, variables },
+    -   newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +   maxUsageCount: Number.POSITIVE_INFINITY,
+      }
+    ])
+
+    ```
+
+
+    **with `MockedProvider`**
+
+    ```diff
+
+    <MockedProvider
+      mocks={[
+        {
+          request: { query, variables },
+    -     newData: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     result: (variables) => ({ data: { greeting: "Hello " +
+    variables.greeting } }),
+
+    +     maxUsageCount: Number.POSITIVE_INFINITY,
+        }
+      ]}
+    />
+
+    ```
+  witty-paws-marry: >-
+    Require the `link` option when instantiating `ApolloClient`. This removes
+    the `uri`, `credentials` and `headers` options from `ApolloClient` in favor
+    of passing an instantiated `HttpLink` directly. To migrate:
+
+
+    **If using `uri`, `credentials`, or `headers` options**
+
+    ```diff
+
+    new ApolloClient({
+      // ...
+    - uri,
+
+    - credentials,
+
+    - headers,
+
+    + link: new HttpLink({ uri, credentials, headers }),
+
+    // or if you prefer the function call approach:
+
+    + link: createHttpLink({ uri, credentials, headers }),
+
+    });
+
+    ```
+
+
+    **If creating a client without the `link` option**
+
+    ```diff
+
+    new ApolloClient({
+      // ...
+    + link: ApolloLink.empty()
+
+    });
+
+    ```
+  young-turtles-explode: >-
+    Remove the deprecated `Query`, `Mutation`, and `Subscription` components.
+    Use the provided React hooks instead.
+  mean-lizards-think: >-
+    Ensure `useLazyQuery` does not return a `partial` property which is not
+    specified by the result type.
+  ninety-bags-bake: >-
+    Mocked responses passed to `MockLink` now accept a callback for the
+    `request.variables` option. This is used to determine if the mock should be
+    matched for a set of request variables. With this change, the
+    `variableMatcher` option has been removed in favor of passing a callback to
+    `variables`. Update by moving the callback function from `variableMatcher`
+    to `request.variables`.
+
+
+    ```diff
+
+    new MockLink([
+      {
+        request: {
+          query,
+    +     variables: (requestVariables) => true
+        },
+    -   variableMatcher: (requestVariables) => true
+      }
+    ]);
+
+    ```
+  thirty-pens-jump: >-
+    Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment
+    matchers used with local state are no longer supported. Fragment matching is
+    now performed by the configured `cache` via the `cache.fragmentMatches` API.
+other:
+  itchy-roses-accept: >-
+    Use an an empty object (`{}`) rather than an object with `null` prototype
+    (`Object.create(null)`) in all areas that instantiate objects.
+ignore:
+  fresh-swans-remain: >-
+    Fix a bug where the new `operationType` property wasn't passed into
+    `operation`.
+  friendly-walls-think: Version bump only to release latest as `rc`.
+  lucky-camels-compete: Export `getMainDefinition` from `@apollo/client/utilities`.
+  lucky-donkeys-behave: Version bump only to release latest as `rc`.
+  silent-lobsters-try: Version bump only for codegen to release as `rc`.
+  slimy-maps-press: Fix up the 4.0 CommonJS build
+  real-turtles-boil: Enable React compiler for hooks in ESM builds.
+  bright-ads-share: >-
+    Removes the `isApolloError` utility function to check if the error object is
+    an `ApolloError` instance. Use `instanceof` to check for more specific error
+    types that replace `ApolloError`.

@@ -1,31 +1,143 @@
 ---
 title: ObservableQuery
 description: API reference
-api_reference: true
-api_doc:
-  - "@apollo/client!ObservableQuery:class"
-  - "@apollo/client!ApolloQueryResult:interface"
-  - "@apollo/client!NetworkStatus:enum"
 ---
 
-import { InterfaceDetails, FunctionDetails, PropertyDetails, EnumDetails } from '../../../shared/ApiDoc';
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+An `ObservableQuery` is created by calling the `client.watchQuery` method.
+It represents a query that can be observed for changes, allowing you to reactively update your UI.
+
+## Key Behaviors
+
+### RxJS Integration
+
+`ObservableQuery` implements the [RxJS](https://rxjs.dev/) `InteropObservable` interface which means you can convert it into an RxJS `Observable` via `from(observableQuery)`.
+It also provides the `subscribe` and `pipe` functions like an RxJS `Observable`.
+Refer to the [RxJS documentation](https://rxjs.dev/guide/overview) for additional context and API options.
+
+To get a single result from an `ObservableQuery` as a Promise, use the `firstValueFrom` helper:
+
+```ts
+import { firstValueFrom, from } from "rxjs";
+
+// The `from` is necessary to turn `observableQuery` into an RxJS observable
+const result = await firstValueFrom(from(observableQuery));
+```
+
+### Subscription Lifecycle
+
+- `ObservableQuery` instances are only registered with `ApolloClient` while they have active subscribers
+- Unsubscribing from an `ObservableQuery` while a request is in flight does not terminate the request
+- Unsubscribing before any value has been emitted removes the query from the tracked list and makes it ineligible for query deduplication
+
+### Error Handling
+
+- `ObservableQuery` does not terminate on errors - instead it emits a `next` value with an `error` property. This ensures `ObservableQuery` subscriptions can continue receiving updates after errors without resubscription.
+
+### Loading States
+
+- When `notifyOnNetworkStatusChange` is `true` (the default), an initial loading state is emitted when subscribing
+- `ObservableQuery` preserves `data` when emitting a loading state unless `query` or `variables` changed (note: `@export` variables are not considered for this check)
+- When the query can be fulfilled by the cache or when the link chain responds synchronously, a loading state is omitted
+- `cache-only` queries initialize with `networkStatus: NetworkStatus.ready` when there is no data in the cache
+- `standby` queries initialize with `networkStatus: NetworkStatus.ready` before subscribing to the query
+
+### Promise-returning Methods and retention
+
+- `refetch()` and `reobserve()` return a `ResultPromise` with an additional `.retain()` method
+- By default, the network operation is cancelled when `ObservableQuery` no longer requires the result, such as when `ObservableQuery` is unsubscribed or variables change, and the returned `Promise` will reject with an `AbortError`
+- Calling `.retain()` keeps the network operation running even when the `ObservableQuery` no longer requires the result
+- `setVariables()` and `refetch()` guarantee that a value will be emitted from the observable, even when the result is deeply equal to the previous result
+
+### Active vs Inactive Queries
+
+- **Active queries**: Have at least one subscriber and are not skipped or have a `fetchPolicy` of `standby`
+- **Inactive queries**: Have a subscriber but are either skipped or have a `fetchPolicy` of `standby`
+- `ObservableQuery`s without subscribers but with an active network request are handled as if they had a subscriber for the duration of the query
+- Only queries with subscribers can be refetched using `ApolloClient.refetchQueries`
 
 ## `ObservableQuery` functions
 
-`ApolloClient` Observables extend the Observables implementation provided by [`zen-observable`](https://github.com/zenparsing/zen-observable). Refer to the `zen-observable` documentation for additional context and API options.
-
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#result:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#getCurrentResult:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#refetch:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#setOptions:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#setVariables:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#fetchMore:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#updateQuery:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#startPolling:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#stopPolling:member(1)" headingLevel={3} />
-<FunctionDetails canonicalReference="@apollo/client!ObservableQuery#subscribeToMore:member(1)" headingLevel={3} />
-
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#getCurrentResult:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery.DocumentationTypes.ObservableMethods#pipe:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery.DocumentationTypes.ObservableMethods#subscribe:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={true}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#refetch:member(1)"
+  headingLevel={3}
+  result={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#fetchMore:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#subscribeToMore:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#stop:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#setVariables:member(1)"
+  headingLevel={3}
+  result={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#updateQuery:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#startPolling:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#stopPolling:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ObservableQuery#reobserve:member(1)"
+  headingLevel={3}
+  result={false}
+  parameters={false}
+/>
 
 ## Types
-<EnumDetails canonicalReference="@apollo/client!NetworkStatus:enum" headingLevel={3} />
-<InterfaceDetails canonicalReference="@apollo/client!ApolloQueryResult:interface" headingLevel={3} />
+
+<EnumDetails
+  canonicalReference="@apollo/client!NetworkStatus:enum"
+  headingLevel={3}
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/utilities/internal!DocumentationTypes.ApolloQueryResult:interface"
+  headingLevel={3}
+/>

@@ -9,9 +9,10 @@ import type {
   RenderHookOptions,
   RenderHookResult,
 } from "@testing-library/react";
-import type * as ReactDOMClient from "react-dom/client";
-import * as ReactDOM from "react-dom";
 import * as React from "react";
+import * as ReactDOM from "react-dom";
+import type * as ReactDOMClient from "react-dom/client";
+
 import { renderAsync } from "./renderAsync.js";
 
 type RendererableContainer = ReactDOMClient.Container;

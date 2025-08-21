@@ -52,7 +52,13 @@ query Feed($offset: Int, $limit: Int) {
 
 ## `@defer`
 
-Beginning with version `3.7.0`, Apollo Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+The [`@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md) enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+
+<Note>
+
+To use the `@defer` directive, you need to choose an incremental delivery format handler . See the [Defer](./defer#setting-up-defer-support-by-choosing-an-incrementalhandler) guide for more information.
+
+</Note>
 
 To use the `@defer` directive, we apply it to an inline or named fragment that contains all slow-resolving fields:
 
@@ -74,9 +80,13 @@ query PersonQuery($personId: ID!) {
 }
 ```
 
-> **Note:** in order to use `@defer` in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.
+<Note>
 
-For more information about the `@defer` directive, check out the [`@defer` docs](/react/data/defer).
+In order to use `@defer` in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.
+
+</Note>
+
+For more information on using the `@defer` directive, see the [Defer](./defer) guide.
 
 ## `@export`
 
@@ -99,11 +109,7 @@ You can do this even if `postCount` is also a local-only field (i.e., if it's al
 
 For more information and other considerations when using the `@export` directive, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).
 
-<MinVersion version="3.8.0">
-
 ## `@nonreactive`
-
-</MinVersion>
 
 The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger rerendering. This allows parent components to fetch data to be rendered by their children without rerendering themselves when the data corresponding with fields marked as `@nonreactive` change.
 
@@ -176,10 +182,7 @@ const Trail = ({ id }) => {
 
 Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.
 
-
-<MinVersion version="3.12.0">
 ## `@unmask`
-</MinVersion>
 
 The `@unmask` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [incrementally adopt data masking in an existing application](./fragments#incremental-adoption-in-an-existing-application). It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
 
@@ -206,7 +209,8 @@ fragment CommentFragment on Comment {
 ```
 
 <Note>
-When the `dataMasking` option is omitted or set to `false`, this directive has no effect.
+  When the `dataMasking` option is omitted or set to `false`, this directive has
+  no effect.
 </Note>
 
 ### Migrate mode

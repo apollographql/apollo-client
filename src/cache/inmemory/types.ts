@@ -1,29 +1,31 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
-import type { Transaction } from "../core/cache.js";
+import type { OperationVariables } from "@apollo/client";
 import type {
+  Reference,
   StoreObject,
   StoreValue,
-  Reference,
-} from "../../utilities/index.js";
-import type { FieldValueGetter } from "./entityStore.js";
+} from "@apollo/client/utilities";
+
+import type { Transaction } from "../core/cache.js";
 import type {
-  TypePolicies,
-  PossibleTypesMap,
-  KeyFieldsFunction,
-  StorageType,
-  FieldMergeFunction,
-} from "./policies.js";
-import type {
+  AllFieldsModifier,
+  CanReadFunction,
   Modifiers,
   ToReferenceFunction,
-  CanReadFunction,
-  AllFieldsModifier,
 } from "../core/types/common.js";
 
+import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type {
+  FieldMergeFunction,
+  KeyFieldsFunction,
+  PossibleTypesMap,
+  StorageType,
+  TypePolicies,
+} from "./policies.js";
 
-export type { StoreObject, StoreValue, Reference };
+export type { Reference, StoreObject, StoreValue };
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -49,7 +51,8 @@ export interface NormalizedCache {
 
   modify<Entity extends Record<string, any>>(
     dataId: string,
-    fields: Modifiers<Entity> | AllFieldsModifier<Entity>
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>,
+    exact: boolean
   ): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
@@ -105,7 +108,7 @@ export interface NormalizedCacheObject {
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCacheObject;
-  transaction: Transaction<NormalizedCacheObject>;
+  transaction: Transaction;
 };
 
 export type ReadQueryOptions = {
@@ -119,14 +122,6 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
-  /**
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
-   */
-  canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
 };
@@ -137,30 +132,12 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
-  /**
-   * @defaultValue true
-   *
-   * @deprecated `addTypename` will be removed in Apollo Client 4.0.
-   *
-   * **Recommended now**
-   *
-   * Please set `addTypename` to `true` or remove the option entirely to use the
-   * default.
-   */
-  addTypename?: boolean;
 };
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
-  /**
-   * @deprecated
-   * Please use `cacheSizes` instead.
-   */
-  resultCacheMaxSize?: number;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
 }
 
@@ -177,7 +154,7 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
-  variables?: Record<string, any>;
+  variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
 }

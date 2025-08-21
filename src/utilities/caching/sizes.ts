@@ -1,4 +1,4 @@
-import { global } from "../globals/index.js";
+import { global } from "@apollo/client/utilities/internal/globals";
 
 declare global {
   interface Window {
@@ -44,23 +44,6 @@ export interface CacheSizes {
    */
   print: number;
   /**
-   * Cache size for the [`parser`](https://github.com/apollographql/apollo-client/blob/main/src/react/parser/index.ts) function.
-   *
-   * It is called with user-provided `DocumentNode`s.
-   *
-   * @defaultValue
-   * Defaults to `1000`.
-   *
-   * @remarks
-   * This method is called by HOCs and hooks.
-   *
-   * @privateRemarks
-   * This function is used directly in HOCs, and nowadays mainly accessed by
-   * calling `verifyDocumentType` from various hooks.
-   * It is called with a user-provided DocumentNode.
-   */
-  parser: number;
-  /**
    * Cache size for the cache of [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts)
    * instances with the `cache` option set to `true`.
    *
@@ -95,7 +78,7 @@ export interface CacheSizes {
    * Cache size for the `performWork` method of each [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts).
    *
    * No user-provided DocumentNode will actually be "the last one", as we run the
-   * `defaultDocumentTransform` before *and* after the user-provided transforms.
+   * `defaultDocumentTransform` before _and_ after the user-provided transforms.
    * For that reason, we need the extra `n` here - `n` for "before transformation"
    * plus the actual maximum cache size of the user-provided transform chain.
    *
@@ -103,7 +86,6 @@ export interface CacheSizes {
    * `QueryManager` with a user-provided DocumentNode.
    * It is also called with already-transformed DocumentNodes, assuming the
    * user provided additional transforms.
-   *
    */
   "documentTransform.cache": number;
   /**
@@ -164,7 +146,6 @@ export interface CacheSizes {
    * Cache size for the `transform` method of FragmentRegistry.
    * This function is called as part of the `defaultDocumentTransform` which will be called with
    * user-provided and already-transformed DocumentNodes.
-   *
    */
   "fragmentRegistry.transform": number;
   /**
@@ -274,11 +255,15 @@ export interface CacheSizes {
    * recommended to set this to a high value.
    */
   "inMemoryCache.executeSubSelectedArray": number;
+  /**
+   * Used by the internal `checkDocument` that traverses GraphQL documents and throws an error if the document is invalid.
+   * if they are not valid.
+   */
+  checkDocument: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
 /**
- *
  * The global cache size configuration for Apollo Client.
  *
  * @remarks
@@ -286,23 +271,24 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * You can directly modify this object, but any modification will
  * only have an effect on caches that are created after the modification.
  *
- * So for global caches, such as `parser`, `canonicalStringify` and `print`,
+ * So for global caches, such as `canonicalStringify` and `print`,
  * you might need to call `.reset` on them, which will essentially re-create them.
  *
  * Alternatively, you can set `globalThis[Symbol.for("apollo.cacheSize")]` before
  * you load the Apollo Client package:
  *
  * @example
+ *
  * ```ts
  * globalThis[Symbol.for("apollo.cacheSize")] = {
- *   parser: 100
- * } satisfies Partial<CacheSizes> // the `satisfies` is optional if using TypeScript
+ *   print: 100,
+ * } satisfies Partial<CacheSizes>; // the `satisfies` is optional if using TypeScript
  * ```
  */
 export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
-  parser = 1000,
+  checkDocument = 2000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,

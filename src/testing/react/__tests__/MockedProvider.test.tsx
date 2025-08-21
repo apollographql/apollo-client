@@ -1,17 +1,15 @@
-import React from "react";
-import { DocumentNode } from "graphql";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
+import type { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
+import type { Observable } from "rxjs";
+import { EMPTY } from "rxjs";
 
-import { MockedResponse, MockLink } from "../../core";
-import { MockedProvider } from "../MockedProvider";
-import { useQuery } from "../../../react/hooks";
-import { InMemoryCache } from "../../../cache";
-import { QueryResult } from "../../../react/types/types";
-import { ApolloLink, FetchResult } from "../../../link/core";
-import { Observable } from "zen-observable-ts";
-import { ApolloError } from "../../../errors";
-import { withDisabledDeprecations } from "../../../utilities/deprecation";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloLink } from "@apollo/client/link";
+import { useQuery } from "@apollo/client/react";
+import { MockLink } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const variables = {
   username: "mock_username",
@@ -43,7 +41,7 @@ const queryWithTypename: DocumentNode = gql`
   }
 `;
 
-const mocks: ReadonlyArray<MockedResponse> = [
+const mocks: ReadonlyArray<MockLink.MockedResponse> = [
   {
     request: {
       query,
@@ -60,7 +58,7 @@ interface Data {
 }
 
 interface Result {
-  current: QueryResult<any, any> | null;
+  current: useQuery.Result<any, any> | null;
 }
 
 interface Variables {
@@ -69,7 +67,7 @@ interface Variables {
 
 let errorThrown = false;
 const errorLink = new ApolloLink((operation, forward) => {
-  let observer: Observable<FetchResult> | null = null;
+  let observer: Observable<ApolloLink.Result> | null = EMPTY;
   try {
     observer = forward(operation);
   } catch (error) {
@@ -111,7 +109,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
         variables,
@@ -130,17 +128,17 @@ describe("General use", () => {
     });
   });
 
-  it("should pass the variables to the variableMatcher", async () => {
+  it("should pass the variables to the `variables` callback function", async () => {
     function Component({ ...variables }: Variables) {
       useQuery<Data, Variables>(query, { variables });
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: jest.fn().mockReturnValue(true),
       },
-      variableMatcher: jest.fn().mockReturnValue(true),
       result: { data: { user } },
     };
 
@@ -151,13 +149,11 @@ describe("General use", () => {
     );
 
     await waitFor(() => {
-      expect(mock2.variableMatcher as jest.Mock).toHaveBeenCalledWith(
-        variables
-      );
+      expect(mock2.request.variables).toHaveBeenCalledWith(variables);
     });
   });
 
-  it("should use a mock if the variableMatcher returns true", async () => {
+  it("should use the mock if the `variables` callback function returns true", async () => {
     let finished = false;
 
     function Component({ username }: Variables) {
@@ -171,11 +167,11 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: (v) => v.username === variables.username,
       },
-      variableMatcher: (v) => v.username === variables.username,
       result: { data: { user } },
     };
 
@@ -280,7 +276,7 @@ describe("General use", () => {
     });
   });
 
-  it("should error if the variableMatcher returns false", async () => {
+  it("should error if the `variables` as callback returns false", async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, {
@@ -293,11 +289,11 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: () => false,
       },
-      variableMatcher: () => false,
       result: { data: { user } },
     };
 
@@ -403,9 +399,7 @@ describe("General use", () => {
         variables,
       });
       if (!loading) {
-        expect(error).toEqual(
-          new ApolloError({ networkError: new Error("something went wrong") })
-        );
+        expect(error).toEqual(new Error("something went wrong"));
         finished = true;
       }
       return null;
@@ -576,7 +570,7 @@ describe("General use", () => {
 
     const link = ApolloLink.from([
       errorLink,
-      new MockLink([], true, { showWarnings: false }),
+      new MockLink([], { showWarnings: false }),
     ]);
 
     render(
@@ -625,7 +619,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -638,7 +632,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -676,7 +670,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -686,10 +680,11 @@ describe("General use", () => {
         },
         maxUsageCount: Number.POSITIVE_INFINITY,
         result: { data: { user } },
+        delay: 0,
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -735,7 +730,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -747,7 +742,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -783,7 +778,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -812,7 +807,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -871,8 +866,6 @@ describe("General use", () => {
 
   it("shows a warning in the console when there is no matched mock", async () => {
     const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-
-    using _ = withDisabledDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -918,7 +911,6 @@ describe("General use", () => {
 
   it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
     const consoleSpy = jest.spyOn(console, "warn");
-    using _ = withDisabledDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -961,7 +953,6 @@ describe("General use", () => {
 
   it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
     const consoleSpy = jest.spyOn(console, "warn");
-    using _ = withDisabledDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -987,7 +978,7 @@ describe("General use", () => {
       },
     ];
 
-    const link = new MockLink(mocksDifferentQuery, false, {
+    const link = new MockLink(mocksDifferentQuery, {
       showWarnings: false,
     });
 
@@ -1006,61 +997,6 @@ describe("General use", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should support custom error handling using setOnError", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      useQuery<Data, Variables>(query, { variables });
-      return null;
-    }
-
-    const mockLink = new MockLink([], true, { showWarnings: false });
-    mockLink.setOnError((error) => {
-      expect(error).toMatchSnapshot();
-      finished = true;
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
-  });
-
-  it("should pipe exceptions thrown in custom onError functions through the link chain", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, {
-        variables,
-      });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
-      }
-      return null;
-    }
-
-    const mockLink = new MockLink([], true, { showWarnings: false });
-    mockLink.setOnError(() => {
-      throw new Error("oh no!");
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
-  });
-
   it("should support loading state testing with delay", async () => {
     jest.useFakeTimers();
 
@@ -1072,7 +1008,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: 30000, // prevent React from batching the loading state away
         request: {
@@ -1116,7 +1052,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: Infinity, // keep loading forever.
         request: {
@@ -1162,7 +1098,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: Infinity, // keep loading forever.
         request: {
@@ -1217,7 +1153,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline
@@ -1261,7 +1197,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline

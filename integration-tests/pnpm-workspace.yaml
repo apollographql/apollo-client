@@ -1,0 +1,9 @@
+packages:
+  - browser-esm
+  - cra5
+  - next
+  - vite
+  - vite-swc
+  - node
+  - wrapping-library
+  - shared

@@ -14,21 +14,27 @@ Apollo Link includes installable, premade links that support a variety of use ca
 The following example demonstrates adding a custom link to Apollo Client. This link adds an `Authorization` header to every HTTP request before the `HttpLink` sends it:
 
 ```js
-import { ApolloClient, HttpLink, ApolloLink, InMemoryCache, concat } from '@apollo/client';
+import {
+  ApolloClient,
+  HttpLink,
+  ApolloLink,
+  InMemoryCache,
+  concat,
+} from "@apollo/client";
 
-const httpLink = new HttpLink({ uri: '/graphql' });
+const httpLink = new HttpLink({ uri: "/graphql" });
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
   operation.setContext(({ headers = {} }) => ({
     headers: {
       ...headers,
-      authorization: localStorage.getItem('token') || null,
-    }
+      authorization: localStorage.getItem("token") || null,
+    },
   }));
 
   return forward(operation);
-})
+});
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -39,41 +45,43 @@ const client = new ApolloClient({
 This next example demonstrates providing multiple custom links in an array:
 
 ```js
-import { ApolloClient, HttpLink, ApolloLink, InMemoryCache, from } from '@apollo/client';
+import {
+  ApolloClient,
+  HttpLink,
+  ApolloLink,
+  InMemoryCache,
+  from,
+} from "@apollo/client";
 
-const httpLink = new HttpLink({ uri: '/graphql' });
+const httpLink = new HttpLink({ uri: "/graphql" });
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
   operation.setContext(({ headers = {} }) => ({
     headers: {
       ...headers,
-      authorization: localStorage.getItem('token') || null,
-    }
+      authorization: localStorage.getItem("token") || null,
+    },
   }));
 
   return forward(operation);
-})
+});
 
 const activityMiddleware = new ApolloLink((operation, forward) => {
   // add the recent-activity custom header to the headers
   operation.setContext(({ headers = {} }) => ({
     headers: {
       ...headers,
-      'recent-activity': localStorage.getItem('lastOnlineTime') || null,
-    }
+      "recent-activity": localStorage.getItem("lastOnlineTime") || null,
+    },
   }));
 
   return forward(operation);
-})
+});
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: from([
-    authMiddleware,
-    activityMiddleware,
-    httpLink
-  ]),
+  link: from([authMiddleware, activityMiddleware, httpLink]),
 });
 ```
 
@@ -86,16 +94,23 @@ You can use Apollo Link to customize Apollo Client's behavior whenever it receiv
 The following example demonstrates using [`@apollo/client/link/error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
 ```js
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
-import { onError } from '@apollo/client/link/error';
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ServerError,
+} from "@apollo/client";
+import { ErrorLink } from "@apollo/client/link/error";
 
-import { logout } from './logout';
+import { logout } from "./logout";
 
-const httpLink = new HttpLink({ uri: '/graphql' });
+const httpLink = new HttpLink({ uri: "/graphql" });
 
-const logoutLink = onError(({ networkError }) => {
-  if (networkError.statusCode === 401) logout();
-})
+const logoutLink = new ErrorLink(({ error }) => {
+  if (ServerError.is(error) && error.statusCode === 401) {
+    logout();
+  }
+});
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -110,12 +125,17 @@ In this example, the user is logged out of the application if the server returns
 You can create a custom link that edits or removes fields from `response.data`. To do so, you call `map` on the result of the link's `forward(operation)` call. In the `map` function, make the desired changes to `response.data` and then return it:
 
 ```js
-import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/client';
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloLink,
+} from "@apollo/client";
 
-const httpLink = new HttpLink({ uri: '/graphql' });
+const httpLink = new HttpLink({ uri: "/graphql" });
 
 const formatDateLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map(response => {
+  return forward(operation).map((response) => {
     if (response.data.date) {
       response.data.date = new Date(response.data.date);
     }
@@ -138,13 +158,13 @@ import {
   ApolloClient,
   InMemoryCache,
   HttpLink,
-  ApolloLink
+  ApolloLink,
 } from "@apollo/client";
 import { asyncMap } from "@apollo/client/utilities";
 
-import { usdToEur } from './currency';
+import { usdToEur } from "./currency";
 
-const httpLink = new HttpLink({ uri: '/graphql' });
+const httpLink = new HttpLink({ uri: "/graphql" });
 
 const usdToEurLink = new ApolloLink((operation, forward) => {
   return asyncMap(forward(operation), async (response) => {
@@ -159,7 +179,7 @@ const usdToEurLink = new ApolloLink((operation, forward) => {
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: usdToEurLink.concat(httpLink)
+  link: usdToEurLink.concat(httpLink),
 });
 ```
 
@@ -185,17 +205,17 @@ const link = new HttpLink({ uri: "/graphql" });
 
 The `HttpLink` constructor accepts the following options:
 
-| Options | Description |
-| - | - |
-| `uri` | A string endpoint or function that resolves to the GraphQL server you want to execute operations against. (default: `/graphql`)|
-| `includeExtensions` | If `true`, you can pass an `extensions` field to your GraphQL server. (default: `false`) |
-| `fetch` | A `fetch`-compatible API for making a request. See [Providing a `fetch` replacement for certain environments](#providing-a-fetch-replacement-for-certain-environments). |
-| `headers` | An object containing header names and values to include in each request. |
-| `preserveHeaderCase` | If `true`, header values retain their capitalization for non-http-spec-compliant servers. (default: `false`) |
-| `credentials` | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
-| `fetchOptions` | Include this to override the values of certain options that are provided to the `fetch` call. |
-| `useGETForQueries` | If `true`, `HttpLink` uses `GET` requests instead of `POST` requests to execute query operations (but not mutation operations). (default: `false`) |
-| `print` | A function to customize AST formatting in requests. See [Overriding the default `print` function](#overriding-the-default-print-function).  |
+| Options              | Description                                                                                                                                                             |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uri`                | A string endpoint or function that resolves to the GraphQL server you want to execute operations against. (default: `/graphql`)                                         |
+| `includeExtensions`  | If `true`, you can pass an `extensions` field to your GraphQL server. (default: `false`)                                                                                |
+| `fetch`              | A `fetch`-compatible API for making a request. See [Providing a `fetch` replacement for certain environments](#providing-a-fetch-replacement-for-certain-environments). |
+| `headers`            | An object containing header names and values to include in each request.                                                                                                |
+| `preserveHeaderCase` | If `true`, header values retain their capitalization for non-http-spec-compliant servers. (default: `false`)                                                            |
+| `credentials`        | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`)                                              |
+| `fetchOptions`       | Include this to override the values of certain options that are provided to the `fetch` call.                                                                           |
+| `useGETForQueries`   | If `true`, `HttpLink` uses `GET` requests instead of `POST` requests to execute query operations (but not mutation operations). (default: `false`)                      |
+| `print`              | A function to customize AST formatting in requests. See [Overriding the default `print` function](#overriding-the-default-print-function).                              |
 
 #### Providing a `fetch` replacement for certain environments
 
@@ -206,14 +226,11 @@ The `HttpLink` constructor accepts the following options:
 The `print` option is useful for customizing the way `DocumentNode` objects are transformed back into strings before they are sent over the network. If no custom `print` function is provided, the [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) will be used. A custom `print` function should accept an `ASTNode` (typically a `DocumentNode`) and the original `print` function as arguments, and return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries:
 
 ```ts
-import { ASTNode, stripIgnoredCharacters } from 'graphql';
+import { ASTNode, stripIgnoredCharacters } from "graphql";
 
 const httpLink = new HttpLink({
-  uri: '/graphql',
-  print(
-    ast: ASTNode,
-    originalPrint: (ast: ASTNode) => string,
-  ) {
+  uri: "/graphql",
+  print(ast: ASTNode, originalPrint: (ast: ASTNode) => string) {
     return stripIgnoredCharacters(originalPrint(ast));
   },
 });
@@ -229,23 +246,23 @@ Note that if you set `fetchOptions.method` to `GET`, `HttpLink` follows the [sta
 
 Context options:
 
-| Option | Description |
-| - | - |
-| `headers` | An object containing header names and values to include in each request. |
-| `credentials` | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
-| `uri` | A string endpoint or function that resolves to the GraphQL server you want to execute operations against. |
-| `fetchOptions` | Any overrides of the fetch options argument to pass to the `fetch` call. |
-| `response` | The raw response from the `fetch` request after it is made. |
-| `http` | An object that lets you control fine-grained aspects of `HttpLink` itself, such as persisted queries (see below). |
+| Option         | Description                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `headers`      | An object containing header names and values to include in each request.                                                   |
+| `credentials`  | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
+| `uri`          | A string endpoint or function that resolves to the GraphQL server you want to execute operations against.                  |
+| `fetchOptions` | Any overrides of the fetch options argument to pass to the `fetch` call.                                                   |
+| `response`     | The raw response from the `fetch` request after it is made.                                                                |
+| `http`         | An object that lets you control fine-grained aspects of `HttpLink` itself, such as persisted queries (see below).          |
 
 The following example shows how to use the `context` to pass a special header for a single query:
 
 ```js
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  uri: "/graphql"
+  link: new HttpLink({ uri: "/graphql" }),
 });
 
 client.query({
@@ -253,9 +270,9 @@ client.query({
   context: {
     // example of setting the headers with context per operation
     headers: {
-      special: "Special header value"
-    }
-  }
+      special: "Special header value",
+    },
+  },
 });
 ```
 

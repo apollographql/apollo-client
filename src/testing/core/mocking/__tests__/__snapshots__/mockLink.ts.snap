@@ -1,14 +1,184 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`can use \`result\` as callback with \`maxUsageCount\` 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
+"
+`;
+
+exports[`consumes matched mock 1`] = `
+"No more mocked responses for the query:
+{
+  a
+}
+
+Request variables: {}
+"
+`;
+
+exports[`does not show variables in error message if none configured 1`] = `
+"No more mocked responses for the query:
+{
+  b
+}
+
+Request variables: {}
+"
+`;
+
+exports[`fails when variables returns false 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":1}
+
+Failed to match variables against 1 mock for this query. The available mocks had the following variables:
+  <function variables>
+"
+`;
+
+exports[`mocks is consumed after running \`result\` callback function 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
+"
+`;
+
+exports[`returns error when no mock matches request 1`] = `
+"No more mocked responses for the query:
+{
+  a
+}
+
+Request variables: {}
+"
+`;
+
+exports[`returns error when no mock matches request 2`] = `
+"No more mocked responses for the query:
+{
+  a
+}
+
+Request variables: {}
+"
+`;
+
+exports[`shows <undefined> for mocks with no configured variables 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match variables against 2 mocks for this query. The available mocks had the following variables:
+  <undefined>
+  {\\"id\\":2}
+"
+`;
+
+exports[`shows all configured variables for queries that did not match request 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":4}
+
+Failed to match variables against 3 mocks for this query. The available mocks had the following variables:
+  {\\"id\\":1}
+  {\\"id\\":2}
+  {\\"id\\":3}
+"
+`;
+
+exports[`shows default variables from query in error message for mocks with no configured variables 1`] = `
+"No more mocked responses for the query:
+query ($id: ID! = 1) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match variables against 2 mocks for this query. The available mocks had the following variables:
+  {\\"id\\":1}
+  {\\"id\\":2}
+"
+`;
+
+exports[`shows empty object for variables when configured with empty vars 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match variables against 2 mocks for this query. The available mocks had the following variables:
+  {}
+  {\\"id\\":2}
+"
+`;
+
 exports[`shows undefined and NaN in debug messages 1`] = `
-"No more mocked responses for the query: query ($id: ID!, $filter: Boolean) {
+"No more mocked responses for the query:
+query ($id: ID!, $filter: Boolean) {
   usersByTestId(id: $id, filter: $filter) {
     id
   }
 }
-Expected variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
 
-Failed to match 1 mock for this query. The mocked response had the following variables:
+Request variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
+
+Failed to match variables against 1 mock for this query. The available mocks had the following variables:
   {\\"id\\":1,\\"filter\\":true}
+"
+`;
+
+exports[`uses a mock a configured number of times when \`maxUsageCount\` is configured 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
+"
+`;
+
+exports[`uses a mock once when \`maxUsageCount\` is not configured 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
 "
 `;

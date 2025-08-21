@@ -4,23 +4,25 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloConsumer",
-  "ApolloError",
   "ApolloLink",
-  "ApolloProvider",
-  "Cache",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
-  "DocumentType",
   "HttpLink",
   "InMemoryCache",
+  "LinkError",
+  "LocalStateError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
+  "build",
   "checkFetcher",
   "concat",
   "createHttpLink",
-  "createQueryPreloader",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
   "defaultPrinter",
@@ -31,51 +33,25 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
-  "getApolloContext",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
-  "makeReference",
   "makeVar",
-  "mergeOptions",
-  "operationName",
   "parseAndCheckHttpResponse",
-  "parser",
-  "resetApolloContext",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
-  "skipToken",
   "split",
-  "throwServerError",
-  "toPromise",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseFragment",
-  "useSuspenseQuery",
+  "version",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
-  "Cache",
   "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
@@ -86,7 +62,6 @@ Array [
   "defaultDataIdFromObject",
   "fieldNameFromStoreName",
   "isReference",
-  "makeReference",
   "makeVar",
 ]
 `;
@@ -95,16 +70,22 @@ exports[`exports of public entry points @apollo/client/core 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
-  "Cache",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
+  "LinkError",
+  "LocalStateError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
+  "build",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -118,26 +99,19 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
-  "makeReference",
   "makeVar",
-  "mergeOptions",
   "parseAndCheckHttpResponse",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
-  "toPromise",
+  "version",
 ]
 `;
 
@@ -152,33 +126,30 @@ Array [
 
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
-  "ApolloError",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
+  "LinkError",
+  "LocalStateError",
   "PROTOCOL_ERRORS_SYMBOL",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "graphQLResultHasProtocolErrors",
-  "isApolloError",
+  "isErrorLike",
+  "registerLinkError",
+  "toErrorLike",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/link/batch 1`] = `
+exports[`exports of public entry points @apollo/client/incremental 1`] = `
 Array [
-  "BatchLink",
-  "OperationBatcher",
+  "Defer20220824Handler",
+  "GraphQL17Alpha2Handler",
+  "NotImplementedHandler",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
-Array [
-  "BatchHttpLink",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/link/context 1`] = `
-Array [
-  "setContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/link/core 1`] = `
+exports[`exports of public entry points @apollo/client/link 1`] = `
 Array [
   "ApolloLink",
   "concat",
@@ -186,6 +157,32 @@ Array [
   "execute",
   "from",
   "split",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/batch 1`] = `
+Array [
+  "BatchLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
+Array [
+  "BaseBatchHttpLink",
+  "BatchHttpLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/client-awareness 1`] = `
+Array [
+  "ClientAwarenessLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/context 1`] = `
+Array [
+  "SetContextLink",
+  "setContext",
 ]
 `;
 
@@ -198,6 +195,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/http 1`] = `
 Array [
+  "BaseHttpLink",
   "HttpLink",
   "checkFetcher",
   "createHttpLink",
@@ -209,12 +207,12 @@ Array [
   "selectHttpOptionsAndBody",
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
-  "serializeFetchParameter",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -223,6 +221,7 @@ Array [
 exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
 Array [
   "KEEP",
+  "RemoveTypenameFromVariablesLink",
   "removeTypenameFromVariables",
 ]
 `;
@@ -249,18 +248,18 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "fromError",
-  "fromPromise",
-  "throwServerError",
-  "toPromise",
-  "transformOperation",
-  "validateOperation",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/ws 1`] = `
 Array [
   "WebSocketLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/local-state 1`] = `
+Array [
+  "LocalState",
 ]
 `;
 
@@ -274,14 +273,10 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
-  "ApolloConsumer",
   "ApolloProvider",
-  "DocumentType",
   "createQueryPreloader",
   "getApolloContext",
-  "operationName",
-  "parser",
-  "resetApolloContext",
+  "reactCompilerVersion",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -299,36 +294,11 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/components 1`] = `
+exports[`exports of public entry points @apollo/client/react with conditions [react-server] 1`] = `
 Array [
-  "Mutation",
-  "Query",
-  "Subscription",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/context 1`] = `
-Array [
-  "ApolloConsumer",
   "ApolloProvider",
+  "createQueryPreloader",
   "getApolloContext",
-  "resetApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
-Array [
-  "graphql",
-  "withApollo",
-  "withMutation",
-  "withQuery",
-  "withSubscription",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
-Array [
-  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -354,23 +324,21 @@ Array [
   "unwrapQueryRef",
   "updateWrappedQueryRef",
   "wrapQueryRef",
+  "wrapperSymbol",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/parser 1`] = `
+exports[`exports of public entry points @apollo/client/react/internal/compiler-runtime 1`] = `
 Array [
-  "DocumentType",
-  "operationName",
-  "parser",
-  "verifyDocumentType",
+  "c",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
-  "RenderPromises",
   "getDataFromTree",
   "getMarkupFromTree",
+  "prerenderStatic",
   "renderToStringWithData",
 ]
 `;
@@ -379,154 +347,145 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
+  "realisticDelay",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/internal 1`] = `
+Array [
+  "ObservableStream",
+  "actAsync",
+  "addDelayToMocks",
+  "createClientWrapper",
+  "createMockWrapper",
+  "createOperationWithDefaultContext",
+  "enableFakeTimers",
+  "executeWithDefaultContext",
+  "markAsStreaming",
+  "mockDeferStream",
+  "mockMultipartSubscriptionStream",
+  "renderAsync",
+  "renderHookAsync",
+  "resetApolloContext",
+  "setupMaskedVariablesCase",
+  "setupPaginatedCase",
+  "setupSimpleCase",
+  "setupVariablesCase",
+  "spyOnConsole",
+  "wait",
+  "withCleanup",
+  "withProdMode",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/react 1`] = `
+Array [
   "MockedProvider",
-  "createMockClient",
-  "itAsync",
-  "mockObservableLink",
-  "mockSingleLink",
-  "subscribeAndCount",
-  "tick",
-  "wait",
-  "withErrorSpy",
-  "withLogSpy",
-  "withWarningSpy",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/testing/core 1`] = `
-Array [
-  "MockLink",
-  "MockSubscriptionLink",
-  "createMockClient",
-  "itAsync",
-  "mockObservableLink",
-  "mockSingleLink",
-  "subscribeAndCount",
-  "tick",
-  "wait",
-  "withErrorSpy",
-  "withLogSpy",
-  "withWarningSpy",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/testing/experimental 1`] = `
-Array [
-  "createSchemaFetch",
-  "createTestSchema",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
-  "AutoCleanedStrongCache",
-  "AutoCleanedWeakCache",
-  "Concast",
-  "DEV",
-  "DeepMerger",
   "DocumentTransform",
   "Observable",
-  "addNonReactiveToNamedFragments",
   "addTypenameToDocument",
-  "argumentsObjectFromField",
-  "asyncMap",
-  "buildQueryFromSelectionSet",
   "cacheSizes",
-  "canUseAsyncIteratorSymbol",
+  "canonicalStringify",
+  "concatPagination",
+  "getMainDefinition",
+  "isFormattedExecutionResult",
+  "isMutationOperation",
+  "isQueryOperation",
+  "isReference",
+  "isSubscriptionOperation",
+  "offsetLimitPagination",
+  "print",
+  "relayStylePagination",
+  "stripTypename",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/environment 1`] = `
+Array [
+  "__DEV__",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
+Array [
+  "AutoCleanedStrongCache",
+  "AutoCleanedWeakCache",
+  "DeepMerger",
+  "argumentsObjectFromField",
   "canUseDOM",
-  "canUseLayoutEffect",
-  "canUseSymbol",
-  "canUseWeakMap",
-  "canUseWeakSet",
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
   "compact",
-  "concatPagination",
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
-  "fixObservableSubclass",
+  "dealias",
+  "decoratePromise",
+  "equalByQuery",
+  "filterMap",
+  "getApolloCacheMemoryInternals",
+  "getApolloClientMemoryInternals",
   "getDefaultValues",
-  "getDirectiveNames",
   "getFragmentDefinition",
   "getFragmentDefinitions",
   "getFragmentFromSelection",
-  "getFragmentMaskMode",
   "getFragmentQueryDocument",
   "getGraphQLErrorsFromResult",
-  "getInclusionDirectives",
+  "getInMemoryCacheMemoryInternals",
   "getMainDefinition",
   "getOperationDefinition",
   "getOperationName",
   "getQueryDefinition",
   "getStoreKeyName",
-  "getTypenameFromResult",
   "graphQLResultHasError",
-  "hasAllDirectives",
-  "hasAnyDirectives",
-  "hasClientExports",
   "hasDirectives",
-  "isApolloPayloadResult",
+  "hasForcedResolvers",
   "isArray",
   "isDocumentNode",
-  "isExecutionPatchIncrementalResult",
-  "isExecutionPatchInitialResult",
-  "isExecutionPatchResult",
   "isField",
-  "isFullyUnmaskedOperation",
-  "isInlineFragment",
-  "isMutationOperation",
   "isNonEmptyArray",
   "isNonNullObject",
   "isPlainObject",
-  "isQueryOperation",
-  "isReference",
-  "isStatefulPromise",
-  "isSubscriptionOperation",
-  "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
-  "maybe",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
-  "mergeIncrementalData",
   "mergeOptions",
-  "offsetLimitPagination",
   "omitDeep",
   "preventUnhandledRejection",
-  "print",
-  "relayStylePagination",
-  "removeArgumentsFromDocument",
-  "removeClientSetsFromDocument",
-  "removeConnectionDirectiveFromDocument",
+  "registerGlobalCache",
   "removeDirectivesFromDocument",
-  "removeFragmentSpreadFromDocument",
+  "removeMaskedFragmentSpreads",
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
   "stringifyForDisplay",
-  "stripTypename",
-  "valueToObjectRepresentation",
-  "wrapPromiseWithState",
+  "toQueryResult",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/internal/globals 1`] = `
 Array [
-  "DEV",
-  "InvariantError",
-  "__DEV__",
   "global",
-  "invariant",
   "maybe",
-  "newInvariantError",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/invariant 1`] = `
 Array [
-  "createFetchMultipartSubscription",
+  "ApolloErrorMessageHandler",
+  "InvariantError",
+  "invariant",
+  "newInvariantError",
+  "setVerbosity",
 ]
 `;
+
+exports[`exports of public entry points @apollo/client/v4-migration 1`] = `Array []`;

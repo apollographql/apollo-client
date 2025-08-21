@@ -1,7 +1,7 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
-import { selectURI } from "../selectURI";
+import { selectURI } from "@apollo/client/link/http";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {
@@ -14,19 +14,19 @@ const query = gql`
 describe("selectURI", () => {
   it("returns a passed in string", () => {
     const uri = "/somewhere";
-    const operation = createOperation({ uri }, { query });
+    const operation = createOperation({ query, context: { uri } });
     expect(selectURI(operation)).toEqual(uri);
   });
 
   it("returns a fallback of /graphql", () => {
     const uri = "/graphql";
-    const operation = createOperation({}, { query });
+    const operation = createOperation({ query });
     expect(selectURI(operation)).toEqual(uri);
   });
 
   it("returns the result of a UriFunction", () => {
     const uri = "/somewhere";
-    const operation = createOperation({}, { query });
+    const operation = createOperation({ query });
     expect(selectURI(operation, () => uri)).toEqual(uri);
   });
 });

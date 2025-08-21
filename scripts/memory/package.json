@@ -2,13 +2,10 @@
   "name": "apollo-client-memory-tests",
   "private": true,
   "scripts": {
-    "test": "mocha --exit -n expose-gc tests.js"
+    "test": "node --expose-gc --test tests.cts"
   },
   "dependencies": {
     "@apollo/client": "file:../../dist",
     "graphql": "^16.0.0"
-  },
-  "devDependencies": {
-    "mocha": "11.0.1"
   }
 }

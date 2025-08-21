@@ -4,77 +4,70 @@
 
 ```ts
 
+import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
-import type { DocumentNode } from 'graphql';
-import type { GraphQLFormattedError } from 'graphql';
-import { InvariantError } from 'ts-invariant';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
+import type { print as print_2 } from 'graphql';
 
 // @public (undocumented)
-class ApolloLink {
-    constructor(request?: RequestHandler);
+export namespace BaseHttpLink {
     // (undocumented)
-    static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
+    export interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    export interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: BaseHttpLink.HttpOptions;
+        uri?: string | BaseHttpLink.UriFunction;
+    }
+    export interface HttpOptions {
+        accept?: string[];
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    export interface Options extends Shared.Options {
+        useGETForQueries?: boolean;
+    }
     // (undocumented)
-    concat(next: ApolloLink | RequestHandler): ApolloLink;
+    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
     // (undocumented)
-    static empty(): ApolloLink;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
-    //
+    export namespace Shared {
+        export interface Options {
+            credentials?: RequestCredentials;
+            fetch?: typeof fetch;
+            fetchOptions?: RequestInit;
+            headers?: Record<string, string>;
+            includeExtensions?: boolean;
+            includeUnusedVariables?: boolean;
+            preserveHeaderCase?: boolean;
+            print?: BaseHttpLink.Printer;
+            uri?: string | BaseHttpLink.UriFunction;
+        }
+    }
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
-    // Warning: (ae-forgotten-export) The symbol "RequestHandler" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // @internal
-    getMemoryInternals?: () => unknown;
-    // @internal
-    readonly left?: ApolloLink;
-    // @deprecated (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
-    // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // @internal
-    readonly right?: ApolloLink;
-    // @deprecated (undocumented)
-    setOnError(fn: ApolloLink["onError"]): this;
-    // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
-    // (undocumented)
-    split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
+    export type UriFunction = (operation: ApolloLink.Operation) => string;
 }
 
-// @public (undocumented)
-interface Body_2 {
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query?: string;
-    // (undocumented)
-    variables?: Record<string, any>;
+// @public
+export class BaseHttpLink extends ApolloLink {
+    constructor(options?: BaseHttpLink.Options);
 }
 
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
-// @public (undocumented)
-export type ClientParseError = InvariantError & {
-    parseError: Error;
-};
-
-// Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
+// @public @deprecated (undocumented)
+export const createHttpLink: (options?: HttpLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -86,57 +79,11 @@ export const createSignalIfSupported: () => {
 };
 
 // @public (undocumented)
-interface DefaultContext extends Record<string, any> {
-}
-
-// Warning: (ae-forgotten-export) The symbol "Printer" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const defaultPrinter: Printer;
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data?: never;
-    // (undocumented)
-    errors?: never;
-    // (undocumented)
-    extensions?: never;
-    // Warning: (ae-forgotten-export) The symbol "IncrementalPayload" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    incremental?: IncrementalPayload<TData, TExtensions>[];
-}
-
-// @public @deprecated (undocumented)
-interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data: TData | null | undefined;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    incremental?: never;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface ExecutionPatchResultBase {
-    // (undocumented)
-    hasNext?: boolean;
-}
+export const defaultPrinter: BaseHttpLink.Printer;
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpQueryOptions;
+    http: BaseHttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -146,28 +93,6 @@ export const fallbackHttpConfig: {
     };
 };
 
-// Warning: (ae-forgotten-export) The symbol "SingleExecutionResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResult" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface GraphQLRequest<TVariables = Record<string, any>> {
-    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    variables?: TVariables;
-}
-
 // @public (undocumented)
 interface HttpConfig {
     // (undocumented)
@@ -175,106 +100,29 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpQueryOptions;
+    http?: BaseHttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
+export namespace HttpLink {
+    export interface ContextOptions extends BaseHttpLink.ContextOptions, ClientAwarenessLink.ContextOptions {
+    }
+    export interface Options extends BaseHttpLink.Options, ClientAwarenessLink.Options {
+    }
+}
+
+// @public
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpOptions);
-    // (undocumented)
-    options: HttpOptions;
+    constructor(options?: HttpLink.Options);
 }
 
 // @public (undocumented)
-export interface HttpOptions {
-    credentials?: string;
-    fetch?: typeof fetch;
-    fetchOptions?: any;
-    headers?: Record<string, string>;
-    includeExtensions?: boolean;
-    includeUnusedVariables?: boolean;
-    preserveHeaderCase?: boolean;
-    print?: Printer;
-    uri?: string | UriFunction;
-    useGETForQueries?: boolean;
-}
+export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
-interface HttpQueryOptions {
-    // (undocumented)
-    includeExtensions?: boolean;
-    // (undocumented)
-    includeQuery?: boolean;
-    // (undocumented)
-    preserveHeaderCase?: boolean;
-}
-
-// @public @deprecated (undocumented)
-interface IncrementalPayload<TData, TExtensions> {
-    // (undocumented)
-    data: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    label?: string;
-    // Warning: (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    path: Path;
-}
-
-// @public (undocumented)
-type NextLink = (operation: Operation) => Observable<FetchResult>;
-
-// @public (undocumented)
-interface Operation {
-    // (undocumented)
-    extensions: Record<string, any>;
-    // (undocumented)
-    getContext: () => DefaultContext;
-    // (undocumented)
-    operationName: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
-    };
-    // (undocumented)
-    variables: Record<string, any>;
-}
-
-// @public (undocumented)
-export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
-
-// @public @deprecated (undocumented)
-type Path = ReadonlyArray<string | number>;
-
-// @public (undocumented)
-const print_2: ((ast: ASTNode) => string) & {
-    reset(): void;
-};
-
-// @public (undocumented)
-interface Printer {
-    // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    (node: ASTNode, originalPrint: typeof print_2): string;
-}
-
-// @public (undocumented)
-type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
-
-// Warning: (ae-forgotten-export) The symbol "Body_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: Body_2): {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -285,51 +133,19 @@ export function rewriteURIForGET(chosenURI: string, body: Body_2): {
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
+export function selectHttpOptionsAndBody(operation: ApolloLink.Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: ApolloLink.Operation, printer: BaseHttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: BaseHttpLink.Body;
 };
 
 // @public (undocumented)
-export const selectURI: (operation: Operation, fallbackURI?: string | ((operation: Operation) => string)) => any;
-
-// @public (undocumented)
-export const serializeFetchParameter: (p: any, label: string) => string;
-
-// @public (undocumented)
-export type ServerParseError = Error & {
-    response: Response;
-    statusCode: number;
-    bodyText: string;
-};
-
-// @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
-    // (undocumented)
-    context?: TContext;
-    // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-}
-
-// @public (undocumented)
-export interface UriFunction {
-    // (undocumented)
-    (operation: Operation): string;
-}
-
-// Warnings were encountered during analysis:
-//
-// src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
+export const selectURI: (operation: ApolloLink.Operation, fallbackURI?: string | ((operation: ApolloLink.Operation) => string)) => any;
 
 // (No @packageDocumentation comment for this package)
 

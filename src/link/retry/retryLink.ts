@@ -1,46 +1,158 @@
-import type { Operation, FetchResult, NextLink } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
-import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
-import { buildDelayFunction } from "./delayFunction.js";
-import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
-import { buildRetryFunction } from "./retryFunction.js";
-import type { SubscriptionObserver } from "zen-observable-ts";
+import type { Subscription } from "rxjs";
+import type { Observer } from "rxjs";
+import { Observable } from "rxjs";
+
+import type { ErrorLike } from "@apollo/client";
 import {
-  ApolloError,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
-} from "../../errors/index.js";
+  toErrorLike,
+} from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link";
 
-export namespace RetryLink {
+import { buildDelayFunction } from "./delayFunction.js";
+import { buildRetryFunction } from "./retryFunction.js";
+
+export declare namespace RetryLink {
+  namespace RetryLinkDocumentationTypes {
+    /**
+     * A function used to determine whether to retry the current operation.
+     *
+     * @param attempt - The current attempt number
+     * @param operation - The current `ApolloLink.Operation` for the request
+     * @param error - The error that triggered the retry attempt
+     * @returns A boolean to indicate whether to retry the current operation
+     */
+    function AttemptsFunction(
+      attempt: number,
+      operation: ApolloLink.Operation,
+      error: ErrorLike
+    ): boolean | Promise<boolean>;
+
+    /**
+     * A function used to determine the delay for a retry attempt.
+     *
+     * @param attempt - The current attempt number
+     * @param operation - The current `ApolloLink.Operation` for the request
+     * @param error - The error that triggered the retry attempt
+     * @returns The delay in milliseconds before attempting the request again
+     */
+    function DelayFunction(
+      attempt: number,
+      operation: ApolloLink.Operation,
+      error: ErrorLike
+    ): number;
+  }
+
+  /** {@inheritDoc @apollo/client/link/retry!RetryLink.RetryLinkDocumentationTypes.DelayFunction:function(1)} */
+  export type DelayFunction = (
+    attempt: number,
+    operation: ApolloLink.Operation,
+    error: ErrorLike
+  ) => number;
+
+  /**
+   * Configuration options for the standard retry delay strategy.
+   */
+  export interface DelayOptions {
+    /**
+     * The number of milliseconds to wait before attempting the first retry.
+     *
+     * Delays will increase exponentially for each attempt. E.g. if this is
+     * set to 100, subsequent retries will be delayed by 200, 400, 800, etc,
+     * until they reach the maximum delay.
+     *
+     * Note that if jittering is enabled, this is the average delay.
+     *
+     * @defaultValue `300`
+     */
+    initial?: number;
+
+    /**
+     * The maximum number of milliseconds that the link should wait for any
+     * retry.
+     *
+     * @defaultValue `Infinity`
+     */
+    max?: number;
+
+    /**
+     * Whether delays between attempts should be randomized.
+     *
+     * This helps avoid [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem)
+     * type situations by better distributing load during major outages. Without
+     * these strategies, when your server comes back up it will be hit by all
+     * of your clients at once, possibly causing it to go down again.
+     *
+     * @defaultValue `true`
+     */
+    jitter?: boolean;
+  }
+
+  /** {@inheritDoc @apollo/client/link/retry!RetryLink.RetryLinkDocumentationTypes.AttemptsFunction:function(1)} */
+  export type AttemptsFunction = (
+    attempt: number,
+    operation: ApolloLink.Operation,
+    error: ErrorLike
+  ) => boolean | Promise<boolean>;
+
+  /**
+   * Configuration options for the standard retry attempt strategy.
+   */
+  export interface AttemptsOptions {
+    /**
+     * The max number of times to try a single operation before giving up.
+     *
+     * Note that this INCLUDES the initial request as part of the count.
+     * E.g. `max` of 1 indicates no retrying should occur.
+     *
+     * Pass `Infinity` for infinite retries.
+     *
+     * @defaultValue `5`
+     */
+    max?: number;
+
+    /**
+     * Predicate function that determines whether a particular error should
+     * trigger a retry.
+     *
+     * For example, you may want to not retry 4xx class HTTP errors.
+     *
+     * @defaultValue `() => true`
+     */
+    retryIf?: (
+      error: ErrorLike,
+      operation: ApolloLink.Operation
+    ) => boolean | Promise<boolean>;
+  }
+
+  /**
+   * Options provided to the `RetryLink` constructor.
+   */
   export interface Options {
     /**
      * Configuration for the delay strategy to use, or a custom delay strategy.
      */
-    delay?: DelayFunctionOptions | DelayFunction;
+    delay?: RetryLink.DelayOptions | RetryLink.DelayFunction;
 
     /**
      * Configuration for the retry strategy to use, or a custom retry strategy.
      */
-    attempts?: RetryFunctionOptions | RetryFunction;
+    attempts?: RetryLink.AttemptsOptions | RetryLink.AttemptsFunction;
   }
 }
 
-/**
- * Tracking and management of operations that may be (or currently are) retried.
- */
 class RetryableOperation {
   private retryCount: number = 0;
-  private currentSubscription: ObservableSubscription | null = null;
-  private timerId: number | undefined;
+  private currentSubscription: Subscription | null = null;
+  private timerId: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
-    private observer: SubscriptionObserver<FetchResult>,
-    private operation: Operation,
-    private forward: NextLink,
-    private delayFor: DelayFunction,
-    private retryIf: RetryFunction
+    private observer: Observer<ApolloLink.Result>,
+    private operation: ApolloLink.Operation,
+    private forward: ApolloLink.ForwardFunction,
+    private delayFor: RetryLink.DelayFunction,
+    private retryIf: RetryLink.AttemptsFunction
   ) {
     this.try();
   }
@@ -61,10 +173,10 @@ class RetryableOperation {
     this.currentSubscription = this.forward(this.operation).subscribe({
       next: (result) => {
         if (graphQLResultHasProtocolErrors(result)) {
-          this.onError(
-            new ApolloError({
-              protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
-            })
+          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL], () =>
+            // Pretend like we never encountered this error and move the result
+            // along for Apollo Client core to handle this error.
+            this.observer.next(result)
           );
           // Unsubscribe from the current subscription to prevent the `complete`
           // handler to be called as a result of the stream closing.
@@ -74,26 +186,28 @@ class RetryableOperation {
 
         this.observer.next(result);
       },
-      error: this.onError,
+      error: (error) => this.onError(error, () => this.observer.error(error)),
       complete: this.observer.complete.bind(this.observer),
     });
   }
 
-  private onError = async (error: any) => {
+  private onError = async (error: unknown, onContinue: () => void) => {
     this.retryCount += 1;
+    const errorLike = toErrorLike(error);
 
-    // Should we retry?
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,
-      error
+      errorLike
     );
     if (shouldRetry) {
-      this.scheduleRetry(this.delayFor(this.retryCount, this.operation, error));
+      this.scheduleRetry(
+        this.delayFor(this.retryCount, this.operation, errorLike)
+      );
       return;
     }
 
-    this.observer.error(error);
+    onContinue();
   };
 
   private scheduleRetry(delay: number) {
@@ -104,13 +218,38 @@ class RetryableOperation {
     this.timerId = setTimeout(() => {
       this.timerId = undefined;
       this.try();
-    }, delay) as any as number;
+    }, delay);
   }
 }
 
+/**
+ * `RetryLink` is a non-terminating link that attempts to retry operations that
+ * fail due to network errors. It enables resilient GraphQL operations by
+ * automatically retrying failed requests with configurable delay and retry
+ * strategies.
+ *
+ * @remarks
+ *
+ * `RetryLink` is particularly useful for handling unreliable network conditions
+ * where you would rather wait longer than explicitly fail an operation. It
+ * provides exponential backoff and jitters delays between attempts by default.
+ *
+ * > [!NOTE]
+ * > This link does not handle retries for GraphQL errors in the response. Use
+ * > `ErrorLink` to retry an operation after a GraphQL error. For more
+ * > information, see the [Error handling documentation](https://apollographql.com/docs/react/data/error-handling#on-graphql-errors).
+ *
+ * @example
+ *
+ * ```ts
+ * import { RetryLink } from "@apollo/client/link/retry";
+ *
+ * const link = new RetryLink();
+ * ```
+ */
 export class RetryLink extends ApolloLink {
-  private delayFor: DelayFunction;
-  private retryIf: RetryFunction;
+  private delayFor: RetryLink.DelayFunction;
+  private retryIf: RetryLink.AttemptsFunction;
 
   constructor(options?: RetryLink.Options) {
     super();
@@ -122,14 +261,14 @@ export class RetryLink extends ApolloLink {
   }
 
   public request(
-    operation: Operation,
-    nextLink: NextLink
-  ): Observable<FetchResult> {
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction
+  ): Observable<ApolloLink.Result> {
     return new Observable((observer) => {
       const retryable = new RetryableOperation(
         observer,
         operation,
-        nextLink,
+        forward,
         this.delayFor,
         this.retryIf
       );

@@ -1,90 +1,338 @@
-import * as React from "rehackt";
-import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+
 import type {
   ApolloClient,
-  ApolloQueryResult,
+  DataState,
+  DefaultContext,
   DocumentNode,
+  ErrorLike,
+  ErrorPolicy,
+  GetDataState,
+  MaybeMasked,
+  ObservableQuery,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  FetchMoreQueryOptions,
-  WatchQueryOptions,
-} from "../../core/index.js";
-import { ApolloError, NetworkStatus } from "../../core/index.js";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
-import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
+} from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
-  SuspenseQueryHookOptions,
-  ObservableQueryFields,
+  CacheKey,
+  FetchMoreFunction,
+  QueryKey,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
-} from "../types/types.js";
-import {
-  __use,
-  useDeepMemo,
-  useWarnRemovedOption,
-  wrapHook,
-} from "./internal/index.js";
-import { muteDeprecations } from "../../utilities/deprecation/index.js";
-import { getSuspenseCache } from "../internal/index.js";
-import { canonicalStringify } from "../../cache/index.js";
-import { skipToken } from "./constants.js";
-import type { SkipToken } from "./constants.js";
-import type { CacheKey, QueryKey } from "../internal/index.js";
-import type { MaybeMasked, Unmasked } from "../../masking/index.js";
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
 
-export interface UseSuspenseQueryResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  client: ApolloClient<any>;
-  data: MaybeMasked<TData>;
-  error: ApolloError | undefined;
-  fetchMore: FetchMoreFunction<TData, TVariables>;
-  networkStatus: NetworkStatus;
-  refetch: RefetchFunction<TData, TVariables>;
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
+import { useApolloClient } from "./useApolloClient.js";
+
+export declare namespace useSuspenseQuery {
+  export type FetchPolicy = Extract<
+    WatchQueryFetchPolicy,
+    "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+  >;
+
+  export namespace Base {
+    export interface Options<
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+      returnPartialData?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
+      refetchWritePolicy?: RefetchWritePolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: FetchPolicy;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+      queryKey?: string | number | any[];
+
+      /**
+       * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+       *
+       * @example Recommended usage of `skipToken`:
+       *
+       * ```ts
+       * import { skipToken, useSuspenseQuery } from "@apollo/client";
+       *
+       * const { data } = useSuspenseQuery(
+       *   query,
+       *   id ? { variables: { id } } : skipToken
+       * );
+       * ```
+       */
+      skip?: boolean;
+    }
+  }
+  export type Options<
+    TVariables extends OperationVariables = OperationVariables,
+  > = Base.Options<TVariables> & VariablesOption<TVariables>;
+
+  export namespace DocumentationTypes {
+    namespace useSuspenseQuery {
+      export interface Options<
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Options<TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+    }
+  }
+
+  export namespace Base {
+    export interface Result<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    > {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+      client: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
+
+      /**
+       * {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member}
+       *
+       * @remarks
+       * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+       */
+      fetchMore: FetchMoreFunction<TData, TVariables>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+      networkStatus: NetworkStatus;
+
+      /**
+       * {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member}
+       *
+       * @remarks
+       * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+       */
+      refetch: RefetchFunction<TData, TVariables>;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    }
+  }
+  export type Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = Base.Result<TData, TVariables> &
+    GetDataState<MaybeMasked<TData>, TStates>;
+
+  export namespace DocumentationTypes {
+    namespace useSuspenseQuery {
+      export interface Result<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      > extends Base.Result<TData, TVariables>,
+          UtilityDocumentationTypes.DataState<TData> {}
+    }
+  }
+  export namespace DocumentationTypes {
+    /** Test {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+    export function useSuspenseQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useSuspenseQuery.Options<TVariables>
+    ): useSuspenseQuery.Result<TData, TVariables>;
+  }
 }
 
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
-  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
-    updateQuery?: (
-      previousQueryResult: Unmasked<TData>,
-      options: {
-        fetchMoreResult: Unmasked<TData>;
-        variables: TVariables;
-      }
-    ) => Unmasked<TData>;
-  }
-) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-
-export type RefetchFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>["refetch"];
-
+/**
+ * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+ *
+ * @example
+ *
+ * ```jsx
+ * import { Suspense } from "react";
+ * import { useSuspenseQuery } from "@apollo/client";
+ *
+ * const listQuery = gql`
+ *   query {
+ *     list {
+ *       id
+ *     }
+ *   }
+ * `;
+ *
+ * function App() {
+ *   return (
+ *     <Suspense fallback={<Spinner />}>
+ *       <List />
+ *     </Suspense>
+ *   );
+ * }
+ *
+ * function List() {
+ *   const { data } = useSuspenseQuery(listQuery);
+ *
+ *   return (
+ *     <ol>
+ *       {data.list.map((item) => (
+ *         <Item key={item.id} id={item.id} />
+ *       ))}
+ *     </ol>
+ *   );
+ * }
+ * ```
+ *
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
+ */
 export function useSuspenseQuery<
-  TData,
-  TVariables extends OperationVariables,
-  TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">,
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
-    TOptions
-): UseSuspenseQueryResult<
-  TOptions["errorPolicy"] extends "ignore" | "all" ?
-    TOptions["returnPartialData"] extends true ?
-      DeepPartial<TData> | undefined
-    : TData | undefined
-  : TOptions["returnPartialData"] extends true ?
-    TOptions["skip"] extends boolean ?
-      DeepPartial<TData> | undefined
-    : DeepPartial<TData>
-  : TOptions["skip"] extends boolean ? TData | undefined
-  : TData,
-  TVariables
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    returnPartialData: true;
+    errorPolicy: "ignore" | "all";
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    errorPolicy: "ignore" | "all";
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    skip: boolean;
+    returnPartialData: true;
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "empty" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "partial" | "streaming" | "complete"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    skip: boolean;
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
+        returnPartialData: true;
+      })
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "streaming" | "complete" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
+): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
 >;
 
 export function useSuspenseQuery<
@@ -92,98 +340,19 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-    errorPolicy: "ignore" | "all";
-  }
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    errorPolicy: "ignore" | "all";
-  }
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    skip: boolean;
-    returnPartialData: true;
-  }
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    skip: boolean;
-  }
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): UseSuspenseQueryResult<TData, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options:
-    | SkipToken
-    | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-        returnPartialData: true;
-      })
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?:
-    | SkipToken
-    | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options:
-    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
-): UseSuspenseQueryResult<TData | undefined, TVariables> {
+  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "streaming" | "complete" | "partial"
+> {
+  "use no memo";
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
-  )(query, options);
+  )(query, options ?? ({} as any));
 }
 
 function useSuspenseQuery_<
@@ -192,18 +361,13 @@ function useSuspenseQuery_<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables>
-): UseSuspenseQueryResult<TData | undefined, TVariables> {
-  if (__DEV__) {
-    // eslint-disable-next-line react-compiler/react-compiler, react-hooks/rules-of-hooks
-    useWarnRemovedOption(
-      typeof options === "symbol" ? {} : options,
-      "canonizeResults",
-      "useSuspenseQuery"
-    );
-  }
-
+    | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
+    | useSuspenseQuery.Options<TVariables>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "partial" | "complete" | "streaming" | "empty"
+> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({
@@ -220,18 +384,17 @@ function useSuspenseQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = muteDeprecations("canonizeResults", () =>
-    suspenseCache.getQueryRef(cacheKey, () =>
-      client.watchQuery(watchQueryOptions)
-    )
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+    client.watchQuery(watchQueryOptions)
   );
 
   let [current, setPromise] = React.useState<
-    [QueryKey, Promise<ApolloQueryResult<any>>]
+    [QueryKey, Promise<ObservableQuery.Result<any>>]
   >([queryRef.key, queryRef.promise]);
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }
@@ -254,14 +417,18 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo(() => {
-    const error = toApolloError(queryRef.result);
+  const skipResult = React.useMemo<ObservableQuery.Result<TData>>(() => {
+    const error = queryRef.result.error;
+    const complete = !!queryRef.result.data;
 
     return {
       loading: false,
       data: queryRef.result.data,
+      dataState: queryRef.result.dataState,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
+      complete,
+      partial: !complete,
     };
   }, [queryRef.result]);
 
@@ -294,69 +461,32 @@ function useSuspenseQuery_<
     .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
-    UseSuspenseQueryResult<TData | undefined, TVariables>
+    useSuspenseQuery.Result<TData, TVariables, DataState<TData>["dataState"]>
   >(() => {
     return {
       client,
       data: result.data,
-      error: toApolloError(result),
+      dataState: result.dataState,
+      error: result.error,
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
       subscribeToMore,
-    };
+    } as useSuspenseQuery.Result<
+      TData,
+      TVariables,
+      DataState<TData>["dataState"]
+    >;
   }, [client, fetchMore, refetch, result, subscribeToMore]);
-}
-
-function validateOptions(options: WatchQueryOptions) {
-  const { query, fetchPolicy, returnPartialData } = options;
-
-  verifyDocumentType(query, DocumentType.Query);
-  validateFetchPolicy(fetchPolicy);
-  validatePartialDataReturn(fetchPolicy, returnPartialData);
-}
-
-function validateFetchPolicy(
-  fetchPolicy: WatchQueryFetchPolicy = "cache-first"
-) {
-  const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
-    "cache-first",
-    "network-only",
-    "no-cache",
-    "cache-and-network",
-  ];
-
-  invariant(
-    supportedFetchPolicies.includes(fetchPolicy),
-    `The fetch policy \`%s\` is not supported with suspense.`,
-    fetchPolicy
-  );
-}
-
-function validatePartialDataReturn(
-  fetchPolicy: WatchQueryFetchPolicy | undefined,
-  returnPartialData: boolean | undefined
-) {
-  if (fetchPolicy === "no-cache" && returnPartialData) {
-    invariant.warn(
-      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
-    );
-  }
-}
-
-export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
 }
 
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables,
 > {
-  client: ApolloClient<unknown>;
+  client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
+  options: SkipToken | useSuspenseQuery.Options<TVariables>;
 }
 
 export function useWatchQueryOptions<
@@ -366,13 +496,16 @@ export function useWatchQueryOptions<
   client,
   query,
   options,
-}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
-  TVariables,
-  TData
-> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+}: UseWatchQueryOptionsHookOptions<
+  TData,
+  TVariables
+>): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      return { query, fetchPolicy: "standby" };
+      return {
+        query,
+        fetchPolicy: "standby",
+      } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 
     const fetchPolicy =
@@ -380,16 +513,17 @@ export function useWatchQueryOptions<
       client.defaultOptions.watchQuery?.fetchPolicy ||
       "cache-first";
 
-    const watchQueryOptions = {
-      ...options,
-      fetchPolicy,
-      query,
-      notifyOnNetworkStatusChange: false,
-      nextFetchPolicy: void 0,
-    };
+    const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+      {
+        ...options,
+        fetchPolicy,
+        query,
+        notifyOnNetworkStatusChange: false,
+        nextFetchPolicy: void 0,
+      };
 
     if (__DEV__) {
-      validateOptions(watchQueryOptions);
+      validateSuspenseHookOptions(watchQueryOptions);
     }
 
     // Assign the updated fetch policy after our validation since `standby` is

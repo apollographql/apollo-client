@@ -1,17 +1,14 @@
-import gql from "graphql-tag";
+import type { FragmentDefinitionNode } from "graphql";
+import { visit } from "graphql";
+import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
-import { visit, FragmentDefinitionNode } from "graphql";
-import { hasOwn } from "../helpers";
+import { InMemoryCache } from "@apollo/client/cache";
 
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {
-    const cacheWithoutPossibleTypes = new InMemoryCache({
-      addTypename: true,
-    });
+    const cacheWithoutPossibleTypes = new InMemoryCache();
 
     const cacheWithPossibleTypes = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Cat", "Dog"],
       },
@@ -57,7 +54,6 @@ describe("fragment matching", () => {
 
   it("can match interface subtypes", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Cat", "Dog"],
       },
@@ -89,7 +85,6 @@ describe("fragment matching", () => {
 
   it("can match union member types", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Status: ["PASSING", "FAILING", "SKIPPED"],
       },
@@ -139,7 +134,6 @@ describe("fragment matching", () => {
 
   it("can match indirect subtypes while avoiding cycles", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Animal", "Bug", "Mammal"],
         Bug: ["Ant", "Spider", "RolyPoly"],
@@ -186,9 +180,7 @@ describe("fragment matching", () => {
   });
 
   it("can match against the root Query", () => {
-    const cache = new InMemoryCache({
-      addTypename: true,
-    });
+    const cache = new InMemoryCache();
 
     const query = gql`
       query AllPeople {
@@ -289,7 +281,7 @@ describe("policies.fragmentMatches", () => {
           const supertype = frag.typeCondition.name.value;
           expect("ABCDEF".split("")).toContain(supertype);
 
-          if (hasOwn.call(expected, supertype)) {
+          if (expected.hasOwnProperty(supertype)) {
             Object.keys(expected[supertype]).forEach((subtype) => {
               check(subtype, expected[supertype][subtype]);
             });

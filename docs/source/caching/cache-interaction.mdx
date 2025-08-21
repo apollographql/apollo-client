@@ -1,28 +1,26 @@
 ---
 title: Reading and writing data to the cache
-api_doc:
-  - "@apollo/client!ApolloClient#watchFragment:member(1)"
 ---
 
-import { DocBlock } from '../../shared/ApiDoc';
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
 
 You can read and write data directly to the Apollo Client cache, _without_ communicating with your GraphQL server. You can interact with data that you previously fetched from your server, _and_ with data that's only available [locally](../local-state/local-state-management/).
 
 Apollo Client supports multiple strategies for interacting with cached data:
 
-| Strategy | API | Description |
-|----------|-----|-------------|
-| [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` / `updateQuery` | Use standard GraphQL queries for managing both remote and local data. |
-| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` / `useFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
-| [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
+| Strategy                                               | API                                                                 | Description                                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Using GraphQL queries](#using-graphql-queries)        | `readQuery` / `writeQuery` / `updateQuery`                          | Use standard GraphQL queries for managing both remote and local data.                          |
+| [Using GraphQL fragments](#using-graphql-fragments)    | `readFragment` / `writeFragment` / `updateFragment` / `useFragment` | Access the fields of any cached object without composing an entire query to reach that object. |
+| [Directly modifying cached fields](#using-cachemodify) | `cache.modify`                                                      | Manipulate cached data without using GraphQL at all.                                           |
 
 You can use whichever combination of strategies and methods are most helpful for your use case.
 
-Bear in mind the difference between fields that contain references to other objects in the cache and fields that contain literal values.  References are objects that contain a `__ref` field—see the [example](./overview/#example) in the caching overview.  Modifying a reference will not change the values contained in the object to which the reference points.  So avoid updating an object from something like `{__ref: '5'}` to `{__ref: '5', completed: true}`.
+Bear in mind the difference between fields that contain references to other objects in the cache and fields that contain literal values. References are objects that contain a `__ref` field—see the [example](./overview/#example) in the caching overview. Modifying a reference will not change the values contained in the object to which the reference points. So avoid updating an object from something like `{__ref: '5'}` to `{__ref: '5', completed: true}`.
 
 > All code samples below assume that you have initialized an instance of `ApolloClient` and that you have imported the `gql` function from `@apollo/client`. If you haven't, [get started](../get-started).
 >
->In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](../api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](../api/react/hooks/#useapolloclient) hook.
+> In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](../api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](../api/react/hooks/#useapolloclient) hook.
 
 ## Using GraphQL queries
 
@@ -107,18 +105,20 @@ client.writeQuery({
         text
         completed
       }
-    }`,
-  data: { // Contains the data to write
+    }
+  `,
+  data: {
+    // Contains the data to write
     todo: {
-      __typename: 'Todo',
+      __typename: "Todo",
       id: 5,
-      text: 'Buy grapes 🍇',
-      completed: false
+      text: "Buy grapes 🍇",
+      completed: false,
     },
   },
   variables: {
-    id: 5
-  }
+    id: 5,
+  },
 });
 ```
 
@@ -126,10 +126,10 @@ This example creates (or edits) a cached `Todo` object with ID `5`.
 
 Note the following about `writeQuery`:
 
-* Any changes you make to cached data with `writeQuery` are **not** pushed to your GraphQL server. If you reload your environment, these changes disappear.
-* The shape of your query is _not_ enforced by your GraphQL server's schema:
-    * The query can include fields that are _not_ present in your schema.
-    * You can (but usually **shouldn't**) provide values for schema fields that are _invalid_ according to your schema.
+- Any changes you make to cached data with `writeQuery` are **not** pushed to your GraphQL server. If you reload your environment, these changes disappear.
+- The shape of your query is _not_ enforced by your GraphQL server's schema:
+  - The query can include fields that are _not_ present in your schema.
+  - You can (but usually **shouldn't**) provide values for schema fields that are _invalid_ according to your schema.
 
 #### Editing existing data
 
@@ -171,7 +171,7 @@ This example fetches the same data as [the example for `readQuery`](#readquery) 
 
 ```js
 const todo = client.readFragment({
-  id: 'Todo:5', // The value of the to-do item's cache ID
+  id: "Todo:5", // The value of the to-do item's cache ID
   fragment: gql`
     fragment MyTodo on Todo {
       id
@@ -186,8 +186,8 @@ Unlike `readQuery`, `readFragment` requires an `id` option. This option specifie
 
 In the example above, `readFragment` returns `null` in either of the following cases:
 
-* There is no cached `Todo` object with ID `5`.
-* There _is_ a cached `Todo` object with ID `5`, but it's missing a value for either `text` or `completed`.
+- There is no cached `Todo` object with ID `5`.
+- There _is_ a cached `Todo` object with ID `5`, but it's missing a value for either `text` or `completed`.
 
 > Prior to Apollo Client 3.3, `readFragment` threw `MissingFieldError` exceptions to report missing fields, and returned `null` only when reading a fragment from a nonexistent ID. Beginning with Apollo Client 3.3, `readFragment` always returns `null` to indicate insufficient data (missing ID or missing fields), instead of throwing a `MissingFieldError`.
 
@@ -201,7 +201,7 @@ The `writeFragment` method resembles `readFragment`, except it requires an addit
 
 ```js
 client.writeFragment({
-  id: 'Todo:5',
+  id: "Todo:5",
   fragment: gql`
     fragment MyTodo on Todo {
       completed
@@ -215,19 +215,13 @@ client.writeFragment({
 
 All subscribers to the Apollo Client cache (including all active queries) see this change and update your application's UI accordingly.
 
-<MinVersion version="3.10.0">
-
 ### `watchFragment`
 
-</MinVersion>
-
-<DocBlock canonicalReference={"@apollo/client!ApolloClient#watchFragment:member(1)"} />
-
-<MinVersion version="3.8.0">
+<DocBlock
+  canonicalReference={"@apollo/client!ApolloClient#watchFragment:member(1)"}
+/>
 
 ### `useFragment`
-
-</MinVersion>
 
 You can read data for a given fragment directly from the cache using the `useFragment` hook. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. [See the API reference.](../api/react/hooks#usefragment)
 
@@ -254,10 +248,10 @@ const data = client.readQuery({ query });
 
 // Create a new to-do item
 const myNewTodo = {
-  id: '6',
-  text: 'Start using Apollo Client.',
+  id: "6",
+  text: "Start using Apollo Client.",
   completed: false,
-  __typename: 'Todo',
+  __typename: "Todo",
 };
 
 // Write back to the to-do list, appending the new item
@@ -271,11 +265,7 @@ client.writeQuery({
 
 </ExpansionPanel>
 
-<MinVersion version="3.5">
-
 ### Using `updateQuery` and `updateFragment`
-
-</MinVersion>
 
 As a convenience, you can use `cache.updateQuery` or `cache.updateFragment` to combine reading and writing cached data with a single method call:
 
@@ -293,14 +283,14 @@ const query = gql`
 
 // Set all todos in the cache as completed
 cache.updateQuery({ query }, (data) => ({
-  todos: data.todos.map((todo) => ({ ...todo, completed: true }))
+  todos: data.todos.map((todo) => ({ ...todo, completed: true })),
 }));
 ```
 
 Each of these methods takes two parameters:
 
-* The same `options` parameter as its `read` method counterpart (which always includes a `query` or `fragment`)
-* An **update function**
+- The same `options` parameter as its `read` method counterpart (which always includes a `query` or `fragment`)
+- An **update function**
 
 After either method fetches data from the cache, it calls its update function and passes it the cached `data`. The update function can then return a value to _replace_ that `data` in the cache. In the example above, every cached `Todo` object has its `completed` field set to `true` (and other fields remain unchanged).
 
@@ -316,19 +306,19 @@ The update function's return value is passed to either `writeQuery` or `writeFra
 
 The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 
-* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior by passing `broadcast: false`).
-* _Unlike_ `writeQuery` and `writeFragment`:
-    * `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
-    * `modify` _cannot_ write fields that do not already exist in the cache.
-* Watched queries can control what happens when they're invalidated by updates to the cache, by passing options like `fetchPolicy` and `nextFetchPolicy` to [`client.watchQuery`](../api/core/ApolloClient/#ApolloClient.watchQuery) or the [`useQuery`](../api/react/hooks/#options) hook.
+- Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior by passing `broadcast: false`).
+- _Unlike_ `writeQuery` and `writeFragment`:
+  - `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
+  - `modify` _cannot_ write fields that do not already exist in the cache.
+- Watched queries can control what happens when they're invalidated by updates to the cache, by passing options like `fetchPolicy` and `nextFetchPolicy` to [`client.watchQuery`](../api/core/ApolloClient/#ApolloClient.watchQuery) or the [`useQuery`](../api/react/hooks/#options) hook.
 
 ### Parameters
 
 Canonically documented in the [API reference](../api/cache/InMemoryCache/#modify), the `modify` method takes the following parameters:
 
-* The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-cache-id))
-* A map of **modifier functions** to execute (one for each field to modify)
-* Optional `broadcast` and `optimistic` boolean values to customize behavior
+- The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-cache-id))
+- A map of **modifier functions** to execute (one for each field to modify)
+- Optional `broadcast` and `optimistic` boolean values to customize behavior
 
 A modifier function applies to a single field. It takes its associated field's current cached value as a parameter and returns whatever value should replace it.
 
@@ -367,14 +357,14 @@ Some of these utilities (namely, the `readField` function and the `DELETE` senti
 Let's say we have a blog application where each `Post` has an array of `Comment`s. Here's how we might remove a specific `Comment` from a paginated `Post.comments` array:
 
 ```js
-const idToRemove = 'abc123';
+const idToRemove = "abc123";
 
 cache.modify({
   id: cache.identify(myPost),
   fields: {
     comments(existingCommentRefs, { readField }) {
       return existingCommentRefs.filter(
-        commentRef => idToRemove !== readField('id', commentRef)
+        (commentRef) => idToRemove !== readField("id", commentRef)
       );
     },
   },
@@ -383,13 +373,13 @@ cache.modify({
 
 Let's break this down:
 
-* In the `id` field, we use [`cache.identify`](#obtaining-an-objects-cache-id) to obtain the cache ID of the cached `Post` object we want to remove a comment from.
+- In the `id` field, we use [`cache.identify`](#obtaining-an-objects-cache-id) to obtain the cache ID of the cached `Post` object we want to remove a comment from.
 
-* In the `fields` field, we provide an object that lists our modifier functions. In this case, we define a single modifier function (for the `comments` field).
+- In the `fields` field, we provide an object that lists our modifier functions. In this case, we define a single modifier function (for the `comments` field).
 
-* The `comments` modifier function takes our existing cached array of comments as a parameter (`existingCommentRefs`). It also uses the `readField` utility function, which helps you read the value of any cached field.
+- The `comments` modifier function takes our existing cached array of comments as a parameter (`existingCommentRefs`). It also uses the `readField` utility function, which helps you read the value of any cached field.
 
-* The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. The returned array replaces the existing array in the cache.
+- The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. The returned array replaces the existing array in the cache.
 
 #### Example: Adding an item to a list
 
@@ -397,9 +387,9 @@ Now let's look at _adding_ a `Comment` to a `Post`:
 
 ```js
 const newComment = {
-  __typename: 'Comment',
-  id: 'abc123',
-  text: 'Great blog post!',
+  __typename: "Comment",
+  id: "abc123",
+  text: "Great blog post!",
 };
 
 cache.modify({
@@ -413,20 +403,22 @@ cache.modify({
             id
             text
           }
-        `
+        `,
       });
 
       // Quick safety check - if the new comment is already
       // present in the cache, we don't need to add it again.
-      if (existingCommentRefs.some(
-        ref => readField('id', ref) === newComment.id
-      )) {
+      if (
+        existingCommentRefs.some(
+          (ref) => readField("id", ref) === newComment.id
+        )
+      ) {
         return existingCommentRefs;
       }
 
       return [...existingCommentRefs, newCommentRef];
-    }
-  }
+    },
+  },
 });
 ```
 
@@ -458,13 +450,13 @@ const [addComment] = useMutation(ADD_COMMENT, {
                 id
                 text
               }
-            `
+            `,
           });
           return [...existingCommentRefs, newCommentRef];
-        }
-      }
+        },
+      },
     });
-  }
+  },
 });
 ```
 
@@ -529,12 +521,12 @@ Let's say we have a JavaScript representation of a cached GraphQL object, like t
 
 ```js {3}
 const invisibleManBook = {
-  __typename: 'Book',
-  isbn: '9780679601395', // The key field for this type's cache ID
-  title: 'Invisible Man',
+  __typename: "Book",
+  isbn: "9780679601395", // The key field for this type's cache ID
+  title: "Invisible Man",
   author: {
-    __typename: 'Author',
-    name: 'Ralph Ellison',
+    __typename: "Author",
+    name: "Ralph Ellison",
   },
 };
 ```
@@ -554,8 +546,8 @@ const fragmentResult = cache.writeFragment({
   id: cache.identify(invisibleManBook),
   fragment: bookYearFragment,
   data: {
-    publicationYear: '1952'
-  }
+    publicationYear: "1952",
+  },
 });
 ```
 

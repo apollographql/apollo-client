@@ -1,10 +1,13 @@
-import { KeySpecifier } from "../policies";
-import { canonicalStringify } from "../../../utilities";
+import { canonicalStringify } from "@apollo/client/utilities";
+
 import {
-  getSpecifierPaths,
   collectSpecifierPaths,
   extractKeyPath,
-} from "../key-extractor";
+  getSpecifierPaths,
+  // not exported
+  // eslint-disable-next-line local-rules/no-relative-imports
+} from "../key-extractor.js";
+import type { KeySpecifier } from "../policies.js";
 
 describe("keyFields and keyArgs extraction", () => {
   it("getSpecifierPaths should work for various specifiers", () => {

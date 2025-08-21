@@ -1,18 +1,35 @@
-import type { GraphQLRequest, Operation } from "../core/index.js";
+import type { ApolloLink } from "@apollo/client/link";
+import {
+  getOperationDefinition,
+  getOperationName,
+} from "@apollo/client/utilities/internal";
 
 export function createOperation(
-  starting: any,
-  operation: GraphQLRequest
-): Operation {
-  let context = { ...starting };
-  const setContext: Operation["setContext"] = (next) => {
+  request: ApolloLink.Request,
+  { client }: ApolloLink.ExecuteContext
+): ApolloLink.Operation {
+  const operation = {
+    query: request.query,
+    variables: request.variables || {},
+    extensions: request.extensions || {},
+    operationName: getOperationName(request.query),
+    operationType: getOperationDefinition(request.query)!.operation,
+  } satisfies Omit<
+    ApolloLink.Operation,
+    "client" | "getContext" | "setContext"
+  > as ApolloLink.Operation;
+
+  let context = { ...request.context };
+
+  const setContext: ApolloLink.Operation["setContext"] = (next) => {
     if (typeof next === "function") {
-      context = { ...context, ...next(context) };
+      context = { ...context, ...next(getContext()) };
     } else {
       context = { ...context, ...next };
     }
   };
-  const getContext: Operation["getContext"] = () => ({ ...context });
+  const getContext: ApolloLink.Operation["getContext"] = () =>
+    Object.freeze({ ...context });
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,
@@ -24,5 +41,10 @@ export function createOperation(
     value: getContext,
   });
 
-  return operation as Operation;
+  Object.defineProperty(operation, "client", {
+    enumerable: false,
+    value: client,
+  });
+
+  return operation;
 }

@@ -1,0 +1,69 @@
+---
+title: PersistedQueryLink
+description: Secure your graph while minimizing request latency
+---
+
+<DocBlock
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink:class"
+  customOrder={["summary", "remarks", "example"]}
+/>
+
+Read the [Persisted queries](../../data/persisted-queries) guide to learn how to use persisted queries with Apollo Client.
+
+## Constructor signature
+
+```ts
+constructor(
+  options: PersistedQueryLink.Options
+): PersistedQueryLink
+```
+
+#### `PersistedQueryLink` options
+
+The `PersistedQueryLink` class takes a configuration object:
+
+- `sha256`: a SHA-256 hashing function. Can be sync or async. Providing a SHA-256 hashing function is required, unless you're defining a fully custom hashing approach via `generateHash`.
+- `generateHash`: an optional function that takes the query document and returns the hash. If provided this custom function will override the default hashing approach that uses the supplied `sha256` function. If not provided, the persisted queries link will use a fallback hashing approach leveraging the `sha256` function.
+- `useGETForHashedQueries`: set to `true` to use the HTTP `GET` method when sending the hashed version of queries (but not for mutations). `GET` requests are not compatible with `@apollo/client/link/batch-http`.
+  > If you want to use `GET` for non-mutation queries whether or not they are hashed, pass `useGETForQueries: true` option to `HttpLink` instead. If you want to use `GET` for all requests, pass `fetchOptions: {method: 'GET'}` to `HttpLink`.
+- `disable`: a function which takes a [`PersistedQueryLink.DisableFunctionOptions`](#persistedquerylinkdisablefunctionoptions) object and returns a boolean to disable any future persisted queries for that session. This defaults to disabling on `PersistedQueryNotSupported` error.
+- `retry`: a function which takes a [`PersistedQueryLink.RetryFunctionOptions`](#persistedquerylinkretryfunctionoptions) object and returns a boolean to retry the request with the full query text included. This defaults to `true` on `PersistedQueryNotSupported` or `PersistedQueryNotFound` errors.
+
+## Types
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.DisableFunctionOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.DisableFunctionOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.ErrorMeta:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.ErrorMeta"
+/>
+
+<FunctionDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.PersistedQueryLinkDocumentationTypes.GenerateHashFunction:function(1)"
+  headingLevel={3}
+  result={false}
+  displayName="PersistedQueryLink.GenerateHashFunction"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.GenerateHashOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.GenerateHashOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.RetryFunctionOptions:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.RetryFunctionOptions"
+/>
+
+<InterfaceDetails
+  canonicalReference="@apollo/client/link/persisted-queries!PersistedQueryLink.SHA256Options:interface"
+  headingLevel={3}
+  displayName="PersistedQueryLink.SHA256Options"
+/>

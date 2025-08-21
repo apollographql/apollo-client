@@ -1,0 +1,38 @@
+---
+title: ApolloProvider
+description: Apollo Client API reference
+---
+
+{/* @import {MDXProvidedComponents} from '../../../shared/MdxProvidedComponents.js' */}
+
+## The `ApolloProvider` component
+
+The `ApolloProvider` component uses [React's Context API](https://react.dev/reference/react/useContext) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client/react` package.
+
+```js
+import { ApolloProvider } from "@apollo/client/react";
+```
+
+### Props
+
+| Option   | Type           | Description                 |
+| -------- | -------------- | --------------------------- |
+| `client` | `ApolloClient` | An `ApolloClient` instance. |
+
+### Example
+
+```jsx {7-9}
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: new HttpLink({
+    uri: "http://localhost:4000/graphql",
+  }),
+});
+
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <MyRootComponent />
+  </ApolloProvider>,
+  document.getElementById("root")
+);
+```

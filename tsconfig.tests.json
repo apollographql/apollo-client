@@ -1,3 +1,16 @@
 {
-  "extends": "./src/tsconfig.json"
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "moduleResolution": "Node",
+    "module": "ES2015",
+    "allowJs": true,
+    "types": [
+      "jest",
+      "node",
+      "./src/testing/matchers/index.d.ts",
+      "./src/testing/internal/declarations.d.ts",
+      "@testing-library/react-render-stream/expect"
+    ]
+  }
 }

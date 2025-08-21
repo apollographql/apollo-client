@@ -4,171 +4,177 @@
 
 ```ts
 
-import type { GraphQLError } from 'graphql';
-import type { GraphQLErrorExtensions } from 'graphql';
+import type { ApolloLink } from '@apollo/client/link';
+import { ErrorLike } from '@apollo/client';
+import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 
 // @public (undocumented)
-export class ApolloError extends Error {
-    constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
-    cause: ({
-        readonly message: string;
-        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
-    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
+export namespace CombinedGraphQLErrors {
     // (undocumented)
-    clientErrors: ReadonlyArray<Error>;
+    export namespace DocumentationTypes {
+        export function formatMessage(errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions): string;
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly data: Record<string, unknown> | null | undefined;
+            readonly errors: ReadonlyArray<GraphQLFormattedError>;
+            readonly extensions: Record<string, unknown> | undefined;
+        }
+        export function is(error: unknown): boolean;
+    }
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
-    extraInfo: any;
-    // (undocumented)
-    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    message: string;
-    // (undocumented)
-    name: string;
-    // Warning: (ae-forgotten-export) The symbol "ServerParseError" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ServerError" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    networkError: Error | ServerParseError | ServerError | null;
-    // (undocumented)
-    protocolErrors: ReadonlyArray<GraphQLFormattedError>;
+    export interface MessageFormatterOptions {
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+        result: ApolloLink.Result<unknown>;
+    }
+}
+
+// @public
+export class CombinedGraphQLErrors extends Error {
+    constructor(result: FormattedExecutionResult<any>);
+    constructor(result: ApolloLink.Result<any>, errors: ReadonlyArray<GraphQLFormattedError>);
+    readonly data: Record<string, unknown> | null | undefined;
+    readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    readonly extensions: Record<string, unknown> | undefined;
+    static formatMessage: CombinedGraphQLErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedGraphQLErrors;
 }
 
 // @public (undocumented)
-export interface ApolloErrorOptions {
+export namespace CombinedProtocolErrors {
     // (undocumented)
-    clientErrors?: ReadonlyArray<Error>;
+    export namespace DocumentationTypes {
+        export function formatMessage(errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions): string;
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly errors: ReadonlyArray<GraphQLFormattedError>;
+        }
+    }
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
     // (undocumented)
-    errorMessage?: string;
-    // (undocumented)
-    extraInfo?: any;
-    // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    networkError?: Error | ServerParseError | ServerError | null;
-    // (undocumented)
-    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+    export interface MessageFormatterOptions {
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+    }
+}
+
+// @public
+export class CombinedProtocolErrors extends Error {
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    static formatMessage: CombinedProtocolErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedProtocolErrors;
 }
 
 // @public (undocumented)
-interface DefaultContext extends Record<string, any> {
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data?: never;
-    // (undocumented)
-    errors?: never;
-    // (undocumented)
-    extensions?: never;
-    // Warning: (ae-forgotten-export) The symbol "IncrementalPayload" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    incremental?: IncrementalPayload<TData, TExtensions>[];
-}
-
-// @public @deprecated (undocumented)
-interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data: TData | null | undefined;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    incremental?: never;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchInitialResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchIncrementalResult" needs to be exported by the entry point index.d.ts
-//
-// @public @deprecated (undocumented)
-type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface ExecutionPatchResultBase {
-    // (undocumented)
-    hasNext?: boolean;
-}
-
-// Warning: (ae-forgotten-export) The symbol "SingleExecutionResult" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResult" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
-
-// Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
+export function graphQLResultHasProtocolErrors<T extends {}>(result: T): result is T & {
     extensions: Record<string | symbol, any>;
 };
 
-// @public @deprecated (undocumented)
-export type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// Warning: (ae-forgotten-export) The symbol "FetchResultWithSymbolExtensions" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
+export function isErrorLike(error: unknown): error is ErrorLike;
 
-// @public @deprecated (undocumented)
-interface IncrementalPayload<TData, TExtensions> {
+// @public
+export const LinkError: {
+    is: (error: unknown) => boolean;
+};
+
+// @public (undocumented)
+export namespace LocalStateError {
     // (undocumented)
-    data: TData | null;
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly path?: Array<string | number>;
+        }
+    }
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    label?: string;
-    // Warning: (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    path: Path;
+    export interface Options {
+        // (undocumented)
+        path?: Array<string | number>;
+        // (undocumented)
+        sourceError?: unknown;
+    }
 }
 
-// @public @deprecated (undocumented)
-export function isApolloError(err: Error): err is ApolloError;
-
-// @public (undocumented)
-export type NetworkError = Error | ServerParseError | ServerError | null;
-
-// @public @deprecated (undocumented)
-type Path = ReadonlyArray<string | number>;
+// @public
+export class LocalStateError extends Error {
+    constructor(message: string, options?: LocalStateError.Options);
+    static is(error: unknown): error is LocalStateError;
+    readonly path?: Array<string | number>;
+}
 
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 
-// @public (undocumented)
-type ServerError = Error & {
-    response: Response;
-    result: Record<string, any> | string;
-    statusCode: number;
-};
+// @internal @deprecated
+export function registerLinkError(error: ErrorLike): void;
 
 // @public (undocumented)
-type ServerParseError = Error & {
-    response: Response;
-    statusCode: number;
-    bodyText: string;
-};
+export namespace ServerError {
+    // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly bodyText: string;
+            readonly response: Response;
+            readonly statusCode: number;
+        }
+    }
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        bodyText: string;
+        // (undocumented)
+        response: Response;
+    }
+}
 
-// Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-//
+// @public
+export class ServerError extends Error {
+    constructor(message: string, options: ServerError.Options);
+    readonly bodyText: string;
+    static is(error: unknown): error is ServerError;
+    readonly response: Response;
+    readonly statusCode: number;
+}
+
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
+export namespace ServerParseError {
     // (undocumented)
-    context?: TContext;
+    export namespace DocumentationTypes {
+        // (undocumented)
+        export interface InstanceProperties {
+            readonly bodyText: string;
+            readonly response: Response;
+            readonly statusCode: number;
+        }
+    }
     // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
+    export interface Options {
+        // (undocumented)
+        bodyText: string;
+        // (undocumented)
+        response: Response;
+    }
+}
+
+// @public
+export class ServerParseError extends Error {
+    constructor(originalParseError: unknown, options: ServerParseError.Options);
+    readonly bodyText: string;
+    static is(error: unknown): error is ServerParseError;
+    readonly response: Response;
+    readonly statusCode: number;
+}
+
+// @public (undocumented)
+export function toErrorLike(error: unknown): ErrorLike;
+
+// @public
+export class UnconventionalError extends Error {
+    constructor(errorType: unknown);
+    static is(error: unknown): error is UnconventionalError;
 }
 
 // (No @packageDocumentation comment for this package)

@@ -1,15 +1,15 @@
 import type { TypedDocumentNode } from "@apollo/client";
 
 import {
-  useQuery,
   gql,
   InMemoryCache,
   ApolloClient,
-  ApolloProvider,
   ApolloLink,
-  Observable,
   HttpLink,
 } from "@apollo/client";
+import { Observable } from "rxjs";
+
+import { useQuery, ApolloProvider } from "@apollo/client/react";
 
 const delayLink = new ApolloLink((operation, forward) => {
   return new Observable((observer) => {
@@ -57,7 +57,7 @@ function Main() {
 
   return data ?
       <ul>
-        {data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}
+        {data?.products?.map(({ id, title } = {}) => <li key={id}>{title}</li>)}
       </ul>
     : <>loading</>;
 }

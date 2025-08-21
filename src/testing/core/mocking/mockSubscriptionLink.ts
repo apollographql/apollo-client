@@ -1,21 +1,19 @@
-import { Observable } from "../../../utilities/index.js";
-import type { FetchResult, Operation } from "../../../link/core/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
+import { Observable } from "rxjs";
 
-export interface MockedSubscription {
-  request: Operation;
-}
+import { ApolloLink } from "@apollo/client/link";
 
-export interface MockedSubscriptionResult {
-  result?: FetchResult;
-  error?: Error;
-  delay?: number;
+export declare namespace MockSubscriptionLink {
+  export interface Result {
+    result?: ApolloLink.Result;
+    error?: Error;
+    delay?: number;
+  }
 }
 
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
-  public operation?: Operation;
+  public operation?: ApolloLink.Operation;
 
   private observers: any[] = [];
 
@@ -23,9 +21,9 @@ export class MockSubscriptionLink extends ApolloLink {
     super();
   }
 
-  public request(operation: Operation) {
+  public request(operation: ApolloLink.Operation) {
     this.operation = operation;
-    return new Observable<FetchResult>((observer) => {
+    return new Observable<ApolloLink.Result>((observer) => {
       this.setups.forEach((x) => x());
       this.observers.push(observer);
       return () => {
@@ -34,7 +32,7 @@ export class MockSubscriptionLink extends ApolloLink {
     });
   }
 
-  public simulateResult(result: MockedSubscriptionResult, complete = false) {
+  public simulateResult(result: MockSubscriptionLink.Result, complete = false) {
     setTimeout(() => {
       const { observers } = this;
       if (!observers.length) throw new Error("subscription torn down");
@@ -61,12 +59,4 @@ export class MockSubscriptionLink extends ApolloLink {
   public onUnsubscribe(listener: any): void {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
-}
-
-/**
- * @deprecated `mockObservableLink` will be removed in Apollo client 4.0. Please
- * ininitialize `MockSubscriptionLink` directly.
- */
-export function mockObservableLink(): MockSubscriptionLink {
-  return new MockSubscriptionLink();
 }

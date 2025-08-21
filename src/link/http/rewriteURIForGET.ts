@@ -1,9 +1,8 @@
-import { serializeFetchParameter } from "./serializeFetchParameter.js";
-import type { Body } from "./selectHttpOptionsAndBody.js";
+import type { BaseHttpLink } from "./BaseHttpLink.js";
 
 // For GET operations, returns the given URI rewritten with parameters, or a
 // parse error.
-export function rewriteURIForGET(chosenURI: string, body: Body) {
+export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body) {
   // Implement the standard HTTP GET serialization, plus 'extensions'. Note
   // the extra level of JSON serialization!
   const queryParams: string[] = [];
@@ -20,10 +19,7 @@ export function rewriteURIForGET(chosenURI: string, body: Body) {
   if (body.variables) {
     let serializedVariables;
     try {
-      serializedVariables = serializeFetchParameter(
-        body.variables,
-        "Variables map"
-      );
+      serializedVariables = JSON.stringify(body.variables);
     } catch (parseError) {
       return { parseError };
     }
@@ -32,10 +28,7 @@ export function rewriteURIForGET(chosenURI: string, body: Body) {
   if (body.extensions) {
     let serializedExtensions;
     try {
-      serializedExtensions = serializeFetchParameter(
-        body.extensions,
-        "Extensions map"
-      );
+      serializedExtensions = JSON.stringify(body.extensions);
     } catch (parseError) {
       return { parseError };
     }

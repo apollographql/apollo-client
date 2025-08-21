@@ -1,187 +1,188 @@
-import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
+import type { ErrorLike } from "@apollo/client";
 import {
+  CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
-} from "../../errors/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import { Observable } from "../../utilities/index.js";
-import type { Operation, FetchResult, NextLink } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
+  toErrorLike,
+} from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link";
 
-export interface ErrorResponse {
-  /**
-   * Errors returned in the `errors` property of the GraphQL response.
-   *
-   * @deprecated `graphQLErrors` will no longer available in options in Apollo Client 4.0.
-   * This value is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When upgrading**
-   *
-   * `graphQLErrors` has been consolidated to the `error` property. You will need to
-   * read the error from the `error` property.
-   */
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  /**
-   * Errors thrown during a network request. This is usually an error thrown
-   * during a `fetch` call or an error while parsing the response from the
-   * network.
-   *
-   * @deprecated `networkError` will no longer available in options in Apollo Client 4.0.
-   * This value is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When upgrading**
-   *
-   * `networkError` has been consolidated to the `error` property. You will need to
-   * read the error from the `error` property.
-   */
-  networkError?: NetworkError;
-  /**
-   * Fatal transport-level errors from multipart subscriptions.
-   * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
-   *
-   * @deprecated `protocolErrors` will no longer available in options in Apollo Client 4.0.
-   * This value is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When upgrading**
-   *
-   * `protocolErrors` has been consolidated to the `error` property. You will need to
-   * read the error from the `error` property.
-   */
-  protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+export declare namespace ErrorLink {
+  // Using a different namespace name to avoid clash with
+  // `ApolloLink.DocumentationTypes`
+  export namespace ErrorLinkDocumentationTypes {
+    /**
+     * Callback that is called by `ErrorLink` when an error occurs from a
+     * downstream link in link chain.
+     *
+     * @param options - The options object provided by `ErrorLink` to the error
+     * handler when an error occurs.
+     */
+    export function ErrorHandler(
+      options: ErrorHandlerOptions
+    ): Observable<ApolloLink.Result> | void;
+  }
 
-  /**
-   * @deprecated `response` has renamed to `result` in Apollo Client 4.0. This
-   * property is safe to use in Apollo Client 3.x.
-   *
-   * **Recommended now**
-   *
-   * No action needed
-   *
-   * **When migrating**
-   *
-   * Use the `result` property instead of `response` inside your callback function.
-   */
-  response?: FormattedExecutionResult;
-  operation: Operation;
-  forward: NextLink;
-}
-
-export namespace ErrorLink {
-  /**
-   * Callback to be triggered when an error occurs within the link stack.
-   */
+  /** {@inheritDoc @apollo/client/link/error!ErrorLink.ErrorLinkDocumentationTypes.ErrorHandler:function(1)} */
   export interface ErrorHandler {
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<ApolloLink.Result> | void;
+  }
+
+  /**
+   * The object provided to the `ErrorHandler` callback function.
+   */
+  export interface ErrorHandlerOptions {
+    /**
+     * The error that occurred during the operation execution. This can be a
+     * `CombinedGraphQLErrors` instance (for GraphQL errors) or another error
+     * type (for network errors).
+     *
+     * Use `CombinedGraphQLErrors.is(error)` to check if it's a GraphQL error with an `errors` array.
+     */
+    error: ErrorLike;
+    /**
+     * The raw GraphQL result from the server (if available), which may include
+     * partial data alongside errors.
+     */
+    result?: ApolloLink.Result;
+
+    /** The details of the GraphQL operation that produced an error. */
+    operation: ApolloLink.Operation;
+
+    /**
+     * A function that calls the next link in the link chain. Calling
+     * `return forward(operation)` in your `ErrorLink` callback
+     * [retries the operation](../../data/error-handling#retrying-operations), returning a new observable for the
+     * upstream link to subscribe to.
+     */
+    forward: ApolloLink.ForwardFunction;
   }
 }
 
-// For backwards compatibility.
-export import ErrorHandler = ErrorLink.ErrorHandler;
-
-export function onError(errorHandler: ErrorHandler): ApolloLink {
-  return new ApolloLink((operation, forward) => {
-    return new Observable((observer) => {
-      let sub: any;
-      let retriedSub: any;
-      let retriedResult: any;
-
-      try {
-        sub = forward(operation).subscribe({
-          next: (result) => {
-            if (result.errors) {
-              retriedResult = errorHandler({
-                graphQLErrors: result.errors,
-                response: result,
-                operation,
-                forward,
-              });
-            } else if (graphQLResultHasProtocolErrors(result)) {
-              retriedResult = errorHandler({
-                protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
-                response: result,
-                operation,
-                forward,
-              });
-            }
-
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
-              return;
-            }
-
-            observer.next(result);
-          },
-          error: (networkError) => {
-            retriedResult = errorHandler({
-              operation,
-              networkError,
-              //Network errors can return GraphQL errors on for example a 403
-              graphQLErrors:
-                (networkError &&
-                  networkError.result &&
-                  networkError.result.errors) ||
-                void 0,
-              forward,
-            });
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
-              return;
-            }
-            observer.error(networkError);
-          },
-          complete: () => {
-            // disable the previous sub from calling complete on observable
-            // if retry is in flight.
-            if (!retriedResult) {
-              observer.complete.bind(observer)();
-            }
-          },
-        });
-      } catch (e) {
-        errorHandler({ networkError: e as Error, operation, forward });
-        observer.error(e);
-      }
-
-      return () => {
-        if (sub) sub.unsubscribe();
-        if (retriedSub) sub.unsubscribe();
-      };
-    });
-  });
+/**
+ * @deprecated
+ * Use `ErrorLink` from `@apollo/client/link/error` instead.
+ */
+export function onError(errorHandler: ErrorLink.ErrorHandler) {
+  return new ErrorLink(errorHandler);
 }
 
+/**
+ * Use the `ErrorLink` to perform custom logic when a [GraphQL or network error](https://apollographql.com/docs/react/data/error-handling)
+ * occurs.
+ *
+ * @remarks
+ *
+ * This link is used after the GraphQL operation completes and execution is
+ * moving back up your [link chain](https://apollographql.com/docs/react/introduction#handling-a-response). The `errorHandler` function should
+ * not return a value unless you want to [retry the operation](https://apollographql.com/docs/react/data/error-handling#retrying-operations).
+ *
+ * For more information on the types of errors that might be encountered, see
+ * the guide on [error handling](https://apollographql.com/docs/react/data/error-handling).
+ *
+ * @example
+ *
+ * ```ts
+ * import { ErrorLink } from "@apollo/client/link/error";
+ * import {
+ *   CombinedGraphQLErrors,
+ *   CombinedProtocolErrors,
+ * } from "@apollo/client/errors";
+ *
+ * // Log any GraphQL errors, protocol errors, or network error that occurred
+ * const errorLink = new ErrorLink(({ error, operation }) => {
+ *   if (CombinedGraphQLErrors.is(error)) {
+ *     error.errors.forEach(({ message, locations, path }) =>
+ *       console.log(
+ *         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+ *       )
+ *     );
+ *   } else if (CombinedProtocolErrors.is(error)) {
+ *     error.errors.forEach(({ message, extensions }) =>
+ *       console.log(
+ *         `[Protocol error]: Message: ${message}, Extensions: ${JSON.stringify(
+ *           extensions
+ *         )}`
+ *       )
+ *     );
+ *   } else {
+ *     console.error(`[Network error]: ${error}`);
+ *   }
+ * });
+ * ```
+ */
 export class ErrorLink extends ApolloLink {
-  private link: ApolloLink;
   constructor(errorHandler: ErrorLink.ErrorHandler) {
-    super();
-    this.link = onError(errorHandler);
-  }
+    super((operation, forward) => {
+      return new Observable((observer) => {
+        let sub: Subscription | undefined;
+        let retriedSub: Subscription | undefined;
+        let retriedResult: ReturnType<ErrorLink.ErrorHandler>;
 
-  public request(
-    operation: Operation,
-    forward: NextLink
-  ): Observable<FetchResult> | null {
-    return this.link.request(operation, forward);
+        try {
+          sub = forward(operation).subscribe({
+            next: (result) => {
+              const handler =
+                operation.client["queryManager"].incrementalHandler;
+              const errors =
+                handler.isIncrementalResult(result) ?
+                  handler.extractErrors(result)
+                : result.errors;
+              if (errors) {
+                retriedResult = errorHandler({
+                  error: new CombinedGraphQLErrors(result, errors),
+                  result,
+                  operation,
+                  forward,
+                });
+              } else if (graphQLResultHasProtocolErrors(result)) {
+                retriedResult = errorHandler({
+                  error: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+                  result,
+                  operation,
+                  forward,
+                });
+              }
+
+              retriedSub = retriedResult?.subscribe(observer);
+
+              if (!retriedSub) {
+                observer.next(result);
+              }
+            },
+            error: (error) => {
+              retriedResult = errorHandler({
+                operation,
+                error: toErrorLike(error),
+                forward,
+              });
+              retriedSub = retriedResult?.subscribe(observer);
+
+              if (!retriedSub) {
+                observer.error(error);
+              }
+            },
+            complete: () => {
+              // disable the previous sub from calling complete on observable
+              // if retry is in flight.
+              if (!retriedResult) {
+                observer.complete();
+              }
+            },
+          });
+        } catch (e) {
+          errorHandler({ error: toErrorLike(e), operation, forward });
+          observer.error(e);
+        }
+
+        return () => {
+          if (sub) sub.unsubscribe();
+          if (retriedSub) retriedSub.unsubscribe();
+        };
+      });
+    });
   }
 }

@@ -1,6 +1,7 @@
 import type * as ReactTypes from "react";
 
 import { prerenderStatic } from "./prerenderStatic.js";
+import type { BatchOptions } from "./types.js";
 
 /**
  * @deprecated This function uses the legacy `renderToString` API from React.
@@ -8,12 +9,14 @@ import { prerenderStatic } from "./prerenderStatic.js";
  * React APIs.
  */
 export async function renderToStringWithData(
-  component: ReactTypes.ReactElement<any>
+  component: ReactTypes.ReactElement<any>,
+  batchOptions?: BatchOptions
 ): Promise<string> {
   const { result } = await prerenderStatic({
     tree: component,
     renderFunction: (await import("react-dom/server")).renderToString,
     maxRerenders: Number.POSITIVE_INFINITY,
+    batchOptions,
   });
   return result;
 }

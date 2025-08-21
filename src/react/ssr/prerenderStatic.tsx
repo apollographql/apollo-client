@@ -16,6 +16,7 @@ import { canonicalStringify } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useSSRQuery } from "./useSSRQuery.js";
+import type { BatchOptions } from "./types.js";
 
 type ObservableQueryKey = `${string}|${string}`;
 function getObservableQueryKey(
@@ -112,6 +113,12 @@ export declare namespace prerenderStatic {
      * @defaultValue 50
      */
     maxRerenders?: number;
+
+    /**
+     * Options for batching queries during SSR to optimize performance.
+     * When provided, this can reduce the time spent waiting for all queries to complete.
+     */
+    batchOptions?: BatchOptions;
   }
 
   export interface Result {
@@ -189,6 +196,7 @@ export function prerenderStatic({
   ignoreResults,
   diagnostics,
   maxRerenders = 50,
+  batchOptions,
 }: prerenderStatic.Options): Promise<prerenderStatic.Result> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
@@ -266,8 +274,93 @@ you have an infinite render loop in your application.`,
       return { result, aborted: true };
     }
 
+    const observables = Array.from(recentlyCreatedObservableQueries);
+
+    // If batchOptions with debounce is provided, use debounced behavior
+    if (batchOptions?.debounce !== undefined) {
+      const dataPromise = new Promise<void>((resolve, reject) => {
+        let resolved = false;
+        let timeoutId: NodeJS.Timeout | null = null;
+        let rejectedPromises = 0;
+        const totalPromises = observables.length;
+        const resolvedObservables = new Set<ObservableQuery>();
+
+        const handleResolve = (observable: ObservableQuery) => {
+          resolvedObservables.add(observable);
+          if (!resolved) {
+            resolved = true;
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+            // Mark these as resolved for the next render cycle
+            resolvedObservables.forEach((obs) => {
+              recentlyCreatedObservableQueries.delete(obs);
+            });
+            resolve();
+          }
+        };
+
+        const handleReject = (error: any) => {
+          rejectedPromises++;
+          // Only reject if ALL promises fail
+          if (rejectedPromises === totalPromises) {
+            if (!resolved) {
+              resolved = true;
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+              reject(
+                new Error(
+                  `All ${totalPromises} queries failed during SSR: ${
+                    error?.message || "Unknown error"
+                  }`
+                )
+              );
+            }
+          }
+        };
+
+        // Set up timeout for debounce
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            // Mark all as resolved when timeout occurs
+            observables.forEach((obs) => {
+              recentlyCreatedObservableQueries.delete(obs);
+            });
+            resolve();
+          }
+        }, batchOptions.debounce);
+
+        // Listen for observables to resolve or reject
+        observables.forEach((observable) => {
+          firstValueFrom(
+            observable.pipe(filter((result) => result.loading === false))
+          )
+            .then(() => handleResolve(observable))
+            .catch((error) => handleReject(error));
+        });
+      });
+
+      let resolveAbortPromise!: () => void;
+      const abortPromise = new Promise<void>((resolve) => {
+        resolveAbortPromise = resolve;
+      });
+      signal?.addEventListener("abort", resolveAbortPromise);
+      await Promise.race([abortPromise, dataPromise]);
+      signal?.removeEventListener("abort", resolveAbortPromise);
+
+      if (signal?.aborted) {
+        return { result, aborted: true };
+      }
+      return process();
+    }
+
+    // Default behavior: wait for all observables (Promise.all)
     const dataPromise = Promise.all(
-      Array.from(recentlyCreatedObservableQueries).map(async (observable) => {
+      observables.map(async (observable) => {
         await firstValueFrom(
           observable.pipe(filter((result) => result.loading === false))
         );

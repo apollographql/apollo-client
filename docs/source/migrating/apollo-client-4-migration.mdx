@@ -1096,8 +1096,6 @@ The `clientErrors` property was not used by Apollo Client and therefore has no r
 
 Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property. This avoids the need to check the type of `error` before consuming it. To make such a guarantee, thrown non-error types are wrapped.
 
-Thrown values that are non-error-like objects (such as a symbol or primitive value) are wrapped in an `UnconventionalError` error instance to avoid the need to check the type of the error before consuming it. `UnconventionalError` sets its `name` to `UnconventionalError`, sets its `message` to `"An error of unexpected shape occured."`, and sets its [`cause` property](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) to the value originally thrown.
-
 #### String errors
 
 Strings thrown as errors are wrapped in an `Error` instance for you. The string is set as the error's `message`.

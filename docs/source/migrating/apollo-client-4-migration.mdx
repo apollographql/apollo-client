@@ -1094,7 +1094,7 @@ The `clientErrors` property was not used by Apollo Client and therefore has no r
 
 ### Errors as guaranteed error-like objects
 
-Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property. This avoids the need to check the type of `error` before consuming it. To make such a guarantee, thrown non-error types are wrapped.
+Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property. This avoids the need to check the type of `error` before consuming it. To make such a guarantee, thrown non-error-like values are wrapped.
 
 #### String errors
 

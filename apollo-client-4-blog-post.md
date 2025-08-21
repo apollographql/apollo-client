@@ -59,7 +59,7 @@ if (CombinedGraphQLErrors.is(error)) {
 }
 ```
 
-This clarity extends throughout the API. Hooks like `useLazyQuery` now have clearer boundaries about what options go where—initial options on the hook, execution options on the execute function. The `loading` state actually means loading now, with `notifyOnNetworkStatusChange` defaulting to `true` so refetches are properly reflected in your UI.
+This clarity extends throughout the API. Hooks like `useLazyQuery` now have clearer boundaries about what options go where — initial options on the hook, execution options on the execute function. The `loading` state actually means loading now, with `notifyOnNetworkStatusChange` defaulting to `true` so refetches are properly reflected in your UI.
 
 ## Built for Modern JavaScript
 

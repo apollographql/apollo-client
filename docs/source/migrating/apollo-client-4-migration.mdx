@@ -1007,6 +1007,25 @@ useQuery(QUERY, {
 
 ## New error handling
 
+Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.
+
+### Unification of the `error` property
+
+In Apollo Client 3, many result types returned both the `error` and `errors` properties. This includes the result emitted from `ObservableQuery` and some React hooks such as `useQuery`. This made it difficult to determine which property should be used to determine the source of the error. This was further complicated by the fact that the `errors` property was set only when `errorPolicy` was `all`!
+
+Apollo Client 4 unifies all errors into a single `error` property. If you check for `errors`, remove this check and use `error` instead.
+
+```ts
+const { error, errors } = useQuery(QUERY);// [!code --]
+const { error } = useQuery(QUERY);// [!code ++]
+
+if (error) {
+  // ...
+} else if (errors) {// [!code --:2]
+  // ...
+}
+```
+
 Error handling between Apollo Client 3 and 4 has changed significantly.
 In Apollo Client 3, every error was wrapped in an `ApolloError` instance, which made it hard to figure out where the error initially came from and could cause problems with observability services.
 In Apollo Client 4,

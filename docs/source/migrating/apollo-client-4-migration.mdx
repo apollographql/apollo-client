@@ -1518,9 +1518,11 @@ Some examples:
 
 Many of the old, most-used types are still available in Apollo Client 4 (including the examples above), but are now deprecated in favor of the new namespaced types. We suggest running the codemod to update your code to use the new namespaced types.
 
-### Removal of `<TContext>` and `<TCacheShape>` generics
+### Removal of `<TContext>` generic argument
 
-Many APIs in Apollo Client 3 used a manual `TContext` generic to pass the context type around. This was extremely fragile, so these generics have been removed in Apollo Client 4. Instead, override the `DefaultContext` type by using module augmentation.
+Many APIs in Apollo Client 3 provided a `TContext` generic argument that allowed you to provide the type for the `context` option. However, this generic argument was not consistently applied across all APIs that provided a `context` option and was easily forgotten.
+
+Apollo Client 4 removes the `TContext` generic argument in favor of using [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `DefaultContext` interface to provide types for the `context` option. This provides type safety throughout all Apollo Client APIs when using context.
 
 To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
 
@@ -1537,7 +1539,18 @@ declare module "@apollo/client" {
 }
 ```
 
-Similar to `TContext`, the `TCacheShape` generic has been removed from the `ApolloClient` constructor options, because it added a lot of mental overhead with very little benefit. There is no replacement for this generic.
+### Removal of `<TCacheShape>` generic argument
+
+The `TCacheShape` generic argument has been removed from the `ApolloClient` constructor. Most users set this type to `any` which provided little benefit for type safety. APIs that previously relied on `TCacheShape` are now set to `unknown`.
+
+To migrate, remove the `TCacheShape` generic argument when initializing `ApolloClient`.
+
+```ts
+new ApolloClient<any>({ // [!code --]
+new ApolloClient({ // [!code ++]
+  // ...
+});
+```
 
 ## Apollo Link changes
 

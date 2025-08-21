@@ -16,6 +16,7 @@ import {
   TVariablesShouldExtendOperationVariables,
   TDataTVariablesOrder,
 } from "./generics.ts";
+import { enforceDocumentationTypes } from "./namespace-documentationTypes.ts";
 
 export default {
   "require-using-disposable": requireUsingDisposable,
@@ -31,4 +32,5 @@ export default {
   "variables-should-extend-operation-variables":
     TVariablesShouldExtendOperationVariables,
   "tdata-tvariables-order": TDataTVariablesOrder,
+  "enforce-documentation-types": enforceDocumentationTypes,
 };

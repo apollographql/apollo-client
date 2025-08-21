@@ -2200,7 +2200,7 @@ Apollo Client 4 now uses the `exports` field in its `package.json` to define whi
 Apollo Client is now transpiled to target a `since 2023, node >= 20, not dead` target. This means that Apollo Client can now use modern JavaScript features without downlevel transpilation, which will generally result in better performance and smaller bundle size.
 We also have stopped the practice of shipping polyfills.
 
-Please note that we might bump the transpilation target to more modern targets in upcoming minor versions. See our [dependency support policy](TODO in separate PR) for more details on the supported environments.
+Please note that we might bump the transpilation target to more modern targets in upcoming minor versions. See our [versioning policy](../versioning-policy) for more details on the supported environments.
 
 If you are targeting older browsers or special environments, you might need to adjust your build configuration to transpile the Apollo Client library itself to a lower target, or polyfill the missing features yourself.
 

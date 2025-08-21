@@ -286,17 +286,20 @@ export type PossibleTypesMap = {
   [supertype: string]: string[];
 };
 
+type InternalFieldPolicy = {
+  typename: string;
+  keyFn?: KeyArgsFunction;
+  read?: FieldReadFunction<any>;
+  merge?: FieldMergeFunction<any>;
+};
+
 export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
       merge?: FieldMergeFunction<any>;
       fields: {
-        [fieldName: string]: {
-          keyFn?: KeyArgsFunction;
-          read?: FieldReadFunction<any>;
-          merge?: FieldMergeFunction<any>;
-        };
+        [fieldName: string]: InternalFieldPolicy;
       };
     };
   } = {};
@@ -443,7 +446,11 @@ export class Policies {
     });
   }
 
-  private updateTypePolicy(typename: string, incoming: TypePolicy) {
+  private updateTypePolicy(
+    typename: string,
+    incoming: TypePolicy,
+    existingFieldPolicies: Record<string, InternalFieldPolicy>
+  ) {
     const existing = this.getTypePolicy(typename);
     const { keyFields, fields } = incoming;
 
@@ -479,7 +486,17 @@ export class Policies {
 
     if (fields) {
       Object.keys(fields).forEach((fieldName) => {
-        const existing = this.getFieldPolicy(typename, fieldName, true)!;
+        let existing = existingFieldPolicies[fieldName] as
+          | InternalFieldPolicy
+          | undefined;
+        // Field policy inheritance is atomic/shallow: you can't inherit a
+        // field policy and then override just its read function, since read
+        // and merge functions often need to cooperate, so changing only one
+        // of them would be a recipe for inconsistency.
+        // So here we avoid merging an inherited field policy with an updated one.
+        if (!existing || existing?.typename !== typename) {
+          existing = existingFieldPolicies[fieldName] = { typename };
+        }
         const incoming = fields[fieldName];
 
         if (typeof incoming === "function") {
@@ -626,7 +643,11 @@ export class Policies {
       // Merge the pending policies into this.typePolicies, in the order they
       // were originally passed to addTypePolicy.
       inbox.splice(0).forEach((policy) => {
-        this.updateTypePolicy(typename, policy);
+        this.updateTypePolicy(
+          typename,
+          policy,
+          this.typePolicies[typename].fields
+        );
       });
     }
 
@@ -635,21 +656,10 @@ export class Policies {
 
   private getFieldPolicy(
     typename: string | undefined,
-    fieldName: string,
-    createIfMissing: boolean
-  ):
-    | {
-        keyFn?: KeyArgsFunction;
-        read?: FieldReadFunction<any>;
-        merge?: FieldMergeFunction<any>;
-      }
-    | undefined {
+    fieldName: string
+  ): InternalFieldPolicy | undefined {
     if (typename) {
-      const fieldPolicies = this.getTypePolicy(typename).fields;
-      return (
-        fieldPolicies[fieldName] ||
-        (createIfMissing && (fieldPolicies[fieldName] = {}))
-      );
+      return this.getTypePolicy(typename).fields[fieldName];
     }
   }
 
@@ -763,13 +773,13 @@ export class Policies {
   }
 
   public hasKeyArgs(typename: string | undefined, fieldName: string) {
-    const policy = this.getFieldPolicy(typename, fieldName, false);
+    const policy = this.getFieldPolicy(typename, fieldName);
     return !!(policy && policy.keyFn);
   }
 
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
-    const policy = this.getFieldPolicy(typename, fieldName, false);
+    const policy = this.getFieldPolicy(typename, fieldName);
     let storeFieldName: Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
     let keyFn = policy && policy.keyFn;
@@ -838,7 +848,7 @@ export class Policies {
       objectOrReference,
       storeFieldName
     );
-    const policy = this.getFieldPolicy(options.typename, fieldName, false);
+    const policy = this.getFieldPolicy(options.typename, fieldName);
     const read = policy && policy.read;
 
     if (read) {
@@ -869,7 +879,7 @@ export class Policies {
     typename: string | undefined,
     fieldName: string
   ): FieldReadFunction | undefined {
-    const policy = this.getFieldPolicy(typename, fieldName, false);
+    const policy = this.getFieldPolicy(typename, fieldName);
     return policy && policy.read;
   }
 
@@ -881,7 +891,7 @@ export class Policies {
     let policy:
       | Policies["typePolicies"][string]
       | Policies["typePolicies"][string]["fields"][string]
-      | undefined = this.getFieldPolicy(parentTypename, fieldName, false);
+      | undefined = this.getFieldPolicy(parentTypename, fieldName);
     let merge = policy && policy.merge;
     if (!merge && childTypename) {
       policy = this.getTypePolicy(childTypename);

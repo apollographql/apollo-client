@@ -1092,7 +1092,7 @@ Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, a
 
 Thrown values that are non-error-like objects (such as a symbol or primitive value) are wrapped in an `UnconventionalError` error instance to avoid the need to check the type of the error before consuming it. `UnconventionalError` sets its `name` to `UnconventionalError`, sets its `message` to `"An error of unexpected shape occured."`, and sets its [`cause` property](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) to the value originally thrown.
 
-#### Strings as errors
+#### String errors
 
 Strings thrown as errors are wrapped in an `Error` instance for you. The string is set as the error's `message`.
 

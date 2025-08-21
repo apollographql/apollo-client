@@ -1030,26 +1030,113 @@ if (error) {
 
 In Apollo Client 3, every error was wrapped in an `ApolloError` instance. This made it difficult to debug the source of the error, especially when reported by error tracking services, because the stack trace pointed to the `ApolloError` class. Additionally, it was unclear whether error types wrapped in `ApolloError` were mutually exclusive because it contained `graphQLErrors`, `protocolErrors`, `networkError`, and `clientErrors` properties that were all optional.
 
-Apollo Client 4 removes `ApolloError` entirely. This change has several implications.
+Apollo Client 4 removes the `ApolloError` class entirely.
 
-#### External errors are no longer wrapped
+#### Migrate from `graphQLErrors`
 
-External errors (i.e. network errors) are no longer wrapped and are instead returned as-is. This makes it easier to debug the source of the error as the stack trace now points to the location of the error.
+GraphQL errors are now encapsulated in a `CombinedGraphQLErrors` instance. You can access the raw GraphQL errors with the `errors` property. To migrate, use `CombinedGraphQLErrors.is(error)` to first check if the error is caused by one or more GraphQL errors, then access the `errors` property.
 
-If you previously handled network errors by checking the `error.networkError` property, use the `error` property directly.
+{/* prettier-ignore */}
+```ts disableCopy=true
+import { CombinedGraphQLErrors } from "@apollo/client"; // [!code ++]
+
+const { error } = useQuery(QUERY);
+
+if (error.graphQLErrors) { // [!code --]
+  error.graphQLErrors.map((graphQLError) => {/* ... */}); // [!code --]
+if (CombinedGraphQLErrors.is(error)) { // [!code ++]
+  error.errors.map((graphQLError) => {/* ... */}); // [!code ++]
+}
+```
+
+#### Migrate from `networkError`
+
+Network errors are no longer wrapped and instead returned as-is. This makes it easier to debug the source of the error as the stack trace now points to the location of the error.
+
+To migrate, use the `error` property directly.
 
 ```ts disableCopy=true
 const { error } = useQuery(QUERY);
 
 if (error.networkError) { // [!code --]
+  console.log(error.networkError.message); // [!code --]
 if (error) { // [!code ++]
-  // ...
+  console.log(error.message); // [!code ++]
 }
 ```
 
-#### Errors as guaranteed error-like objects
+#### Migrate from `protocolErrors`
 
-Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property, as a replacement for `ApolloError`. Thrown values that are non-error-like objects (such as a symbol or primitive value) are wrapped in an `UnconventionalError` error instance to avoid the need to check the type of the error before consuming it. `UnconventionalError` sets its `name` to `UnconventionalError`, sets its `message` to `"An error of unexpected shape occured."`, and sets its [`cause` property](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) to the value originally thrown.
+Protocol errors are now encapsulated in a `CombinedProtocolErrors` instance. You can access the raw protocol errors with the `errors` property. To migrate, use `CombinedProtocolErrors.is(error)` to first check if the error is caused by one or more protocol errors, then access the `errors` property.
+
+{/* prettier-ignore */}
+```ts disableCopy=true
+import { CombinedProtocolErrors } from "@apollo/client"; // [!code ++]
+
+const { error } = useQuery(QUERY);
+
+if (error.protocolErrors) { // [!code --]
+  error.graphQLErrors.map((graphQLError) => {/* ... */}); // [!code --]
+if (CombinedProtocolErrors.is(error)) { // [!code ++]
+  error.errors.map((graphQLError) => {/* ... */}); // [!code ++]
+}
+```
+
+#### Migrate from `clientErrors`
+
+The `clientErrors` property was not used by Apollo Client and therefore has no replacement. Any non-GraphQL errors or non-protocol errors are passed through as-is.
+
+### Errors as guaranteed error-like objects
+
+Apollo Client 4 guarantees that the `error` property is an `ErrorLike` object, an object with a `message` and `name` property. This avoids the need to check the type of `error` before consuming it. To make such a guarantee, thrown non-error types are wrapped.
+
+Thrown values that are non-error-like objects (such as a symbol or primitive value) are wrapped in an `UnconventionalError` error instance to avoid the need to check the type of the error before consuming it. `UnconventionalError` sets its `name` to `UnconventionalError`, sets its `message` to `"An error of unexpected shape occured."`, and sets its [`cause` property](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) to the value originally thrown.
+
+#### Strings as errors
+
+Strings thrown as errors are wrapped in an `Error` instance for you. The string is set as the error's `message`.
+
+```ts
+const client = new ApolloClient({
+  link: new ApolloLink(() => {
+    return new Observable((observer) => {
+      // Oops we sent a string instead of wrapping it in an `Error`
+      observer.error("Test error");
+    });
+  }),
+});
+
+// ...
+
+const { error } = useQuery(query);
+
+// `error` is `new Error("Test error")`
+console.log(error.message);
+```
+
+#### Non-error types
+
+All other object types (e.g. symbols, arrays, etc.) or primitives thrown as errors are wrapped in an `UnconventionalError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) property set to the original object. Additionally, `UnconventionalError` sets its `name` to `UnconventionalError` and its `message` to `"An error of unexpected shape occured."`.
+
+```ts
+const client = new ApolloClient({
+  link: new ApolloLink(() => {
+    return new Observable((observer) => {
+      // Oops we sent a string instead of wrapping it in an `Error`
+      observer.error({ message: "Not a proper error type" });
+    });
+  }),
+});
+
+// ...
+
+const { error } = useQuery(query);
+
+// `error` is an `UnconventionalError` instance
+console.log(error.message); // => "An error of unexpected shape occured."
+// The `cause` returns the original object that was thrown
+console.log(error.cause); // => { message: "Not a proper error type" }
+```
 
 #### X
 

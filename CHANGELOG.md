@@ -337,7 +337,13 @@ npm install @apollo/client graphql rxjs
 
 Apollo Client 4.0 represents years of community feedback and contributions. Thank you to all our contributors, early adopters, and the entire GraphQL community for making this release possible.
 
+<details>
+
+<summary>
+
 ### Major Changes
+
+</summary>
 
 - [#12644](https://github.com/apollographql/apollo-client/pull/12644) [`fe2f005`](https://github.com/apollographql/apollo-client/commit/fe2f005c34913ae082b96a807dc240e2785d50bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Replace the `result` property on `ServerError` with `bodyText`. `bodyText` is set to the raw string body. `HttpLink` and `BatchHttpLink` no longer try and parse the response body as JSON when a `ServerError` is thrown.
 
@@ -1593,7 +1599,15 @@ Apollo Client 4.0 represents years of community feedback and contributions. Than
 
 - [#12211](https://github.com/apollographql/apollo-client/pull/12211) [`c2736db`](https://github.com/apollographql/apollo-client/commit/c2736db3ad6f8b6e56f065682d5b76614f41bfd4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `Query`, `Mutation`, and `Subscription` components. Use the provided React hooks instead.
 
+</details>
+
+<details>
+
+<summary>
+
 ### Minor Changes
+
+</summary>
 
 - [#12532](https://github.com/apollographql/apollo-client/pull/12532) [`ae0dcad`](https://github.com/apollographql/apollo-client/commit/ae0dcad89924e6b8090ca3182df30e528589b562) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow mocked responses passed to `MockLink` to accept a callback for the `delay` option. The `delay` callback will be given the current operation which can be used to determine what delay should be used for the mock.
 
@@ -2115,7 +2129,14 @@ Apollo Client 4.0 represents years of community feedback and contributions. Than
   }
   ```
 
+</details>
+<details>
+
+<summary>
+
 ### Patch Changes
+
+</summary>
 
 - [#12574](https://github.com/apollographql/apollo-client/pull/12574) [`0098ec9`](https://github.com/apollographql/apollo-client/commit/0098ec9f860e4e08a2070823f723dce401ae588a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export `gql` from the `@apollo/client/react` entrypoint.
 
@@ -2333,6 +2354,8 @@ Apollo Client 4.0 represents years of community feedback and contributions. Than
 - [#12782](https://github.com/apollographql/apollo-client/pull/12782) [`742b3a0`](https://github.com/apollographql/apollo-client/commit/742b3a0ed65d28818974e56225c86ab7e350e677) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move `ApolloClient`, `ObservableQuery`, and `ApolloCache.watchFragment` method options and result types into namespaces. The old types are now exported as deprecated.
 
 - [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug in `PersistedQueryLink` where the `persistedQuery` extension would still be sent after a `PersistedQueryNotSupported` if `includeExtensions` was enabled on `HttpLink`.
+
+</details>
 
 ## 4.0.0-rc.13
 

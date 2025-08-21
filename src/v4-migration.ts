@@ -511,6 +511,16 @@ export type ChildProps = never;
 export type ClientParseError = never;
 
 /**
+ * {@inheritDoc @apollo/client/v4-migration!Removals.removedType:type {"name":"Masked"} }
+ */
+export type Masked = never;
+
+/**
+ * {@inheritDoc @apollo/client/v4-migration!Removals.removedType:type {"name":"MaskedDocumentNode"} }
+ */
+export type MaskedDocumentNode = never;
+
+/**
  * {@inheritDoc @apollo/client/v4-migration!Removals.removedType:type {"name":"CommonOptions"} }
  */
 export type CommonOptions = never;

@@ -1764,9 +1764,31 @@ new ApolloLink((operation, forward) => {
 });
 ```
 
-### `ApolloLink.execute` and `execute` method changes
+### `execute` now requires the `client`
 
-### Notes for custom link implementations
+If you use the `execute` function directly to run the link chain, the `execute` function now requires a 3rd argument that provides the `ApolloClient` instance that represents the client that initiated the request.
+
+Provide a context argument with the `client` option to the 3rd argument of the `execute` function.
+
+```ts
+import { execute } from "@apollo/client";
+
+const client = new ApolloClient({
+  // ...
+});
+
+execute(
+  link,
+  { query /* ... */ },
+  { client }// [!code ++]
+);
+```
+
+<Tip>
+
+If you use the `execute` function to unit-test custom links, provide a dummy `ApolloClient` instance. The `ApolloClient` instance does not need any special configuration unless your unit tests require it.
+
+</Tip>
 
 #### Observable API changes
 

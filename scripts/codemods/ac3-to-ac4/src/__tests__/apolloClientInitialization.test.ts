@@ -893,8 +893,9 @@ new ApolloClient({
   });
 });
 
-test("remove constructor type argument", () => {
-  expect(transform("removeConstructorTypeArgument")`
+describe("removeTypeArguments", () => {
+  test("remove constructor type argument", () => {
+    expect(transform("removeTypeArguments")`
 import { ApolloClient } from "@apollo/client";
 
 new ApolloClient<CacheShape>({
@@ -909,4 +910,21 @@ new ApolloClient<CacheShape>({
           link: someLink,
         })"
       `);
+  });
+
+  test("removes type arguments for usages of `ApolloClient` as a type", () => {
+    expect(transform("removeTypeArguments")`
+import { ApolloClient } from "@apollo/client";
+
+function test(client: ApolloClient<unknown>): ApolloClient<any> {
+  return client;
+}
+    `).toMatchInlineSnapshot(`
+      "import { ApolloClient } from "@apollo/client";
+
+      function test(client: ApolloClient): ApolloClient {
+        return client;
+      }"
+    `);
+  });
 });

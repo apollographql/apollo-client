@@ -1581,9 +1581,28 @@ const authLink = new SetContextLink((prevContext, operation) => { /*...*/ }  // 
 
 </Caution>
 
-### Deprecation of `from`, `concat`, and `split`
+### Deprecation of bare `empty`, `from`, `concat`, and `split` functions
 
-Instead of using the `from`, `concat`, and `split` exports from `@apollo/client/link/core`, please now use the `ApolloLink.from`, `ApolloLink.concat`, and `ApolloLink.split` methods.
+> This change is performed by the codemod
+
+The bare `empty`, `from`, `concat`, and `split` functions exported from `@apollo/client` and `@apollo/client/link` are now deprecated in favor of using the equivalent static methods on the `ApolloLink` class.
+
+```ts disableCopy=true
+import { empty, from, concat, split } from "@apollo/client";// [!code --]
+import { ApolloLink } from "@apollo/client";// [!code ++]
+
+const link = empty();// [!code --]
+const link = ApolloLink.empty();// [!code ++]
+
+from([linkA, linkB]);// [!code --]
+ApolloLink.from([linkA, linkB]);// [!code ++]
+
+concat(linkA, linkB);// [!code --]
+ApolloLink.concat(linkA, linkB);// [!code ++]
+
+split((operation) => check(operation), linkA, linkB);// [!code --]
+ApolloLink.split((operation) => check(operation), linkA, linkB);// [!code ++]
+```
 
 ### `ApolloLink` usage pattern of `from` and `concat` now aligned with the native `Array` class
 

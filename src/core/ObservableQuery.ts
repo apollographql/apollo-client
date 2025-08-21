@@ -135,6 +135,8 @@ export class ObservableQuery<
     timeout: ReturnType<typeof setTimeout>;
   };
 
+  private _getOrCreateQuery: () => QueryInfo;
+
   constructor({
     queryManager,
     queryInfo,
@@ -146,11 +148,7 @@ export class ObservableQuery<
   }) {
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
     super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
-      if (startedInactive) {
-        queryManager["queries"].set(this.queryId, queryInfo);
-        startedInactive = false;
-      }
-
+      this._getOrCreateQuery();
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -187,6 +185,14 @@ export class ObservableQuery<
         }
       };
     });
+
+    this._getOrCreateQuery = () => {
+      if (startedInactive) {
+        queryManager["queries"].set(this.queryId, queryInfo);
+        startedInactive = false;
+      }
+      return this.queryManager.getOrCreateQuery(this.queryId);
+    };
 
     // related classes
     this.queryInfo = queryInfo;
@@ -495,7 +501,6 @@ export class ObservableQuery<
 
     this.queryManager.resetErrors(this.queryId);
   }
-
   /**
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
@@ -943,7 +948,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
+    const queryInfo = this._getOrCreateQuery();
     queryInfo.setObservableQuery(this);
     return this.queryManager["fetchConcastWithInfo"](
       queryInfo,

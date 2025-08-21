@@ -82,6 +82,8 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "node config/build.ts",
+    "build:ai": "npm run build -w packages/ai",
+    "build:ai-vercel-adapter": "npm run build -w packages/ai-vercel-adapter",
     "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
     "postinstall": "patch-package",
     "extract-api": "npm run clean && node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc --step=deprecateInternals && npm run extract-api:only",

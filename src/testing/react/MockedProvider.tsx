@@ -18,6 +18,11 @@ export interface MockedProviderProps {
   link?: ApolloLink;
   showWarnings?: boolean;
   mockLinkDefaultOptions?: MockLink.DefaultOptions;
+  /**
+   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+   *
+   * @since 3.14.0
+   */
   devtools?: ApolloClient.Options["devtools"];
 }
 

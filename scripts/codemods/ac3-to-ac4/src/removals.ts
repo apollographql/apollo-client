@@ -18,6 +18,8 @@ const removals = [
   { importType: "type", module: "@apollo/client/errors", identifier: "NetworkError" },
   { importType: "type", module: "@apollo/client/link/batch", identifier: "BatchableRequest" },
   { importType: "type", module: "@apollo/client/link/http", identifier: "ClientParseError" },
+  { importType: "type", module: "@apollo/client/masking", identifier: "Masked" },
+  { importType: "type", module: "@apollo/client/masking", identifier: "MaskedDocumentNode" },
   { importType: "type", module: "@apollo/client/react", identifier: "BaseMutationOptions" },
   { importType: "type", module: "@apollo/client/react", identifier: "BaseQueryOptions" },
   { importType: "type", module: "@apollo/client/react", identifier: "CommonOptions" },

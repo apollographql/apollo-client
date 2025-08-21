@@ -32,7 +32,6 @@ export interface MockedProviderProps {
     children?: any;
     // (undocumented)
     defaultOptions?: ApolloClient.DefaultOptions;
-    // (undocumented)
     devtools?: ApolloClient.Options["devtools"];
     // (undocumented)
     link?: ApolloLink;

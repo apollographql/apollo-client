@@ -575,22 +575,44 @@ const cache = new InMemoryCache({
 });
 ```
 
-### Disabling `merge` functions
+### Opting in to the default behavior for non-normalized fields
 
-In some cases, you might want to completely disable merge functions for certain fields. To do so, pass `merge: false` like so:
+Apollo Client replaces existing data with incoming data for non-normalized fields by default. When this happens, you will encounter console warnings like "Cache data may be lost when...", even when the default behavior is desirable. You can tell Apollo Client you want this behavior by passing `merge: false` to a field's `FieldPolicy`. By opting into this behavior, the console warning is no longer emitted:
 
-```ts {13}
+```ts {6}
 const cache = new InMemoryCache({
   typePolicies: {
-    Book: {
+    Author: {
       fields: {
-        // No longer necessary!
-        // author: {
-        //   merge: true,
-        // },
+        books: {
+          merge: false,
+        },
       },
     },
+  },
+});
+```
 
+In some cases, you might want the same behavior for all occurrences of a particular type. To do so, pass `merge: false` to the type policy for that type like so:
+
+```ts {19}
+const cache = new InMemoryCache({
+  typePolicies: {
+    // No longer necessary!
+    // Article: {
+    //   fields: {
+    //     author: {
+    //       merge: false,
+    //     },
+    //   },
+    // },
+    // Book: {
+    //   fields: {
+    //     author: {
+    //       merge: false,
+    //     },
+    //   },
+    // },
     Author: {
       merge: false,
     },

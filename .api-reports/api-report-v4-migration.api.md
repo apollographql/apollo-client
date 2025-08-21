@@ -197,6 +197,12 @@ export const itAsync: never;
 export const iterateObserversSafely: never;
 
 // @public @deprecated (undocumented)
+export type Masked = never;
+
+// @public @deprecated (undocumented)
+export type MaskedDocumentNode = never;
+
+// @public @deprecated (undocumented)
 export const mergeIncrementalData: never;
 
 // @public @deprecated (undocumented)

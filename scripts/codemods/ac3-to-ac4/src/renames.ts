@@ -595,6 +595,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       },
       to: {
         module: "@apollo/client/incremental",
+        alternativeModules: [],
         namespace: "Defer20220824Handler",
       },
       importType: "type",

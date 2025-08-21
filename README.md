@@ -52,8 +52,8 @@ npm install @apollo/client graphql
 Deliver tomorrow's roadmap today with our comprehensive suite of API orchestration tools:
 
 - [**Apollo Client**](https://www.apollographql.com/docs/react?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Type-safe apps with GraphQL-powered on-device caching ([React](https://www.apollographql.com/docs/react?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [iOS](https://www.apollographql.com/docs/ios?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [Kotlin](https://www.apollographql.com/docs/kotlin?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme))
-- [**Apollo Connectors**](https://www.apollographql.com/connectors?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Compose all your GraphQL and REST APIs into one GraphQL endpoint
-- [**Apollo MCP Server**](https://www.apollographql.com/ai?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- AI needs APIs. The fastest way to ship reliable AI experiences
+- [**Apollo Connectors**](https://www.apollographql.com/graphos/apollo-connectors?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Compose all your GraphQL and REST APIs into one GraphQL endpoint
+- [**Apollo MCP Server**](https://www.apollographql.com/apollo-mcp-server?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- AI needs APIs. The fastest way to ship reliable AI experiences
 - [**Apollo Router**](https://www.apollographql.com/docs/router?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Scale your APIs seamlessly with GraphQL Federation, Security, Auth, and more
 - [**GraphOS**](https://www.apollographql.com/graphos?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Deploy, manage, govern, and explore your APIs ([start for free, no credit card needed](https://www.apollographql.com/pricing?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme))
 

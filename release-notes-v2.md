@@ -315,12 +315,6 @@ npm install @apollo/client graphql rxjs
 - `@apollo/client/react/parser`
 - `@apollo/client/utilities/globals`
 
-### Removed Methods
-
-- `client.writeData` - use `writeQuery`/`writeFragment`
-- `ObservableQuery.result()` - use RxJS `firstValueFrom`
-- `InMemoryCache.canonizeResults` option
-
 ## Upgrade Path
 
 1. **Update to Apollo Client 3.14** first for deprecation warnings
@@ -334,7 +328,6 @@ npm install @apollo/client graphql rxjs
 
 - [Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration)
 - [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md)
-- [API Reference](https://www.apollographql.com/docs/react/api)
 
 ## Acknowledgments
 

@@ -1,9 +1,11 @@
 switcher:
   heading: "Apollo Client (Web)"
   versions:
-    - label: v3
+    - label: v4
       latest: true
       href: ./
+    - label: v3
+      href: ./v3
     - label: v2
       href: ./v2
 items:

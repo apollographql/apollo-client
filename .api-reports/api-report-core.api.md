@@ -530,6 +530,9 @@ export namespace InternalTypes {
 }
 
 // @public
+export function isNetworkRequestInFlight(networkStatus?: NetworkStatus): boolean;
+
+// @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 export { isReference }

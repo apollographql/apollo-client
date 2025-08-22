@@ -710,6 +710,18 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
+  ...[{ from: "isNetworkRequestInFlight" }].map(
+    moveInto({
+      from: {
+        module: "@apollo/client/core/networkStatus",
+        alternativeModules: ["@apollo/client/core"],
+      },
+      to: {
+        module: "@apollo/client",
+      },
+      importType: "value",
+    })
+  ),
   // no direct 1:1 drop-in replacement
   // {
   //   from: { module: "@apollo/client/react/ssr", identifier: "renderToStringWithData" },

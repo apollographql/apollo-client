@@ -26,6 +26,7 @@
       "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
     }
   },
+  "files": ["src/global.d.ts"],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "mdx": {
     // Enable strict type checking in MDX files.

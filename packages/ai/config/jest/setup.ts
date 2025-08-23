@@ -1,6 +1,9 @@
 //@ts-ignore
 globalThis.__DEV__ = true;
 
+import * as matchers from "jest-extended";
+expect.extend(matchers);
+
 import { TextDecoder, TextEncoder } from "util";
 import "@testing-library/jest-dom";
 

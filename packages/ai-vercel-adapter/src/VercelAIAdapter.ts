@@ -1,4 +1,3 @@
-import { ApolloLink } from "@apollo/client";
 import { type LanguageModel, generateObject } from "ai";
 import { AIAdapter } from "@apollo/client-ai";
 import { isFormattedExecutionResult } from "@apollo/client/utilities";
@@ -26,15 +25,15 @@ export class VercelAIAdapter extends AIAdapter {
     this.model = options.model;
   }
 
-  public async generateResponseForOperation(
-    operation: ApolloLink.Operation,
-    prompt: string
+  public async generateObject(
+    prompt: string,
+    systemPrompt: string
   ): Promise<AIAdapter.Result> {
     const promptOptions: GenerateObjectOptions = {
       mode: "json",
       model: this.model,
-      prompt: this.createPrompt(operation, prompt),
-      system: this.systemPrompt,
+      prompt,
+      system: systemPrompt,
       output: "no-schema",
     };
 

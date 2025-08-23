@@ -2,7 +2,7 @@ import { AIAdapter } from "../AIAdapter.js";
 
 class DerivedAdapter extends AIAdapter {
   constructor() {
-    super();
+    super({});
   }
 
   public generateObject(prompt: string): Promise<any> {

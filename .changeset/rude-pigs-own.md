@@ -3,4 +3,4 @@
 "@apollo/client": patch
 ---
 
-Export `isNetworkStatusInFlight` from `@apollo/client/utilities` and move `isNetworkStatusSettled` to `@apollo/client/utilities`.
+Export `isNetworkStatusInFlight` from `@apollo/client/utilities`. Add `isNetworkStatusSettled` to `@apollo/client/utilities` and re-export it from `@apollo/client` instead. Add a deprecation for the re-export from `@apollo/client`.

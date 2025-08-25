@@ -151,6 +151,8 @@ export type {
 } from "@apollo/client/utilities";
 export {
   DocumentTransform,
+  /** @deprecated Please import `isNetworkRequestSettled` from `@apollo/client/utilities`. */
+  isNetworkRequestSettled,
   isReference,
   Observable,
 } from "@apollo/client/utilities";

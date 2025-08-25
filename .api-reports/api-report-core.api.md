@@ -529,12 +529,6 @@ export namespace InternalTypes {
     export type { NextFetchPolicyContext, QueryManager };
 }
 
-// @public
-export function isNetworkRequestInFlight(networkStatus?: NetworkStatus): boolean;
-
-// @public
-export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
-
 export { isReference }
 
 export { LinkError }
@@ -1136,8 +1130,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // Warnings were encountered during analysis:
 //
 // src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:360:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:175:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:361:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

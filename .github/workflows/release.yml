@@ -62,8 +62,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+  postrelease:
+    name: Postrelease
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.result == 'success' && fromJSON(needs.release.outputs.packages)[0] != null
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.release.outputs.packages) }}
+    steps:
       - name: Send a Slack notification on publish
-        if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
         id: slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
@@ -79,7 +87,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "A new version of `@apollo/client` was released :rocket:"
+                    "text": "A new version of `{{ matrix.package.name }}` was released :rocket:"
                   }
                 },
                 {
@@ -87,7 +95,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Version:*\n`${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}`"
+                      "text": "*Version:*\n`${{ matrix.package.version }}`"
                     },
                     {
                       "type": "mrkdwn",
@@ -95,7 +103,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|link>"
+                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/${{ matrix.package.name }}@${{ matrix.package.version }}|link>"
                     },
                     {
                       "type": "mrkdwn",

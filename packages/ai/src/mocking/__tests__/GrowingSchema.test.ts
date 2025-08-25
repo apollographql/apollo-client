@@ -260,36 +260,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles inline fragments", () => {
-      const query = gql`
-      query Search {
-        book {
-          ... on Book {
-            __typename
-            title
-          }
-        }
-      }
-      `;
-      const response = {
-        data: {
-          book: {
-            __typename: "Book",
-            title: "Moby Dick",
-          },
-        },
-      };
-      const expectedSchema = /* GraphQL */ `
-      type Query {
-      }
-      `;
-
-      const schema = new GrowingSchema();
-      schema.add({ query }, response);
-      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
-    });
-
-    it.skip("handles union types", () => {
+    it.skip("handles union types with inline fragments", () => {
       const query = gql`
       query Search {
         search(term: "Smith", first: 2, after: "ASDF") {
@@ -356,7 +327,36 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles interfaces", () => {
+    it.skip("handles a single inline fragment as a union", () => {
+      const query = gql`
+      query Search {
+        book {
+          ... on Book {
+            __typename
+            title
+          }
+        }
+      }
+      `;
+      const response = {
+        data: {
+          book: {
+            __typename: "Book",
+            title: "Moby Dick",
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+      type Query {
+      }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it.skip("handles a selection set with root fields and inline fragments as a union, contributing the root fields to all union members", () => {
       const query = gql`
       query Search($term: String!, $first: Int, $after: String) {
         search(term: $term, first: $first, after: $after) {
@@ -372,14 +372,14 @@ describe("GrowingSchema", () => {
               __typename
               # The root field should imply that this
               # is an interface, not a union.
-              id
-              ... on Author {
+              title
+              ... on Movie {
                 __typename
-                name
+                someField
               }
               ... on Book {
                 __typename
-                title
+                someOtherField
               }
             }
           }
@@ -428,7 +428,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles named fragments", () => {
+    it.skip("handles named fragments on a type", () => {
       const query = gql`
       query Search {
         book {
@@ -472,78 +472,6 @@ describe("GrowingSchema", () => {
           edges {
             __typename
             node {
-              ... AuthorFragment
-              ... BookFragment
-            }
-          }
-        }
-      }
-
-      fragment AuthorFragment on Author {
-        __typename
-        name
-      }
-
-      fragment BookFragment on Book {
-        __typename
-        title
-      }
-      `;
-      const response = {
-        data: {
-          search: {
-            __typename: "SearchConnection",
-            pageInfo: {
-              __typename: "PageInfo",
-              hasNextPage: true,
-              nextCursor: "eyJvZmZzZXQiOjJ9",
-            },
-            edges: [
-              {
-                __typename: "SearchEdge",
-                node: {
-                  __typename: "Author",
-                  name: "John Smith",
-                },
-              },
-              {
-                __typename: "SearchEdge",
-                node: {
-                  __typename: "Book",
-                  title: "The Art of Blacksmithing",
-                },
-              },
-            ],
-          },
-        },
-      };
-      const expectedSchema = /* GraphQL */ `
-      type Query {
-      }
-      `;
-
-      const schema = new GrowingSchema();
-      schema.add({ query }, response);
-      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
-    });
-
-    it.skip("handles interfaces with named fragments", () => {
-      const query = gql`
-      query Search($term: String!, $first: Int, $after: String) {
-        search(term: $term, first: $first, after: $after) {
-          __typename
-          pageInfo {
-            __typename
-            hasNextPage
-            nextCursor
-          }
-          edges {
-            __typename
-            node {
-              __typename
-              # The root field should imply that this
-              # is an interface, not a union.
-              id
               ... AuthorFragment
               ... BookFragment
             }

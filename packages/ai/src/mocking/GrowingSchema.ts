@@ -3,11 +3,13 @@ import type {
   DocumentNode,
   FieldDefinitionNode,
   FieldNode,
+  FormattedExecutionResult,
   GraphQLCompositeType,
   InputValueDefinitionNode,
   TypeNode,
 } from "graphql";
 import {
+  execute,
   extendSchema,
   FieldsOnCorrectTypeRule,
   GraphQLError,
@@ -21,8 +23,8 @@ import {
   visit,
   visitWithTypeInfo,
 } from "graphql";
-import { Maybe } from "graphql/jsutils/Maybe.js";
-import { AIAdapter } from "./AIAdapter.js";
+
+import type { AIAdapter } from "./AIAdapter.js";
 
 const rulesToIgnore = [
   FieldsOnCorrectTypeRule,
@@ -45,6 +47,8 @@ export class GrowingSchema {
     }),
   });
 
+  private seenQueries = new WeakSet<DocumentNode>();
+
   public validateQuery(query: DocumentNode) {
     const errors = validate(this.schema, query, enforcedRules);
     if (errors.length > 0) {
@@ -64,8 +68,25 @@ export class GrowingSchema {
     response: AIAdapter.Result
   ) {
     const query = operation.query;
+
+    if (!this.seenQueries.has(query)) {
+      this.seenQueries.add(query);
+      this.mergeQueryIntoSchema(operation, response);
+    }
     // @todo handle variables
     // const variables = operation.variables;
+
+    this.validateResponseAgainstSchema(query, operation, response);
+  }
+
+  public mergeQueryIntoSchema(
+    operation: {
+      query: DocumentNode;
+      variables?: Record<string, unknown>;
+    },
+    response: AIAdapter.Result
+  ) {
+    const query = operation.query;
 
     const typeInfo = new TypeInfo(this.schema);
     const responsePath = [response.data];
@@ -78,10 +99,26 @@ export class GrowingSchema {
       definitions: [],
     } satisfies DocumentNode;
 
-    const mergeExtensions = () => {
+    const mergeExtensions = ({
+      assumeValidSDL = false,
+      revisitAtPath,
+    }: {
+      assumeValidSDL?: boolean;
+      revisitAtPath?: ReadonlyArray<string | number>;
+    } = {}) => {
       this.schema = extendSchema(this.schema, accumulatedExtensions, {
-        assumeValidSDL: true,
+        assumeValidSDL,
       });
+
+      if (revisitAtPath) {
+        Object.assign(typeInfo, new TypeInfo(this.schema));
+        revisitAtPath.reduce((node: any, key: any) => {
+          const child = node[key];
+          typeInfo.enter(child);
+          return child;
+        }, query);
+      }
+
       accumulatedExtensions = {
         kind: Kind.DOCUMENT,
         definitions: [],
@@ -119,25 +156,37 @@ export class GrowingSchema {
               type
             );
 
-            const existingFieldDef = typeInfo.getFieldDef();
+            const existingFieldDef = typeInfo.getFieldDef()?.astNode;
             if (existingFieldDef) {
-              if (
-                this.newFieldDefinitionMatchesExistingFieldDefinition(
-                  newFieldDef,
-                  existingFieldDef.astNode
-                )
-              ) {
-                // The new and existing field definitions match, so we
+              const existingArguments = new Map(
+                existingFieldDef.arguments?.map((arg) => [arg.name.value, arg])
+              );
+              const additionalArgs =
+                newFieldDef.arguments?.filter(
+                  (arg) => !existingArguments.has(arg.name.value)
+                ) || [];
+
+              if (!additionalArgs.length) {
+                // The existing field definition is sufficient, so we
                 // can skip adding the new field definition to the schema.
                 return;
               }
-              // The new and existing field definitions don't match, so we
-              // need to attempt to merge them.
-              newFieldDef = this.mergeFieldDefinitions(
-                newFieldDef,
-                existingFieldDef.astNode,
-                type.name
-              );
+
+              accumulatedExtensions.definitions.push({
+                kind: Kind.OBJECT_TYPE_EXTENSION,
+                name: { kind: Kind.NAME, value: type.name },
+                fields: [
+                  {
+                    ...existingFieldDef,
+                    arguments: [
+                      ...(existingFieldDef.arguments || []),
+                      ...additionalArgs,
+                    ],
+                  },
+                ],
+              });
+              mergeExtensions({ assumeValidSDL: true, revisitAtPath: path });
+              return;
             }
 
             if (node.name.value === "__typename") {
@@ -162,19 +211,58 @@ export class GrowingSchema {
               // this selection set couldn't be entered correctly before, so we
               // need to merge the schema now, and have the type info start
               // from the top to navigate to the current node
+              mergeExtensions({ revisitAtPath: path });
+            } else {
               mergeExtensions();
-              Object.assign(typeInfo, new TypeInfo(this.schema));
-              path.reduce((node: any, key: any) => {
-                const child = node[key];
-                typeInfo.enter(child);
-                return child;
-              }, query);
             }
           },
         },
       })
     );
     mergeExtensions();
+  }
+
+  private validateResponseAgainstSchema(
+    query: DocumentNode,
+    operation: { query: DocumentNode; variables?: Record<string, unknown> },
+    response: FormattedExecutionResult<Record<string, any>, Record<string, any>>
+  ) {
+    const result = execute({
+      schema: this.schema,
+      document: query,
+      variableValues: operation.variables,
+      fieldResolver: (source, args, context, info) => {
+        const value = source[info.fieldName];
+        switch (info.returnType.toString()) {
+          case "String":
+            if (typeof value !== "string") {
+              throw new TypeError(`Value is not string: ${value}`);
+            }
+            break;
+          case "Float":
+            if (typeof value !== "number") {
+              throw new TypeError(`Value is not number: ${value}`);
+            }
+            break;
+          case "Boolean":
+            if (typeof value !== "boolean") {
+              throw new TypeError(`Value is not boolean: ${value}`);
+            }
+            break;
+        }
+
+        return value;
+      },
+      rootValue: response.data,
+    }) as FormattedExecutionResult;
+
+    if (result.errors?.length) {
+      throw new GraphQLError(
+        `Error executing query against grown schema: ${result.errors
+          .map((e) => e.message)
+          .join(", ")}`
+      );
+    }
   }
 
   private getFieldArguments(node: FieldNode): InputValueDefinitionNode[] {
@@ -279,125 +367,6 @@ export class GrowingSchema {
         },
       };
     }
-  }
-
-  /**
-   * Helper function to compare two TypeNode objects for equality
-   */
-  private typeNodesEqual(type1: TypeNode, type2: TypeNode): boolean {
-    if (type1.kind !== type2.kind) {
-      return false;
-    }
-
-    switch (type1.kind) {
-      case Kind.NAMED_TYPE:
-        return type1.name.value === (type2 as typeof type1).name.value;
-      case Kind.LIST_TYPE:
-        return this.typeNodesEqual(type1.type, (type2 as typeof type1).type);
-      case Kind.NON_NULL_TYPE:
-        return this.typeNodesEqual(type1.type, (type2 as typeof type1).type);
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Helper function to convert TypeNode to human-readable string
-   */
-  private static typeNodeToString(type: TypeNode): string {
-    switch (type.kind) {
-      case Kind.NAMED_TYPE:
-        return type.name.value;
-      case Kind.LIST_TYPE:
-        return `[${GrowingSchema.typeNodeToString(type.type)}]`;
-      case Kind.NON_NULL_TYPE:
-        return `${GrowingSchema.typeNodeToString(type.type)}!`;
-      default:
-        return "Unknown";
-    }
-  }
-
-  private newFieldDefinitionMatchesExistingFieldDefinition(
-    newFieldDef: FieldDefinitionNode,
-    existingFieldDef: Maybe<FieldDefinitionNode>
-  ): boolean {
-    if (!existingFieldDef) {
-      return false;
-    }
-    if (existingFieldDef.name.value !== newFieldDef.name.value) {
-      return false;
-    }
-
-    // Check arguments
-    const newArgs = newFieldDef.arguments || [];
-    const existingArgs = existingFieldDef.arguments || [];
-
-    // Check argument count
-    if (newArgs.length !== existingArgs.length) {
-      return false;
-    }
-
-    // Check each argument by name and type
-    for (const newArg of newArgs) {
-      const existingArg = existingArgs.find(
-        (arg) => arg.name.value === newArg.name.value
-      );
-
-      if (!existingArg) {
-        return false; // Argument name not found
-      }
-
-      // Check argument types
-      if (!this.typeNodesEqual(newArg.type, existingArg.type)) {
-        return false;
-      }
-    }
-
-    // Check field return types
-    if (!this.typeNodesEqual(newFieldDef.type, existingFieldDef.type)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * @todo handle existing field definition that doesn't match the new field definition
-   * We need to:
-   *
-   * - merge arguments
-   * - check return type
-   *   - If the return type is different, we need to throw an error
-   */
-  private mergeFieldDefinitions(
-    newFieldDef: FieldDefinitionNode,
-    existingFieldDef: Maybe<FieldDefinitionNode>,
-    parentTypeName: string
-  ): FieldDefinitionNode {
-    if (!existingFieldDef) {
-      return newFieldDef;
-    }
-
-    if (!this.typeNodesEqual(newFieldDef.type, existingFieldDef.type)) {
-      const existingReturnTypeString = GrowingSchema.typeNodeToString(
-        existingFieldDef.type
-      );
-      const newReturnTypeString = GrowingSchema.typeNodeToString(
-        newFieldDef.type
-      );
-      throw new GraphQLError(
-        `Field \`${parentTypeName}.${newFieldDef.name.value}\` return type mismatch. Previously defined return type: \`${existingReturnTypeString}\`, new return type: \`${newReturnTypeString}\``
-      );
-    }
-
-    const newArgs = newFieldDef.arguments || [];
-    const existingArgs = existingFieldDef.arguments || [];
-    const mergedArgs = [...existingArgs, ...newArgs];
-
-    return {
-      ...existingFieldDef,
-      arguments: mergedArgs,
-    };
   }
 
   public toString() {

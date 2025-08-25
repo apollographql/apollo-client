@@ -319,6 +319,7 @@ export class GrowingSchema {
     typename: string,
     type: GraphQLCompositeType
   ): FieldDefinitionNode {
+    const name = node.name.value;
     const args = this.getFieldArguments(node);
 
     // field not in schema
@@ -341,7 +342,7 @@ export class GrowingSchema {
       }
       return {
         kind: Kind.FIELD_DEFINITION,
-        name: { kind: Kind.NAME, value: node.name.value },
+        name: { kind: Kind.NAME, value: name },
         type: fieldReturnType,
         arguments: args,
       };
@@ -350,7 +351,7 @@ export class GrowingSchema {
       let valueType: string;
       switch (typeof actualValue) {
         case "string":
-          valueType = "String";
+          valueType = name === "id" ? "ID" : "String";
           break;
         case "number":
           valueType = "Float";
@@ -360,14 +361,14 @@ export class GrowingSchema {
           break;
         default:
           throw new GraphQLError(
-            `Scalar responses are not supported for field ${
-              node.name.value
-            } on type ${type.name} - received ${JSON.stringify(actualValue)}`
+            `Scalar responses are not supported for field ${name} on type ${
+              type.name
+            } - received ${JSON.stringify(actualValue)}`
           );
       }
       return {
         kind: Kind.FIELD_DEFINITION,
-        name: { kind: Kind.NAME, value: node.name.value },
+        name: { kind: Kind.NAME, value: name },
         type: {
           kind: Kind.NAMED_TYPE,
           name: { kind: Kind.NAME, value: valueType },

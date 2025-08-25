@@ -46,13 +46,13 @@ describe("GrowingSchema", () => {
         }
 
         type User {
-          id: String
+          id: ID
           name: String
           emails: [Email]
         }
 
         type Email {
-          id: String
+          id: ID
           kind: String
           value: String
         }
@@ -118,14 +118,14 @@ describe("GrowingSchema", () => {
         }
 
         type User {
-          id: String
+          id: ID
           name: String
           emails: [Email]
           lastName: String
         }
 
         type Email {
-          id: String
+          id: ID
           kind: String
           value: String
           foo: Float
@@ -161,7 +161,7 @@ describe("GrowingSchema", () => {
         }
 
         type User {
-          id: String
+          id: ID
           name: String
         }
       `;

@@ -69,14 +69,19 @@ export class GrowingSchema {
   ) {
     const query = operation.query;
 
-    if (!this.seenQueries.has(query)) {
-      this.seenQueries.add(query);
-      this.mergeQueryIntoSchema(operation, response);
-    }
-    // @todo handle variables
-    // const variables = operation.variables;
+    const previousSchema = this.schema;
 
-    this.validateResponseAgainstSchema(query, operation, response);
+    try {
+      if (!this.seenQueries.has(query)) {
+        this.seenQueries.add(query);
+        this.mergeQueryIntoSchema(operation, response);
+      }
+
+      this.validateResponseAgainstSchema(query, operation, response);
+    } catch (e) {
+      this.schema = previousSchema;
+      throw e;
+    }
   }
 
   public mergeQueryIntoSchema(
@@ -88,6 +93,8 @@ export class GrowingSchema {
   ) {
     const query = operation.query;
 
+    // @todo handle variables
+    // const variables = operation.variables;
     const typeInfo = new TypeInfo(this.schema);
     const responsePath = [response.data];
 

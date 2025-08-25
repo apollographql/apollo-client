@@ -73,11 +73,11 @@ export class GrowingSchema {
 
     try {
       if (!this.seenQueries.has(query)) {
-        this.seenQueries.add(query);
         this.mergeQueryIntoSchema(operation, response);
       }
 
       this.validateResponseAgainstSchema(query, operation, response);
+      this.seenQueries.add(query);
     } catch (e) {
       this.schema = previousSchema;
       throw e;

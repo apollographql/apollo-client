@@ -1438,6 +1438,9 @@ const _invalidateModifier: unique symbol;
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
+export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
+
+// @public
 export function isReference(obj: any): obj is Reference;
 
 // @public (undocumented)

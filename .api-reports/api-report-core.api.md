@@ -52,6 +52,7 @@ import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import { isNetworkRequestSettled } from '@apollo/client/utilities';
 import { isReference } from '@apollo/client/utilities';
 import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
@@ -528,6 +529,8 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 export namespace InternalTypes {
     export type { NextFetchPolicyContext, QueryManager };
 }
+
+export { isNetworkRequestSettled }
 
 export { isReference }
 

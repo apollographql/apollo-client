@@ -254,11 +254,11 @@ Apollo Client 4.0 provides a comprehensive codemod to automate migration:
 
 ```bash
 # Basic usage
-npx apollo-client-codemod-migrate-3-to-4 src
+npx @apollo/client-codemod-migrate-3-to-4 src
 
 # TypeScript projects (run separately)
-npx apollo-client-codemod-migrate-3-to-4 --parser ts --extensions ts src
-npx apollo-client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
+npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
+npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
 
 The codemod handles:

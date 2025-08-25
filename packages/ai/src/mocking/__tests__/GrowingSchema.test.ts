@@ -223,7 +223,7 @@ describe("GrowingSchema", () => {
 
       expect(error).toBeInstanceOf(GraphQLError);
       expect(error?.message).toEqual(
-        "Field `Query.users` return type mismatch. Previously defined return type: `[User]`, new return type: `UserConnection`"
+        'Error executing query against grown schema: Expected Iterable, but did not find one for field "Query.users".'
       );
     });
 

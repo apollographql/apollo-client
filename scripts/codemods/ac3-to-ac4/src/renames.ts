@@ -710,14 +710,17 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       importType: "type",
     })
   ),
-  ...[{ from: "isNetworkRequestInFlight" }].map(
+  ...[
+    { from: "isNetworkRequestInFlight" },
+    { from: "isNetworkRequestSettled" },
+  ].map(
     moveInto({
       from: {
         module: "@apollo/client/core/networkStatus",
-        alternativeModules: ["@apollo/client/core"],
+        alternativeModules: ["@apollo/client/core", "@apollo/client"],
       },
       to: {
-        module: "@apollo/client",
+        module: "@apollo/client/utilities",
       },
       importType: "value",
     })

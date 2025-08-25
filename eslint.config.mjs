@@ -153,6 +153,8 @@ export default [
       parserOptions: {
         project: [
           "./tsconfig.json",
+          "./packages/ai/tsconfig.json",
+          "./packages/ai-vercel-adapter/tsconfig.json",
           "./codegen/tsconfig.json",
           "./config/tsconfig.json",
           "./docs/tsconfig.json",

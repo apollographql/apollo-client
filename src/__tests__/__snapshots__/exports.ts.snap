@@ -395,6 +395,8 @@ Array [
   "getMainDefinition",
   "isFormattedExecutionResult",
   "isMutationOperation",
+  "isNetworkRequestInFlight",
+  "isNetworkRequestSettled",
   "isQueryOperation",
   "isReference",
   "isSubscriptionOperation",

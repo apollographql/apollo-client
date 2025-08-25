@@ -27,7 +27,7 @@ export type {
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
+export { NetworkStatus } from "./networkStatus.js";
 export type {
   DataState,
   DataValue,
@@ -151,6 +151,8 @@ export type {
 } from "@apollo/client/utilities";
 export {
   DocumentTransform,
+  /** @deprecated Please import `isNetworkRequestSettled` from `@apollo/client/utilities`. */
+  isNetworkRequestSettled,
   isReference,
   Observable,
 } from "@apollo/client/utilities";

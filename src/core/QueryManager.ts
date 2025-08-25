@@ -40,7 +40,12 @@ import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { cacheSizes, DocumentTransform, print } from "@apollo/client/utilities";
+import {
+  cacheSizes,
+  DocumentTransform,
+  isNetworkRequestInFlight,
+  print,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
@@ -66,7 +71,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {

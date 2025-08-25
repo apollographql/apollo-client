@@ -40,3 +40,6 @@ export { cacheSizes } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";
 
 export type { HKT } from "./HKT.js";
+
+export { isNetworkRequestInFlight } from "./isNetworkRequestInFlight.js";
+export { isNetworkRequestSettled } from "./isNetworkRequestSettled.js";

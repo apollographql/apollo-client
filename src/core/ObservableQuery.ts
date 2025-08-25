@@ -14,6 +14,7 @@ import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
+import { isNetworkRequestInFlight } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
@@ -28,7 +29,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import { NetworkStatus } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   DataState,

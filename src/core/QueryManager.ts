@@ -43,8 +43,8 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import {
   cacheSizes,
   DocumentTransform,
-  print,
   isNetworkRequestInFlight,
+  print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {

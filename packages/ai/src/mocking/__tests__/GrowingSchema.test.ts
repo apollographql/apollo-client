@@ -227,7 +227,7 @@ describe("GrowingSchema", () => {
       );
     });
 
-    it.skip("handles variables", () => {
+    it("handles scalar variables", () => {
       const query = gql`
       query Search($bookId: ID!, $arg: String!) {
         book(id: $bookId) {
@@ -252,6 +252,112 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
         type Query {
+          book(id: ID!): Book
+        }
+
+        type Book {
+          title: String
+          anotherField(arg: String!): Boolean
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query, variables }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it.skip("handles input object variables", () => {
+      const query = gql`
+      query SearchByAuthor($author: AuthorInput!, $arg: SomeArgInput!) {
+        bookByAuthor(author: $author) {
+          __typename
+          title
+          anotherField(arg: $arg)
+        }
+      }
+      `;
+      const variables = {
+        author: {
+          name: "John Smith",
+        },
+        arg: {
+          foo: "bar",
+        },
+      };
+      const response = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "Moby Dick",
+            anotherField: true,
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(author: AuthorInput!): Book
+        }
+
+        input AuthorInput {
+          name: String
+        }
+
+        type Book {
+          title: String
+          anotherField(arg: SomeArgInput!): Boolean
+        }
+
+        input SomeArgInput {
+          foo: String
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query, variables }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it.skip("handles nested input object variables", () => {
+      const query = gql`
+      query SearchByAuthor($author: AuthorInput!) {
+        bookByAuthor(author: $author) {
+          __typename
+          title
+        }
+      }
+      `;
+      const variables = {
+        author: {
+          name: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+        },
+      };
+      const response = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "Moby Dick",
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(author: AuthorInput!): Book
+        }
+
+        input AuthorInput {
+          name: NameInput
+        }
+
+        input NameInput {
+          firstName: String
+          lastName: String
+        }
+
+        type Book {
+          title: String
         }
       `;
 

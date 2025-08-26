@@ -1,4 +1,5 @@
 import type {
+  ASTNode,
   DefinitionNode,
   DocumentNode,
   FieldDefinitionNode,
@@ -7,6 +8,7 @@ import type {
   GraphQLCompositeType,
   InputValueDefinitionNode,
   TypeNode,
+  VariableDefinitionNode,
 } from "graphql";
 import {
   execute,
@@ -38,6 +40,10 @@ const rulesToIgnore = [
 const enforcedRules = specifiedRules.filter(
   (rule) => !rulesToIgnore.includes(rule)
 );
+
+const isSingle = <T>(item: T | readonly T[]): item is T => !Array.isArray(item);
+
+type OperationVariableDefinitions = Record<string, TypeNode>;
 
 export class GrowingSchema {
   public schema = new GraphQLSchema({
@@ -155,12 +161,16 @@ export class GrowingSchema {
               );
             }
 
+            const operationVariableDefinitions =
+              this.getVariableDefinitionsFromAncestors(ancestors);
+
             let newFieldDef = this.getFieldDefinition(
               node,
               isList,
               actualValue,
               typename,
-              type
+              type,
+              operationVariableDefinitions
             );
 
             const existingFieldDef = typeInfo.getFieldDef()?.astNode;
@@ -272,24 +282,68 @@ export class GrowingSchema {
     }
   }
 
-  private getFieldArguments(node: FieldNode): InputValueDefinitionNode[] {
-    // @todo we need to handle named input object arguments
-    // For now, we'll only handle build-in scalar arguments
+  private getVariableDefinitionsFromAncestors(
+    ancestors: readonly (ASTNode | readonly ASTNode[])[]
+  ): OperationVariableDefinitions {
+    const operationDefinition = ancestors.find(
+      (ancestor) =>
+        isSingle(ancestor) && ancestor.kind === Kind.OPERATION_DEFINITION
+    );
+    if (!operationDefinition) {
+      return {};
+    }
+    return (
+      operationDefinition.variableDefinitions?.reduce(
+        (acc, variable) => ({
+          ...acc,
+          [variable.variable.name.value]: variable.type,
+        }),
+        {}
+      ) ?? {}
+    );
+  }
+
+  private getFieldArguments(
+    node: FieldNode,
+    operationVariableDefinitions: OperationVariableDefinitions
+  ): InputValueDefinitionNode[] {
     return (
       node.arguments?.map((arg) => {
-        let valueType: string;
+        let valueType: TypeNode;
         switch (arg.value.kind) {
+          case Kind.VARIABLE:
+            const variableDefinition =
+              operationVariableDefinitions[arg.value.name.value];
+            if (!variableDefinition) {
+              throw new GraphQLError(
+                `Variable \`${arg.value.name.value}\` is not defined`
+              );
+            }
+            valueType = variableDefinition;
+            break;
           case Kind.STRING:
-            valueType = "String";
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: "String" },
+            };
             break;
           case Kind.INT:
-            valueType = "Int";
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: "Int" },
+            };
             break;
           case Kind.FLOAT:
-            valueType = "Float";
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: "Float" },
+            };
             break;
           case Kind.BOOLEAN:
-            valueType = "Boolean";
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: "Boolean" },
+            };
             break;
           default:
             throw new GraphQLError(
@@ -303,10 +357,7 @@ export class GrowingSchema {
         return {
           kind: Kind.INPUT_VALUE_DEFINITION,
           name: arg.name,
-          type: {
-            kind: Kind.NAMED_TYPE,
-            name: { kind: Kind.NAME, value: valueType },
-          },
+          type: valueType,
         };
       }) ?? []
     );
@@ -317,14 +368,15 @@ export class GrowingSchema {
     isList: boolean,
     actualValue: any,
     typename: string,
-    type: GraphQLCompositeType
+    type: GraphQLCompositeType,
+    operationVariableDefinitions: OperationVariableDefinitions
   ): FieldDefinitionNode {
     const name = node.name.value;
-    const args = this.getFieldArguments(node);
+    const args = this.getFieldArguments(node, operationVariableDefinitions);
 
-    // field not in schema
+    // Handle fields not in schema
     if (node.selectionSet) {
-      // either an object or a list type
+      // Handle object or list types
       if (!typename) {
         throw new GraphQLError(
           `Field ${node.name.value} on type ${type.name} is missing __typename in response data`
@@ -346,35 +398,36 @@ export class GrowingSchema {
         type: fieldReturnType,
         arguments: args,
       };
-    } else {
-      // scalar type
-      let valueType: string;
-      switch (typeof actualValue) {
-        case "string":
-          valueType = name === "id" ? "ID" : "String";
-          break;
-        case "number":
-          valueType = "Float";
-          break;
-        case "boolean":
-          valueType = "Boolean";
-          break;
-        default:
-          throw new GraphQLError(
-            `Scalar responses are not supported for field ${name} on type ${
-              type.name
-            } - received ${JSON.stringify(actualValue)}`
-          );
-      }
-      return {
-        kind: Kind.FIELD_DEFINITION,
-        name: { kind: Kind.NAME, value: name },
-        type: {
-          kind: Kind.NAMED_TYPE,
-          name: { kind: Kind.NAME, value: valueType },
-        },
-      };
     }
+
+    // Handle scalar types
+    let valueType: string;
+    switch (typeof actualValue) {
+      case "string":
+        valueType = name === "id" ? "ID" : "String";
+        break;
+      case "number":
+        valueType = "Float";
+        break;
+      case "boolean":
+        valueType = "Boolean";
+        break;
+      default:
+        throw new GraphQLError(
+          `Scalar responses are not supported for field ${name} on type ${
+            type.name
+          } - received ${JSON.stringify(actualValue)}`
+        );
+    }
+    return {
+      kind: Kind.FIELD_DEFINITION,
+      name: { kind: Kind.NAME, value: name },
+      type: {
+        kind: Kind.NAMED_TYPE,
+        name: { kind: Kind.NAME, value: valueType },
+      },
+      arguments: args,
+    };
   }
 
   public toString() {

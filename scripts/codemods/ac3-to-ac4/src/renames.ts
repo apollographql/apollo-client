@@ -721,6 +721,7 @@ export const renames: Array<IdentifierRename | ModuleRename> = [
       },
       to: {
         module: "@apollo/client/utilities",
+        alternativeModules: [],
       },
       importType: "value",
     })

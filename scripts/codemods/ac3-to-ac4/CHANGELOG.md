@@ -1,5 +1,11 @@
 # @apollo/client-codemod-migrate-3-to-4
 
+## 1.0.2
+
+### Patch Changes
+
+- [#12879](https://github.com/apollographql/apollo-client/pull/12879) [`56b2094`](https://github.com/apollographql/apollo-client/commit/56b20945a2c3d3fb227d5ede3b705a5c58801b7d) Thanks [@phryneas](https://github.com/phryneas)! - Fix an issue where `networkStatus` would not be moved into the correct package.
+
 ## 1.0.1
 
 ### Patch Changes

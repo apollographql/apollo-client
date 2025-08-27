@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.2
+
+### Patch Changes
+
+- [#12880](https://github.com/apollographql/apollo-client/pull/12880) [`56fac52`](https://github.com/apollographql/apollo-client/commit/56fac522549eaed5494097dc0098ea7a558382a0) Thanks [@phryneas](https://github.com/phryneas)! - restore `getMemoryInternals` access in dev builds
+
 ## 4.0.1
 
 ### Patch Changes

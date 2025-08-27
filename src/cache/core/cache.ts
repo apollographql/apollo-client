@@ -541,7 +541,7 @@ export abstract class ApolloCache {
    * information to the DevTools.
    * Use at your own risk!
    */
-  public getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+  public declare getMemoryInternals?: typeof getApolloCacheMemoryInternals;
 }
 
 if (__DEV__) {

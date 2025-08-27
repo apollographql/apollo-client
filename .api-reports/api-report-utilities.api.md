@@ -13,6 +13,7 @@ import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
 import type { FormattedExecutionResult } from 'graphql';
 import { getMainDefinition } from '@apollo/client/utilities/internal';
+import type { NetworkStatus } from '@apollo/client';
 import { Observable } from 'rxjs';
 import type { Primitive } from '@apollo/client/utilities/internal';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
@@ -136,6 +137,12 @@ export function isFormattedExecutionResult(result?: object): result is Formatted
 
 // @public
 export function isMutationOperation(document: DocumentNode_2): boolean;
+
+// @public
+export function isNetworkRequestInFlight(networkStatus?: NetworkStatus): boolean;
+
+// @public
+export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 // @public
 export function isQueryOperation(document: DocumentNode_2): boolean;

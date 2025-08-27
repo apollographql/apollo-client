@@ -25,7 +25,7 @@ export async function processInvariants(options: BuildStepOptions) {
   };
   type ExportName = keyof typeof allExports;
 
-  allExports.errorCodes.comments = [
+  program.comments = [
     b.commentLine(
       " This file is used by the error message display website and the",
       true
@@ -33,6 +33,40 @@ export async function processInvariants(options: BuildStepOptions) {
     b.commentLine(" @apollo/client/includeErrors entry point.", true),
     b.commentLine(" This file is not meant to be imported manually.", true),
   ];
+
+  if (options.type === "cjs") {
+    program.body.unshift(
+      b.expressionStatement(
+        b.callExpression(
+          b.memberExpression(
+            b.identifier("Object"),
+            b.identifier("defineProperty")
+          ),
+          [
+            b.identifier("exports"),
+            b.stringLiteral("__esModule"),
+            b.objectExpression([
+              b.property("init", b.identifier("value"), b.booleanLiteral(true)),
+            ]),
+          ]
+        )
+      ),
+      b.expressionStatement(
+        Object.keys(allExports).reduce<
+          | recast.types.namedTypes.UnaryExpression
+          | recast.types.namedTypes.AssignmentExpression
+        >(
+          (right, name) =>
+            b.assignmentExpression(
+              "=",
+              b.memberExpression(b.identifier("exports"), b.identifier(name)),
+              right
+            ),
+          b.unaryExpression("void", b.numericLiteral(0), true)
+        )
+      )
+    );
+  }
 
   await applyRecast({
     cwd: options.targetDir,
@@ -49,13 +83,29 @@ export async function processInvariants(options: BuildStepOptions) {
 
   function getExportObject(exportName: string) {
     const object = b.objectExpression([]);
-    program.body.push(
-      b.exportNamedDeclaration(
-        b.variableDeclaration("const", [
-          b.variableDeclarator(b.identifier(exportName), object),
-        ])
-      )
-    );
+
+    if (options.type === "esm") {
+      program.body.push(
+        b.exportNamedDeclaration(
+          b.variableDeclaration("const", [
+            b.variableDeclarator(b.identifier(exportName), object),
+          ])
+        )
+      );
+    } else {
+      program.body.push(
+        b.expressionStatement(
+          b.assignmentExpression(
+            "=",
+            b.memberExpression(
+              b.identifier("exports"),
+              b.identifier(exportName)
+            ),
+            object
+          )
+        )
+      );
+    }
     return object;
   }
 

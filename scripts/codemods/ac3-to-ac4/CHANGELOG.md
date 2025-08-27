@@ -1,5 +1,11 @@
 # @apollo/client-codemod-migrate-3-to-4
 
+## 1.0.1
+
+### Patch Changes
+
+- [#12866](https://github.com/apollographql/apollo-client/pull/12866) [`0d1614a`](https://github.com/apollographql/apollo-client/commit/0d1614a9dfca2b1bcf4ea40095cc9018d6314532) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export `isNetworkStatusInFlight` from `@apollo/client/utilities`. Add `isNetworkStatusSettled` to `@apollo/client/utilities` and re-export it from `@apollo/client` with a deprecation.
+
 ## 1.0.0
 
 ### Major Changes

@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.0.1
+
+### Patch Changes
+
+- [#12876](https://github.com/apollographql/apollo-client/pull/12876) [`b00f231`](https://github.com/apollographql/apollo-client/commit/b00f231e5f10a23178cf7a2c69a4e13cd959ab45) Thanks [@phryneas](https://github.com/phryneas)! - Fix CJS build output for `invariantErrorCodes`
+
+- [#12866](https://github.com/apollographql/apollo-client/pull/12866) [`0d1614a`](https://github.com/apollographql/apollo-client/commit/0d1614a9dfca2b1bcf4ea40095cc9018d6314532) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export `isNetworkStatusInFlight` from `@apollo/client/utilities`. Add `isNetworkStatusSettled` to `@apollo/client/utilities` and re-export it from `@apollo/client` with a deprecation.
+
 ## 4.0.0
 
 # Apollo Client 4.0 Release Notes
@@ -254,11 +262,11 @@ Apollo Client 4.0 provides a comprehensive codemod to automate migration:
 
 ```bash
 # Basic usage
-npx apollo-client-codemod-migrate-3-to-4 src
+npx @apollo/client-codemod-migrate-3-to-4 src
 
 # TypeScript projects (run separately)
-npx apollo-client-codemod-migrate-3-to-4 --parser ts --extensions ts src
-npx apollo-client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
+npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
+npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
 
 The codemod handles:

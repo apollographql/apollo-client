@@ -1537,7 +1537,7 @@ export class ApolloClient {
    * }
    * ```
    */
-  public getMemoryInternals?: typeof getApolloClientMemoryInternals;
+  public declare getMemoryInternals?: typeof getApolloClientMemoryInternals;
 }
 
 if (__DEV__) {

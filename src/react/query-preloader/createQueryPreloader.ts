@@ -19,7 +19,7 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
-import { FinalizationRegistry } from "@apollo/client/utilities/internal/polyfilled";
+import { FinalizationRegistry } from "@apollo/client/utilities/internal/ponyfills";
 
 import { wrapHook } from "../hooks/internal/index.js";
 

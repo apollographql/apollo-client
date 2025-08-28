@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Ensure `invariantErrorCodes.js` is importable
+Ensure `invariantErrorCodes.js`/`invariantErrorCodes.cjs` is importable.

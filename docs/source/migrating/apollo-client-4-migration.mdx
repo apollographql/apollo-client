@@ -1488,7 +1488,7 @@ You can read more about this decision and recommendations on what to do instead 
 
 #### `toPromise` moved from `queryRef` to the `preloadQuery` function
 
-To make `queryRef` objects more serializable for SSR environments, the `toPromise` method has been removed from the `queryRef` object and instead added as a property on the `preloadQuery` function.
+The `toPromise` method now exists as a property on the `preloadQuery` function instead of on the `queryRef` object. This change makes `queryRef` objects more serializable for SSR environments.
 
 To migrate, call `preloadQuery.toPromise` and pass it the `queryRef`.
 

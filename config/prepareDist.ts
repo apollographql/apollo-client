@@ -43,6 +43,7 @@ export const prepareDist: BuildStep = async (options) => {
       packageJson.exports = {
         "./package.json": "./package.json",
         "./invariantErrorCodes.js": "./invariantErrorCodes.js",
+        "./invariantErrorCodes.cjs": "./__cjs/invariantErrorCodes.cjs",
         "./*.js": "./legacyEntryPoints/*.js",
         "./*.cjs": "./legacyEntryPoints/*.cjs",
         "./*.d.ts": "./legacyEntryPoints/*.d.ts",

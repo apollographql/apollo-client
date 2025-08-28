@@ -66,6 +66,10 @@
       "production": "./src/utilities/internal/index.production.ts",
       "default": "./src/utilities/internal/index.ts"
     },
+    "./utilities/polyfilled": {
+      "react-native": "./src/utilities/internal/polyfilled/index.react-native.ts",
+      "default": "./src/utilities/internal/polyfilled/index.ts"
+    },
     "./utilities/internal/globals": "./src/utilities/internal/globals/index.ts",
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/invariant": {

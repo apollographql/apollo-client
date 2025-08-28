@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/react";
 
-// eslint-disable-next-line local-rules/no-relative-imports
+// eslint-disable-next-line
 import { FinalizationRegistry } from "../FinalizationRegistry.js";
 
 test("register", async () => {

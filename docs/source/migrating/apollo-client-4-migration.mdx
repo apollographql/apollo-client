@@ -1484,6 +1484,23 @@ The `onCompleted` and `onError` callback options have been removed. Their behavi
 
 You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
+### Changes to `preloadQuery`
+
+#### `toPromise` moved from `queryRef` to the `preloadQuery` function
+
+To make `queryRef` objects more serializable for SSR environments, the `toPromise` method has been removed from the `queryRef` object and instead added as a property on the `preloadQuery` function.
+
+To migrate, call `preloadQuery.toPromise` and pass it the `queryRef`.
+
+```ts disableCopy=true
+function loader() {
+  const queryRef = preloadQuery(QUERY, options);
+
+  return queryRef.toPromise();// [!code --]
+  return preloadQuery.toPromise(queryRef);// [!code ++]
+}
+```
+
 ### Recommended: Avoid using generated hooks
 
 Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen](https://the-guild.dev/graphql/codegen), you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.

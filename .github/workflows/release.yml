@@ -20,6 +20,9 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

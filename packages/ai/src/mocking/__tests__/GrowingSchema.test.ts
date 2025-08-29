@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 import { GrowingSchema } from "../GrowingSchema.js";
 import { GraphQLError } from "graphql";
+import { first } from "rxjs";
 
 describe("GrowingSchema", () => {
   it("creates a base schema when instantiated", () => {
@@ -223,7 +224,7 @@ describe("GrowingSchema", () => {
 
       expect(error).toBeInstanceOf(GraphQLError);
       expect(error?.message).toEqual(
-        'Error executing query against grown schema: Expected Iterable, but did not find one for field "Query.users".'
+        'Error executing query `GetUser2` against grown schema: Expected Iterable, but did not find one for field "Query.users".'
       );
     });
 
@@ -288,7 +289,7 @@ describe("GrowingSchema", () => {
         data: {
           bookByAuthor: {
             __typename: "Book",
-            title: "Moby Dick",
+            title: "The Tardis",
             anotherField: true,
           },
         },
@@ -343,7 +344,7 @@ describe("GrowingSchema", () => {
         data: {
           bookByAuthor: {
             __typename: "Book",
-            title: "Moby Dick",
+            title: "The Tardis",
           },
         },
       };
@@ -376,6 +377,183 @@ describe("GrowingSchema", () => {
       const schema = new GrowingSchema();
       schema.add({ query, variables }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("handles repeated input object variables for a single query", () => {
+      const query = gql`
+      query SearchByAuthor($author: AuthorInput!) {
+        bookByAuthor(author: $author) {
+          __typename
+          title
+          anotherField(author: $author)
+        }
+      }
+      `;
+      const variables = {
+        author: {
+          name: {
+            firstName: "John",
+            lastName: "Smith",
+            nickName: {
+              full: "The Doctor",
+              short: "Dr.",
+            },
+            age: 2000,
+          },
+        },
+      };
+      const response = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "The Tardis",
+            anotherField: true,
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(author: AuthorInput!): Book
+        }
+
+        input AuthorInput {
+          name: NameInput
+        }
+
+        input NameInput {
+          firstName: String
+          lastName: String
+          nickName: NickNameInput
+          age: Int
+        }
+
+        input NickNameInput {
+          full: String
+          short: String
+        }
+
+        type Book {
+          title: String
+          anotherField(author: AuthorInput!): Boolean
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query, variables }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("handles repeated input object variables across multiple queries", () => {
+      const firstQuery = gql`
+      query SearchByAuthor($author: AuthorInput!) {
+        bookByAuthor(author: $author) {
+          __typename
+          title
+        }
+      }
+      `;
+      const firstVariables = {
+        author: {
+          name: {
+            nickName: {
+              full: "The Doctor",
+            },
+          },
+        },
+      };
+      const firstResponse = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "The Tardis",
+          },
+        },
+      };
+      const firstExpectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(author: AuthorInput!): Book
+        }
+
+        input AuthorInput {
+          name: NameInput
+        }
+
+        input NameInput {
+          nickName: NickNameInput
+        }
+
+        input NickNameInput {
+          full: String
+        }
+
+        type Book {
+          title: String
+        }
+      `;
+      const secondQuery = gql`
+      query SearchByAuthor($author: AuthorInput!) {
+        bookByAuthor(author: $author) {
+          __typename
+          title
+        }
+      }
+      `;
+      const secondVariables = {
+        author: {
+          name: {
+            firstName: "John",
+            lastName: "Smith",
+            nickName: {
+              short: "Dr.",
+            },
+          },
+        },
+      };
+      const secondResponse = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "The Tardis",
+          },
+        },
+      };
+      const secondExpectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(author: AuthorInput!): Book
+        }
+
+        input AuthorInput {
+          name: NameInput
+        }
+
+        input NameInput {
+          nickName: NickNameInput
+          firstName: String
+          lastName: String
+        }
+
+        input NickNameInput {
+          full: String
+          short: String
+        }
+
+        type Book {
+          title: String
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add(
+        { query: firstQuery, variables: firstVariables },
+        firstResponse
+      );
+      expect(schema.toString()).toEqualIgnoringWhitespace(firstExpectedSchema);
+
+      schema.add(
+        { query: secondQuery, variables: secondVariables },
+        secondResponse
+      );
+      expect(schema.toString()).toEqualIgnoringWhitespace(secondExpectedSchema);
     });
 
     it.skip("handles union types with inline fragments", () => {

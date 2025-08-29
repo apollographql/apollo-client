@@ -18,6 +18,7 @@ import {
   extendSchema,
   FieldsOnCorrectTypeRule,
   GraphQLError,
+  GraphQLInputObjectType,
   GraphQLObjectType,
   GraphQLSchema,
   Kind,
@@ -60,6 +61,11 @@ const ScalarTypes = ["String", "Int", "Float", "Boolean", "ID"];
 
 export type OperationVariableDefinitions = Record<string, TypeNode>;
 
+type GraphQLOperation = {
+  query: DocumentNode;
+  variables?: Record<string, unknown>;
+};
+
 type InputObject = InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode;
 type InputObjectsList = InputObject[];
 
@@ -71,7 +77,16 @@ export class GrowingSchema {
     }),
   });
 
-  private seenQueries = new WeakSet<DocumentNode>();
+  // We need to track the seen queries with their variables to
+  // accommodate changes to the input objects defined via the
+  // variables.
+  //
+  // This will likely result in extra schema building attempts
+  // that are mostly "skipped" but are necessary to ensure that
+  // the input objects are correct.
+  private seenQueries = new WeakSet<GraphQLOperation>();
+
+  private seenInputObjects: Record<string, string[]> = {};
 
   public validateQuery(query: DocumentNode) {
     const errors = validate(this.schema, query, enforcedRules);
@@ -84,24 +99,27 @@ export class GrowingSchema {
     }
   }
 
-  public add(
-    operation: {
-      query: DocumentNode;
-      variables?: Record<string, unknown>;
-    },
-    response: AIAdapter.Result
-  ) {
-    const query = operation.query;
-
+  public add(operation: GraphQLOperation, response: AIAdapter.Result) {
     const previousSchema = this.schema;
 
     try {
-      if (!this.seenQueries.has(query)) {
+      if (!this.seenQueries.has(operation)) {
         this.mergeQueryIntoSchema(operation, response);
       }
 
-      this.validateResponseAgainstSchema(query, operation, response);
-      this.seenQueries.add(query);
+      this.validateResponseAgainstSchema(operation, response);
+      this.seenQueries.add(operation);
+
+      // Track the fields of each input object so we can avoid
+      // creating duplicate input objects.
+      Object.entries(this.schema.getTypeMap()).forEach(([name, node]) => {
+        if (node instanceof GraphQLInputObjectType) {
+          this.seenInputObjects[name] =
+            node.astNode?.fields?.map((field) => {
+              return field.name.value;
+            }) || [];
+        }
+      });
     } catch (e) {
       this.schema = previousSchema;
       throw e;
@@ -109,10 +127,7 @@ export class GrowingSchema {
   }
 
   public mergeQueryIntoSchema(
-    operation: {
-      query: DocumentNode;
-      variables?: Record<string, unknown>;
-    },
+    operation: GraphQLOperation,
     response: AIAdapter.Result
   ) {
     const query = operation.query;
@@ -299,13 +314,12 @@ export class GrowingSchema {
   }
 
   private validateResponseAgainstSchema(
-    query: DocumentNode,
-    operation: { query: DocumentNode; variables?: Record<string, unknown> },
+    operation: GraphQLOperation,
     response: FormattedExecutionResult<Record<string, any>, Record<string, any>>
   ) {
     const result = execute({
       schema: this.schema,
-      document: query,
+      document: operation.query,
       variableValues: operation.variables,
       fieldResolver: (source, args, context, info) => {
         const value = source[info.fieldName];
@@ -333,8 +347,13 @@ export class GrowingSchema {
     }) as FormattedExecutionResult;
 
     if (result.errors?.length) {
+      const operationName = operation.query.definitions.find(
+        (def) => def.kind === Kind.OPERATION_DEFINITION
+      )?.name?.value;
       throw new GraphQLError(
-        `Error executing query against grown schema: ${result.errors
+        `Error executing query \`${
+          operationName ? operationName : "unnamed query"
+        }\` against grown schema: ${result.errors
           .map((e) => e.message)
           .join(", ")}`
       );
@@ -493,13 +512,18 @@ export class GrowingSchema {
     name: string,
     variableValue: any
   ): InputObjectsList {
-    const { fields, inputObjects } =
-      this.getInputValueDefinitionsFromVariables(variableValue);
+    const { fields, inputObjects } = this.getInputValueDefinitionsFromVariables(
+      name,
+      variableValue
+    );
     // Return this input object and any other input objects
     // created from its fields.
     return [
       {
-        kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
+        kind:
+          this.seenInputObjects[name] ?
+            Kind.INPUT_OBJECT_TYPE_EXTENSION
+          : Kind.INPUT_OBJECT_TYPE_DEFINITION,
         name: { kind: Kind.NAME, value: name },
         fields,
       },
@@ -507,13 +531,16 @@ export class GrowingSchema {
     ];
   }
 
-  getInputValueDefinitionsFromVariables(valuesInScope: any): {
+  getInputValueDefinitionsFromVariables(
+    inputObjectName: string,
+    valuesInScope: any
+  ): {
     fields: InputValueDefinitionNode[];
     inputObjects: InputObjectsList;
   } {
     const inputObjects: InputObjectsList = [];
-    const fields = Object.entries(valuesInScope).map(
-      ([fieldName, fieldVariableValue]) => {
+    const fields = Object.entries(valuesInScope)
+      .map(([fieldName, fieldVariableValue]) => {
         let valueType: TypeNode;
         switch (typeof fieldVariableValue) {
           case "object":
@@ -574,8 +601,11 @@ export class GrowingSchema {
           name: { kind: Kind.NAME, value: fieldName },
           type: valueType,
         } as InputValueDefinitionNode;
-      }
-    );
+      })
+      .filter(
+        (field) =>
+          !this.seenInputObjects[inputObjectName]?.includes(field.name.value)
+      );
     return { fields, inputObjects };
   }
 

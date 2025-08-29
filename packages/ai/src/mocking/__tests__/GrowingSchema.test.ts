@@ -230,17 +230,18 @@ describe("GrowingSchema", () => {
 
     it("handles scalar variables", () => {
       const query = gql`
-      query Search($bookId: ID!, $arg: String!) {
+      query Search($bookId: ID!, $arg: String!, $nullable: String) {
         book(id: $bookId) {
           __typename
           title
-          anotherField(arg: $arg)
+          anotherField(arg: $arg, nullable: $nullable)
         }
       }
       `;
       const variables = {
         bookId: "ASDF",
         arg: "QWERTY",
+        nullable: null,
       };
       const response = {
         data: {
@@ -258,7 +259,7 @@ describe("GrowingSchema", () => {
 
         type Book {
           title: String
-          anotherField(arg: String!): Boolean
+          anotherField(arg: String!, nullable: String): Boolean
         }
       `;
 
@@ -282,7 +283,7 @@ describe("GrowingSchema", () => {
           name: "John Smith",
         },
         arg: {
-          foo: "bar",
+          foo: null,
         },
       };
       const response = {

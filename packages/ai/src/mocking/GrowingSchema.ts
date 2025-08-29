@@ -132,7 +132,6 @@ export class GrowingSchema {
   ) {
     const query = operation.query;
 
-    // @todo handle variables
     const variables = operation.variables;
     const typeInfo = new TypeInfo(this.schema);
     const responsePath = [response.data];
@@ -191,7 +190,7 @@ export class GrowingSchema {
           const relatedVariable =
             variables?.[variableDefinition.variable.name.value];
 
-          if (!relatedVariable) {
+          if (relatedVariable === undefined) {
             throw new GraphQLError(
               `Variable \`${variableDefinition.variable.name.value}\` is not defined`
             );

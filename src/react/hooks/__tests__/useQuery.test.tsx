@@ -1706,7 +1706,7 @@ describe("useQuery Hook", () => {
       });
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      const renderStream = await renderHookToSnapshotStream(
         ({ id, skip }) =>
           useQuery(query, skip ? skipToken : { variables: { id } }),
         {
@@ -1716,6 +1716,7 @@ describe("useQuery Hook", () => {
           ),
         }
       );
+      const { takeSnapshot, rerender } = renderStream;
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -1744,14 +1745,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ id: 2, skip: true });
 
-      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: undefined,
-        dataState: "empty",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
-        variables: { id: 2 },
-      });
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
 
       client.writeQuery({
         query,

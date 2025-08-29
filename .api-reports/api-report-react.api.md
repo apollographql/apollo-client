@@ -658,7 +658,7 @@ export namespace useMutation {
         refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         updateQueries?: MutationQueryReducersMap<TData>;
-        variables?: TConfiguredVariables;
+        variables?: Partial<TVariables> & TConfiguredVariables;
     }
     // (undocumented)
     export interface Result<TData = unknown> {

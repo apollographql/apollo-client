@@ -14285,9 +14285,10 @@ describe.skip("Type Tests", () => {
       { id: string; language?: string }
     > = gql``;
 
-    const { data, dataState } = useQuery(query, skipToken);
+    const { data, dataState, variables } = useQuery(query, skipToken);
 
     expectTypeOf(data).toEqualTypeOf<undefined>();
     expectTypeOf(dataState).toEqualTypeOf<"empty">();
+    expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
   });
 });

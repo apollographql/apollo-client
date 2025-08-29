@@ -118,7 +118,7 @@ export declare namespace ApolloClient {
      *
      * @since 3.11.0
      */
-    devtools?: DevtoolsOptions;
+    devtools?: ApolloClient.DevtoolsOptions;
 
     /**
      * Determines if data masking is enabled for the client.

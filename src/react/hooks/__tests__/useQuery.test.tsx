@@ -8676,8 +8676,6 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const correctInitialFetchPolicy: WatchQueryFetchPolicy = "cache-first";
-
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot, rerender } =
         await renderHookToSnapshotStream(

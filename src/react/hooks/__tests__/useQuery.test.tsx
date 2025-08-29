@@ -40,6 +40,7 @@ import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
+  skipToken,
   useLazyQuery,
   useMutation,
   useQuery,
@@ -1680,6 +1681,97 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
     });
+
+    it("returns correct result when cache updates after changing variables and skipping query with skipToken", async () => {
+      interface Data {
+        user: {
+          __typename: "User";
+          id: number;
+          name: string;
+        };
+      }
+
+      const query: TypedDocumentNode<Data, { id: number }> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ id, skip }) =>
+          useQuery(query, skip ? skipToken : { variables: { id } }),
+        {
+          initialProps: { id: 1, skip: true },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      client.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      });
+      await rerender({ id: 1, skip: false });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      await rerender({ id: 2, skip: true });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
+
+      client.writeQuery({
+        query,
+        variables: { id: 2 },
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+      });
+
+      await rerender({ id: 2, skip: false });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
   });
 
   it("does not rerender with cache updates when changing from skip: false to skip: true", async () => {
@@ -1714,6 +1806,70 @@ describe("useQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = await renderHookToSnapshotStream(
       ({ skip }) => useQuery(query, { skip, variables: { id: 1 } }),
+      {
+        initialProps: { skip: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+    const { takeSnapshot, rerender } = renderStream;
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: 1 },
+    });
+
+    await rerender({ skip: true });
+
+    await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1 (updated)" } },
+    });
+
+    await expect(renderStream).not.toRerender();
+  });
+
+  it("does not rerender with cache updates when changing skipToken to options", async () => {
+    interface Data {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Data, { id: number }> = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const renderStream = await renderHookToSnapshotStream(
+      ({ skip }) =>
+        useQuery(query, skip ? skipToken : { variables: { id: 1 } }),
       {
         initialProps: { skip: false },
         wrapper: ({ children }) => (
@@ -2085,6 +2241,142 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const renderStream = await renderHookToSnapshotStream(
         ({ skip }) => useQuery(query, { pollInterval: 80, skip }),
+        {
+          initialProps: { skip: false },
+          wrapper: ({ children }) => (
+            <MockedProvider
+              mocks={mocks}
+              cache={cache}
+              mockLinkDefaultOptions={{ delay: 0 }}
+            >
+              {children}
+            </MockedProvider>
+          ),
+        }
+      );
+      const { takeSnapshot, rerender } = renderStream;
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await rerender({ skip: true });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        /* equal result */
+      });
+
+      await expect(takeSnapshot).not.toRerender({ timeout: 100 });
+
+      await rerender({ skip: false });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          dataState: "complete",
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 3" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
+    });
+
+    it("should start polling when changing skipToken to options", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      let count = 0;
+      const mocks = [
+        {
+          request: { query },
+          result: () => ({ data: { hello: `world ${++count}` } }),
+          delay: 10,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ skip }) => useQuery(query, skip ? skipToken : { pollInterval: 80 }),
         {
           initialProps: { skip: false },
           wrapper: ({ children }) => (
@@ -7773,6 +8065,64 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("should skip running a query when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ skip }) => useQuery(query, skip ? skipToken : undefined),
+        { wrapper, initialProps: { skip: true } }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: false });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it("should not make network requests when `skip` is `true`", async () => {
       const linkFn = jest.fn();
       const link = new ApolloLink((o, f) => {
@@ -7826,6 +8176,60 @@ describe("useQuery Hook", () => {
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 
+    it("should not make network requests when using skipToken", async () => {
+      const linkFn = jest.fn();
+      const link = new ApolloLink((o, f) => {
+        linkFn();
+        return f ? f(o) : EMPTY;
+      }).concat(new MockLink(mocks));
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ skip, variables }) =>
+          useQuery(query, skip ? skipToken : { variables }),
+        { wrapper, initialProps: { skip: false, variables: undefined as any } }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: true, variables: { someVar: true } });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world" },
+        variables: { someVar: true },
+      });
+
+      expect(linkFn).toHaveBeenCalledTimes(1);
+    });
+
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
         link: new ApolloLink(() => of({ data: { hello: "world" } })),
@@ -7837,6 +8241,26 @@ describe("useQuery Hook", () => {
       );
 
       const { unmount } = renderHook(() => useQuery(query, { skip: true }), {
+        wrapper,
+      });
+
+      expect(client.getObservableQueries("all").size).toBe(1);
+      unmount();
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(client.getObservableQueries("all").size).toBe(0);
+    });
+
+    it("should tear down the query if using skipToken", async () => {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      const { unmount } = renderHook(() => useQuery(query, skipToken), {
         wrapper,
       });
 
@@ -7958,6 +8382,62 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("should not automatically set `data` to `undefined` when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ skip }) => useQuery(query, skip ? skipToken : undefined),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+          initialProps: { skip: false },
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: true });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
     it("should refetch when skip is true", async () => {
       const query = gql`
@@ -7987,6 +8467,53 @@ describe("useQuery Hook", () => {
             ),
           }
         );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const refetchResult = await getCurrentSnapshot().refetch();
+
+      expect(refetchResult).toStrictEqualTyped({
+        data: { hello: "world" },
+      });
+
+      expect(requestSpy).toHaveBeenCalledTimes(1);
+      requestSpy.mockRestore();
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should refetch when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const link = new ApolloLink(() =>
+        of({
+          data: { hello: "world" },
+        })
+      );
+
+      const requestSpy = jest.spyOn(link, "request");
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useQuery(query, skipToken), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8093,6 +8620,129 @@ describe("useQuery Hook", () => {
       });
 
       check(correctInitialFetchPolicy, correctInitialFetchPolicy);
+
+      const reasons: string[] = [];
+
+      const result = await getCurrentSnapshot().observable.reobserve({
+        variables: {
+          newVar: true,
+        },
+        nextFetchPolicy(currentFetchPolicy, context) {
+          expect(currentFetchPolicy).toBe("cache-and-network");
+          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          reasons.push(context.reason);
+          return currentFetchPolicy;
+        },
+      });
+
+      expect(result).toStrictEqualTyped({ data: { hello: 2 } });
+      expect(reasons).toEqual(["variables-changed", "after-fetch"]);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 1 },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 2 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: 1 },
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should set correct initialFetchPolicy when using skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      let linkCount = 0;
+      const link = new ApolloLink(() =>
+        // Emit the value  async so we can observe the loading state
+        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const correctInitialFetchPolicy: WatchQueryFetchPolicy = "cache-first";
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ skip }) =>
+            useQuery(
+              query,
+              skip ? skipToken : (
+                {
+                  fetchPolicy: "cache-and-network",
+                }
+              )
+            ),
+          {
+            initialProps: {
+              skip: true,
+            },
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      function check(
+        expectedFetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialFetchPolicy: WatchQueryFetchPolicy
+      ) {
+        const { observable } = getCurrentSnapshot();
+        const { fetchPolicy, initialFetchPolicy } = observable.options;
+
+        expect(fetchPolicy).toBe(expectedFetchPolicy);
+        expect(initialFetchPolicy).toBe(expectedInitialFetchPolicy);
+      }
+
+      check("standby", "cache-first");
+
+      await rerender({ skip: false });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 1 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      check("cache-and-network", "cache-and-network");
 
       const reasons: string[] = [];
 

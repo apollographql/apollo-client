@@ -8192,11 +8192,12 @@ describe("useQuery Hook", () => {
       );
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      const renderStream = await renderHookToSnapshotStream(
         ({ skip, variables }) =>
           useQuery(query, skip ? skipToken : { variables }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } }
       );
+      const { takeSnapshot, rerender } = renderStream;
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8218,14 +8219,8 @@ describe("useQuery Hook", () => {
 
       await rerender({ skip: true, variables: { someVar: true } });
 
-      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: undefined,
-        dataState: "empty",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world" },
-        variables: { someVar: true },
-      });
+      // new variables aren't applied yet so we see the same value returned
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
 
       expect(linkFn).toHaveBeenCalledTimes(1);
     });

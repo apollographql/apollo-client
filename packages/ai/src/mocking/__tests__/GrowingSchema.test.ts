@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import { GrowingSchema } from "../GrowingSchema.js";
 import { GraphQLError } from "graphql";
-import { first } from "rxjs";
 
 describe("GrowingSchema", () => {
   it("creates a base schema when instantiated", () => {

@@ -12,11 +12,10 @@ import type {
   useSuspenseFragment,
   useSuspenseQuery,
 } from "@apollo/client/react";
+import { wrapperSymbol } from "@apollo/client/react/internal";
 
 // direct import to avoid circular dependency
 import { getApolloContext } from "../../context/ApolloContext.js";
-
-export const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 
 type FunctionSignature<T> =
   T extends (...args: infer A) => infer R ? (...args: A) => R : never;

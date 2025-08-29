@@ -1,3 +1,4 @@
+import type { InternalTypes as ReactInternalTypes } from "@apollo/client/react";
 export { getSuspenseCache } from "./cache/getSuspenseCache.js";
 export type { CacheKey, FragmentKey, QueryKey } from "./cache/types.js";
 export type { PreloadedQueryRef, QueryRef } from "./cache/QueryReference.js";
@@ -10,8 +11,6 @@ export {
   wrapQueryRef,
 } from "./cache/QueryReference.js";
 export type { SuspenseCacheOptions } from "./cache/SuspenseCache.js";
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-export type { HookWrappers } from "../hooks/internal/wrapHook.js";
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-export { wrapperSymbol } from "../hooks/internal/wrapHook.js";
+export type HookWrappers = ReactInternalTypes.HookWrappers;
+export const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 export type { FetchMoreFunction, RefetchFunction } from "./types.js";

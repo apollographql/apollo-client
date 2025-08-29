@@ -518,6 +518,8 @@ function useOptions<TData, TVariables extends OperationVariables>(
       mergeOptions(defaultOptions, { ...options, query });
 
     if (options.skip) {
+      watchQueryOptions.initialFetchPolicy =
+        options.initialFetchPolicy || options.fetchPolicy;
       watchQueryOptions.fetchPolicy = "standby";
     }
 

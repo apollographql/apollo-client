@@ -13986,6 +13986,13 @@ describe.skip("Type Tests", () => {
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { foo: "bar" } });
     useQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
   });
 
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
@@ -13996,6 +14003,13 @@ describe.skip("Type Tests", () => {
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { foo: "bar" } });
     useQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
   });
 
   test("variables are optional when TVariables are empty", () => {
@@ -14013,6 +14027,16 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
   });
 
   test("is invalid when TVariables is `never`", () => {
@@ -14036,6 +14060,30 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: undefined }
+    );
+    useQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
   });
 
   test("optional variables are optional", () => {
@@ -14059,6 +14107,35 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { limit: 10 } });
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
   });
 
   test("enforces required variables when TVariables includes required variables", () => {
@@ -14085,6 +14162,44 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
   });
 
   test("requires variables with mixed TVariables", () => {
@@ -14120,5 +14235,61 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useQuery(
+      query,
+      skip ? skipToken : { variables: { id: "1", language: "en" } }
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("always returns empty data/dataState with unconditional skipToken", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    const { data, dataState } = useQuery(query, skipToken);
+
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty">();
   });
 });

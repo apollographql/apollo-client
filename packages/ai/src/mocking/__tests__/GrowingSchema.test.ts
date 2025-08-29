@@ -556,6 +556,73 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(secondExpectedSchema);
     });
 
+    it("handles list variables", () => {
+      const query = gql`
+      query SearchByAuthor($authors: [AuthorInput!]!) {
+        bookByAuthor(authors: $authors) {
+          __typename
+          title
+        }
+      }
+      `;
+      const variables = {
+        authors: [
+          {
+            name: {
+              nickNames: [
+                {
+                  full: "The Doctor",
+                },
+              ],
+            },
+          },
+          {
+            name: {
+              firstName: "Sarah",
+              middleName: "Jane",
+              lastName: "Smith",
+            },
+          },
+        ],
+      };
+      const response = {
+        data: {
+          bookByAuthor: {
+            __typename: "Book",
+            title: "The Tardis",
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          bookByAuthor(authors: [AuthorInput!]!): Book
+        }
+
+        input AuthorInput {
+          name: NameInput
+        }
+
+        input NameInput {
+          nickNames: [NickNameInput]
+          firstName: String
+          middleName: String
+          lastName: String
+        }
+
+        input NickNameInput {
+          full: String
+        }
+
+        type Book {
+          title: String
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query, variables }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
     it.skip("handles union types with inline fragments", () => {
       const query = gql`
       query Search {

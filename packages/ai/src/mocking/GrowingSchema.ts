@@ -38,14 +38,32 @@ const enforcedRules = specifiedRules.filter(
   (rule) => !rulesToIgnore.includes(rule)
 );
 
+/**
+ * Type guard for checking if an item is a single item.
+ *
+ * @param item - The item to check.
+ * @returns True if the item is a single item, false otherwise.
+ */
 const isSingle = <T>(item: T | readonly T[]): item is T => !Array.isArray(item);
 
+/**
+ * Get the leaf type of a type node.
+ *
+ * @param typeNode - The type node to get the leaf type of.
+ * @returns The leaf type of the type node.
+ */
 const getLeafType = (typeNode: TypeNode): NamedTypeNode => {
   return typeNode.kind === Kind.NAMED_TYPE ?
       typeNode
     : getLeafType(typeNode.type);
 };
 
+/**
+ * Convert the first letter of a string to uppercase.
+ *
+ * @param str - The string to convert.
+ * @returns The string with the first letter capitalized.
+ */
 const ucFirst = (str: string) => {
   if (!str) {
     return "";
@@ -53,8 +71,85 @@ const ucFirst = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+/**
+ * Convert a plural word to its singular form.
+ *
+ * @param str - The plural word to convert.
+ * @returns The singular form of the word.
+ */
+const singularize = (str: string) => {
+  if (!str) {
+    return "";
+  }
+
+  // Handle common pluralization patterns
+  if (str.endsWith("ies")) {
+    return str.slice(0, -3) + "y";
+  } else if (str.endsWith("ves")) {
+    return str.slice(0, -3) + "f";
+  } else if (str.endsWith("es")) {
+    // Special cases for -es endings
+    if (str.endsWith("ches") || str.endsWith("shes") || str.endsWith("xes")) {
+      return str.slice(0, -2);
+    } else if (str.endsWith("ses")) {
+      return str.slice(0, -2);
+    } else {
+      return str.slice(0, -1);
+    }
+  } else if (str.endsWith("s") && str.length > 1) {
+    return str.slice(0, -1);
+  }
+
+  return str;
+};
+
+/**
+ * Check if a number is a float (i.e. 9.5).
+ *
+ * @param num - The number to check.
+ * @returns True if the number is a float, false otherwise.
+ */
 function isFloat(num: number) {
   return typeof num === "number" && !Number.isInteger(num);
+}
+
+/**
+ * Deep merge utility function to preserve nested properties.
+ *
+ * @param target - The target object to merge into.
+ * @param source - The source object to merge from.
+ * @returns The merged object.
+ */
+function deepMerge(target: any, source: any): any {
+  if (source === null || typeof source !== "object") {
+    return source;
+  }
+
+  if (Array.isArray(source)) {
+    return source;
+  }
+
+  if (target === null || typeof target !== "object" || Array.isArray(target)) {
+    target = {};
+  }
+
+  const result = { ...target };
+
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      if (
+        typeof source[key] === "object" &&
+        source[key] !== null &&
+        !Array.isArray(source[key])
+      ) {
+        result[key] = deepMerge(result[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+
+  return result;
 }
 
 const ScalarTypes = ["String", "Int", "Float", "Boolean", "ID"];
@@ -183,7 +278,7 @@ export class GrowingSchema {
     // Create all input objects from the operation's variable definitions.
     // By doing this here, we _may_ create unused input objects, but this
     // helps us avoid complexity in tying input objects to field definitions.
-    const inputObjects =
+    const inputObjects = this.mergeRepeatedInputObjects(
       variableDefinitions.reduce(
         (acc, variableDefinition) => {
           const leafType = getLeafType(variableDefinition.type);
@@ -208,7 +303,8 @@ export class GrowingSchema {
           return acc;
         },
         [] as (InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode)[]
-      ) || [];
+      ) || []
+    );
 
     accumulatedExtensions.definitions.push(...inputObjects);
 
@@ -538,7 +634,15 @@ export class GrowingSchema {
     inputObjects: InputObjectsList;
   } {
     const inputObjects: InputObjectsList = [];
-    const fields = Object.entries(valuesInScope)
+
+    let valuesToHandle = valuesInScope;
+    if (Array.isArray(valuesInScope)) {
+      valuesToHandle = valuesInScope.reduce((acc, item) => {
+        return deepMerge(acc, item);
+      }, {});
+    }
+
+    const fields = Object.entries(valuesToHandle)
       .map(([fieldName, fieldVariableValue]) => {
         let valueType: TypeNode;
         switch (typeof fieldVariableValue) {
@@ -549,19 +653,40 @@ export class GrowingSchema {
                 name: { kind: Kind.NAME, value: "String" },
               };
             } else {
-              // If a variable field is a key/value object, then it is
-              // an input object and we need to create it and any other
-              // input objects from its fields.
-              const inputObjectName = `${ucFirst(fieldName)}Input`;
-              const inputObject = this.getInputObjectsForVariableValue(
-                inputObjectName,
-                fieldVariableValue
-              );
-              inputObjects.push(...inputObject);
+              // Create a name for the input object based on the singular
+              // form of the field name + "Input".
+              const inputObjectName = `${ucFirst(singularize(fieldName))}Input`;
+
+              // Create a type node for the input object.
               valueType = {
                 kind: Kind.NAMED_TYPE,
                 name: { kind: Kind.NAME, value: inputObjectName },
               };
+
+              // If the field value is an array, then we need to create a list
+              // type node for the input object and merge the array items
+              // into a single object for creating the input object.
+              let variableValueToHandle = fieldVariableValue;
+              if (Array.isArray(fieldVariableValue)) {
+                valueType = {
+                  kind: Kind.LIST_TYPE,
+                  type: valueType,
+                };
+                variableValueToHandle = fieldVariableValue.reduce(
+                  (acc, item) => {
+                    return deepMerge(acc, item);
+                  },
+                  {}
+                );
+              }
+
+              // Create the input object and any other input objects from its
+              // fields.
+              const inputObject = this.getInputObjectsForVariableValue(
+                inputObjectName,
+                variableValueToHandle
+              );
+              inputObjects.push(...inputObject);
             }
             break;
           case "string":
@@ -606,6 +731,29 @@ export class GrowingSchema {
           !this.seenInputObjects[inputObjectName]?.includes(field.name.value)
       );
     return { fields, inputObjects };
+  }
+
+  mergeRepeatedInputObjects(inputObjects: InputObjectsList): InputObjectsList {
+    return Object.values(
+      inputObjects.reduce(
+        (acc, inputObject) => {
+          const existingInputObject = acc[inputObject.name.value];
+          if (existingInputObject) {
+            acc[inputObject.name.value] = {
+              ...existingInputObject,
+              fields: [
+                ...(existingInputObject?.fields || []),
+                ...(inputObject.fields || []),
+              ],
+            };
+          } else {
+            acc[inputObject.name.value] = inputObject;
+          }
+          return acc;
+        },
+        {} as Record<string, InputObject>
+      )
+    );
   }
 
   public toString() {

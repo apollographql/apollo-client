@@ -6,7 +6,10 @@ import type {
   FieldNode,
   FormattedExecutionResult,
   GraphQLCompositeType,
+  InputObjectTypeDefinitionNode,
+  InputObjectTypeExtensionNode,
   InputValueDefinitionNode,
+  NamedTypeNode,
   TypeNode,
   VariableDefinitionNode,
 } from "graphql";
@@ -28,14 +31,7 @@ import {
 
 import type { AIAdapter } from "./AIAdapter.js";
 
-const rulesToIgnore = [
-  FieldsOnCorrectTypeRule,
-  // KnownArgumentNamesOnDirectivesRule,
-  // KnownArgumentNamesRule,
-  // KnownDirectivesRule,
-  // KnownFragmentNamesRule,
-  // KnownTypeNamesRule,
-];
+const rulesToIgnore = [FieldsOnCorrectTypeRule];
 
 const enforcedRules = specifiedRules.filter(
   (rule) => !rulesToIgnore.includes(rule)
@@ -43,7 +39,29 @@ const enforcedRules = specifiedRules.filter(
 
 const isSingle = <T>(item: T | readonly T[]): item is T => !Array.isArray(item);
 
-type OperationVariableDefinitions = Record<string, TypeNode>;
+const getLeafType = (typeNode: TypeNode): NamedTypeNode => {
+  return typeNode.kind === Kind.NAMED_TYPE ?
+      typeNode
+    : getLeafType(typeNode.type);
+};
+
+const ucFirst = (str: string) => {
+  if (!str) {
+    return "";
+  }
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+function isFloat(num: number) {
+  return typeof num === "number" && !Number.isInteger(num);
+}
+
+const ScalarTypes = ["String", "Int", "Float", "Boolean", "ID"];
+
+export type OperationVariableDefinitions = Record<string, TypeNode>;
+
+type InputObject = InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode;
+type InputObjectsList = InputObject[];
 
 export class GrowingSchema {
   public schema = new GraphQLSchema({
@@ -100,7 +118,7 @@ export class GrowingSchema {
     const query = operation.query;
 
     // @todo handle variables
-    // const variables = operation.variables;
+    const variables = operation.variables;
     const typeInfo = new TypeInfo(this.schema);
     const responsePath = [response.data];
 
@@ -138,6 +156,47 @@ export class GrowingSchema {
       };
       return this.schema;
     };
+
+    const variableDefinitions: VariableDefinitionNode[] = [];
+
+    query.definitions.forEach((definition) => {
+      if (definition.kind !== Kind.OPERATION_DEFINITION) {
+        return;
+      }
+      variableDefinitions.push(...(definition.variableDefinitions ?? []));
+    });
+
+    // Create all input objects from the operation's variable definitions.
+    // By doing this here, we _may_ create unused input objects, but this
+    // helps us avoid complexity in tying input objects to field definitions.
+    const inputObjects =
+      variableDefinitions.reduce(
+        (acc, variableDefinition) => {
+          const leafType = getLeafType(variableDefinition.type);
+          const relatedVariable =
+            variables?.[variableDefinition.variable.name.value];
+
+          if (!relatedVariable) {
+            throw new GraphQLError(
+              `Variable \`${variableDefinition.variable.name.value}\` is not defined`
+            );
+          }
+
+          if (!ScalarTypes.includes(leafType.name.value)) {
+            // Create the input object for this variable and any other
+            // input objects from its fields.
+            const inputObjects = this.getInputObjectsForVariableValue(
+              leafType.name.value,
+              relatedVariable
+            );
+            acc.push(...inputObjects);
+          }
+          return acc;
+        },
+        [] as (InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode)[]
+      ) || [];
+
+    accumulatedExtensions.definitions.push(...inputObjects);
 
     visit(
       query,
@@ -428,6 +487,96 @@ export class GrowingSchema {
       },
       arguments: args,
     };
+  }
+
+  private getInputObjectsForVariableValue(
+    name: string,
+    variableValue: any
+  ): InputObjectsList {
+    const { fields, inputObjects } =
+      this.getInputValueDefinitionsFromVariables(variableValue);
+    // Return this input object and any other input objects
+    // created from its fields.
+    return [
+      {
+        kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
+        name: { kind: Kind.NAME, value: name },
+        fields,
+      },
+      ...inputObjects,
+    ];
+  }
+
+  getInputValueDefinitionsFromVariables(valuesInScope: any): {
+    fields: InputValueDefinitionNode[];
+    inputObjects: InputObjectsList;
+  } {
+    const inputObjects: InputObjectsList = [];
+    const fields = Object.entries(valuesInScope).map(
+      ([fieldName, fieldVariableValue]) => {
+        let valueType: TypeNode;
+        switch (typeof fieldVariableValue) {
+          case "object":
+            if (fieldVariableValue === null) {
+              valueType = {
+                kind: Kind.NAMED_TYPE,
+                name: { kind: Kind.NAME, value: "String" },
+              };
+            } else {
+              // If a variable field is a key/value object, then it is
+              // an input object and we need to create it and any other
+              // input objects from its fields.
+              const inputObjectName = `${ucFirst(fieldName)}Input`;
+              const inputObject = this.getInputObjectsForVariableValue(
+                inputObjectName,
+                fieldVariableValue
+              );
+              inputObjects.push(...inputObject);
+              valueType = {
+                kind: Kind.NAMED_TYPE,
+                name: { kind: Kind.NAME, value: inputObjectName },
+              };
+            }
+            break;
+          case "string":
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: {
+                kind: Kind.NAME,
+                value: fieldName === "id" ? "ID" : "String",
+              },
+            };
+            break;
+          case "number":
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: {
+                kind: Kind.NAME,
+                value: isFloat(fieldVariableValue) ? "Float" : "Int",
+              },
+            };
+            break;
+          case "boolean":
+            valueType = {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: "Boolean" },
+            };
+            break;
+          default:
+            throw new GraphQLError(
+              `Scalar responses are not supported for field ${fieldName} - received ${JSON.stringify(
+                fieldVariableValue
+              )}`
+            );
+        }
+        return {
+          kind: Kind.INPUT_VALUE_DEFINITION,
+          name: { kind: Kind.NAME, value: fieldName },
+          type: valueType,
+        } as InputValueDefinitionNode;
+      }
+    );
+    return { fields, inputObjects };
   }
 
   public toString() {

@@ -266,7 +266,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles input object variables", () => {
+    it("handles input object variables", () => {
       const query = gql`
       query SearchByAuthor($author: AuthorInput!, $arg: SomeArgInput!) {
         bookByAuthor(author: $author) {
@@ -302,13 +302,13 @@ describe("GrowingSchema", () => {
           name: String
         }
 
+        input SomeArgInput {
+          foo: String
+        }
+
         type Book {
           title: String
           anotherField(arg: SomeArgInput!): Boolean
-        }
-
-        input SomeArgInput {
-          foo: String
         }
       `;
 
@@ -317,7 +317,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles nested input object variables", () => {
+    it("handles nested input object variables", () => {
       const query = gql`
       query SearchByAuthor($author: AuthorInput!) {
         bookByAuthor(author: $author) {
@@ -331,6 +331,11 @@ describe("GrowingSchema", () => {
           name: {
             firstName: "John",
             lastName: "Smith",
+            nickName: {
+              full: "The Doctor",
+              short: "Dr.",
+            },
+            age: 2000,
           },
         },
       };
@@ -354,6 +359,13 @@ describe("GrowingSchema", () => {
         input NameInput {
           firstName: String
           lastName: String
+          nickName: NickNameInput
+          age: Int
+        }
+
+        input NickNameInput {
+          full: String
+          short: String
         }
 
         type Book {

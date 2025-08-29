@@ -38,6 +38,7 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
+import type { SkipToken } from "@apollo/client/react";
 import {
   ApolloProvider,
   skipToken,
@@ -1691,7 +1692,11 @@ describe("useQuery Hook", () => {
         };
       }
 
-      const query: TypedDocumentNode<Data, { id: number }> = gql`
+      interface Variables {
+        id: number;
+      }
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
         query ($id: ID!) {
           user(id: $id) {
             id
@@ -1707,10 +1712,10 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const renderStream = await renderHookToSnapshotStream(
-        ({ id, skip }) =>
-          useQuery(query, skip ? skipToken : { variables: { id } }),
+        (options: SkipToken | useQuery.Options<Data, Variables>) =>
+          useQuery(query, options),
         {
-          initialProps: { id: 1, skip: true },
+          initialProps: skipToken,
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
@@ -1732,7 +1737,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
         data: { user: { __typename: "User", id: 1, name: "User 1" } },
       });
-      await rerender({ id: 1, skip: false });
+      await rerender({ variables: { id: 1 } });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { user: { __typename: "User", id: 1, name: "User 1" } },
@@ -1743,7 +1748,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      await rerender({ id: 2, skip: true });
+      await rerender(skipToken);
 
       await expect(renderStream).toRerenderWithSimilarSnapshot();
 
@@ -1753,7 +1758,7 @@ describe("useQuery Hook", () => {
         data: { user: { __typename: "User", id: 2, name: "User 2" } },
       });
 
-      await rerender({ id: 2, skip: false });
+      await rerender({ variables: { id: 2 } });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { user: { __typename: "User", id: 2, name: "User 2" } },
@@ -1860,12 +1865,13 @@ describe("useQuery Hook", () => {
       data: { user: { __typename: "User", id: 1, name: "User 1" } },
     });
 
+    type Opts = SkipToken | useQuery.Options<Data, { id: number }>;
+
     using _disabledAct = disableActEnvironment();
     const renderStream = await renderHookToSnapshotStream(
-      ({ skip }) =>
-        useQuery(query, skip ? skipToken : { variables: { id: 1 } }),
+      (options: Opts) => useQuery(query, options),
       {
-        initialProps: { skip: false },
+        initialProps: { variables: { id: 1 } } as Opts,
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -1882,7 +1888,7 @@ describe("useQuery Hook", () => {
       variables: { id: 1 },
     });
 
-    await rerender({ skip: true });
+    await rerender(skipToken);
 
     await expect(renderStream).toRerenderWithSimilarSnapshot();
 
@@ -2369,10 +2375,12 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       using _disabledAct = disableActEnvironment();
+
+      type Opts = SkipToken | useQuery.Options;
       const renderStream = await renderHookToSnapshotStream(
-        ({ skip }) => useQuery(query, skip ? skipToken : { pollInterval: 80 }),
+        (options: Opts) => useQuery(query, options),
         {
-          initialProps: { skip: false },
+          initialProps: { pollInterval: 80 } as Opts,
           wrapper: ({ children }) => (
             <MockedProvider
               mocks={mocks}
@@ -2411,7 +2419,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({ skip: true });
+      await rerender(skipToken);
 
       await expect(renderStream).toRerenderWithSimilarSnapshot({
         /* equal result */
@@ -2419,7 +2427,7 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender({ timeout: 100 });
 
-      await rerender({ skip: false });
+      await rerender({ pollInterval: 80 });
 
       {
         const result = await takeSnapshot();
@@ -8081,8 +8089,9 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ skip }) => useQuery(query, skip ? skipToken : undefined),
-        { wrapper, initialProps: { skip: true } }
+        (options: SkipToken | useQuery.Options | undefined) =>
+          useQuery(query, options),
+        { wrapper, initialProps: skipToken }
       );
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8094,7 +8103,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await rerender({ skip: false });
+      await rerender(undefined);
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8185,11 +8194,11 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
+      type Opts = SkipToken | useQuery.Options;
       using _disabledAct = disableActEnvironment();
       const renderStream = await renderHookToSnapshotStream(
-        ({ skip, variables }) =>
-          useQuery(query, skip ? skipToken : { variables }),
-        { wrapper, initialProps: { skip: false, variables: undefined as any } }
+        (options: Opts) => useQuery(query, options),
+        { wrapper, initialProps: { variables: undefined } as Opts }
       );
       const { takeSnapshot, rerender } = renderStream;
 
@@ -8211,7 +8220,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await rerender({ skip: true, variables: { someVar: true } });
+      await rerender(skipToken);
 
       // new variables aren't applied yet so we see the same value returned
       await expect(renderStream).toRerenderWithSimilarSnapshot();
@@ -8386,12 +8395,11 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ skip }) => useQuery(query, skip ? skipToken : undefined),
+        (options: SkipToken | undefined) => useQuery(query, options),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
           ),
-          initialProps: { skip: false },
         }
       );
 
@@ -8413,7 +8421,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await rerender({ skip: true });
+      await rerender(skipToken);
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world" },
@@ -8668,15 +8676,9 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot, rerender } =
         await renderHookToSnapshotStream(
-          ({ skip }) =>
-            useQuery(
-              query,
-              skip ? skipToken : { fetchPolicy: "cache-and-network" }
-            ),
+          (options: SkipToken | useQuery.Options) => useQuery(query, options),
           {
-            initialProps: {
-              skip: true,
-            },
+            initialProps: skipToken,
             wrapper: ({ children }) => (
               <ApolloProvider client={client}>{children}</ApolloProvider>
             ),
@@ -8705,7 +8707,7 @@ describe("useQuery Hook", () => {
 
       check("standby", "cache-first");
 
-      await rerender({ skip: false });
+      await rerender({ fetchPolicy: "cache-and-network" });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,

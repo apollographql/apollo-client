@@ -21,7 +21,7 @@ import type { GetDataState } from '@apollo/client';
 import type { HookWrappers } from '@apollo/client/react/internal';
 import type { IgnoreModifier } from '@apollo/client/cache';
 import type { InternalRefetchQueriesInclude } from '@apollo/client';
-import type { InternalTypes } from '@apollo/client';
+import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { MaybeMasked } from '@apollo/client';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client/masking';
 import type { MissingTree } from '@apollo/client/cache';
@@ -92,6 +92,11 @@ type From<TData> = StoreObject_2 | Reference_2 | FragmentType<NoInfer_2<TData>> 
 
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
+
+// @internal @deprecated (undocumented)
+export namespace InternalTypes {
+    export type { HookWrappers };
+}
 
 // @public @deprecated (undocumented)
 export type LazyQueryExecFunction<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.ExecFunction<TData, TVariables>;
@@ -528,7 +533,7 @@ export namespace useLazyQuery {
         client?: ApolloClient;
         errorPolicy?: ErrorPolicy;
         fetchPolicy?: WatchQueryFetchPolicy;
-        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
         notifyOnNetworkStatusChange?: boolean;
         pollInterval?: number;
         refetchWritePolicy?: RefetchWritePolicy;
@@ -697,7 +702,7 @@ export namespace useQuery {
             errorPolicy?: ErrorPolicy;
             fetchPolicy?: WatchQueryFetchPolicy;
             initialFetchPolicy?: WatchQueryFetchPolicy;
-            nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+            nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
             notifyOnNetworkStatusChange?: boolean;
             pollInterval?: number;
             refetchWritePolicy?: RefetchWritePolicy;

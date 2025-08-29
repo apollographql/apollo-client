@@ -188,6 +188,7 @@ export { build, version } from "../version.js";
 // internal types
 import type { QueryManager } from "./QueryManager.js";
 import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
+/** @internal */
 export declare namespace InternalTypes {
   export type { NextFetchPolicyContext, QueryManager };
 }

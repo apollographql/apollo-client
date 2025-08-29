@@ -16,7 +16,6 @@ import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
 import type {
-  ApolloClient,
   DataState,
   DefaultContext,
   DocumentNode,
@@ -32,6 +31,7 @@ import type {
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
@@ -45,7 +45,8 @@ import {
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
-import { wrapHook } from "./internal/index.js";
+import { skipToken } from "./constants.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
@@ -409,19 +410,13 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(
     typeof options === "object" ? options.client : undefined
   );
-  const { skip, ssr, ...opts } = options;
+  const { ssr } = typeof options === "object" ? options : {};
 
-  const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
-    mergeOptions(client.defaultOptions.watchQuery as any, { ...opts, query });
-
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      options.initialFetchPolicy || options.fetchPolicy;
-    watchQueryOptions.fetchPolicy = "standby";
-  }
+  const watchQueryOptions = useOptions(
+    query,
+    options,
+    client.defaultOptions.watchQuery as any
+  );
 
   function createState(
     previous?: InternalState<TData, TVariables>
@@ -467,11 +462,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useResult<TData, TVariables>(
-    observable,
-    resultData,
-    options.ssr
-  );
+  const result = useResult<TData, TVariables>(observable, resultData, ssr);
 
   const obsQueryFields = React.useMemo(
     () => ({
@@ -498,6 +489,34 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       ...obsQueryFields,
     };
   }, [result, client, observable, previousData, obsQueryFields]);
+}
+
+function useOptions<TData, TVariables extends OperationVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+  defaultOptions:
+    | Partial<
+        ApolloClient.WatchQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
+      >
+    | undefined
+): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
+    if (options === skipToken) {
+      return mergeOptions(defaultOptions, {
+        query,
+        fetchPolicy: "standby",
+      } as ApolloClient.WatchQueryOptions<TData, TVariables>);
+    }
+
+    const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+      mergeOptions(defaultOptions, { ...options, query });
+
+    if (options.skip) {
+      watchQueryOptions.fetchPolicy = "standby";
+    }
+
+    return watchQueryOptions;
+  }, [query, options, defaultOptions]);
 }
 
 function useInitialFetchPolicyIfNecessary<

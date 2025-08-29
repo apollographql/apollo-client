@@ -74,7 +74,7 @@ export declare namespace useMutation {
     errorPolicy?: ErrorPolicy;
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-    variables?: TConfiguredVariables;
+    variables?: Partial<TVariables> & TConfiguredVariables;
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
     context?: DefaultContext;

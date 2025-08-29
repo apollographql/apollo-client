@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.0.3
+
+### Patch Changes
+
+- [#12887](https://github.com/apollographql/apollo-client/pull/12887) [`6f6ca47`](https://github.com/apollographql/apollo-client/commit/6f6ca47e9f5e80ee9c98fca2639b5cba6317fbbf) Thanks [@phryneas](https://github.com/phryneas)! - Fix accidental deep re-export from `/react` out of `/react/internals`
+
+- [#12890](https://github.com/apollographql/apollo-client/pull/12890) [`019b422`](https://github.com/apollographql/apollo-client/commit/019b4224147a5a8709de54c4474e126619dd2469) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the `variables` option for `useMutation` provides proper IntelliSense suggestions.
+
 ## 4.0.2
 
 ### Patch Changes

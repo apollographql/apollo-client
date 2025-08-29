@@ -44,6 +44,7 @@ import {
   mergeOptions,
 } from "@apollo/client/utilities/internal";
 
+import type { SkipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -120,6 +121,7 @@ export declare namespace useQuery {
     export interface Result<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
+      TReturnVariables extends OperationVariables = TVariables,
     > {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
       client: ApolloClient;
@@ -157,7 +159,7 @@ export declare namespace useQuery {
       ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-      variables: TVariables;
+      variables: TReturnVariables;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
       fetchMore: <
@@ -178,7 +180,8 @@ export declare namespace useQuery {
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = Base.Result<TData, TVariables> &
+    TReturnVariables extends OperationVariables = TVariables,
+  > = Base.Result<TData, TVariables, TReturnVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export namespace DocumentationTypes {
@@ -287,6 +290,33 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken
+): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: true;
+      })
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial",
+  Partial<TVariables>
+>;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: boolean;
   }
@@ -302,11 +332,19 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+  options:
+    | SkipToken
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: boolean;
+      })
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial",
+  Partial<TVariables>
+>;
 
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -315,24 +353,62 @@ export function useQuery<
   ...[options]: {} extends TVariables ?
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming",
+  Partial<TVariables>
+>;
+
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables> {
   "use no memo";
   return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
-    useApolloClient(options && options.client)
+    useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = {} as useQuery.Options<TData, TVariables>
+  options:
+    | SkipToken
+    | useQuery.Options<
+        NoInfer<TData>,
+        NoInfer<TVariables>
+      > = {} as useQuery.Options<TData, TVariables>
 ): useQuery.Result<TData, TVariables> {
-  const client = useApolloClient(options.client);
+  const client = useApolloClient(
+    typeof options === "object" ? options.client : undefined
+  );
   const { skip, ssr, ...opts } = options;
 
   const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =

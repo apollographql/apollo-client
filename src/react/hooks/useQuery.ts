@@ -491,6 +491,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, client, observable, previousData, obsQueryFields]);
 }
 
+const fromSkipToken = Symbol();
+
 function useOptions<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
@@ -502,10 +504,14 @@ function useOptions<TData, TVariables extends OperationVariables>(
 ): ApolloClient.WatchQueryOptions<TData, TVariables> {
   return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      return mergeOptions(defaultOptions, {
+      const opts = mergeOptions(defaultOptions, {
         query,
         fetchPolicy: "standby",
       } as ApolloClient.WatchQueryOptions<TData, TVariables>);
+
+      (opts as any)[fromSkipToken] = true;
+
+      return opts;
     }
 
     const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
@@ -607,6 +613,16 @@ function useResubscribeIfNecessary<
     observable[lastWatchOptions] &&
     !equal(observable[lastWatchOptions], watchQueryOptions)
   ) {
+    // If skipToken was used to generate options, we won't know the correct
+    // initialFetchPolicy until the hook is rerendered with real options, so we
+    // set it the next time we get real options
+    if (
+      (observable[lastWatchOptions] as any)[fromSkipToken] &&
+      !watchQueryOptions.initialFetchPolicy
+    ) {
+      (watchQueryOptions.initialFetchPolicy as any) =
+        watchQueryOptions.fetchPolicy;
+    }
     // Though it might be tempting to postpone this reobserve call to the
     // useEffect block, we need getCurrentResult to return an appropriate
     // loading:true result synchronously (later within the same call to

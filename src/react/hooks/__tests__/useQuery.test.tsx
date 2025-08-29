@@ -8682,11 +8682,7 @@ describe("useQuery Hook", () => {
           ({ skip }) =>
             useQuery(
               query,
-              skip ? skipToken : (
-                {
-                  fetchPolicy: "cache-and-network",
-                }
-              )
+              skip ? skipToken : { fetchPolicy: "cache-and-network" }
             ),
           {
             initialProps: {

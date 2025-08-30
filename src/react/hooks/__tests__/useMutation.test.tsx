@@ -30,7 +30,7 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import { spyOnConsole, wait } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -511,6 +511,47 @@ describe("useMutation Hook", () => {
       }
 
       await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("does not cause unhandled rejections", async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [{ message: CREATE_TODO_ERROR }],
+          },
+          delay: 10,
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { variables }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
+
+      await takeSnapshot();
+
+      const [createTodo] = getCurrentSnapshot();
+
+      // Intentionally don't await this to ensure we don't get unhandled rejections
+      createTodo();
+      await wait(15);
+
+      // No assertions needed. This test fails if the promise throws an
+      // unhandled rection
     });
 
     it(`should reject when errorPolicy is 'none'`, async () => {

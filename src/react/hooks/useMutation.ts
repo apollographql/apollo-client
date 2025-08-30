@@ -21,7 +21,10 @@ import type {
 } from "@apollo/client";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { NoInfer, Prettify } from "@apollo/client/utilities/internal";
-import { mergeOptions } from "@apollo/client/utilities/internal";
+import {
+  mergeOptions,
+  preventUnhandledRejection,
+} from "@apollo/client/utilities/internal";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -284,72 +287,80 @@ export function useMutation<
       const mutationId = ++ref.current.mutationId;
       const clientOptions = mergeOptions(baseOptions, executeOptions as any);
 
-      return client
-        .mutate(
-          clientOptions as ApolloClient.MutateOptions<TData, OperationVariables>
-        )
-        .then(
-          (response) => {
-            const { data, error } = response;
+      return preventUnhandledRejection(
+        client
+          .mutate(
+            clientOptions as ApolloClient.MutateOptions<
+              TData,
+              OperationVariables
+            >
+          )
+          .then(
+            (response) => {
+              const { data, error } = response;
 
-            const onError =
-              executeOptions.onError || ref.current.options?.onError;
+              const onError =
+                executeOptions.onError || ref.current.options?.onError;
 
-            if (error && onError) {
-              onError(error, clientOptions);
-            }
-
-            if (mutationId === ref.current.mutationId) {
-              const result = {
-                called: true,
-                loading: false,
-                data,
-                error,
-                client,
-              };
-
-              if (ref.current.isMounted && !equal(ref.current.result, result)) {
-                setResult((ref.current.result = result));
+              if (error && onError) {
+                onError(error, clientOptions);
               }
-            }
 
-            const onCompleted =
-              executeOptions.onCompleted || ref.current.options?.onCompleted;
+              if (mutationId === ref.current.mutationId) {
+                const result = {
+                  called: true,
+                  loading: false,
+                  data,
+                  error,
+                  client,
+                };
 
-            if (!error) {
-              onCompleted?.(response.data!, clientOptions);
-            }
-
-            return response;
-          },
-          (error) => {
-            if (
-              mutationId === ref.current.mutationId &&
-              ref.current.isMounted
-            ) {
-              const result = {
-                loading: false,
-                error,
-                data: void 0,
-                called: true,
-                client,
-              };
-
-              if (!equal(ref.current.result, result)) {
-                setResult((ref.current.result = result));
+                if (
+                  ref.current.isMounted &&
+                  !equal(ref.current.result, result)
+                ) {
+                  setResult((ref.current.result = result));
+                }
               }
+
+              const onCompleted =
+                executeOptions.onCompleted || ref.current.options?.onCompleted;
+
+              if (!error) {
+                onCompleted?.(response.data!, clientOptions);
+              }
+
+              return response;
+            },
+            (error) => {
+              if (
+                mutationId === ref.current.mutationId &&
+                ref.current.isMounted
+              ) {
+                const result = {
+                  loading: false,
+                  error,
+                  data: void 0,
+                  called: true,
+                  client,
+                };
+
+                if (!equal(ref.current.result, result)) {
+                  setResult((ref.current.result = result));
+                }
+              }
+
+              const onError =
+                executeOptions.onError || ref.current.options?.onError;
+
+              if (onError) {
+                onError(error, clientOptions);
+              }
+
+              throw error;
             }
-
-            const onError =
-              executeOptions.onError || ref.current.options?.onError;
-
-            if (onError) {
-              onError(error, clientOptions);
-            }
-
-            throw error;
-          }
-        );
+          )
+      );
     },
     []
   );

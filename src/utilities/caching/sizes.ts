@@ -211,9 +211,6 @@ export interface CacheSizes {
   /**
    * Cache size for the `maybeBroadcastWatch` method on [`InMemoryCache`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/inMemoryCache.ts).
    *
-   * Note: `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
-   * will fall back to this configuration value if the option is not set.
-   *
    * @defaultValue
    * Defaults to `5000`.
    *
@@ -228,10 +225,6 @@ export interface CacheSizes {
   /**
    * Cache size for the `executeSelectionSet` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
    *
-   * Note:
-   * `executeSelectionSet` will be set to the `resultCacheMaxSize` option and
-   * will fall back to this configuration value if the option is not set.
-   *
    * @defaultValue
    * Defaults to `50000`.
    *
@@ -242,10 +235,6 @@ export interface CacheSizes {
   "inMemoryCache.executeSelectionSet": number;
   /**
    * Cache size for the `executeSubSelectedArray` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
-   *
-   * Note:
-   * `executeSubSelectedArray` will be set to the `resultCacheMaxSize` option and
-   * will fall back to this configuration value if the option is not set.
    *
    * @defaultValue
    * Defaults to `10000`.

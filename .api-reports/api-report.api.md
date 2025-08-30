@@ -237,7 +237,7 @@ export namespace ApolloClient {
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
         defaultOptions?: ApolloClient.DefaultOptions;
-        devtools?: DevtoolsOptions;
+        devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
         // (undocumented)

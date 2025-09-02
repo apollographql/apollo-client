@@ -1836,7 +1836,7 @@ describe("useQuery Hook", () => {
     await expect(renderStream).not.toRerender();
   });
 
-  it("does not rerender with cache updates when changing skipToken to options", async () => {
+  it("does not rerender with cache updates when changing options to skipToken", async () => {
     interface Data {
       user: {
         __typename: "User";

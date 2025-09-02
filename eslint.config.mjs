@@ -79,6 +79,19 @@ export default [
 
     // rules for the whole repo
     rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@wry/equality",
+              importNames: ["default"],
+              message:
+                "Please use named export `{ equal }` from @wry/equality instead.",
+            },
+          ],
+        },
+      ],
       "import/no-unresolved": "error",
       "import/order": [
         "warn",

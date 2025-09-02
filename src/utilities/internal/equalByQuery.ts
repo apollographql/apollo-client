@@ -1,4 +1,4 @@
-import equal from "@wry/equality";
+import { equal } from "@wry/equality";
 import type {
   DirectiveNode,
   DocumentNode,

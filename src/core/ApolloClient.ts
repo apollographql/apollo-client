@@ -118,7 +118,7 @@ export declare namespace ApolloClient {
      *
      * @since 3.11.0
      */
-    devtools?: DevtoolsOptions;
+    devtools?: ApolloClient.DevtoolsOptions;
 
     /**
      * Determines if data masking is enabled for the client.
@@ -1418,6 +1418,14 @@ export class ApolloClient {
 
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
+   *
+   * @remarks
+   *
+   * This can be useful for debugging in order to inspect the full state of the
+   * cache.
+   *
+   * @param optimistic - Determines whether the result contains data from the
+   * optimistic layer
    */
   public extract(optimistic?: boolean) {
     return this.cache.extract(optimistic);

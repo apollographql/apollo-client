@@ -1,4 +1,4 @@
-import equal from "@wry/equality";
+import { equal } from "@wry/equality";
 import * as React from "react";
 
 import type {

@@ -6,7 +6,7 @@ import {
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import equal from "@wry/equality";
+import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";

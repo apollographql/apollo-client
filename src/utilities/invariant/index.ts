@@ -122,6 +122,12 @@ function getFallbackErrorMsg(
   messageArgs: unknown[] = []
 ) {
   if (!message) return;
+  if (typeof message === "string") {
+    return messageArgs.reduce<string>(
+      (msg, arg) => msg.replace(/%[sdfo]/, stringify(arg)),
+      message
+    );
+  }
   return `An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
     JSON.stringify({
       version,

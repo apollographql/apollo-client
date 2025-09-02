@@ -38,8 +38,10 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
+import type { SkipToken } from "@apollo/client/react";
 import {
   ApolloProvider,
+  skipToken,
   useLazyQuery,
   useMutation,
   useQuery,
@@ -1680,6 +1682,95 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
     });
+
+    it("returns correct result when cache updates after changing variables and skipping query with skipToken", async () => {
+      interface Data {
+        user: {
+          __typename: "User";
+          id: number;
+          name: string;
+        };
+      }
+
+      interface Variables {
+        id: number;
+      }
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        (options: SkipToken | useQuery.Options<Data, Variables>) =>
+          useQuery(query, options),
+        {
+          initialProps: skipToken,
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+      const { takeSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      client.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      });
+      await rerender({ variables: { id: 1 } });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      await rerender(skipToken);
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+      client.writeQuery({
+        query,
+        variables: { id: 2 },
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+      });
+
+      await rerender({ variables: { id: 2 } });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
   });
 
   it("does not rerender with cache updates when changing from skip: false to skip: true", async () => {
@@ -1733,6 +1824,71 @@ describe("useQuery Hook", () => {
     });
 
     await rerender({ skip: true });
+
+    await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1 (updated)" } },
+    });
+
+    await expect(renderStream).not.toRerender();
+  });
+
+  it("does not rerender with cache updates when changing options to skipToken", async () => {
+    interface Data {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Data, { id: number }> = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+    });
+
+    type Opts = SkipToken | useQuery.Options<Data, { id: number }>;
+
+    using _disabledAct = disableActEnvironment();
+    const renderStream = await renderHookToSnapshotStream(
+      (options: Opts) => useQuery(query, options),
+      {
+        initialProps: { variables: { id: 1 } } as Opts,
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+    const { takeSnapshot, rerender } = renderStream;
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: 1 },
+    });
+
+    await rerender(skipToken);
 
     await expect(renderStream).toRerenderWithSimilarSnapshot();
 
@@ -2134,6 +2290,144 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender({ timeout: 100 });
 
       await rerender({ skip: false });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          dataState: "complete",
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 3" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
+    });
+
+    it("should start polling when changing skipToken to options", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      let count = 0;
+      const mocks = [
+        {
+          request: { query },
+          result: () => ({ data: { hello: `world ${++count}` } }),
+          delay: 10,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      using _disabledAct = disableActEnvironment();
+
+      type Opts = SkipToken | useQuery.Options;
+      const renderStream = await renderHookToSnapshotStream(
+        (options: Opts) => useQuery(query, options),
+        {
+          initialProps: { pollInterval: 80 } as Opts,
+          wrapper: ({ children }) => (
+            <MockedProvider
+              mocks={mocks}
+              cache={cache}
+              mockLinkDefaultOptions={{ delay: 0 }}
+            >
+              {children}
+            </MockedProvider>
+          ),
+        }
+      );
+      const { takeSnapshot, rerender } = renderStream;
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await rerender(skipToken);
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        /* equal result */
+      });
+
+      await expect(takeSnapshot).not.toRerender({ timeout: 100 });
+
+      await rerender({ pollInterval: 80 });
 
       {
         const result = await takeSnapshot();
@@ -7773,6 +8067,65 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("should skip running a query when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        (options: SkipToken | useQuery.Options | undefined) =>
+          useQuery(query, options),
+        { wrapper, initialProps: skipToken }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender(undefined);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it("should not make network requests when `skip` is `true`", async () => {
       const linkFn = jest.fn();
       const link = new ApolloLink((o, f) => {
@@ -7826,6 +8179,55 @@ describe("useQuery Hook", () => {
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 
+    it("should not make network requests when using skipToken", async () => {
+      const linkFn = jest.fn();
+      const link = new ApolloLink((o, f) => {
+        linkFn();
+        return f ? f(o) : EMPTY;
+      }).concat(new MockLink(mocks));
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      type Opts = SkipToken | useQuery.Options;
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        (options: Opts) => useQuery(query, options),
+        { wrapper, initialProps: { variables: undefined } as Opts }
+      );
+      const { takeSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender(skipToken);
+
+      // new variables aren't applied yet so we see the same value returned
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+      expect(linkFn).toHaveBeenCalledTimes(1);
+    });
+
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
         link: new ApolloLink(() => of({ data: { hello: "world" } })),
@@ -7842,7 +8244,27 @@ describe("useQuery Hook", () => {
 
       expect(client.getObservableQueries("all").size).toBe(1);
       unmount();
-      await new Promise((resolve) => setTimeout(resolve));
+      await wait(0);
+      expect(client.getObservableQueries("all").size).toBe(0);
+    });
+
+    it("should tear down the query if using skipToken", async () => {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      const { unmount } = renderHook(() => useQuery(query, skipToken), {
+        wrapper,
+      });
+
+      expect(client.getObservableQueries("all").size).toBe(1);
+      unmount();
+      await wait(0);
       expect(client.getObservableQueries("all").size).toBe(0);
     });
 
@@ -7958,6 +8380,61 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("should not automatically set `data` to `undefined` when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        (options: SkipToken | undefined) => useQuery(query, options),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender(skipToken);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
     it("should refetch when skip is true", async () => {
       const query = gql`
@@ -7987,6 +8464,53 @@ describe("useQuery Hook", () => {
             ),
           }
         );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const refetchResult = await getCurrentSnapshot().refetch();
+
+      expect(refetchResult).toStrictEqualTyped({
+        data: { hello: "world" },
+      });
+
+      expect(requestSpy).toHaveBeenCalledTimes(1);
+      requestSpy.mockRestore();
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should refetch when providing skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const link = new ApolloLink(() =>
+        of({
+          data: { hello: "world" },
+        })
+      );
+
+      const requestSpy = jest.spyOn(link, "request");
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useQuery(query, skipToken), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8093,6 +8617,117 @@ describe("useQuery Hook", () => {
       });
 
       check(correctInitialFetchPolicy, correctInitialFetchPolicy);
+
+      const reasons: string[] = [];
+
+      const result = await getCurrentSnapshot().observable.reobserve({
+        variables: {
+          newVar: true,
+        },
+        nextFetchPolicy(currentFetchPolicy, context) {
+          expect(currentFetchPolicy).toBe("cache-and-network");
+          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          reasons.push(context.reason);
+          return currentFetchPolicy;
+        },
+      });
+
+      expect(result).toStrictEqualTyped({ data: { hello: 2 } });
+      expect(reasons).toEqual(["variables-changed", "after-fetch"]);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 1 },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 2 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: 1 },
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should set correct initialFetchPolicy when using skipToken", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      let linkCount = 0;
+      const link = new ApolloLink(() =>
+        // Emit the value  async so we can observe the loading state
+        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          (options: SkipToken | useQuery.Options) => useQuery(query, options),
+          {
+            initialProps: skipToken,
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      function check(
+        expectedFetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialFetchPolicy: WatchQueryFetchPolicy
+      ) {
+        const { observable } = getCurrentSnapshot();
+        const { fetchPolicy, initialFetchPolicy } = observable.options;
+
+        expect(fetchPolicy).toBe(expectedFetchPolicy);
+        expect(initialFetchPolicy).toBe(expectedInitialFetchPolicy);
+      }
+
+      check("standby", "cache-first");
+
+      await rerender({ fetchPolicy: "cache-and-network" });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: 1 },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      check("cache-and-network", "cache-and-network");
 
       const reasons: string[] = [];
 
@@ -13336,6 +13971,13 @@ describe.skip("Type Tests", () => {
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { foo: "bar" } });
     useQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
   });
 
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
@@ -13346,6 +13988,13 @@ describe.skip("Type Tests", () => {
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { foo: "bar" } });
     useQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
   });
 
   test("variables are optional when TVariables are empty", () => {
@@ -13363,6 +14012,16 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
   });
 
   test("is invalid when TVariables is `never`", () => {
@@ -13386,6 +14045,30 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: undefined }
+    );
+    useQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
   });
 
   test("optional variables are optional", () => {
@@ -13409,6 +14092,35 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(query, skip ? skipToken : {});
+    useQuery(query, skip ? skipToken : { variables: {} });
+    useQuery(query, skip ? skipToken : { variables: { limit: 10 } });
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
   });
 
   test("enforces required variables when TVariables includes required variables", () => {
@@ -13435,6 +14147,44 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
   });
 
   test("requires variables with mixed TVariables", () => {
@@ -13470,5 +14220,62 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useQuery(query, skip ? skipToken : undefined);
+    useQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useQuery(
+      query,
+      skip ? skipToken : { variables: { id: "1", language: "en" } }
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("always returns empty data/dataState with unconditional skipToken", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    const { data, dataState, variables } = useQuery(query, skipToken);
+
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty">();
+    expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
   });
 });

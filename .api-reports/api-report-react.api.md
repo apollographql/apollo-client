@@ -682,14 +682,32 @@ export function useQuery<TData = unknown, TVariables extends OperationVariables 
 }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
+
+// @public
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+    returnPartialData: true;
+})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+
+// @public
 export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
     returnPartialData: boolean;
 }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+    returnPartialData: boolean;
+})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+
+// @public
 export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
 ] : [options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+
+// @public
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+options?: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+] : [options: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", Partial<TVariables>>;
 
 // @public (undocumented)
 export namespace useQuery {
@@ -715,7 +733,7 @@ export namespace useQuery {
     // (undocumented)
     export namespace Base {
         // (undocumented)
-        export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TReturnVariables extends OperationVariables = TVariables> {
             client: ApolloClient;
             error?: ErrorLike;
             fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>>>;
@@ -728,7 +746,7 @@ export namespace useQuery {
             stopPolling: () => void;
             subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
             updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-            variables: TVariables;
+            variables: TReturnVariables;
         }
     }
     // (undocumented)
@@ -756,7 +774,7 @@ export namespace useQuery {
     // (undocumented)
     export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
     // (undocumented)
-    export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = Base.Result<TData, TVariables> & GetDataState<MaybeMasked_2<TData>, TStates>;
+    export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TReturnVariables extends OperationVariables = TVariables> = Base.Result<TData, TVariables, TReturnVariables> & GetDataState<MaybeMasked_2<TData>, TStates>;
 }
 
 // @public (undocumented)

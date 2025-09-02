@@ -7,8 +7,14 @@ description: Apollo Client API reference
 
 ## `skipToken`
 
-`skipToken` provides a type-safe mechanism to skip query execution. It is currently supported with `useSuspenseQuery` and `useBackgroundQuery`.
+`skipToken` provides a type-safe mechanism to skip query execution. It is currently supported with `useQuery`, `useSuspenseQuery` and `useBackgroundQuery`.
 When you pass a `skipToken` to one of the supported hooks instead of the `options` object, the hook will not cause any requests or suspenseful behavior and keeps the last `data` available. It is typically used conditionally to start query execution when the input data is available.
+
+```js title="Recommended usage of skipToken with useQuery"
+import { skipToken, useQuery } from "@apollo/client/react";
+
+const { data } = useQuery(query, id ? { variables: { id } } : skipToken);
+```
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
 import { skipToken, useSuspenseQuery } from "@apollo/client/react";
@@ -26,9 +32,7 @@ const [queryRef] = useBackgroundQuery(
 );
 ```
 
-<blockquote>
-
-Note: **Why do we recommend `skipToken` over `{ skip: true }`?**
+### Why do we recommend `skipToken` over `{ skip: true }`?
 
 Imagine this very common scenario for `skip`: You want to skip your query if a certain required variable is not set. You might be tempted to write something like this:
 
@@ -76,5 +80,3 @@ const { data } = useSuspenseQuery(
 ```
 
 Here it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
-
-</blockquote>

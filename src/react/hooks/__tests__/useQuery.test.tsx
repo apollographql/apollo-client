@@ -8244,7 +8244,7 @@ describe("useQuery Hook", () => {
 
       expect(client.getObservableQueries("all").size).toBe(1);
       unmount();
-      await new Promise((resolve) => setTimeout(resolve));
+      await wait(0);
       expect(client.getObservableQueries("all").size).toBe(0);
     });
 
@@ -8264,7 +8264,7 @@ describe("useQuery Hook", () => {
 
       expect(client.getObservableQueries("all").size).toBe(1);
       unmount();
-      await new Promise((resolve) => setTimeout(resolve));
+      await wait(0);
       expect(client.getObservableQueries("all").size).toBe(0);
     });
 

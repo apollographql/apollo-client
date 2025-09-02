@@ -92,12 +92,25 @@ For more information on the `defaultOptions` object, see the [Default Options](#
   canonicalReference="@apollo/client!ApolloClient#getObservableQueries:member(1)"
   headingLevel={3}
 />
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#extract:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#restore:member(1)"
+  headingLevel={3}
+/>
+<FunctionDetails
+  canonicalReference="@apollo/client!ApolloClient#setLink:member(1)"
+  headingLevel={3}
+/>
 
 ## Types
 
 <InterfaceDetails
   canonicalReference="@apollo/client!ApolloClient.Options:interface"
   headingLevel={3}
+  displayName="ApolloClient.Options"
   customPropertyOrder={[
     "cache",
     "link",
@@ -112,6 +125,7 @@ For more information on the `defaultOptions` object, see the [Default Options](#
 <InterfaceDetails
   canonicalReference="@apollo/client!ApolloClient.DefaultOptions:interface"
   headingLevel={3}
+  displayName="ApolloClient.DefaultOptions"
 />
 
 ##### Example `defaultOptions` object
@@ -136,3 +150,9 @@ You can override any default option you specify in this object by providing a
 different value for the same option in individual function calls.
 
 > **Note:** The `useQuery` hook uses Apollo Client's `watchQuery` function. To set `defaultOptions` when using the `useQuery` hook, make sure to set them under the `defaultOptions.watchQuery` property.
+
+<InterfaceDetails
+  canonicalReference="@apollo/client!ApolloClient.DevtoolsOptions:interface"
+  headingLevel={3}
+  displayName="ApolloClient.DevtoolsOptions"
+/>

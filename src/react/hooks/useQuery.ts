@@ -415,7 +415,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const watchQueryOptions = useOptions(
     query,
     options,
-    client.defaultOptions.watchQuery as any
+    client.defaultOptions.watchQuery
   );
 
   function createState(
@@ -496,18 +496,15 @@ const fromSkipToken = Symbol();
 function useOptions<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  defaultOptions:
-    | Partial<
-        ApolloClient.WatchQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
-      >
-    | undefined
+  defaultOptions: Partial<ApolloClient.WatchQueryOptions<any, any>> | undefined
 ): ApolloClient.WatchQueryOptions<TData, TVariables> {
   return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      const opts = mergeOptions(defaultOptions, {
-        query,
-        fetchPolicy: "standby",
-      } as ApolloClient.WatchQueryOptions<TData, TVariables>);
+      const opts: ApolloClient.WatchQueryOptions<TData, TVariables> =
+        mergeOptions(defaultOptions as any, {
+          query,
+          fetchPolicy: "standby",
+        });
 
       (opts as any)[fromSkipToken] = true;
 
@@ -515,7 +512,7 @@ function useOptions<TData, TVariables extends OperationVariables>(
     }
 
     const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
-      mergeOptions(defaultOptions, { ...options, query });
+      mergeOptions(defaultOptions as any, { ...options, query });
 
     if (options.skip) {
       watchQueryOptions.initialFetchPolicy =

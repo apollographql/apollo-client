@@ -1,5 +1,27 @@
 # @apollo/client
 
+## 4.0.4
+
+### Patch Changes
+
+- [#12892](https://github.com/apollographql/apollo-client/pull/12892) [`db8a04b`](https://github.com/apollographql/apollo-client/commit/db8a04b193c157d57d6fe0f187b1892afdda1b7d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent unhandled rejections from the promise returned by calling the `mutate` function from the `useMutation` hook.
+
+- [#12899](https://github.com/apollographql/apollo-client/pull/12899) [`5352c12`](https://github.com/apollographql/apollo-client/commit/5352c1208e19c93678fef7860a1a87841653eb64) Thanks [@phryneas](https://github.com/phryneas)! - Fix an issue when `invariant` is called by external libraries when no dev error message handler is loaded.
+
+- [#12895](https://github.com/apollographql/apollo-client/pull/12895) [`71f2517`](https://github.com/apollographql/apollo-client/commit/71f2517132a34563a14934f3971666b3691710f9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support `skipToken` with `useQuery` to provide a more type-safe way to skip query execution.
+
+  ```ts
+  import { skipToken, useQuery } from "@apollo/client/react";
+
+  // Use `skipToken` in place of `skip: true` for better type safety
+  // for required variables
+  const { data } = useQuery(QUERY, id ? { variables: { id } } : skipToken);
+  ```
+
+  Note: this change is provided as a patch within the 4.0 minor version because the changes to TypeScript validation with required variables in version 4.0 made using the `skip` option more difficult.
+
+- [#12900](https://github.com/apollographql/apollo-client/pull/12900) [`c0d5be7`](https://github.com/apollographql/apollo-client/commit/c0d5be7cbbb1b1f7771962eb2ae0e173de743265) Thanks [@phryneas](https://github.com/phryneas)! - Use named export `equal` instead of default from `"@wry/equality"`
+
 ## 4.0.3
 
 ### Patch Changes

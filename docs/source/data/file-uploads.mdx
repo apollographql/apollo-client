@@ -16,8 +16,7 @@ npm install apollo-upload-client
 Basic setup for the Apollo Client:
 
 ```js
-import { ApolloClient } from "apollo-client";
-import { InMemoryCache } from "apollo-cache-inmemory";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import UploadHttpLink from "apollo-upload-client/UploadHttpLink.mjs";
 
 const client = new ApolloClient({

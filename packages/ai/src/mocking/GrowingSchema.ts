@@ -6,6 +6,7 @@ import type {
   FieldNode,
   FormattedExecutionResult,
   GraphQLCompositeType,
+  GraphQLNamedType,
   InputObjectTypeDefinitionNode,
   InputObjectTypeExtensionNode,
   InputValueDefinitionNode,
@@ -181,8 +182,6 @@ export class GrowingSchema {
   // the input objects are correct.
   private seenQueries = new WeakSet<GraphQLOperation>();
 
-  private seenInputObjects: Record<string, string[]> = {};
-
   public validateQuery(query: DocumentNode) {
     const errors = validate(this.schema, query, enforcedRules);
     if (errors.length > 0) {
@@ -204,17 +203,6 @@ export class GrowingSchema {
 
       this.validateResponseAgainstSchema(operation, response);
       this.seenQueries.add(operation);
-
-      // Track the fields of each input object so we can avoid
-      // creating duplicate input objects.
-      Object.entries(this.schema.getTypeMap()).forEach(([name, node]) => {
-        if (node instanceof GraphQLInputObjectType) {
-          this.seenInputObjects[name] =
-            node.astNode?.fields?.map((field) => {
-              return field.name.value;
-            }) || [];
-        }
-      });
     } catch (e) {
       this.schema = previousSchema;
       throw e;
@@ -455,6 +443,13 @@ export class GrowingSchema {
     }
   }
 
+  private getType<T extends GraphQLNamedType>(name: string): T | undefined {
+    if (!name) {
+      return undefined;
+    }
+    return this.schema.getType(name) as T;
+  }
+
   private getVariableDefinitionsFromAncestors(
     ancestors: readonly (ASTNode | readonly ASTNode[])[]
   ): OperationVariableDefinitions {
@@ -616,7 +611,7 @@ export class GrowingSchema {
     return [
       {
         kind:
-          this.seenInputObjects[name] ?
+          this.getType(name) ?
             Kind.INPUT_OBJECT_TYPE_EXTENSION
           : Kind.INPUT_OBJECT_TYPE_DEFINITION,
         name: { kind: Kind.NAME, value: name },
@@ -633,6 +628,11 @@ export class GrowingSchema {
     fields: InputValueDefinitionNode[];
     inputObjects: InputObjectsList;
   } {
+    const existingInputObject =
+      this.getType<GraphQLInputObjectType>(inputObjectName);
+    const existingInputObjectFields =
+      existingInputObject?.astNode?.fields?.map((field) => field.name.value) ||
+      [];
     const inputObjects: InputObjectsList = [];
 
     let valuesToHandle = valuesInScope;
@@ -727,8 +727,7 @@ export class GrowingSchema {
         } as InputValueDefinitionNode;
       })
       .filter(
-        (field) =>
-          !this.seenInputObjects[inputObjectName]?.includes(field.name.value)
+        (field) => !existingInputObjectFields?.includes(field.name.value)
       );
     return { fields, inputObjects };
   }

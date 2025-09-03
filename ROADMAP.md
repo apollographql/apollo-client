@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-08-20**
+**Last updated: 2025-09-03**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,24 +17,16 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### 3.14.0 - August 21st, 2025
+#### 4.1.0
 
-_Release candidate - July 7th, 2025_
-
-- 4.0 compatibility release/deprecations
-
-To be released together with 4.0.
-
-#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - August 21st, 2025
-
-_Release candidate - June 18th 2025_
+_In planning_
 
 ### GraphQL Testing Library
 
 - New documentation
 - Subscription support
 
-_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+_These changes will take longer than anticipated due to prioritization of other libaries and integrations_
 
 ### VSCode Extension
 
@@ -46,15 +38,11 @@ _No outstanding work_
 
 ### Apollo Client DevTools
 
-- Memory panel
-- Add compatibility for 4.0
-
-_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+_No outstanding work_
 
 ### Apollo Client React Framework Integrations
 
 - New/more robust documentation
-- Add compatibility for 4.0
 
 **TanStack Start**
 

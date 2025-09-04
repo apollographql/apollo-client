@@ -2129,7 +2129,7 @@ describe("graphql-js test cases", () => {
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
-            name: "Luke",
+            id: "1",
           },
         },
       });
@@ -2141,7 +2141,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       expect(handler.isIncrementalResult(chunk)).toBe(true);
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
@@ -2207,7 +2207,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       expect(handler.isIncrementalResult(chunk)).toBe(true);
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {

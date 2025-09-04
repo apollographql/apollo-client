@@ -131,11 +131,13 @@ class IncrementalRequest<TData>
           extensions: incremental.extensions,
           errors: incremental.errors,
         });
+      }
+    }
 
-        for (const completed of chunk.completed) {
-          const index = this.pending.findIndex(({ id }) => id === completed.id);
-          this.pending.splice(index, 1);
-        }
+    if ("completed" in chunk && chunk.completed) {
+      for (const completed of chunk.completed) {
+        const index = this.pending.findIndex(({ id }) => id === completed.id);
+        this.pending.splice(index, 1);
       }
     }
 

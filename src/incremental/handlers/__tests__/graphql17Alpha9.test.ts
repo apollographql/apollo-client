@@ -1858,6 +1858,24 @@ describe("graphql-js test cases", () => {
             },
           },
         },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+            },
+          },
+        },
         errors: [
           {
             message:

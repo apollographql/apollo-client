@@ -8,7 +8,7 @@ import { HttpLink } from "@apollo/client/link/http";
 
 const hasNextSymbol = Symbol("hasNext");
 
-export function mockIncrementalStream<Chunks>({
+export function mockMultipartStream<Chunks>({
   responseHeaders,
 }: {
   responseHeaders: Headers;

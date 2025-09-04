@@ -214,6 +214,7 @@
     "globals": "15.14.0",
     "graphql": "16.9.0",
     "graphql-17-alpha2": "npm:graphql@17.0.0-alpha.2",
+    "graphql-17-alpha9": "npm:graphql@17.0.0-alpha.9",
     "graphql-ws": "6.0.3",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",

@@ -1,8 +1,15 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+} from "graphql";
 
-import type { ApolloLink } from "@apollo/client";
-import type { HKT } from "@apollo/client/utilities";
-import { isNonEmptyArray } from "@apollo/client/utilities/internal";
+import type { ApolloLink } from "@apollo/client/link";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import {
+  hasDirectives,
+  isNonEmptyArray,
+} from "@apollo/client/utilities/internal";
 
 import type { Incremental } from "../types.js";
 
@@ -69,25 +76,50 @@ export declare namespace GraphQL17Alpha9Handler {
     | SubsequentResult<TData>;
 }
 
-export class GraphQL17Alpha9Handler<TData extends Record<string, unknown>>
-  implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<TData>>
+class IncrementalRequest<TData extends Record<string, unknown>>
+  implements
+    Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData>
 {
-  isIncrementalResult: (
+  hasNext = true;
+
+  private data: any = {};
+
+  handle(
+    cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
+    chunk: GraphQL17Alpha9Handler.Chunk<TData>
+  ): FormattedExecutionResult<TData> {
+    return { data: null };
+  }
+}
+
+export class GraphQL17Alpha9Handler<TData extends Record<string, unknown>>
+  implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
+{
+  isIncrementalResult(
     result: ApolloLink.Result<any>
-  ) => result is GraphQL17Alpha9Handler.Chunk<TData>;
+  ): result is GraphQL17Alpha9Handler.Chunk<TData> {
+    return "hasNext" in result;
+  }
 
-  prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
+  prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
+    if (hasDirectives(["defer"], request.query)) {
+      const context = request.context ?? {};
+      const http = (context.http ??= {});
+      http.accept = ["multipart/mixed", ...(http.accept || [])];
 
-  extractErrors: (
-    result: ApolloLink.Result<any>
-  ) => readonly GraphQLFormattedError[] | undefined | void;
+      request.context = context;
+    }
 
-  startRequest: <TData extends Record<string, unknown>>(request: {
+    return request;
+  }
+
+  extractErrors(result: ApolloLink.Result<any>) {}
+
+  startRequest<TData extends Record<string, unknown>>(_: {
     query: DocumentNode;
-  }) => Incremental.IncrementalRequest<
-    GraphQL17Alpha9Handler.Chunk<TData>,
-    TData
-  >;
+  }) {
+    return new IncrementalRequest<TData>();
+  }
 }
 
 // only exported for use in tests

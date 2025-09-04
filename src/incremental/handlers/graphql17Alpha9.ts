@@ -156,6 +156,10 @@ class IncrementalRequest<TData>
       this.data = this.merger.merge(this.data, normalized.data);
     }
 
+    if (normalized.errors) {
+      this.errors.push(...normalized.errors);
+    }
+
     Object.assign(this.extensions, normalized.extensions);
   }
 }

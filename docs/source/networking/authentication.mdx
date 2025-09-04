@@ -11,7 +11,7 @@ Apollo Client uses the ultra flexible [Apollo Link](../api/link/introduction/) t
 If your app is browser based and you are using cookies for login and session management with a backend, tell your network interface to send the cookie along with every request. Pass the credentials option e.g. `credentials: 'same-origin'` if your backend server is the same domain, as shown below, or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
-const link = createHttpLink({
+const link = new HttpLink({
   uri: "/graphql",
   credentials: "same-origin",
 });
@@ -42,14 +42,14 @@ Another common way to identify yourself when using HTTP is to send along an auth
 ReactJS example:
 
 ```js
-import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { SetContextLink } from "@apollo/client/link/context";
 
-const httpLink = createHttpLink({
+const httpLink = new HttpLink({
   uri: "/graphql",
 });
 
-const authLink = setContext((_, { headers }) => {
+const authLink = new SetContextLink(({ headers }) => {
   // get the authentication token from local storage if it exists
   const token = localStorage.getItem("token");
   // return the headers to the context so httpLink can read them

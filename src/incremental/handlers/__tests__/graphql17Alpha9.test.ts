@@ -15,7 +15,20 @@ import {
   GraphQLString,
 } from "graphql-17-alpha9";
 
-import { ApolloLink, gql, Observable } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  Observable,
+} from "@apollo/client";
+import {
+  markAsStreaming,
+  mockDeferStream,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 import {
   GraphQL17Alpha9Handler,
@@ -2285,4 +2298,450 @@ describe("graphql-js test cases", () => {
   it.skip("original execute function resolves to error if anything is deferred and something else is async", async () => {
     // not relevant for the client
   });
+});
+
+test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
+  const client = new ApolloClient({
+    link: schemaLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        name: "Luke",
+      },
+    },
+    dataState: "complete",
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("merges cache updates that happen concurrently", async () => {
+  const stream = mockDeferStream();
+  const client = new ApolloClient({
+    link: stream.httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        job
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  stream.enqueueInitialChunk({
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        job: "Farmer",
+      },
+    },
+    hasNext: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        job: "Farmer",
+      },
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  client.cache.writeFragment({
+    id: "Hero:1",
+    fragment: gql`
+      fragment HeroJob on Hero {
+        job
+      }
+    `,
+    data: {
+      job: "Jedi",
+    },
+  });
+
+  stream.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          name: "Luke",
+        },
+        path: ["hero"],
+      },
+    ],
+    hasNext: false,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        job: "Jedi", // updated from cache
+        name: "Luke",
+      },
+    },
+    dataState: "complete",
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("returns error on initial result", async () => {
+  const client = new ApolloClient({
+    link: schemaLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        ... @defer {
+          name
+        }
+        errorField
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+      },
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+        },
+      },
+      errors: [
+        {
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+        name: "Luke",
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+          name: "Luke",
+        },
+      },
+      errors: [
+        {
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+test("stream that returns an error but continues to stream", async () => {
+  const client = new ApolloClient({
+    link: schemaLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        ... @defer {
+          errorField
+        }
+        ... @defer {
+          slowField
+        }
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+      },
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+        },
+      },
+      errors: [
+        {
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+        slowField: "slow",
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+          slowField: "slow",
+        },
+      },
+      errors: [
+        {
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+});
+
+test("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
+  const stream = mockDeferStream();
+  const client = new ApolloClient({
+    link: stream.httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query ProductsQuery {
+      allProducts {
+        id
+        nonNullErrorField
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+  stream.enqueueInitialChunk({
+    data: {
+      allProducts: [null, null, null],
+    },
+    errors: [
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+    ],
+    hasNext: true,
+  });
+
+  stream.enqueueSubsequentChunk({
+    hasNext: false,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      allProducts: [null, null, null],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        allProducts: [null, null, null],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    }),
+  });
+  await expect(observableStream).not.toEmitAnything();
 });

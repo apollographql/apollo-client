@@ -203,7 +203,7 @@ async function* run(
       ) as FormattedSubsequentIncrementalExecutionResult;
     }
   } else {
-    yield result;
+    yield JSON.parse(JSON.stringify(result)) as FormattedExecutionResult;
   }
 }
 

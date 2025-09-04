@@ -2,7 +2,7 @@ import type { ApolloPayloadResult } from "@apollo/client";
 
 import { mockMultipartStream } from "./incremental/utils.js";
 
-export { mockDefer20220824 } from "./incremental/defer20220824.js";
+export { mockDefer20220824 } from "./incremental/mockDefer20220824.js";
 
 export function mockMultipartSubscriptionStream<
   TData = Record<string, unknown>,

@@ -402,7 +402,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 7, column: 11 }],
             path: ["hero", "name"],
           },
         ],

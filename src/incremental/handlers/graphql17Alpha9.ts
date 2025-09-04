@@ -6,10 +6,12 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import { DeepMerger } from "@apollo/client/utilities/internal";
 import {
   hasDirectives,
   isNonEmptyArray,
 } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { Incremental } from "../types.js";
 
@@ -81,16 +83,84 @@ class IncrementalRequest<TData>
   hasNext = true;
 
   private data: any = {};
+  private errors: GraphQLFormattedError[] = [];
+  private extensions: Record<string, any> = {};
+  private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
+  private merger = new DeepMerger();
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
     chunk: GraphQL17Alpha9Handler.Chunk<TData>
   ): FormattedExecutionResult<TData> {
-    return { data: null };
+    this.hasNext = chunk.hasNext;
+    this.data = cacheData;
+
+    if (chunk.pending) {
+      this.pending.push(...chunk.pending);
+    }
+
+    this.mergeIn(chunk);
+
+    if (hasIncrementalChunks(chunk)) {
+      for (const incremental of chunk.incremental) {
+        // TODO: Implement support for `@stream`. For now we will skip handling
+        // streamed responses
+        if ("items" in incremental) {
+          continue;
+        }
+
+        const pending = this.pending.find(({ id }) => incremental.id === id);
+        invariant(
+          pending,
+          "Could not find pending chunk for incremental value. Please file an issue because this is a bug in Apollo Client."
+        );
+
+        let { data } = incremental;
+        const { path } = pending;
+
+        for (let i = path.length - 1; i >= 0; i--) {
+          const key = path[i];
+          const parent: Record<string | number, any> =
+            typeof key === "number" ? [] : {};
+          parent[key] = incremental.data;
+          data = parent as typeof data;
+        }
+
+        this.mergeIn({
+          data: data as TData,
+          extensions: incremental.extensions,
+        });
+
+        for (const completed of chunk.completed) {
+          const index = this.pending.findIndex(({ id }) => id === completed.id);
+          this.pending.splice(index, 1);
+        }
+      }
+    }
+
+    const result: FormattedExecutionResult<TData> = { data: this.data };
+
+    if (isNonEmptyArray(this.errors)) {
+      result.errors = this.errors;
+    }
+
+    if (Object.keys(this.extensions).length > 0) {
+      result.extensions = this.extensions;
+    }
+
+    return result;
+  }
+
+  private mergeIn(normalized: FormattedExecutionResult<TData>) {
+    if (normalized.data !== undefined) {
+      this.data = this.merger.merge(this.data, normalized.data);
+    }
+
+    Object.assign(this.extensions, normalized.extensions);
   }
 }
 
-export class GraphQL17Alpha9Handler<TData extends Record<string, unknown>>
+export class GraphQL17Alpha9Handler<TData>
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {
   isIncrementalResult(

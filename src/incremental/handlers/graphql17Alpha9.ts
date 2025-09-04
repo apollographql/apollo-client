@@ -26,12 +26,13 @@ export declare namespace GraphQL17Alpha9Handler {
 
   export type InitialResult<TData = Record<string, unknown>> = {
     data: TData;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     pending: ReadonlyArray<PendingResult>;
     hasNext: boolean;
     extensions?: Record<string, unknown>;
   };
 
-  export type SubsequentResult<TData = Record<string, unknown>> = {
+  export type SubsequentResult<TData = unknown> = {
     hasNext: boolean;
     pending?: ReadonlyArray<PendingResult>;
     incremental?: ReadonlyArray<IncrementalResult<TData>>;
@@ -55,7 +56,7 @@ export declare namespace GraphQL17Alpha9Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     data: TData;
     id: string;
-    subPath?: ReadonlyArray<string | number>;
+    subPath?: Incremental.Path;
     extensions?: Record<string, unknown>;
   }
 
@@ -63,20 +64,18 @@ export declare namespace GraphQL17Alpha9Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     items: TData;
     id: string;
-    subPath?: ReadonlyArray<string | number>;
+    subPath?: Incremental.Path;
     extensions?: Record<string, unknown>;
   }
 
-  export type IncrementalResult<TData = Record<string, unknown>> =
+  export type IncrementalResult<TData = unknown> =
     | IncrementalDeferResult<TData>
     | IncrementalStreamResult<TData>;
 
-  export type Chunk<TData extends Record<string, unknown>> =
-    | InitialResult<TData>
-    | SubsequentResult<TData>;
+  export type Chunk<TData> = InitialResult<TData> | SubsequentResult<TData>;
 }
 
-class IncrementalRequest<TData extends Record<string, unknown>>
+class IncrementalRequest<TData>
   implements
     Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData>
 {
@@ -115,9 +114,7 @@ export class GraphQL17Alpha9Handler<TData extends Record<string, unknown>>
 
   extractErrors(result: ApolloLink.Result<any>) {}
 
-  startRequest<TData extends Record<string, unknown>>(_: {
-    query: DocumentNode;
-  }) {
+  startRequest<TData>(_: { query: DocumentNode }) {
     return new IncrementalRequest<TData>();
   }
 }

@@ -116,7 +116,7 @@ class IncrementalRequest<TData>
         );
 
         let { data } = incremental;
-        const { path } = pending;
+        const path = pending.path.concat(incremental.subPath ?? []);
 
         for (let i = path.length - 1; i >= 0; i--) {
           const key = path[i];

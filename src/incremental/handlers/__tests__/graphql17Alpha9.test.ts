@@ -1556,7 +1556,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 8, column: 17 }],
             path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
@@ -1631,7 +1630,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 17, column: 17 }],
             path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
@@ -1696,13 +1694,11 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 7, column: 17 }],
             path: ["a", "b", "c", "someError"],
           },
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 16, column: 17 }],
             path: ["a", "b", "c", "anotherError"],
           },
         ],
@@ -1780,7 +1776,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 19, column: 17 }],
             path: ["a", "b", "someC", "someError"],
           },
         ],
@@ -1867,7 +1862,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field c.nonNullErrorField.",
-            locations: [{ line: 8, column: 17 }],
             path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
@@ -1932,7 +1926,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Hero.nonNullName.",
-            locations: [{ line: 5, column: 13 }],
             path: ["hero", "nonNullName"],
           },
         ],
@@ -2079,7 +2072,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 9, column: 9 }],
             path: ["hero", "name"],
           },
         ],
@@ -2142,7 +2134,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Hero.nonNullName.",
-            locations: [{ line: 9, column: 9 }],
             path: ["hero", "nonNullName"],
           },
         ],
@@ -2209,7 +2200,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Hero.nonNullName.",
-            locations: [{ line: 9, column: 9 }],
             path: ["hero", "nonNullName"],
           },
         ],

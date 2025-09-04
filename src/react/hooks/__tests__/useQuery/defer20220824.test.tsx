@@ -13,8 +13,11 @@ import {
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloProvider, useQuery } from "@apollo/client/react";
-import { MockSubscriptionLink } from "@apollo/client/testing";
-import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
+import {
+  markAsStreaming,
+  mockDefer20220824,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 test("should handle deferred queries", async () => {
   const query = gql`
@@ -30,10 +33,11 @@ test("should handle deferred queries", async () => {
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -57,18 +61,14 @@ test("should handle deferred queries", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
-          },
-        },
-        hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        message: "Hello world",
+        __typename: "Greeting",
       },
-    });
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -85,27 +85,20 @@ test("should handle deferred queries", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: {
-                  name: "Alice",
-                  __typename: "Person",
-                },
-                __typename: "Greeting",
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
+        data: {
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
         },
+        path: ["greeting"],
       },
-      true
-    );
+    ],
+    hasNext: false,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -148,10 +141,11 @@ test("should handle deferred queries in lists", async () => {
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -175,18 +169,14 @@ test("should handle deferred queries in lists", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          greetings: [
-            { message: "Hello world", __typename: "Greeting" },
-            { message: "Hello again", __typename: "Greeting" },
-          ],
-        },
-        hasNext: true,
-      },
-    });
+  enqueueInitialChunk({
+    data: {
+      greetings: [
+        { message: "Hello world", __typename: "Greeting" },
+        { message: "Hello again", __typename: "Greeting" },
+      ],
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -203,24 +193,20 @@ test("should handle deferred queries in lists", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: {
-                name: "Alice",
-                __typename: "Person",
-              },
-              __typename: "Greeting",
-            },
-            path: ["greetings", 0],
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
           },
-        ],
-        hasNext: true,
+          __typename: "Greeting",
+        },
+        path: ["greetings", 0],
       },
-    });
+    ],
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -246,27 +232,20 @@ test("should handle deferred queries in lists", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: {
-                  name: "Bob",
-                  __typename: "Person",
-                },
-                __typename: "Greeting",
-              },
-              path: ["greetings", 1],
-            },
-          ],
-          hasNext: false,
+        data: {
+          recipient: {
+            name: "Bob",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
         },
+        path: ["greetings", 1],
       },
-      true
-    );
+    ],
+    hasNext: false,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -320,10 +299,11 @@ test("should handle deferred queries in lists, merging arrays", async () => {
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -347,32 +327,28 @@ test("should handle deferred queries in lists, merging arrays", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          allProducts: [
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-federation",
-              sku: "federation",
-            },
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-studio",
-              sku: "studio",
-            },
-          ],
+  enqueueInitialChunk({
+    data: {
+      allProducts: [
+        {
+          __typename: "Product",
+          delivery: {
+            __typename: "DeliveryEstimates",
+          },
+          id: "apollo-federation",
+          sku: "federation",
         },
-        hasNext: true,
-      },
-    });
+        {
+          __typename: "Product",
+          delivery: {
+            __typename: "DeliveryEstimates",
+          },
+          id: "apollo-studio",
+          sku: "studio",
+        },
+      ],
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -403,30 +379,26 @@ test("should handle deferred queries in lists, merging arrays", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        hasNext: true,
-        incremental: [
-          {
-            data: {
-              __typename: "DeliveryEstimates",
-              estimatedDelivery: "6/25/2021",
-              fastestDelivery: "6/24/2021",
-            },
-            path: ["allProducts", 0, "delivery"],
-          },
-          {
-            data: {
-              __typename: "DeliveryEstimates",
-              estimatedDelivery: "6/25/2021",
-              fastestDelivery: "6/24/2021",
-            },
-            path: ["allProducts", 1, "delivery"],
-          },
-        ],
+  enqueueSubsequentChunk({
+    hasNext: true,
+    incremental: [
+      {
+        data: {
+          __typename: "DeliveryEstimates",
+          estimatedDelivery: "6/25/2021",
+          fastestDelivery: "6/24/2021",
+        },
+        path: ["allProducts", 0, "delivery"],
       },
-    });
+      {
+        data: {
+          __typename: "DeliveryEstimates",
+          estimatedDelivery: "6/25/2021",
+          fastestDelivery: "6/24/2021",
+        },
+        path: ["allProducts", 1, "delivery"],
+      },
+    ],
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -495,10 +467,11 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -522,18 +495,14 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
-          },
-        },
-        hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        message: "Hello world",
+        __typename: "Greeting",
       },
-    });
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -550,27 +519,20 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: {
-                  name: "Alice",
-                  __typename: "Person",
-                },
-                __typename: "Greeting",
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
+        data: {
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
         },
+        path: ["greeting"],
       },
-      true
-    );
+    ],
+    hasNext: false,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -615,10 +577,11 @@ test("should handle deferred queries with errors returned on the incremental bat
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -642,27 +605,23 @@ test("should handle deferred queries with errors returned on the incremental bat
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
+  enqueueInitialChunk({
+    data: {
+      hero: {
+        name: "R2-D2",
+        heroFriends: [
+          {
+            id: "1000",
+            name: "Luke Skywalker",
           },
-        },
-        hasNext: true,
+          {
+            id: "1003",
+            name: "Leia Organa",
+          },
+        ],
       },
-    });
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -688,36 +647,29 @@ test("should handle deferred queries with errors returned on the incremental bat
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                {
-                  message:
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                  path: ["hero", "heroFriends", 0, "homeWorld"],
-                },
-              ],
-              data: {
-                homeWorld: null,
-              },
-            },
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
+        path: ["hero", "heroFriends", 0],
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
+        data: {
+          homeWorld: null,
         },
       },
-      true
-    );
+      {
+        path: ["hero", "heroFriends", 1],
+        data: {
+          homeWorld: "Alderaan",
+        },
+      },
+    ],
+    hasNext: false,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -787,10 +739,11 @@ it('should handle deferred queries with errors returned on the incremental batch
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -814,27 +767,23 @@ it('should handle deferred queries with errors returned on the incremental batch
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
+  enqueueInitialChunk({
+    data: {
+      hero: {
+        name: "R2-D2",
+        heroFriends: [
+          {
+            id: "1000",
+            name: "Luke Skywalker",
           },
-        },
-        hasNext: true,
+          {
+            id: "1003",
+            name: "Leia Organa",
+          },
+        ],
       },
-    });
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -860,44 +809,37 @@ it('should handle deferred queries with errors returned on the incremental batch
     variables: {},
   });
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                {
-                  message:
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                  path: ["hero", "heroFriends", 0, "homeWorld"],
-                },
-              ],
-              data: {
-                homeWorld: null,
-              },
-              extensions: {
-                thing1: "foo",
-                thing2: "bar",
-              },
-            },
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-              extensions: {
-                thing1: "foo",
-                thing2: "bar",
-              },
-            },
-          ],
-          hasNext: false,
+        path: ["hero", "heroFriends", 0],
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
+        data: {
+          homeWorld: null,
+        },
+        extensions: {
+          thing1: "foo",
+          thing2: "bar",
         },
       },
-      true
-    );
+      {
+        path: ["hero", "heroFriends", 1],
+        data: {
+          homeWorld: "Alderaan",
+        },
+        extensions: {
+          thing1: "foo",
+          thing2: "bar",
+        },
+      },
+    ],
+    hasNext: false,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -981,11 +923,12 @@ it('returns eventually consistent data from deferred queries with data in the ca
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
   const cache = new InMemoryCache();
   const client = new ApolloClient({
     cache,
-    link,
+    link: httpLink,
     incrementalHandler: new Defer20220824Handler(),
   });
 
@@ -1025,13 +968,11 @@ it('returns eventually consistent data from deferred queries with data in the ca
     variables: {},
   });
 
-  link.simulateResult({
-    result: {
-      data: {
-        greeting: { __typename: "Greeting", message: "Hello world" },
-      },
-      hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
     },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -1055,23 +996,18 @@ it('returns eventually consistent data from deferred queries with data in the ca
     variables: {},
   });
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Alice", __typename: "Person" },
+          __typename: "Greeting",
+        },
+        path: ["greeting"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: {
@@ -1112,10 +1048,11 @@ it('returns eventually consistent data from deferred queries with partial data i
   `;
 
   const cache = new InMemoryCache();
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
   const client = new ApolloClient({
     cache,
-    link,
+    link: httpLink,
     incrementalHandler: new Defer20220824Handler(),
   });
 
@@ -1162,13 +1099,11 @@ it('returns eventually consistent data from deferred queries with partial data i
     variables: {},
   });
 
-  link.simulateResult({
-    result: {
-      data: {
-        greeting: { message: "Hello world", __typename: "Greeting" },
-      },
-      hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: { message: "Hello world", __typename: "Greeting" },
     },
+    hasNext: true,
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -1191,23 +1126,18 @@ it('returns eventually consistent data from deferred queries with partial data i
     variables: {},
   });
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              __typename: "Greeting",
-              recipient: { name: "Alice", __typename: "Person" },
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { name: "Alice", __typename: "Person" },
+        },
+        path: ["greeting"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: {

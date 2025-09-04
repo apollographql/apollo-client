@@ -12,12 +12,57 @@ export declare namespace GraphQL17Alpha9Handler {
     arg2: unknown; // TExtensions
     return: GraphQL17Alpha9Handler.Chunk<Record<string, unknown>>;
   }
+
   export interface TypeOverrides {
     AdditionalApolloLinkResultTypes: GraphQL17Alpha9Result;
   }
 
-  export type InitialResult<TData = Record<string, unknown>> = {};
-  export type SubsequentResult<TData = Record<string, unknown>> = {};
+  export type InitialResult<TData = Record<string, unknown>> = {
+    data: TData;
+    pending: ReadonlyArray<PendingResult>;
+    hasNext: boolean;
+    extensions?: Record<string, unknown>;
+  };
+
+  export type SubsequentResult<TData = Record<string, unknown>> = {
+    hasNext: boolean;
+    pending?: ReadonlyArray<PendingResult>;
+    incremental?: ReadonlyArray<IncrementalResult<TData>>;
+    completed?: ReadonlyArray<CompletedResult>;
+    extensions?: Record<string, unknown>;
+  };
+
+  export interface PendingResult {
+    id: string;
+    path: Incremental.Path;
+    label?: string;
+  }
+
+  export interface CompletedResult {
+    path: Incremental.Path;
+    label?: string;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+  }
+
+  export interface IncrementalDeferResult<TData = Record<string, unknown>> {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    data: TData;
+    id: string;
+    subPath?: ReadonlyArray<string | number>;
+    extensions?: Record<string, unknown>;
+  }
+
+  export interface IncrementalStreamResult<TData = ReadonlyArray<unknown>> {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    items: TData;
+    id: string;
+    subPath?: ReadonlyArray<string | number>;
+    extensions?: Record<string, unknown>;
+  }
+
+  export type IncrementalResult<TData = Record<string, unknown>> =
+    | IncrementalDeferResult<TData>
+    | IncrementalStreamResult<TData>;
 
   export type Chunk<TData extends Record<string, unknown>> =
     | InitialResult<TData>

@@ -15,7 +15,13 @@ import {
   GraphQLString,
 } from "graphql-17-alpha9";
 
-import { gql } from "@apollo/client";
+import { ApolloLink, gql, Observable } from "@apollo/client";
+
+import {
+  GraphQL17Alpha9Handler,
+  hasIncrementalChunks,
+  // eslint-disable-next-line local-rules/no-relative-imports
+} from "../graphql17Alpha9.js";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts
@@ -133,6 +139,27 @@ const query = new GraphQLObjectType({
 
 const schema = new GraphQLSchema({ query });
 
+function resolveOnNextTick(): Promise<void> {
+  return Promise.resolve(undefined);
+}
+
+type PromiseOrValue<T> = Promise<T> | T;
+
+function promiseWithResolvers<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseOrValue<T>) => void;
+  reject: (reason?: any) => void;
+} {
+  // these are assigned synchronously within the Promise constructor
+  let resolve!: (value: T | PromiseOrValue<T>) => void;
+  let reject!: (reason?: any) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 async function* run(
   document: DocumentNode,
   rootValue: unknown = { hero },
@@ -163,6 +190,17 @@ async function* run(
   }
 }
 
+const schemaLink = new ApolloLink((operation) => {
+  return new Observable((observer) => {
+    void (async () => {
+      for await (const chunk of run(operation.query)) {
+        observer.next(chunk);
+      }
+      observer.complete();
+    })();
+  });
+});
+
 describe("graphql-js test cases", () => {
   // These test cases mirror defer tests of the `graphql-js` v17.0.0-alpha.9 release:
   // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts
@@ -179,34 +217,48 @@ describe("graphql-js test cases", () => {
         name
       }
     `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
     const incoming = run(query);
 
-    expectJSON(incoming).toDeepEqual([
-      {
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
             id: "1",
           },
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              name: "Luke",
-            },
-            id: "0",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+            name: "Luke",
           },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
+
   it("Can disable defer using if argument", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           id
@@ -216,163 +268,31 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         name
       }
-    `);
-    const result = await run(document);
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const incoming = run(query);
 
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {
-          id: "1",
-          name: "Luke",
-        },
-      },
-    });
-  });
-  it("Does not disable defer with null if argument", async () => {
-    const document = parse(`
-      query HeroNameQuery($shouldDefer: Boolean) {
-        hero {
-          id
-          ...NameFragment @defer(if: $shouldDefer)
-        }
-      }
-      fragment NameFragment on Hero {
-        name
-      }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { id: "1" } },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { name: "Luke" },
-            id: "0",
-          },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
-  });
-  it("Does not execute deferred fragments early when not specified", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          id
-          ...NameFragment @defer
-        }
-      }
-      fragment NameFragment on Hero {
-        name
-      }
-    `);
-    const order: Array<string> = [];
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        id: async () => {
-          await resolveOnNextTick();
-          await resolveOnNextTick();
-          order.push("slow-id");
-          return hero.id;
-        },
-        name: () => {
-          order.push("fast-name");
-          return hero.name;
-        },
-      },
-    });
+    const { value: chunk } = await incoming.next();
 
-    expectJSON(result).toDeepEqual([
-      {
-        data: {
-          hero: {
-            id: "1",
-          },
-        },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              name: "Luke",
-            },
-            id: "0",
-          },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
-    expect(order).to.deep.equal(["slow-id", "fast-name"]);
+    assert(chunk);
+    expect(handler.isIncrementalResult(chunk)).toBe(false);
+    expect(hasIncrementalChunks(chunk)).toBe(false);
   });
-  it("Does execute deferred fragments early when specified", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          id
-          ...NameFragment @defer
-        }
-      }
-      fragment NameFragment on Hero {
-        name
-      }
-    `);
-    const order: Array<string> = [];
-    const result = await run(
-      document,
-      {
-        hero: {
-          ...hero,
-          id: async () => {
-            await resolveOnNextTick();
-            await resolveOnNextTick();
-            order.push("slow-id");
-            return hero.id;
-          },
-          name: () => {
-            order.push("fast-name");
-            return hero.name;
-          },
-        },
-      },
-      true
-    );
 
-    expectJSON(result).toDeepEqual([
-      {
-        data: {
-          hero: {
-            id: "1",
-          },
-        },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              name: "Luke",
-            },
-            id: "0",
-          },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
-    expect(order).to.deep.equal(["fast-name", "slow-id"]);
+  it.skip("Does not disable defer with null if argument", async () => {
+    // test is not interesting from a client perspective
   });
+
+  it.skip("Does not execute deferred fragments early when not specified", async () => {
+    // test is not interesting from a client perspective
+  });
+
+  it.skip("Does execute deferred fragments early when specified", async () => {
+    // test is not interesting from a client perspective
+  });
+
   it("Can defer fragments on the top level Query field", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         ...QueryFragment @defer(label: "DeferQuery")
       }
@@ -381,33 +301,44 @@ describe("graphql-js test cases", () => {
           id
         }
       }
-    `);
-    const result = await run(document);
+    `;
 
-    expectJSON(result).toDeepEqual([
-      {
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [{ id: "0", path: [], label: "DeferQuery" }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              hero: {
-                id: "1",
-              },
-            },
-            id: "0",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
           },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
+
   it("Can defer fragments with errors on the top level Query field", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         ...QueryFragment @defer(label: "DeferQuery")
       }
@@ -416,8 +347,11 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         ...hero,
         name: () => {
@@ -426,37 +360,44 @@ describe("graphql-js test cases", () => {
       },
     });
 
-    expectJSON(result).toDeepEqual([
-      {
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [{ id: "0", path: [], label: "DeferQuery" }],
-        hasNext: true,
-      },
-      {
-        incremental: [
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            name: null,
+          },
+        },
+        errors: [
           {
-            data: {
-              hero: {
-                name: null,
-              },
-            },
-            errors: [
-              {
-                message: "bad",
-                locations: [{ line: 7, column: 11 }],
-                path: ["hero", "name"],
-              },
-            ],
-            id: "0",
+            message: "bad",
+            locations: [{ line: 7, column: 11 }],
+            path: ["hero", "name"],
           },
         ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
+
   it("Can defer a fragment within an already deferred fragment", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           ...TopFragment @defer(label: "DeferTop")
@@ -471,83 +412,55 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `);
-    const result = await run(document);
+    `;
 
-    expectJSON(result).toDeepEqual([
-      {
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {},
         },
-        pending: [{ id: "0", path: ["hero"], label: "DeferTop" }],
-        hasNext: true,
-      },
-      {
-        pending: [{ id: "1", path: ["hero"], label: "DeferNested" }],
-        incremental: [
-          {
-            data: {
-              id: "1",
-            },
-            id: "0",
-          },
-          {
-            data: {
-              friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
-            },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
+            friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
-  });
-  it("Can defer a fragment that is also not deferred, deferred fragment is first", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          ...TopFragment @defer(label: "DeferTop")
-          ...TopFragment
-        }
-      }
-      fragment TopFragment on Hero {
-        name
-      }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {
-          name: "Luke",
         },
-      },
-    });
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
-  it("Can defer a fragment that is also not deferred, non-deferred fragment is first", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          ...TopFragment
-          ...TopFragment @defer(label: "DeferTop")
-        }
-      }
-      fragment TopFragment on Hero {
-        name
-      }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {
-          name: "Luke",
-        },
-      },
-    });
+
+  it.skip("Can defer a fragment that is also not deferred, deferred fragment is first", async () => {
+    // from the client perspective, a regular graphql query
+  });
+
+  it.skip("Can defer a fragment that is also not deferred, non-deferred fragment is first", async () => {
+    // from the client perspective, a regular graphql query
   });
 
   it("Can defer an inline fragment", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           id
@@ -556,46 +469,52 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
 
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { id: "1" } },
-        pending: [{ id: "0", path: ["hero"], label: "InlineDeferred" }],
-        hasNext: true,
-      },
-      {
-        incremental: [{ data: { name: "Luke" }, id: "0" }],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+            name: "Luke",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
-  it("Does not emit empty defer fragments", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          ... @defer {
-            name @skip(if: true)
-          }
-        }
-      }
-      fragment TopFragment on Hero {
-        name
-      }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {},
-      },
-    });
+  it.skip("Does not emit empty defer fragments", async () => {
+    // from the client perspective, a regular query
   });
 
   it("Emits children of empty defer fragments", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           ... @defer {
@@ -605,26 +524,46 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {},
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [{ data: { name: "Luke" }, id: "0" }],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            name: "Luke",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Can separately emit defer fragments with different labels with varying fields", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           ... @defer(label: "DeferID") {
@@ -635,42 +574,47 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {},
         },
-        pending: [
-          { id: "0", path: ["hero"], label: "DeferID" },
-          { id: "1", path: ["hero"], label: "DeferName" },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              id: "1",
-            },
-            id: "0",
-          },
-          {
-            data: {
-              name: "Luke",
-            },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
+            name: "Luke",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Separately emits defer fragments with different labels with varying subfields", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         ... @defer(label: "DeferID") {
           hero {
@@ -683,95 +627,49 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [
-          { id: "0", path: [], label: "DeferID" },
-          { id: "1", path: [], label: "DeferName" },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { hero: {} },
-            id: "0",
-          },
-          {
-            data: { id: "1" },
-            id: "0",
-            subPath: ["hero"],
-          },
-          {
-            data: { name: "Luke" },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
-            subPath: ["hero"],
+            name: "Luke",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
-  it("Separately emits defer fragments with different labels with varying subfields that return promises", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        ... @defer(label: "DeferID") {
-          hero {
-            id
-          }
-        }
-        ... @defer(label: "DeferName") {
-          hero {
-            name
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        id: () => Promise.resolve("1"),
-        name: () => Promise.resolve("Luke"),
-      },
-    });
-    expectJSON(result).toDeepEqual([
-      {
-        data: {},
-        pending: [
-          { id: "0", path: [], label: "DeferID" },
-          { id: "1", path: [], label: "DeferName" },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { hero: {} },
-            id: "0",
-          },
-          {
-            data: { id: "1" },
-            id: "0",
-            subPath: ["hero"],
-          },
-          {
-            data: { name: "Luke" },
-            id: "1",
-            subPath: ["hero"],
-          },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+  it.skip("Separately emits defer fragments with different labels with varying subfields that return promises", async () => {
+    // from the client perspective, a repeat of the last one
   });
 
   it("Separately emits defer fragments with varying subfields of same priorities but different level of defers", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           ... @defer(label: "DeferID") {
@@ -784,43 +682,47 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {},
         },
-        pending: [
-          { id: "0", path: ["hero"], label: "DeferID" },
-          { id: "1", path: [], label: "DeferName" },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              id: "1",
-            },
-            id: "0",
-          },
-          {
-            data: {
-              name: "Luke",
-            },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
-            subPath: ["hero"],
+            name: "Luke",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Separately emits nested defer fragments with varying subfields of same priorities but different level of defers", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         ... @defer(label: "DeferName") {
           hero {
@@ -831,40 +733,44 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [{ id: "0", path: [], label: "DeferName" }],
-        hasNext: true,
-      },
-      {
-        pending: [{ id: "1", path: ["hero"], label: "DeferID" }],
-        incremental: [
-          {
-            data: {
-              hero: {
-                name: "Luke",
-              },
-            },
-            id: "0",
-          },
-          {
-            data: {
-              id: "1",
-            },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
+            name: "Luke",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Initiates deferred grouped field sets only if they have been released as pending", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -886,113 +792,82 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
+    `;
 
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
-    let cResolverCalled = false;
-    let eResolverCalled = false;
-    const executeResult = experimentalExecuteIncrementally({
-      schema,
-      document,
-      rootValue: {
-        a: {
-          someField: slowFieldPromise,
-          b: {
-            c: () => {
-              cResolverCalled = true;
-              return { d: "d" };
-            },
-            e: () => {
-              eResolverCalled = true;
-              return { f: "f" };
-            },
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
+      a: {
+        someField: slowFieldPromise,
+        b: {
+          c: () => {
+            return { d: "d" };
+          },
+          e: () => {
+            return { f: "f" };
           },
         },
       },
-      enableEarlyExecution: false,
     });
 
-    assert("initialResult" in executeResult);
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    const result1 = executeResult.initialResult;
-    expectJSON(result1).toDeepEqual({
-      data: {},
-      pending: [
-        { id: "0", path: [] },
-        { id: "1", path: [] },
-      ],
-      hasNext: true,
-    });
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {},
+      });
+      expect(request.hasNext).toBe(true);
+    }
 
-    const iterator = executeResult.subsequentResults[Symbol.asyncIterator]();
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    expect(cResolverCalled).to.equal(false);
-    expect(eResolverCalled).to.equal(false);
-
-    const result2 = await iterator.next();
-    expectJSON(result2).toDeepEqual({
-      value: {
-        pending: [{ id: "2", path: ["a"] }],
-        incremental: [
-          {
-            data: { a: {} },
-            id: "0",
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+            },
           },
-          {
-            data: { b: {} },
-            id: "2",
-          },
-          {
-            data: { c: { d: "d" } },
-            id: "2",
-            subPath: ["b"],
-          },
-        ],
-        completed: [{ id: "0" }, { id: "2" }],
-        hasNext: true,
-      },
-      done: false,
-    });
-
-    expect(cResolverCalled).to.equal(true);
-    expect(eResolverCalled).to.equal(false);
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
 
     resolveSlowField("someField");
 
-    const result3 = await iterator.next();
-    expectJSON(result3).toDeepEqual({
-      value: {
-        pending: [{ id: "3", path: ["a"] }],
-        incremental: [
-          {
-            data: { someField: "someField" },
-            id: "1",
-            subPath: ["a"],
-          },
-          {
-            data: { e: { f: "f" } },
-            id: "3",
-            subPath: ["b"],
-          },
-        ],
-        completed: [{ id: "1" }, { id: "3" }],
-        hasNext: false,
-      },
-      done: false,
-    });
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    expect(eResolverCalled).to.equal(true);
-
-    const result4 = await iterator.next();
-    expectJSON(result4).toDeepEqual({
-      value: undefined,
-      done: true,
-    });
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+              e: { f: "f" },
+            },
+            someField: "someField",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Initiates unique deferred grouped field sets after those that are common to sibling defers", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1014,103 +889,77 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
+    `;
 
     const { promise: cPromise, resolve: resolveC } =
       promiseWithResolvers<void>();
-    let cResolverCalled = false;
-    let eResolverCalled = false;
-    const executeResult = experimentalExecuteIncrementally({
-      schema,
-      document,
-      rootValue: {
-        a: {
-          b: {
-            c: async () => {
-              cResolverCalled = true;
-              await cPromise;
-              return { d: "d" };
-            },
-            e: () => {
-              eResolverCalled = true;
-              return { f: "f" };
-            },
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
+      a: {
+        b: {
+          c: async () => {
+            await cPromise;
+            return { d: "d" };
+          },
+          e: () => {
+            return { f: "f" };
           },
         },
       },
-      enableEarlyExecution: false,
     });
 
-    assert("initialResult" in executeResult);
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    const result1 = executeResult.initialResult;
-    expectJSON(result1).toDeepEqual({
-      data: {},
-      pending: [
-        { id: "0", path: [] },
-        { id: "1", path: [] },
-      ],
-      hasNext: true,
-    });
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {},
+      });
+      expect(request.hasNext).toBe(true);
+    }
 
-    const iterator = executeResult.subsequentResults[Symbol.asyncIterator]();
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    expect(cResolverCalled).to.equal(false);
-    expect(eResolverCalled).to.equal(false);
-
-    const result2 = await iterator.next();
-    expectJSON(result2).toDeepEqual({
-      value: {
-        pending: [
-          { id: "2", path: ["a"] },
-          { id: "3", path: ["a"] },
-        ],
-        incremental: [
-          {
-            data: { a: {} },
-            id: "0",
-          },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: true,
-      },
-      done: false,
-    });
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {},
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
 
     resolveC();
 
-    expect(cResolverCalled).to.equal(true);
-    expect(eResolverCalled).to.equal(false);
+    {
+      const { value: chunk, done } = await incoming.next();
 
-    const result3 = await iterator.next();
-    expectJSON(result3).toDeepEqual({
-      value: {
-        incremental: [
-          {
-            data: { b: { c: { d: "d" } } },
-            id: "2",
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+              e: { f: "f" },
+            },
           },
-          {
-            data: { e: { f: "f" } },
-            id: "3",
-            subPath: ["b"],
-          },
-        ],
-        completed: [{ id: "2" }, { id: "3" }],
-        hasNext: false,
-      },
-      done: false,
-    });
-
-    const result4 = await iterator.next();
-    expectJSON(result4).toDeepEqual({
-      value: undefined,
-      done: true,
-    });
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Can deduplicate multiple defers on the same object", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           friends {
@@ -1134,33 +983,52 @@ describe("graphql-js test cases", () => {
         id
         name
       }
-    `);
-    const result = await run(document);
+    `;
 
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { friends: [{}, {}, {}] } },
-        pending: [
-          { id: "0", path: ["hero", "friends", 0] },
-          { id: "1", path: ["hero", "friends", 1] },
-          { id: "2", path: ["hero", "friends", 2] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          { data: { id: "2", name: "Han" }, id: "0" },
-          { data: { id: "3", name: "Leia" }, id: "1" },
-          { data: { id: "4", name: "C-3PO" }, id: "2" },
-        ],
-        completed: [{ id: "0" }, { id: "1" }, { id: "2" }],
-        hasNext: false,
-      },
-    ]);
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            friends: [{}, {}, {}],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            friends: [
+              { id: "2", name: "Han" },
+              { id: "3", name: "Leia" },
+              { id: "4", name: "C-3PO" },
+            ],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Deduplicates fields present in the initial payload", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           nestedObject {
@@ -1187,15 +1055,24 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         nestedObject: { deeperObject: { foo: "foo", bar: "bar" } },
         anotherNestedObject: { deeperObject: { foo: "foo" } },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
             nestedObject: {
@@ -1210,25 +1087,39 @@ describe("graphql-js test cases", () => {
             },
           },
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { bar: "bar" },
-            id: "0",
-            subPath: ["nestedObject", "deeperObject"],
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            nestedObject: {
+              deeperObject: {
+                foo: "foo",
+                bar: "bar",
+              },
+            },
+            anotherNestedObject: {
+              deeperObject: {
+                foo: "foo",
+              },
+            },
           },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Deduplicates fields present in a parent defer payload", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           ... @defer {
@@ -1244,44 +1135,52 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: { nestedObject: { deeperObject: { foo: "foo", bar: "bar" } } },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {},
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        pending: [{ id: "1", path: ["hero", "nestedObject", "deeperObject"] }],
-        incremental: [
-          {
-            data: {
-              nestedObject: {
-                deeperObject: { foo: "foo" },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            nestedObject: {
+              deeperObject: {
+                foo: "foo",
+                bar: "bar",
               },
             },
-            id: "0",
           },
-          {
-            data: {
-              bar: "bar",
-            },
-            id: "1",
-          },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Deduplicates fields with deferred fragments at multiple levels", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           nestedObject {
@@ -1312,16 +1211,26 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         nestedObject: {
           deeperObject: { foo: "foo", bar: "bar", baz: "baz", bak: "bak" },
         },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
             nestedObject: {
@@ -1331,38 +1240,36 @@ describe("graphql-js test cases", () => {
             },
           },
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        pending: [
-          { id: "1", path: ["hero", "nestedObject"] },
-          { id: "2", path: ["hero", "nestedObject", "deeperObject"] },
-        ],
-        incremental: [
-          {
-            data: { bar: "bar" },
-            id: "0",
-            subPath: ["nestedObject", "deeperObject"],
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            nestedObject: {
+              deeperObject: {
+                foo: "foo",
+                bar: "bar",
+                baz: "baz",
+                bak: "bak",
+              },
+            },
           },
-          {
-            data: { baz: "baz" },
-            id: "1",
-            subPath: ["deeperObject"],
-          },
-          {
-            data: { bak: "bak" },
-            id: "2",
-          },
-        ],
-        completed: [{ id: "0" }, { id: "1" }, { id: "2" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Deduplicates multiple fields from deferred fragments from different branches occurring at the same level", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           nestedObject {
@@ -1384,12 +1291,22 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: { nestedObject: { deeperObject: { foo: "foo", bar: "bar" } } },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
             nestedObject: {
@@ -1397,35 +1314,34 @@ describe("graphql-js test cases", () => {
             },
           },
         },
-        pending: [
-          { id: "0", path: ["hero", "nestedObject", "deeperObject"] },
-          { id: "1", path: ["hero", "nestedObject", "deeperObject"] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: {
-              foo: "foo",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            nestedObject: {
+              deeperObject: {
+                foo: "foo",
+                bar: "bar",
+              },
             },
-            id: "0",
           },
-          {
-            data: {
-              bar: "bar",
-            },
-            id: "1",
-          },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Deduplicate fields with deferred fragments in different branches at multiple non-overlapping levels", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         a {
           b {
@@ -1452,8 +1368,12 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       a: {
         b: {
           c: { d: "d" },
@@ -1462,42 +1382,50 @@ describe("graphql-js test cases", () => {
       },
       g: { h: "h" },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           a: {
             b: {
-              c: {
-                d: "d",
-              },
+              c: { d: "d" },
             },
           },
         },
-        pending: [
-          { id: "0", path: ["a", "b"] },
-          { id: "1", path: [] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { e: { f: "f" } },
-            id: "0",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+              e: { f: "f" },
+            },
           },
-          {
-            data: { g: { h: "h" } },
-            id: "1",
+          g: {
+            h: "h",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Correctly bundles varying subfields into incremental data records unique by defer combination, ignoring fields in a fragment masked by a parent defer", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         ... @defer {
           hero {
@@ -1514,45 +1442,45 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: [] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { hero: {} },
-            id: "0",
-          },
-          {
-            data: { id: "1" },
-            id: "0",
-            subPath: ["hero"],
-          },
-          {
-            data: {
-              name: "Luke",
-              shouldBeWithNameDespiteAdditionalDefer: "Luke",
-            },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
             id: "1",
-            subPath: ["hero"],
+            name: "Luke",
+            shouldBeWithNameDespiteAdditionalDefer: "Luke",
           },
-        ],
-        completed: [{ id: "0" }, { id: "1" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Nulls cross defer boundaries, null first", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1574,54 +1502,57 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       a: { b: { c: { d: "d" } }, someField: "someField" },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           a: {},
         },
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: ["a"] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { b: { c: {} } },
-            id: "1",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+            },
           },
+        },
+        errors: [
           {
-            data: { d: "d" },
-            id: "1",
-            subPath: ["b", "c"],
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 8, column: 17 }],
+            path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
-        completed: [
-          {
-            id: "0",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 8, column: 17 }],
-                path: ["a", "b", "c", "nonNullErrorField"],
-              },
-            ],
-          },
-          { id: "1" },
-        ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Nulls cross defer boundaries, value first", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1643,57 +1574,60 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       a: {
         b: { c: { d: "d" }, nonNullErrorFIeld: null },
         someField: "someField",
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           a: {},
         },
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: ["a"] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { b: { c: {} } },
-            id: "1",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+            },
           },
+        },
+        errors: [
           {
-            data: { d: "d" },
-            id: "0",
-            subPath: ["a", "b", "c"],
-          },
-        ],
-        completed: [
-          { id: "0" },
-          {
-            id: "1",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 17, column: 17 }],
-                path: ["a", "b", "c", "nonNullErrorField"],
-              },
-            ],
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 17, column: 17 }],
+            path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Handles multiple erroring deferred grouped field sets", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1714,53 +1648,57 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       a: {
         b: { c: { nonNullErrorField: null } },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: [] },
-        ],
-        hasNext: true,
-      },
-      {
-        completed: [
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {},
+        errors: [
           {
-            id: "0",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 7, column: 17 }],
-                path: ["a", "b", "c", "someError"],
-              },
-            ],
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 7, column: 17 }],
+            path: ["a", "b", "c", "someError"],
           },
           {
-            id: "1",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 16, column: 17 }],
-                path: ["a", "b", "c", "anotherError"],
-              },
-            ],
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 16, column: 17 }],
+            path: ["a", "b", "c", "anotherError"],
           },
         ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("Handles multiple erroring deferred grouped field sets for the same fragment", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1787,59 +1725,58 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       a: {
         b: { c: { d: "d", nonNullErrorField: null } },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: [] },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              someC: { d: "d" },
+              anotherC: { d: "d" },
+            },
+          },
+        },
+        errors: [
+          {
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 19, column: 17 }],
+            path: ["a", "b", "someC", "someError"],
+          },
         ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { a: { b: { someC: {}, anotherC: {} } } },
-            id: "0",
-          },
-          {
-            data: { d: "d" },
-            id: "0",
-            subPath: ["a", "b", "someC"],
-          },
-          {
-            data: { d: "d" },
-            id: "0",
-            subPath: ["a", "b", "anotherC"],
-          },
-        ],
-        completed: [
-          {
-            id: "1",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 19, column: 17 }],
-                path: ["a", "b", "someC", "someError"],
-              },
-            ],
-          },
-          { id: "0" },
-        ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
   it("filters a payload with a null that cannot be merged", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           a {
@@ -1861,9 +1798,12 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(
-      document,
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(
+      query,
       {
         a: {
           b: {
@@ -1880,91 +1820,54 @@ describe("graphql-js test cases", () => {
       },
       true
     );
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           a: {},
         },
-        pending: [
-          { id: "0", path: [] },
-          { id: "1", path: ["a"] },
-        ],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { b: { c: {} } },
-            id: "1",
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          a: {
+            b: {
+              c: { d: "d" },
+            },
           },
+        },
+        errors: [
           {
-            data: { d: "d" },
-            id: "1",
-            subPath: ["b", "c"],
-          },
-        ],
-        completed: [{ id: "1" }],
-        hasNext: true,
-      },
-      {
-        completed: [
-          {
-            id: "0",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field c.nonNullErrorField.",
-                locations: [{ line: 8, column: 17 }],
-                path: ["a", "b", "c", "nonNullErrorField"],
-              },
-            ],
+            message:
+              "Cannot return null for non-nullable field c.nonNullErrorField.",
+            locations: [{ line: 8, column: 17 }],
+            path: ["a", "b", "c", "nonNullErrorField"],
           },
         ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
-  it("Cancels deferred fields when initial result exhibits null bubbling", async () => {
-    const document = parse(`
-      query {
-        hero {
-          nonNullName
-        }
-        ... @defer {
-          hero {
-            name
-          }
-        }
-      }
-    `);
-    const result = await run(
-      document,
-      {
-        hero: {
-          ...hero,
-          nonNullName: () => null,
-        },
-      },
-      true
-    );
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: null,
-      },
-      errors: [
-        {
-          message:
-            "Cannot return null for non-nullable field Hero.nonNullName.",
-          locations: [{ line: 4, column: 11 }],
-          path: ["hero", "nonNullName"],
-        },
-      ],
-    });
+  it.skip("Cancels deferred fields when initial result exhibits null bubbling", async () => {
+    // from the client perspective, a regular graphql query
   });
 
   it("Cancels deferred fields when deferred result exhibits null bubbling", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         ... @defer {
           hero {
@@ -1973,9 +1876,13 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(
-      document,
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(
+      query,
       {
         hero: {
           ...hero,
@@ -1984,119 +1891,56 @@ describe("graphql-js test cases", () => {
       },
       true
     );
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        pending: [{ id: "0", path: [] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: null,
+        },
+        errors: [
           {
-            data: {
-              hero: null,
-            },
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field Hero.nonNullName.",
-                locations: [{ line: 5, column: 13 }],
-                path: ["hero", "nonNullName"],
-              },
-            ],
-            id: "0",
+            message:
+              "Cannot return null for non-nullable field Hero.nonNullName.",
+            locations: [{ line: 5, column: 13 }],
+            path: ["hero", "nonNullName"],
           },
         ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
-  it("Deduplicates list fields", async () => {
-    const document = parse(`
-      query {
-        hero {
-          friends {
-            name
-          }
-          ... @defer {
-            friends {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {
-          friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
-        },
-      },
-    });
+  it.skip("Deduplicates list fields", async () => {
+    // from the client perspective, a regular query
   });
 
-  it("Deduplicates async iterable list fields", async () => {
-    const document = parse(`
-      query {
-        hero {
-          friends {
-            name
-          }
-          ... @defer {
-            friends {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        friends: async function* resolve() {
-          yield await Promise.resolve(friends[0]);
-        },
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: { hero: { friends: [{ name: "Han" }] } },
-    });
+  it.skip("Deduplicates async iterable list fields", async () => {
+    // from the client perspective, a regular query
   });
 
-  it("Deduplicates empty async iterable list fields", async () => {
-    const document = parse(`
-      query {
-        hero {
-          friends {
-            name
-          }
-          ... @defer {
-            friends {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-
-        friends: async function* resolve() {
-          await resolveOnNextTick();
-        },
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: { hero: { friends: [] } },
-    });
+  it.skip("Deduplicates empty async iterable list fields", async () => {
+    // from the client perspective, a regular query
   });
 
   it("Does not deduplicate list fields with non-overlapping fields", async () => {
-    const document = parse(`
+    const query = gql`
       query {
         hero {
           friends {
@@ -2109,121 +1953,63 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query);
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           hero: {
             friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
           },
         },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { id: "2" },
-            id: "0",
-            subPath: ["friends", 0],
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            friends: [
+              { id: "2", name: "Han" },
+              { id: "3", name: "Leia" },
+              { id: "4", name: "C-3PO" },
+            ],
           },
-          {
-            data: { id: "3" },
-            id: "0",
-            subPath: ["friends", 1],
-          },
-          {
-            data: { id: "4" },
-            id: "0",
-            subPath: ["friends", 2],
-          },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
 
-  it("Deduplicates list fields that return empty lists", async () => {
-    const document = parse(`
-      query {
-        hero {
-          friends {
-            name
-          }
-          ... @defer {
-            friends {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        friends: () => [],
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: { hero: { friends: [] } },
-    });
+  it.skip("Deduplicates list fields that return empty lists", async () => {
+    // from the client perspective, a regular query
   });
 
-  it("Deduplicates null object fields", async () => {
-    const document = parse(`
-      query {
-        hero {
-          nestedObject {
-            name
-          }
-          ... @defer {
-            nestedObject {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        nestedObject: () => null,
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: { hero: { nestedObject: null } },
-    });
+  it.skip("Deduplicates null object fields", async () => {
+    // from the client perspective, a regular query
   });
 
-  it("Deduplicates promise object fields", async () => {
-    const document = parse(`
-      query {
-        hero {
-          nestedObject {
-            name
-          }
-          ... @defer {
-            nestedObject {
-              name
-            }
-          }
-        }
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        nestedObject: () => Promise.resolve({ name: "foo" }),
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: { hero: { nestedObject: { name: "foo" } } },
-    });
+  it.skip("Deduplicates promise object fields", async () => {
+    // from the client perspective, a regular query
   });
 
   it("Handles errors thrown in deferred fragments", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           id
@@ -2233,8 +2019,12 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         name
       }
-    `);
-    const result = await run(document, {
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         ...hero,
         name: () => {
@@ -2242,112 +2032,50 @@ describe("graphql-js test cases", () => {
         },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { id: "1" } },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        incremental: [
-          {
-            data: { name: null },
-            id: "0",
-            errors: [
-              {
-                message: "bad",
-                locations: [{ line: 9, column: 9 }],
-                path: ["hero", "name"],
-              },
-            ],
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
           },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-    ]);
-  });
-  it("Handles non-nullable errors thrown in deferred fragments", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          id
-          ...NameFragment @defer
-        }
-      }
-      fragment NameFragment on Hero {
-        nonNullName
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        nonNullName: () => null,
-      },
-    });
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { id: "1" } },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        completed: [
-          {
-            id: "0",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field Hero.nonNullName.",
-                locations: [{ line: 9, column: 9 }],
-                path: ["hero", "nonNullName"],
-              },
-            ],
-          },
-        ],
-        hasNext: false,
-      },
-    ]);
-  });
-  it("Handles non-nullable errors thrown outside deferred fragments", async () => {
-    const document = parse(`
-      query HeroNameQuery {
-        hero {
-          nonNullName
-          ...NameFragment @defer
-        }
-      }
-      fragment NameFragment on Hero {
-        id
-      }
-    `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        nonNullName: () => null,
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      errors: [
-        {
-          message:
-            "Cannot return null for non-nullable field Hero.nonNullName.",
-          locations: [
-            {
-              line: 4,
-              column: 11,
-            },
-          ],
-          path: ["hero", "nonNullName"],
         },
-      ],
-      data: {
-        hero: null,
-      },
-    });
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+            name: null,
+          },
+        },
+        errors: [
+          {
+            message: "bad",
+            locations: [{ line: 9, column: 9 }],
+            path: ["hero", "name"],
+          },
+        ],
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
-  it("Handles async non-nullable errors thrown in deferred fragments", async () => {
-    const document = parse(`
+
+  it("Handles non-nullable errors thrown in deferred fragments", async () => {
+    const query = gql`
       query HeroNameQuery {
         hero {
           id
@@ -2357,39 +2085,127 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         nonNullName
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
+      hero: {
+        ...hero,
+        nonNullName: () => null,
+      },
+    });
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            name: "Luke",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+          },
+        },
+        errors: [
+          {
+            message:
+              "Cannot return null for non-nullable field Hero.nonNullName.",
+            locations: [{ line: 9, column: 9 }],
+            path: ["hero", "nonNullName"],
+          },
+        ],
+      });
+      expect(request.hasNext).toBe(false);
+    }
+  });
+
+  it.skip("Handles non-nullable errors thrown outside deferred fragments", async () => {
+    // from the client perspective, a regular query
+  });
+
+  it("Handles async non-nullable errors thrown in deferred fragments", async () => {
+    const query = gql`
+      query HeroNameQuery {
+        hero {
+          id
+          ...NameFragment @defer
+        }
+      }
+      fragment NameFragment on Hero {
+        nonNullName
+      }
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         ...hero,
         nonNullName: () => Promise.resolve(null),
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
-        data: { hero: { id: "1" } },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        completed: [
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+          },
+        },
+        errors: [
           {
-            id: "0",
-            errors: [
-              {
-                message:
-                  "Cannot return null for non-nullable field Hero.nonNullName.",
-                locations: [{ line: 9, column: 9 }],
-                path: ["hero", "nonNullName"],
-              },
-            ],
+            message:
+              "Cannot return null for non-nullable field Hero.nonNullName.",
+            locations: [{ line: 9, column: 9 }],
+            path: ["hero", "nonNullName"],
           },
         ],
-        hasNext: false,
-      },
-    ]);
+      });
+      expect(request.hasNext).toBe(false);
+    }
   });
+
   it("Returns payloads in correct order", async () => {
-    const document = parse(`
+    const query = gql`
       query HeroNameQuery {
         hero {
           id
@@ -2405,8 +2221,11 @@ describe("graphql-js test cases", () => {
       fragment NestedFragment on Friend {
         name
       }
-    `);
-    const result = await run(document, {
+    `;
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
       hero: {
         ...hero,
         name: async () => {
@@ -2415,167 +2234,55 @@ describe("graphql-js test cases", () => {
         },
       },
     });
-    expectJSON(result).toDeepEqual([
-      {
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
-          hero: { id: "1" },
-        },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        pending: [
-          { id: "1", path: ["hero", "friends", 0] },
-          { id: "2", path: ["hero", "friends", 1] },
-          { id: "3", path: ["hero", "friends", 2] },
-        ],
-        incremental: [
-          {
-            data: { name: "slow", friends: [{}, {}, {}] },
-            id: "0",
-          },
-          { data: { name: "Han" }, id: "1" },
-          { data: { name: "Leia" }, id: "2" },
-          { data: { name: "C-3PO" }, id: "3" },
-        ],
-        completed: [{ id: "0" }, { id: "1" }, { id: "2" }, { id: "3" }],
-        hasNext: false,
-      },
-    ]);
-  });
-  it("Returns payloads from synchronous data in correct order", async () => {
-    const document = parse(`
-    query HeroNameQuery {
-      hero {
-        id
-        ...NameFragment @defer
-      }
-    }
-    fragment NameFragment on Hero {
-      name
-      friends {
-        ...NestedFragment @defer
-      }
-    }
-    fragment NestedFragment on Friend {
-      name
-    }
-  `);
-    const result = await run(document);
-    expectJSON(result).toDeepEqual([
-      {
-        data: {
-          hero: { id: "1" },
-        },
-        pending: [{ id: "0", path: ["hero"] }],
-        hasNext: true,
-      },
-      {
-        pending: [
-          { id: "1", path: ["hero", "friends", 0] },
-          { id: "2", path: ["hero", "friends", 1] },
-          { id: "3", path: ["hero", "friends", 2] },
-        ],
-        incremental: [
-          {
-            data: {
-              name: "Luke",
-              friends: [{}, {}, {}],
-            },
-            id: "0",
-          },
-          { data: { name: "Han" }, id: "1" },
-          { data: { name: "Leia" }, id: "2" },
-          { data: { name: "C-3PO" }, id: "3" },
-        ],
-        completed: [{ id: "0" }, { id: "1" }, { id: "2" }, { id: "3" }],
-        hasNext: false,
-      },
-    ]);
-  });
-
-  it("Filters deferred payloads when a list item returned by an async iterable is nulled", async () => {
-    const document = parse(`
-    query {
-      hero {
-        friends {
-          nonNullName
-          ...NameFragment @defer
-        }
-      }
-    }
-    fragment NameFragment on Friend {
-      name
-    }
-  `);
-    const result = await run(document, {
-      hero: {
-        ...hero,
-        async *friends() {
-          yield await Promise.resolve({
-            ...friends[0],
-            nonNullName: () => Promise.resolve(null),
-          });
-        },
-      },
-    });
-    expectJSON(result).toDeepEqual({
-      data: {
-        hero: {
-          friends: [null],
-        },
-      },
-      errors: [
-        {
-          message:
-            "Cannot return null for non-nullable field Friend.nonNullName.",
-          locations: [{ line: 5, column: 11 }],
-          path: ["hero", "friends", 0, "nonNullName"],
-        },
-      ],
-    });
-  });
-
-  it("original execute function throws error if anything is deferred and everything else is sync", () => {
-    const doc = `
-    query Deferred {
-      ... @defer { hero { id } }
-    }
-  `;
-    expect(() =>
-      execute({
-        schema,
-        document: parse(doc),
-        rootValue: {},
-      })
-    ).to.throw(
-      "Executing this GraphQL operation would unexpectedly produce multiple payloads (due to @defer or @stream directive)"
-    );
-  });
-
-  it("original execute function resolves to error if anything is deferred and something else is async", async () => {
-    const doc = `
-    query Deferred {
-      hero { name }
-      ... @defer { hero { id } }
-    }
-  `;
-    await expectPromise(
-      execute({
-        schema,
-        document: parse(doc),
-        rootValue: {
           hero: {
-            ...hero,
-            name: async () => {
-              await resolveOnNextTick();
-              return "slow";
-            },
+            id: "1",
           },
         },
-      })
-    ).toRejectWith(
-      "Executing this GraphQL operation would unexpectedly produce multiple payloads (due to @defer or @stream directive)"
-    );
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          hero: {
+            id: "1",
+            name: "slow",
+            friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
+  });
+
+  it.skip("Returns payloads from synchronous data in correct order", async () => {
+    // from the client perspective, a repeat of the last one
+  });
+
+  it.skip("Filters deferred payloads when a list item returned by an async iterable is nulled", async () => {
+    // from the client perspective, a regular query
+  });
+
+  it.skip("original execute function throws error if anything is deferred and everything else is sync", () => {
+    // not relevant for the client
+  });
+
+  it.skip("original execute function resolves to error if anything is deferred and something else is async", async () => {
+    // not relevant for the client
   });
 });

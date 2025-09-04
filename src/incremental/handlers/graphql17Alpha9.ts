@@ -47,8 +47,7 @@ export declare namespace GraphQL17Alpha9Handler {
   }
 
   export interface CompletedResult {
-    path: Incremental.Path;
-    label?: string;
+    id: string;
     errors?: ReadonlyArray<GraphQLFormattedError>;
   }
 

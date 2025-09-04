@@ -205,16 +205,18 @@ async function* run(
   }
 }
 
-const schemaLink = new ApolloLink((operation) => {
-  return new Observable((observer) => {
-    void (async () => {
-      for await (const chunk of run(operation.query)) {
-        observer.next(chunk);
-      }
-      observer.complete();
-    })();
+function createSchemaLink(rootValue?: Record<string, unknown>) {
+  return new ApolloLink((operation) => {
+    return new Observable((observer) => {
+      void (async () => {
+        for await (const chunk of run(operation.query, rootValue)) {
+          observer.next(chunk);
+        }
+        observer.complete();
+      })();
+    });
   });
-});
+}
 
 describe("graphql-js test cases", () => {
   // These test cases mirror defer tests of the `graphql-js` v17.0.0-alpha.9 release:
@@ -2556,7 +2558,16 @@ test("returns error on initial result", async () => {
 
 test("stream that returns an error but continues to stream", async () => {
   const client = new ApolloClient({
-    link: schemaLink,
+    link: createSchemaLink({
+      hero: {
+        ...hero,
+        nonNullName: null,
+        name: async () => {
+          await wait(100);
+          return "slow";
+        },
+      },
+    }),
     cache: new InMemoryCache(),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
@@ -2566,10 +2577,10 @@ test("stream that returns an error but continues to stream", async () => {
       hero {
         id
         ... @defer {
-          errorField
+          nonNullName
         }
         ... @defer {
-          slowField
+          name
         }
       }
     }
@@ -2606,7 +2617,6 @@ test("stream that returns an error but continues to stream", async () => {
       hero: {
         __typename: "Hero",
         id: "1",
-        errorField: null,
       },
     }),
     error: new CombinedGraphQLErrors({
@@ -2614,13 +2624,13 @@ test("stream that returns an error but continues to stream", async () => {
         hero: {
           __typename: "Hero",
           id: "1",
-          errorField: null,
         },
       },
       errors: [
         {
-          message: "bad",
-          path: ["hero", "errorField"],
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
         },
       ],
     }),
@@ -2635,8 +2645,7 @@ test("stream that returns an error but continues to stream", async () => {
       hero: {
         __typename: "Hero",
         id: "1",
-        errorField: null,
-        slowField: "slow",
+        name: "slow",
       },
     },
     error: new CombinedGraphQLErrors({
@@ -2644,14 +2653,14 @@ test("stream that returns an error but continues to stream", async () => {
         hero: {
           __typename: "Hero",
           id: "1",
-          errorField: null,
-          slowField: "slow",
+          name: "slow",
         },
       },
       errors: [
         {
-          message: "bad",
-          path: ["hero", "errorField"],
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
         },
       ],
     }),

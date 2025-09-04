@@ -2,6 +2,7 @@ import assert from "node:assert";
 
 import type {
   DocumentNode,
+  FormattedExecutionResult,
   FormattedInitialIncrementalExecutionResult,
   FormattedSubsequentIncrementalExecutionResult,
 } from "graphql-17-alpha9";
@@ -175,11 +176,12 @@ function promiseWithResolvers<T>(): {
 
 async function* run(
   document: DocumentNode,
-  rootValue: unknown = { hero },
+  rootValue: Record<string, unknown> = { hero },
   enableEarlyExecution = false
 ): AsyncGenerator<
   | FormattedInitialIncrementalExecutionResult
-  | FormattedSubsequentIncrementalExecutionResult
+  | FormattedSubsequentIncrementalExecutionResult,
+  FormattedExecutionResult | void
 > {
   const result = await experimentalExecuteIncrementally({
     schema,

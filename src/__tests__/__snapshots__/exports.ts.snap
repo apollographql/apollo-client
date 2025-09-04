@@ -363,7 +363,7 @@ Array [
   "enableFakeTimers",
   "executeWithDefaultContext",
   "markAsStreaming",
-  "mockDeferStream",
+  "mockDefer20220824",
   "mockMultipartSubscriptionStream",
   "renderAsync",
   "renderHookAsync",

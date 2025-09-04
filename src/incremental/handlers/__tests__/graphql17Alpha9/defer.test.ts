@@ -27,7 +27,7 @@ import {
 } from "@apollo/client";
 import {
   markAsStreaming,
-  mockDeferStream,
+  mockDefer20220824,
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
@@ -2371,7 +2371,7 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
 
 // TODO: Add test helpers for new format
 test.failing("merges cache updates that happen concurrently", async () => {
-  const stream = mockDeferStream();
+  const stream = mockDefer20220824();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),
@@ -2642,7 +2642,7 @@ test("stream that returns an error but continues to stream", async () => {
 
 // TODO: Update to use test utils with updated types
 test.skip("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
-  const stream = mockDeferStream();
+  const stream = mockDefer20220824();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),

@@ -14,7 +14,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockLink } from "@apollo/client/testing";
 import {
-  mockDeferStream,
+  mockDefer20220824,
   ObservableStream,
   spyOnConsole,
   wait,
@@ -7567,7 +7567,7 @@ describe("ApolloClient", () => {
 
       const outgoingRequestSpy = jest.fn(((operation, forward) =>
         forward(operation)) satisfies ApolloLink.RequestHandler);
-      const defer = mockDeferStream();
+      const defer = mockDefer20220824();
       const client = new ApolloClient({
         cache: new InMemoryCache({}),
         link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),

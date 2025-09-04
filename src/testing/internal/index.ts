@@ -26,7 +26,7 @@ export { actAsync } from "./rtl/actAsync.js";
 export { renderAsync } from "./rtl/renderAsync.js";
 export { renderHookAsync } from "./rtl/renderHookAsync.js";
 export {
-  mockDeferStream,
+  mockDefer20220824,
   mockMultipartSubscriptionStream,
 } from "./incremental.js";
 export { resetApolloContext } from "./resetApolloContext.js";

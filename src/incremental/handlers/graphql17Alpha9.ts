@@ -171,12 +171,14 @@ class IncrementalRequest<TData>
   }
 }
 
-export class GraphQL17Alpha9Handler<TData>
+export class GraphQL17Alpha9Handler
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {
   isIncrementalResult(
     result: ApolloLink.Result<any>
-  ): result is GraphQL17Alpha9Handler.Chunk<TData> {
+  ): result is
+    | GraphQL17Alpha9Handler.InitialResult
+    | GraphQL17Alpha9Handler.SubsequentResult {
     return "hasNext" in result;
   }
 

@@ -36,7 +36,7 @@ import {
   GraphQL17Alpha9Handler,
   hasIncrementalChunks,
   // eslint-disable-next-line local-rules/no-relative-imports
-} from "../graphql17Alpha9.js";
+} from "../../graphql17Alpha9.js";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts

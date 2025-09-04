@@ -129,6 +129,7 @@ class IncrementalRequest<TData>
         this.mergeIn({
           data: data as TData,
           extensions: incremental.extensions,
+          errors: incremental.errors,
         });
 
         for (const completed of chunk.completed) {

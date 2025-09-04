@@ -364,6 +364,7 @@ Array [
   "executeWithDefaultContext",
   "markAsStreaming",
   "mockDefer20220824",
+  "mockDeferStreamGraphQL17Alpha9",
   "mockMultipartSubscriptionStream",
   "renderAsync",
   "renderHookAsync",

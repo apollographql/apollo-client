@@ -122,7 +122,7 @@ class IncrementalRequest<TData>
           const key = path[i];
           const parent: Record<string | number, any> =
             typeof key === "number" ? [] : {};
-          parent[key] = incremental.data;
+          parent[key] = data;
           data = parent as typeof data;
         }
 

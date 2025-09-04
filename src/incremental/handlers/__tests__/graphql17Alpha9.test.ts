@@ -2467,7 +2467,12 @@ test.failing("merges cache updates that happen concurrently", async () => {
 
 test("returns error on initial result", async () => {
   const client = new ApolloClient({
-    link: createSchemaLink(),
+    link: createSchemaLink({
+      hero: {
+        ...hero,
+        nonNullName: null,
+      },
+    }),
     cache: new InMemoryCache(),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
@@ -2479,7 +2484,7 @@ test("returns error on initial result", async () => {
         ... @defer {
           name
         }
-        errorField
+        nonNullName
       }
     }
   `;
@@ -2497,57 +2502,19 @@ test("returns error on initial result", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    loading: true,
-    data: markAsStreaming({
-      hero: {
-        __typename: "Hero",
-        id: "1",
-        errorField: null,
-      },
-    }),
-    error: new CombinedGraphQLErrors({
-      data: {
-        hero: {
-          __typename: "Hero",
-          id: "1",
-          errorField: null,
-        },
-      },
-      errors: [
-        {
-          message: "bad",
-          path: ["hero", "errorField"],
-        },
-      ],
-    }),
-    dataState: "streaming",
-    networkStatus: NetworkStatus.streaming,
-    partial: true,
-  });
-
-  await expect(observableStream).toEmitTypedValue({
     loading: false,
     data: {
-      hero: {
-        __typename: "Hero",
-        id: "1",
-        errorField: null,
-        name: "Luke",
-      },
+      hero: null,
     },
     error: new CombinedGraphQLErrors({
       data: {
-        hero: {
-          __typename: "Hero",
-          id: "1",
-          errorField: null,
-          name: "Luke",
-        },
+        hero: null,
       },
       errors: [
         {
-          message: "bad",
-          path: ["hero", "errorField"],
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
         },
       ],
     }),

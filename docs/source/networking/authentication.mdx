@@ -11,7 +11,7 @@ Apollo Client uses the ultra flexible [Apollo Link](../api/link/introduction/) t
 If your app is browser based and you are using cookies for login and session management with a backend, tell your network interface to send the cookie along with every request. Pass the credentials option e.g. `credentials: 'same-origin'` if your backend server is the same domain, as shown below, or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
-const link = createHttpLink({
+const link = new HttpLink({
   uri: "/graphql",
   credentials: "same-origin",
 });

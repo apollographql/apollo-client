@@ -99,7 +99,7 @@ class IncrementalRequest<TData>
       this.pending.push(...chunk.pending);
     }
 
-    this.mergeIn(chunk);
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -126,7 +126,7 @@ class IncrementalRequest<TData>
           data = parent as typeof data;
         }
 
-        this.mergeIn({
+        this.merge({
           data: data as TData,
           extensions: incremental.extensions,
           errors: incremental.errors,
@@ -158,7 +158,7 @@ class IncrementalRequest<TData>
     return result;
   }
 
-  private mergeIn(normalized: FormattedExecutionResult<TData>) {
+  private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
       this.data = this.merger.merge(this.data, normalized.data);
     }

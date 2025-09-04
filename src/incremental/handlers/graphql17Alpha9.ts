@@ -192,7 +192,28 @@ export class GraphQL17Alpha9Handler<TData>
     return request;
   }
 
-  extractErrors(result: ApolloLink.Result<any>) {}
+  extractErrors(result: ApolloLink.Result<any>) {
+    const acc: GraphQLFormattedError[] = [];
+    const push = ({
+      errors,
+    }: {
+      errors?: ReadonlyArray<GraphQLFormattedError>;
+    }) => {
+      if (errors) {
+        acc.push(...errors);
+      }
+    };
+
+    push(result);
+
+    if (this.isIncrementalResult(result)) {
+      push(new IncrementalRequest().handle(undefined, result));
+    }
+
+    if (acc.length) {
+      return acc;
+    }
+  }
 
   startRequest<TData>(_: { query: DocumentNode }) {
     return new IncrementalRequest<TData>();

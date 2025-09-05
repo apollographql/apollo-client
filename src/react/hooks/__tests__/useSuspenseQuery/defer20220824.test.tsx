@@ -52,7 +52,7 @@ async function renderSuspenseHook<
   }
 
   function ErrorFallback() {
-    useTrackRenders({ name: "ErrorFallback" });
+    useTrackRenders({ name: "ErrorBoundary" });
 
     return null;
   }
@@ -1682,7 +1682,7 @@ test("throws network errors returned by deferred queries", async () => {
   {
     const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
+    expect(renderedComponents).toStrictEqual(["ErrorBoundary"]);
     expect(snapshot).toStrictEqualTyped({
       error: new Error("Could not fetch"),
     });
@@ -1739,7 +1739,7 @@ test("throws graphql errors returned by deferred queries", async () => {
   {
     const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
+    expect(renderedComponents).toStrictEqual(["ErrorBoundary"]);
     expect(snapshot).toStrictEqualTyped({
       error: new CombinedGraphQLErrors({
         data: null,
@@ -1797,7 +1797,7 @@ test("throws errors returned by deferred queries that include partial data", asy
   {
     const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
+    expect(renderedComponents).toStrictEqual(["ErrorBoundary"]);
     expect(snapshot).toStrictEqualTyped({
       error: new CombinedGraphQLErrors({
         data: { greeting: null },
@@ -1927,7 +1927,7 @@ test("discards partial data and throws errors returned in incremental chunks", a
   {
     const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
+    expect(renderedComponents).toStrictEqual(["ErrorBoundary"]);
     expect(snapshot).toStrictEqualTyped({
       error: new CombinedGraphQLErrors({
         data: {

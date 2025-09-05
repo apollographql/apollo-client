@@ -28,8 +28,6 @@ import {
 import { offsetLimitPagination } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-const IS_REACT_19 = React.version.startsWith("19");
-
 async function renderSuspenseHook<
   TData,
   TVariables extends OperationVariables,

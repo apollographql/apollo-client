@@ -2487,7 +2487,7 @@ test("can refetch and respond to cache updates after encountering an error in an
     });
   }
 
-  await expect(refetchPromise!).resolves.toStrictEqualTyped({
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
     data: {
       hero: {
         heroFriends: [

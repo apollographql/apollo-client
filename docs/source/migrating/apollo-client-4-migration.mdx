@@ -1503,7 +1503,7 @@ function loader() {
 
 ### Recommended: Avoid using generated hooks
 
-Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen](https://the-guild.dev/graphql/codegen), you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
+Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen's](https://the-guild.dev/graphql/codegen) [`@graphql-codegen/typescript-react-apollo`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-react-apollo) plugin, you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
 
 Use the hooks exported from Apollo Client directly with `TypedDocumentNode` instead.
 

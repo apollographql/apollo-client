@@ -8,9 +8,9 @@ import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { useMutation } from "@apollo/client/react";
-import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   createClientWrapper,
+  mockDefer20220824,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
@@ -33,10 +33,11 @@ test("resolves a deferred mutation with the full result", async () => {
     description: "Get milk!",
   };
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -73,41 +74,30 @@ test("resolves a deferred mutation with the full result", async () => {
     });
   }
 
-  setTimeout(() => {
-    link.simulateResult({
-      result: {
-        data: {
-          createTodo: {
-            id: 1,
-            __typename: "Todo",
-          },
-        },
-        hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      createTodo: {
+        id: 1,
+        __typename: "Todo",
       },
-    });
+    },
+    hasNext: true,
   });
 
   await expect(takeSnapshot).not.toRerender();
 
-  setTimeout(() => {
-    link.simulateResult(
+  enqueueSubsequentChunk({
+    incremental: [
       {
-        result: {
-          incremental: [
-            {
-              data: {
-                description: "Get milk!",
-                priority: "High",
-                __typename: "Todo",
-              },
-              path: ["createTodo"],
-            },
-          ],
-          hasNext: false,
+        data: {
+          description: "Get milk!",
+          priority: "High",
+          __typename: "Todo",
         },
+        path: ["createTodo"],
       },
-      true
-    );
+    ],
+    hasNext: false,
   });
 
   {
@@ -159,10 +149,11 @@ test("resolves with resulting errors and calls onError callback", async () => {
     description: "Get milk!",
   };
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -202,35 +193,28 @@ test("resolves with resulting errors and calls onError callback", async () => {
     });
   }
 
-  link.simulateResult({
-    result: {
-      data: {
-        createTodo: {
-          id: 1,
-          __typename: "Todo",
-        },
+  enqueueInitialChunk({
+    data: {
+      createTodo: {
+        id: 1,
+        __typename: "Todo",
       },
-      hasNext: true,
     },
+    hasNext: true,
   });
 
   await expect(takeSnapshot).not.toRerender();
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: null,
-            errors: [{ message: CREATE_TODO_ERROR }],
-            path: ["createTodo"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: null,
+        errors: [{ message: CREATE_TODO_ERROR }],
+        path: ["createTodo"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   await expect(promise).rejects.toThrow(
     new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
@@ -280,10 +264,11 @@ test("calls the update function with the final merged result data", async () => 
     description: "Get milk!",
   };
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
   const update = jest.fn();
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache: new InMemoryCache(),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -322,38 +307,31 @@ test("calls the update function with the final merged result data", async () => 
     });
   }
 
-  link.simulateResult({
-    result: {
-      data: {
-        createTodo: {
-          id: 1,
-          __typename: "Todo",
-        },
+  enqueueInitialChunk({
+    data: {
+      createTodo: {
+        id: 1,
+        __typename: "Todo",
       },
-      hasNext: true,
     },
+    hasNext: true,
   });
 
   await expect(takeSnapshot).not.toRerender();
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-            path: ["createTodo"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          description: "Get milk!",
+          priority: "High",
+          __typename: "Todo",
+        },
+        path: ["createTodo"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   await expect(promiseReturnedByMutate).resolves.toStrictEqualTyped({
     data: {

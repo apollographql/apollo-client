@@ -16,8 +16,10 @@ import {
   createQueryPreloader,
   useReadQuery,
 } from "@apollo/client/react";
-import { MockSubscriptionLink } from "@apollo/client/testing";
-import { markAsStreaming } from "@apollo/client/testing/internal";
+import {
+  markAsStreaming,
+  mockDefer20220824,
+} from "@apollo/client/testing/internal";
 
 async function renderDefaultTestApp<
   TData,
@@ -94,10 +96,12 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link,
+    link: httpLink,
     incrementalHandler: new Defer20220824Handler(),
   });
 
@@ -113,11 +117,9 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
-  link.simulateResult({
-    result: {
-      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-      hasNext: true,
-    },
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    hasNext: true,
   });
 
   {
@@ -134,23 +136,18 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     });
   }
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Alice", __typename: "Person" },
+          __typename: "Greeting",
+        },
+        path: ["greeting"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();

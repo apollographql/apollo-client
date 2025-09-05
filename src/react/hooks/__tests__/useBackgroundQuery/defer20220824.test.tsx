@@ -12,9 +12,9 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { QueryRef } from "@apollo/client/react";
 import { useBackgroundQuery, useReadQuery } from "@apollo/client/react";
-import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   createClientWrapper,
+  mockDefer20220824,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
@@ -83,7 +83,9 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+
   const cache = new InMemoryCache();
   cache.writeQuery({
     query,
@@ -97,7 +99,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   });
   const client = new ApolloClient({
     cache,
-    link,
+    link: httpLink,
     incrementalHandler: new Defer20220824Handler(),
   });
 
@@ -140,13 +142,11 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     });
   }
 
-  link.simulateResult({
-    result: {
-      data: {
-        greeting: { __typename: "Greeting", message: "Hello world" },
-      },
-      hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
     },
+    hasNext: true,
   });
 
   {
@@ -167,23 +167,18 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     });
   }
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Alice", __typename: "Person" },
+          __typename: "Greeting",
+        },
+        path: ["greeting"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -231,7 +226,9 @@ test('does not suspend deferred queries with partial data in the cache and using
     }
   `;
 
-  const link = new MockSubscriptionLink();
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+
   const cache = new InMemoryCache();
 
   // We are intentionally writing partial data to the cache. Supress console
@@ -250,7 +247,7 @@ test('does not suspend deferred queries with partial data in the cache and using
   }
 
   const client = new ApolloClient({
-    link,
+    link: httpLink,
     cache,
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -293,13 +290,11 @@ test('does not suspend deferred queries with partial data in the cache and using
     });
   }
 
-  link.simulateResult({
-    result: {
-      data: {
-        greeting: { message: "Hello world", __typename: "Greeting" },
-      },
-      hasNext: true,
+  enqueueInitialChunk({
+    data: {
+      greeting: { message: "Hello world", __typename: "Greeting" },
     },
+    hasNext: true,
   });
 
   {
@@ -320,23 +315,18 @@ test('does not suspend deferred queries with partial data in the cache and using
     });
   }
 
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              __typename: "Greeting",
-              recipient: { name: "Alice", __typename: "Person" },
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { name: "Alice", __typename: "Person" },
+        },
+        path: ["greeting"],
       },
-    },
-    true
-  );
+    ],
+    hasNext: false,
+  });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();

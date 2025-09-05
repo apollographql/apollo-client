@@ -2,7 +2,6 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import React from "react";
 
 import {
   ApolloClient,

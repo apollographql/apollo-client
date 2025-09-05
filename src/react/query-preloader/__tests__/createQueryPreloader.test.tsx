@@ -25,7 +25,6 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { PreloadedQueryRef, QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -33,7 +32,7 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
-import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import type {
   MaskedVariablesCaseData,
   SimpleCaseData,
@@ -41,7 +40,6 @@ import type {
 } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
-  markAsStreaming,
   renderHookAsync,
   setupMaskedVariablesCase,
   setupSimpleCase,

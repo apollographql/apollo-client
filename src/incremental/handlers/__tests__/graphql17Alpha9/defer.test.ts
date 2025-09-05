@@ -25,6 +25,7 @@ import {
   NetworkStatus,
   Observable,
 } from "@apollo/client";
+import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
   markAsStreaming,
   mockDefer20220824,
@@ -33,7 +34,6 @@ import {
 } from "@apollo/client/testing/internal";
 
 import {
-  GraphQL17Alpha9Handler,
   hasIncrementalChunks,
   // eslint-disable-next-line local-rules/no-relative-imports
 } from "../../graphql17Alpha9.js";

@@ -1398,7 +1398,7 @@ test("rerenders data returned by `fetchMore` for a deferred query", async () => 
     });
   }
 
-  await expect(fetchMorePromise!).resolves.toStrictEqualTyped({
+  await expect(fetchMorePromise).resolves.toStrictEqualTyped({
     data: {
       greetings: [
         {

@@ -1,12 +1,18 @@
-import type { RenderStream } from "@testing-library/react-render-stream";
+import type { RenderOptions } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import React, { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import type { DataState, TypedDocumentNode } from "@apollo/client";
+import type {
+  DataState,
+  ErrorLike,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import { ApolloClient, gql, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
@@ -17,48 +23,69 @@ import {
   mockDefer20220824,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
 
-function createDefaultTrackedComponents<
-  Snapshot extends {
-    result: useReadQuery.Result<any> | null;
-  },
-  TData = Snapshot["result"] extends useReadQuery.Result<infer TData> | null ?
-    TData
-  : unknown,
-  TStates extends DataState<TData>["dataState"] = Snapshot["result"] extends (
-    useReadQuery.Result<any, infer TStates> | null
+async function renderSuspenseHook<
+  TData,
+  TVariables extends OperationVariables,
+  TQueryRef extends QueryRef<any, any, any>,
+  TStates extends DataState<TData>["dataState"] = TQueryRef extends (
+    QueryRef<any, any, infer States>
   ) ?
-    TStates
-  : "complete" | "streaming",
->(renderStream: RenderStream<Snapshot>) {
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryRef<TData, any, TStates>;
-  }) {
-    useTrackRenders();
-    renderStream.mergeSnapshot({
-      result: useReadQuery(queryRef),
-    } as unknown as Partial<Snapshot>);
+    States
+  : never,
+  Props = never,
+>(
+  renderHook: (
+    props: Props extends never ? undefined : Props
+  ) => [TQueryRef, useBackgroundQuery.Result<TData, TVariables>],
+  options: Pick<RenderOptions, "wrapper"> & { initialProps?: Props }
+) {
+  function UseReadQuery({ queryRef }: { queryRef: QueryRef }) {
+    useTrackRenders({ name: "useReadQuery" });
+    replaceSnapshot(useReadQuery(queryRef) as any);
 
     return null;
   }
 
-  return { SuspenseFallback, ReadQueryHook };
-}
+  function SuspenseFallback() {
+    useTrackRenders({ name: "SuspenseFallback" });
 
-function createDefaultProfiler<TData = unknown>() {
-  return createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<TData> | null,
-    },
-  });
+    return null;
+  }
+
+  function ErrorFallback() {
+    useTrackRenders({ name: "ErrorBoundary" });
+
+    return null;
+  }
+
+  function App({ props }: { props: Props | undefined }) {
+    useTrackRenders({ name: "useBackgroundQuery" });
+    const [queryRef] = renderHook(props as any);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={(error) => replaceSnapshot({ error })}
+        >
+          <UseReadQuery queryRef={queryRef} />
+        </ErrorBoundary>
+      </Suspense>
+    );
+  }
+
+  const { render, takeRender, replaceSnapshot } = createRenderStream<
+    useReadQuery.Result<TData, TStates> | { error: ErrorLike }
+  >();
+
+  const utils = await render(<App props={options.initialProps} />, options);
+
+  function rerender(props: Props) {
+    return utils.rerender(<App props={props} />);
+  }
+
+  return { takeRender, rerender };
 }
 
 test('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
@@ -103,32 +130,20 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     incrementalHandler: new Defer20220824Handler(),
   });
 
-  const renderStream = createDefaultProfiler<Data>();
-
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [queryRef] = useBackgroundQuery(query, {
-      fetchPolicy: "cache-and-network",
-    });
-
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook queryRef={queryRef} />
-      </Suspense>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  const { takeRender } = await renderSuspenseHook(
+    () => useBackgroundQuery(query, { fetchPolicy: "cache-and-network" }),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "useReadQuery",
+    ]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -150,10 +165,10 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   });
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -181,10 +196,10 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   });
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -198,7 +213,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     });
   }
 
-  await expect(renderStream).not.toRerender({ timeout: 50 });
+  await expect(takeRender).not.toRerender();
 });
 
 test('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
@@ -252,32 +267,24 @@ test('does not suspend deferred queries with partial data in the cache and using
     incrementalHandler: new Defer20220824Handler(),
   });
 
-  const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [queryRef] = useBackgroundQuery(query, {
-      fetchPolicy: "cache-first",
-      returnPartialData: true,
-    });
-
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook queryRef={queryRef} />
-      </Suspense>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  const { takeRender } = await renderSuspenseHook(
+    () =>
+      useBackgroundQuery(query, {
+        fetchPolicy: "cache-first",
+        returnPartialData: true,
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "useReadQuery",
+    ]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -298,10 +305,10 @@ test('does not suspend deferred queries with partial data in the cache and using
   });
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -329,10 +336,10 @@ test('does not suspend deferred queries with partial data in the cache and using
   });
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -346,6 +353,5 @@ test('does not suspend deferred queries with partial data in the cache and using
     });
   }
 
-  await expect(renderStream).not.toRerender({ timeout: 50 });
+  await expect(takeRender).not.toRerender();
 });
-

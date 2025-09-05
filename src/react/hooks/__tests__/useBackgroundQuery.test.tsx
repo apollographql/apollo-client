@@ -1390,7 +1390,6 @@ it("works with startTransition to change variables", async () => {
   }
 });
 
-
 it("reacts to cache updates", async () => {
   const { query, mocks } = setupSimpleCase();
 
@@ -3670,7 +3669,6 @@ it('suspends and does not use partial data when changing variables and using a "
 
   await expect(renderStream).not.toRerender({ timeout: 50 });
 });
-
 
 it.each<useBackgroundQuery.FetchPolicy>([
   "cache-first",

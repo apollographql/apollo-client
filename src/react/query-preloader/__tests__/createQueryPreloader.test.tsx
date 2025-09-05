@@ -1806,7 +1806,6 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   }
 });
 
-
 test("masks result when dataMasking is `true`", async () => {
   const { query, mocks } = setupMaskedVariablesCase();
   const client = new ApolloClient({

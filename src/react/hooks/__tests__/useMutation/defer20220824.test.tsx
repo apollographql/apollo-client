@@ -387,4 +387,3 @@ test("calls the update function with the final merged result data", async () => 
 
   expect(console.error).not.toHaveBeenCalled();
 });
-

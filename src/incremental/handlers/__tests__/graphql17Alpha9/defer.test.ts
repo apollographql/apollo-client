@@ -794,7 +794,9 @@ describe("graphql-js test cases", () => {
           a {
             ... @defer {
               b {
-                c { d }
+                c {
+                  d
+                }
               }
             }
           }
@@ -804,7 +806,9 @@ describe("graphql-js test cases", () => {
             someField
             ... @defer {
               b {
-                e { f }
+                e {
+                  f
+                }
               }
             }
           }
@@ -891,7 +895,9 @@ describe("graphql-js test cases", () => {
           a {
             ... @defer {
               b {
-                c { d }
+                c {
+                  d
+                }
               }
             }
           }
@@ -900,8 +906,12 @@ describe("graphql-js test cases", () => {
           a {
             ... @defer {
               b {
-                c { d }
-                e { f }
+                c {
+                  d
+                }
+                e {
+                  f
+                }
               }
             }
           }

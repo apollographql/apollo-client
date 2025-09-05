@@ -1717,11 +1717,14 @@ test("throws graphql errors returned by deferred queries", async () => {
     }
   `;
 
-  const { httpLink, enqueueInitialChunk } = mockDeferStreamGraphQL17Alpha9();
-
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: httpLink,
+    link: new ApolloLink(() => {
+      return of({
+        data: null,
+        errors: [{ message: "Could not fetch greeting" }],
+      }).pipe(delay(20));
+    }),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
@@ -1738,11 +1741,6 @@ test("throws graphql errors returned by deferred queries", async () => {
 
     expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
-
-  enqueueInitialChunk({
-    errors: [{ message: "Could not fetch greeting" }],
-    hasNext: false,
-  });
 
   {
     const { snapshot, renderedComponents } = await takeRender();

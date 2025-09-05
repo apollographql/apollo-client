@@ -12,8 +12,9 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
-import { ApolloProvider, useQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import {
+  createClientWrapper,
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   spyOnConsole,
@@ -46,9 +47,7 @@ test("should handle deferred queries", async () => {
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -156,9 +155,7 @@ test("should handle deferred queries in lists", async () => {
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -286,9 +283,7 @@ test("should handle deferred queries in lists, merging arrays", async () => {
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -459,9 +454,7 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query, { fetchPolicy: "no-cache" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -566,9 +559,7 @@ test("should handle deferred queries with errors returned on the incremental bat
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -733,9 +724,7 @@ test('should handle deferred queries with errors returned on the incremental bat
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query, { errorPolicy: "all" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -933,9 +922,7 @@ test('returns eventually consistent data from deferred queries with data in the 
   const { takeSnapshot } = await renderHookToSnapshotStream(
     () => useQuery(query, { fetchPolicy: "cache-and-network" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1067,9 +1054,7 @@ test('returns eventually consistent data from deferred queries with partial data
         returnPartialData: true,
       }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 

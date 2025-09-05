@@ -18,8 +18,9 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
-import { ApolloProvider, useSuspenseQuery } from "@apollo/client/react";
+import { useSuspenseQuery } from "@apollo/client/react";
 import {
+  createClientWrapper,
   markAsStreaming,
   mockDefer20220824,
   spyOnConsole,
@@ -119,9 +120,7 @@ test("suspends deferred queries until initial chunk loads then streams in data a
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -218,9 +217,7 @@ test.each<useSuspenseQuery.FetchPolicy>([
     const { takeRender } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { fetchPolicy }),
       {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+        wrapper: createClientWrapper(client),
       }
     );
 
@@ -323,9 +320,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -395,9 +390,7 @@ test('does not suspend deferred queries with partial data in the cache and using
         returnPartialData: true,
       }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -513,9 +506,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { fetchPolicy: "cache-and-network" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -621,9 +612,7 @@ test("suspends deferred queries with lists and properly patches results", async 
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -769,9 +758,7 @@ test("suspends queries with deferred fragments in lists and properly merges arra
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -923,9 +910,7 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
   const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1104,9 +1089,7 @@ test("incrementally renders data returned after skipping a deferred query", asyn
     ({ skip }) => useSuspenseQuery(query, { skip }),
     {
       initialProps: { skip: true },
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1236,9 +1219,7 @@ test("rerenders data returned by `fetchMore` for a deferred query", async () => 
   const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { variables: { offset: 0 } }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1460,9 +1441,7 @@ it.failing(
     const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { offset: 0 } }),
       {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+        wrapper: createClientWrapper(client),
       }
     );
 
@@ -1667,9 +1646,7 @@ test("throws network errors returned by deferred queries", async () => {
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1719,9 +1696,7 @@ test("throws graphql errors returned by deferred queries", async () => {
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1782,9 +1757,7 @@ test("throws errors returned by deferred queries that include partial data", asy
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1840,9 +1813,7 @@ test("discards partial data and throws errors returned in incremental chunks", a
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -1990,9 +1961,7 @@ test("adds partial data and does not throw errors returned in incremental chunks
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { errorPolicy: "all" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -2159,9 +2128,7 @@ test("adds partial data and discards errors returned in incremental chunks with 
   const { takeRender } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 
@@ -2301,9 +2268,7 @@ test("can refetch and respond to cache updates after encountering an error in an
   const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
     () => useSuspenseQuery(query, { errorPolicy: "all" }),
     {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+      wrapper: createClientWrapper(client),
     }
   );
 

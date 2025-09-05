@@ -178,6 +178,7 @@ class IncrementalRequest<TData>
 export class GraphQL17Alpha9Handler
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {
+  /** @internal */
   isIncrementalResult(
     result: ApolloLink.Result<any>
   ): result is
@@ -186,6 +187,7 @@ export class GraphQL17Alpha9Handler
     return "hasNext" in result;
   }
 
+  /** @internal */
   prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
     if (hasDirectives(["defer"], request.query)) {
       const context = request.context ?? {};
@@ -198,6 +200,7 @@ export class GraphQL17Alpha9Handler
     return request;
   }
 
+  /** @internal */
   extractErrors(result: ApolloLink.Result<any>) {
     const acc: GraphQLFormattedError[] = [];
     const push = ({
@@ -221,6 +224,7 @@ export class GraphQL17Alpha9Handler
     }
   }
 
+  /** @internal */
   startRequest<TData>(_: { query: DocumentNode }) {
     return new IncrementalRequest<TData>();
   }

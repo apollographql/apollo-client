@@ -171,6 +171,10 @@ class IncrementalRequest<TData>
   }
 }
 
+/**
+ * Provides handling for the incremental delivery specification implemented by
+ * graphql.js version `17.0.0-alpha.9`.
+ */
 export class GraphQL17Alpha9Handler
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {

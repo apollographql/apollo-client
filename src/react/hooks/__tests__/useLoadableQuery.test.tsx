@@ -32,7 +32,6 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -1530,7 +1529,6 @@ it("works with startTransition to change variables", async () => {
     expect(todo).toHaveTextContent("Take out trash (completed)");
   });
 });
-
 
 it("reacts to cache updates", async () => {
   const { query, mocks } = useSimpleQueryCase();
@@ -4395,7 +4393,6 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 });
-
 
 it("throws when calling loadQuery on first render", async () => {
   // We don't provide this functionality with React 19 anymore since it requires internals access

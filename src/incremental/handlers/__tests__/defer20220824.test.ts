@@ -28,7 +28,7 @@ import {
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
   markAsStreaming,
-  mockDeferStream,
+  mockDefer20220824,
   ObservableStream,
 } from "@apollo/client/testing/internal";
 
@@ -683,7 +683,7 @@ test("Defer20220824Handler can be used with `ApolloClient`", async () => {
 });
 
 test("merges cache updates that happen concurrently", async () => {
-  const stream = mockDeferStream();
+  const stream = mockDefer20220824();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),
@@ -979,7 +979,7 @@ test("stream that returns an error but continues to stream", async () => {
 });
 
 test("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
-  const stream = mockDeferStream();
+  const stream = mockDefer20220824();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),

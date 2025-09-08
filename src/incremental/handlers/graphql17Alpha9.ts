@@ -136,8 +136,7 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
-        const index = this.pending.findIndex(({ id }) => id === completed.id);
-        this.pending.splice(index, 1);
+        this.pending = this.pending.filter(({ id }) => id !== completed.id);
 
         if (completed.errors) {
           this.errors.push(...completed.errors);

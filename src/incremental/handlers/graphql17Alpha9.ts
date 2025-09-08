@@ -112,7 +112,7 @@ class IncrementalRequest<TData>
         const pending = this.pending.find(({ id }) => incremental.id === id);
         invariant(
           pending,
-          "Could not find pending chunk for incremental value. Please file an issue because this is a bug in Apollo Client."
+          "Could not find pending chunk for incremental value. Please file an issue for the Apollo Client team to investigate."
         );
 
         let { data } = incremental;

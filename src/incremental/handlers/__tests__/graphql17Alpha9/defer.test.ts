@@ -28,7 +28,7 @@ import {
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
   markAsStreaming,
-  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
@@ -2379,9 +2379,8 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
   });
 });
 
-// TODO: Add test helpers for new format
-test.failing("merges cache updates that happen concurrently", async () => {
-  const stream = mockDefer20220824();
+test("merges cache updates that happen concurrently", async () => {
+  const stream = mockDeferStreamGraphQL17Alpha9();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),
@@ -2418,6 +2417,7 @@ test.failing("merges cache updates that happen concurrently", async () => {
         job: "Farmer",
       },
     },
+    pending: [{ id: "0", path: ["hero"] }],
     hasNext: true,
   });
 
@@ -2453,9 +2453,10 @@ test.failing("merges cache updates that happen concurrently", async () => {
         data: {
           name: "Luke",
         },
-        path: ["hero"],
+        id: "0",
       },
     ],
+    completed: [{ id: "0" }],
     hasNext: false,
   });
 
@@ -2650,9 +2651,8 @@ test("stream that returns an error but continues to stream", async () => {
   });
 });
 
-// TODO: Update to use test utils with updated types
-test.skip("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
-  const stream = mockDefer20220824();
+test("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
+  const stream = mockDeferStreamGraphQL17Alpha9();
   const client = new ApolloClient({
     link: stream.httpLink,
     cache: new InMemoryCache(),
@@ -2675,6 +2675,7 @@ test.skip("handles final chunk of { hasNext: false } correctly in usage with Apo
     data: {
       allProducts: [null, null, null],
     },
+    pending: [],
     errors: [
       {
         message:

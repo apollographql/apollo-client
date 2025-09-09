@@ -102,20 +102,33 @@ class IncrementalRequest<TData>
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
-        // TODO: Implement support for `@stream`. For now we will skip handling
-        // streamed responses
-        if ("items" in incremental) {
-          continue;
-        }
-
         const pending = this.pending.find(({ id }) => incremental.id === id);
+
         invariant(
           pending,
           "Could not find pending chunk for incremental value. Please file an issue for the Apollo Client team to investigate."
         );
 
-        let { data } = incremental;
         const path = pending.path.concat(incremental.subPath ?? []);
+
+        if ("items" in incremental) {
+          const array = path.reduce((data, key) => {
+            // Use `&&` to maintain `null` if encountered
+            return data && data[key];
+          }, this.data);
+
+          invariant(
+            Array.isArray(array),
+            `@stream: value at path %o is not an array. Please file an issue for the Apollo Client team to investigate.`,
+            path
+          );
+
+          array.push(...(incremental.items as ReadonlyArray<unknown>));
+
+          continue;
+        }
+
+        let { data } = incremental;
 
         for (let i = path.length - 1; i >= 0; i--) {
           const key = path[i];

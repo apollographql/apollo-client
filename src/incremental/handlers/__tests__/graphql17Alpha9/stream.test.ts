@@ -140,7 +140,7 @@ describe("graphql-js test cases", () => {
   // These test cases mirror stream tests of the `graphql-js` v17.0.0-alpha.9 release:
   // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/stream-test.ts
 
-  it.skip("Can stream a list field", async () => {
+  it("Can stream a list field", async () => {
     const query = gql`
       query {
         scalarList @stream(initialCount: 1)

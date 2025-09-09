@@ -20,7 +20,6 @@ import { from } from "rxjs";
 import {
   ApolloClient,
   ApolloLink,
-  CombinedGraphQLErrors,
   gql,
   InMemoryCache,
   NetworkStatus,
@@ -28,7 +27,6 @@ import {
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
   markAsStreaming,
-  mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
 } from "@apollo/client/testing/internal";
 

@@ -1021,7 +1021,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [
@@ -1130,7 +1130,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
@@ -1322,7 +1322,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
@@ -1374,7 +1374,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ name: "Luke", id: "1" }],
@@ -1570,7 +1570,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ nonNullName: "Luke" }],
@@ -1759,7 +1759,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(false);
+      expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           otherNestedObject: { scalarField: null },
@@ -2032,7 +2032,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [
@@ -2133,7 +2133,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
@@ -2251,7 +2251,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
@@ -2349,7 +2349,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
@@ -2478,7 +2478,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(hasIncrementalChunks(chunk)).toBe(true);
+      expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           friendList: [

@@ -183,7 +183,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can use default value of initialCount", async () => {
+  it("Can use default value of initialCount", async () => {
     const query = gql`
       query {
         scalarList @stream
@@ -237,7 +237,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a regular graphql query
   });
 
-  it.skip("Does not disable stream with null if argument", async () => {
+  it("Does not disable stream with null if argument", async () => {
     const query = gql`
       query ($shouldStream: Boolean) {
         scalarList @stream(initialCount: 2, if: $shouldStream)
@@ -280,7 +280,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream multi-dimensional lists", async () => {
+  it("Can stream multi-dimensional lists", async () => {
     const query = gql`
       query {
         scalarListList @stream(initialCount: 1)
@@ -330,7 +330,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream a field that returns a list of promises", async () => {
+  it("Can stream a field that returns a list of promises", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 2) {
@@ -398,7 +398,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream in correct order with lists of promises", async () => {
+  it("Can stream in correct order with lists of promises", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -494,7 +494,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Does not execute early if not specified", async () => {
+  it("Does not execute early if not specified", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -575,7 +575,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Executes early if specified", async () => {
+  it("Executes early if specified", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -632,7 +632,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream a field that returns a list with nested promises", async () => {
+  it("Can stream a field that returns a list with nested promises", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 2) {
@@ -703,7 +703,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Handles rejections in a field that returns a list of promises before initialCount is reached", async () => {
+  it("Handles rejections in a field that returns a list of promises before initialCount is reached", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 2) {
@@ -773,7 +773,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Handles rejections in a field that returns a list of promises after initialCount is reached", async () => {
+  it("Handles rejections in a field that returns a list of promises after initialCount is reached", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1) {
@@ -857,7 +857,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream a field that returns an async iterable", async () => {
+  it("Can stream a field that returns an async iterable", async () => {
     const query = gql`
       query {
         friendList @stream {
@@ -960,7 +960,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can stream a field that returns an async iterable, using a non-zero initialCount", async () => {
+  it("Can stream a field that returns an async iterable, using a non-zero initialCount", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 2) {
@@ -1039,7 +1039,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a regular graphql query
   });
 
-  it.skip("Does not execute early if not specified, when streaming from an async iterable", async () => {
+  it("Does not execute early if not specified, when streaming from an async iterable", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -1140,7 +1140,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Executes early if specified when streaming from an async iterable", async () => {
+  it("Executes early if specified when streaming from an async iterable", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -1204,7 +1204,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can handle concurrent calls to .next() without waiting", async () => {
+  it("Can handle concurrent calls to .next() without waiting", async () => {
     const query = gql(`
       query {
         friendList @stream(initialCount: 2) {
@@ -1283,7 +1283,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a regular graphql query
   });
 
-  it.skip("Handles error thrown in async iterable after initialCount is reached", async () => {
+  it("Handles error thrown in async iterable after initialCount is reached", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1) {
@@ -1339,7 +1339,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Handles null returned in non-null list items after initialCount is reached", async () => {
+  it("Handles null returned in non-null list items after initialCount is reached", async () => {
     const query = gql`
       query {
         nonNullFriendList @stream(initialCount: 1) {
@@ -1396,7 +1396,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a repeat of the last test
   });
 
-  it.skip("Handles errors thrown by completeValue after initialCount is reached", async () => {
+  it("Handles errors thrown by completeValue after initialCount is reached", async () => {
     const query = gql`
       query {
         scalarList @stream(initialCount: 1)
@@ -1446,7 +1446,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Handles async errors thrown by completeValue after initialCount is reached", async () => {
+  it("Handles async errors thrown by completeValue after initialCount is reached", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1) {
@@ -1529,7 +1529,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a repeat of the last test
   });
 
-  it.skip("Handles async errors thrown by completeValue after initialCount is reached for a non-nullable list", async () => {
+  it("Handles async errors thrown by completeValue after initialCount is reached for a non-nullable list", async () => {
     const query = gql`
       query {
         nonNullFriendList @stream(initialCount: 1) {
@@ -1591,7 +1591,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a repeat of the last test
   });
 
-  it.skip("Handles async errors thrown by completeValue after initialCount is reached from async iterable", async () => {
+  it("Handles async errors thrown by completeValue after initialCount is reached from async iterable", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1) {
@@ -1711,7 +1711,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a regular graphql query
   });
 
-  it.skip("Does not filter payloads when null error is in a different path", async () => {
+  it("Does not filter payloads when null error is in a different path", async () => {
     const query = gql`
       query {
         otherNestedObject: nestedObject {
@@ -1799,7 +1799,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Filters stream payloads that are nulled in a deferred payload", async () => {
+  it("Filters stream payloads that are nulled in a deferred payload", async () => {
     const query = gql`
       query {
         nestedObject {
@@ -1867,7 +1867,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Filters defer payloads that are nulled in a stream response", async () => {
+  it("Filters defer payloads that are nulled in a stream response", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 0) {
@@ -1954,7 +1954,7 @@ describe("graphql-js test cases", () => {
     // from a client perspective, a repeat of a previous test
   });
 
-  it.skip("Handles promises returned by completeValue after initialCount is reached", async () => {
+  it("Handles promises returned by completeValue after initialCount is reached", async () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1) {
@@ -2046,7 +2046,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Handles overlapping deferred and non-deferred streams", async () => {
+  it("Handles overlapping deferred and non-deferred streams", async () => {
     const query = gql`
       query {
         nestedObject {
@@ -2148,7 +2148,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Returns payloads in correct order when parent deferred fragment resolves slower than stream", async () => {
+  it("Returns payloads in correct order when parent deferred fragment resolves slower than stream", async () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
 
@@ -2264,7 +2264,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can @defer fields that are resolved after async iterable is complete", async () => {
+  it("Can @defer fields that are resolved after async iterable is complete", async () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
     const {
@@ -2376,7 +2376,7 @@ describe("graphql-js test cases", () => {
     }
   });
 
-  it.skip("Can @defer fields that are resolved before async iterable is complete", async () => {
+  it("Can @defer fields that are resolved before async iterable is complete", async () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
     const {

@@ -30,6 +30,7 @@ import {
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  promiseWithResolvers,
   wait,
 } from "@apollo/client/testing/internal";
 
@@ -151,23 +152,6 @@ const schema = new GraphQLSchema({ query });
 
 function resolveOnNextTick(): Promise<void> {
   return Promise.resolve(undefined);
-}
-
-type PromiseOrValue<T> = Promise<T> | T;
-
-function promiseWithResolvers<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T | PromiseOrValue<T>) => void;
-  reject: (reason?: any) => void;
-} {
-  // these are assigned synchronously within the Promise constructor
-  let resolve!: (value: T | PromiseOrValue<T>) => void;
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 async function* run(

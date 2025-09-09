@@ -577,3 +577,123 @@ test("handles final chunk without incremental value", async () => {
 
   await expect(observableStream).not.toEmitAnything();
 });
+
+test("handles errors thrown before initialCount is reached", async () => {
+  const client = new ApolloClient({
+    link: createLink({
+      async *friendList() {
+        yield await Promise.resolve(friends[0]);
+        throw new Error("bad");
+      },
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query FriendListQuery {
+      friendList @stream(initialCount: 2) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: null,
+    },
+    error: new CombinedGraphQLErrors({
+      data: { friendList: null },
+      errors: [
+        {
+          message: "bad",
+          path: ["friendList"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+test("handles errors thrown after initialCount is reached", async () => {
+  const client = new ApolloClient({
+    link: createLink({
+      async *friendList() {
+        yield await Promise.resolve(friends[0]);
+        throw new Error("bad");
+      },
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query FriendListQuery {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    error: new CombinedGraphQLErrors({
+      data: { friendList: [{ __typename: "Friend", id: "1", name: "Luke" }] },
+      errors: [
+        {
+          message: "bad",
+          path: ["friendList"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});

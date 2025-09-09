@@ -124,6 +124,21 @@ function createLink(rootValue?: Record<string, unknown>) {
   });
 }
 
+function promiseWithResolvers<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | Promise<T>) => void;
+  reject: (reason?: any) => void;
+} {
+  // these are assigned synchronously within the Promise constructor
+  let resolve!: (value: T | Promise<T>) => void;
+  let reject!: (reason?: any) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 test("handles streamed scalar lists", async () => {
   const client = new ApolloClient({
     link: createLink({ scalarList: ["apple", "banana", "orange"] }),
@@ -569,10 +584,6 @@ test("handles final chunk without incremental value", async () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     }),
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   await expect(observableStream).not.toEmitAnything();
@@ -693,6 +704,186 @@ test("handles errors thrown after initialCount is reached", async () => {
     loading: false,
     networkStatus: NetworkStatus.error,
     partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+it("handles errors thrown due to null returned in non-null list items after initialCount is reached", async () => {
+  const client = new ApolloClient({
+    link: createLink({
+      nonNullFriendList: () => [friends[0], null, friends[1]],
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      nonNullFriendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+it("handles stream when in parent deferred fragment", async () => {
+  const { promise: slowFieldPromise, resolve: resolveSlowField } =
+    promiseWithResolvers();
+
+  const client = new ApolloClient({
+    link: createLink({
+      nestedObject: {
+        scalarField: () => slowFieldPromise,
+        async *nestedFriendList() {
+          yield await Promise.resolve(friends[0]);
+          yield await Promise.resolve(friends[1]);
+        },
+      },
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      nestedObject {
+        ...DeferFragment @defer
+      }
+    }
+    fragment DeferFragment on NestedObject {
+      scalarField
+      nestedFriendList @stream(initialCount: 0) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  resolveSlowField("slow");
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        scalarField: "slow",
+        nestedFriendList: [],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        scalarField: "slow",
+        nestedFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        scalarField: "slow",
+        nestedFriendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    }),
   });
 
   await expect(observableStream).not.toEmitAnything();

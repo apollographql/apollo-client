@@ -12,8 +12,6 @@ export function storeKeyNameFromField(
   if (field.directives) {
     directivesObj = {};
     field.directives.forEach((directive) => {
-      if (directive.name.value === "stream") return;
-
       directivesObj[directive.name.value] = {};
 
       if (directive.arguments) {

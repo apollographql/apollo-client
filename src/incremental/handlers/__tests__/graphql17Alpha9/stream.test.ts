@@ -28,6 +28,7 @@ import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
   markAsStreaming,
   ObservableStream,
+  promiseWithResolvers,
 } from "@apollo/client/testing/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
@@ -95,23 +96,6 @@ const schema = new GraphQLSchema({ query });
 
 function resolveOnNextTick(): Promise<void> {
   return Promise.resolve(undefined);
-}
-
-type PromiseOrValue<T> = Promise<T> | T;
-
-function promiseWithResolvers<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T | PromiseOrValue<T>) => void;
-  reject: (reason?: any) => void;
-} {
-  // these are assigned synchronously within the Promise constructor
-  let resolve!: (value: T | PromiseOrValue<T>) => void;
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 async function* run(

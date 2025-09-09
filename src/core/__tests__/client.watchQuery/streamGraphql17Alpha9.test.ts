@@ -28,6 +28,7 @@ import {
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  promiseWithResolvers,
 } from "@apollo/client/testing/internal";
 
 const friendType = new GraphQLObjectType({
@@ -122,21 +123,6 @@ function createLink(rootValue?: Record<string, unknown>) {
   return new ApolloLink((operation) => {
     return from(run(operation.query, rootValue));
   });
-}
-
-function promiseWithResolvers<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T | Promise<T>) => void;
-  reject: (reason?: any) => void;
-} {
-  // these are assigned synchronously within the Promise constructor
-  let resolve!: (value: T | Promise<T>) => void;
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 test("handles streamed scalar lists", async () => {

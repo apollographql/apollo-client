@@ -561,13 +561,13 @@ test("handles final chunk without incremental value", async () => {
     partial: true,
   });
 
-  await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Leia" },
-      ],
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     }),
     dataState: "complete",
     loading: false,

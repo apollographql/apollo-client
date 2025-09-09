@@ -112,22 +112,32 @@ class IncrementalRequest<TData>
         const path = pending.path.concat(incremental.subPath ?? []);
 
         if ("items" in incremental) {
-          const array = path.reduce(
+          let data = path.reduce(
             // Use `&&` to maintain `null` if encountered
             (data, key) => data && data[key],
             this.data
           );
 
           invariant(
-            Array.isArray(array),
+            Array.isArray(data),
             `@stream: value at path %o is not an array. Please file an issue for the Apollo Client team to investigate.`,
             path
           );
 
-          array.push(...(incremental.items as ReadonlyArray<unknown>));
+          if (data) {
+            for (let i = path.length - 1; i >= 0; i--) {
+              const key = path[i];
+              const parent: Record<string | number, any> =
+                typeof key === "number" ? [] : {};
+              parent[key] =
+                i === path.length - 1 ? data.concat(incremental.items) : data;
+              data = parent as typeof data;
+            }
+          }
 
           this.merge(
             {
+              data,
               extensions: incremental.extensions,
               errors: incremental.errors,
             },

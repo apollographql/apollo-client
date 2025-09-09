@@ -148,11 +148,11 @@ test("handles streamed scalar lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    loading: true,
     data: markAsStreaming({
       scalarList: ["apple"],
     }),
     dataState: "streaming",
+    loading: true,
     networkStatus: NetworkStatus.streaming,
     partial: true,
   });
@@ -198,11 +198,11 @@ test("handles streamed multi-dimensional lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    loading: true,
     data: markAsStreaming({
       scalarListList: [["apple", "apple", "apple"]],
     }),
     dataState: "streaming",
+    loading: true,
     networkStatus: NetworkStatus.streaming,
     partial: true,
   });

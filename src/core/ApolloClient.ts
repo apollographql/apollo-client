@@ -132,6 +132,8 @@ export declare namespace ApolloClient {
      * queries.
      */
     incrementalHandler?: Incremental.Handler<any>;
+
+    experiments?: ApolloClient.Experiment[];
   }
 
   interface DevtoolsOptions {
@@ -610,6 +612,10 @@ export declare namespace ApolloClient {
       variables?: TVariables;
     }
   }
+
+  export interface Experiment {
+    (this: ApolloClient, options: ApolloClient.Options): void;
+  }
 }
 
 /**
@@ -708,6 +714,7 @@ export class ApolloClient {
       dataMasking,
       link,
       incrementalHandler = new NotImplementedHandler(),
+      experiments = [],
     } = options;
 
     this.link = link;
@@ -759,6 +766,8 @@ export class ApolloClient {
     }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
+
+    experiments.forEach((experiment) => experiment.call(this, options));
   }
 
   private connectToDevTools() {

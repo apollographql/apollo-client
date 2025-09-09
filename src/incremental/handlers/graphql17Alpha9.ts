@@ -229,8 +229,7 @@ export class GraphQL17Alpha9Handler
   }
 }
 
-// only exported for use in tests
-export function hasIncrementalChunks(
+function hasIncrementalChunks(
   result: Record<string, any>
 ): result is Required<GraphQL17Alpha9Handler.SubsequentResult> {
   return isNonEmptyArray(result.incremental);

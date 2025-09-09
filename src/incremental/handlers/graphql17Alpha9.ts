@@ -112,10 +112,11 @@ class IncrementalRequest<TData>
         const path = pending.path.concat(incremental.subPath ?? []);
 
         if ("items" in incremental) {
-          const array = path.reduce((data, key) => {
+          const array = path.reduce(
             // Use `&&` to maintain `null` if encountered
-            return data && data[key];
-          }, this.data);
+            (data, key) => data && data[key],
+            this.data
+          );
 
           invariant(
             Array.isArray(array),

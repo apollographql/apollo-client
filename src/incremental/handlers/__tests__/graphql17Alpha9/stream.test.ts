@@ -739,7 +739,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -764,7 +763,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -823,7 +821,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -848,7 +845,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -1330,7 +1326,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList"],
           },
         ],
@@ -1383,7 +1378,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Query.nonNullFriendList.",
-            locations: [{ line: 3, column: 9 }],
             path: ["nonNullFriendList", 1],
           },
         ],
@@ -1437,7 +1431,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "String cannot represent value: {}",
-            locations: [{ line: 3, column: 9 }],
             path: ["scalarList", 1],
           },
         ],
@@ -1495,7 +1488,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["friendList", 1, "nonNullName"],
           },
         ],
@@ -1516,7 +1508,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["friendList", 1, "nonNullName"],
           },
         ],
@@ -1578,7 +1569,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["nonNullFriendList", 1, "nonNullName"],
           },
         ],
@@ -1640,7 +1630,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["friendList", 1, "nonNullName"],
           },
         ],
@@ -1661,7 +1650,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["friendList", 1, "nonNullName"],
           },
         ],
@@ -1682,7 +1670,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 4, column: 11 }],
             path: ["friendList", 1, "nonNullName"],
           },
         ],
@@ -1768,7 +1755,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 5, column: 13 }],
             path: ["otherNestedObject", "scalarField"],
           },
         ],
@@ -1790,7 +1776,6 @@ describe("graphql-js test cases", () => {
         errors: [
           {
             message: "Oops",
-            locations: [{ line: 5, column: 13 }],
             path: ["otherNestedObject", "scalarField"],
           },
         ],
@@ -1919,7 +1904,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Friend.nonNullName.",
-            locations: [{ line: 4, column: 9 }],
             path: ["friendList", 0, "nonNullName"],
           },
         ],
@@ -1941,7 +1925,6 @@ describe("graphql-js test cases", () => {
           {
             message:
               "Cannot return null for non-nullable field Friend.nonNullName.",
-            locations: [{ line: 4, column: 9 }],
             path: ["friendList", 0, "nonNullName"],
           },
         ],

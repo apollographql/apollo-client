@@ -23,6 +23,7 @@ export {
 } from "./scenarios/index.js";
 export { createClientWrapper, createMockWrapper } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
+export { promiseWithResolvers } from "./promiseWithResolvers.js";
 export { renderAsync } from "./rtl/renderAsync.js";
 export { renderHookAsync } from "./rtl/renderHookAsync.js";
 export { mockDefer20220824 } from "./multipart/mockDefer20220824.js";

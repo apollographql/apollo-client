@@ -126,27 +126,33 @@ class IncrementalRequest<TData>
 
           array.push(...(incremental.items as ReadonlyArray<unknown>));
 
-          continue;
+          this.merge(
+            {
+              extensions: incremental.extensions,
+              errors: incremental.errors,
+            },
+            new DeepMerger()
+          );
+        } else {
+          let { data } = incremental;
+
+          for (let i = path.length - 1; i >= 0; i--) {
+            const key = path[i];
+            const parent: Record<string | number, any> =
+              typeof key === "number" ? [] : {};
+            parent[key] = data;
+            data = parent as typeof data;
+          }
+
+          this.merge(
+            {
+              data: data as TData,
+              extensions: incremental.extensions,
+              errors: incremental.errors,
+            },
+            new DeepMerger()
+          );
         }
-
-        let { data } = incremental;
-
-        for (let i = path.length - 1; i >= 0; i--) {
-          const key = path[i];
-          const parent: Record<string | number, any> =
-            typeof key === "number" ? [] : {};
-          parent[key] = data;
-          data = parent as typeof data;
-        }
-
-        this.merge(
-          {
-            data: data as TData,
-            extensions: incremental.extensions,
-            errors: incremental.errors,
-          },
-          new DeepMerger()
-        );
       }
     }
 

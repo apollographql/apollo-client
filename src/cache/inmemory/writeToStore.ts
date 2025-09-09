@@ -79,18 +79,17 @@ export interface WriteContext extends ReadMergeModifyContext {
       fieldNodeSet: Set<FieldNode>;
     }
   >;
-  // Directive metadata for @client, @defer, and @stream. We could use a bitfield for this
+  // Directive metadata for @client and @defer. We could use a bitfield for this
   // information to save some space, and use that bitfield number as the keys in
   // the context.flavors Map.
   clientOnly: boolean;
   deferred: boolean;
-  streamed: boolean;
   flavors: Map<string, FlavorableWriteContext>;
 }
 
 type FlavorableWriteContext = Pick<
   WriteContext,
-  "clientOnly" | "deferred" | "streamed" | "flavors"
+  "clientOnly" | "deferred" | "flavors"
 >;
 
 // Since there are only four possible combinations of context.clientOnly and
@@ -101,8 +100,7 @@ type FlavorableWriteContext = Pick<
 function getContextFlavor<TContext extends FlavorableWriteContext>(
   context: TContext,
   clientOnly: TContext["clientOnly"],
-  deferred: TContext["deferred"],
-  streamed: TContext["streamed"]
+  deferred: TContext["deferred"]
 ): TContext {
   const key = `${clientOnly}${deferred}`;
   let flavored = context.flavors.get(key);
@@ -110,17 +108,12 @@ function getContextFlavor<TContext extends FlavorableWriteContext>(
     context.flavors.set(
       key,
       (flavored =
-        (
-          context.clientOnly === clientOnly &&
-          context.deferred === deferred &&
-          context.streamed === streamed
-        ) ?
+        context.clientOnly === clientOnly && context.deferred === deferred ?
           context
         : {
             ...context,
             clientOnly,
             deferred,
-            streamed,
           })
     );
   }
@@ -176,7 +169,6 @@ export class StoreWriter {
       incomingById: new Map(),
       clientOnly: false,
       deferred: false,
-      streamed: false,
       flavors: new Map(),
     };
 
@@ -360,7 +352,7 @@ export class StoreWriter {
           // Reset context.clientOnly and context.deferred to their default
           // values before processing nested selection sets.
           field.selectionSet ?
-            getContextFlavor(context, false, false, false)
+            getContextFlavor(context, false, false)
           : context,
           childTree
         );
@@ -403,7 +395,6 @@ export class StoreWriter {
         __DEV__ &&
         !context.clientOnly &&
         !context.deferred &&
-        !context.streamed &&
         !addTypenameToDocument.added(field) &&
         // If the field has a read function, it may be a synthetic field or
         // provide a default value, so its absence from the written data should
@@ -531,7 +522,6 @@ export class StoreWriter {
       WriteContext,
       | "clientOnly"
       | "deferred"
-      | "streamed"
       | "flavors"
       | "fragmentMap"
       | "lookupFragment"
@@ -565,13 +555,12 @@ export class StoreWriter {
     ) {
       const visitedNode = limitingTrie.lookup(
         selectionSet,
-        // Because we take inheritedClientOnly, inheritedDeferred, and inheritedStramed into
+        // Because we take inheritedClientOnly and inheritedDeferred into
         // consideration here (in addition to selectionSet), it's possible for
         // the same selection set to be flattened more than once, if it appears
         // in the query with different @client and/or @directive configurations.
         inheritedContext.clientOnly,
-        inheritedContext.deferred,
-        inheritedContext.streamed
+        inheritedContext.deferred
       );
       if (visitedNode.visited) return;
       visitedNode.visited = true;
@@ -579,12 +568,12 @@ export class StoreWriter {
       selectionSet.selections.forEach((selection) => {
         if (!shouldInclude(selection, context.variables)) return;
 
-        let { clientOnly, deferred, streamed } = inheritedContext;
+        let { clientOnly, deferred } = inheritedContext;
         if (
-          // Since the presence of @client, @defer, or @stream on this field can only
-          // cause clientOnly, deferred, or streamed to become true, we can skip the
-          // forEach loop if clientOnly, deferred, and streamed are already true.
-          !(clientOnly && deferred && streamed) &&
+          // Since the presence of @client or @defer on this field can only
+          // cause clientOnly or deferred to become true, we can skip the
+          // forEach loop if both clientOnly and deferred are already true.
+          !(clientOnly && deferred) &&
           isNonEmptyArray(selection.directives)
         ) {
           selection.directives.forEach((dir) => {
@@ -602,18 +591,6 @@ export class StoreWriter {
               // TODO In the future, we may want to record args.label using
               // context.deferred, if a label is specified.
             }
-            if (name === "stream") {
-              const args = argumentsObjectFromField(dir, context.variables);
-              // The @stream directive takes an optional args.if boolean
-              // argument, similar to @include(if: boolean). Note that
-              // @stream(if: false) does not make context.deferred false, but
-              // instead behaves as if there was no @stream directive.
-              if (!args || (args as { if?: boolean }).if !== false) {
-                streamed = true;
-              }
-              // TODO In the future, we may want to record args.label using
-              // context.deferred, if a label is specified.
-            }
           });
         }
 
@@ -625,12 +602,11 @@ export class StoreWriter {
             // to true only if *all* paths have the directive (hence the &&).
             clientOnly = clientOnly && existing.clientOnly;
             deferred = deferred && existing.deferred;
-            streamed = streamed && existing.streamed;
           }
 
           fieldMap.set(
             selection,
-            getContextFlavor(context, clientOnly, deferred, streamed)
+            getContextFlavor(context, clientOnly, deferred)
           );
         } else {
           const fragment = getFragmentFromSelection(
@@ -656,7 +632,7 @@ export class StoreWriter {
           ) {
             flatten(
               fragment.selectionSet,
-              getContextFlavor(context, clientOnly, deferred, streamed)
+              getContextFlavor(context, clientOnly, deferred)
             );
           }
         }

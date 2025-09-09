@@ -888,3 +888,101 @@ it("handles stream when in parent deferred fragment", async () => {
 
   await expect(observableStream).not.toEmitAnything();
 });
+
+test("handles @defer inside @stream", async () => {
+  const { promise: slowFieldPromise, resolve: resolveSlowField } =
+    promiseWithResolvers();
+  const {
+    promise: iterableCompletionPromise,
+    resolve: resolveIterableCompletion,
+  } = promiseWithResolvers();
+
+  const client = new ApolloClient({
+    link: createLink({
+      async *friendList() {
+        yield await Promise.resolve(friends[0]);
+        yield await Promise.resolve({
+          id: friends[1].id,
+          name: () => slowFieldPromise,
+        });
+        await iterableCompletionPromise;
+      },
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream {
+        ...NameFragment @defer
+        id
+      }
+    }
+    fragment NameFragment on Friend {
+      name
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  resolveIterableCompletion(null);
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+    }),
+  });
+
+  resolveSlowField("Han");
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2" },
+        ],
+      }),
+      dataState: "streaming",
+    }),
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});

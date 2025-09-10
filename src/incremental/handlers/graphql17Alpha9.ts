@@ -86,7 +86,6 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
-  private merger = new DeepMerger();
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -99,7 +98,7 @@ class IncrementalRequest<TData>
       this.pending.push(...chunk.pending);
     }
 
-    this.merge(chunk);
+    this.merge(chunk, new DeepMerger());
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -126,11 +125,14 @@ class IncrementalRequest<TData>
           data = parent as typeof data;
         }
 
-        this.merge({
-          data: data as TData,
-          extensions: incremental.extensions,
-          errors: incremental.errors,
-        });
+        this.merge(
+          {
+            data: data as TData,
+            extensions: incremental.extensions,
+            errors: incremental.errors,
+          },
+          new DeepMerger()
+        );
       }
     }
 
@@ -157,9 +159,12 @@ class IncrementalRequest<TData>
     return result;
   }
 
-  private merge(normalized: FormattedExecutionResult<TData>) {
+  private merge(
+    normalized: FormattedExecutionResult<TData>,
+    merger: DeepMerger<any[]>
+  ) {
     if (normalized.data !== undefined) {
-      this.data = this.merger.merge(this.data, normalized.data);
+      this.data = merger.merge(this.data, normalized.data);
     }
 
     if (normalized.errors) {

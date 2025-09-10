@@ -23,6 +23,7 @@ export {
 } from "./scenarios/index.js";
 export { createClientWrapper, createMockWrapper } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
+export { asyncIterableSubject } from "./asyncIterableSubject.js";
 export { executeSchemaGraphQL17Alpha2 } from "./incremental/executeSchemaGraphQL17Alpha2.js";
 export { executeSchemaGraphQL17Alpha9 } from "./incremental/executeSchemaGraphQL17Alpha9.js";
 export { promiseWithResolvers } from "./promiseWithResolvers.js";

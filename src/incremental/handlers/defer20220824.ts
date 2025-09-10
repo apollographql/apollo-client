@@ -74,13 +74,11 @@ class DeferRequest<TData extends Record<string, unknown>>
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
+  private merger = new DeepMerger();
 
-  private mergeIn(
-    normalized: FormattedExecutionResult<TData>,
-    merger: DeepMerger<any[]>
-  ) {
+  private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = merger.merge(this.data, normalized.data);
+      this.data = this.merger.merge(this.data, normalized.data);
     }
     if (normalized.errors) {
       this.errors.push(...normalized.errors);
@@ -96,11 +94,9 @@ class DeferRequest<TData extends Record<string, unknown>>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-
-    this.mergeIn(chunk, new DeepMerger());
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
-      const merger = new DeepMerger();
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
         let data =
@@ -121,14 +117,11 @@ class DeferRequest<TData extends Record<string, unknown>>
             data = parent as typeof data;
           }
         }
-        this.mergeIn(
-          {
-            errors,
-            extensions,
-            data: data ? (data as TData) : undefined,
-          },
-          merger
-        );
+        this.merge({
+          errors,
+          extensions,
+          data: data ? (data as TData) : undefined,
+        });
       }
     }
 

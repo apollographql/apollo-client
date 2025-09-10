@@ -102,7 +102,12 @@ class DeferRequest<TData extends Record<string, unknown>>
     if (hasIncrementalChunks(chunk)) {
       const merger = new DeepMerger();
       for (const incremental of chunk.incremental) {
-        let { data, path, errors, extensions } = incremental;
+        const { path, errors, extensions } = incremental;
+        let data =
+          "items" in incremental ? incremental.items?.[0]
+          : "data" in incremental ? incremental.data
+          : undefined;
+
         if (data && path) {
           for (let i = path.length - 1; i >= 0; --i) {
             const key = path[i];

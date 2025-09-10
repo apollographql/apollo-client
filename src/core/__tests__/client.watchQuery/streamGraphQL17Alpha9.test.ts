@@ -1,10 +1,4 @@
-import type {
-  FormattedExecutionResult,
-  FormattedInitialIncrementalExecutionResult,
-  FormattedSubsequentIncrementalExecutionResult,
-} from "graphql-17-alpha9";
 import {
-  experimentalExecuteIncrementally,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -14,7 +8,6 @@ import {
 } from "graphql-17-alpha9";
 import { from } from "rxjs";
 
-import type { DocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -25,6 +18,7 @@ import {
 } from "@apollo/client";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
+  executeSchemaGraphQL17Alpha9,
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
@@ -91,37 +85,11 @@ const query = new GraphQLObjectType({
 
 const schema = new GraphQLSchema({ query });
 
-async function* run(
-  document: DocumentNode,
-  rootValue: unknown = {},
-  enableEarlyExecution = false
-): AsyncGenerator<
-  | FormattedInitialIncrementalExecutionResult
-  | FormattedSubsequentIncrementalExecutionResult
-  | FormattedExecutionResult,
-  void
-> {
-  const result = await experimentalExecuteIncrementally({
-    schema,
-    document,
-    rootValue,
-    enableEarlyExecution,
-  });
-
-  if ("initialResult" in result) {
-    yield JSON.parse(JSON.stringify(result.initialResult));
-
-    for await (const patch of result.subsequentResults) {
-      yield JSON.parse(JSON.stringify(patch));
-    }
-  } else {
-    yield JSON.parse(JSON.stringify(result));
-  }
-}
-
 function createLink(rootValue?: Record<string, unknown>) {
   return new ApolloLink((operation) => {
-    return from(run(operation.query, rootValue));
+    return from(
+      executeSchemaGraphQL17Alpha9(schema, operation.query, rootValue)
+    );
   });
 }
 

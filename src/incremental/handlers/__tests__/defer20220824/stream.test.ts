@@ -200,32 +200,6 @@ describe("Execute: stream directive", () => {
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
-          scalarList: ["apple"],
-        },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
-          scalarList: ["apple", "banana"],
-        },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
           scalarList: ["apple", "banana"],
         },
       });
@@ -325,22 +299,6 @@ describe("Execute: stream directive", () => {
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
           scalarListList: [["apple", "apple", "apple"]],
-        },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
-          scalarListList: [
-            ["apple", "apple", "apple"],
-            ["banana", "banana", "banana"],
-          ],
         },
       });
       expect(request.hasNext).toBe(true);
@@ -494,7 +452,7 @@ describe("Execute: stream directive", () => {
           ],
         },
       });
-      expect(request.hasNext).toBe(true);
+      expect(request.hasNext).toBe(false);
     }
   });
 

@@ -1,12 +1,6 @@
 import assert from "node:assert";
 
-import type {
-  FormattedExecutionResult,
-  FormattedInitialIncrementalExecutionResult,
-  FormattedSubsequentIncrementalExecutionResult,
-} from "graphql-17-alpha2";
 import {
-  experimentalExecuteIncrementally,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -26,6 +20,7 @@ import {
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
+  executeSchemaGraphQL17Alpha2,
   markAsStreaming,
   ObservableStream,
   promiseWithResolvers,
@@ -94,30 +89,8 @@ const query = new GraphQLObjectType({
 
 const schema = new GraphQLSchema({ query });
 
-async function* run(
-  document: DocumentNode,
-  rootValue: unknown = {}
-): AsyncGenerator<
-  | FormattedInitialIncrementalExecutionResult
-  | FormattedSubsequentIncrementalExecutionResult
-  | FormattedExecutionResult,
-  void
-> {
-  const result = await experimentalExecuteIncrementally({
-    schema,
-    document,
-    rootValue,
-  });
-
-  if ("initialResult" in result) {
-    yield JSON.parse(JSON.stringify(result.initialResult));
-
-    for await (const patch of result.subsequentResults) {
-      yield JSON.parse(JSON.stringify(patch));
-    }
-  } else {
-    yield JSON.parse(JSON.stringify(result));
-  }
+function run(document: DocumentNode, rootValue: unknown = {}) {
+  return executeSchemaGraphQL17Alpha2(schema, document, rootValue);
 }
 
 function createSchemaLink(rootValue?: Record<string, unknown>) {

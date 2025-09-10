@@ -439,22 +439,6 @@ test("handles errors from items after initialCount is reached", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     data: markAsStreaming({
-      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-    }),
-    error: new CombinedGraphQLErrors({
-      data: {
-        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-      },
-      errors: [{ message: "bad", path: ["friendList", 1] }],
-    }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.streaming,
-    partial: true,
-  });
-
-  await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         null,
@@ -607,14 +591,16 @@ test("handles errors thrown before initialCount is reached", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     data: {
-      friendList: null,
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
     },
     error: new CombinedGraphQLErrors({
-      data: { friendList: null },
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
+      },
       errors: [
         {
           message: "bad",
-          path: ["friendList"],
+          path: ["friendList", 1],
         },
       ],
     }),
@@ -672,14 +658,16 @@ test("handles errors thrown after initialCount is reached", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     data: {
-      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
     },
     error: new CombinedGraphQLErrors({
-      data: { friendList: [{ __typename: "Friend", id: "1", name: "Luke" }] },
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
+      },
       errors: [
         {
           message: "bad",
-          path: ["friendList"],
+          path: ["friendList", 1],
         },
       ],
     }),
@@ -942,7 +930,7 @@ test("handles @defer inside @stream", async () => {
     expected: (previous) => ({
       ...previous,
       data: markAsStreaming({
-        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+        friendList: [{ __typename: "Friend", id: "1" }],
       }),
       dataState: "streaming",
     }),

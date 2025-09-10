@@ -104,11 +104,15 @@ class DeferRequest<TData extends Record<string, unknown>>
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
         let data =
+          // The item merged from a `@stream` chunk is always the first item in
+          // the `items` array
           "items" in incremental ? incremental.items?.[0]
-          : "data" in incremental ? incremental.data
+            // Ensure `data: null` isn't merged for `@defer` responses by
+            // falling back to `undefined`
+          : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
-        if (data && path) {
+        if (data !== undefined && path) {
           for (let i = path.length - 1; i >= 0; --i) {
             const key = path[i];
             const isNumericKey = !isNaN(+key);

@@ -25,12 +25,22 @@ namespace Defer20220824Handler {
         return: Defer20220824Handler.Chunk<Record<string, unknown>>;
     }
     // (undocumented)
-    type IncrementalDeferPayload<TData = Record<string, unknown>> = {
-        data?: TData | null | undefined;
+    type IncrementalDeferResult<TData = Record<string, unknown>> = {
+        data?: TData | null;
         errors?: ReadonlyArray<GraphQLFormattedError>;
         extensions?: Record<string, unknown>;
         path?: Incremental.Path;
         label?: string;
+    };
+    // (undocumented)
+    type IncrementalResult<TData = Record<string, unknown>> = IncrementalDeferResult<TData> | IncrementalStreamResult<TData>;
+    // (undocumented)
+    type IncrementalStreamResult<TData = Array<unknown>> = {
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        items?: TData;
+        path?: Incremental.Path;
+        label?: string;
+        extensions?: Record<string, unknown>;
     };
     // (undocumented)
     type InitialResult<TData = Record<string, unknown>> = {
@@ -38,6 +48,7 @@ namespace Defer20220824Handler {
         errors?: ReadonlyArray<GraphQLFormattedError>;
         extensions?: Record<string, unknown>;
         hasNext: boolean;
+        incremental?: ReadonlyArray<IncrementalResult<TData>>;
     };
     // (undocumented)
     type SubsequentResult<TData = Record<string, unknown>> = {
@@ -45,7 +56,7 @@ namespace Defer20220824Handler {
         errors?: ReadonlyArray<GraphQLFormattedError>;
         extensions?: Record<string, unknown>;
         hasNext: boolean;
-        incremental?: Array<IncrementalDeferPayload<TData>>;
+        incremental?: Array<IncrementalResult<TData>>;
     };
     // (undocumented)
     interface TypeOverrides {

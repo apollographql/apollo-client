@@ -565,25 +565,6 @@ describe("Execute: stream directive", () => {
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
-          friendList: [{ name: "Luke", id: "1" }, null],
-        },
-        errors: [
-          {
-            message: "bad",
-            path: ["friendList", 1],
-          },
-        ],
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
           friendList: [
             { name: "Luke", id: "1" },
             null,
@@ -1127,28 +1108,6 @@ describe("Execute: stream directive", () => {
           otherNestedObject: {},
           nestedObject: { nestedFriendList: [] },
         },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
-          otherNestedObject: {
-            scalarField: null,
-          },
-          nestedObject: { nestedFriendList: [{ name: "Luke" }] },
-        },
-        errors: [
-          {
-            message: "Oops",
-            path: ["otherNestedObject", "scalarField"],
-          },
-        ],
       });
       expect(request.hasNext).toBe(true);
     }

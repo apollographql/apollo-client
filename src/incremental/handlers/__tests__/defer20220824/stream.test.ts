@@ -160,19 +160,6 @@ describe("Execute: stream directive", () => {
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
-          scalarList: ["apple", "banana"],
-        },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
           scalarList: ["apple", "banana", "coconut"],
         },
       });

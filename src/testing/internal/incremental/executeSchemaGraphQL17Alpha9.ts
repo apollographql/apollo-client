@@ -11,7 +11,8 @@ import type { DocumentNode } from "@apollo/client";
 export async function* executeSchemaGraphQL17Alpha9(
   schema: GraphQLSchema,
   document: DocumentNode,
-  rootValue: unknown = {}
+  rootValue: unknown = {},
+  enableEarlyExecution?: boolean
 ): AsyncGenerator<
   | FormattedInitialIncrementalExecutionResult
   | FormattedSubsequentIncrementalExecutionResult
@@ -22,6 +23,7 @@ export async function* executeSchemaGraphQL17Alpha9(
     schema,
     document,
     rootValue,
+    enableEarlyExecution,
   });
 
   if ("initialResult" in result) {

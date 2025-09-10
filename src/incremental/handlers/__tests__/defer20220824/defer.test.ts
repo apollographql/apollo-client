@@ -35,7 +35,7 @@ import {
 import {
   hasIncrementalChunks,
   // eslint-disable-next-line local-rules/no-relative-imports
-} from "../defer20220824.js";
+} from "../../defer20220824.js";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.2 release:
 // https://github.com/graphql/graphql-js/blob/364cd71d1a26eb6f62661efd7fa399e91332d30d/src/execution/__tests__/defer-test.ts

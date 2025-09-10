@@ -19,7 +19,10 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
-import { Defer20220824Handler } from "@apollo/client/incremental";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { BaseHttpLink, HttpLink } from "@apollo/client/link/http";
 import {
@@ -1350,6 +1353,23 @@ describe("HttpLink", () => {
         "-----",
       ].join("\r\n");
 
+      const bodyAlpha9 = [
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 43",
+        "",
+        '{"data":{"stub":{"id":"0"}},"pending":[{"id":"0","path":["stub"]}],"hasNext":true}',
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 58",
+        "",
+        // Intentionally using the boundary value `---` within the “name” to
+        // validate that boundary delimiters are not parsed within the response
+        // data itself, only read at the beginning of each chunk.
+        '{"hasNext":false, "incremental": [{"data":{"name":"stubby---"},"id":"0","extensions":{"timestamp":1633038919}}]}',
+        "-----",
+      ].join("\r\n");
+
       const streamBody = [
         "---",
         "Content-Type: application/json; charset=utf-8",
@@ -1364,6 +1384,23 @@ describe("HttpLink", () => {
         // validate that boundary delimiters are not parsed within the response
         // data itself, only read at the beginning of each chunk.
         '{"hasNext":false, "incremental": [{"data":{"id":"1","name":"stubby---"},"path":["stubs", 1],"extensions":{"timestamp":1633038919}}]}',
+        "-----",
+      ].join("\r\n");
+
+      const streamBodyAlpha9 = [
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 43",
+        "",
+        '{"data":{"stubs":[]},"pending": [{"id":"0","path":["stubs"]}], "hasNext":true}',
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 58",
+        "",
+        // Intentionally using the boundary value `---` within the “name” to
+        // validate that boundary delimiters are not parsed within the response
+        // data itself, only read at the beginning of each chunk.
+        '{"hasNext":false, "incremental": [{"items":[{"id":"1","name":"stubby---"}],"id":"0","extensions":{"timestamp":1633038919}}],"completed":[{"id":"0"}]}',
         "-----",
       ].join("\r\n");
 
@@ -1550,6 +1587,61 @@ describe("HttpLink", () => {
         );
       });
 
+      it("sets correct accept header on request with deferred query using GraphQL17Alpha9Handler", async () => {
+        const stream = ReadableStream.from(
+          bodyAlpha9.split("\r\n").map((line) => line + "\r\n")
+        );
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new GraphQL17Alpha9Handler(),
+        });
+        void client.query({ query: sampleDeferredQuery });
+
+        await expect(observableStream).toEmitTypedValue({
+          data: { stub: { id: "0" } },
+          // @ts-ignore
+          pending: [{ id: "0", path: ["stub"] }],
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { name: "stubby---" },
+              // @ts-ignore
+              id: "0",
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
+
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              "content-type": "application/json",
+              accept:
+                "multipart/mixed,application/graphql-response+json,application/json;q=0.9",
+            },
+          })
+        );
+      });
+
       it("sets correct accept header on request with streamed query", async () => {
         const stream = ReadableStream.from(
           streamBody.split("\r\n").map((line) => line + "\r\n")
@@ -1597,6 +1689,62 @@ describe("HttpLink", () => {
               "content-type": "application/json",
               accept:
                 "multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
+            },
+          })
+        );
+      });
+
+      it("sets correct accept header on request with streamed query using GraphQL17Alpha9Handler", async () => {
+        const stream = ReadableStream.from(
+          streamBodyAlpha9.split("\r\n").map((line) => line + "\r\n")
+        );
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new GraphQL17Alpha9Handler(),
+        });
+        void client.query({ query: sampleStreamedQuery });
+
+        await expect(observableStream).toEmitTypedValue({
+          data: { stubs: [] },
+          // @ts-ignore
+          pending: [{ id: "0", path: ["stubs"] }],
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              // @ts-ignore
+              items: [{ id: "1", name: "stubby---" }],
+              id: "0",
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          completed: [{ id: "0" }],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
+
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              "content-type": "application/json",
+              accept:
+                "multipart/mixed,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );

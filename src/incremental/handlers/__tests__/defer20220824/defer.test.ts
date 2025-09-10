@@ -8,6 +8,7 @@ import {
   GraphQLSchema,
   GraphQLString,
 } from "graphql-17-alpha2";
+import { from } from "rxjs";
 
 import type { DocumentNode } from "@apollo/client";
 import {
@@ -17,7 +18,6 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  Observable,
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
@@ -105,14 +105,7 @@ function run(query: DocumentNode) {
 }
 
 const schemaLink = new ApolloLink((operation) => {
-  return new Observable((observer) => {
-    void (async () => {
-      for await (const chunk of run(operation.query)) {
-        observer.next(chunk);
-      }
-      observer.complete();
-    })();
-  });
+  return from(run(operation.query));
 });
 
 describe("graphql-js test cases", () => {

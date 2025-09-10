@@ -29,6 +29,7 @@ export declare namespace Defer20220824Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
+    incremental?: ReadonlyArray<IncrementalResult<TData>>;
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
@@ -36,20 +37,32 @@ export declare namespace Defer20220824Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
-    incremental?: Array<IncrementalDeferPayload<TData>>;
+    incremental?: Array<IncrementalResult<TData>>;
   };
 
-  export type Chunk<TData extends Record<string, unknown>> =
-    | InitialResult<TData>
-    | SubsequentResult<TData>;
-
-  export type IncrementalDeferPayload<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
+  export type IncrementalDeferResult<TData = Record<string, unknown>> = {
+    data?: TData | null;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     path?: Incremental.Path;
     label?: string;
   };
+
+  export type IncrementalStreamResult<TData = Array<unknown>> = {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    items?: TData;
+    path?: Incremental.Path;
+    label?: string;
+    extensions?: Record<string, unknown>;
+  };
+
+  export type IncrementalResult<TData = Record<string, unknown>> =
+    | IncrementalDeferResult<TData>
+    | IncrementalStreamResult<TData>;
+
+  export type Chunk<TData extends Record<string, unknown>> =
+    | InitialResult<TData>
+    | SubsequentResult<TData>;
 }
 
 class DeferRequest<TData extends Record<string, unknown>>

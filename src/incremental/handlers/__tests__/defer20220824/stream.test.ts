@@ -491,7 +491,6 @@ describe("Execute: stream directive", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -515,7 +514,6 @@ describe("Execute: stream directive", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -572,7 +570,6 @@ describe("Execute: stream directive", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],
@@ -596,7 +593,6 @@ describe("Execute: stream directive", () => {
         errors: [
           {
             message: "bad",
-            locations: [{ line: 3, column: 9 }],
             path: ["friendList", 1],
           },
         ],

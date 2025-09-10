@@ -522,7 +522,12 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
-    previousData: undefined,
+    previousData: {
+      greeting: {
+        message: "Hello world",
+        __typename: "Greeting",
+      },
+    },
     variables: {},
   });
 

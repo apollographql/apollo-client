@@ -366,6 +366,7 @@ Array [
   "mockDefer20220824",
   "mockDeferStreamGraphQL17Alpha9",
   "mockMultipartSubscriptionStream",
+  "promiseWithResolvers",
   "renderAsync",
   "renderHookAsync",
   "resetApolloContext",

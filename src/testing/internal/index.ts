@@ -38,3 +38,6 @@ export {
 } from "./link.js";
 export { markAsStreaming } from "./markAsStreaming.js";
 export { wait } from "./wait.js";
+
+export { friendListSchemaGraphQL17Alpha2 } from "./schemas/friendList.graphql17Alpha2.js";
+export { friendListSchemaGraphQL17Alpha9 } from "./schemas/friendList.graphql17Alpha9.js";

@@ -57,6 +57,15 @@ const sampleDeferredQuery = gql`
   }
 `;
 
+const sampleStreamedQuery = gql`
+  query SampleDeferredQuery {
+    stubs @stream {
+      id
+      name
+    }
+  }
+`;
+
 const sampleQueryCustomDirective = gql`
   query SampleDeferredQuery {
     stub {
@@ -1341,6 +1350,23 @@ describe("HttpLink", () => {
         "-----",
       ].join("\r\n");
 
+      const streamBody = [
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 43",
+        "",
+        '{"data":{"stubs":[]},"hasNext":true}',
+        "---",
+        "Content-Type: application/json; charset=utf-8",
+        "Content-Length: 58",
+        "",
+        // Intentionally using the boundary value `---` within the “name” to
+        // validate that boundary delimiters are not parsed within the response
+        // data itself, only read at the beginning of each chunk.
+        '{"hasNext":false, "incremental": [{"data":{"id":"1","name":"stubby---"},"path":["stubs", 1],"extensions":{"timestamp":1633038919}}]}',
+        "-----",
+      ].join("\r\n");
+
       const finalChunkOnlyHasNextFalse = [
         "--graphql",
         "content-type: application/json",
@@ -1504,6 +1530,58 @@ describe("HttpLink", () => {
             {
               data: { name: "stubby---" },
               path: ["stub"],
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
+
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              "content-type": "application/json",
+              accept:
+                "multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
+            },
+          })
+        );
+      });
+
+      it("sets correct accept header on request with streamed query", async () => {
+        const stream = ReadableStream.from(
+          streamBody.split("\r\n").map((line) => line + "\r\n")
+        );
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new Defer20220824Handler(),
+        });
+        void client.query({ query: sampleStreamedQuery });
+
+        await expect(observableStream).toEmitTypedValue({
+          data: { stubs: [] },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { id: "1", name: "stubby---" },
+              path: ["stubs", 1],
               extensions: { timestamp: 1633038919 },
             },
           ],

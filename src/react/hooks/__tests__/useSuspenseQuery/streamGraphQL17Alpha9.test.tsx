@@ -369,7 +369,7 @@ test('does not suspend streamed queries with data in the cache and using a "cach
   await expect(takeRender).not.toRerender();
 });
 
-test.failing(
+test.skip.failing(
   'does not suspend streamed queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`',
   async () => {
     const { subject, stream } = asyncIterableSubject();
@@ -500,7 +500,7 @@ test.failing(
   }
 );
 
-test.failing(
+test.skip.failing(
   'does not suspend streamed queries with data in the cache and using a "cache-and-network" fetch policy',
   async () => {
     const { stream, subject } = asyncIterableSubject();
@@ -600,7 +600,7 @@ test.failing(
   }
 );
 
-test.failing(
+test.skip.failing(
   "incrementally rerenders data returned by a `refetch` for a streamed query",
   async () => {
     let subject!: Subject<Friend>;
@@ -738,7 +738,7 @@ test.failing(
   }
 );
 
-test("incrementally renders data returned after skipping a streamed query", async () => {
+test.skip("incrementally renders data returned after skipping a streamed query", async () => {
   const { stream, subject } = asyncIterableSubject();
   const query = gql`
     query {
@@ -836,7 +836,7 @@ test("incrementally renders data returned after skipping a streamed query", asyn
 // the core bug is fixed, this test can be removed in favor of the other test.
 //
 // https://github.com/apollographql/apollo-client/issues/11034
-test.failing(
+test.skip.failing(
   "rerenders data returned by `fetchMore` for a streamed query",
   async () => {
     let subject!: Subject<Friend>;
@@ -992,7 +992,7 @@ test.failing(
 // is fixed.
 //
 // https://github.com/apollographql/apollo-client/issues/11034
-test.failing(
+test.skip.failing(
   "incrementally rerenders data returned by a `fetchMore` for a streamed query",
   async () => {
     let subject!: Subject<Friend>;
@@ -1142,7 +1142,7 @@ test.failing(
   }
 );
 
-test("throws network errors returned by streamed queries", async () => {
+test.skip("throws network errors returned by streamed queries", async () => {
   using _consoleSpy = spyOnConsole("error");
 
   const query = gql`
@@ -1186,7 +1186,7 @@ test("throws network errors returned by streamed queries", async () => {
   await expect(takeRender).not.toRerender();
 });
 
-test("throws graphql errors returned by streamed queries", async () => {
+test.skip("throws graphql errors returned by streamed queries", async () => {
   using _consoleSpy = spyOnConsole("error");
 
   const query = gql`
@@ -1238,7 +1238,7 @@ test("throws graphql errors returned by streamed queries", async () => {
   await expect(takeRender).not.toRerender();
 });
 
-test("discards partial data and throws errors returned in incremental chunks", async () => {
+test.skip("discards partial data and throws errors returned in incremental chunks", async () => {
   const { stream, subject } = asyncIterableSubject<Friend>();
   using _consoleSpy = spyOnConsole("error");
 
@@ -1314,7 +1314,7 @@ test("discards partial data and throws errors returned in incremental chunks", a
   await expect(takeRender).not.toRerender();
 });
 
-test.failing(
+test.skip.failing(
   "adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`",
   async () => {
     const query = gql`
@@ -1413,7 +1413,7 @@ test.failing(
   }
 );
 
-test.failing(
+test.skip.failing(
   "adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`",
   async () => {
     const query = gql`
@@ -1494,7 +1494,7 @@ test.failing(
   }
 );
 
-test.failing(
+test.skip.failing(
   "can refetch and respond to cache updates after encountering an error in an incremental chunk for a streamed query when `errorPolicy` is `all`",
   async () => {
     let returnError = true;

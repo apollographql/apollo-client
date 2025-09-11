@@ -130,6 +130,15 @@ class IncrementalRequest<TData>
           const items = incremental.items as any[];
           const parent: any[] = [];
 
+          if (!(pending.id in this.mergedIndexes)) {
+            const dataAtPath = pending.path.reduce(
+              (data, key) => (data as any)[key],
+              this.data
+            );
+
+            this.mergedIndexes[pending.id] = dataAtPath.length;
+          }
+
           for (let i = 0!; i < items.length; i++) {
             parent[i + this.mergedIndexes[pending.id]] = items[i];
           }

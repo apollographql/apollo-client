@@ -1,13 +1,5 @@
 import assert from "node:assert";
 
-import {
-  GraphQLID,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-} from "graphql-17-alpha2";
 import { from } from "rxjs";
 
 import type { DocumentNode } from "@apollo/client";
@@ -21,6 +13,7 @@ import {
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
   executeSchemaGraphQL17Alpha2,
+  friendListSchemaGraphQL17Alpha2,
   markAsStreaming,
   ObservableStream,
   promiseWithResolvers,
@@ -29,68 +22,18 @@ import {
 // This is the test setup of the `graphql-js` v17.0.0-alpha.2 release:
 // https://github.com/graphql/graphql-js/blob/042002c3d332d36c67861f5b37d39b74d54d97d4/src/execution/__tests__/stream-test.ts
 
-const friendType = new GraphQLObjectType({
-  fields: {
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    nonNullName: { type: new GraphQLNonNull(GraphQLString) },
-  },
-  name: "Friend",
-});
-
 const friends = [
   { name: "Luke", id: 1 },
   { name: "Han", id: 2 },
   { name: "Leia", id: 3 },
 ];
 
-const query = new GraphQLObjectType({
-  fields: {
-    scalarList: {
-      type: new GraphQLList(GraphQLString),
-    },
-    scalarListList: {
-      type: new GraphQLList(new GraphQLList(GraphQLString)),
-    },
-    friendList: {
-      type: new GraphQLList(friendType),
-    },
-    nonNullFriendList: {
-      type: new GraphQLList(new GraphQLNonNull(friendType)),
-    },
-    nestedObject: {
-      type: new GraphQLObjectType({
-        name: "NestedObject",
-        fields: {
-          scalarField: {
-            type: GraphQLString,
-          },
-          nonNullScalarField: {
-            type: new GraphQLNonNull(GraphQLString),
-          },
-          nestedFriendList: { type: new GraphQLList(friendType) },
-          deeperNestedObject: {
-            type: new GraphQLObjectType({
-              name: "DeeperNestedObject",
-              fields: {
-                nonNullScalarField: {
-                  type: new GraphQLNonNull(GraphQLString),
-                },
-                deeperNestedFriendList: { type: new GraphQLList(friendType) },
-              },
-            }),
-          },
-        },
-      }),
-    },
-  },
-  name: "Query",
-});
-
-const schema = new GraphQLSchema({ query });
-
 function run(document: DocumentNode, rootValue: unknown = {}) {
-  return executeSchemaGraphQL17Alpha2(schema, document, rootValue);
+  return executeSchemaGraphQL17Alpha2(
+    friendListSchemaGraphQL17Alpha2,
+    document,
+    rootValue
+  );
 }
 
 function createSchemaLink(rootValue?: Record<string, unknown>) {

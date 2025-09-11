@@ -1340,6 +1340,21 @@ test("adds partial data and does not throw errors returned in incremental chunks
   }
 
   subject.next(friends[0]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
   subject.next(Promise.reject(new Error("Could not get friend")));
 
   {
@@ -1362,6 +1377,34 @@ test("adds partial data and does not throw errors returned in incremental chunks
   }
 
   subject.next(friends[2]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          null,
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: new CombinedGraphQLErrors({
+        data: {
+          friendList: [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            null,
+            { __typename: "Friend", id: "3", name: "Leia" },
+          ],
+        },
+        errors: [{ message: "Could not get friend", path: ["friendList", 1] }],
+      }),
+    });
+  }
+
   subject.complete();
 
   {
@@ -1426,6 +1469,21 @@ test("adds partial data and discards errors returned in incremental chunks with 
   }
 
   subject.next(friends[0]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
   subject.next(Promise.reject(new Error("Could not get friend")));
 
   {
@@ -1503,6 +1561,21 @@ test("can refetch and respond to cache updates after encountering an error in an
   }
 
   subject.next(friends[0]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
   subject.next(Promise.reject(new Error("Could not get friend")));
 
   {

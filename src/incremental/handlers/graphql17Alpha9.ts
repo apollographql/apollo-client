@@ -82,13 +82,6 @@ class IncrementalRequest<TData>
 {
   hasNext = true;
 
-  // `this.data` represents the merged results of all raw chunk data without
-  // cache data mixed in. This makes it easier to track incremental @stream
-  // chunks since they can be concatenated with the results streamed directly
-  // from the server, rather than concatenated with a cache list that might
-  // already have a non-zero length. Cache data is deep merged with this.data at
-  // the end to ensure this.data overwrites array indexes from increemntal
-  // chunks at the right location.
   private data: any = {};
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
@@ -99,10 +92,7 @@ class IncrementalRequest<TData>
     chunk: GraphQL17Alpha9Handler.Chunk<TData>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
-
-    if ("data" in chunk) {
-      this.data = chunk.data;
-    }
+    this.data = cacheData;
 
     if (chunk.pending) {
       this.pending.push(...chunk.pending);
@@ -153,9 +143,7 @@ class IncrementalRequest<TData>
       }
     }
 
-    const result: FormattedExecutionResult<TData> = {
-      data: deepMerge(cacheData, this.data),
-    };
+    const result: FormattedExecutionResult<TData> = { data: this.data };
 
     if (isNonEmptyArray(this.errors)) {
       result.errors = this.errors;

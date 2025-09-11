@@ -86,6 +86,7 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
+  private mergedIndexes: Record<string, number> = {};
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -96,6 +97,19 @@ class IncrementalRequest<TData>
 
     if (chunk.pending) {
       this.pending.push(...chunk.pending);
+
+      if ("data" in chunk) {
+        for (const pending of chunk.pending) {
+          const dataAtPath = pending.path.reduce(
+            (data, key) => (data as any)[key],
+            chunk.data
+          );
+
+          if (Array.isArray(dataAtPath)) {
+            this.mergedIndexes[pending.id] = dataAtPath.length;
+          }
+        }
+      }
     }
 
     this.merge(chunk);
@@ -110,12 +124,21 @@ class IncrementalRequest<TData>
         );
 
         const path = pending.path.concat(incremental.subPath ?? []);
-        let data =
-          "items" in incremental ?
-            path
-              .reduce((data, key) => data[key], this.data)
-              .concat(incremental.items)
-          : incremental.data;
+
+        let data: any;
+        if ("items" in incremental) {
+          const items = incremental.items as any[];
+          const parent: any[] = [];
+
+          for (let i = 0!; i < items.length; i++) {
+            parent[i + this.mergedIndexes[pending.id]] = items[i];
+          }
+
+          this.mergedIndexes[pending.id] += items.length;
+          data = parent;
+        } else {
+          data = incremental.data;
+        }
 
         for (let i = path.length - 1; i >= 0; i--) {
           const key = path[i];

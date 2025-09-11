@@ -151,7 +151,7 @@ function resolveOnNextTick(): Promise<void> {
 
 function run(
   document: DocumentNode,
-  rootValue: unknown = {},
+  rootValue: unknown = { hero },
   enableEarlyExecution?: boolean
 ) {
   return executeSchemaGraphQL17Alpha9(

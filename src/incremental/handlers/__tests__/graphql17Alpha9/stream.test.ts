@@ -2127,6 +2127,103 @@ describe("graphql-js test cases", () => {
     }
   });
 
+  // this test does not exist in the original test suite but added to ensure
+  // deferred non-empty lists are properly merged
+  it("Returns payloads in correct order when parent deferred fragment resolves slower than stream with > 0 initialCount", async () => {
+    const { promise: slowFieldPromise, resolve: resolveSlowField } =
+      promiseWithResolvers();
+
+    const query = gql`
+      query {
+        nestedObject {
+          ...DeferFragment @defer
+        }
+      }
+      fragment DeferFragment on NestedObject {
+        scalarField
+        nestedFriendList @stream(initialCount: 1) {
+          name
+        }
+      }
+    `;
+
+    const handler = new GraphQL17Alpha9Handler();
+    const request = handler.startRequest({ query });
+
+    const incoming = run(query, {
+      nestedObject: {
+        scalarField: () => slowFieldPromise,
+        async *nestedFriendList() {
+          yield await Promise.resolve(friends[0]);
+          yield await Promise.resolve(friends[1]);
+        },
+      },
+    });
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          nestedObject: {},
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    resolveSlowField("slow");
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          nestedObject: {
+            scalarField: "slow",
+            nestedFriendList: [{ name: "Luke" }],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          nestedObject: {
+            scalarField: "slow",
+            nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          nestedObject: {
+            scalarField: "slow",
+            nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
+          },
+        },
+      });
+      expect(request.hasNext).toBe(false);
+    }
+  });
+
   it("Can @defer fields that are resolved after async iterable is complete", async () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();

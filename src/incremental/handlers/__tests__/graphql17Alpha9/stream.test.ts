@@ -2409,3 +2409,217 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
     partial: false,
   });
 });
+
+test("properly merges streamed data into cache data", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 2) {
+        name
+        id
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    friendList: () => friends.map((f) => Promise.resolve(f)),
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [
+            { name: "Luke Cached", id: "1" },
+            { name: "Han Cached", id: "2" },
+            { name: "Leia Cached", id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { name: "Leia Cached", id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [
+            { name: "Luke", id: "1" },
+            { name: "Han", id: "2" },
+            { name: "Leia Cached", id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { name: "Leia", id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});
+
+test("properly merges streamed data into partial cache data", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 2) {
+        name
+        id
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    friendList: () => friends.map((f) => Promise.resolve(f)),
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [
+            { name: "Luke", id: "1" },
+            { name: "Han", id: "2" },
+            { id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { name: "Leia", id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});
+
+test("properly merges streamed data into list with fewer items", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 2) {
+        name
+        id
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    friendList: () => friends.map((f) => Promise.resolve(f)),
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          friendList: [
+            { name: "Luke", id: "1" },
+            { name: "Han", id: "2" },
+            { id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { name: "Leia", id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});

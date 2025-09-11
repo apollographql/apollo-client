@@ -86,6 +86,13 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
+  // `streamPositions` maps `pending.id` to the index that should be set by the
+  // next `incremental` stream chunk to ensure the streamed array item is placed
+  // at the correct point in the data array. `this.data` contains cached
+  // references with the full array so we can't rely on the array length in
+  // `this.data` to determine where to place item. This also ensures that items
+  // updated by the cache between a streamed chunk aren't overwritten by merges
+  // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
 
   handle(

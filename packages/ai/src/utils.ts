@@ -16,7 +16,7 @@ import {
 export type NamedNode = { name: { value: string } };
 
 /**
- * The names of the root types in the GraphQLschema.
+ * The names of the root types in the GraphQLSchema.
  */
 export enum RootTypeName {
   MUTATION = "Mutation",

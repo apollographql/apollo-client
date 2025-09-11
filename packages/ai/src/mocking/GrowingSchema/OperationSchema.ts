@@ -980,10 +980,12 @@ export class OperationSchema {
     this.unionTypeDefinitions.set(name, {
       kind: Kind.UNION_TYPE_DEFINITION,
       name: { kind: Kind.NAME, value: name },
-      types: memberTypeNames.map((item) => ({
-        kind: Kind.NAMED_TYPE,
-        name: { kind: Kind.NAME, value: item },
-      })),
+      types: sortASTNodes(
+        memberTypeNames.map((item) => ({
+          kind: Kind.NAMED_TYPE,
+          name: { kind: Kind.NAME, value: item },
+        }))
+      ),
     });
     return name;
   }

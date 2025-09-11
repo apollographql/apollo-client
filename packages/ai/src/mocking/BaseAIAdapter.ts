@@ -2,7 +2,7 @@ import { ApolloLink } from "@apollo/client";
 import { AIAdapter } from "./AIAdapter.js";
 import { print } from "graphql";
 import { BASE_SYSTEM_PROMPT } from "./consts.js";
-import { GrowingSchema } from "./GrowingSchema.js";
+import { GrowingSchema } from "./GrowingSchema/index.js";
 
 export class BaseAIAdapter {
   private static baseSystemPrompt = BASE_SYSTEM_PROMPT;

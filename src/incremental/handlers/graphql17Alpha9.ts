@@ -158,7 +158,7 @@ class IncrementalRequest<TData>
 
   private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = deepMerge(this.data, normalized.data);
+      this.data = new DeepMerger().merge(this.data, normalized.data);
     }
 
     if (normalized.errors) {
@@ -167,10 +167,6 @@ class IncrementalRequest<TData>
 
     Object.assign(this.extensions, normalized.extensions);
   }
-}
-
-function deepMerge<T>(target: T, source: T): T {
-  return new DeepMerger().merge(target, source);
 }
 
 /**

@@ -30,7 +30,6 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { offsetLimitPagination } from "@apollo/client/utilities";
-import { preventUnhandledRejection } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 async function renderSuspenseHook<

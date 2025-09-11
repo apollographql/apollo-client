@@ -1,11 +1,3 @@
-import {
-  GraphQLID,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-} from "graphql-17-alpha2";
 import { from } from "rxjs";
 
 import {
@@ -19,20 +11,12 @@ import {
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
   executeSchemaGraphQL17Alpha2,
+  friendListSchemaGraphQL17Alpha2,
   markAsStreaming,
   mockDefer20220824,
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
-
-const friendType = new GraphQLObjectType({
-  fields: {
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    nonNullName: { type: new GraphQLNonNull(GraphQLString) },
-  },
-  name: "Friend",
-});
 
 const friends = [
   { name: "Luke", id: 1 },
@@ -40,55 +24,14 @@ const friends = [
   { name: "Leia", id: 3 },
 ];
 
-const query = new GraphQLObjectType({
-  fields: {
-    scalarList: {
-      type: new GraphQLList(GraphQLString),
-    },
-    scalarListList: {
-      type: new GraphQLList(new GraphQLList(GraphQLString)),
-    },
-    friendList: {
-      type: new GraphQLList(friendType),
-    },
-    nonNullFriendList: {
-      type: new GraphQLList(new GraphQLNonNull(friendType)),
-    },
-    nestedObject: {
-      type: new GraphQLObjectType({
-        name: "NestedObject",
-        fields: {
-          scalarField: {
-            type: GraphQLString,
-          },
-          nonNullScalarField: {
-            type: new GraphQLNonNull(GraphQLString),
-          },
-          nestedFriendList: { type: new GraphQLList(friendType) },
-          deeperNestedObject: {
-            type: new GraphQLObjectType({
-              name: "DeeperNestedObject",
-              fields: {
-                nonNullScalarField: {
-                  type: new GraphQLNonNull(GraphQLString),
-                },
-                deeperNestedFriendList: { type: new GraphQLList(friendType) },
-              },
-            }),
-          },
-        },
-      }),
-    },
-  },
-  name: "Query",
-});
-
-const schema = new GraphQLSchema({ query });
-
 function createLink(rootValue?: Record<string, unknown>) {
   return new ApolloLink((operation) => {
     return from(
-      executeSchemaGraphQL17Alpha2(schema, operation.query, rootValue)
+      executeSchemaGraphQL17Alpha2(
+        friendListSchemaGraphQL17Alpha2,
+        operation.query,
+        rootValue
+      )
     );
   });
 }

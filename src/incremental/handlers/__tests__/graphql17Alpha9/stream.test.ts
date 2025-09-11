@@ -10,10 +10,10 @@ import {
 } from "graphql-17-alpha9";
 import { from } from "rxjs";
 
+import type { DocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
-  DocumentNode,
   gql,
   InMemoryCache,
   NetworkStatus,

@@ -1481,161 +1481,150 @@ test("adds partial data and discards errors returned in incremental chunks with 
   await expect(takeRender).not.toRerender();
 });
 
-test.failing(
-  "can refetch and respond to cache updates after encountering an error in an incremental chunk for a streamed query when `errorPolicy` is `all`",
-  async () => {
-    let returnError = true;
-    const query = gql`
-      query {
-        friendList @stream(initialCount: 1) {
-          id
-          name
-        }
+test("can refetch and respond to cache updates after encountering an error in an incremental chunk for a streamed query when `errorPolicy` is `all`", async () => {
+  let subject!: Subject<Promise<Friend> | Friend>;
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
       }
-    `;
+    }
+  `;
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: createLink({
-        friendList: () => {
-          return friends.map((f, i) => {
-            if (i === 1 && returnError) {
-              return preventUnhandledRejection(
-                Promise.reject(new Error("Could not get friend"))
-              );
-            }
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: createLink({
+      friendList: async () => {
+        const iterable = asyncIterableSubject<Promise<Friend> | Friend>();
+        subject = iterable.subject;
 
-            return {
-              id: f.id,
-              name: wait(i * 50).then(() => f.name),
-            };
-          });
-        },
+        return iterable.stream;
+      },
+    }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
+    () => useSuspenseQuery(query, { errorPolicy: "all" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+  }
+
+  subject.next(friends[0]);
+  subject.next(Promise.reject(new Error("Could not get friend")));
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
       }),
-      incrementalHandler: new GraphQL17Alpha9Handler(),
-    });
-
-    using _disabledAct = disableActEnvironment();
-    const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { errorPolicy: "all" }),
-      { wrapper: createClientWrapper(client) }
-    );
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: new CombinedGraphQLErrors({
+        data: {
           friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: new CombinedGraphQLErrors({
-          data: {
-            friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-          },
-          errors: [
-            { message: "Could not get friend", path: ["friendList", 1] },
-          ],
-        }),
-      });
-    }
+        },
+        errors: [{ message: "Could not get friend", path: ["friendList", 1] }],
+      }),
+    });
+  }
 
-    {
-      const { snapshot, renderedComponents } = await takeRender();
+  subject.next(friends[2]);
+  subject.complete();
 
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          null,
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "complete",
+      networkStatus: NetworkStatus.error,
+      error: new CombinedGraphQLErrors({
+        data: {
           friendList: [
             { __typename: "Friend", id: "1", name: "Luke" },
             null,
             { __typename: "Friend", id: "3", name: "Leia" },
           ],
-        }),
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: new CombinedGraphQLErrors({
-          data: {
-            friendList: [
-              { __typename: "Friend", id: "1", name: "Luke" },
-              null,
-              { __typename: "Friend", id: "3", name: "Leia" },
-            ],
-          },
-          errors: [
-            { message: "Could not get friend", path: ["friendList", 1] },
-          ],
-        }),
-      });
-    }
-
-    returnError = false;
-    const refetchPromise = getCurrentSnapshot().refetch();
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
-          friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    }
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
-          friendList: [
-            { __typename: "Friend", id: "1", name: "Luke" },
-            { __typename: "Friend", id: "2", name: "Han" },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    }
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          friendList: [
-            { __typename: "Friend", id: "1", name: "Luke" },
-            { __typename: "Friend", id: "2", name: "Han" },
-            { __typename: "Friend", id: "3", name: "Leia" },
-          ],
         },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    }
+        errors: [{ message: "Could not get friend", path: ["friendList", 1] }],
+      }),
+    });
+  }
 
-    await expect(refetchPromise).resolves.toStrictEqualTyped({
+  const refetchPromise = getCurrentSnapshot().refetch();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+  }
+
+  subject.next(friends[0]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          null,
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  subject.next(friends[1]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
       data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
@@ -1643,33 +1632,46 @@ test.failing(
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
       },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
     });
-
-    client.cache.updateQuery<any>({ query }, (data) => ({
-      friendList: [
-        { ...data.friendList[0], name: "Luke (updated)" },
-        ...data.friendList.slice(1),
-      ],
-    }));
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          friendList: [
-            { __typename: "Friend", id: "1", name: "Luke (updated)" },
-            { __typename: "Friend", id: "2", name: "Han" },
-            { __typename: "Friend", id: "3", name: "Leia" },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    }
-
-    await expect(takeRender).not.toRerender();
   }
-);
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+  });
+
+  client.cache.updateQuery<any>({ query }, (data) => ({
+    friendList: [
+      { ...data.friendList[0], name: "Luke (updated)" },
+      ...data.friendList.slice(1),
+    ],
+  }));
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke (updated)" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});

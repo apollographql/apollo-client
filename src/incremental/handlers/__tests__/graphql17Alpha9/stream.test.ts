@@ -2796,3 +2796,157 @@ test("properly merges streamed data into list with more items", async () => {
     expect(request.hasNext).toBe(false);
   }
 });
+
+it("properly merges cache data when list is included in deferred chunk", async () => {
+  const { promise: slowFieldPromise, resolve: resolveSlowField } =
+    promiseWithResolvers();
+
+  const query = gql`
+    query {
+      nestedObject {
+        ...DeferFragment @defer
+      }
+    }
+    fragment DeferFragment on NestedObject {
+      scalarField
+      nestedFriendList @stream(initialCount: 0) {
+        name
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    nestedObject: {
+      scalarField: () => slowFieldPromise,
+      async *nestedFriendList() {
+        yield await Promise.resolve(friends[0]);
+        yield await Promise.resolve(friends[1]);
+      },
+    },
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nestedObject: {
+            scalarField: "cached",
+            nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
+          },
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nestedObject: {
+          scalarField: "cached",
+          nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
+        },
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  resolveSlowField("slow");
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nestedObject: {
+            scalarField: "cached",
+            nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
+          },
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
+        },
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke" }, { name: "Han Cached" }],
+        },
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nestedObject: {
+            scalarField: "slow",
+            nestedFriendList: [{ name: "Luke" }, { name: "Han Cached" }],
+          },
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
+        },
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nestedObject: {
+            scalarField: "slow",
+            nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
+          },
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
+        },
+      },
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});

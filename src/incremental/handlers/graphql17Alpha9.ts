@@ -130,16 +130,10 @@ class IncrementalRequest<TData>
           const items = incremental.items as any[];
           const parent: any[] = [];
 
-          if (!(pending.id in this.mergedIndexes)) {
-            const dataAtPath = pending.path.reduce(
-              (data, key) => (data as any)[key],
-              this.data
-            );
-
-            this.mergedIndexes[pending.id] = dataAtPath.length;
-          }
-
-          for (let i = 0!; i < items.length; i++) {
+          // This creates a sparse array with values set at the indices streamed
+          // from the server. DeepMerger uses Object.keys and will correctly
+          // place the values in this array in the correct place
+          for (let i = 0; i < items.length; i++) {
             parent[i + this.mergedIndexes[pending.id]] = items[i];
           }
 
@@ -147,6 +141,28 @@ class IncrementalRequest<TData>
           data = parent;
         } else {
           data = incremental.data;
+
+          // For deferred data, check if any pending streams have data here
+          // and update mergedIndexes accordingly
+          // Look through all pending items to see if any have arrays in this incremental data
+          for (const pendingItem of this.pending) {
+            if (!(pendingItem.id in this.mergedIndexes)) {
+              // Check if this incremental data contains array data for the pending path
+              // The pending path is absolute, but incremental data is relative to the defer
+              // E.g., pending.path = ["nestedObject"], pendingItem.path = ["nestedObject", "nestedFriendList"]
+              // incremental.data = { scalarField: "...", nestedFriendList: [...] }
+              // So we need the path from pending.path onwards
+              const relativePath = pendingItem.path.slice(pending.path.length);
+              const dataAtPath = relativePath.reduce(
+                (data, key) => (data as any)?.[key],
+                incremental.data
+              );
+
+              if (Array.isArray(dataAtPath)) {
+                this.mergedIndexes[pendingItem.id] = dataAtPath.length;
+              }
+            }
+          }
         }
 
         for (let i = path.length - 1; i >= 0; i--) {
@@ -154,7 +170,7 @@ class IncrementalRequest<TData>
           const parent: Record<string | number, any> =
             typeof key === "number" ? [] : {};
           parent[key] = data;
-          data = parent as typeof data;
+          data = parent;
         }
 
         this.merge({

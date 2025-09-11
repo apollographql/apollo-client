@@ -2797,7 +2797,7 @@ test("properly merges streamed data into list with more items", async () => {
   }
 });
 
-it("properly merges cache data when list is included in deferred chunk", async () => {
+test("properly merges cache data when list is included in deferred chunk", async () => {
   const { promise: slowFieldPromise, resolve: resolveSlowField } =
     promiseWithResolvers();
 

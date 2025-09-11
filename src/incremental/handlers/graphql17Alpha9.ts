@@ -86,7 +86,7 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
-  private mergedIndexes: Record<string, number> = {};
+  private streamPositions: Record<string, number> = {};
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -106,7 +106,7 @@ class IncrementalRequest<TData>
           );
 
           if (Array.isArray(dataAtPath)) {
-            this.mergedIndexes[pending.id] = dataAtPath.length;
+            this.streamPositions[pending.id] = dataAtPath.length;
           }
         }
       }
@@ -134,10 +134,10 @@ class IncrementalRequest<TData>
           // from the server. DeepMerger uses Object.keys and will correctly
           // place the values in this array in the correct place
           for (let i = 0; i < items.length; i++) {
-            parent[i + this.mergedIndexes[pending.id]] = items[i];
+            parent[i + this.streamPositions[pending.id]] = items[i];
           }
 
-          this.mergedIndexes[pending.id] += items.length;
+          this.streamPositions[pending.id] += items.length;
           data = parent;
         } else {
           data = incremental.data;
@@ -146,7 +146,7 @@ class IncrementalRequest<TData>
           // and update mergedIndexes accordingly
           // Look through all pending items to see if any have arrays in this incremental data
           for (const pendingItem of this.pending) {
-            if (!(pendingItem.id in this.mergedIndexes)) {
+            if (!(pendingItem.id in this.streamPositions)) {
               // Check if this incremental data contains array data for the pending path
               // The pending path is absolute, but incremental data is relative to the defer
               // E.g., pending.path = ["nestedObject"], pendingItem.path = ["nestedObject", "nestedFriendList"]
@@ -159,7 +159,7 @@ class IncrementalRequest<TData>
               );
 
               if (Array.isArray(dataAtPath)) {
-                this.mergedIndexes[pendingItem.id] = dataAtPath.length;
+                this.streamPositions[pendingItem.id] = dataAtPath.length;
               }
             }
           }

@@ -1312,6 +1312,7 @@ test("discards partial data and throws errors returned in incremental chunks", a
 });
 
 test("adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`", async () => {
+  const { stream, subject } = asyncIterableSubject();
   const query = gql`
     query {
       friendList @stream(initialCount: 1) {
@@ -1323,22 +1324,7 @@ test("adds partial data and does not throw errors returned in incremental chunks
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: createLink({
-      friendList: () => {
-        return friends.map((f, i) => {
-          if (i === 1) {
-            return preventUnhandledRejection(
-              Promise.reject(new Error("Could not get friend"))
-            );
-          }
-
-          return {
-            id: f.id,
-            name: wait(i * 50).then(() => f.name),
-          };
-        });
-      },
-    }),
+    link: createLink({ friendList: () => stream }),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
@@ -1353,6 +1339,9 @@ test("adds partial data and does not throw errors returned in incremental chunks
 
     expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
+
+  subject.next(friends[0]);
+  subject.next(Promise.reject(new Error("Could not get friend")));
 
   {
     const { snapshot, renderedComponents } = await takeRender();
@@ -1372,6 +1361,9 @@ test("adds partial data and does not throw errors returned in incremental chunks
       }),
     });
   }
+
+  subject.next(friends[2]);
+  subject.complete();
 
   {
     const { snapshot, renderedComponents } = await takeRender();
@@ -1404,6 +1396,7 @@ test("adds partial data and does not throw errors returned in incremental chunks
 });
 
 test("adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`", async () => {
+  const { stream, subject } = asyncIterableSubject<Friend | Promise<Friend>>();
   const query = gql`
     query {
       friendList @stream(initialCount: 1) {
@@ -1416,20 +1409,7 @@ test("adds partial data and discards errors returned in incremental chunks with 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: createLink({
-      friendList: () => {
-        return friends.map((f, i) => {
-          if (i === 1) {
-            return preventUnhandledRejection(
-              Promise.reject(new Error("Could not get friend"))
-            );
-          }
-
-          return {
-            id: f.id,
-            name: wait(i * 50).then(() => f.name),
-          };
-        });
-      },
+      friendList: () => stream,
     }),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
@@ -1446,6 +1426,9 @@ test("adds partial data and discards errors returned in incremental chunks with 
     expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
 
+  subject.next(friends[0]);
+  subject.next(Promise.reject(new Error("Could not get friend")));
+
   {
     const { snapshot, renderedComponents } = await takeRender();
 
@@ -1459,6 +1442,9 @@ test("adds partial data and discards errors returned in incremental chunks with 
       error: undefined,
     });
   }
+
+  subject.next(friends[2]);
+  subject.complete();
 
   {
     const { snapshot, renderedComponents } = await takeRender();

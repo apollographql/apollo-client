@@ -108,7 +108,7 @@ class IncrementalRequest<TData>
       this.pending.push(...chunk.pending);
     }
 
-    this.merge(chunk, new DeepMerger());
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -135,14 +135,11 @@ class IncrementalRequest<TData>
           data = parent as typeof data;
         }
 
-        this.merge(
-          {
-            data,
-            extensions: incremental.extensions,
-            errors: incremental.errors,
-          },
-          new DeepMerger()
-        );
+        this.merge({
+          data,
+          extensions: incremental.extensions,
+          errors: incremental.errors,
+        });
       }
     }
 
@@ -157,7 +154,7 @@ class IncrementalRequest<TData>
     }
 
     const result: FormattedExecutionResult<TData> = {
-      data: new DeepMerger().merge(cacheData, this.data),
+      data: deepMerge(cacheData, this.data),
     };
 
     if (isNonEmptyArray(this.errors)) {
@@ -171,12 +168,9 @@ class IncrementalRequest<TData>
     return result;
   }
 
-  private merge(
-    normalized: FormattedExecutionResult<TData>,
-    merger: DeepMerger<any[]>
-  ) {
+  private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = merger.merge(this.data, normalized.data);
+      this.data = deepMerge(this.data, normalized.data);
     }
 
     if (normalized.errors) {
@@ -185,6 +179,10 @@ class IncrementalRequest<TData>
 
     Object.assign(this.extensions, normalized.extensions);
   }
+}
+
+function deepMerge<T>(target: T, source: T): T {
+  return new DeepMerger().merge(target, source);
 }
 
 /**

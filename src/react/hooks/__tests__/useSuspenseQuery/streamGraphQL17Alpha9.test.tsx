@@ -823,7 +823,7 @@ test("incrementally renders data returned after skipping a streamed query", asyn
 });
 
 // TODO: This test is a bit of a lie. `fetchMore` should incrementally
-// rerender when using `@defer` but there is currently a bug in the core
+// rerender when using `@stream` but there is currently a bug in the core
 // implementation that prevents updates until the final result is returned.
 // This test reflects the behavior as it exists today, but will need
 // to be updated once the core bug is fixed.

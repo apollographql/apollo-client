@@ -1,5 +1,6 @@
 import {
   GraphQLID,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -26,6 +27,11 @@ const query = new GraphQLObjectType({
     },
     friendList: {
       type: new GraphQLList(friendType),
+      args: {
+        offset: {
+          type: GraphQLInt,
+        },
+      },
     },
     nonNullFriendList: {
       type: new GraphQLList(new GraphQLNonNull(friendType)),

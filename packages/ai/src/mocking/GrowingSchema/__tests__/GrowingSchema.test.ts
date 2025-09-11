@@ -1,20 +1,76 @@
 import { gql } from "@apollo/client";
 import { GrowingSchema } from "../GrowingSchema.js";
-import { GraphQLError } from "graphql";
 
 describe("GrowingSchema", () => {
-  it("creates a base schema when instantiated", () => {
+  it("creates an empty base schema when instantiated", () => {
+    const expectedSchema = /* GraphQL */ `
+    type Query {
+      _placeholder_query_: Boolean
+    }
+    `;
     const schema = new GrowingSchema();
-    expect(schema.toString()).toEqualIgnoringWhitespace(/* GraphQL */ `
-      type Query
-    `);
+    expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
   });
 
   describe(".add()", () => {
-    it("should create a schema with the correct fields", () => {
+    it("creates a query schema with the correct fields", () => {
       const query = gql`
       query GetUser {
         user {
+          __typename
+          id
+          name
+          emails {
+            __typename
+            id
+            kind
+            value
+          }
+          aliases
+        }
+      }
+      `;
+      const response = {
+        data: {
+          user: {
+            __typename: "User",
+            id: "1",
+            name: "John Doe",
+            emails: [
+              { __typename: "Email", id: "1", kind: "work", value: "qd" },
+              { __typename: "Email", id: "2", kind: "personal", value: "qwe" },
+            ],
+            aliases: ["John Smith", "Who Knows"],
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          user: User
+        }
+
+        type Email {
+          id: ID!
+          kind: String
+          value: String
+        }
+
+        type User {
+          aliases: [String]
+          emails: [Email]
+          id: ID!
+          name: String
+        }
+      `;
+      const schema = new GrowingSchema();
+      schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("creates a mutation schema with the correct fields", () => {
+      const query = gql`
+      mutation CreateUser {
+        createUser {
           __typename
           id
           name
@@ -29,7 +85,7 @@ describe("GrowingSchema", () => {
       `;
       const response = {
         data: {
-          user: {
+          createUser: {
             __typename: "User",
             id: "1",
             name: "John Doe",
@@ -42,19 +98,23 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
         type Query {
-          user: User
+          _placeholder_query_: Boolean
         }
 
-        type User {
-          id: ID
-          name: String
-          emails: [Email]
+        type Mutation {
+          createUser: User
         }
 
         type Email {
-          id: ID
+          id: ID!
           kind: String
           value: String
+        }
+
+        type User {
+          emails: [Email]
+          id: ID!
+          name: String
         }
       `;
       const schema = new GrowingSchema();
@@ -117,18 +177,18 @@ describe("GrowingSchema", () => {
           user: User
         }
 
-        type User {
-          id: ID
-          name: String
-          emails: [Email]
-          lastName: String
-        }
-
         type Email {
-          id: ID
+          foo: Int
+          id: ID!
           kind: String
           value: String
-          foo: Float
+        }
+
+        type User {
+          emails: [Email]
+          id: ID!
+          lastName: String
+          name: String
         }
       `;
       const schema = new GrowingSchema();
@@ -161,7 +221,7 @@ describe("GrowingSchema", () => {
         }
 
         type User {
-          id: ID
+          id: ID!
           name: String
         }
       `;
@@ -221,10 +281,105 @@ describe("GrowingSchema", () => {
         error = err as Error;
       }
 
-      expect(error).toBeInstanceOf(GraphQLError);
+      expect(error).toBeInstanceOf(Error);
       expect(error?.message).toEqual(
         'Error executing query `GetUser2` against grown schema: Expected Iterable, but did not find one for field "Query.users".'
       );
+    });
+
+    it("handles inline arguments", () => {
+      const query = gql`
+      query Search {
+        book(
+          id: "asdf"
+          nullArg: null
+          stringArg: "Hi"
+          boolArg: false
+          intArg: 2
+          floatArg: 3.6
+          listArg: ["string1", "string2"]
+          nestedListArg: [["nested1"], ["nested2, nested3"]]
+          objectArg: {
+            prop1: true,
+            prop2: 5,
+            prop3: 9.7,
+            prop4: "Hello",
+            prop5: null,
+            prop6: {value: "Yep"}
+            prop7: ["Yep"],
+            prop8: [[7]],
+            prop9: [{value1: "Nope"}, {value2: true}, {value2: false}]
+          }
+          objectArgs: [{prop1: true}, {prop1: false}, {prop2: 5}]
+          nestedObjectArgs: [[{prop1: true}], [{prop1: false}], [{prop2: 5}]]
+        ) {
+          __typename
+          title
+          anotherField(number: 1, bool: true)
+        }
+      }
+      `;
+      const response = {
+        data: {
+          book: {
+            __typename: "Book",
+            title: "Moby Dick",
+            anotherField: true,
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          book(
+            boolArg: Boolean,
+            floatArg: Float,
+            id: ID,
+            intArg: Int,
+            listArg: [String],
+            nestedListArg: [[String]],
+            nestedObjectArgs: [[NestedObjectArgInput]],
+            nullArg: String,
+            objectArg: ObjectArgInput,
+            objectArgs: [ObjectArgInput],
+            stringArg: String
+          ): Book
+        }
+
+        type Book {
+          anotherField(bool: Boolean, number: Int): Boolean
+          title: String
+        }
+
+        input NestedObjectArgInput {
+          prop1: Boolean
+          prop2: Int
+        }
+
+        input ObjectArgInput {
+          prop1: Boolean
+          prop2: Int
+          prop3: Float
+          prop4: String
+          prop5: String
+          prop6: Prop6Input
+          prop7: [String]
+          prop8: [[Int]]
+          prop9: [Prop9Input]
+        }
+
+        input Prop6Input {
+          value: String
+        }
+
+        input Prop9Input {
+          value1: String
+          value2: Boolean
+        }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
     it("handles scalar variables", () => {
@@ -257,8 +412,8 @@ describe("GrowingSchema", () => {
         }
 
         type Book {
-          title: String
           anotherField(arg: String!, nullable: String): Boolean
+          title: String
         }
       `;
 
@@ -303,13 +458,13 @@ describe("GrowingSchema", () => {
           name: String
         }
 
-        input SomeArgInput {
-          foo: String
+        type Book {
+          anotherField(arg: SomeArgInput!): Boolean
+          title: String
         }
 
-        type Book {
-          title: String
-          anotherField(arg: SomeArgInput!): Boolean
+        input SomeArgInput {
+          foo: String
         }
       `;
 
@@ -357,20 +512,20 @@ describe("GrowingSchema", () => {
           name: NameInput
         }
 
+        type Book {
+          title: String
+        }
+
         input NameInput {
+          age: Int
           firstName: String
           lastName: String
           nickName: NickNameInput
-          age: Int
         }
 
         input NickNameInput {
           full: String
           short: String
-        }
-
-        type Book {
-          title: String
         }
       `;
 
@@ -420,21 +575,21 @@ describe("GrowingSchema", () => {
           name: NameInput
         }
 
+        type Book {
+          anotherField(author: AuthorInput!): Boolean
+          title: String
+        }
+
         input NameInput {
+          age: Int
           firstName: String
           lastName: String
           nickName: NickNameInput
-          age: Int
         }
 
         input NickNameInput {
           full: String
           short: String
-        }
-
-        type Book {
-          title: String
-          anotherField(author: AuthorInput!): Boolean
         }
       `;
 
@@ -478,16 +633,16 @@ describe("GrowingSchema", () => {
           name: NameInput
         }
 
+        type Book {
+          title: String
+        }
+
         input NameInput {
           nickName: NickNameInput
         }
 
         input NickNameInput {
           full: String
-        }
-
-        type Book {
-          title: String
         }
       `;
       const secondQuery = gql`
@@ -526,19 +681,19 @@ describe("GrowingSchema", () => {
           name: NameInput
         }
 
+        type Book {
+          title: String
+        }
+
         input NameInput {
-          nickName: NickNameInput
           firstName: String
           lastName: String
+          nickName: NickNameInput
         }
 
         input NickNameInput {
           full: String
           short: String
-        }
-
-        type Book {
-          title: String
         }
       `;
 
@@ -602,19 +757,19 @@ describe("GrowingSchema", () => {
           name: NameInput
         }
 
+        type Book {
+          title: String
+        }
+
         input NameInput {
-          nickNames: [NickNameInput]
           firstName: String
-          middleName: String
           lastName: String
+          middleName: String
+          nickNames: [NickNameInput]
         }
 
         input NickNameInput {
           full: String
-        }
-
-        type Book {
-          title: String
         }
       `;
 
@@ -623,74 +778,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles union types with inline fragments", () => {
-      const query = gql`
-      query Search {
-        search(term: "Smith", first: 2, after: "ASDF") {
-          __typename
-          pageInfo {
-            __typename
-            hasNextPage
-            nextCursor
-          }
-          edges {
-            __typename
-            node {
-              # The inline fragments imply that this is a union.
-              ... on Author {
-                __typename
-                name
-              }
-              ... on Book {
-                __typename
-                title
-              }
-            }
-          }
-        }
-      }
-      `;
-      const response = {
-        data: {
-          search: {
-            __typename: "SearchConnection",
-            pageInfo: {
-              __typename: "PageInfo",
-              hasNextPage: true,
-              nextCursor: "eyJvZmZzZXQiOjJ9",
-            },
-            edges: [
-              // The inconsistent `__typename` values
-              // imply that this is a union.
-              {
-                __typename: "SearchEdge",
-                node: {
-                  __typename: "Author",
-                  name: "John Smith",
-                },
-              },
-              {
-                __typename: "SearchEdge",
-                node: {
-                  __typename: "Book",
-                  title: "The Art of Blacksmithing",
-                },
-              },
-            ],
-          },
-        },
-      };
-      const expectedSchema = /* GraphQL */ `
-      type Query {
-      }
-      `;
-
-      const schema = new GrowingSchema();
-      schema.add({ query }, response);
-      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
-    });
-
-    it.skip("handles a single inline fragment as a union", () => {
+    it("handles a single inline fragment as a type, not a union", () => {
       const query = gql`
       query Search {
         book {
@@ -711,6 +799,11 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
       type Query {
+        book: Book
+      }
+
+      type Book {
+        title: String
       }
       `;
 
@@ -719,10 +812,104 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles a selection set with root fields and inline fragments as a union, contributing the root fields to all union members", () => {
+    it("handles a single inline fragment as a type, not a union, when the return data is a list of matching types", () => {
       const query = gql`
-      query Search($term: String!, $first: Int, $after: String) {
-        search(term: $term, first: $first, after: $after) {
+      query Search {
+        books {
+          ... on Book {
+            __typename
+            title
+          }
+        }
+      }
+      `;
+      const response = {
+        data: {
+          books: [
+            {
+              __typename: "Book",
+              title: "Moby Dick",
+            },
+            {
+              __typename: "Book",
+              title: "The Martian",
+            },
+          ],
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+      type Query {
+        books: [Book]
+      }
+
+      type Book {
+        title: String
+      }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("handles union types with inline fragments", () => {
+      const query = gql`
+      query Search {
+        search(term: "Smith", first: 2, after: "ASDF") {
+          __typename
+          # The inline fragments imply that this is a union
+          ... on Author {
+            __typename
+            name
+          }
+          ... on Book {
+            __typename
+            title
+          }
+        }
+      }
+      `;
+      const response = {
+        data: {
+          search: [
+            // The inconsistent `__typename` values
+            // imply that this is a union.
+            {
+              __typename: "Book",
+              title: "The Art of Blacksmithing",
+            },
+            {
+              __typename: "Author",
+              name: "John Smith",
+            },
+          ],
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+      type Query {
+        search(after: String, first: Int, term: String): [AuthorBookUnion]
+      }
+
+      type Author {
+        name: String
+      }
+
+      union AuthorBookUnion = Author | Book
+
+      type Book {
+        title: String
+      }
+      `;
+
+      const schema = new GrowingSchema();
+      schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("handles a selection set with root fields and inline fragments as a union, contributing the root fields to all union members", () => {
+      const query = gql`
+      query Search {
+        search {
           __typename
           pageInfo {
             __typename
@@ -766,8 +953,9 @@ describe("GrowingSchema", () => {
               {
                 __typename: "SearchEdge",
                 node: {
-                  __typename: "Author",
-                  name: "John Smith",
+                  __typename: "Movie",
+                  title: "The Matrix",
+                  someField: true,
                 },
               },
               {
@@ -775,6 +963,7 @@ describe("GrowingSchema", () => {
                 node: {
                   __typename: "Book",
                   title: "The Art of Blacksmithing",
+                  someOtherField: false,
                 },
               },
             ],
@@ -783,6 +972,33 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
       type Query {
+        search: SearchConnection
+      }
+
+      type Book {
+        someOtherField: Boolean
+        title: String
+      }
+
+      union BookMovieUnion = Book | Movie
+
+      type Movie {
+        someField: Boolean
+        title: String
+      }
+
+      type PageInfo {
+        hasNextPage: Boolean
+        nextCursor: String
+      }
+
+      type SearchConnection {
+        edges: [SearchEdge]
+        pageInfo: PageInfo
+      }
+
+      type SearchEdge {
+        node: BookMovieUnion
       }
       `;
 
@@ -791,7 +1007,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles named fragments on a type", () => {
+    it("handles named fragments on a type", () => {
       const query = gql`
       query Search {
         book {
@@ -814,6 +1030,11 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
       type Query {
+        book: Book
+      }
+
+      type Book {
+        title: String
       }
       `;
 
@@ -822,7 +1043,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it.skip("handles union types with named fragments", () => {
+    it("handles union types with named fragments", () => {
       const query = gql`
       query Search {
         search(term: "Smith", first: 2, after: "ASDF") {
@@ -882,6 +1103,31 @@ describe("GrowingSchema", () => {
       };
       const expectedSchema = /* GraphQL */ `
       type Query {
+        search(after: String, first: Int, term: String): SearchConnection
+      }
+
+      type Author {
+        name: String
+      }
+
+      union AuthorBookUnion = Author | Book
+
+      type Book {
+        title: String
+      }
+
+      type PageInfo {
+        hasNextPage: Boolean
+        nextCursor: String
+      }
+
+      type SearchConnection {
+        edges: [SearchEdge]
+        pageInfo: PageInfo
+      }
+
+      type SearchEdge {
+        node: AuthorBookUnion
       }
       `;
 

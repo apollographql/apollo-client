@@ -149,9 +149,10 @@ class IncrementalRequest<TData>
         } else {
           data = incremental.data;
 
-          // For deferred data, check if any pending streams have data here
-          // and update mergedIndexes accordingly
-          // Look through all pending items to see if any have arrays in this incremental data
+          // Check if any pending streams added arrays from deferred data so
+          // that we can update streamPositions with the initial length of the
+          // array to ensure future streamed items are inserted at the right
+          // starting index.
           for (const pendingItem of this.pending) {
             if (!(pendingItem.id in this.streamPositions)) {
               // Check if this incremental data contains array data for the pending path

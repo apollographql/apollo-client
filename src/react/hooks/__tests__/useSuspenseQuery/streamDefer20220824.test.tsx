@@ -1300,9 +1300,9 @@ test("discards partial data and throws errors returned in incremental chunks", a
     expect(snapshot).toStrictEqualTyped({
       error: new CombinedGraphQLErrors({
         data: {
-          friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+          friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
         },
-        errors: [{ message: "Could not get friend", path: ["friendList"] }],
+        errors: [{ message: "Could not get friend", path: ["friendList", 1] }],
       }),
     });
   }
@@ -1340,7 +1340,7 @@ test("adds partial data and does not throw errors returned in incremental chunks
   }
 
   subject.next(friends[0]);
-  subject.next(Promise.reject(new Error("Could not get friend")));
+  subject.next(new Error("Could not get friend"));
 
   {
     const { snapshot, renderedComponents } = await takeRender();
@@ -1395,7 +1395,7 @@ test("adds partial data and does not throw errors returned in incremental chunks
 });
 
 test("adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`", async () => {
-  const { stream, subject } = asyncIterableSubject<Friend | Promise<Friend>>();
+  const { stream, subject } = asyncIterableSubject<Friend | Error>();
   const query = gql`
     query {
       friendList @stream(initialCount: 1) {
@@ -1426,7 +1426,7 @@ test("adds partial data and discards errors returned in incremental chunks with 
   }
 
   subject.next(friends[0]);
-  subject.next(Promise.reject(new Error("Could not get friend")));
+  subject.next(new Error("Could not get friend"));
 
   {
     const { snapshot, renderedComponents } = await takeRender();
@@ -1467,7 +1467,7 @@ test("adds partial data and discards errors returned in incremental chunks with 
 });
 
 test("can refetch and respond to cache updates after encountering an error in an incremental chunk for a streamed query when `errorPolicy` is `all`", async () => {
-  let subject!: Subject<Promise<Friend> | Friend>;
+  let subject!: Subject<Friend | Error>;
   const query = gql`
     query {
       friendList @stream(initialCount: 1) {
@@ -1480,8 +1480,8 @@ test("can refetch and respond to cache updates after encountering an error in an
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: createLink({
-      friendList: async () => {
-        const iterable = asyncIterableSubject<Promise<Friend> | Friend>();
+      friendList: () => {
+        const iterable = asyncIterableSubject<Friend | Error>();
         subject = iterable.subject;
 
         return iterable.stream;
@@ -1503,7 +1503,7 @@ test("can refetch and respond to cache updates after encountering an error in an
   }
 
   subject.next(friends[0]);
-  subject.next(Promise.reject(new Error("Could not get friend")));
+  subject.next(new Error("Could not get friend"));
 
   {
     const { snapshot, renderedComponents } = await takeRender();

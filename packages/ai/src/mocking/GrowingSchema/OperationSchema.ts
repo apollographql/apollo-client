@@ -22,17 +22,10 @@ import {
   FieldNode,
   InlineFragmentNode,
   FragmentDefinitionNode,
-  isIntrospectionType,
-  isObjectType,
-  isUnionType,
-  isInputObjectType,
 } from "graphql";
 import { AIAdapter } from "../AIAdapter.js";
 import {
   deepMerge,
-  graphQLInputObjectTypeToInputObjectDefinitionNode,
-  graphQLObjectTypeToObjectTypeDefinitionNode,
-  graphQLUnionTypeToUnionTypeDefinitionNode,
   isFloat,
   RootTypeName,
   singularize,

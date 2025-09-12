@@ -3,7 +3,6 @@ import {
   execute,
   FieldDefinitionNode,
   FormattedExecutionResult,
-  GraphQLBoolean,
   GraphQLError,
   GraphQLInputObjectType,
   GraphQLObjectType,

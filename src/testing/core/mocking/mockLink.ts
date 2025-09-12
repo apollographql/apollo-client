@@ -54,7 +54,7 @@ export declare namespace MockLink {
   }
 
   export interface MockedResponse<
-    // @ts-ignore
+    /** @ts-ignore */
     out TData = Record<string, any>,
     out TVariables extends OperationVariables = Record<string, any>,
   > {

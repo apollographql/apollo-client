@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.5
+
+### Patch Changes
+
+- [#12920](https://github.com/apollographql/apollo-client/pull/12920) [`e2fc385`](https://github.com/apollographql/apollo-client/commit/e2fc3850ddb2aa756fc44420390ae357daf31948) Thanks [@phryneas](https://github.com/phryneas)! - Fix an invariance type error in the `MockedResponse` type.
+
 ## 4.0.4
 
 ### Patch Changes

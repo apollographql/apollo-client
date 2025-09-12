@@ -590,7 +590,7 @@ export class LocalState<
         const matches =
           typename === typeCondition ||
           cache.fragmentMatches(fragment, typename ?? "", {
-            unnormalizedResult: rootValue,
+            unnormalizedResult: rootValue || undefined,
           });
 
         if (matches) {

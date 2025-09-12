@@ -77,6 +77,7 @@
       "development": "./src/utilities/environment/index.development.ts",
       "default": "./src/utilities/environment/index.ts"
     },
+    "./experimental/identifyResolvedFragments": "./src/experimental/identifyResolvedFragments/index.ts",
     "./v4-migration": "./src/v4-migration.ts"
   },
   "scripts": {

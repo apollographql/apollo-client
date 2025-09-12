@@ -119,7 +119,7 @@ class IncrementalRequest<TData>
       }
     }
 
-    this.merge(chunk);
+    this.merge(chunk, new DeepMerger(undefined, { arrayMerge: "truncate" }));
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -181,11 +181,14 @@ class IncrementalRequest<TData>
           data = parent;
         }
 
-        this.merge({
-          data,
-          extensions: incremental.extensions,
-          errors: incremental.errors,
-        });
+        this.merge(
+          {
+            data,
+            extensions: incremental.extensions,
+            errors: incremental.errors,
+          },
+          new DeepMerger(undefined, { arrayMerge: "truncate" })
+        );
       }
     }
 
@@ -212,9 +215,12 @@ class IncrementalRequest<TData>
     return result;
   }
 
-  private merge(normalized: FormattedExecutionResult<TData>) {
+  private merge(
+    normalized: FormattedExecutionResult<TData>,
+    merger: DeepMerger
+  ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger().merge(this.data, normalized.data);
+      this.data = merger.merge(this.data, normalized.data);
     }
 
     if (normalized.errors) {

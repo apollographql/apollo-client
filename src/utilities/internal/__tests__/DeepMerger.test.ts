@@ -94,3 +94,23 @@ test("provides optional context to reconciler function", function () {
   expect(typicalContextValues[0]).toBe(contextObject);
   expect(typicalContextValues[1]).toBe(contextObject);
 });
+
+test("deep merges each array item keeping length by default", () => {
+  const target = [{ a: 1, b: { c: 2 } }, { e: 5 }];
+  const source = [{ a: 2, b: { c: 2, d: 3 } }];
+
+  const result = new DeepMerger().merge(target, source);
+
+  expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }, { e: 5 }]);
+});
+
+test("deep merges each array item and truncates source to target length", () => {
+  const target = [{ a: 1, b: { c: 2 } }, { e: 5 }];
+  const source = [{ a: 2, b: { c: 2, d: 3 } }];
+
+  const result = new DeepMerger(undefined, {
+    arrayMerge: "truncate",
+  }).merge(target, source);
+
+  expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }]);
+});

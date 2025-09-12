@@ -13,6 +13,7 @@ import { AIMockLink } from "./AIMockLink.js";
 export interface AIMockedProviderProps {
   adapter: AIAdapter;
   systemPrompt?: string;
+  schema?: string;
   defaultOptions?: ApolloClient.DefaultOptions;
   cache?: ApolloCache;
   localState?: LocalState;
@@ -37,6 +38,7 @@ export class AIMockedProvider extends React.Component<
 
     const {
       adapter,
+      schema,
       defaultOptions,
       cache,
       localState,
@@ -53,6 +55,7 @@ export class AIMockedProvider extends React.Component<
         link ||
         new AIMockLink({
           adapter,
+          schema,
           showWarnings,
           defaultOptions: mockLinkDefaultOptions,
         }),

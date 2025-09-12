@@ -63,6 +63,70 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
+    it("creates a query schema with the correct fields from a base schema", async () => {
+      const baseSchema = /* GraphQL */ `
+        scalar DateTime
+
+        type Query {
+          now: DateTime
+        }
+      `;
+      const query = gql`
+      query GetUser {
+        user {
+          __typename
+          id
+          name
+          emails {
+            __typename
+            id
+            kind
+            value
+          }
+          aliases
+        }
+      }
+      `;
+      const response = {
+        data: {
+          user: {
+            __typename: "User",
+            id: "1",
+            name: "John Doe",
+            emails: [
+              { __typename: "Email", id: "1", kind: "work", value: "qd" },
+              { __typename: "Email", id: "2", kind: "personal", value: "qwe" },
+            ],
+            aliases: ["John Smith", "Who Knows"],
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          now: DateTime
+          user: User
+        }
+
+        scalar DateTime
+
+        type Email {
+          id: ID!
+          kind: String
+          value: String
+        }
+
+        type User {
+          aliases: [String]
+          emails: [Email]
+          id: ID!
+          name: String
+        }
+      `;
+      const schema = new GrowingSchema({ schema: baseSchema });
+      await schema.add({ query }, response);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
     it("creates a mutation schema with the correct fields", async () => {
       const query = gql`
       mutation CreateUser {

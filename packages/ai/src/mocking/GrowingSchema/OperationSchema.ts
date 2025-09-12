@@ -22,6 +22,9 @@ import {
   FieldNode,
   InlineFragmentNode,
   FragmentDefinitionNode,
+  visit,
+  ScalarTypeDefinitionNode,
+  DirectiveDefinitionNode,
 } from "graphql";
 import { AIAdapter } from "../AIAdapter.js";
 import {
@@ -145,6 +148,14 @@ export class OperationSchema {
     InputObjectTypeDefinitionNode
   >();
   /**
+   * A map of scalar type definitions extracted from the operation document.
+   */
+  public scalarTypeDefinitions = new Map<string, ScalarTypeDefinitionNode>();
+  /**
+   * A map of directive definitions extracted from the operation document.
+   */
+  public directiveDefinitions = new Map<string, DirectiveDefinitionNode>();
+  /**
    * The schema that has been built for the operation.
    */
   private _schema: GraphQLSchema | undefined;
@@ -159,7 +170,8 @@ export class OperationSchema {
 
   constructor(
     public readonly operationDocument: GraphQLOperation,
-    public readonly response: AIAdapter.Result
+    public readonly response: AIAdapter.Result,
+    baseSchema?: DocumentNode | null
   ) {
     const { query: queryDocument, variables } = operationDocument;
     const operationNodes = queryDocument.definitions.filter(
@@ -179,6 +191,10 @@ export class OperationSchema {
           nodes: queryDocument,
         }
       );
+    }
+
+    if (baseSchema) {
+      this.seedSchema(baseSchema);
     }
 
     this.operationNode = operationNodes[0];
@@ -210,6 +226,30 @@ export class OperationSchema {
       this.operationNode.selectionSet
     );
     this.ensureQueryExists();
+  }
+
+  /**
+   * Seeds the schema with the base schema.
+   * @param baseSchema
+   */
+  private seedSchema(baseSchema: DocumentNode) {
+    visit(baseSchema, {
+      [Kind.OBJECT_TYPE_DEFINITION]: (node) => {
+        this.objectTypeDefinitions.set(node.name.value, node);
+      },
+      [Kind.UNION_TYPE_DEFINITION]: (node) => {
+        this.unionTypeDefinitions.set(node.name.value, node);
+      },
+      [Kind.INPUT_OBJECT_TYPE_DEFINITION]: (node) => {
+        this.inputObjectTypeDefinitions.set(node.name.value, node);
+      },
+      [Kind.SCALAR_TYPE_DEFINITION]: (node) => {
+        this.scalarTypeDefinitions.set(node.name.value, node);
+      },
+      [Kind.DIRECTIVE_DEFINITION]: (node) => {
+        this.directiveDefinitions.set(node.name.value, node);
+      },
+    });
   }
 
   private ensureQueryExists() {
@@ -1259,6 +1299,8 @@ export class OperationSchema {
         ...this.objectTypeDefinitions.values(),
         ...this.unionTypeDefinitions.values(),
         ...this.inputObjectTypeDefinitions.values(),
+        ...this.scalarTypeDefinitions.values(),
+        ...this.directiveDefinitions.values(),
       ]),
     };
     return this._ast;

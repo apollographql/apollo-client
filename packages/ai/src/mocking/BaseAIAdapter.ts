@@ -4,12 +4,21 @@ import { print } from "graphql";
 import { BASE_SYSTEM_PROMPT } from "./consts.js";
 import { GrowingSchema } from "./GrowingSchema/index.js";
 
+export declare namespace BaseAIAdapter {
+  export interface Options {
+    schema?: string;
+  }
+}
+
 export class BaseAIAdapter {
   private static baseSystemPrompt = BASE_SYSTEM_PROMPT;
   private schema: GrowingSchema;
 
-  constructor(private implementation: AIAdapter) {
-    this.schema = new GrowingSchema();
+  constructor(
+    private implementation: AIAdapter,
+    options: BaseAIAdapter.Options
+  ) {
+    this.schema = new GrowingSchema({ schema: options.schema });
   }
 
   /**

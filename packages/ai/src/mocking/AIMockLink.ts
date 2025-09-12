@@ -8,6 +8,7 @@ export declare namespace AIMockLink {
   export interface Options {
     adapter: AIAdapter;
     showWarnings?: boolean;
+    schema?: string;
     defaultOptions?: DefaultOptions;
   }
 }
@@ -15,13 +16,14 @@ export declare namespace AIMockLink {
 export class AIMockLink extends ApolloLink {
   private adapter: BaseAIAdapter;
   public showWarnings: boolean = true;
-
+  public schema: string | undefined;
   public static defaultOptions: AIMockLink.DefaultOptions = {};
 
   constructor(options: AIMockLink.Options) {
     super();
 
-    this.adapter = new BaseAIAdapter(options.adapter);
+    this.schema = options.schema;
+    this.adapter = new BaseAIAdapter(options.adapter, { schema: this.schema });
     this.showWarnings = options.showWarnings ?? true;
   }
 

@@ -1,5 +1,6 @@
 import {
   buildASTSchema,
+  DocumentNode,
   execute,
   FieldDefinitionNode,
   FormattedExecutionResult,
@@ -13,6 +14,7 @@ import {
   Kind,
   NamedTypeNode,
   ObjectTypeDefinitionNode,
+  parse,
   printSchema,
   UnionTypeDefinitionNode,
   visit,
@@ -44,6 +46,11 @@ export class GrowingSchema {
    */
   public schema = new GraphQLSchema({});
 
+  /**
+   * The base schema that is used to build the schema.
+   */
+  private baseSchema: DocumentNode | null = null;
+
   // We need to track the seen queries with their variables to
   // accommodate changes to the input objects defined via the
   // variables.
@@ -67,6 +74,12 @@ export class GrowingSchema {
    * Whether an operation is currently being merged into the schema.
    */
   private mergingOperation = false;
+
+  constructor(options: { schema?: string } = {}) {
+    if (options.schema) {
+      this.baseSchema = parse(options.schema);
+    }
+  }
 
   /**
    * Adds an operation to the schema.
@@ -96,7 +109,11 @@ export class GrowingSchema {
     response: AIAdapter.Result
   ): Promise<void> {
     // Create a schema for the operation
-    const operationSchema = new OperationSchema(operationDocument, response);
+    const operationSchema = new OperationSchema(
+      operationDocument,
+      response,
+      this.baseSchema
+    );
 
     return new Promise((resolve, reject) => {
       // Add to the merge task queue with its own promise handlers

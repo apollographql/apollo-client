@@ -31,7 +31,8 @@ export class BaseAIAdapter {
       systemPrompt
     );
 
-    this.schema.add(operation, result);
+    // Add the operation to the schema.
+    await this.schema.add(operation, result);
 
     return result;
   }

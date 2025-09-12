@@ -41,6 +41,7 @@ import {
   sortUnionMembers,
   ucFirst,
 } from "../../utils.js";
+import { PLACEHOLDER_QUERY_NAME } from "../consts.js";
 
 /**
  * The mapping of the operation field name to the root type name.
@@ -124,10 +125,6 @@ export class OperationSchema {
    */
   private readonly variables: Record<string, unknown>;
   /**
-   * The response provided for the operation.
-   */
-  private readonly response: AIAdapter.Result;
-  /**
    * A map of paths to return types metadata.
    */
   private paths = new Map<string, ReturnType | ReturnType[]>();
@@ -168,9 +165,8 @@ export class OperationSchema {
   private _schemaString: string | undefined;
 
   constructor(
-    operationDocument: GraphQLOperation,
-    response: AIAdapter.Result,
-    previousSchema: GraphQLSchema
+    public readonly operationDocument: GraphQLOperation,
+    public readonly response: AIAdapter.Result
   ) {
     const { query: queryDocument, variables } = operationDocument;
     const operationNodes = queryDocument.definitions.filter(
@@ -200,12 +196,9 @@ export class OperationSchema {
       ])
     );
     this.variables = variables || {};
-    this.response = response;
     this.type = this.operationNode.operation;
     this.typeName = OPERATION_FIELD_TO_TYPE_NAME[this.type];
     this.operationName = this.operationNode.name?.value ?? "Unnamed Operation";
-
-    this.seedSchema(previousSchema);
 
     // Collect all the fragment definitions
     queryDocument.definitions.forEach((selection) => {
@@ -223,40 +216,26 @@ export class OperationSchema {
       this.typeName,
       this.operationNode.selectionSet
     );
+    this.ensureQueryExists();
   }
 
-  /**
-   * Seed the schema with the previous schema.
-   * This allows us to build with some level of consistency with the previous
-   * schema.
-   * @param previousSchema — The previous schema to seed the schema with.
-   */
-  private seedSchema(previousSchema: GraphQLSchema) {
-    Object.values(previousSchema.getTypeMap()).forEach((type) => {
-      if (isIntrospectionType(type)) {
-        // Skip introspection types like __Schema, __Type, __TypeKind, etc.
-        // These types are not relevant to the schema we are building and will
-        // be added when we do the final build of the schema.
-        return;
-      }
-      if (isObjectType(type)) {
-        this.objectTypeDefinitions.set(
-          type.name,
-          type.astNode || graphQLObjectTypeToObjectTypeDefinitionNode(type)
-        );
-      } else if (isUnionType(type)) {
-        this.unionTypeDefinitions.set(
-          type.name,
-          type.astNode || graphQLUnionTypeToUnionTypeDefinitionNode(type)
-        );
-      } else if (isInputObjectType(type)) {
-        this.inputObjectTypeDefinitions.set(
-          type.name,
-          type.astNode ||
-            graphQLInputObjectTypeToInputObjectDefinitionNode(type)
-        );
-      }
-    });
+  private ensureQueryExists() {
+    if (!this.objectTypeDefinitions.has(RootTypeName.QUERY)) {
+      this.objectTypeDefinitions.set(RootTypeName.QUERY, {
+        kind: Kind.OBJECT_TYPE_DEFINITION,
+        name: { kind: Kind.NAME, value: RootTypeName.QUERY },
+        fields: [
+          {
+            type: {
+              kind: Kind.NAMED_TYPE,
+              name: { kind: Kind.NAME, value: BuiltInScalarType.BOOLEAN },
+            },
+            kind: Kind.FIELD_DEFINITION,
+            name: { kind: Kind.NAME, value: PLACEHOLDER_QUERY_NAME },
+          },
+        ],
+      });
+    }
   }
 
   /**

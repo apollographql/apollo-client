@@ -3,17 +3,13 @@ import { GrowingSchema } from "../GrowingSchema.js";
 
 describe("GrowingSchema", () => {
   it("creates an empty base schema when instantiated", () => {
-    const expectedSchema = /* GraphQL */ `
-    type Query {
-      _placeholder_query_: Boolean
-    }
-    `;
+    const expectedSchema = /* GraphQL */ ``;
     const schema = new GrowingSchema();
     expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
   });
 
   describe(".add()", () => {
-    it("creates a query schema with the correct fields", () => {
+    it("creates a query schema with the correct fields", async () => {
       const query = gql`
       query GetUser {
         user {
@@ -63,11 +59,11 @@ describe("GrowingSchema", () => {
         }
       `;
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("creates a mutation schema with the correct fields", () => {
+    it("creates a mutation schema with the correct fields", async () => {
       const query = gql`
       mutation CreateUser {
         createUser {
@@ -118,11 +114,11 @@ describe("GrowingSchema", () => {
         }
       `;
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("extends an existing schema based on a new query", () => {
+    it("extends an existing schema based on a new query", async () => {
       const query = gql`
       query GetUser {
         user {
@@ -192,12 +188,90 @@ describe("GrowingSchema", () => {
         }
       `;
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       schema.add({ query: query2 }, response2);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("throws an error when a query that is incompatible with previous queries is added", () => {
+    it("avoids errors due to race conditions when adding multiple queries simultaneously", async () => {
+      const query = gql`
+      query GetUser {
+        user {
+          __typename
+          id
+          name
+          emails {
+            __typename
+            id
+            kind
+            value
+          }
+        }
+      }
+      `;
+      const response = {
+        data: {
+          user: {
+            __typename: "User",
+            id: "1",
+            name: "John Doe",
+            emails: [
+              { __typename: "Email", id: "1", kind: "work", value: "qd" },
+              { __typename: "Email", id: "2", kind: "personal", value: "qwe" },
+            ],
+          },
+        },
+      };
+      const query2 = gql`
+      query GetUser2 {
+        user {
+          __typename
+          lastName
+          emails {
+            __typename
+            foo
+          }
+        }
+      }
+      `;
+      const response2 = {
+        data: {
+          user: {
+            __typename: "User",
+            lastName: "John Doe",
+            emails: [{ __typename: "Email", foo: 1 }],
+          },
+        },
+      };
+      const expectedSchema = /* GraphQL */ `
+        type Query {
+          user: User
+        }
+
+        type Email {
+          foo: Int
+          id: ID!
+          kind: String
+          value: String
+        }
+
+        type User {
+          emails: [Email]
+          id: ID!
+          lastName: String
+          name: String
+        }
+      `;
+      const schema = new GrowingSchema();
+      const promises = [
+        schema.add({ query: query2 }, response2),
+        schema.add({ query }, response),
+      ];
+      await Promise.all(promises);
+      expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
+    });
+
+    it("throws an error when a query that is incompatible with previous queries is added", async () => {
       const query = gql`
       query GetUsers {
         users(limit: 2) {
@@ -270,13 +344,13 @@ describe("GrowingSchema", () => {
       const schema = new GrowingSchema();
 
       // Add the initial schema
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
 
       // Attempt to add the incompatible schema
       let error: Error | undefined;
       try {
-        schema.add({ query: query2 }, response2);
+        await schema.add({ query: query2 }, response2);
       } catch (err) {
         error = err as Error;
       }
@@ -287,7 +361,7 @@ describe("GrowingSchema", () => {
       );
     });
 
-    it("handles inline arguments", () => {
+    it("handles inline arguments", async () => {
       const query = gql`
       query Search {
         book(
@@ -378,11 +452,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles scalar variables", () => {
+    it("handles scalar variables", async () => {
       const query = gql`
       query Search($bookId: ID!, $arg: String!, $nullable: String) {
         book(id: $bookId) {
@@ -418,11 +492,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query, variables }, response);
+      await schema.add({ query, variables }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles input object variables", () => {
+    it("handles input object variables", async () => {
       const query = gql`
       query SearchByAuthor($author: AuthorInput!, $arg: SomeArgInput!) {
         bookByAuthor(author: $author) {
@@ -469,11 +543,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query, variables }, response);
+      await schema.add({ query, variables }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles nested input object variables", () => {
+    it("handles nested input object variables", async () => {
       const query = gql`
       query SearchByAuthor($author: AuthorInput!) {
         bookByAuthor(author: $author) {
@@ -534,7 +608,7 @@ describe("GrowingSchema", () => {
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles repeated input object variables for a single query", () => {
+    it("handles repeated input object variables for a single query", async () => {
       const query = gql`
       query SearchByAuthor($author: AuthorInput!) {
         bookByAuthor(author: $author) {
@@ -594,11 +668,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query, variables }, response);
+      await schema.add({ query, variables }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles repeated input object variables across multiple queries", () => {
+    it("handles repeated input object variables across multiple queries", async () => {
       const firstQuery = gql`
       query SearchByAuthor($author: AuthorInput!) {
         bookByAuthor(author: $author) {
@@ -698,20 +772,20 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add(
+      await schema.add(
         { query: firstQuery, variables: firstVariables },
         firstResponse
       );
       expect(schema.toString()).toEqualIgnoringWhitespace(firstExpectedSchema);
 
-      schema.add(
+      await schema.add(
         { query: secondQuery, variables: secondVariables },
         secondResponse
       );
       expect(schema.toString()).toEqualIgnoringWhitespace(secondExpectedSchema);
     });
 
-    it("handles list variables", () => {
+    it("handles list variables", async () => {
       const query = gql`
       query SearchByAuthor($authors: [AuthorInput!]!) {
         bookByAuthor(authors: $authors) {
@@ -774,11 +848,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query, variables }, response);
+      await schema.add({ query, variables }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles a single inline fragment as a type, not a union", () => {
+    it("handles a single inline fragment as a type, not a union", async () => {
       const query = gql`
       query Search {
         book {
@@ -808,11 +882,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles a single inline fragment as a type, not a union, when the return data is a list of matching types", () => {
+    it("handles a single inline fragment as a type, not a union, when the return data is a list of matching types", async () => {
       const query = gql`
       query Search {
         books {
@@ -848,11 +922,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles union types with inline fragments", () => {
+    it("handles union types with inline fragments", async () => {
       const query = gql`
       query Search {
         search(term: "Smith", first: 2, after: "ASDF") {
@@ -902,11 +976,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles a selection set with root fields and inline fragments as a union, contributing the root fields to all union members", () => {
+    it("handles a selection set with root fields and inline fragments as a union, contributing the root fields to all union members", async () => {
       const query = gql`
       query Search {
         search {
@@ -1003,11 +1077,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles named fragments on a type", () => {
+    it("handles named fragments on a type", async () => {
       const query = gql`
       query Search {
         book {
@@ -1039,11 +1113,11 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
 
-    it("handles union types with named fragments", () => {
+    it("handles union types with named fragments", async () => {
       const query = gql`
       query Search {
         search(term: "Smith", first: 2, after: "ASDF") {
@@ -1132,7 +1206,7 @@ describe("GrowingSchema", () => {
       `;
 
       const schema = new GrowingSchema();
-      schema.add({ query }, response);
+      await schema.add({ query }, response);
       expect(schema.toString()).toEqualIgnoringWhitespace(expectedSchema);
     });
   });

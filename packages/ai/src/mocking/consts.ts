@@ -14,3 +14,9 @@ For example, say something is named "Foobar", you should use a unique identifier
 
 Remember context and data based on the unique identifier and typename so that data is consistent.
 `;
+
+/**
+ * This is a special field name that is used to provide a placeholder query
+ * field when the root query type has no fields.
+ */
+export const PLACEHOLDER_QUERY_NAME = "_placeholder_query_";

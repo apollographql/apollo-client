@@ -31,40 +31,19 @@ import {
   RootTypeName,
   sortASTNodes,
 } from "../../utils.js";
+import { PLACEHOLDER_QUERY_NAME } from "../consts.js";
 
 /**
  * A schema that is progressively built as operations are added.
  */
 export class GrowingSchema {
   /**
-   * This is a special field name that is used to provide a placeholder query
-   * field when the root query type has no fields.
-   */
-  private static placeholderQueryName = "_placeholder_query_";
-
-  /**
    * The schema that is progressively built as operations are added.
    *
    * We start with a schema containing an empty query type.
    * We will build the schema up as we go.
    */
-  public schema = new GraphQLSchema({
-    query: new GraphQLObjectType({
-      name: RootTypeName.QUERY,
-      fields: {
-        // We always include a placeholder query field in the initial schema.
-        // This is because a schema is invalid if:
-        // 1. There is no query type
-        // 2. There is a query type with no fields
-        //
-        // This placeholder query field is removed when the schema is updated
-        // with the first real query field.
-        [GrowingSchema.placeholderQueryName]: {
-          type: GraphQLBoolean,
-        },
-      },
-    }),
-  });
+  public schema = new GraphQLSchema({});
 
   // We need to track the seen queries with their variables to
   // accommodate changes to the input objects defined via the
@@ -76,36 +55,36 @@ export class GrowingSchema {
   private seenQueries = new WeakSet<GraphQLOperation>();
 
   /**
+   * The queue of schema merge tasks.
+   * They must be treated as a queue to avoid race conditions.
+   */
+  private mergeTaskQueue: {
+    operationSchema: OperationSchema;
+    resolve: (value: void) => void;
+    reject: (error: Error) => void;
+  }[] = [];
+
+  /**
+   * Whether an operation is currently being merged into the schema.
+   */
+  private mergingOperation = false;
+
+  /**
    * Adds an operation to the schema.
    * @param operationDocument — The operation to add to the schema.
    * @param response — The response to the operation.
    */
-  public add(
+  public async add(
     operationDocument: GraphQLOperation,
     response: AIAdapter.Result
-  ): void {
-    // Save the previous schema to restore it if the operation fails
-    const previousSchema = this.schema;
-
-    try {
-      if (!this.seenQueries.has(operationDocument)) {
-        // If this is a new operation, merge it into the schema
-        this.mergeOperationIntoSchema(operationDocument, response);
-      }
-
-      // Validate that the operation and response are valid against the schema
-      this.validateOperationAndResponseAgainstSchema(
-        operationDocument,
-        response
-      );
-
-      // Mark the operation as seen
-      this.seenQueries.add(operationDocument);
-    } catch (e) {
-      // Restore the previous schema if the operation fails
-      this.schema = previousSchema;
-      throw e;
+  ): Promise<void> {
+    if (!this.seenQueries.has(operationDocument)) {
+      // Return a promise that will be resolved when the operation is merged
+      // into the schema
+      return this.mergeOperationIntoSchema(operationDocument, response);
     }
+    // If the operation has already been seen, resolve immediately
+    return Promise.resolve();
   }
 
   /**
@@ -113,33 +92,106 @@ export class GrowingSchema {
    * @param operationDocument — The operation to merge into the schema.
    * @param response — The response to the operation.
    */
-  private mergeOperationIntoSchema(
+  private async mergeOperationIntoSchema(
     operationDocument: GraphQLOperation,
     response: AIAdapter.Result
-  ) {
+  ): Promise<void> {
     // Create a schema for the operation
-    const operationSchema = new OperationSchema(
-      operationDocument,
-      response,
-      this.schema
-    );
+    const operationSchema = new OperationSchema(operationDocument, response);
 
-    // Merge the operation schema into the main schema
-    const finalAst = visit(operationSchema.ast, {
-      [Kind.OBJECT_TYPE_DEFINITION]: (node) => {
-        const updatedNode = this.mergeObjectTypeDefinition(node);
-        return updatedNode;
-      },
-      [Kind.UNION_TYPE_DEFINITION]: (node) => {
-        return this.mergeUnionTypeDefinition(node);
-      },
-      [Kind.INPUT_OBJECT_TYPE_DEFINITION]: (node) => {
-        return this.mergeInputObjectTypeDefinition(node);
-      },
+    return new Promise((resolve, reject) => {
+      // Add to the merge task queue with its own promise handlers
+      this.mergeTaskQueue.push({
+        operationSchema,
+        resolve,
+        reject,
+      });
+
+      // Start processing the merge task queue if it is not already running
+      this.processMergeTaskQueue();
     });
+  }
 
-    // Update the main schema with the merged operation schema
-    this.schema = buildASTSchema(finalAst);
+  /**
+   * Processes the merge task queue.
+   */
+  private processMergeTaskQueue() {
+    // If already processing, return.
+    // the queue will continue to be processed automatically.
+    if (this.mergingOperation) {
+      return;
+    }
+
+    // Process the next merge task in the queue
+    const nextMergeTask = this.mergeTaskQueue.shift();
+    if (!nextMergeTask) {
+      // If the queue is empty, return
+      return;
+    }
+
+    // Start merging the operation into the schema
+    this.mergingOperation = true;
+    this.mergeAndUpdateSchema(nextMergeTask.operationSchema)
+      .then(() => {
+        // Merging the operation into the schema succeeded :)
+        nextMergeTask.resolve();
+      })
+      .catch((error) => {
+        // Merging the operation into the schema failed :(
+        nextMergeTask.reject(error);
+      })
+      .finally(() => {
+        // Move on to the next merge task
+        this.mergingOperation = false;
+
+        // Process the next merge task in the queue
+        if (this.mergeTaskQueue.length > 0) {
+          this.processMergeTaskQueue();
+        }
+      });
+  }
+
+  /**
+   * Merges an operation schema into the main schema.
+   * @param operationSchema
+   */
+  private async mergeAndUpdateSchema(
+    operationSchema: OperationSchema
+  ): Promise<void> {
+    // Save the previous schema to restore it if the operation fails
+    const previousSchema = this.schema;
+
+    try {
+      // Merge the operation schema into the main schema
+      const finalAst = visit(operationSchema.ast, {
+        [Kind.OBJECT_TYPE_DEFINITION]: (node) => {
+          const updatedNode = this.mergeObjectTypeDefinition(node);
+          return updatedNode;
+        },
+        [Kind.UNION_TYPE_DEFINITION]: (node) => {
+          return this.mergeUnionTypeDefinition(node);
+        },
+        [Kind.INPUT_OBJECT_TYPE_DEFINITION]: (node) => {
+          return this.mergeInputObjectTypeDefinition(node);
+        },
+      });
+
+      // Update the main schema with the merged operation schema
+      this.schema = buildASTSchema(finalAst);
+
+      // Validate that the operation and response are valid against the schema
+      this.validateOperationAndResponseAgainstSchema(
+        operationSchema.operationDocument,
+        operationSchema.response
+      );
+
+      // Mark the operation as seen
+      this.seenQueries.add(operationSchema.operationDocument);
+    } catch (e) {
+      // Restore the previous schema if the operation fails
+      this.schema = previousSchema;
+      throw e;
+    }
   }
 
   /**
@@ -365,7 +417,7 @@ export class GrowingSchema {
       // The placeholder query field is only necessary when there are no real
       // query fields in the schema.
       const fieldsWithoutPlaceholder = new Map(fields);
-      fieldsWithoutPlaceholder.delete(GrowingSchema.placeholderQueryName);
+      fieldsWithoutPlaceholder.delete(PLACEHOLDER_QUERY_NAME);
       if (fieldsWithoutPlaceholder.size > 0) {
         fields = fieldsWithoutPlaceholder;
       }

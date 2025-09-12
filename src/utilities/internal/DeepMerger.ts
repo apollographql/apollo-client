@@ -33,7 +33,7 @@ export declare namespace DeepMerger {
 }
 
 /** @internal */
-export class DeepMerger<TContextArgs extends any[]> {
+export class DeepMerger<TContextArgs extends any[] = any[]> {
   constructor(
     private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>,
     private options: DeepMerger.Options = {}

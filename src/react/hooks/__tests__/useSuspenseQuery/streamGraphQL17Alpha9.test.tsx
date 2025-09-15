@@ -369,7 +369,6 @@ test('does not suspend streamed queries with data in the cache and using a "cach
 });
 
 test('does not suspend streamed queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
-  using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
   const { subject, stream } = asyncIterableSubject();
 
   const query = gql`
@@ -396,7 +395,7 @@ test('does not suspend streamed queries with partial data in the cache and using
   // We are intentionally writing partial data to the cache. Supress console
   // warnings to avoid unnecessary noise in the test.
   {
-    // using _consoleSpy = spyOnConsole("error");
+    using _consoleSpy = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {

@@ -104,7 +104,7 @@ test("deep merges each array item keeping length by default", () => {
   expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }, { e: 5 }]);
 });
 
-test("deep merges each array item and truncates source to target length", () => {
+test("deep merges each array item and truncates source to target length when using truncate arrayMerge", () => {
   const target = [{ a: 1, b: { c: 2 } }, { e: 5 }];
   const source = [{ a: 2, b: { c: 2, d: 3 } }];
 
@@ -113,4 +113,15 @@ test("deep merges each array item and truncates source to target length", () => 
   }).merge(target, source);
 
   expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }]);
+});
+
+test("maintains source length when using truncate arrayMerge when source is longer than target length", () => {
+  const target = [{ a: 1, b: { c: 2 } }];
+  const source = [{ a: 2 }, { e: 2 }];
+
+  const result = new DeepMerger(undefined, {
+    arrayMerge: "truncate",
+  }).merge(target, source);
+
+  expect(result).toEqual([{ a: 2, b: { c: 2 } }, { e: 2 }]);
 });

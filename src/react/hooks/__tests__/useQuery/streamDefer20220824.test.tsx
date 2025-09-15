@@ -491,7 +491,17 @@ test('returns eventually consistent data from streamed queries with data in the 
   `;
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            friendList: {
+              merge: (_, incoming) => incoming,
+            },
+          },
+        },
+      },
+    }),
     link: createLink({ friendList: () => stream }),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -532,11 +542,7 @@ test('returns eventually consistent data from streamed queries with data in the 
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: markAsStreaming({
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Cached Han" },
-        { __typename: "Friend", id: "3", name: "Cached Leia" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     }),
     dataState: "streaming",
     loading: true,
@@ -558,18 +564,13 @@ test('returns eventually consistent data from streamed queries with data in the 
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
     }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Cached Han" },
-        { __typename: "Friend", id: "3", name: "Cached Leia" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     },
     variables: {},
   });
@@ -592,7 +593,6 @@ test('returns eventually consistent data from streamed queries with data in the 
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
     },
     variables: {},
@@ -613,7 +613,6 @@ test('returns eventually consistent data from streamed queries with data in the 
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
     },
     variables: {},
@@ -622,13 +621,7 @@ test('returns eventually consistent data from streamed queries with data in the 
   await expect(takeSnapshot).not.toRerender();
 });
 
-// TODO: Determine how we handle partial data with streamed responses. While this
-// works as expected and renders correctly, this also emits missing field
-// warnings in the console when writing the result to the cache since array items
-// with partial cache data are still included for items that haven't streamed in
-// yet.
 test('returns eventually consistent data from streamed queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
-  using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
   const { stream, subject } = asyncIterableSubject();
   const query = gql`
     query {
@@ -640,7 +633,17 @@ test('returns eventually consistent data from streamed queries with partial data
   `;
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            friendList: {
+              merge: (_, incoming) => incoming,
+            },
+          },
+        },
+      },
+    }),
     link: createLink({ friendList: () => stream }),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -648,7 +651,7 @@ test('returns eventually consistent data from streamed queries with partial data
   // We know we are writing partial data to the cache so suppress the console
   // warning.
   {
-    // using _consoleSpy = spyOnConsole("error");
+    using _consoleSpy = spyOnConsole("error");
     client.writeQuery({
       query,
       data: {
@@ -692,11 +695,7 @@ test('returns eventually consistent data from streamed queries with partial data
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: markAsStreaming({
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2" },
-        { __typename: "Friend", id: "3" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     }),
     dataState: "streaming",
     loading: true,
@@ -718,18 +717,13 @@ test('returns eventually consistent data from streamed queries with partial data
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3" },
       ],
     }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2" },
-        { __typename: "Friend", id: "3" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     },
     variables: {},
   });
@@ -752,7 +746,6 @@ test('returns eventually consistent data from streamed queries with partial data
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3" },
       ],
     },
     variables: {},
@@ -773,7 +766,6 @@ test('returns eventually consistent data from streamed queries with partial data
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3" },
       ],
     },
     variables: {},

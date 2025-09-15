@@ -46,7 +46,8 @@ export class DeepMerger<TContextArgs extends any[] = any[]> {
       this.options.arrayMerge === "truncate" &&
       target.length > source.length
     ) {
-      target = this.shallowCopyForMerge(target).slice(0, source.length);
+      target = target.slice(0, source.length);
+      this.pastCopies.add(target);
     }
 
     if (isNonNullObject(source) && isNonNullObject(target)) {

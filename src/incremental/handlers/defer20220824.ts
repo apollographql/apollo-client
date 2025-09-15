@@ -75,9 +75,12 @@ class DeferRequest<TData extends Record<string, unknown>>
   private extensions: Record<string, any> = {};
   private data: any = {};
 
-  private merge(normalized: FormattedExecutionResult<TData>) {
+  private merge(
+    normalized: FormattedExecutionResult<TData>,
+    arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate"
+  ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger(undefined, { arrayMerge: "truncate" }).merge(
+      this.data = new DeepMerger(undefined, { arrayMerge }).merge(
         this.data,
         normalized.data
       );
@@ -101,6 +104,7 @@ class DeferRequest<TData extends Record<string, unknown>>
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
+        let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
         let data =
           // The item merged from a `@stream` chunk is always the first item in
           // the `items` array
@@ -115,15 +119,21 @@ class DeferRequest<TData extends Record<string, unknown>>
             const key = path[i];
             const isNumericKey = !isNaN(+key);
             const parent: Record<string | number, any> = isNumericKey ? [] : {};
+            if (isNumericKey) {
+              arrayMerge = "combine";
+            }
             parent[key] = data;
             data = parent as typeof data;
           }
         }
-        this.merge({
-          errors,
-          extensions,
-          data: data ? (data as TData) : undefined,
-        });
+        this.merge(
+          {
+            errors,
+            extensions,
+            data: data ? (data as TData) : undefined,
+          },
+          arrayMerge
+        );
       }
     }
 

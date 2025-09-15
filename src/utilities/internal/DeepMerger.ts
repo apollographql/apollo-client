@@ -10,14 +10,6 @@ type ReconcilerFunction<TContextArgs extends any[]> = (
   ...context: TContextArgs
 ) => any;
 
-type ArrayMergeStrategy =
-  // Truncate the target array to the source length, then deep merge the array
-  // items at the same index
-  | "truncate"
-  // Combine arrays and deep merge array items for items at the same index.
-  // This is the default
-  | "combine";
-
 const defaultReconciler: ReconcilerFunction<any[]> = function (
   target,
   source,
@@ -28,8 +20,16 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
 
 export declare namespace DeepMerger {
   export interface Options {
-    arrayMerge?: ArrayMergeStrategy;
+    arrayMerge?: DeepMerger.ArrayMergeStrategy;
   }
+
+  export type ArrayMergeStrategy =
+    // Truncate the target array to the source length, then deep merge the array
+    // items at the same index
+    | "truncate"
+    // Combine arrays and deep merge array items for items at the same index.
+    // This is the default
+    | "combine";
 }
 
 /** @internal */

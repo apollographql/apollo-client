@@ -18,6 +18,7 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
   return this.merge(target[property], source[property]);
 };
 
+/** @internal */
 export declare namespace DeepMerger {
   export interface Options {
     arrayMerge?: DeepMerger.ArrayMergeStrategy;

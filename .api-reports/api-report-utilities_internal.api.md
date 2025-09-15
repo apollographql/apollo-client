@@ -99,9 +99,7 @@ export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise
 // @internal @deprecated (undocumented)
 export function decoratePromise<TValue>(promise: Promise<TValue>): DecoratedPromise<TValue>;
 
-// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "DeepMerger" because one of its declarations is marked as @internal
-//
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export namespace DeepMerger {
     // (undocumented)
     export type ArrayMergeStrategy = "truncate" | "combine";
@@ -394,6 +392,8 @@ export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
 // @internal @deprecated (undocumented)
 export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
+// Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
+//
 // @public (undocumented)
 type ReconcilerFunction<TContextArgs extends any[]> = (this: DeepMerger<TContextArgs>, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number, ...context: TContextArgs) => any;
 

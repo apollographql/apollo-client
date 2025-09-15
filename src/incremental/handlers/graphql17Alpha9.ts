@@ -133,7 +133,7 @@ class IncrementalRequest<TData>
         const path = pending.path.concat(incremental.subPath ?? []);
 
         let data: any;
-        let arrayMerge: DeepMerger.ArrayMergeStrategy = "combine";
+        let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
         if ("items" in incremental) {
           const items = incremental.items as any[];
           const parent: any[] = [];
@@ -169,7 +169,6 @@ class IncrementalRequest<TData>
 
               if (Array.isArray(dataAtPath)) {
                 this.streamPositions[pendingItem.id] = dataAtPath.length;
-                arrayMerge = "truncate";
               }
             }
           }
@@ -180,6 +179,9 @@ class IncrementalRequest<TData>
           const parent: Record<string | number, any> =
             typeof key === "number" ? [] : {};
           parent[key] = data;
+          if (typeof key === "number") {
+            arrayMerge = "combine";
+          }
           data = parent;
         }
 

@@ -77,7 +77,10 @@ class DeferRequest<TData extends Record<string, unknown>>
 
   private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger().merge(this.data, normalized.data);
+      this.data = new DeepMerger(undefined, { arrayMerge: "truncate" }).merge(
+        this.data,
+        normalized.data
+      );
     }
     if (normalized.errors) {
       this.errors.push(...normalized.errors);

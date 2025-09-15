@@ -219,7 +219,7 @@ class IncrementalRequest<TData>
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
-    arrayMerge: "combine" | "truncate"
+    arrayMerge: DeepMerger.ArrayMergeStrategy
   ) {
     if (normalized.data !== undefined) {
       this.data = new DeepMerger(undefined, { arrayMerge }).merge(

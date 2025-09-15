@@ -258,13 +258,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
   await expect(takeRender).not.toRerender();
 });
 
-// TODO: Determine how we handle partial data with streamed responses. While this
-// works as expected and renders correctly, this also emits missing field
-// warnings in the console when writing the result to the cache since array items
-// with partial cache data are still included for items that haven't streamed in
-// yet.
 test('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
-  using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
   const { stream, subject } = asyncIterableSubject();
   interface QueryData {
     friendList: Array<{ __typename: "Friend"; id: string; name: string }>;
@@ -300,7 +294,7 @@ test('does not suspend deferred queries with partial data in the cache and using
   // We are intentionally writing partial data to the cache. Supress console
   // warnings to avoid unnecessary noise in the test.
   {
-    // using _consoleSpy = spyOnConsole("error");
+    using _consoleSpy = spyOnConsole("error");
     client.writeQuery({
       query,
       data: {

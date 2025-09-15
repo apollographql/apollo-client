@@ -125,7 +125,19 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     }
   `;
 
-  const cache = new InMemoryCache();
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: (_, incoming) => {
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  });
   cache.writeQuery({
     query,
     data: {
@@ -177,11 +189,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: {
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke" },
-          { __typename: "Friend", id: "2", name: "Cached Han" },
-          { __typename: "Friend", id: "3", name: "Cached Leia" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
       dataState: "streaming",
       error: undefined,
@@ -200,7 +208,6 @@ test('does not suspend deferred queries with data in the cache and using a "cach
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
-          { __typename: "Friend", id: "3", name: "Cached Leia" },
         ],
       },
       dataState: "streaming",
@@ -274,7 +281,19 @@ test('does not suspend deferred queries with partial data in the cache and using
 
   const client = new ApolloClient({
     link: createLink({ friendList: () => stream }),
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            friendList: {
+              merge: (_, incoming) => {
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+    }),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
@@ -336,13 +355,7 @@ test('does not suspend deferred queries with partial data in the cache and using
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: {
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke" },
-          // @ts-expect-error
-          { __typename: "Friend", id: "2" },
-          // @ts-expect-error
-          { __typename: "Friend", id: "3" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
       dataState: "streaming",
       error: undefined,
@@ -361,8 +374,6 @@ test('does not suspend deferred queries with partial data in the cache and using
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
-          // @ts-expect-error
-          { __typename: "Friend", id: "3" },
         ],
       },
       dataState: "streaming",

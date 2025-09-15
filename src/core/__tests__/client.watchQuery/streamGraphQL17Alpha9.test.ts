@@ -792,7 +792,7 @@ test("handles @defer inside @stream", async () => {
   const {
     promise: iterableCompletionPromise,
     resolve: resolveIterableCompletion,
-  } = promiseWithResolvers();
+  } = promiseWithResolvers<void>();
 
   const client = new ApolloClient({
     link: createLink({
@@ -841,7 +841,7 @@ test("handles @defer inside @stream", async () => {
     partial: true,
   });
 
-  resolveIterableCompletion(null);
+  resolveIterableCompletion();
 
   await expect(observableStream).toEmitSimilarValue({
     expected: (previous) => ({

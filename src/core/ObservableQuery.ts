@@ -867,8 +867,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.transformDocument(this.options.query)
       : combinedOptions.query;
 
-    // let wasUpdated = false;
-
+    let wasUpdated = false;
     const isCached = this.options.fetchPolicy !== "no-cache";
 
     if (!isCached) {
@@ -891,7 +890,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
 
-    let wasUpdated = false;
     const { promise, operator } = getTrackingOperatorPromise(
       (value: QueryNotification.Value<TFetchData>) => {
         switch (value.kind) {

@@ -1,13 +1,6 @@
 import assert from "node:assert";
 
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  FormattedInitialIncrementalExecutionResult,
-  FormattedSubsequentIncrementalExecutionResult,
-} from "graphql-17-alpha2";
 import {
-  experimentalExecuteIncrementally,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -15,7 +8,9 @@ import {
   GraphQLSchema,
   GraphQLString,
 } from "graphql-17-alpha2";
+import { from } from "rxjs";
 
+import type { DocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -23,10 +18,10 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  Observable,
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
+  executeSchemaGraphQL17Alpha2,
   markAsStreaming,
   mockDefer20220824,
   ObservableStream,
@@ -35,7 +30,7 @@ import {
 import {
   hasIncrementalChunks,
   // eslint-disable-next-line local-rules/no-relative-imports
-} from "../defer20220824.js";
+} from "../../defer20220824.js";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.2 release:
 // https://github.com/graphql/graphql-js/blob/364cd71d1a26eb6f62661efd7fa399e91332d30d/src/execution/__tests__/defer-test.ts
@@ -105,41 +100,12 @@ function resolveOnNextTick(): Promise<void> {
   return Promise.resolve(undefined);
 }
 
-async function* run(
-  document: DocumentNode
-): AsyncGenerator<
-  | FormattedInitialIncrementalExecutionResult
-  | FormattedSubsequentIncrementalExecutionResult,
-  FormattedExecutionResult | void
-> {
-  const result = await experimentalExecuteIncrementally({
-    schema,
-    document,
-    rootValue: {},
-  });
-  if ("initialResult" in result) {
-    yield JSON.parse(
-      JSON.stringify(result.initialResult)
-    ) as FormattedInitialIncrementalExecutionResult;
-    for await (const incremental of result.subsequentResults) {
-      yield JSON.parse(
-        JSON.stringify(incremental)
-      ) as FormattedSubsequentIncrementalExecutionResult;
-    }
-  } else {
-    return result;
-  }
+function run(query: DocumentNode) {
+  return executeSchemaGraphQL17Alpha2(schema, query);
 }
 
 const schemaLink = new ApolloLink((operation) => {
-  return new Observable((observer) => {
-    void (async () => {
-      for await (const chunk of run(operation.query)) {
-        observer.next(chunk);
-      }
-      observer.complete();
-    })();
-  });
+  return from(run(operation.query));
 });
 
 describe("graphql-js test cases", () => {
@@ -166,7 +132,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -180,7 +146,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -234,7 +200,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
@@ -244,7 +210,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -275,7 +241,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
@@ -285,7 +251,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -329,7 +295,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -344,7 +310,7 @@ describe("graphql-js test cases", () => {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
 
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -380,7 +346,7 @@ describe("graphql-js test cases", () => {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
 
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -393,7 +359,7 @@ describe("graphql-js test cases", () => {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
 
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -433,7 +399,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
@@ -443,7 +409,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -482,7 +448,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
@@ -492,7 +458,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -563,7 +529,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
@@ -573,7 +539,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {
@@ -589,7 +555,7 @@ describe("graphql-js test cases", () => {
     {
       const { value: chunk, done } = (await incoming.next())!;
       assert(!done);
-      expect(handler.isIncrementalResult(chunk)).toBe(true);
+      assert(handler.isIncrementalResult(chunk));
       expect(hasIncrementalChunks(chunk)).toBe(true);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {

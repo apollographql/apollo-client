@@ -29,6 +29,7 @@ export declare namespace Defer20220824Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
+    incremental?: ReadonlyArray<IncrementalResult<TData>>;
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
@@ -36,20 +37,32 @@ export declare namespace Defer20220824Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
-    incremental?: Array<IncrementalDeferPayload<TData>>;
+    incremental?: Array<IncrementalResult<TData>>;
   };
 
-  export type Chunk<TData extends Record<string, unknown>> =
-    | InitialResult<TData>
-    | SubsequentResult<TData>;
-
-  export type IncrementalDeferPayload<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
+  export type IncrementalDeferResult<TData = Record<string, unknown>> = {
+    data?: TData | null;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     path?: Incremental.Path;
     label?: string;
   };
+
+  export type IncrementalStreamResult<TData = Array<unknown>> = {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    items?: TData;
+    path?: Incremental.Path;
+    label?: string;
+    extensions?: Record<string, unknown>;
+  };
+
+  export type IncrementalResult<TData = Record<string, unknown>> =
+    | IncrementalDeferResult<TData>
+    | IncrementalStreamResult<TData>;
+
+  export type Chunk<TData extends Record<string, unknown>> =
+    | InitialResult<TData>
+    | SubsequentResult<TData>;
 }
 
 class DeferRequest<TData extends Record<string, unknown>>
@@ -62,12 +75,9 @@ class DeferRequest<TData extends Record<string, unknown>>
   private extensions: Record<string, any> = {};
   private data: any = {};
 
-  private mergeIn(
-    normalized: FormattedExecutionResult<TData>,
-    merger: DeepMerger<any[]>
-  ) {
+  private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = merger.merge(this.data, normalized.data);
+      this.data = new DeepMerger().merge(this.data, normalized.data);
     }
     if (normalized.errors) {
       this.errors.push(...normalized.errors);
@@ -83,14 +93,21 @@ class DeferRequest<TData extends Record<string, unknown>>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-
-    this.mergeIn(chunk, new DeepMerger());
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
-      const merger = new DeepMerger();
       for (const incremental of chunk.incremental) {
-        let { data, path, errors, extensions } = incremental;
-        if (data && path) {
+        const { path, errors, extensions } = incremental;
+        let data =
+          // The item merged from a `@stream` chunk is always the first item in
+          // the `items` array
+          "items" in incremental ? incremental.items?.[0]
+            // Ensure `data: null` isn't merged for `@defer` responses by
+            // falling back to `undefined`
+          : "data" in incremental ? incremental.data ?? undefined
+          : undefined;
+
+        if (data !== undefined && path) {
           for (let i = path.length - 1; i >= 0; --i) {
             const key = path[i];
             const isNumericKey = !isNaN(+key);
@@ -99,14 +116,11 @@ class DeferRequest<TData extends Record<string, unknown>>
             data = parent as typeof data;
           }
         }
-        this.mergeIn(
-          {
-            errors,
-            extensions,
-            data: data ? (data as TData) : undefined,
-          },
-          merger
-        );
+        this.merge({
+          errors,
+          extensions,
+          data: data ? (data as TData) : undefined,
+        });
       }
     }
 
@@ -162,7 +176,7 @@ export class Defer20220824Handler
   }
 
   prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
-    if (hasDirectives(["defer"], request.query)) {
+    if (hasDirectives(["defer", "stream"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});
       http.accept = [

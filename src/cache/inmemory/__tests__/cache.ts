@@ -1042,6 +1042,49 @@ describe("Cache", () => {
         });
       }
     );
+
+    it("does not write @stream directive as part of the cache key", () => {
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        data: {
+          list: [{ __typename: "Item", id: "1", value: 1 }],
+        },
+        query: gql`
+          query {
+            list @stream(initialCount: 1) {
+              id
+              value
+            }
+          }
+        `,
+      });
+
+      expect(cache.extract()).toStrictEqualTyped({
+        ROOT_QUERY: {
+          __typename: "Query",
+          list: [{ __ref: "Item:1" }],
+        },
+        "Item:1": { __typename: "Item", id: "1", value: 1 },
+      });
+
+      // We should be able to read the list without the `@stream` directive and
+      // get back results
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              list {
+                id
+                value
+              }
+            }
+          `,
+        })
+      ).toStrictEqualTyped({
+        list: [{ __typename: "Item", id: "1", value: 1 }],
+      });
+    });
   });
 
   describe("writeFragment", () => {

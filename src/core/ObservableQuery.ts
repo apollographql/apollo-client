@@ -1712,8 +1712,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (
       dirty &&
-      (this.options.fetchPolicy == "cache-only" ||
-        this.options.fetchPolicy == "cache-and-network" ||
+      (this.options.fetchPolicy === "cache-only" ||
+        this.options.fetchPolicy === "cache-and-network" ||
         !this.activeOperations.size)
     ) {
       const diff = this.getCacheDiff();

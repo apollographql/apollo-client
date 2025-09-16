@@ -80,6 +80,7 @@ class IncrementalRequest<TData>
   implements
     Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData>
 {
+  /** @internal */
   hasNext = true;
 
   private data: any = {};
@@ -95,6 +96,7 @@ class IncrementalRequest<TData>
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
 
+  /** @internal */
   handle(
     chunk: GraphQL17Alpha9Handler.Chunk<TData>,
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data

@@ -69,6 +69,7 @@ class DeferRequest<TData extends Record<string, unknown>>
   implements
     Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData>
 {
+  /** @internal */
   public hasNext = true;
 
   private errors: Array<GraphQLFormattedError> = [];
@@ -91,6 +92,7 @@ class DeferRequest<TData extends Record<string, unknown>>
     Object.assign(this.extensions, normalized.extensions);
   }
 
+  /** @internal */
   handle(
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
@@ -158,6 +160,7 @@ class DeferRequest<TData extends Record<string, unknown>>
 export class Defer20220824Handler
   implements Incremental.Handler<Defer20220824Handler.Chunk<any>>
 {
+  /** @internal */
   isIncrementalResult(
     result: Record<string, any>
   ): result is
@@ -166,6 +169,7 @@ export class Defer20220824Handler
     return "hasNext" in result;
   }
 
+  /** @internal */
   extractErrors(result: ApolloLink.Result<any>) {
     const acc: GraphQLFormattedError[] = [];
     const push = ({
@@ -188,6 +192,7 @@ export class Defer20220824Handler
     }
   }
 
+  /** @internal */
   prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
     if (hasDirectives(["defer", "stream"], request.query)) {
       const context = request.context ?? {};
@@ -200,6 +205,8 @@ export class Defer20220824Handler
 
     return request;
   }
+
+  /** @internal */
   startRequest<TData extends Record<string, unknown>>(_: {
     query: DocumentNode;
   }) {

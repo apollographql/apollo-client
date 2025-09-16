@@ -217,10 +217,10 @@ export class GraphQL17Alpha9Handler
       }
     };
 
-    push(result);
-
     if (this.isIncrementalResult(result)) {
       push(new IncrementalRequest().handle(undefined, result));
+    } else {
+      push(result);
     }
 
     if (acc.length) {

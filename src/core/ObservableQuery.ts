@@ -14,7 +14,10 @@ import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { isNetworkRequestInFlight } from "@apollo/client/utilities";
+import {
+  isNetworkRequestInFlight,
+  isNetworkRequestSettled,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
@@ -806,6 +809,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TFetchVars
     >
   ): Promise<ApolloClient.QueryResult<TFetchData>>;
+
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -863,7 +867,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.transformDocument(this.options.query)
       : combinedOptions.query;
 
-    let wasUpdated = false;
+    // let wasUpdated = false;
 
     const isCached = this.options.fetchPolicy !== "no-cache";
 
@@ -877,6 +881,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
+
     pushNotification(
       {
         source: "newNetworkStatus",
@@ -885,14 +890,39 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
-    return this.queryManager
-      .fetchQuery(combinedOptions, NetworkStatus.fetchMore)
-      .then((fetchMoreResult) => {
-        // disable the `fetchMore` override that is currently active
-        // the next updates caused by this should not be `fetchMore` anymore,
-        // but `ready` or whatever other calculated loading state is currently
-        // appropriate
-        finalize();
+
+    let wasUpdated = false;
+    const { promise, operator } = getTrackingOperatorPromise(
+      (value: QueryNotification.Value<TFetchData>) => {
+        switch (value.kind) {
+          case "E": {
+            throw value.error;
+          }
+          case "N": {
+            if (value.source !== "newNetworkStatus" && !value.value.loading) {
+              return value.value;
+            }
+          }
+        }
+      }
+    );
+
+    const { observable } = this.queryManager.fetchObservableWithInfo(
+      combinedOptions,
+      { networkStatus: NetworkStatus.fetchMore }
+    );
+
+    observable.pipe(operator).subscribe({
+      next: (notification) => {
+        if (notification.kind !== "N" || notification.source !== "network") {
+          return;
+        }
+
+        const fetchMoreResult = notification.value;
+
+        if (isNetworkRequestSettled(notification.value.networkStatus)) {
+          finalize();
+        }
 
         if (isCached) {
           // Performing this cache update inside a cache.batch transaction ensures
@@ -930,9 +960,27 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               }
             },
 
-            onWatchUpdated: (watch) => {
+            onWatchUpdated: (watch, diff) => {
               if (watch.watcher === this) {
                 wasUpdated = true;
+                const lastResult = this.getCurrentResult();
+                pushNotification({
+                  ...notification,
+                  value: {
+                    ...lastResult,
+                    networkStatus:
+                      fetchMoreResult.networkStatus === NetworkStatus.error ?
+                        NetworkStatus.ready
+                      : fetchMoreResult.networkStatus,
+                    // will be overwritten anyways, just here for types sake
+                    loading: false,
+                    data: diff.result,
+                    dataState:
+                      fetchMoreResult.dataState === "streaming" ?
+                        "streaming"
+                      : "complete",
+                  },
+                });
               }
             },
           });
@@ -956,9 +1004,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
-          // was reportResult
+
           pushNotification({
-            kind: "N",
+            ...notification,
             value: {
               ...lastResult,
               networkStatus: NetworkStatus.ready,
@@ -968,32 +1016,29 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               dataState:
                 lastResult.dataState === "streaming" ? "streaming" : "complete",
             },
-            source: "network",
           });
         }
+      },
+    });
 
-        return this.maskResult(fetchMoreResult);
-      })
-      .finally(() => {
-        // call `finalize` a second time in case the `.then` case above was not reached
-        finalize();
+    return preventUnhandledRejection(
+      promise
+        .then((result) => toQueryResult(this.maskResult(result)))
+        .finally(() => {
+          if (isCached && !wasUpdated) {
+            finalize();
 
-        // In case the cache writes above did not generate a broadcast
-        // notification (which would have been intercepted by onWatchUpdated),
-        // likely because the written data were the same as what was already in
-        // the cache, we still want fetchMore to deliver its final loading:false
-        // result with the unchanged data.
-        if (isCached && !wasUpdated) {
-          pushNotification(
-            {
-              kind: "N",
-              source: "newNetworkStatus",
-              value: {},
-            },
-            { shouldEmit: EmitBehavior.force }
-          );
-        }
-      });
+            pushNotification(
+              {
+                kind: "N",
+                source: "newNetworkStatus",
+                value: {},
+              },
+              { shouldEmit: EmitBehavior.force }
+            );
+          }
+        })
+    );
   }
 
   // XXX the subscription variables are separate from the query variables.

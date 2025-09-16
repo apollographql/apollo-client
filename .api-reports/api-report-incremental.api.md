@@ -67,15 +67,15 @@ namespace Defer20220824Handler {
 
 // @public
 class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk<any>> {
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     extractErrors(result: ApolloLink.Result<any>): GraphQLFormattedError[] | undefined;
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     isIncrementalResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult | Defer20220824Handler.InitialResult;
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     startRequest<TData extends Record<string, unknown>>(_: {
         query: DocumentNode;
     }): DeferRequest<TData>;
@@ -85,9 +85,9 @@ export { Defer20220824Handler as GraphQL17Alpha2Handler }
 
 // @public (undocumented)
 class DeferRequest<TData extends Record<string, unknown>> implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData> {
-    // (undocumented)
-    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.Chunk<TData>): FormattedExecutionResult<TData>;
-    // (undocumented)
+    // @internal @deprecated (undocumented)
+    handle(chunk: Defer20220824Handler.Chunk<TData>, cacheData?: TData | DeepPartial<TData> | null | undefined): FormattedExecutionResult<TData>;
+    // @internal @deprecated (undocumented)
     hasNext: boolean;
 }
 
@@ -191,22 +191,22 @@ export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alph
 export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
-        // (undocumented)
+        // @deprecated (undocumented)
         extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
-        // (undocumented)
+        // @deprecated (undocumented)
         isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
-        // (undocumented)
+        // @deprecated (undocumented)
         prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
-        // (undocumented)
+        // @deprecated (undocumented)
         startRequest: <TData extends Record<string, unknown>>(request: {
             query: DocumentNode;
         }) => IncrementalRequest<Chunk, TData>;
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // (undocumented)
-        handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
-        // (undocumented)
+        // @internal @deprecated (undocumented)
+        handle: (chunk: Chunk, cacheData: TData | DeepPartial<TData> | undefined | null) => FormattedExecutionResult<TData>;
+        // @internal @deprecated (undocumented)
         hasNext: boolean;
     }
     // (undocumented)
@@ -215,9 +215,9 @@ export namespace Incremental {
 
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
-    // (undocumented)
-    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
-    // (undocumented)
+    // @internal @deprecated (undocumented)
+    handle(chunk: GraphQL17Alpha9Handler.Chunk<TData>, cacheData?: TData | DeepPartial<TData> | null | undefined): FormattedExecutionResult<TData>;
+    // @internal @deprecated (undocumented)
     hasNext: boolean;
 }
 

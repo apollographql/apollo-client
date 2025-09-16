@@ -1288,24 +1288,24 @@ const _ignoreModifier: unique symbol;
 namespace Incremental {
     // @internal @deprecated (undocumented)
     interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
-        // (undocumented)
+        // @deprecated (undocumented)
         extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
-        // (undocumented)
+        // @deprecated (undocumented)
         isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
-        // (undocumented)
+        // @deprecated (undocumented)
         prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
         //
-        // (undocumented)
+        // @deprecated (undocumented)
         startRequest: <TData extends Record<string, unknown>>(request: {
             query: DocumentNode;
         }) => IncrementalRequest<Chunk, TData>;
     }
     // (undocumented)
     interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // (undocumented)
-        handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
-        // (undocumented)
+        // @internal @deprecated (undocumented)
+        handle: (chunk: Chunk, cacheData: TData | DeepPartial<TData> | undefined | null) => FormattedExecutionResult<TData>;
+        // @internal @deprecated (undocumented)
         hasNext: boolean;
     }
     // (undocumented)

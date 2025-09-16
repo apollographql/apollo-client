@@ -74,7 +74,7 @@ async function renderSuspenseHook<
   const { render, takeRender, replaceSnapshot, getCurrentRender } =
     createRenderStream<
       useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
-    >();
+    >({ skipNonTrackingRenders: true });
 
   const utils = await render(<App props={options.initialProps} />, options);
 

@@ -24,7 +24,6 @@ import {
   markAsStreaming,
   mockDefer20220824,
   spyOnConsole,
-  wait,
 } from "@apollo/client/testing/internal";
 import { offsetLimitPagination } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";

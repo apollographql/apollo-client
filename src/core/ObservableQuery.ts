@@ -912,8 +912,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       { networkStatus: NetworkStatus.fetchMore }
     );
 
-    observable.pipe(operator).subscribe({
+    const subscription = observable.pipe(operator).subscribe({
       next: (notification) => {
+        wasUpdated = false;
         if (notification.kind !== "N" || notification.source !== "network") {
           return;
         }
@@ -965,7 +966,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 wasUpdated = true;
                 const lastResult = this.getCurrentResult();
                 pushNotification({
-                  ...notification,
+                  kind: "N",
+                  source: "network",
                   value: {
                     ...lastResult,
                     networkStatus:
@@ -1025,17 +1027,32 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       promise
         .then((result) => toQueryResult(this.maskResult(result)))
         .finally(() => {
+          subscription.unsubscribe();
           if (isCached && !wasUpdated) {
             finalize();
 
-            pushNotification(
-              {
+            const lastResult = this.getCurrentResult();
+
+            if (lastResult.networkStatus === NetworkStatus.streaming) {
+              pushNotification({
                 kind: "N",
-                source: "newNetworkStatus",
-                value: {},
-              },
-              { shouldEmit: EmitBehavior.force }
-            );
+                source: "network",
+                value: {
+                  ...lastResult,
+                  dataState: "complete",
+                  networkStatus: NetworkStatus.ready,
+                } as any,
+              });
+            } else {
+              pushNotification(
+                {
+                  kind: "N",
+                  source: "newNetworkStatus",
+                  value: {},
+                },
+                { shouldEmit: EmitBehavior.force }
+              );
+            }
           }
         })
     );

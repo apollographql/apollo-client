@@ -96,8 +96,8 @@ class IncrementalRequest<TData>
   private streamPositions: Record<string, number> = {};
 
   handle(
-    cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
-    chunk: GraphQL17Alpha9Handler.Chunk<TData>
+    chunk: GraphQL17Alpha9Handler.Chunk<TData>,
+    cacheData: TData | DeepPartial<TData> | null | undefined = this.data
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
@@ -281,7 +281,7 @@ export class GraphQL17Alpha9Handler
     };
 
     if (this.isIncrementalResult(result)) {
-      push(new IncrementalRequest().handle(undefined, result));
+      push(new IncrementalRequest().handle(result));
     } else {
       push(result);
     }

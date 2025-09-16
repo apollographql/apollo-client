@@ -195,7 +195,7 @@ export class QueryInfo<
         DataValue.Complete<TData> | DataValue.Streaming<TData>
       >;
 
-      return this.incremental.handle(cacheData, incoming);
+      return this.incremental.handle(incoming, cacheData);
     }
     return incoming;
   }

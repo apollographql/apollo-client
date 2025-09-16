@@ -30,8 +30,8 @@ export declare namespace Incremental {
   > {
     hasNext: boolean;
     handle: (
-      cacheData: TData | DeepPartial<TData> | undefined | null,
-      chunk: Chunk
+      chunk: Chunk,
+      cacheData: TData | DeepPartial<TData> | undefined | null
     ) => FormattedExecutionResult<TData>;
   }
 }

@@ -74,7 +74,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["apple"],
         },
@@ -87,7 +87,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -114,7 +114,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: [],
         },
@@ -127,7 +127,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -167,7 +167,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["apple", "banana"],
         },
@@ -180,7 +180,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -211,7 +211,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarListList: [["apple", "apple", "apple"]],
         },
@@ -224,7 +224,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarListList: [
             ["apple", "apple", "apple"],
@@ -259,7 +259,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             {
@@ -281,7 +281,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             {
@@ -325,7 +325,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -338,7 +338,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
@@ -351,7 +351,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -367,7 +367,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -409,7 +409,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -422,7 +422,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }],
         },
@@ -435,7 +435,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }],
         },
@@ -448,7 +448,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
@@ -490,7 +490,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -503,7 +503,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
@@ -537,7 +537,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             {
@@ -559,7 +559,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             {
@@ -609,7 +609,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }, null],
         },
@@ -628,7 +628,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -675,7 +675,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
@@ -688,7 +688,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }, null],
         },
@@ -707,7 +707,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -752,7 +752,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -765,7 +765,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
@@ -778,7 +778,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -794,7 +794,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -811,7 +811,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -850,7 +850,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -866,7 +866,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -883,7 +883,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -935,7 +935,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -948,7 +948,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }],
         },
@@ -961,7 +961,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }],
         },
@@ -974,7 +974,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
@@ -987,7 +987,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
@@ -1036,7 +1036,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -1049,7 +1049,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
@@ -1084,7 +1084,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -1100,7 +1100,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -1117,7 +1117,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -1159,7 +1159,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
@@ -1172,7 +1172,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
@@ -1208,7 +1208,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ name: "Luke" }],
         },
@@ -1221,7 +1221,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ name: "Luke" }],
         },
@@ -1260,7 +1260,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["Luke"],
         },
@@ -1273,7 +1273,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           scalarList: ["Luke", null],
         },
@@ -1315,7 +1315,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }],
         },
@@ -1328,7 +1328,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }, null],
         },
@@ -1347,7 +1347,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }, null, { nonNullName: "Han" }],
         },
@@ -1393,7 +1393,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ nonNullName: "Luke" }],
         },
@@ -1406,7 +1406,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nonNullFriendList: [{ nonNullName: "Luke" }],
         },
@@ -1452,7 +1452,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }],
         },
@@ -1465,7 +1465,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }, null],
         },
@@ -1484,7 +1484,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }, null, { nonNullName: "Han" }],
         },
@@ -1503,7 +1503,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ nonNullName: "Luke" }, null, { nonNullName: "Han" }],
         },
@@ -1571,7 +1571,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           otherNestedObject: {},
           nestedObject: { nestedFriendList: [] },
@@ -1585,7 +1585,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           otherNestedObject: { scalarField: null },
           nestedObject: { nestedFriendList: [{ name: "Luke" }] },
@@ -1605,7 +1605,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           otherNestedObject: { scalarField: null },
           nestedObject: { nestedFriendList: [{ name: "Luke" }] },
@@ -1656,7 +1656,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {},
         },
@@ -1669,7 +1669,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             deeperNestedObject: null,
@@ -1716,7 +1716,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -1729,7 +1729,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [null],
         },
@@ -1749,7 +1749,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [null],
         },
@@ -1798,7 +1798,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
@@ -1811,7 +1811,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -1827,7 +1827,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -1844,7 +1844,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -1893,7 +1893,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             nestedFriendList: [],
@@ -1908,7 +1908,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             nestedFriendList: [{ id: "1", name: "Luke" }],
@@ -1923,7 +1923,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             nestedFriendList: [
@@ -1941,7 +1941,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             nestedFriendList: [
@@ -1991,7 +1991,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {},
         },
@@ -2006,7 +2006,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2022,7 +2022,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2038,7 +2038,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2054,7 +2054,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2104,7 +2104,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {},
         },
@@ -2119,7 +2119,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2135,7 +2135,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2151,7 +2151,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2202,7 +2202,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [],
         },
@@ -2217,7 +2217,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
@@ -2232,7 +2232,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
@@ -2245,7 +2245,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
@@ -2258,7 +2258,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -2309,7 +2309,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1" }],
         },
@@ -2324,7 +2324,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
@@ -2337,7 +2337,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
@@ -2350,7 +2350,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -2368,7 +2368,7 @@ describe("graphql-js test cases", () => {
 
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      expect(request.handle(chunk)).toStrictEqualTyped({
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -2469,16 +2469,13 @@ test("properly merges streamed data into cache data", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke Cached", id: "1" },
-            { name: "Han Cached", id: "2" },
-            { name: "Leia Cached", id: "3" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke Cached", id: "1" },
+          { name: "Han Cached", id: "2" },
+          { name: "Leia Cached", id: "3" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2496,15 +2493,12 @@ test("properly merges streamed data into cache data", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke", id: "1" },
-            { name: "Han", id: "2" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2541,12 +2535,9 @@ test("properly merges streamed data into partial cache data", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2564,15 +2555,12 @@ test("properly merges streamed data into partial cache data", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke", id: "1" },
-            { name: "Han", id: "2" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2609,12 +2597,9 @@ test("properly merges streamed data into list with fewer items", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [{ id: "1", name: "Luke Cached" }],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [{ id: "1", name: "Luke Cached" }],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2632,15 +2617,12 @@ test("properly merges streamed data into list with fewer items", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke", id: "1" },
-            { name: "Han", id: "2" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2677,17 +2659,14 @@ test("properly merges streamed data into list with more items", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke Cached", id: "1" },
-            { name: "Han Cached", id: "2" },
-            { name: "Leia Cached", id: "3" },
-            { name: "Chewbacca Cached", id: "4" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke Cached", id: "1" },
+          { name: "Han Cached", id: "2" },
+          { name: "Leia Cached", id: "3" },
+          { name: "Chewbacca Cached", id: "4" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2705,15 +2684,12 @@ test("properly merges streamed data into list with more items", async () => {
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          friendList: [
-            { name: "Luke", id: "1" },
-            { name: "Han", id: "2" },
-          ],
-        },
-        chunk
-      )
+      request.handle(chunk, {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+        ],
+      })
     ).toStrictEqualTyped({
       data: {
         friendList: [
@@ -2764,15 +2740,12 @@ test("properly merges cache data when list is included in deferred chunk", async
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          nestedObject: {
-            scalarField: "cached",
-            nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
-          },
+      request.handle(chunk, {
+        nestedObject: {
+          scalarField: "cached",
+          nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
         },
-        chunk
-      )
+      })
     ).toStrictEqualTyped({
       data: {
         nestedObject: {
@@ -2792,15 +2765,12 @@ test("properly merges cache data when list is included in deferred chunk", async
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          nestedObject: {
-            scalarField: "cached",
-            nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
-          },
+      request.handle(chunk, {
+        nestedObject: {
+          scalarField: "cached",
+          nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
         },
-        chunk
-      )
+      })
     ).toStrictEqualTyped({
       data: {
         nestedObject: {
@@ -2817,7 +2787,7 @@ test("properly merges cache data when list is included in deferred chunk", async
 
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
-    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+    expect(request.handle(chunk)).toStrictEqualTyped({
       data: {
         nestedObject: {
           scalarField: "slow",
@@ -2834,15 +2804,12 @@ test("properly merges cache data when list is included in deferred chunk", async
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          nestedObject: {
-            scalarField: "slow",
-            nestedFriendList: [{ name: "Luke" }],
-          },
+      request.handle(chunk, {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke" }],
         },
-        chunk
-      )
+      })
     ).toStrictEqualTyped({
       data: {
         nestedObject: {
@@ -2860,15 +2827,12 @@ test("properly merges cache data when list is included in deferred chunk", async
     assert(!done);
     assert(handler.isIncrementalResult(chunk));
     expect(
-      request.handle(
-        {
-          nestedObject: {
-            scalarField: "slow",
-            nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
-          },
+      request.handle(chunk, {
+        nestedObject: {
+          scalarField: "slow",
+          nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
         },
-        chunk
-      )
+      })
     ).toStrictEqualTyped({
       data: {
         nestedObject: {

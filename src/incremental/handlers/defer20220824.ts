@@ -94,8 +94,8 @@ class DeferRequest<TData extends Record<string, unknown>>
   handle(
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
-    cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
-    chunk: Defer20220824Handler.Chunk<TData>
+    chunk: Defer20220824Handler.Chunk<TData>,
+    cacheData: TData | DeepPartial<TData> | null | undefined = this.data
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;

@@ -1196,7 +1196,7 @@ test("incrementally renders data returned after skipping a deferred query", asyn
 });
 
 // https://github.com/apollographql/apollo-client/issues/11034
-it("incrementally rerenders data returned by a `fetchMore` for a deferred query", async () => {
+test("incrementally rerenders data returned by a `fetchMore` for a deferred query", async () => {
   const query = gql`
     query ($offset: Int) {
       greetings(offset: $offset) {

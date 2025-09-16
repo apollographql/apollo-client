@@ -1006,7 +1006,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           });
 
           pushNotification({
-            ...notification,
+            kind: "N",
             value: {
               ...lastResult,
               networkStatus: NetworkStatus.ready,
@@ -1016,6 +1016,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               dataState:
                 lastResult.dataState === "streaming" ? "streaming" : "complete",
             },
+            source: "network",
           });
         }
       },

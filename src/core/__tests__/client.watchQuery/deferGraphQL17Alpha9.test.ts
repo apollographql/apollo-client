@@ -6,6 +6,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import {
+  markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
 } from "@apollo/client/testing/internal";
@@ -173,3 +174,198 @@ test("deduplicates queries as long as a query still has deferred chunks", async 
   // expect(query5).not.toEmitAnything();
   expect(outgoingRequestSpy).toHaveBeenCalledTimes(2);
 });
+
+it.each([["cache-first"], ["no-cache"]] as const)(
+  "correctly merges deleted rows when receiving a deferred payload",
+  async (fetchPolicy) => {
+    const query = gql`
+      query Characters {
+        characters {
+          id
+          uppercase
+          ... @defer {
+            lowercase
+          }
+        }
+      }
+    `;
+
+    const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+      mockDeferStreamGraphQL17Alpha9();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: httpLink,
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    enqueueInitialChunk({
+      data: {
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A" },
+          { __typename: "Character", id: 2, uppercase: "B" },
+          { __typename: "Character", id: 3, uppercase: "C" },
+        ],
+      },
+      pending: [
+        { id: "0", path: ["characters", 0] },
+        { id: "1", path: ["characters", 1] },
+        { id: "2", path: ["characters", 2] },
+      ],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A" },
+          { __typename: "Character", id: 2, uppercase: "B" },
+          { __typename: "Character", id: 3, uppercase: "C" },
+        ],
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    enqueueSubsequentChunk({
+      incremental: [{ data: { lowercase: "a" }, id: "0" }],
+      completed: [{ id: "0" }],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A", lowercase: "a" },
+          { __typename: "Character", id: 2, uppercase: "B" },
+          { __typename: "Character", id: 3, uppercase: "C" },
+        ],
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    enqueueSubsequentChunk({
+      incremental: [
+        { data: { lowercase: "b" }, id: "1" },
+        { data: { lowercase: "c" }, id: "2" },
+      ],
+      completed: [{ id: "1" }, { id: "2" }],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A", lowercase: "a" },
+          { __typename: "Character", id: 2, uppercase: "B", lowercase: "b" },
+          { __typename: "Character", id: 3, uppercase: "C", lowercase: "c" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    void observable.refetch();
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A", lowercase: "a" },
+          { __typename: "Character", id: 2, uppercase: "B", lowercase: "b" },
+          { __typename: "Character", id: 3, uppercase: "C", lowercase: "c" },
+        ],
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    // on refetch, the list is shorter
+    enqueueInitialChunk({
+      data: {
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A" },
+          { __typename: "Character", id: 2, uppercase: "B" },
+        ],
+      },
+      pending: [
+        { id: "0", path: ["characters", 0] },
+        { id: "1", path: ["characters", 1] },
+      ],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        characters:
+          // no-cache fetch policy doesn't merge with existing cache data, so
+          // the lowercase field is not available in the refetch
+          fetchPolicy === "no-cache" ?
+            [
+              { __typename: "Character", id: 1, uppercase: "A" },
+              { __typename: "Character", id: 2, uppercase: "B" },
+            ]
+          : [
+              {
+                __typename: "Character",
+                id: 1,
+                uppercase: "A",
+                lowercase: "a",
+              },
+              {
+                __typename: "Character",
+                id: 2,
+                uppercase: "B",
+                lowercase: "b",
+              },
+            ],
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    enqueueSubsequentChunk({
+      incremental: [
+        { data: { lowercase: "a" }, id: "0" },
+        { data: { lowercase: "b" }, id: "1" },
+      ],
+      completed: [{ id: "0" }, { id: "1" }],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        characters: [
+          { __typename: "Character", id: 1, uppercase: "A", lowercase: "a" },
+          { __typename: "Character", id: 2, uppercase: "B", lowercase: "b" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  }
+);

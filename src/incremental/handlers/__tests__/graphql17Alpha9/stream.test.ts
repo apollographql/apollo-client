@@ -2484,7 +2484,6 @@ test("properly merges streamed data into cache data", async () => {
         friendList: [
           { name: "Luke", id: "1" },
           { name: "Han", id: "2" },
-          { name: "Leia Cached", id: "3" },
         ],
       },
     });
@@ -2502,7 +2501,6 @@ test("properly merges streamed data into cache data", async () => {
           friendList: [
             { name: "Luke", id: "1" },
             { name: "Han", id: "2" },
-            { name: "Leia Cached", id: "3" },
           ],
         },
         chunk
@@ -2554,7 +2552,6 @@ test("properly merges streamed data into partial cache data", async () => {
         friendList: [
           { name: "Luke", id: "1" },
           { name: "Han", id: "2" },
-          { id: "3" },
         ],
       },
     });
@@ -2572,7 +2569,6 @@ test("properly merges streamed data into partial cache data", async () => {
           friendList: [
             { name: "Luke", id: "1" },
             { name: "Han", id: "2" },
-            { id: "3" },
           ],
         },
         chunk
@@ -2697,8 +2693,6 @@ test("properly merges streamed data into list with more items", async () => {
         friendList: [
           { name: "Luke", id: "1" },
           { name: "Han", id: "2" },
-          { name: "Leia Cached", id: "3" },
-          { name: "Chewbacca Cached", id: "4" },
         ],
       },
     });
@@ -2716,8 +2710,6 @@ test("properly merges streamed data into list with more items", async () => {
           friendList: [
             { name: "Luke", id: "1" },
             { name: "Han", id: "2" },
-            { name: "Leia Cached", id: "3" },
-            { name: "Chewbacca Cached", id: "4" },
           ],
         },
         chunk
@@ -2728,7 +2720,6 @@ test("properly merges streamed data into list with more items", async () => {
           { name: "Luke", id: "1" },
           { name: "Han", id: "2" },
           { name: "Leia", id: "3" },
-          { name: "Chewbacca Cached", id: "4" },
         ],
       },
     });
@@ -2814,7 +2805,7 @@ test("properly merges cache data when list is included in deferred chunk", async
       data: {
         nestedObject: {
           scalarField: "slow",
-          nestedFriendList: [{ name: "Luke Cached" }, { name: "Han Cached" }],
+          nestedFriendList: [],
         },
       },
     });
@@ -2830,7 +2821,7 @@ test("properly merges cache data when list is included in deferred chunk", async
       data: {
         nestedObject: {
           scalarField: "slow",
-          nestedFriendList: [{ name: "Luke" }, { name: "Han Cached" }],
+          nestedFriendList: [{ name: "Luke" }],
         },
       },
     });
@@ -2847,7 +2838,7 @@ test("properly merges cache data when list is included in deferred chunk", async
         {
           nestedObject: {
             scalarField: "slow",
-            nestedFriendList: [{ name: "Luke" }, { name: "Han Cached" }],
+            nestedFriendList: [{ name: "Luke" }],
           },
         },
         chunk

@@ -17,6 +17,7 @@ import {
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
+import { hasDirectives } from "@apollo/client/utilities/internal";
 
 const friends = [
   { name: "Luke", id: 1 },
@@ -792,7 +793,7 @@ test("handles @defer inside @stream", async () => {
   const {
     promise: iterableCompletionPromise,
     resolve: resolveIterableCompletion,
-  } = promiseWithResolvers();
+  } = promiseWithResolvers<void>();
 
   const client = new ApolloClient({
     link: createLink({
@@ -841,7 +842,7 @@ test("handles @defer inside @stream", async () => {
     partial: true,
   });
 
-  resolveIterableCompletion(null);
+  resolveIterableCompletion();
 
   await expect(observableStream).toEmitSimilarValue({
     expected: (previous) => ({
@@ -882,4 +883,125 @@ test("handles @defer inside @stream", async () => {
   });
 
   await expect(observableStream).not.toEmitAnything();
+});
+
+test("can use custom merge function to combine cached and streamed lists", async () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: (existing = [], incoming, { field }) => {
+              if (field && hasDirectives(["stream"], field)) {
+                const merged: any[] = [];
+
+                for (
+                  let i = 0;
+                  i < Math.max(existing.length, incoming.length);
+                  i++
+                ) {
+                  merged[i] =
+                    incoming[i] === undefined ? existing[i] : incoming[i];
+                }
+
+                return merged;
+              }
+
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: () => friends.map((friend) => Promise.resolve(friend)),
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
 });

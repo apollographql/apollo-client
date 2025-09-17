@@ -943,14 +943,14 @@ test("incrementally rerenders data returned by a `fetchMore` for a streamed quer
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3", name: "Leia" },
           { __typename: "Friend", id: "4", name: "Chewbacca" },
         ],
-      }),
+      },
       dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,

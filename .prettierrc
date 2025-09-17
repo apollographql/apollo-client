@@ -18,6 +18,12 @@
       }
     },
     {
+      "files": ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
       "files": ["*.mdx"],
       "options": {
         "parser": "mdx3"

@@ -81,6 +81,102 @@ class DeferRequest<TData extends Record<string, unknown>> implements Incremental
 }
 
 // @public (undocumented)
+export namespace GraphQL17Alpha9Handler {
+    // (undocumented)
+    export type Chunk<TData> = InitialResult<TData> | SubsequentResult<TData>;
+    // (undocumented)
+    export interface CompletedResult {
+        // (undocumented)
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        // (undocumented)
+        id: string;
+    }
+    // (undocumented)
+    export interface GraphQL17Alpha9Result extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        arg2: unknown;
+        // (undocumented)
+        return: GraphQL17Alpha9Handler.Chunk<Record<string, unknown>>;
+    }
+    // (undocumented)
+    export interface IncrementalDeferResult<TData = Record<string, unknown>> {
+        // (undocumented)
+        data: TData;
+        // (undocumented)
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        // (undocumented)
+        extensions?: Record<string, unknown>;
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        subPath?: Incremental.Path;
+    }
+    // (undocumented)
+    export type IncrementalResult<TData = unknown> = IncrementalDeferResult<TData> | IncrementalStreamResult<TData>;
+    // (undocumented)
+    export interface IncrementalStreamResult<TData = ReadonlyArray<unknown>> {
+        // (undocumented)
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        // (undocumented)
+        extensions?: Record<string, unknown>;
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        items: TData;
+        // (undocumented)
+        subPath?: Incremental.Path;
+    }
+    // (undocumented)
+    export type InitialResult<TData = Record<string, unknown>> = {
+        data: TData;
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        pending: ReadonlyArray<PendingResult>;
+        hasNext: boolean;
+        extensions?: Record<string, unknown>;
+    };
+    // (undocumented)
+    export interface PendingResult {
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        label?: string;
+        // (undocumented)
+        path: Incremental.Path;
+    }
+    // (undocumented)
+    export type SubsequentResult<TData = unknown> = {
+        hasNext: boolean;
+        pending?: ReadonlyArray<PendingResult>;
+        incremental?: ReadonlyArray<IncrementalResult<TData>>;
+        completed?: ReadonlyArray<CompletedResult>;
+        extensions?: Record<string, unknown>;
+    };
+    // (undocumented)
+    export interface TypeOverrides {
+        // (undocumented)
+        AdditionalApolloLinkResultTypes: GraphQL17Alpha9Result;
+    }
+}
+
+// @public
+export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>> {
+    // @internal @deprecated (undocumented)
+    extractErrors(result: ApolloLink.Result<any>): GraphQLFormattedError[] | undefined;
+    // @internal @deprecated (undocumented)
+    isIncrementalResult(result: ApolloLink.Result<any>): result is GraphQL17Alpha9Handler.InitialResult | GraphQL17Alpha9Handler.SubsequentResult;
+    // @internal @deprecated (undocumented)
+    prepareRequest(request: ApolloLink.Request): ApolloLink.Request;
+    // Warning: (ae-forgotten-export) The symbol "IncrementalRequest" needs to be exported by the entry point index.d.ts
+    //
+    // @internal @deprecated (undocumented)
+    startRequest<TData>(_: {
+        query: DocumentNode;
+    }): IncrementalRequest<TData>;
+}
+
+// @public (undocumented)
 export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
@@ -104,6 +200,14 @@ export namespace Incremental {
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+}
+
+// @public (undocumented)
+class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
+    // (undocumented)
+    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
+    // (undocumented)
+    hasNext: boolean;
 }
 
 // @public (undocumented)

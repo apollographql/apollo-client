@@ -1,5 +1,36 @@
 # @apollo/client
 
+## 4.1.0-alpha.0
+
+### Minor Changes
+
+- [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`2aa31c7`](https://github.com/apollographql/apollo-client/commit/2aa31c718155e88814551afb14fd7a0035acc57d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where deferred payloads that reteurned arrays with fewer items than the original cached array would retain items from the cached array. This change includes `@stream` arrays where stream arrays replace the cached arrays.
+
+- [#12926](https://github.com/apollographql/apollo-client/pull/12926) [`c7fba99`](https://github.com/apollographql/apollo-client/commit/c7fba99e16da522fdbc35b9c16cdb8df0dda4c2c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support the newer incremental delivery format for the `@defer` directive implemented in `graphql@17.0.0-alpha.9`. Import the `GraphQL17Alpha9Handler` to use the newer incremental delivery format with `@defer`.
+
+  ```ts
+  import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
+
+  const client = new ApolloClient({
+    // ...
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  ```
+
+  > [!NOTE]
+  > In order to use the `GraphQL17Alpha9Handler`, the GraphQL server MUST implement the newer incremental delivery format. You may see errors or unusual behavior if you use the wrong handler. If you are using Apollo Router, continue to use the `Defer20220824Handler` because Apollo Router does not yet support the newer incremental delivery format.
+
+- [#12918](https://github.com/apollographql/apollo-client/pull/12918) [`562e219`](https://github.com/apollographql/apollo-client/commit/562e2191a4b38e05edb3da9074e2958db3c7b6b9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for the `@stream` directive on both the `Defer20220824Handler` and the `GraphQL17Alpha2Handler`.
+
+  > [!NOTE]
+  > The implementations of `@stream` differ in the delivery of incremental results between the different GraphQL spec versions. If you upgrading from the older format to the newer format, expect the timing of some incremental results to change.
+
+### Patch Changes
+
+- [#12925](https://github.com/apollographql/apollo-client/pull/12925) [`f538a83`](https://github.com/apollographql/apollo-client/commit/f538a83621e1d110286c056dd8e91611dfd9a1d3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where calling `fetchMore` with `@defer` or `@stream` would not rerender incremental results as they were streamed.
+
+- [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`01cace0`](https://github.com/apollographql/apollo-client/commit/01cace0a6d4faf79e8a4188b93c7d13c4b26d6d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the cache data loss warning message when `existing` or `incoming` is an array.
+
 ## 4.0.4
 
 ### Patch Changes

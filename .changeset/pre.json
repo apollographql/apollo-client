@@ -6,5 +6,11 @@
     "@apollo/client-graphql-codegen": "1.0.0",
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
-  "changesets": []
+  "changesets": [
+    "cold-kiwis-give",
+    "funny-bats-hammer",
+    "little-yaks-decide",
+    "neat-lemons-shave",
+    "six-islands-drum"
+  ]
 }

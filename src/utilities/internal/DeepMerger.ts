@@ -19,12 +19,38 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
 };
 
 /** @internal */
-export class DeepMerger<TContextArgs extends any[]> {
+export declare namespace DeepMerger {
+  export interface Options {
+    arrayMerge?: DeepMerger.ArrayMergeStrategy;
+  }
+
+  export type ArrayMergeStrategy =
+    // Truncate the target array to the source length, then deep merge the array
+    // items at the same index
+    | "truncate"
+    // Combine arrays and deep merge array items for items at the same index.
+    // This is the default
+    | "combine";
+}
+
+/** @internal */
+export class DeepMerger<TContextArgs extends any[] = any[]> {
   constructor(
-    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>
+    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>,
+    private options: DeepMerger.Options = {}
   ) {}
 
   public merge(target: any, source: any, ...context: TContextArgs): any {
+    if (
+      Array.isArray(target) &&
+      Array.isArray(source) &&
+      this.options.arrayMerge === "truncate" &&
+      target.length > source.length
+    ) {
+      target = target.slice(0, source.length);
+      this.pastCopies.add(target);
+    }
+
     if (isNonNullObject(source) && isNonNullObject(target)) {
       Object.keys(source).forEach((sourceKey) => {
         if (hasOwnProperty.call(target, sourceKey)) {

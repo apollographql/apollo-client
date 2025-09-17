@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "4.0.4",
+    "@apollo/client-graphql-codegen": "1.0.0",
+    "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
+  },
+  "changesets": []
+}

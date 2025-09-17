@@ -8,13 +8,16 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { BehaviorSubject, Observable, share, Subject, tap } from "rxjs";
+import { BehaviorSubject, filter, Observable, share, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { isNetworkRequestInFlight } from "@apollo/client/utilities";
+import {
+  isNetworkRequestInFlight,
+  isNetworkRequestSettled,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
@@ -353,6 +356,10 @@ export class ObservableQuery<
     return this.subject.getValue().result.networkStatus;
   }
 
+  private get cache() {
+    return this.queryManager.cache;
+  }
+
   constructor({
     queryManager,
     options,
@@ -556,7 +563,7 @@ export class ObservableQuery<
    * @internal
    */
   public getCacheDiff({ optimistic = true } = {}) {
-    return this.queryManager.cache.diff<TData>({
+    return this.cache.diff<TData>({
       query: this.query,
       variables: this.variables,
       returnPartialData: true,
@@ -691,7 +698,7 @@ export class ObservableQuery<
         }
       },
     };
-    const cancelWatch = this.queryManager.cache.watch(watch);
+    const cancelWatch = this.cache.watch(watch);
 
     this.unsubscribeFromCache = Object.assign(
       () => {
@@ -806,6 +813,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TFetchVars
     >
   ): Promise<ApolloClient.QueryResult<TFetchData>>;
+
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -864,7 +872,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       : combinedOptions.query;
 
     let wasUpdated = false;
-
     const isCached = this.options.fetchPolicy !== "no-cache";
 
     if (!isCached) {
@@ -877,6 +884,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
+
     pushNotification(
       {
         source: "newNetworkStatus",
@@ -885,115 +893,190 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
-    return this.queryManager
-      .fetchQuery(combinedOptions, NetworkStatus.fetchMore)
-      .then((fetchMoreResult) => {
-        // disable the `fetchMore` override that is currently active
-        // the next updates caused by this should not be `fetchMore` anymore,
-        // but `ready` or whatever other calculated loading state is currently
-        // appropriate
-        finalize();
 
-        if (isCached) {
-          // Performing this cache update inside a cache.batch transaction ensures
-          // any affected cache.watch watchers are notified at most once about any
-          // updates. Most watchers will be using the QueryInfo class, which
-          // responds to notifications by calling reobserveCacheFirst to deliver
-          // fetchMore cache results back to this ObservableQuery.
-          this.queryManager.cache.batch({
-            update: (cache) => {
-              if (updateQuery) {
-                cache.updateQuery(
-                  {
-                    query: this.query,
-                    variables: this.variables,
-                    returnPartialData: true,
-                    optimistic: false,
-                  },
-                  (previous) =>
-                    updateQuery(previous! as any, {
-                      fetchMoreResult: fetchMoreResult.data as any,
-                      variables: combinedOptions.variables as TFetchVars,
-                    })
-                );
-              } else {
-                // If we're using a field policy instead of updateQuery, the only
-                // thing we need to do is write the new data to the cache using
-                // combinedOptions.variables (instead of this.variables, which is
-                // what this.updateQuery uses, because it works by abusing the
-                // original field value, keyed by the original variables).
-                cache.writeQuery({
-                  query: combinedOptions.query,
-                  variables: combinedOptions.variables,
-                  data: fetchMoreResult.data as Unmasked<any>,
-                });
-              }
-            },
-
-            onWatchUpdated: (watch) => {
-              if (watch.watcher === this) {
-                wasUpdated = true;
-              }
-            },
-          });
-        } else {
-          // There is a possibility `lastResult` may not be set when
-          // `fetchMore` is called which would cause this to crash. This should
-          // only happen if we haven't previously reported a result. We don't
-          // quite know what the right behavior should be here since this block
-          // of code runs after the fetch result has executed on the network.
-          // We plan to let it crash in the meantime.
-          //
-          // If we get bug reports due to the `data` property access on
-          // undefined, this should give us a real-world scenario that we can
-          // use to test against and determine the right behavior. If we do end
-          // up changing this behavior, this may require, for example, an
-          // adjustment to the types on `updateQuery` since that function
-          // expects that the first argument always contains previous result
-          // data, but not `undefined`.
-          const lastResult = this.getCurrentResult();
-          const data = updateQuery!(lastResult.data as Unmasked<TData>, {
-            fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
-            variables: combinedOptions.variables as TFetchVars,
-          });
-          // was reportResult
-          pushNotification({
-            kind: "N",
-            value: {
-              ...lastResult,
-              networkStatus: NetworkStatus.ready,
-              // will be overwritten anyways, just here for types sake
-              loading: false,
-              data: data as any,
-              dataState:
-                lastResult.dataState === "streaming" ? "streaming" : "complete",
-            },
-            source: "network",
-          });
+    const { promise, operator } = getTrackingOperatorPromise(
+      (value: QueryNotification.Value<TFetchData>) => {
+        switch (value.kind) {
+          case "E": {
+            throw value.error;
+          }
+          case "N": {
+            if (value.source !== "newNetworkStatus" && !value.value.loading) {
+              return value.value;
+            }
+          }
         }
+      }
+    );
 
-        return this.maskResult(fetchMoreResult);
-      })
-      .finally(() => {
-        // call `finalize` a second time in case the `.then` case above was not reached
-        finalize();
+    const { observable } = this.queryManager.fetchObservableWithInfo(
+      combinedOptions,
+      { networkStatus: NetworkStatus.fetchMore }
+    );
 
-        // In case the cache writes above did not generate a broadcast
-        // notification (which would have been intercepted by onWatchUpdated),
-        // likely because the written data were the same as what was already in
-        // the cache, we still want fetchMore to deliver its final loading:false
-        // result with the unchanged data.
-        if (isCached && !wasUpdated) {
-          pushNotification(
-            {
+    const subscription = observable
+      .pipe(
+        operator,
+        filter(
+          (
+            notification
+          ): notification is Extract<
+            QueryNotification.FromNetwork<TFetchData>,
+            { kind: "N" }
+          > => notification.kind === "N" && notification.source === "network"
+        )
+      )
+      .subscribe({
+        next: (notification) => {
+          wasUpdated = false;
+          const fetchMoreResult = notification.value;
+
+          if (isNetworkRequestSettled(notification.value.networkStatus)) {
+            finalize();
+          }
+
+          if (isCached) {
+            // Performing this cache update inside a cache.batch transaction ensures
+            // any affected cache.watch watchers are notified at most once about any
+            // updates. Most watchers will be using the QueryInfo class, which
+            // responds to notifications by calling reobserveCacheFirst to deliver
+            // fetchMore cache results back to this ObservableQuery.
+            this.cache.batch({
+              update: (cache) => {
+                if (updateQuery) {
+                  cache.updateQuery(
+                    {
+                      query: this.query,
+                      variables: this.variables,
+                      returnPartialData: true,
+                      optimistic: false,
+                    },
+                    (previous) =>
+                      updateQuery(previous! as any, {
+                        fetchMoreResult: fetchMoreResult.data as any,
+                        variables: combinedOptions.variables as TFetchVars,
+                      })
+                  );
+                } else {
+                  // If we're using a field policy instead of updateQuery, the only
+                  // thing we need to do is write the new data to the cache using
+                  // combinedOptions.variables (instead of this.variables, which is
+                  // what this.updateQuery uses, because it works by abusing the
+                  // original field value, keyed by the original variables).
+                  cache.writeQuery({
+                    query: combinedOptions.query,
+                    variables: combinedOptions.variables,
+                    data: fetchMoreResult.data as Unmasked<any>,
+                  });
+                }
+              },
+
+              onWatchUpdated: (watch, diff) => {
+                if (watch.watcher === this) {
+                  wasUpdated = true;
+                  const lastResult = this.getCurrentResult();
+
+                  // Let the cache watch from resubscribeCache handle the final
+                  // result
+                  if (isNetworkRequestInFlight(fetchMoreResult.networkStatus)) {
+                    pushNotification({
+                      kind: "N",
+                      source: "network",
+                      value: {
+                        ...lastResult,
+                        networkStatus:
+                          (
+                            fetchMoreResult.networkStatus ===
+                            NetworkStatus.error
+                          ) ?
+                            NetworkStatus.ready
+                          : fetchMoreResult.networkStatus,
+                        // will be overwritten anyways, just here for types sake
+                        loading: false,
+                        data: diff.result,
+                        dataState:
+                          fetchMoreResult.dataState === "streaming" ?
+                            "streaming"
+                          : "complete",
+                      },
+                    });
+                  }
+                }
+              },
+            });
+          } else {
+            // There is a possibility `lastResult` may not be set when
+            // `fetchMore` is called which would cause this to crash. This should
+            // only happen if we haven't previously reported a result. We don't
+            // quite know what the right behavior should be here since this block
+            // of code runs after the fetch result has executed on the network.
+            // We plan to let it crash in the meantime.
+            //
+            // If we get bug reports due to the `data` property access on
+            // undefined, this should give us a real-world scenario that we can
+            // use to test against and determine the right behavior. If we do end
+            // up changing this behavior, this may require, for example, an
+            // adjustment to the types on `updateQuery` since that function
+            // expects that the first argument always contains previous result
+            // data, but not `undefined`.
+            const lastResult = this.getCurrentResult();
+            const data = updateQuery!(lastResult.data as Unmasked<TData>, {
+              fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
+              variables: combinedOptions.variables as TFetchVars,
+            });
+
+            pushNotification({
               kind: "N",
-              source: "newNetworkStatus",
-              value: {},
-            },
-            { shouldEmit: EmitBehavior.force }
-          );
-        }
+              value: {
+                ...lastResult,
+                networkStatus: NetworkStatus.ready,
+                // will be overwritten anyways, just here for types sake
+                loading: false,
+                data: data as any,
+                dataState:
+                  lastResult.dataState === "streaming" ?
+                    "streaming"
+                  : "complete",
+              },
+              source: "network",
+            });
+          }
+        },
       });
+
+    return preventUnhandledRejection(
+      promise
+        .then((result) => toQueryResult(this.maskResult(result)))
+        .finally(() => {
+          subscription.unsubscribe();
+          if (isCached && !wasUpdated) {
+            finalize();
+
+            const lastResult = this.getCurrentResult();
+
+            if (lastResult.networkStatus === NetworkStatus.streaming) {
+              pushNotification({
+                kind: "N",
+                source: "network",
+                value: {
+                  ...lastResult,
+                  dataState: "complete",
+                  networkStatus: NetworkStatus.ready,
+                } as any,
+              });
+            } else {
+              pushNotification(
+                {
+                  kind: "N",
+                  source: "newNetworkStatus",
+                  value: {},
+                },
+                { shouldEmit: EmitBehavior.force }
+              );
+            }
+          }
+        })
+    );
   }
 
   // XXX the subscription variables are separate from the query variables.
@@ -1131,7 +1214,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
 
     if (newResult) {
-      queryManager.cache.writeQuery({
+      this.cache.writeQuery({
         query: this.options.query,
         data: newResult,
         variables: this.variables,
@@ -1667,8 +1750,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (
       dirty &&
-      (this.options.fetchPolicy == "cache-only" ||
-        this.options.fetchPolicy == "cache-and-network" ||
+      (this.options.fetchPolicy === "cache-only" ||
+        this.options.fetchPolicy === "cache-and-network" ||
         !this.activeOperations.size)
     ) {
       const diff = this.getCacheDiff();

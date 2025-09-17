@@ -100,9 +100,20 @@ export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise
 export function decoratePromise<TValue>(promise: Promise<TValue>): DecoratedPromise<TValue>;
 
 // @internal @deprecated (undocumented)
-export class DeepMerger<TContextArgs extends any[]> {
+export namespace DeepMerger {
+    // (undocumented)
+    export type ArrayMergeStrategy = "truncate" | "combine";
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        arrayMerge?: DeepMerger.ArrayMergeStrategy;
+    }
+}
+
+// @internal @deprecated (undocumented)
+export class DeepMerger<TContextArgs extends any[] = any[]> {
     // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-    constructor(reconciler?: ReconcilerFunction<TContextArgs>);
+    constructor(reconciler?: ReconcilerFunction<TContextArgs>, options?: DeepMerger.Options);
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)
@@ -449,7 +460,7 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 
 // Warnings were encountered during analysis:
 //
-// src/utilities/internal/getStoreKeyName.ts:88:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

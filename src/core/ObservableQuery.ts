@@ -975,24 +975,32 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 if (watch.watcher === this) {
                   wasUpdated = true;
                   const lastResult = this.getCurrentResult();
-                  pushNotification({
-                    kind: "N",
-                    source: "network",
-                    value: {
-                      ...lastResult,
-                      networkStatus:
-                        fetchMoreResult.networkStatus === NetworkStatus.error ?
-                          NetworkStatus.ready
-                        : fetchMoreResult.networkStatus,
-                      // will be overwritten anyways, just here for types sake
-                      loading: false,
-                      data: diff.result,
-                      dataState:
-                        fetchMoreResult.dataState === "streaming" ?
-                          "streaming"
-                        : "complete",
-                    },
-                  });
+
+                  // Let the cache watch from resubscribeCache handle the final
+                  // result
+                  if (isNetworkRequestInFlight(fetchMoreResult.networkStatus)) {
+                    pushNotification({
+                      kind: "N",
+                      source: "network",
+                      value: {
+                        ...lastResult,
+                        networkStatus:
+                          (
+                            fetchMoreResult.networkStatus ===
+                            NetworkStatus.error
+                          ) ?
+                            NetworkStatus.ready
+                          : fetchMoreResult.networkStatus,
+                        // will be overwritten anyways, just here for types sake
+                        loading: false,
+                        data: diff.result,
+                        dataState:
+                          fetchMoreResult.dataState === "streaming" ?
+                            "streaming"
+                          : "complete",
+                      },
+                    });
+                  }
                 }
               },
             });

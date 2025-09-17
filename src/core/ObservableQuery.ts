@@ -912,11 +912,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const subscription = observable.pipe(operator).subscribe({
       next: (notification) => {
-        wasUpdated = false;
         if (notification.kind !== "N" || notification.source !== "network") {
           return;
         }
 
+        wasUpdated = false;
         const fetchMoreResult = notification.value;
 
         if (isNetworkRequestSettled(notification.value.networkStatus)) {

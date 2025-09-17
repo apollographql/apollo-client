@@ -6,7 +6,7 @@
 
 - [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`2aa31c7`](https://github.com/apollographql/apollo-client/commit/2aa31c718155e88814551afb14fd7a0035acc57d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where deferred payloads that reteurned arrays with fewer items than the original cached array would retain items from the cached array. This change includes `@stream` arrays where stream arrays replace the cached arrays.
 
-- [#12918](https://github.com/apollographql/apollo-client/pull/12918) [`c7fba99`](https://github.com/apollographql/apollo-client/commit/c7fba99e16da522fdbc35b9c16cdb8df0dda4c2c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support the newer incremental delivery format for the `@defer` directive implemented in `graphql@17.0.0-alpha.9`. Import the `GraphQL17Alpha9Handler` to use the newer incremental delivery format with `@defer`.
+- [#12926](https://github.com/apollographql/apollo-client/pull/12926) [`c7fba99`](https://github.com/apollographql/apollo-client/commit/c7fba99e16da522fdbc35b9c16cdb8df0dda4c2c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support the newer incremental delivery format for the `@defer` directive implemented in `graphql@17.0.0-alpha.9`. Import the `GraphQL17Alpha9Handler` to use the newer incremental delivery format with `@defer`.
 
   ```ts
   import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";

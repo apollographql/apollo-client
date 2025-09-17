@@ -356,6 +356,10 @@ export class ObservableQuery<
     return this.subject.getValue().result.networkStatus;
   }
 
+  private get cache() {
+    return this.queryManager.cache;
+  }
+
   constructor({
     queryManager,
     options,
@@ -559,7 +563,7 @@ export class ObservableQuery<
    * @internal
    */
   public getCacheDiff({ optimistic = true } = {}) {
-    return this.queryManager.cache.diff<TData>({
+    return this.cache.diff<TData>({
       query: this.query,
       variables: this.variables,
       returnPartialData: true,
@@ -694,7 +698,7 @@ export class ObservableQuery<
         }
       },
     };
-    const cancelWatch = this.queryManager.cache.watch(watch);
+    const cancelWatch = this.cache.watch(watch);
 
     this.unsubscribeFromCache = Object.assign(
       () => {
@@ -937,7 +941,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             // updates. Most watchers will be using the QueryInfo class, which
             // responds to notifications by calling reobserveCacheFirst to deliver
             // fetchMore cache results back to this ObservableQuery.
-            this.queryManager.cache.batch({
+            this.cache.batch({
               update: (cache) => {
                 if (updateQuery) {
                   cache.updateQuery(
@@ -1202,7 +1206,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
 
     if (newResult) {
-      queryManager.cache.writeQuery({
+      this.cache.writeQuery({
         query: this.options.query,
         data: newResult,
         variables: this.variables,

@@ -84,6 +84,61 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 > If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local state in the cache](#storing-local-state-in-the-cache) for details.
 
+<Caution>
+
+The initial `existing` value provided to the `read` function is `null` instead of `undefined` when the `@client` field is a child of another server field. This means using default parameters to set a default value will not work as expected and instead return `null` as the value for the field. Note that this behavior does not affect root `@client` fields which receive `undefined` as the initial `existing` value.<br/><br/>
+
+<ExpansionPanel title="Learn more about this behavior">
+
+When you're using a `fetchPolicy` that reads from the cache, Apollo Client first tries to fulfill the query from the cache before executing the query on the network. In the context of `@client` fields, `LocalState` is treated as part of the network layer when resolving field values.<br/><br/>
+
+`LocalState` fulfills values for `@client` fields by first running local resolvers. If a local resolver isn't provided for a particular `@client` field, `LocalState` will then try to resolve the value from the cache. If the cache doesn't contain a value for the field, the field value is set to `null` to ensure future cache reads don't result in a cache miss.<br/><br/>
+
+When using `read` functions to resolve root `@client` fields, those `read` functions run as a result of executing the initial cache read. If a value hasn't yet been written to the cache, the `existing` value is set to `undefined`, allowing default parameters to provide a default value for the field.<br/><br/>
+
+When using `read` functions to resolve child `@client` fields of other server fields, `read` functions might not be run as part of the initial cache read when the parent field does not return a cached value. The query is then executed on the network, which includes running the query through `LocalState` to fulfill data for `@client` fields. In this scenario, `LocalState` resolves the value of the `@client` field to `null` before the `read` function is run. Unless your `merge` function alters the `null` value before its written to the cache, the `existing` value provided to the `read` function is `null`.
+
+</ExpansionPanel>
+
+To provide default values for `read` functions on `@client` fields, use the nullish coalescing operator:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Product: {
+      fields: {
+        isInCart: {
+          // ❌ Don't use default parameter values, otherwise the
+          // value will return as `null`
+          read(value = false) {
+            return value;
+          },
+
+          // ✅ Use nullish coalescing operator to set a default value
+          read(value) {
+            return value ?? false;
+          },
+        },
+      },
+    },
+
+    Query: {
+      fields: {
+        rootClientField: {
+          // ✅ Default parameter values on root client field
+          // read functions are ok
+          read(value = "rootFieldDefault") {
+            return value;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+</Caution>
+
 ### Reads are synchronous by design
 
 Many UI frameworks like React (when not using `Suspense`) have synchronous rendering pipelines, therefore it's important for UI components to have immediate access to any existing data. This is why all `read` functions are synchronous, as are the cache's `readQuery` and `readFragment` methods. It is possible, however, to leverage reactive variables and `options.storage` to compose a `read` function that behaves in a manner that resembles an asynchronous action:

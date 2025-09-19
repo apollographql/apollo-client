@@ -86,17 +86,17 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 <Caution>
 
-The initial `existing` value provided to the `read` function is `null` instead of `undefined` when the `@client` field is a child of another server field. This means using default parameters to set a default value will not work as expected and instead return `null` as the value for the field. Note that this behavior does not affect root `@client` fields which receive `undefined` as the initial `existing` value.<br/><br/>
+The initial `existing` value provided to the `read` function is `null` instead of `undefined` when the `@client` field is a child of another server field. This means using default parameters to set a default value doesn't work as expected and instead returns `null` as the value for the field. Note that this behavior doesn't affect root `@client` fields which receive `undefined` as the initial `existing` value.<br/><br/>
 
-<ExpansionPanel title="Learn more about this behavior">
+<ExpansionPanel title="Understanding this behavior">
 
 When you're using a `fetchPolicy` that reads from the cache, Apollo Client first tries to fulfill the query from the cache before executing the query on the network. In the context of `@client` fields, `LocalState` is treated as part of the network layer when resolving field values.<br/><br/>
 
-`LocalState` fulfills values for `@client` fields by first running local resolvers. If a local resolver isn't provided for a particular `@client` field, `LocalState` will then try to resolve the value from the cache. If the cache doesn't contain a value for the field, the field value is set to `null` to ensure future cache reads don't result in a cache miss.<br/><br/>
+`LocalState` fulfills values for `@client` fields by first running local resolvers. If a local resolver isn't provided for a particular `@client` field, `LocalState` then tries to resolve the value from the cache. If the cache doesn't contain a value for the field, the field value is set to `null` to ensure future cache reads don't result in a cache miss.<br/><br/>
 
 When using `read` functions to resolve root `@client` fields, those `read` functions run as a result of executing the initial cache read. If a value hasn't yet been written to the cache, the `existing` value is set to `undefined`, allowing default parameters to provide a default value for the field.<br/><br/>
 
-When using `read` functions to resolve child `@client` fields of other server fields, `read` functions might not be run as part of the initial cache read when the parent field does not return a cached value. The query is then executed on the network, which includes running the query through `LocalState` to fulfill data for `@client` fields. In this scenario, `LocalState` resolves the value of the `@client` field to `null` before the `read` function is run. Unless your `merge` function alters the `null` value before its written to the cache, the `existing` value provided to the `read` function is `null`.
+When using `read` functions to resolve child `@client` fields of other server fields, `read` functions might not be run as part of the initial cache read when the parent field doesn't return a cached value. The query is then executed on the network, which includes running the query through `LocalState` to fulfill data for `@client` fields. In this scenario, `LocalState` resolves the value of the `@client` field to `null` before the `read` function is run. Unless your `merge` function alters the `null` value before it's written to the cache, the `existing` value provided to the `read` function is `null`.
 
 </ExpansionPanel>
 
@@ -109,7 +109,7 @@ const cache = new InMemoryCache({
       fields: {
         isInCart: {
           // ❌ Don't use default parameter values, otherwise the
-          // value will return as `null`
+          // value will be null
           read(value = false) {
             return value;
           },
@@ -125,8 +125,8 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         rootClientField: {
-          // ✅ Default parameter values on root client field
-          // read functions are ok
+          // ✅ Default parameters on root client field
+          // read functions work as expected
           read(value = "rootFieldDefault") {
             return value;
           },

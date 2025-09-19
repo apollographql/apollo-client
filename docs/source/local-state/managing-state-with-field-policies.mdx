@@ -103,7 +103,7 @@ When using `read` functions to resolve child `@client` fields of other server fi
 To provide default values for `read` functions on `@client` fields, use the nullish coalescing operator:
 
 ```ts
-const cache = new InMemoryCache({
+new InMemoryCache({
   typePolicies: {
     Product: {
       fields: {

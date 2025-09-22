@@ -20,6 +20,7 @@ import type {
   Cache,
   DefaultContext,
   ErrorLike,
+  InMemoryCache,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
@@ -676,9 +677,9 @@ export class LocalState<
       variables,
       operationDefinition,
       phase,
-      returnPartialData,
       onlyRunForcedResolvers,
     } = execContext;
+    let { returnPartialData } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
     const typename =
@@ -703,10 +704,20 @@ export class LocalState<
         // Warn when a resolver is not defined.
       : (
         () => {
+          const { cache } = client;
           const fieldFromCache = getCacheResultAtPath(diff, path);
 
           if (fieldFromCache !== undefined) {
             return fieldFromCache;
+          }
+
+          if (
+            isInMemoryCache(cache) &&
+            cache.policies.getReadFunction(typename, fieldName)
+          ) {
+            // assume the read function will handle writing the correct value
+            returnPartialData = true;
+            return;
           }
 
           if (!returnPartialData) {
@@ -1161,4 +1172,17 @@ function toQueryOperation(document: DocumentNode): DocumentNode {
     },
   });
   return modifiedDoc;
+}
+
+function isInMemoryCache(cache: ApolloCache): cache is InMemoryCache {
+  // Avoid `instanceof InMemoryCache` to avoid adding bundle size when
+  // `InMemoryCache` is not used.
+  return (
+    "policies" in cache &&
+    "typePolicies" &&
+    !!cache.policies &&
+    typeof cache.policies === "object" &&
+    "cache" in cache.policies &&
+    cache.policies.cache === cache
+  );
 }

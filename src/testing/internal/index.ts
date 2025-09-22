@@ -3,6 +3,7 @@ export {
   spyOnConsole,
   withCleanup,
   withProdMode,
+  withCacheSizes,
 } from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
 

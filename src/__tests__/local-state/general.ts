@@ -1510,3 +1510,85 @@ test("throws when executing subscriptions with client fields when local state is
     )
   );
 });
+
+test("sets existing value of `@client` field to undefined when read function is present", async () => {
+  const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const read = jest.fn((value) => value ?? null);
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            firstName: {
+              read,
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: { user: { __typename: "User", lastName: "Smith" } },
+      }).pipe(delay(10));
+    }),
+    localState: new LocalState(),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      user: { __typename: "User", firstName: null, lastName: "Smith" },
+    },
+  });
+
+  expect(read).toHaveBeenCalledTimes(1);
+  expect(read).toHaveBeenCalledWith(undefined, expect.anything());
+});
+
+test("sets existing value of `@client` field to undefined when merge function is present", async () => {
+  const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const merge = jest.fn(() => null);
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            firstName: {
+              merge,
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: { user: { __typename: "User", lastName: "Smith" } },
+      }).pipe(delay(10));
+    }),
+    localState: new LocalState(),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      user: { __typename: "User", firstName: null, lastName: "Smith" },
+    },
+  });
+
+  expect(merge).toHaveBeenCalledTimes(1);
+  expect(merge).toHaveBeenCalledWith(undefined, undefined, expect.anything());
+});

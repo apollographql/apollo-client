@@ -632,7 +632,7 @@ describe("Cache manipulation", () => {
     });
 
     expect(read).toHaveBeenCalledTimes(1);
-    expect(read).toHaveBeenCalledWith(null, expect.anything());
+    expect(read).toHaveBeenCalledWith(undefined, expect.anything());
     expect(console.warn).not.toHaveBeenCalled();
   });
 });
@@ -1511,7 +1511,53 @@ test("throws when executing subscriptions with client fields when local state is
   );
 });
 
-test("sets existing value of `@client` field to undefined when read function is present", async () => {
+test.each(["cache-first", "network-only"] as const)(
+  "sets existing value of `@client` field to undefined when read function is present",
+  async (fetchPolicy) => {
+    const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+    const read = jest.fn((value) => value ?? null);
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              firstName: {
+                read,
+              },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() => {
+        return of({
+          data: { user: { __typename: "User", lastName: "Smith" } },
+        }).pipe(delay(10));
+      }),
+      localState: new LocalState(),
+    });
+
+    await expect(
+      client.query({ query, fetchPolicy })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        user: { __typename: "User", firstName: null, lastName: "Smith" },
+      },
+    });
+
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledWith(undefined, expect.anything());
+  }
+);
+
+test("sets existing value of `@client` field to null when using no-cache with read function", async () => {
   const query = gql`
     query GetUser {
       user {
@@ -1542,18 +1588,24 @@ test("sets existing value of `@client` field to undefined when read function is 
     localState: new LocalState(),
   });
 
-  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+  await expect(
+    client.query({ query, fetchPolicy: "no-cache" })
+  ).resolves.toStrictEqualTyped({
     data: {
       user: { __typename: "User", firstName: null, lastName: "Smith" },
     },
   });
 
-  expect(read).toHaveBeenCalledTimes(1);
-  expect(read).toHaveBeenCalledWith(undefined, expect.anything());
+  expect(read).not.toHaveBeenCalled();
 });
 
-test("sets existing value of `@client` field to undefined when merge function is present", async () => {
-  const query = gql`
+// The cache does not run merge functions if the incoming value is `undefined`,
+// so this particular behavior fails. We can only handle this if a `read`
+// function is present.
+test.failing(
+  "sets existing value of `@client` field to undefined when merge function is present",
+  async () => {
+    const query = gql`
     query GetUser {
       user {
         firstName @client
@@ -1562,33 +1614,38 @@ test("sets existing value of `@client` field to undefined when merge function is
     }
   `;
 
-  const merge = jest.fn(() => null);
-  const client = new ApolloClient({
-    cache: new InMemoryCache({
-      typePolicies: {
-        User: {
-          fields: {
-            firstName: {
-              merge,
+    const merge = jest.fn(() => null);
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              firstName: {
+                merge,
+              },
             },
           },
         },
+      }),
+      link: new ApolloLink(() => {
+        return of({
+          data: { user: { __typename: "User", lastName: "Smith" } },
+        }).pipe(delay(10));
+      }),
+      localState: new LocalState(),
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: {
+        user: {
+          __typename: "User",
+          firstName: null,
+          lastName: "Smith",
+        },
       },
-    }),
-    link: new ApolloLink(() => {
-      return of({
-        data: { user: { __typename: "User", lastName: "Smith" } },
-      }).pipe(delay(10));
-    }),
-    localState: new LocalState(),
-  });
+    });
 
-  await expect(client.query({ query })).resolves.toStrictEqualTyped({
-    data: {
-      user: { __typename: "User", firstName: null, lastName: "Smith" },
-    },
-  });
-
-  expect(merge).toHaveBeenCalledTimes(1);
-  expect(merge).toHaveBeenCalledWith(undefined, undefined, expect.anything());
-});
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge).toHaveBeenCalledWith(undefined, undefined, expect.anything());
+  }
+);

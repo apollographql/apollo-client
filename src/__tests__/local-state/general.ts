@@ -1599,13 +1599,8 @@ test("sets existing value of `@client` field to null when using no-cache with re
   expect(read).not.toHaveBeenCalled();
 });
 
-// The cache does not run merge functions if the incoming value is `undefined`,
-// so this particular behavior fails. We can only handle this if a `read`
-// function is present.
-test.failing(
-  "sets existing value of `@client` field to undefined when merge function is present",
-  async () => {
-    const query = gql`
+test("sets existing value of `@client` field to null when merge function is present", async () => {
+  const query = gql`
     query GetUser {
       user {
         firstName @client
@@ -1614,38 +1609,37 @@ test.failing(
     }
   `;
 
-    const merge = jest.fn(() => null);
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        typePolicies: {
-          User: {
-            fields: {
-              firstName: {
-                merge,
-              },
+  const merge = jest.fn(() => "Fallback");
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            firstName: {
+              merge,
             },
           },
         },
-      }),
-      link: new ApolloLink(() => {
-        return of({
-          data: { user: { __typename: "User", lastName: "Smith" } },
-        }).pipe(delay(10));
-      }),
-      localState: new LocalState(),
-    });
-
-    await expect(client.query({ query })).resolves.toStrictEqualTyped({
-      data: {
-        user: {
-          __typename: "User",
-          firstName: null,
-          lastName: "Smith",
-        },
       },
-    });
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: { user: { __typename: "User", lastName: "Smith" } },
+      }).pipe(delay(10));
+    }),
+    localState: new LocalState(),
+  });
 
-    expect(merge).toHaveBeenCalledTimes(1);
-    expect(merge).toHaveBeenCalledWith(undefined, undefined, expect.anything());
-  }
-);
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        firstName: "Fallback",
+        lastName: "Smith",
+      },
+    },
+  });
+
+  expect(merge).toHaveBeenCalledTimes(1);
+  expect(merge).toHaveBeenCalledWith(undefined, null, expect.anything());
+});

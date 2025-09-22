@@ -1,9 +1,9 @@
 export {
   enableFakeTimers,
   spyOnConsole,
+  withCacheSizes,
   withCleanup,
   withProdMode,
-  withCacheSizes,
 } from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
 

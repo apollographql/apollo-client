@@ -715,7 +715,7 @@ export class LocalState<
             isInMemoryCache(cache) &&
             cache.policies.getReadFunction(typename, fieldName)
           ) {
-            // assume the read function will handle writing the correct value
+            // assume the read function will handle returning the correct value
             returnPartialData = true;
             return;
           }

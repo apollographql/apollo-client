@@ -376,12 +376,15 @@ export class LocalState<
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
-    const diff = client.cache.diff<Record<string, any>>({
-      query: toQueryOperation(document),
-      variables,
-      returnPartialData: true,
-      optimistic: false,
-    });
+    const diff: Cache.DiffResult<Record<string, any>> =
+      fetchPolicy === "no-cache" ?
+        { result: null, complete: false }
+      : client.cache.diff<Record<string, any>>({
+          query: toQueryOperation(document),
+          variables,
+          returnPartialData: true,
+          optimistic: false,
+        });
 
     const requestContext = { ...client.defaultContext, ...context };
     const execContext: ExecContext = {

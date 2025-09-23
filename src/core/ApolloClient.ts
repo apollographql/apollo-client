@@ -133,6 +133,13 @@ export declare namespace ApolloClient {
      */
     incrementalHandler?: Incremental.Handler<any>;
 
+    /**
+     * @experimental
+     * Allows passing in "experiments", experimental features that might one day
+     * become part of Apollo Client's core functionality.
+     * Keep in mind that these features might change the core of Apollo Client.
+     * Do not pass in experiments that are not provided by Apollo.
+     */
     experiments?: ApolloClient.Experiment[];
   }
 
@@ -615,6 +622,7 @@ export declare namespace ApolloClient {
 
   export interface Experiment {
     (this: ApolloClient, options: ApolloClient.Options): void;
+    v: 1;
   }
 }
 

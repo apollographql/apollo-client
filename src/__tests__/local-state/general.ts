@@ -1530,7 +1530,7 @@ test.each(["cache-first", "network-only"] as const)(
     }
   `;
 
-    const read = jest.fn((value) => value ?? null);
+    const read = jest.fn((value = "Fallback") => value);
     const client = new ApolloClient({
       cache: new InMemoryCache({
         typePolicies: {
@@ -1555,7 +1555,7 @@ test.each(["cache-first", "network-only"] as const)(
       client.query({ query, fetchPolicy })
     ).resolves.toStrictEqualTyped({
       data: {
-        user: { __typename: "User", firstName: null, lastName: "Smith" },
+        user: { __typename: "User", firstName: "Fallback", lastName: "Smith" },
       },
     });
 
@@ -1575,7 +1575,7 @@ test("sets existing value of `@client` field to null and warns when using no-cac
     }
   `;
 
-  const read = jest.fn((value) => value ?? null);
+  const read = jest.fn((value) => value ?? "Fallback");
   const client = new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {

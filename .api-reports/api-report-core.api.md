@@ -195,6 +195,13 @@ export namespace ApolloClient {
         }
     }
     // (undocumented)
+    export interface Experiment {
+        // (undocumented)
+        (this: ApolloClient, options: ApolloClient.Options): void;
+        // (undocumented)
+        v: 1;
+    }
+    // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
         optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
@@ -231,6 +238,7 @@ export namespace ApolloClient {
         documentTransform?: DocumentTransform;
         // (undocumented)
         enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+        experiments?: ApolloClient.Experiment[];
         incrementalHandler?: Incremental.Handler<any>;
         link: ApolloLink;
         // (undocumented)
@@ -1132,7 +1140,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:362:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:368:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

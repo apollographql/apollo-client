@@ -23,6 +23,7 @@ import type {
   InMemoryCache,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalStateError, toErrorLike } from "@apollo/client/errors";
@@ -64,6 +65,7 @@ interface ExecContext {
   exportedVariableDefs: Record<string, ExportedVariable>;
   diff: Cache.DiffResult<any>;
   returnPartialData: boolean;
+  fetchPolicy?: WatchQueryFetchPolicy;
 }
 
 /**
@@ -337,6 +339,7 @@ export class LocalState<
     variables = {} as TVariables,
     onlyRunForcedResolvers = false,
     returnPartialData = false,
+    fetchPolicy,
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
@@ -346,6 +349,7 @@ export class LocalState<
     variables: TVariables | undefined;
     onlyRunForcedResolvers?: boolean;
     returnPartialData?: boolean;
+    fetchPolicy: WatchQueryFetchPolicy;
   }): Promise<FormattedExecutionResult<TData>> {
     if (__DEV__) {
       invariant(
@@ -402,6 +406,7 @@ export class LocalState<
       exportedVariableDefs,
       diff,
       returnPartialData,
+      fetchPolicy,
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -678,6 +683,7 @@ export class LocalState<
       operationDefinition,
       phase,
       onlyRunForcedResolvers,
+      fetchPolicy,
     } = execContext;
     let { returnPartialData } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
@@ -712,6 +718,7 @@ export class LocalState<
           }
 
           if (
+            fetchPolicy !== "no-cache" &&
             isInMemoryCache(cache) &&
             cache.policies.getReadFunction(typename, fieldName)
           ) {

@@ -1557,7 +1557,8 @@ test.each(["cache-first", "network-only"] as const)(
   }
 );
 
-test("sets existing value of `@client` field to null when using no-cache with read function", async () => {
+test("sets existing value of `@client` field to null and warns when using no-cache with read function", async () => {
+  using _ = spyOnConsole("warn");
   const query = gql`
     query GetUser {
       user {
@@ -1597,9 +1598,15 @@ test("sets existing value of `@client` field to null when using no-cache with re
   });
 
   expect(read).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+    "User.firstName"
+  );
 });
 
-test("sets existing value of `@client` field to null when merge function is present", async () => {
+test("sets existing value of `@client` field to null and warns when merge function but not read function is present", async () => {
+  using _ = spyOnConsole("warn");
   const query = gql`
     query GetUser {
       user {
@@ -1642,4 +1649,10 @@ test("sets existing value of `@client` field to null when merge function is pres
 
   expect(merge).toHaveBeenCalledTimes(1);
   expect(merge).toHaveBeenCalledWith(undefined, null, expect.anything());
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    "User.firstName"
+  );
 });

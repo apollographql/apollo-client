@@ -20,7 +20,6 @@ import type {
   Cache,
   DefaultContext,
   ErrorLike,
-  InMemoryCache,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -719,15 +718,18 @@ export class LocalState<
 
           if (
             fetchPolicy !== "no-cache" &&
-            isInMemoryCache(cache) &&
-            cache.policies.getReadFunction(typename, fieldName)
+            cache.resolvesClientField?.(typename, fieldName)
           ) {
-            // assume the read function will handle returning the correct value
+            // assume the cache will handle returning the correct value
             returnPartialData = true;
             return;
           }
 
           if (!returnPartialData) {
+            invariant.warn(
+              "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+              resolverName
+            );
             return null;
           }
         }
@@ -1179,17 +1181,4 @@ function toQueryOperation(document: DocumentNode): DocumentNode {
     },
   });
   return modifiedDoc;
-}
-
-function isInMemoryCache(cache: ApolloCache): cache is InMemoryCache {
-  // Avoid `instanceof InMemoryCache` to avoid adding bundle size when
-  // `InMemoryCache` is not used.
-  return (
-    "policies" in cache &&
-    "typePolicies" &&
-    !!cache.policies &&
-    typeof cache.policies === "object" &&
-    "cache" in cache.policies &&
-    cache.policies.cache === cache
-  );
 }

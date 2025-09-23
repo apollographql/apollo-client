@@ -6,6 +6,13 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";
 
+const WARNINGS = {
+  MISSING_RESOLVER:
+    "Could not find a resolver for the '%s' field nor does the cache resolve the field. The field value has been set to `null`. Either define a resolver for the field or ensure the cache can resolve the value, for example, by adding a 'read' function to a field policy in 'InMemoryCache'.",
+  NO_CACHE:
+    "The '%s' field resolves the value from the cache, for example from a 'read' function, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+};
+
 test("runs resolvers for @client queries", async () => {
   const document = gql`
     query Test {
@@ -613,7 +620,7 @@ test("warns and sets value to null when a resolver is missing for an `@client` f
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    WARNINGS.MISSING_RESOLVER,
     "Query.foo"
   );
 });
@@ -689,7 +696,7 @@ test("warns and sets value to null for client child fields of a server field wit
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    WARNINGS.MISSING_RESOLVER,
     "Foo.bar"
   );
 });
@@ -777,10 +784,7 @@ test("warns when using a no-cache query with a read function but no resolver fun
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
-    "Query.foo"
-  );
+  expect(console.warn).toHaveBeenCalledWith(WARNINGS.NO_CACHE, "Query.foo");
 });
 
 test("warns when using a no-cache query with a read function but no resolver function on child @client field", async () => {
@@ -824,10 +828,7 @@ test("warns when using a no-cache query with a read function but no resolver fun
   });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
-    "Foo.bar"
-  );
+  expect(console.warn).toHaveBeenCalledWith(WARNINGS.NO_CACHE, "Foo.bar");
 });
 
 test("warns when a resolver returns undefined and sets value to null", async () => {

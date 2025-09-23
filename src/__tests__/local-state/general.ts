@@ -26,6 +26,13 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+const WARNINGS = {
+  MISSING_RESOLVER:
+    "Could not find a resolver for the '%s' field nor does the cache resolve the field. The field value has been set to `null`. Either define a resolver for the field or ensure the cache can resolve the value, for example, by adding a 'read' function to a field policy in 'InMemoryCache'.",
+  NO_CACHE:
+    "The '%s' field resolves the value from the cache, for example from a 'read' function, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+};
+
 describe("General functionality", () => {
   test("should not impact normal non-@client use", async () => {
     const query = gql`
@@ -1600,7 +1607,7 @@ test("sets existing value of `@client` field to null and warns when using no-cac
   expect(read).not.toHaveBeenCalled();
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+    WARNINGS.NO_CACHE,
     "User.firstName"
   );
 });
@@ -1652,7 +1659,7 @@ test("sets existing value of `@client` field to null and warns when merge functi
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    WARNINGS.MISSING_RESOLVER,
     "User.firstName"
   );
 });

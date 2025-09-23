@@ -94,6 +94,7 @@ export abstract class ApolloCache {
     abstract removeOptimistic(id: string): void;
     // (undocumented)
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
+    resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -543,6 +544,8 @@ export class InMemoryCache extends ApolloCache {
     removeOptimistic(idToRemove: string): void;
     // (undocumented)
     reset(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    resolvesClientField(typename: string, fieldName: string): boolean;
     // (undocumented)
     restore(data: NormalizedCacheObject): this;
     // (undocumented)

@@ -95,6 +95,7 @@ export abstract class ApolloCache {
     abstract removeOptimistic(id: string): void;
     // (undocumented)
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
+    resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -1381,6 +1382,8 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     reset(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
+    resolvesClientField(typename: string, fieldName: string): boolean;
+    // (undocumented)
     restore(data: NormalizedCacheObject): this;
     // (undocumented)
     retain(rootId: string, optimistic?: boolean): number;
@@ -1577,7 +1580,7 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
     ]);
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
-    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, fetchPolicy, }: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -1585,6 +1588,7 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
         variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
         returnPartialData?: boolean;
+        fetchPolicy: WatchQueryFetchPolicy;
     }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
     getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
@@ -2723,9 +2727,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ApolloClient.ts:362:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:368:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:147:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:200:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:243:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

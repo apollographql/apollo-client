@@ -719,13 +719,18 @@ export class LocalState<
             return fieldFromCache;
           }
 
-          if (
-            fetchPolicy !== "no-cache" &&
-            cache.resolvesClientField?.(typename, fieldName)
-          ) {
-            // assume the cache will handle returning the correct value
-            returnPartialData = true;
-            return;
+          if (cache.resolvesClientField?.(typename, fieldName)) {
+            if (fetchPolicy === "no-cache") {
+              invariant.warn(
+                "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+                resolverName
+              );
+              return null;
+            } else {
+              // assume the cache will handle returning the correct value
+              returnPartialData = true;
+              return;
+            }
           }
 
           if (!returnPartialData) {

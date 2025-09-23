@@ -740,6 +740,96 @@ test("does not warn when a read function is defined for a child `@client` field 
   expect(console.warn).not.toHaveBeenCalled();
 });
 
+test("warns when using a no-cache query with a read function but no resolver function", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      foo @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            foo: {
+              read: () => "bar",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState();
+
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+      fetchPolicy: "no-cache",
+    })
+  ).resolves.toStrictEqualTyped({ data: { foo: null } });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+    "Query.foo"
+  );
+});
+
+test("warns when using a no-cache query with a read function but no resolver function on child @client field", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      foo {
+        bar @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Foo: {
+          fields: {
+            bar: {
+              read: () => "baz",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState();
+
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: { data: { foo: { __typename: "Foo" } } },
+      fetchPolicy: "no-cache",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { foo: { __typename: "Foo", bar: null } },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field resolves the value from the cache, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+    "Foo.bar"
+  );
+});
+
 test("warns when a resolver returns undefined and sets value to null", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`

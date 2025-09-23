@@ -585,7 +585,7 @@ test("throws error when query does not contain client fields", async () => {
   );
 });
 
-test("does not warn when a resolver is missing for an `@client` field", async () => {
+test("warns and sets value to null when a resolver is missing for an `@client` field and a read function is not defined when using InMemoryCache", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -611,10 +611,53 @@ test("does not warn when a resolver is missing for an `@client` field", async ()
     })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    "Query.foo"
+  );
+});
+
+test("does not warn when read function is defined for a `@client` field when using InMemoryCache", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      foo @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            foo: {
+              read: () => "Bar",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState();
+
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+      fetchPolicy: "cache-first",
+    })
+  ).resolves.toStrictEqualTyped({ data: { foo: "Bar" } });
+
   expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("does not warn for client child fields of a server field", async () => {
+test("warns and sets value to null for client child fields of a server field with no resolver or read function", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -642,6 +685,56 @@ test("does not warn for client child fields of a server field", async () => {
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver or the cache doesn't resolve the '%s' field. The field value has been set to `null`.",
+    "Foo.bar"
+  );
+});
+
+test("does not warn when a read function is defined for a child `@client` field from a server field when using InMemoryCache", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      foo {
+        bar @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Foo: {
+          fields: {
+            bar: {
+              read: () => "Baz",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState();
+
+  const remoteResult = { data: { foo: { __typename: "Foo" } } };
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+      fetchPolicy: "cache-first",
+    })
+  ).resolves.toStrictEqualTyped({
+    // The `bar` field is not so that the cache can fill in the field from the
+    // read function.
+    data: { foo: { __typename: "Foo" } },
   });
 
   expect(console.warn).not.toHaveBeenCalled();

@@ -726,11 +726,11 @@ export class LocalState<
                 resolverName
               );
               return null;
-            } else {
-              // assume the cache will handle returning the correct value
-              returnPartialData = true;
-              return;
             }
+
+            // assume the cache will handle returning the correct value
+            returnPartialData = true;
+            return;
           }
 
           if (!returnPartialData) {

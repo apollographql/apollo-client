@@ -41,6 +41,7 @@ test("resolves @client fields mixed with aliased server fields", async () => {
       context: {},
       remoteResult,
       variables: {},
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -81,6 +82,7 @@ test("resolves aliased @client fields", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { fie: { bar: true, __typename: "Foo" } },
@@ -137,6 +139,7 @@ test("resolves deeply nested aliased @client fields", async () => {
       context: {},
       remoteResult,
       variables: {},
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -190,6 +193,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
       context: {},
       remoteResult,
       variables: {},
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -231,6 +235,7 @@ test("does not confuse fields aliased to each other", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -269,6 +274,7 @@ test("does not confuse fields aliased to each other with boolean values", async 
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {

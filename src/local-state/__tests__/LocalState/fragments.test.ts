@@ -52,6 +52,7 @@ test("handles @client fields inside fragments", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -100,6 +101,7 @@ test("handles a mix of @client fields with fragments and server fields", async (
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -154,6 +156,7 @@ it("matches fragments with fragment conditions", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -200,6 +203,7 @@ test("throws when cache does not implement fragmentMatches", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).rejects.toEqual(
     new InvariantError(
@@ -240,6 +244,7 @@ test("does not traverse fragment when fragment spread type condition does not ma
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { foo: { __typename: "Foo" } } });
 });
@@ -277,6 +282,7 @@ test("can use a fragments on interface types defined by possibleTypes", async ()
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {

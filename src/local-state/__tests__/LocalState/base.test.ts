@@ -34,6 +34,7 @@ test("runs resolvers for @client queries", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
@@ -69,6 +70,7 @@ test("can add resolvers after LocalState is instantiated", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
@@ -108,6 +110,7 @@ test("handles queries with a mix of @client and server fields", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -165,6 +168,7 @@ test("runs resolvers for deeply nested @client fields", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -214,6 +218,7 @@ test("has access to query variables in @client resolvers", async () => {
       context: {},
       variables: { id: 1 },
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
@@ -266,6 +271,7 @@ test("combines local @client resolver results with server results, for the same 
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -309,6 +315,7 @@ test("handles resolvers that return booleans", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { isInCart: false },
@@ -351,6 +358,7 @@ test("does not run resolvers without @client directive", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -405,6 +413,7 @@ test("does not run resolvers without @client directive with nested field", async
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -462,6 +471,7 @@ test("allows child resolvers from a parent resolved field from a local resolver"
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -518,6 +528,7 @@ test("can use remote result to resolve @client field", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -567,6 +578,7 @@ test("throws error when query does not contain client fields", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
@@ -595,6 +607,7 @@ test("does not warn when a resolver is missing for an `@client` field", async ()
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
@@ -625,6 +638,7 @@ test("does not warn for client child fields of a server field", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
@@ -661,6 +675,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
@@ -701,6 +716,7 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
@@ -745,6 +761,7 @@ test("warns if a parent resolver omits a field and child has @client field", asy
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
@@ -791,6 +808,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -844,6 +862,7 @@ test("can return more data than needed in resolver which is accessible by child 
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: "random" } },
@@ -882,6 +901,7 @@ test("does not execute child resolver when parent is null", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { currentUser: null },
@@ -929,6 +949,7 @@ test("does not execute root scalar resolver data when remote data returns null",
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: null,
@@ -979,6 +1000,7 @@ test("does not run object resolver when remote data returns null", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: null,
@@ -1037,6 +1059,7 @@ test("does not run root resolvers when multiple client fields are defined when r
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: null,
@@ -1084,6 +1107,7 @@ test("does not execute resolver if client field is a child of a server field whe
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: null,

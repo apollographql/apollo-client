@@ -132,6 +132,15 @@ export declare namespace ApolloClient {
      * queries.
      */
     incrementalHandler?: Incremental.Handler<any>;
+
+    /**
+     * @experimental
+     * Allows passing in "experiments", experimental features that might one day
+     * become part of Apollo Client's core functionality.
+     * Keep in mind that these features might change the core of Apollo Client.
+     * Do not pass in experiments that are not provided by Apollo.
+     */
+    experiments?: ApolloClient.Experiment[];
   }
 
   interface DevtoolsOptions {
@@ -610,6 +619,11 @@ export declare namespace ApolloClient {
       variables?: TVariables;
     }
   }
+
+  export interface Experiment {
+    (this: ApolloClient, options: ApolloClient.Options): void;
+    v: 1;
+  }
 }
 
 /**
@@ -708,6 +722,7 @@ export class ApolloClient {
       dataMasking,
       link,
       incrementalHandler = new NotImplementedHandler(),
+      experiments = [],
     } = options;
 
     this.link = link;
@@ -759,6 +774,8 @@ export class ApolloClient {
     }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
+
+    experiments.forEach((experiment) => experiment.call(this, options));
   }
 
   private connectToDevTools() {

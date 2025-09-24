@@ -895,6 +895,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         finalize();
 
         if (isCached) {
+          // Separately getting a diff here before the batch - `onWatchUpdated` might be
+          // called with an `undefined` `lastDiff` on the watcher if the cache was just subscribed to.
+          const lastDiff = this.getCacheDiff();
           // Performing this cache update inside a cache.batch transaction ensures
           // any affected cache.watch watchers are notified at most once about any
           // updates. Most watchers will be using the QueryInfo class, which
@@ -929,10 +932,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 });
               }
             },
-            onWatchUpdated: (watch, diff, lastDiff) => {
+            onWatchUpdated: (watch, diff) => {
               if (
                 watch.watcher === this &&
-                !equal(diff.result, lastDiff?.result)
+                !equal(diff.result, lastDiff.result)
               ) {
                 wasUpdated = true;
               }

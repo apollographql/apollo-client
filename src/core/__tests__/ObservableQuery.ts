@@ -6504,28 +6504,30 @@ test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange:
   await expect(stream).not.toEmitAnything();
 });
 
-test("`fetchMore` will leave `loading` even if a result doesn't trigger cache change", async () => {
-  const query: TypedDocumentNode<
-    {
-      items: {
-        __typename: "ItemConnection";
-        edges: {
-          __typename: "ItemEdge";
-          cursor: string;
-          node: { __typename: "Item"; id: string; attributes: string[] };
-        }[];
-        pageInfo: {
-          __typename: "PageInfo";
-          hasNextPage: boolean;
-          endCursor: string | null;
+test.each(["cache-first", "network-only"] as const)(
+  "`fetchMore` with `fetchPolicy` `%s` will leave `loading` even if a result doesn't trigger cache change",
+  async (fetchPolicy) => {
+    const query: TypedDocumentNode<
+      {
+        items: {
+          __typename: "ItemConnection";
+          edges: {
+            __typename: "ItemEdge";
+            cursor: string;
+            node: { __typename: "Item"; id: string; attributes: string[] };
+          }[];
+          pageInfo: {
+            __typename: "PageInfo";
+            hasNextPage: boolean;
+            endCursor: string | null;
+          };
         };
-      };
-    },
-    {
-      first?: number;
-      after?: string;
-    }
-  > = gql`
+      },
+      {
+        first?: number;
+        after?: string;
+      }
+    > = gql`
   query Items($first: Int, $after: String) {
     items(first: $first, after: $after) {
       edges {
@@ -6542,132 +6544,38 @@ test("`fetchMore` will leave `loading` even if a result doesn't trigger cache ch
     }
   }
 `;
-  const firstResult: ResultOf<typeof query> = {
-    items: {
-      edges: [
-        {
-          cursor: "YXJyYXljb25uZWN0aW9uOjA=",
-          node: {
-            id: "0",
-            attributes: ["data"],
-            __typename: "Item",
-          },
-          __typename: "ItemEdge",
-        },
-        {
-          cursor: "YXJyYXljb25uZWN0aW9uOjk=",
-          node: {
-            id: "9",
-            attributes: ["data"],
-            __typename: "Item",
-          },
-          __typename: "ItemEdge",
-        },
-      ],
-      pageInfo: {
-        hasNextPage: false,
-        endCursor: "YXJyYXljb25uZWN0aW9uOjk=",
-        __typename: "PageInfo",
-      },
-      __typename: "ItemConnection",
-    },
-  };
-
-  const secondResult: ResultOf<typeof query> = {
-    items: {
-      edges: [],
-      pageInfo: {
-        hasNextPage: false,
-        endCursor: null,
-        __typename: "PageInfo",
-      },
-      __typename: "ItemConnection",
-    },
-  };
-
-  const client = new ApolloClient({
-    link: new MockLink([
-      {
-        request: { query, variables: { first: 2 } },
-        result: {
-          data: firstResult,
-        },
-      },
-      {
-        request: {
-          query,
-          variables: {
-            first: 10,
-            after: "YXJyYXljb25uZWN0aW9uOjk=",
-          },
-        },
-        result: {
-          data: secondResult,
-        },
-      },
-    ] satisfies MockLink.MockedResponse<ResultOf<typeof query>>[]),
-    cache: new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            items: relayStylePagination(),
-          },
-        },
-      },
-    }),
-  });
-
-  const observable = client.watchQuery({
-    query,
-    variables: { first: 2 },
-  });
-  const stream = new ObservableStream(observable);
-
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    dataState: "empty",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: {
+    const firstResult: ResultOf<typeof query> = {
       items: {
-        __typename: "ItemConnection",
-        edges: firstResult.items.edges,
+        edges: [
+          {
+            cursor: "YXJyYXljb25uZWN0aW9uOjA=",
+            node: {
+              id: "0",
+              attributes: ["data"],
+              __typename: "Item",
+            },
+            __typename: "ItemEdge",
+          },
+          {
+            cursor: "YXJyYXljb25uZWN0aW9uOjk=",
+            node: {
+              id: "9",
+              attributes: ["data"],
+              __typename: "Item",
+            },
+            __typename: "ItemEdge",
+          },
+        ],
         pageInfo: {
-          __typename: "PageInfo",
           hasNextPage: false,
           endCursor: "YXJyYXljb25uZWN0aW9uOjk=",
+          __typename: "PageInfo",
         },
+        __typename: "ItemConnection",
       },
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+    };
 
-  const more = observable.fetchMore({
-    variables: {
-      first: 10,
-      after: "YXJyYXljb25uZWN0aW9uOjk=",
-    },
-  });
-
-  await expect(stream).toEmitSimilarValue({
-    expected(previous) {
-      return {
-        ...previous,
-        loading: true,
-        networkStatus: NetworkStatus.fetchMore,
-      };
-    },
-  });
-
-  await expect(more).resolves.toStrictEqualTyped({
-    data: {
+    const secondResult: ResultOf<typeof query> = {
       items: {
         edges: [],
         pageInfo: {
@@ -6677,21 +6585,117 @@ test("`fetchMore` will leave `loading` even if a result doesn't trigger cache ch
         },
         __typename: "ItemConnection",
       },
-    },
-  });
+    };
 
-  await expect(stream).toEmitSimilarValue({
-    expected(previous) {
-      return {
-        ...previous,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      };
-    },
-  });
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query, variables: { first: 2 } },
+          result: {
+            data: firstResult,
+          },
+        },
+        {
+          request: {
+            query,
+            variables: {
+              first: 10,
+              after: "YXJyYXljb25uZWN0aW9uOjk=",
+            },
+          },
+          result: {
+            data: secondResult,
+          },
+        },
+      ] satisfies MockLink.MockedResponse<ResultOf<typeof query>>[]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              items: relayStylePagination(),
+            },
+          },
+        },
+      }),
+    });
 
-  await expect(stream).not.toEmitAnything();
-});
+    const observable = client.watchQuery({
+      query,
+      variables: { first: 2 },
+      fetchPolicy,
+    });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        items: {
+          __typename: "ItemConnection",
+          edges: firstResult.items.edges,
+          pageInfo: {
+            __typename: "PageInfo",
+            hasNextPage: false,
+            endCursor: "YXJyYXljb25uZWN0aW9uOjk=",
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const more = observable.fetchMore({
+      variables: {
+        first: 10,
+        after: "YXJyYXljb25uZWN0aW9uOjk=",
+      },
+    });
+
+    await expect(stream).toEmitSimilarValue({
+      expected(previous) {
+        return {
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.fetchMore,
+        };
+      },
+    });
+
+    await expect(more).resolves.toStrictEqualTyped({
+      data: {
+        items: {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null,
+            __typename: "PageInfo",
+          },
+          __typename: "ItemConnection",
+        },
+      },
+    });
+
+    await expect(stream).toEmitSimilarValue({
+      expected(previous) {
+        return {
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
+      },
+    });
+
+    await expect(stream).not.toEmitAnything();
+  }
+);
 
 test("does not emit loading state on client.resetStore with notifyOnNetworkStatusChange: false", async () => {
   const query: TypedDocumentNode<

@@ -929,9 +929,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 });
               }
             },
-
-            onWatchUpdated: (watch) => {
-              if (watch.watcher === this) {
+            onWatchUpdated: (watch, diff, lastDiff) => {
+              if (
+                watch.watcher === this &&
+                !equal(diff.result, lastDiff?.result)
+              ) {
                 wasUpdated = true;
               }
             },

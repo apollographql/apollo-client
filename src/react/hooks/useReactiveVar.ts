@@ -10,7 +10,8 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * @example
  *
  * ```jsx
- * import { makeVar, useReactiveVar } from "@apollo/client";
+ * import { makeVar } from "@apollo/client";
+ * import { useReactiveVar } from "@apollo/client/react";
  * export const cartItemsVar = makeVar([]);
  *
  * export function Cart() {

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.6
+
+### Patch Changes
+
+- [#12937](https://github.com/apollographql/apollo-client/pull/12937) [`3b0d89b`](https://github.com/apollographql/apollo-client/commit/3b0d89bc9dde3eaee9ddf0aec387da43fe71abc0) Thanks [@phryneas](https://github.com/phryneas)! - Fix a problem with `fetchMore` where the loading state wouldn't reset if the result wouldn't result in a data update.
+
 ## 4.0.5
 
 ### Patch Changes

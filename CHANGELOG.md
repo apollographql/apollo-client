@@ -1,5 +1,25 @@
 # @apollo/client
 
+## 4.1.0-alpha.1
+
+### Minor Changes
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't set the fallback value of a `@client` field to `null` when a `read` function is defined. Instead the `read` function will be called with an `existing` value of `undefined` to allow default arguments to be used to set the returned value.
+
+  When a `read` function is not defined nor is there a defined resolver for the field, warn and set the value to `null` only in that instance.
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an abstract `resolvesClientField` function to `ApolloCache` that can be used by caches to tell `LocalState` if it can resolve a `@client` field when a local resolver is not defined.
+
+  `LocalState` will emit a warning and set a fallback value of `null` when no local resolver is defined and `resolvesClientField` returns `false`, or isn't defined. Returning `true` from `resolvesClientField` signals that a mechanism in the cache will set the field value. In this case, `LocalState` won't set the field value.
+
+### Patch Changes
+
+- [#12915](https://github.com/apollographql/apollo-client/pull/12915) [`c97b145`](https://github.com/apollographql/apollo-client/commit/c97b145188d39d754ff098ff399a80cae5b10cc0) Thanks [@phryneas](https://github.com/phryneas)! - Create mechanism to add experimental features to Apollo Client
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `LocalState` doesn't try to read from the cache when using a `no-cache` fetch policy.
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using a `no-cache` fetch policy without a local resolver defined. `no-cache` queries do not read or write to the cache which meant `no-cache` queries are silently incomplete when the `@client` field value was handled by a cache `read` function.
+
 ## 4.1.0-alpha.0
 
 ### Minor Changes

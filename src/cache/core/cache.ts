@@ -178,6 +178,28 @@ export abstract class ApolloCache {
     return null;
   }
 
+  // Local state API
+
+  /**
+   * Determines whether a `@client` field can be resolved by the cache. Used
+   * when `LocalState` does not have a local resolver that can resolve the
+   * field.
+   *
+   * @remarks Cache implementations should return `true` if a mechanism in the
+   * cache is expected to provide a value for the field. `LocalState` will set
+   * the value of the field to `undefined` in order for the cache to handle it.
+   *
+   * Cache implementations should return `false` to indicate that it cannot
+   * handle resolving the field (either because it doesn't have a mechanism to
+   * do so, or because the user hasn't provided enough information to resolve
+   * the field). Returning `false` will emit a warning and set the value of the
+   * field to `null`.
+   *
+   * A cache that doesn't implement `resolvesClientField` will be treated the
+   * same as returning `false`.
+   */
+  public resolvesClientField?(typename: string, fieldName: string): boolean;
+
   // Transactional API
 
   // The batch method is intended to replace/subsume both performTransaction

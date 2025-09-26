@@ -33,6 +33,7 @@ test("supports async @client resolvers", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { isLoggedIn: true },
@@ -130,6 +131,7 @@ test("handles nested asynchronous @client resolvers", async () => {
       context: {},
       variables: { id: developerId },
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -201,6 +203,7 @@ test("supports async @client resolvers mixed with remotely resolved data", async
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {

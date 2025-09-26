@@ -36,6 +36,7 @@ test("handles errors thrown in a resolver", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -88,6 +89,7 @@ test("handles errors thrown in a child resolver", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
@@ -146,6 +148,7 @@ test("adds errors for each field that throws errors", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null, baz: null, qux: true } },
@@ -208,6 +211,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -283,6 +287,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -339,6 +344,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -393,6 +399,7 @@ test("overwrites localState extension from thrown GraphQLError if provided", asy
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -452,6 +459,7 @@ test("concatenates client errors with server errors", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null, baz: { __typename: "Baz", qux: null } },
@@ -502,6 +510,7 @@ test("handles errors thrown in async resolvers", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -551,6 +560,7 @@ test("handles rejected promises returned in async resolvers", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
@@ -614,6 +624,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -671,6 +682,7 @@ test("handles remote errors with no local resolver errors", async () => {
       context: {},
       variables: {},
       remoteResult,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {

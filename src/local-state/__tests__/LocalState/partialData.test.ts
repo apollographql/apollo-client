@@ -30,6 +30,7 @@ test("omits field and does not warn if resolver not defined when returnPartialDa
       variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
       returnPartialData: true,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1 } },
@@ -81,6 +82,7 @@ test("omits client fields without cached values when running forced resolvers wi
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
       returnPartialData: true,
       onlyRunForcedResolvers: true,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     // Note: name is omitted because we are only running forced resolvers and

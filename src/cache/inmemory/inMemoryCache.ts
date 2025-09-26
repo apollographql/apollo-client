@@ -530,6 +530,10 @@ export class InMemoryCache extends ApolloCache {
     return this.config.fragments?.lookup(fragmentName) || null;
   }
 
+  public resolvesClientField(typename: string, fieldName: string): boolean {
+    return !!this.policies.getReadFunction(typename, fieldName);
+  }
+
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach((c) => this.maybeBroadcastWatch(c, options));

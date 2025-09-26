@@ -331,6 +331,7 @@ export class QueryManager {
           optimisticResponse: isOptimistic ? optimisticResponse : void 0,
         },
         variables,
+        fetchPolicy,
         {},
         false
       )
@@ -748,7 +749,7 @@ export class QueryManager {
   ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
-      fetchPolicy,
+      fetchPolicy = "cache-first",
       errorPolicy = "none",
       context = {},
       extensions = {},
@@ -785,6 +786,7 @@ export class QueryManager {
           query,
           context,
           variables,
+          fetchPolicy,
           extensions
         );
 
@@ -864,7 +866,8 @@ export class QueryManager {
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: DefaultContext | undefined,
-    variables?: OperationVariables,
+    variables: OperationVariables,
+    fetchPolicy: WatchQueryFetchPolicy,
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
@@ -994,6 +997,7 @@ export class QueryManager {
               remoteResult: result as FormattedExecutionResult<TData>,
               context,
               variables,
+              fetchPolicy,
             })
           );
         })
@@ -1041,7 +1045,8 @@ export class QueryManager {
     return this.getObservableFromLink<TData>(
       linkDocument,
       options.context,
-      options.variables
+      options.variables,
+      options.fetchPolicy
     ).observable.pipe(
       map((incoming) => {
         // Use linkDocument rather than queryInfo.document so the
@@ -1602,6 +1607,7 @@ export class QueryManager {
             variables,
             onlyRunForcedResolvers: true,
             returnPartialData: true,
+            fetchPolicy,
           }).then(
             (resolved): QueryNotification.FromCache<TData> => ({
               kind: "N",

@@ -26,6 +26,7 @@ test("throws when given a subscription with no client fields", async () => {
       context: {},
       variables: {},
       remoteResult: { data: { field: 1 } },
+      fetchPolicy: "cache-first",
     })
   ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
@@ -64,6 +65,7 @@ test("adds @client fields with subscription results", async () => {
       context: {},
       variables: {},
       remoteResult: { data: { field: 1 } },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { field: 1, count: 1 },
@@ -76,6 +78,7 @@ test("adds @client fields with subscription results", async () => {
       context: {},
       variables: {},
       remoteResult: { data: { field: 2 } },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { field: 2, count: 2 },

@@ -712,14 +712,13 @@ export class LocalState<
         // Warn when a resolver is not defined.
       : (
         () => {
-          const { cache } = client;
           const fieldFromCache = getCacheResultAtPath(diff, path);
 
           if (fieldFromCache !== undefined) {
             return fieldFromCache;
           }
 
-          if (cache.resolvesClientField?.(typename, fieldName)) {
+          if (client.cache.resolvesClientField?.(typename, fieldName)) {
             if (fetchPolicy === "no-cache") {
               invariant.warn(
                 "The '%s' field resolves the value from the cache, for example from a 'read' function, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",

@@ -1522,13 +1522,13 @@ test.each(["cache-first", "network-only"] as const)(
   "sets existing value of `@client` field to undefined when read function is present",
   async (fetchPolicy) => {
     const query = gql`
-    query GetUser {
-      user {
-        firstName @client
-        lastName
+      query GetUser {
+        user {
+          firstName @client
+          lastName
+        }
       }
-    }
-  `;
+    `;
 
     const read = jest.fn((value = "Fallback") => value);
     const client = new ApolloClient({

@@ -79,8 +79,9 @@ export class GraphQLWsLink extends ApolloLink {
     operation: ApolloLink.Operation
   ): Observable<ApolloLink.Result> {
     return new Observable((observer) => {
+      const { operationType, ...request } = operation;
       return this.client.subscribe<ApolloLink.Result>(
-        { ...operation, query: print(operation.query) },
+        { ...request, query: print(operation.query) },
         {
           next: observer.next.bind(observer),
           complete: observer.complete.bind(observer),

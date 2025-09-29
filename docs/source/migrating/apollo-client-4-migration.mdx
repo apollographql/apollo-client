@@ -1567,6 +1567,17 @@ new ApolloClient({ // [!code ++]
 });
 ```
 
+### Removal of `<TSerialized>` generic argument
+
+The `TSerialized` generic argument has been removed from the `ApolloCache` abstract class. Most users set this type to `any` which provided little benefit for type safety. APIs that previously relied on `TSerialized` are now set to `unknown`.
+
+To migrate, remove the `TSerialized` generic argument when referencing `ApolloCache`.
+
+```ts
+const cache: ApolloCache<any> = ... // [!code --]
+const cache: ApolloCache = ... // [!code ++]
+```
+
 ## Apollo Link changes
 
 ### New class-based links

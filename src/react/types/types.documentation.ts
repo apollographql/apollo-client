@@ -451,8 +451,9 @@ export interface MutationOptionsDocumentation {
 
 export interface MutationResultDocumentation {
   /**
-   * The data returned from your mutation. Can be `undefined` if the `errorPolicy` is
-   * all`or`ignore`and the server returns a GraphQL response with`errors` but not`data` or a network error is returned.
+   * The data returned from your mutation. Can be `undefined` if the `errorPolicy`
+   * is `all` or `ignore` and the server returns a GraphQL response with `errors`
+   * but not `data` or a network error is returned.
    */
   data: unknown;
   /**

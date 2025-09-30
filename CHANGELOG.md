@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.7
+
+### Patch Changes
+
+- [#12950](https://github.com/apollographql/apollo-client/pull/12950) [`5b4f36a`](https://github.com/apollographql/apollo-client/commit/5b4f36a2b249d15e2e8165bd32d9b2fca7e70217) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't send `operationType` in the payload sent by `GraphQLWsLink`.
+
 ## 4.0.6
 
 ### Patch Changes

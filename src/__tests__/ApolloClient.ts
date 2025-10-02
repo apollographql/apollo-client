@@ -5,21 +5,28 @@ import {
   ApolloError,
   ApolloQueryResult,
   DefaultOptions,
+  NetworkStatus,
   ObservableQuery,
   QueryOptions,
   makeReference,
 } from "../core";
 import { Kind } from "graphql";
 
-import { DeepPartial, Observable } from "../utilities";
+import { DeepPartial, Observable, wrapPromiseWithState } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
+import {
+  mockDeferStream,
+  ObservableStream,
+  spyOnConsole,
+} from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../masking";
+import { waitFor } from "@testing-library/dom";
+import { wait } from "../testing";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2646,6 +2653,117 @@ describe("ApolloClient", () => {
           complete: true,
         });
       }
+    });
+  });
+
+  describe("query.firstChunk & waitForFragment", () => {
+    it("should resolve when the query's first chunk is available", async () => {
+      const defer = mockDeferStream();
+      const client = new ApolloClient({
+        link: defer.httpLink,
+        cache: new InMemoryCache(),
+      });
+
+      const HelloFragment: TypedDocumentNode<{
+        world: { id: string; name: string };
+      }> = gql`
+        fragment HelloFragment on Hello {
+          world {
+            id
+            name
+          }
+        }
+      `;
+
+      const query: TypedDocumentNode<{
+        hello: { id: string; world?: { id: string; name: string } };
+      }> = gql`
+        query someData {
+          hello {
+            id
+            ...HelloFragment @defer
+            ... @defer {
+              somethingElse
+            }
+          }
+        }
+        ${HelloFragment}
+      `;
+
+      const queryPromise = client.query({
+        query,
+      });
+      const queryStatus = wrapPromiseWithState(queryPromise);
+
+      {
+        const details = wrapPromiseWithState(queryPromise.firstChunk);
+        await wait(10);
+        expect(details.status).toBe("pending");
+      }
+
+      defer.enqueueInitialChunk({
+        hasNext: true,
+        data: {
+          hello: {
+            __typename: "Hello",
+            id: "1",
+          },
+        },
+      });
+
+      const firstChunkResult = await queryPromise.firstChunk;
+
+      expect(firstChunkResult).toStrictEqual({
+        data: { hello: { __typename: "Hello", id: "1" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      } satisfies ApolloQueryResult<any>);
+
+      const fragmentPromise = client.waitForFragment({
+        fragment: HelloFragment,
+        from: firstChunkResult.data.hello,
+      });
+
+      {
+        const details = wrapPromiseWithState(fragmentPromise);
+        await wait(10);
+        expect(details.status).toBe("pending");
+      }
+
+      defer.enqueueSubsequentChunk({
+        hasNext: true,
+        incremental: [
+          {
+            path: ["hello"],
+            data: {
+              world: {
+                __typename: "World",
+                id: "100",
+                name: "Earth",
+              },
+            },
+          },
+        ],
+      });
+
+      await expect(fragmentPromise).resolves.toStrictEqual({
+        __typename: "Hello",
+        world: { __typename: "World", id: "100", name: "Earth" },
+      });
+
+      expect(queryStatus.status).toBe("pending");
+
+      defer.enqueueSubsequentChunk({
+        hasNext: false,
+        incremental: [
+          {
+            path: ["hello"],
+            data: { somethingElse: true },
+          },
+        ],
+      });
+
+      await expect(queryPromise).resolves.toBeTruthy();
     });
   });
 

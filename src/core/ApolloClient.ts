@@ -25,6 +25,7 @@ import type {
   InteropApolloQueryResult,
   InteropMutateResult,
   InteropSubscribeResult,
+  ApolloQueryResult,
 } from "./types.js";
 
 import type {
@@ -662,7 +663,9 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, T>
-  ): Promise<InteropApolloQueryResult<MaybeMasked<T>>> {
+  ): Promise<InteropApolloQueryResult<MaybeMasked<T>>> & {
+    firstChunk: Promise<ApolloQueryResult<MaybeMasked<T>>>;
+  } {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -789,6 +792,28 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
     return this.cache.watchFragment({
       ...options,
       [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
+    });
+  }
+
+  public waitForFragment<
+    TFragmentData = unknown,
+    TVariables = OperationVariables,
+  >(
+    options: WatchFragmentOptions<TFragmentData, TVariables>
+  ): Promise<TFragmentData> {
+    return new Promise<TFragmentData>((resolve, reject) => {
+      const observable = this.watchFragment(options);
+      let subscription = observable.subscribe({
+        next(result) {
+          if (result.complete) {
+            resolve(result.data);
+            subscription.unsubscribe();
+          }
+        },
+        error(err) {
+          reject(err);
+        },
+      });
     });
   }
 

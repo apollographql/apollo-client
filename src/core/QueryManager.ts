@@ -802,7 +802,9 @@ export class QueryManager<TStore> {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> & {
+    firstChunk: Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  } {
     invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +
@@ -826,20 +828,51 @@ export class QueryManager<TStore> {
 
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then(
-        (result) =>
-          result && {
-            ...result,
-            data: this.maskOperation({
-              document: query,
-              data: result.data,
-              fetchPolicy: options.fetchPolicy,
-              id: queryId,
-            }),
-          }
-      )
-      .finally(() => this.stopQuery(queryId));
+    const concast = this.fetchConcastWithInfo(this.getOrCreateQuery(queryId), {
+      ...options,
+      query,
+    }).concast as Concast<ApolloQueryResult<TData>>;
+    let resolve!: (
+        value: ApolloQueryResult<TData> | PromiseLike<ApolloQueryResult<TData>>
+      ) => void,
+      reject!: (reason?: any) => void;
+    const firstChunkPromise = new Promise<ApolloQueryResult<TData>>(
+      (res, rej) => {
+        resolve = res;
+        reject = rej;
+      }
+    );
+
+    concast.addObserver({
+      next(value) {
+        if (!value.loading) resolve(value);
+      },
+      error(errorValue) {
+        reject(errorValue);
+      },
+      complete() {
+        reject(
+          new Error("The query never received a result before finishing.")
+        );
+      },
+    });
+    return Object.assign(
+      (concast.promise as Promise<ApolloQueryResult<TData>>)
+        .then(
+          (result) =>
+            result && {
+              ...result,
+              data: this.maskOperation({
+                document: query,
+                data: result.data,
+                fetchPolicy: options.fetchPolicy,
+                id: queryId,
+              }),
+            }
+        )
+        .finally(() => this.stopQuery(queryId)),
+      { firstChunk: firstChunkPromise }
+    );
   }
 
   private queryIdCounter = 1;

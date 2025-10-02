@@ -22,8 +22,8 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
   }
   prepareRequest(request: ApolloLink.Request) {
     invariant(
-      !hasDirectives(["defer"], request.query),
-      "`@defer` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+      !hasDirectives(["defer", "stream"], request.query),
+      "`@defer` and `@stream` are not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
     );
 
     return request;

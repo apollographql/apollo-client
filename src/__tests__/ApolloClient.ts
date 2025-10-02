@@ -25,7 +25,6 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../masking";
-import { waitFor } from "@testing-library/dom";
 import { wait } from "../testing";
 
 describe("ApolloClient", () => {

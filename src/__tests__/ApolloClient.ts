@@ -3052,7 +3052,7 @@ describe("ApolloClient", () => {
 
     await expect(() => client.query({ query })).rejects.toThrow(
       new InvariantError(
-        "`@defer` and `@stream` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+        "`@defer` and `@stream` are not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
       )
     );
   });
@@ -3073,7 +3073,7 @@ describe("ApolloClient", () => {
 
     await expect(() => client.query({ query })).rejects.toThrow(
       new InvariantError(
-        "`@defer` and `@stream` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+        "`@defer` and `@stream` are not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
       )
     );
   });

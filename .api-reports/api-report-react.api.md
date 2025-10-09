@@ -639,7 +639,9 @@ export namespace useMutation {
     }
     ]) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
-    export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = Options<TData, TVariables, TCache>;
+    export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = Options<TData, TVariables, TCache> & {
+        context?: DefaultContext | ((prevContext: DefaultContext | undefined) => DefaultContext);
+    };
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache, TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>> {
         awaitRefetchQueries?: boolean;

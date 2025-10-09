@@ -1447,7 +1447,7 @@ async function onUserInteraction() {
 
 #### Changes to promise resolution from the `execute` function
 
-The promise returned from the `execute` function is now consistently resolved or rejected depending on the configured `errorPolicy`. Errors returned while using an `errorPolicy` of `none` always rejects the promise, regardless of the error type. Errors returned while using an `errorPolicy` of `all` always resolves the promise and sets the `error` property on the result, regardless of the error type. Errors returned while using an `errorPolicy` of `ignore` discards them and resolves the promise, regardless of the error type.
+The promise returned from the `execute` function is now consistently resolved or rejected depending on the configured `errorPolicy`. With an `errorPolicy` of `none`, the promise always rejects on error. With an `errorPolicy` of `all`, the promise always resolves and sets the `error` property on the result. With an `errorPolicy` of `ignore`, the promise always resolves and discards any errors.
 
 Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of the configured error policy. This change unified the error behavior across error types to ensure errors are handled consistently.
 

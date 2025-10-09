@@ -354,3 +354,81 @@ test("does not merge returned context from context callback with hook", async ()
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+test("provides full context returned from callback to update function", async () => {
+  const mutation = gql`
+    mutation {
+      echo {
+        context
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: echoContextLink,
+    cache: new InMemoryCache(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const update = jest.fn();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { context: { foo: true }, update }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      called: false,
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await execute({ context: (ctx) => ({ ...ctx, bar: true }) });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      called: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        echo: { context: { foo: true, bar: true } },
+      },
+      error: undefined,
+      loading: false,
+      called: true,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+
+  expect(update).toHaveBeenCalledTimes(1);
+  expect(update).toHaveBeenCalledWith(
+    client.cache,
+    {
+      data: {
+        echo: { context: { foo: true, bar: true } },
+      },
+    },
+    { context: { foo: true, bar: true }, variables: {} }
+  );
+});

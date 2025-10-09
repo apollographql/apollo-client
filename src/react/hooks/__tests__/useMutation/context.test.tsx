@@ -17,6 +17,70 @@ const echoContextLink = new ApolloLink((operation) => {
   }).pipe(delay(20));
 });
 
+test("context is provided from hook", async () => {
+  const mutation = gql`
+    mutation {
+      echo {
+        context
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: echoContextLink,
+    cache: new InMemoryCache(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { context: { foo: true } }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      called: false,
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await execute();
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      called: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { echo: { context: { foo: true } } },
+      error: undefined,
+      loading: false,
+      called: true,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("context provided to execute function overrides hook context", async () => {
   const mutation = gql`
     mutation {

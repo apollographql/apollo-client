@@ -28,13 +28,7 @@ test("allows context as callback called with context from hook", async () => {
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
-    () =>
-      useMutation(mutation, {
-        variables: { message: "Hello, world" },
-        context: {
-          foo: true,
-        },
-      }),
+    () => useMutation(mutation, { context: { foo: true } }),
     {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>

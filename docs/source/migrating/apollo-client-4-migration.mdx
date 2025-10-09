@@ -1445,6 +1445,58 @@ async function onUserInteraction() {
 
 </Tip>
 
+#### Changes to promise resolution from the `execute` function
+
+The promise returned from the `execute` function is now consistently resolved or rejected depending on the configured `errorPolicy`. Errors returned while using an `errorPolicy` of `none` always rejects the promise, regardless of the error type. Errors returned while using an `errorPolicy` of `all` always resolves the promise and sets the `error` property on the result, regardless of the error type. Errors returned while using an `errorPolicy` of `ignore` discards them and resolves the promise, regardless of the error type.
+
+Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of the configured error policy. This change unified the error behavior across error types to ensure errors are handled consistently.
+
+To migrate code that uses an `errorPolicy` of `none`, wrap the call to `execute` in a `try`/`catch` block and use `CombinedGraphQLErrors.is(error)` to test if the error was the result of GraphQL errors.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "none",
+});
+
+async function onUserInteraction() {
+  const { data, error } = await execute({ variables });// [!code --:4]
+  if (error.graphQLErrors) {
+    // handle GraphQL errors
+  }
+
+  try {// [!code ++:6]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      // handle GraphQL errors
+    }
+  }
+}
+```
+
+To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements since all errors types are returned in the resolved promise.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "all",
+});
+
+async function onUserInteraction() {
+  try {// [!code --:7]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (error.graphQLErrors) {
+      // handle GraphQL errors
+    }
+  }
+
+  const { data, error } = await execute({ variables });// [!code ++:4]
+  if (CombinedGraphQLErrors.is(error)) {
+    // handle GraphQL errors
+  }
+}
+```
+
 ### Changes to `useMutation`
 
 `useMutation` has been modified to work with our [philosophy](#a-note-about-hook-usage) that React hooks should be used to synchronize hook state with your component.

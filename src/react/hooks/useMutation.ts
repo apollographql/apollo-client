@@ -282,6 +282,10 @@ export function useMutation<
       const { options, mutation } = ref.current;
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
+      const context =
+        typeof executeOptions.context === "function" ?
+          executeOptions.context(options?.context)
+        : executeOptions.context;
 
       if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
@@ -296,7 +300,10 @@ export function useMutation<
       }
 
       const mutationId = ++ref.current.mutationId;
-      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
+      const clientOptions = mergeOptions(baseOptions, {
+        ...executeOptions,
+        context,
+      } as any);
 
       return preventUnhandledRejection(
         client

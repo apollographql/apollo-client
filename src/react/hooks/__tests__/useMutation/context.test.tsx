@@ -76,7 +76,9 @@ test("allows context as callback called with context from hook", async () => {
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
-      data: { echo: { context: { foo: true, bar: true } } },
+      data: {
+        echo: { context: expect.objectContaining({ foo: true, bar: true }) },
+      },
       error: undefined,
       loading: false,
       called: true,

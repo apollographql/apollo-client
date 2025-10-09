@@ -156,6 +156,31 @@ When using TypeScript, you might see an error related to a missing variable when
 
 </Note>
 
+<MinVersion version="4.1">
+
+##### Merging `context` from the hook and `mutate` function
+
+</MinVersion>
+
+Due to option precedence, `context` provided to the `mutate` function overrides `context` provided to the `useMutation` hook. In some cases, you might want to merge the `context` value provided to the hook with a value available at the time you execute the `mutate` function.
+
+You accomplish this by using a callback function for the `context` option provided to the `mutate` function. The callback function is called with the `context` value provided to the hook, allowing you to merge them together.
+
+```ts
+addTodo({
+  context: (hookContext) => ({
+    ...hookContext,
+    myCustomValue: true,
+  }),
+});
+```
+
+<Note>
+
+Your callback function is not required to merge the context values together. The `context` value sent to the link chain is the value returned from the function which makes it possible to change the `context` value in any way you wish, such as omitting a property from the hook context.
+
+</Note>
+
 ### Tracking mutation status
 
 In addition to a mutate function, the `useMutation` hook returns an object that represents the current state of the mutation's execution. The fields of this object include booleans that indicate whether the mutate function has been `called` and whether the mutation's result is currently `loading`.

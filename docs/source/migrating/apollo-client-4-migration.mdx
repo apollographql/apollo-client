@@ -1474,7 +1474,7 @@ async function onUserInteraction() {
 }
 ```
 
-To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements since all errors types are returned in the resolved promise.
+To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements since the promise resolves for all error types.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY, {

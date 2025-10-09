@@ -170,7 +170,7 @@ export declare namespace useMutation {
      */
     context?:
       | DefaultContext
-      | ((prevContext: DefaultContext | undefined) => DefaultContext);
+      | ((hookContext: DefaultContext | undefined) => DefaultContext);
   };
 
   export namespace DocumentationTypes {

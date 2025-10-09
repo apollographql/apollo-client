@@ -160,7 +160,18 @@ export declare namespace useMutation {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
-  > = Options<TData, TVariables, TCache>;
+  > = Options<TData, TVariables, TCache> & {
+    /**
+     * {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member}
+     *
+     * @remarks
+     * When provided as a callback function, the function is called with the
+     * value of `context` provided to the `useMutation` hook.
+     */
+    context?:
+      | DefaultContext
+      | ((prevContext: DefaultContext | undefined) => DefaultContext);
+  };
 
   export namespace DocumentationTypes {
     /** {@inheritDoc @apollo/client/react!useMutation:function(1)} */

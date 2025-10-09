@@ -71,7 +71,14 @@ test("allows context as callback called with context from hook", async () => {
 
     expect(result).toStrictEqualTyped({
       data: {
-        echo: { context: expect.objectContaining({ foo: true, bar: true }) },
+        echo: {
+          context: {
+            foo: true,
+            bar: true,
+            queryDeduplication: false,
+            optimisticResponse: undefined,
+          },
+        },
       },
       error: undefined,
       loading: false,

@@ -284,3 +284,73 @@ test("provides undefined to context callback if context is not provided to hook"
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+test("does not merge returned context from context callback with hook", async () => {
+  const mutation = gql`
+    mutation {
+      echo {
+        context
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: echoContextLink,
+    cache: new InMemoryCache(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { context: { foo: true } }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      called: false,
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  const contextFn = jest.fn(() => ({ baz: true }));
+  await execute({ context: contextFn });
+
+  expect(contextFn).toHaveBeenCalledTimes(1);
+  expect(contextFn).toHaveBeenCalledWith({ foo: true });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      called: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        echo: { context: { baz: true } },
+      },
+      error: undefined,
+      loading: false,
+      called: true,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});

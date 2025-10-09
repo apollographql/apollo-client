@@ -2,6 +2,16 @@
 title: Server-side rendering
 ---
 
+<Note>
+This page describes manual server side rendering setups with React. If you are using a modern SSR-focused framework like [Next.js](https://nextjs.org/), [React Router Framework mode](https://reactrouter.com/en/main/routers/framework), or [TanStack Start](https://start.tanstack.com/), you need to use one of our Apollo Client Framework integrations instead.
+You can find these integrations [on GitHub](https://github.com/apollographql/apollo-client-integrations):
+
+- [@apollo/client-integration-nextjs](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/nextjs)
+- [@apollo/client-integration-react-router](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/react-router)
+- [@apollo/client-integration-tanstack-start](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/tanstack-start)
+
+</Note>
+
 **Server-side rendering** (**SSR**) is a performance optimization for modern web apps. It enables you to render your app's initial state to raw HTML and CSS on the server _before_ serving it to a browser. This means users don't have to wait for their browser to download and initialize React (or Angular, Vue, etc.) before content is available:
 
 ```mermaid
@@ -34,12 +44,12 @@ When you render your React app on the server side, _most_ of the code is identic
 
 Here's an example _server-side_ initialization of Apollo Client:
 
-```js {7-17}
-import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+```js
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
 const client = new ApolloClient({
   ssrMode: true,
-  link: createHttpLink({
+  link: new HttpLink({
     uri: "http://localhost:3010",
     credentials: "same-origin",
     headers: {
@@ -50,13 +60,9 @@ const client = new ApolloClient({
 });
 ```
 
-You'll notice a couple differences from a typical client-side initialization:
+You'll notice that here you provide `ssrMode: true`. This prevents Apollo Client from accidentally polling on the server and tells it to prioritize cache values over network requests when possible.
 
-- You provide `ssrMode: true`. This prevents Apollo Client from refetching queries unnecessarily, and it also enables you to use the `getDataFromTree` function (covered below).
-
-- Instead of providing a `uri` option, you provide an `HttpLink` instance to the `link` option. This enables you to specify any required authentication details when sending requests to your GraphQL endpoint from the server side.
-
-  Note that you also might need to make sure your GraphQL endpoint is configured to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP).
+Note that you also might need to make sure your GraphQL endpoint is configured to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP). Also keep in mind that on the server, you always have to use absolute URLs for your GraphQL endpoint, as relative network requests can only be made in a browser.
 
 > It's possible and valid for your GraphQL endpoint to be hosted by the _same server_ that's performing SSR. In this case, Apollo Client doesn't need to make network requests to execute queries. For details, see [Avoiding the network for local queries](#avoiding-the-network-for-local-queries).
 
@@ -69,7 +75,7 @@ First, here's an example `app.js` file, _without_ the code for rendering React t
 <ExpansionPanel title="Click to expand">
 
 ```jsx title="app.js"
-import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import Express from "express";
 import React from "react";
@@ -82,7 +88,7 @@ const app = new Express();
 app.use((req, res) => {
   const client = new ApolloClient({
     ssrMode: true,
-    link: createHttpLink({
+    link: new HttpLink({
       uri: "http://localhost:3010",
       credentials: "same-origin",
       headers: {
@@ -121,62 +127,209 @@ It's important to create an _entirely new instance_ of Apollo Client for each re
 
 </Caution>
 
-### Executing queries with `getDataFromTree`
+### Executing queries with `prerenderStatic`
 
-Because our app uses Apollo Client, some of the components in the React tree probably execute a GraphQL query with the `useQuery` hook. We can instruct Apollo Client to execute _all_ of the queries required by the tree's components with the `getDataFromTree` function.
+Because your app uses Apollo Client, some of the components in the React tree probably execute a GraphQL query with the `useQuery` or `useSuspenseQuery` hook. You can instruct Apollo Client to execute _all_ of the queries required by the tree's components with the `prerenderStatic` function.
 
-This function walks down the entire tree and executes every required query it encounters (including nested queries). It returns a `Promise` that resolves when all result data is ready in the Apollo Client cache.
+This function rerenders your React tree until no more network requests need to be made. When you use suspenseful hooks (like `useSuspenseQuery`) with a suspense-ready rendering function, this means the tree is rendered once and suspends while network requests happen. When you use non-suspenseful hooks (like `useQuery`), this function renders all components, waits for all requests started by your rendered hooks to finish, and then renders the tree again, until no more requests are made.
 
-When the `Promise` resolves, you're ready to render your React tree and return it, along with the current state of the Apollo Client cache.
+The function returns a `Promise` that resolves when all result data is ready in the Apollo Client cache and the final render is complete.
 
-> Note that if you are rendering your React tree directly to a string (instead of the component-based example below), you will need to use [`renderToStringWithData`](../api/react/ssr/#rendertostringwithdata) instead of `getDataFromTree`. This will ensure the client-side React hydration works correctly by using [`ReactDOMServer.renderToString`](https://react.dev/reference/react-dom/server/renderToString) to generate the string.
+#### Choosing a rendering function
+
+`prerenderStatic` supports multiple React rendering functions:
+
+- **`prerender`** from `react-dom/static` - Recommended for Deno or modern edge runtimes with Web Streams. Supports React Suspense.
+- **`prerenderToNodeStream`** from `react-dom/static` - Recommended for Node.js. Supports React Suspense.
+- **`renderToString`** from `react-dom/server` - Legacy API without Suspense support. Won't work with `useSuspenseQuery`.
+- **`renderToStaticMarkup`** from `react-dom/server` - Legacy API without Suspense support. Slightly faster than `renderToString`, but the result cannot be hydrated.
 
 The following code replaces the `TODO` comment within the `app.use` call in the example above:
 
 ```js title="app.js"
-// Add this import to the top of the file
-import { getDataFromTree } from "@apollo/client/react/ssr";
+// Add these imports to the top of the file
+import { prerenderStatic } from "@apollo/client/react/ssr";
+import { prerenderToNodeStream } from "react-dom/static.node";
 
 // Replace the TODO with this
-getDataFromTree(App).then((content) => {
+prerenderStatic({
+  tree: App,
+  // this is optional if your `App` component contains an <ApolloProvider>
+  context: { client },
+  renderFunction: prerenderToNodeStream,
+}).then(async ({ result }) => {
   // Extract the entirety of the Apollo Client cache's current state
   const initialState = client.extract();
 
-  // Add both the page content and the cache state to a top-level component
-  const html = <Html content={content} state={initialState} />;
+  // TODO: Send the response to the client (see below for examples)
+});
+```
 
-  // Render the component to static markup and return it
+#### Sending the response
+
+After `prerenderStatic` completes, you need to send the HTML response to the client. The approach depends on the rendering function you chose.
+
+##### Using streaming with `renderToPipeableStream`
+
+For Node.js environments, you can stream the response to the client using `renderToPipeableStream`. This allows the browser to start displaying content before the entire page is rendered:
+
+```js title="app.js"
+import { renderToPipeableStream } from "react-dom/server";
+
+// After prerenderStatic completes
+prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: prerenderToNodeStream,
+}).then(async ({ result }) => {
+  const initialState = client.extract();
+
+  // Render the app again with streaming, injecting the Apollo state
+  const { pipe } = renderToPipeableStream(
+    <html>
+      <head>
+        <title>My App</title>
+      </head>
+      <body>
+        <div id="root">
+          <App />
+        </div>
+      </body>
+    </html>,
+    {
+      bootstrapScriptContent: `window.__APOLLO_STATE__=${JSON.stringify(
+        initialState
+      ).replace(/</g, "\\u003c")}`,
+      bootstrapScripts: ["/client.js"],
+      onShellReady() {
+        // Start streaming the reponse to the browser
+        res.setHeader("Content-Type", "text/html");
+        res.statusCode = 200;
+        pipe(res);
+      },
+      onError(error) {
+        console.error("Rendering error:", error);
+      },
+    }
+  );
+});
+```
+
+<Note>
+Instead of rendering `<div id="root"><App /></div>`, you can also render `<div id="root" dangerouslySetInnerHTML={{ __html: result }} />` to avoid rendering the entire tree twice.
+However, if you go this approach, React cannot decide on the order in which components are streamed to the browser, which might be suboptimal.
+In the end, it's a tradeoff between more work on the server and a potential delay in displaying content in the browser that you need to make based on your individual requirements.
+</Note>
+
+<Tip>
+If you are only using suspenseful hooks like `useSuspenseQuery` and no `useQuery` hooks, is also possible to use the [@apollo/client-react-streaming](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/client-react-streaming) package to stream data dynamically while it is fetching, without requiring a first render pass with `prerenderStatic`.
+You can find an example application that uses this approach in the [integration tests for that package](https://github.com/apollographql/apollo-client-integrations/tree/main/integration-test/vite-streaming).
+</Tip>
+
+<Note>
+The `replace` call in these examples escapes the `<` character to prevent cross-site scripting attacks that are possible via the presence of `</script>` in a string literal.
+</Note>
+
+##### Using `renderToString` for synchronous rendering
+
+For simpler use cases or environments without stream support, you can use `renderToString` to render the entire page synchronously:
+
+```js title="app.js"
+import { renderToString } from "react-dom/server";
+
+// After prerenderStatic completes
+prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: renderToString,
+}).then(async ({ result }) => {
+  const initialState = client.extract();
+
+  // Create a complete HTML document with the cache state
+  const Html = () => (
+    <html>
+      <head>
+        <title>My App</title>
+      </head>
+      <body>
+        <div id="root" dangerouslySetInnerHTML={{ __html: result }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__APOLLO_STATE__=${JSON.stringify(
+              initialState
+            ).replace(/</g, "\\u003c")};`,
+          }}
+        />
+        <script src="/client.js" />
+      </body>
+    </html>
+  );
+
+  // Render to string and send
+  const html = renderToString(<Html />);
+
+  res.setHeader("Content-Type", "text/html");
   res.status(200);
-  res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
+  res.send(`<!DOCTYPE html>${html}`);
   res.end();
 });
 ```
 
-The definition of the top-level `Html` component that's rendered to static markup might look like this:
+<Note>
+The `replace` call in these examples escapes the `<` character to prevent cross-site scripting attacks that are possible via the presence of `</script>` in a string literal.
+</Note>
 
-```jsx title="components/html.js"
-export function Html({ content, state }) {
-  return (
-    <html>
-      <body>
-        <div id="root" dangerouslySetInnerHTML={{ __html: content }} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.__APOLLO_STATE__=${JSON.stringify(state).replace(
-              /</g,
-              "\\u003c"
-            )};`,
-          }}
-        />
-      </body>
-    </html>
-  );
+#### Advanced options
+
+`prerenderStatic` provides several options to customize the rendering process:
+
+**Diagnostics**
+
+You can enable diagnostics to detect inefficient rendering structures (like `useQuery` waterfalls) in your app:
+
+```js
+const { diagnostics } = await prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: prerenderToNodeStream,
+  diagnostics: true,
+});
+
+console.log(`Rendered ${diagnostics.renderCount} times`);
+// If renderCount is high, consider using fragment colocation or useSuspenseQuery
+```
+
+**Timeout support**
+
+You can use an `AbortSignal` to stop the render loop early:
+
+```js
+const signal = AbortSignal.timeout(2000); // 2 second timeout
+
+const { result, aborted } = await prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: (tree) => prerenderToNodeStream(tree, { signal }),
+  signal,
+});
+
+if (aborted) {
+  console.log("Render timed out, returning partial result");
 }
 ```
 
-This results in the rendered React tree being added as a child of the `root` `div`, and the initial cache state is assigned to the `__APOLLO_STATE__` global object.
+**Maximum rerenders**
 
-> The `replace` call in this example escapes the `<` character to prevent cross-site scripting attacks that are possible via the presence of `</script>` in a string literal.
+If you have deep `useQuery` waterfalls, you can increase the `maxRerenders` option (default: 50):
+
+```js
+await prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: prerenderToNodeStream,
+  maxRerenders: 100,
+});
+```
 
 ### Rehydrating the client-side cache
 
@@ -209,7 +362,7 @@ const client = new ApolloClient({
 
 If your GraphQL endpoint is hosted by the same server that you're rendering from, you can optionally avoid using the network when executing your SSR queries. This is particularly helpful if `localhost` is firewalled in the server's environment (e.g., on Heroku).
 
-One option is to use Apollo Link to fetch data using a local GraphQL schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use a [SchemaLink](../api/link/apollo-link-schema/) instead of using `createHttpLink`. `SchemaLink` uses your schema and context to run the query immediately, without any additional network requests:
+One option is to use Apollo Link to fetch data using a local GraphQL schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use a [SchemaLink](../api/link/apollo-link-schema/) instead of using `HttpLink`. `SchemaLink` uses your schema and context to run the query immediately, without any additional network requests:
 
 ```js
 import { ApolloClient, InMemoryCache } from "@apollo/client";
@@ -218,20 +371,33 @@ import { SchemaLink } from "@apollo/client/link/schema";
 // ...
 
 const client = new ApolloClient({
-  ssrMode: true,
-  // Instead of "createHttpLink" use SchemaLink here
+  // Instead of HttpLink use SchemaLink here
   link: new SchemaLink({ schema }),
   cache: new InMemoryCache(),
 });
 ```
 
-## Skipping a query
+## Selectively disabling query execution during SSR
 
-If you want to intentionally skip a particular query during SSR, you can include `ssr: false` in that query's options. Typically, this means the component is rendered in its "loading" state on the server. For example:
+If you want to prevent a particular query from executing during SSR, you can include `ssr: false` in that query's options. This is useful for queries that should only run on the client side, such as user-specific data that isn't available during SSR.
+
+When `ssr: false` is set, the component receives a result with `loading: true`, `dataState: "empty"`, and no data during server-side rendering. The query will execute normally once the component hydrates on the client side.
 
 ```jsx
-function withClientOnlyUser() {
-  useQuery(GET_USER_WITH_ID, { ssr: false });
-  return <span>My query won't be run on the server</span>;
+function ClientOnlyUser() {
+  const { loading, data } = useQuery(GET_USER_WITH_ID, { ssr: false });
+  if (loading) return <span>Loading...</span>;
+  return <span>User: {data?.user?.name || "Not loaded"}</span>;
 }
 ```
+
+Note that this is different from using `skip: true`, which prevents the query from executing on both the server and client until `skip` is set to `false`. During SSR, `skip: true` results in `loading: false` and `networkStatus: NetworkStatus.ready`.
+
+## Legacy APIs
+
+Apollo Client provides two legacy SSR functions that are both replaced by `prerenderStatic`:
+
+- **`getDataFromTree`** - Executes all queries in a component tree and returns when data is ready. Uses `renderToStaticMarkup` by default.
+- **`renderToStringWithData`** - Similar to `getDataFromTree`, but returns the rendered string using `renderToString`.
+
+These functions are deprecated. Use `prerenderStatic` instead, which offers better flexibility and performance with modern React rendering APIs.

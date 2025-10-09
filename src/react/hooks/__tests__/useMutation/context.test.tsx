@@ -91,11 +91,7 @@ test("allows context as callback called with context from hook", async () => {
   `;
 
   const client = new ApolloClient({
-    link: new ApolloLink((operation) => {
-      return of({
-        data: { echo: { context: operation.getContext() } },
-      }).pipe(delay(20));
-    }),
+    link: echoContextLink,
     cache: new InMemoryCache(),
   });
 
@@ -144,14 +140,7 @@ test("allows context as callback called with context from hook", async () => {
 
     expect(result).toStrictEqualTyped({
       data: {
-        echo: {
-          context: {
-            foo: true,
-            bar: true,
-            queryDeduplication: false,
-            optimisticResponse: undefined,
-          },
-        },
+        echo: { context: { foo: true, bar: true } },
       },
       error: undefined,
       loading: false,

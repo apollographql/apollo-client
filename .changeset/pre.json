@@ -7,6 +7,7 @@
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
   "changesets": [
+    "big-flowers-move",
     "cold-kiwis-give",
     "flat-worms-notice",
     "funny-bats-hammer",
@@ -14,6 +15,7 @@
     "neat-lemons-shave",
     "olive-queens-fold",
     "perfect-crabs-smile",
+    "popular-files-glow",
     "shaggy-islands-yell",
     "six-islands-drum",
     "unlucky-cooks-rhyme"

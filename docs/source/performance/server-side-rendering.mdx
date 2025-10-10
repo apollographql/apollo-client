@@ -60,9 +60,9 @@ const client = new ApolloClient({
 });
 ```
 
-You'll notice that here you provide `ssrMode: true`. This prevents Apollo Client from accidentally polling on the server and tells it to prioritize cache values over network requests when possible.
+Provide `ssrMode: true` to prevent Apollo Client from polling on the server. This setting also tells the client to prioritize cache values over network requests when possible.
 
-Note that you also might need to make sure your GraphQL endpoint is configured to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP). Also keep in mind that on the server, you always have to use absolute URLs for your GraphQL endpoint, as relative network requests can only be made in a browser.
+You also might need to configure your GraphQL endpoint to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP). Use absolute URLs for your GraphQL endpoint on the server, because relative network requests can only be made in a browser.
 
 > It's possible and valid for your GraphQL endpoint to be hosted by the _same server_ that's performing SSR. In this case, Apollo Client doesn't need to make network requests to execute queries. For details, see [Avoiding the network for local queries](#avoiding-the-network-for-local-queries).
 
@@ -129,9 +129,9 @@ It's important to create an _entirely new instance_ of Apollo Client for each re
 
 ### Executing queries with `prerenderStatic`
 
-Because your app uses Apollo Client, some of the components in the React tree probably execute a GraphQL query with the `useQuery` or `useSuspenseQuery` hook. You can instruct Apollo Client to execute _all_ of the queries required by the tree's components with the `prerenderStatic` function.
+You can instruct Apollo Client to execute all of the queries executed by the `useQuery` or `useSuspenseQuery` hooks in the React tree's components with the `prerenderStatic` function.
 
-This function rerenders your React tree until no more network requests need to be made. When you use suspenseful hooks (like `useSuspenseQuery`) with a suspense-ready rendering function, this means the tree is rendered once and suspends while network requests happen. When you use non-suspenseful hooks (like `useQuery`), this function renders all components, waits for all requests started by your rendered hooks to finish, and then renders the tree again, until no more requests are made.
+This function rerenders your React tree until no more network requests are made. When you use suspenseful hooks (like `useSuspenseQuery`) with a suspense-ready rendering function, the tree is rendered once and suspends while network requests are executed. When you use non-suspenseful hooks (like `useQuery`), this function renders all components, waits for all requests to finish, and then re-renders the tree until no more requests are made.
 
 The function returns a `Promise` that resolves when all result data is ready in the Apollo Client cache and the final render is complete.
 
@@ -362,7 +362,7 @@ const client = new ApolloClient({
 
 If your GraphQL endpoint is hosted by the same server that you're rendering from, you can optionally avoid using the network when executing your SSR queries. This is particularly helpful if `localhost` is firewalled in the server's environment (e.g., on Heroku).
 
-One option is to use Apollo Link to fetch data using a local GraphQL schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use a [SchemaLink](../api/link/apollo-link-schema/) instead of using `HttpLink`. `SchemaLink` uses your schema and context to run the query immediately, without any additional network requests:
+When creating an Apollo Client on the server, use a [SchemaLink](../api/link/apollo-link-schema/) instead of an `HttpLink`. `SchemaLink` uses your schema and context to run the query immediately, without the need for a network request:
 
 ```js
 import { ApolloClient, InMemoryCache } from "@apollo/client";
@@ -379,19 +379,27 @@ const client = new ApolloClient({
 
 ## Selectively disabling query execution during SSR
 
-If you want to prevent a particular query from executing during SSR, you can include `ssr: false` in that query's options. This is useful for queries that should only run on the client side, such as user-specific data that isn't available during SSR.
+If you want to prevent a particular query from executing during SSR, use `ssr: false` in that query's options. This is useful for queries that should only run on the client side, such as user-specific data that isn't available during SSR.
 
-When `ssr: false` is set, the component receives a result with `loading: true`, `dataState: "empty"`, and no data during server-side rendering. The query will execute normally once the component hydrates on the client side.
+When `ssr: false` is set, the component receives a result with `loading: true`, `dataState: "empty"`, and `data: undefined` during server-side rendering. The query will execute normally once the component hydrates on the client.
 
 ```jsx
 function ClientOnlyUser() {
   const { loading, data } = useQuery(GET_USER_WITH_ID, { ssr: false });
-  if (loading) return <span>Loading...</span>;
+  
+  if (loading) {
+    return <span>Loading...</span>;
+  }
+  
   return <span>User: {data?.user?.name || "Not loaded"}</span>;
 }
 ```
 
-Note that this is different from using `skip: true`, which prevents the query from executing on both the server and client until `skip` is set to `false`. During SSR, `skip: true` results in `loading: false` and `networkStatus: NetworkStatus.ready`.
+<Note>
+
+`ssr: false` behaves differently than `skip: true`, which prevents the query from executing on both the server and client until `skip` is set to `false`. During SSR, `skip: true` results in `loading: false` and `networkStatus: NetworkStatus.ready`.
+
+</Note>
 
 ## Legacy APIs
 

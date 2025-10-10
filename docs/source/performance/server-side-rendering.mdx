@@ -386,11 +386,11 @@ When `ssr: false` is set, the component receives a result with `loading: true`, 
 ```jsx
 function ClientOnlyUser() {
   const { loading, data } = useQuery(GET_USER_WITH_ID, { ssr: false });
-  
+
   if (loading) {
     return <span>Loading...</span>;
   }
-  
+
   return <span>User: {data?.user?.name || "Not loaded"}</span>;
 }
 ```

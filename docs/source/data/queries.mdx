@@ -502,7 +502,7 @@ The promise resolves with an object that includes the error and any partial data
 const handleClick = async () => {
   const { data, error } = await getDogs();
 
-  if (error && CombinedGraphQLErrors.is(error)) {
+  if (CombinedGraphQLErrors.is(error)) {
     // handle GraphQL errors returned by the query
   }
 };

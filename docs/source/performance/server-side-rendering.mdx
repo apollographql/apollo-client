@@ -129,9 +129,9 @@ It's important to create an _entirely new instance_ of Apollo Client for each re
 
 ### Executing queries with `prerenderStatic`
 
-You can instruct Apollo Client to execute all of the queries executed by the `useQuery` or `useSuspenseQuery` hooks in the React tree's components with the `prerenderStatic` function.
+You can instruct Apollo Client to execute all of the queries executed by the `useQuery` or the suspenseful query hooks (like `useSuspenseQuery` and `useBackgroundQuery`) in the React tree's components with the `prerenderStatic` function.
 
-This function rerenders your React tree until no more network requests are made. When you use suspenseful hooks (like `useSuspenseQuery`) with a suspense-ready rendering function, the tree is rendered once and suspends while network requests are executed. When you use non-suspenseful hooks (like `useQuery`), this function renders all components, waits for all requests to finish, and then re-renders the tree until no more requests are made.
+This function rerenders your React tree until no more network requests are made. When you use suspenseful hooks with a suspense-ready rendering function, the tree is rendered once and suspends while network requests are executed. When you use non-suspenseful hooks (like `useQuery`), this function renders all components, waits for all requests to finish, and then re-renders the tree until no more requests are made.
 
 The function returns a `Promise` that resolves when all result data is ready in the Apollo Client cache and the final render is complete.
 
@@ -141,7 +141,7 @@ The function returns a `Promise` that resolves when all result data is ready in 
 
 - **`prerender`** from `react-dom/static` - Recommended for Deno or modern edge runtimes with Web Streams. Supports React Suspense.
 - **`prerenderToNodeStream`** from `react-dom/static` - Recommended for Node.js. Supports React Suspense.
-- **`renderToString`** from `react-dom/server` - Legacy API without Suspense support. Won't work with `useSuspenseQuery`.
+- **`renderToString`** from `react-dom/server` - Legacy API without Suspense support. Won't work with suspenseful hooks.
 - **`renderToStaticMarkup`** from `react-dom/server` - Legacy API without Suspense support. Slightly faster than `renderToString`, but the result cannot be hydrated.
 
 The following code replaces the `TODO` comment within the `app.use` call in the example above:
@@ -222,7 +222,7 @@ In the end, it's a tradeoff between more work on the server and a potential dela
 </Note>
 
 <Tip>
-If you are only using suspenseful hooks like `useSuspenseQuery` and no `useQuery` hooks, is also possible to use the [@apollo/client-react-streaming](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/client-react-streaming) package to stream data dynamically while it is fetching, without requiring a first render pass with `prerenderStatic`.
+If you are only using suspenseful hooks (like `useSuspenseQuery` or `useBackgroundQuery`) and no `useQuery` hooks, is also possible to use the [@apollo/client-react-streaming](https://github.com/apollographql/apollo-client-integrations/tree/main/packages/client-react-streaming) package to stream data dynamically while it is fetching, without requiring a first render pass with `prerenderStatic`.
 You can find an example application that uses this approach in the [integration tests for that package](https://github.com/apollographql/apollo-client-integrations/tree/main/integration-test/vite-streaming).
 </Tip>
 
@@ -296,7 +296,7 @@ const { diagnostics } = await prerenderStatic({
 });
 
 console.log(`Rendered ${diagnostics.renderCount} times`);
-// If renderCount is high, consider using fragment colocation or useSuspenseQuery
+// If renderCount is high, consider using fragment colocation
 ```
 
 **Timeout support**

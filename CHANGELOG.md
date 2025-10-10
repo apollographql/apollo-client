@@ -1,5 +1,32 @@
 # @apollo/client
 
+## 4.1.0-alpha.2
+
+### Minor Changes
+
+- [#12959](https://github.com/apollographql/apollo-client/pull/12959) [`556e837`](https://github.com/apollographql/apollo-client/commit/556e83781069d925a7e8f99e49023f6f858c6438) Thanks [@jerelmiller](https://github.com/jerelmiller)! - You can now provide a callback function as the `context` option on the `mutate` function returned by `useMutation`. The callback function is called with the value of the `context` option provided to the `useMutation` hook. This is useful if you'd like to merge the context object provided to the `useMutation` hook with a value provided to the `mutate` function.
+
+  ```ts
+  function MyComponent() {
+    const [mutate, result] = useMutation(MUTATION, {
+      context: { foo: true },
+    });
+
+    async function runMutation() {
+      await mutate({
+        // sends context as { foo: true, bar: true }
+        context: (hookContext) => ({ ...hookContext, bar: true }),
+      });
+    }
+
+    // ...
+  }
+  ```
+
+### Patch Changes
+
+- [#12954](https://github.com/apollographql/apollo-client/pull/12954) [`1c82eaf`](https://github.com/apollographql/apollo-client/commit/1c82eafe4921a9e30128202623be6c5a3d4df803) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure an error is thrown when `@stream` is detected and an `incrementalDelivery` handler is not configured.
+
 ## 4.1.0-alpha.1
 
 ### Minor Changes

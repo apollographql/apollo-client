@@ -283,7 +283,7 @@ The `replace` call in these examples escapes the `<` character to prevent cross-
 
 `prerenderStatic` provides several options to customize the rendering process:
 
-**Diagnostics**
+##### Diagnostics
 
 You can enable diagnostics to detect inefficient rendering structures (like `useQuery` waterfalls) in your app:
 
@@ -318,7 +318,7 @@ if (aborted) {
 }
 ```
 
-**Maximum rerenders**
+##### Maximum rerenders
 
 If you have deep `useQuery` waterfalls, you can increase the `maxRerenders` option (default: 50):
 

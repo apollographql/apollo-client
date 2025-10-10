@@ -1449,9 +1449,9 @@ async function onUserInteraction() {
 
 The promise returned from the `execute` function is now consistently resolved or rejected depending on the configured `errorPolicy`. With an `errorPolicy` of `none`, the promise always rejects on error. With an `errorPolicy` of `all`, the promise always resolves and sets the `error` property on the result. With an `errorPolicy` of `ignore`, the promise always resolves and discards any errors.
 
-Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of the configured error policy. This change unified the error behavior across error types to ensure errors are handled consistently.
+Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of the configured error policy. This change unifies the error behavior across error types to ensure errors are handled consistently.
 
-To migrate code that uses an `errorPolicy` of `none`, wrap the call to `execute` in a `try`/`catch` block and use `CombinedGraphQLErrors.is(error)` to test if the error was the result of GraphQL errors.
+To migrate code that uses an `errorPolicy` of `none`, wrap the call to `execute` in a `try`/`catch` block and use `CombinedGraphQLErrors.is(error)` to check for GraphQL errors.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY, {
@@ -1474,7 +1474,7 @@ async function onUserInteraction() {
 }
 ```
 
-To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements since the promise resolves for all error types.
+To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements because the promise resolves for all error types.
 
 ```ts disableCopy=true
 const [execute] = useLazyQuery(QUERY, {

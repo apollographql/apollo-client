@@ -137,7 +137,7 @@ jobs:
 
       - name: Tag release with next on npm
         run: |
-          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt(process.env.PUBLISHED,"${{ matrix.package.version }}")?0:1)'; then
+          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt("${{ matrix.package.version }}",process.env.NEXT)?0:1)'; then
             npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next;
           fi
 

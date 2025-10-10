@@ -23,7 +23,7 @@ jobs:
         tag: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.tags || '["canary", "experimental"]') }}
         branch: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.branches || '["main", "release-3.13", "release-4.0"]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ matrix.branch }}
       - uses: actions/setup-node@v5

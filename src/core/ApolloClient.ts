@@ -1114,13 +1114,31 @@ export class ApolloClient {
    * the cache to identify the fragment and optionally specify whether to react
    * to optimistic updates.
    */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<any>;
+    }
+  ): Observable<Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
 
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
+  ):
+    | Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>
+    | Observable<Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>> {
     const dataMasking = this.queryManager.dataMasking;
 
     return this.cache

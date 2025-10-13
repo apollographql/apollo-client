@@ -55,7 +55,12 @@ export declare namespace ApolloCache {
      *
      * @docGroup 1. Required options
      */
-    from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
+    from:
+      | StoreObject
+      | Reference
+      | FragmentType<NoInfer<TData>>
+      | string
+      | Array<StoreObject | Reference | FragmentType<NoInfer<TData>> | string>;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -309,13 +314,31 @@ export abstract class ApolloCache {
     });
   }
 
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<any>;
+    }
+  ): Observable<Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>>;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
+  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
+
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>> {
+  ):
+    | Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+    | Observable<Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>> {
     const {
       fragment,
       fragmentName,

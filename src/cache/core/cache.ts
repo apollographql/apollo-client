@@ -348,15 +348,12 @@ export abstract class ApolloCache {
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
 
-    const watch = (
+    const getId = (
       from: Exclude<
         ApolloCache.WatchFragmentOptions<TData, TVariables>["from"],
         Array<any>
-      >,
-      cb: (result: ApolloCache.WatchFragmentResult<Unmasked<TData>>) => void
+      >
     ) => {
-      let latestDiff: Cache.DiffResult<TData> | undefined;
-
       // While our TypeScript types do not allow for `undefined` as a valid
       // `from`, its possible `useFragment` gives us an `undefined` since it
       // calls` cache.identify` and provides that value to `from`. We are
@@ -379,6 +376,15 @@ export abstract class ApolloCache {
           );
         }
       }
+
+      return id!;
+    };
+
+    const watch = (
+      id: string,
+      cb: (result: ApolloCache.WatchFragmentResult<Unmasked<TData>>) => void
+    ) => {
+      let latestDiff: Cache.DiffResult<TData> | undefined;
 
       return this.watch<TData, TVariables>({
         ...otherOptions,
@@ -425,9 +431,11 @@ export abstract class ApolloCache {
       });
     };
 
+    const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
+
     return new Observable((observer) => {
       if (!Array.isArray(from)) {
-        return watch(from, (result) => observer.next(result));
+        return watch(ids[0], (result) => observer.next(result));
       }
 
       if (from.length === 0) {
@@ -437,7 +445,7 @@ export abstract class ApolloCache {
       let results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>> = [];
       let initialized = false;
 
-      let subscriptions = from.map((id, idx) => {
+      let subscriptions = ids.map((id, idx) => {
         return watch(id, (result) => {
           // Shallow copy array to allow for Object.is or === checks to detect a
           // change has occurred

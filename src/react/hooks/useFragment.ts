@@ -246,7 +246,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
         let lastTimeout = 0;
         const subscriptions = stableOptions.from.map((id, idx) => {
           if (id === null) {
-            return null;
+            return;
           }
 
           return client

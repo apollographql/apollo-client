@@ -49,6 +49,10 @@ export interface MockedResponse<
     | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
   delay?: number;
+  /**
+   * @deprecated `variableMatcher` will be removed in Apollo Client 4.0. Please use the
+   * `request.variables` option with a callback function instead to get the same behavior.
+   */
   variableMatcher?: VariableMatcher<TVariables>;
   /**
    * @deprecated `newData` will be removed in Apollo Client 4.0. Please use the

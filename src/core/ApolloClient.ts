@@ -1147,27 +1147,41 @@ export class ApolloClient {
         fragment: this.transform(options.fragment, dataMasking),
       })
       .pipe(
-        map((result) => {
+        map((resultOrResults) => {
           // The transform will remove fragment spreads from the fragment
           // document when dataMasking is enabled. The `maskFragment` function
           // remains to apply warnings to fragments marked as
           // `@unmask(mode: "migrate")`. Since these warnings are only applied
           // in dev, we can skip the masking algorithm entirely for production.
           if (__DEV__) {
+            const mask = (
+              data: ApolloClient.WatchFragmentResult<Unmasked<TData>>
+            ) => {
+              return {
+                ...resultOrResults,
+                data: this.queryManager.maskFragment({
+                  ...options,
+                  data,
+                }),
+              } as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+            };
+
             if (dataMasking) {
-              const data = this.queryManager.maskFragment({
-                ...options,
-                data: result.data,
-              });
-              return { ...result, data } as ApolloClient.WatchFragmentResult<
-                MaybeMasked<TData>
-              >;
+              if (Array.isArray(resultOrResults)) {
+                return resultOrResults.map(mask);
+              }
+
+              return mask(resultOrResults);
             }
           }
 
-          return result as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+          return resultOrResults as ApolloClient.WatchFragmentResult<
+            MaybeMasked<TData>
+          >;
         })
-      );
+      ) as
+      | Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>
+      | Observable<Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>>;
   }
 
   /**

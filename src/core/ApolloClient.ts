@@ -1155,23 +1155,21 @@ export class ApolloClient {
           // in dev, we can skip the masking algorithm entirely for production.
           if (__DEV__) {
             const mask = (
-              data: ApolloClient.WatchFragmentResult<Unmasked<TData>>
+              result: ApolloClient.WatchFragmentResult<Unmasked<TData>>
             ) => {
               return {
-                ...resultOrResults,
+                ...result,
                 data: this.queryManager.maskFragment({
                   ...options,
-                  data,
+                  data: result.data,
                 }),
               } as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
             };
 
             if (dataMasking) {
-              if (Array.isArray(resultOrResults)) {
-                return resultOrResults.map(mask);
-              }
-
-              return mask(resultOrResults);
+              return Array.isArray(resultOrResults) ?
+                  resultOrResults.map(mask)
+                : mask(resultOrResults);
             }
           }
 

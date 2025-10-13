@@ -360,8 +360,18 @@ export abstract class ApolloCache {
       // adding this fix here however to ensure those using plain JavaScript
       // and using `cache.identify` themselves will avoid seeing the obscure
       // warning.
+      //
+      // `null` isn't allowed by the TypeScript types either, but we handle it
+      // internally to allow for useFragment to send `null` as a valid array
+      // item. This ensures the array length emitted by client.watchFragment
+      // matches the `from` length provided to useFragment. This also means we
+      // can use client.watchFragment with a `from` array from useFragment
       const id =
-        typeof from === "undefined" || typeof from === "string" ?
+        (
+          typeof from === "undefined" ||
+          typeof from === "string" ||
+          from === null
+        ) ?
           from
         : this.identify(from);
 
@@ -369,7 +379,7 @@ export abstract class ApolloCache {
         const actualFragmentName =
           fragmentName || getFragmentDefinition(fragment).name.value;
 
-        if (!id) {
+        if (id === undefined) {
           invariant.warn(
             "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
             actualFragmentName
@@ -377,14 +387,23 @@ export abstract class ApolloCache {
         }
       }
 
-      return id!;
+      return id as string | null;
     };
 
     const watch = (
-      id: string,
+      id: string | null,
       cb: (result: ApolloCache.WatchFragmentResult<Unmasked<TData>>) => void
     ) => {
       let latestDiff: Cache.DiffResult<TData> | undefined;
+
+      if (id === null) {
+        cb({
+          data: {},
+          dataState: "partial",
+          complete: false,
+        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>);
+        return () => {};
+      }
 
       return this.watch<TData, TVariables>({
         ...otherOptions,

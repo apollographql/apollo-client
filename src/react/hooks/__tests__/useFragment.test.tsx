@@ -2647,21 +2647,18 @@ test("allows null as list item `from` value", async () => {
   await expect(takeSnapshot()).resolves.toStrictEqualTyped([
     {
       data: {},
-      dataState: "complete",
+      dataState: "partial",
       complete: false,
-      missing: [],
     },
     {
       data: {},
-      dataState: "complete",
+      dataState: "partial",
       complete: false,
-      missing: [],
     },
     {
       data: {},
-      dataState: "complete",
+      dataState: "partial",
       complete: false,
-      missing: [],
     },
   ]);
 
@@ -2727,7 +2724,6 @@ test("allows mix of array identifiers", async () => {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
     },
   ]);
 
@@ -2808,19 +2804,19 @@ test("returns incomplete results when cache is empty", async () => {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:1 object",
     },
     {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:2 object",
     },
     {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:5 object",
     },
   ]);
 
@@ -2882,7 +2878,7 @@ test("can use static lists with useFragment with partially fulfilled items", asy
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:5 object",
     },
   ]);
 
@@ -3003,6 +2999,7 @@ test("handles changing list size", async () => {
       data: {},
       dataState: "partial",
       complete: false,
+      missing: "Dangling reference to missing Item:6 object",
     },
   ]);
 
@@ -3029,7 +3026,7 @@ test("updates items in the list with cache writes", async () => {
   });
   const { cache } = client;
 
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 2; i++) {
     client.writeFragment({
       fragment,
       data: { __typename: "Item", id: i, text: `Item #${i}` },
@@ -3065,7 +3062,7 @@ test("updates items in the list with cache writes", async () => {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:5 object",
     },
   ]);
 
@@ -3093,7 +3090,7 @@ test("updates items in the list with cache writes", async () => {
       data: {},
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: "Dangling reference to missing Item:5 object",
     },
   ]);
 
@@ -3132,7 +3129,7 @@ test("updates items in the list with cache writes", async () => {
     },
     {
       data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
-      dataState: "partial",
+      dataState: "complete",
       complete: true,
     },
   ]);
@@ -3149,7 +3146,9 @@ test("updates items in the list with cache writes", async () => {
       data: { __typename: "Item", id: 1 },
       dataState: "partial",
       complete: false,
-      missing: [],
+      missing: {
+        text: "Can't find field 'text' on Item:1 object",
+      },
     },
     {
       data: { __typename: "Item", id: 2, text: "Item #2 updated" },
@@ -3158,7 +3157,7 @@ test("updates items in the list with cache writes", async () => {
     },
     {
       data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
-      dataState: "partial",
+      dataState: "complete",
       complete: true,
     },
   ]);

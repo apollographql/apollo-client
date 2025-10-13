@@ -235,9 +235,13 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     });
   }, [client, stableOptions]);
 
-  const result = React.useMemo(
-    () => (isArray ? diffs.map((d) => d.result) : diffs[0].result),
-    [diffs, isArray]
+  const results = React.useMemo(
+    () => ({ items: diffs.map((d) => d.result) }),
+    [diffs]
+  );
+  const getSnapshot = React.useCallback(
+    () => (isArray ? results.items : results.items[0]),
+    [results, isArray]
   );
 
   return useSyncExternalStore(
@@ -256,8 +260,11 @@ function useFragment_<TData, TVariables extends OperationVariables>(
                 // Avoid unnecessarily rerendering this hook for the initial result
                 // emitted from watchFragment which should be equal to
                 // `diff.result`.
-                if (equal(result, diffs[idx].result)) return;
-                diffs[idx].result = result;
+                if (equal(result, results.items[idx])) return;
+                // ensure the array returned from getSnapshot changes identities
+                // so that the updated data will be rerendered
+                results.items[idx] = result;
+                results.items = [...results.items];
                 // If we get another update before we've re-rendered, bail out of
                 // the update and try again. This ensures that the relative timing
                 // between useQuery and useFragment stays roughly the same as
@@ -273,10 +280,10 @@ function useFragment_<TData, TVariables extends OperationVariables>(
           clearTimeout(lastTimeout);
         };
       },
-      [client, stableOptions, diffs]
+      [client, stableOptions, results]
     ),
-    () => result,
-    () => result
+    getSnapshot,
+    getSnapshot
   );
 }
 

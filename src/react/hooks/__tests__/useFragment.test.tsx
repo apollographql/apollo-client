@@ -36,7 +36,10 @@ import {
 } from "@apollo/client";
 import type { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider, useFragment, useQuery } from "@apollo/client/react";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import {
+  createClientWrapper,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
@@ -2546,6 +2549,628 @@ test("runs custom document transforms", async () => {
     data: { __typename: "Dog", id: 1, name: "Buddy" },
     dataState: "complete",
     complete: true,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("can use list for `from` to get list of items", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [
+          { __typename: "Item", id: 1 },
+          { __typename: "Item", id: 2 },
+          { __typename: "Item", id: 5 },
+        ],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("allows null as list item `from` value", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [null, null, null],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: {},
+      dataState: "complete",
+      complete: false,
+      missing: [],
+    },
+    {
+      data: {},
+      dataState: "complete",
+      complete: false,
+      missing: [],
+    },
+    {
+      data: {},
+      dataState: "complete",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("allows mix of array identifiers", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [{ __typename: "Item", id: 1 }, "Item:2", null],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Item #1",
+      },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: {
+        __typename: "Item",
+        id: 2,
+        text: "Item #2",
+      },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("returns empty array with empty from", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useFragment({ fragment, from: [] }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([]);
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("returns incomplete results when cache is empty", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [
+          { __typename: "Item", id: 1 },
+          { __typename: "Item", id: 2 },
+          { __typename: "Item", id: 5 },
+        ],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("can use static lists with useFragment with partially fulfilled items", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 2; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [
+          { __typename: "Item", id: 1 },
+          { __typename: "Item", id: 2 },
+          { __typename: "Item", id: 5 },
+        ],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("handles changing list size", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+    ({ from }) => useFragment({ fragment, from }),
+    {
+      initialProps: {
+        from: [
+          { __typename: "Item", id: 1 },
+          { __typename: "Item", id: 2 },
+        ],
+      },
+      wrapper: createClientWrapper(client),
+    }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await rerender({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await rerender({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await rerender({
+    from: [],
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([]);
+
+  await rerender({
+    from: [{ __typename: "Item", id: 6 }],
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+    },
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("updates items in the list with cache writes", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+  const { cache } = client;
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [
+          { __typename: "Item", id: 1 },
+          { __typename: "Item", id: 2 },
+          { __typename: "Item", id: 5 },
+        ],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 2,
+      text: "Item #2 updated",
+    },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: {},
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+  ]);
+
+  client.cache.batch({
+    update: (cache) => {
+      cache.writeFragment({
+        fragment,
+        data: {
+          __typename: "Item",
+          id: 1,
+          text: "Item #1 from batch",
+        },
+      });
+
+      cache.writeFragment({
+        fragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 from batch",
+        },
+      });
+    },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1 from batch" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
+      dataState: "partial",
+      complete: true,
+    },
+  ]);
+
+  cache.modify({
+    id: cache.identify({ __typename: "Item", id: 1 }),
+    fields: {
+      text: (_, { DELETE }) => DELETE,
+    },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1 },
+      dataState: "partial",
+      complete: false,
+      missing: [],
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
+      dataState: "partial",
+      complete: true,
+    },
+  ]);
+
+  // should not cause rerender since its an item not watched
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 6,
+      text: "Item #6 ignored",
+    },
   });
 
   await expect(takeSnapshot).not.toRerender();

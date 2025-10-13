@@ -347,42 +347,45 @@ export abstract class ApolloCache {
       ...otherOptions
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
-    // While our TypeScript types do not allow for `undefined` as a valid
-    // `from`, its possible `useFragment` gives us an `undefined` since it
-    // calls` cache.identify` and provides that value to `from`. We are
-    // adding this fix here however to ensure those using plain JavaScript
-    // and using `cache.identify` themselves will avoid seeing the obscure
-    // warning.
-    const id =
-      typeof from === "undefined" || typeof from === "string" ?
-        from
-      : this.identify(from);
 
-    if (__DEV__) {
-      const actualFragmentName =
-        fragmentName || getFragmentDefinition(fragment).name.value;
+    const watch = (
+      from: Exclude<
+        ApolloCache.WatchFragmentOptions<TData, TVariables>["from"],
+        Array<any>
+      >,
+      cb: (result: ApolloCache.WatchFragmentResult<Unmasked<TData>>) => void
+    ) => {
+      let latestDiff: Cache.DiffResult<TData> | undefined;
 
-      if (!id) {
-        invariant.warn(
-          "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-          actualFragmentName
-        );
+      // While our TypeScript types do not allow for `undefined` as a valid
+      // `from`, its possible `useFragment` gives us an `undefined` since it
+      // calls` cache.identify` and provides that value to `from`. We are
+      // adding this fix here however to ensure those using plain JavaScript
+      // and using `cache.identify` themselves will avoid seeing the obscure
+      // warning.
+      const id =
+        typeof from === "undefined" || typeof from === "string" ?
+          from
+        : this.identify(from);
+
+      if (__DEV__) {
+        const actualFragmentName =
+          fragmentName || getFragmentDefinition(fragment).name.value;
+
+        if (!id) {
+          invariant.warn(
+            "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+            actualFragmentName
+          );
+        }
       }
-    }
 
-    const diffOptions: Cache.DiffOptions<TData, TVariables> = {
-      ...otherOptions,
-      returnPartialData: true,
-      id,
-      query,
-      optimistic,
-    };
-
-    let latestDiff: Cache.DiffResult<TData> | undefined;
-
-    return new Observable((observer) => {
       return this.watch<TData, TVariables>({
-        ...diffOptions,
+        ...otherOptions,
+        returnPartialData: true,
+        id,
+        query,
+        optimistic,
         immediate: true,
         callback: (diff) => {
           let data = diff.result;
@@ -417,10 +420,41 @@ export abstract class ApolloCache {
           }
 
           latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
-          observer.next(result);
+          cb(result);
         },
       });
-    });
+    };
+
+    return new Observable((observer) => {
+      if (!Array.isArray(from)) {
+        return watch(from, (result) => observer.next(result));
+      }
+
+      if (from.length === 0) {
+        return observer.next([]);
+      }
+
+      let results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>> = [];
+      let initialized = false;
+
+      let subscriptions = from.map((id, idx) => {
+        return watch(id, (result) => {
+          // Shallow copy array to allow for Object.is or === checks to detect a
+          // change has occurred
+          results = [...results];
+          results[idx] = result;
+
+          // Wait for all watches to emit a value before emitting the first
+          // result
+          initialized ||= results.length === from.length;
+          if (initialized) {
+            observer.next(results);
+          }
+        });
+      });
+
+      return () => subscriptions.forEach((unsub) => unsub());
+    }) as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

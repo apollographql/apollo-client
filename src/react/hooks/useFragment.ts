@@ -248,35 +248,29 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscriptions = stableOptions.from.map((id, idx) => {
-          if (id === null) {
-            return;
-          }
-
-          return client
-            .watchFragment({ ...stableOptions, from: id! })
-            .subscribe({
-              next: (result) => {
-                // Avoid unnecessarily rerendering this hook for the initial result
-                // emitted from watchFragment which should be equal to
-                // `diff.result`.
-                if (equal(result, results.items[idx])) return;
-                // ensure the array returned from getSnapshot changes identities
-                // so that the updated data will be rerendered
-                results.items[idx] = result;
-                results.items = [...results.items];
-                // If we get another update before we've re-rendered, bail out of
-                // the update and try again. This ensures that the relative timing
-                // between useQuery and useFragment stays roughly the same as
-                // fixed in https://github.com/apollographql/apollo-client/pull/11083
-                clearTimeout(lastTimeout);
-                lastTimeout = setTimeout(forceUpdate) as any;
-              },
-            });
-        });
+        const subscription = client
+          .watchFragment({
+            ...stableOptions,
+            from: stableOptions.from as string[],
+          })
+          .subscribe({
+            next: (nextResults) => {
+              // Avoid unnecessarily rerendering this hook for the initial result
+              // emitted from watchFragment which should be equal to
+              // `diff.result`.
+              if (equal(results.items, nextResults)) return;
+              results.items = nextResults;
+              // If we get another update before we've re-rendered, bail out of
+              // the update and try again. This ensures that the relative timing
+              // between useQuery and useFragment stays roughly the same as
+              // fixed in https://github.com/apollographql/apollo-client/pull/11083
+              clearTimeout(lastTimeout);
+              lastTimeout = setTimeout(forceUpdate) as any;
+            },
+          });
 
         return () => {
-          subscriptions.forEach((sub) => sub?.unsubscribe());
+          subscription.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },

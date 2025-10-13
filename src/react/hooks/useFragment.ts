@@ -53,7 +53,10 @@ export declare namespace useFragment {
       | Reference
       | FragmentType<NoInfer<TData>>
       | string
-      | null;
+      | null
+      | Array<
+          StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null
+        >;
 
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
@@ -138,7 +141,24 @@ export declare namespace useFragment {
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
->(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData> {
+>(
+  options: useFragment.Options<TData, TVariables> & {
+    from: Array<any>;
+  }
+): Array<useFragment.Result<TData>>;
+
+/** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
+
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useFragment.Options<TData, TVariables>
+): useFragment.Result<TData> | Array<useFragment.Result<TData>> {
   "use no memo";
   return wrapHook(
     "useFragment",
@@ -150,83 +170,94 @@ export function useFragment<
 
 function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
-): useFragment.Result<TData> {
+): useFragment.Result<TData> | Array<useFragment.Result<TData>> {
   const client = useApolloClient(options.client);
   const { cache } = client;
-  const { from, ...rest } = options;
+  const isArray = Array.isArray(options.from);
 
   // We calculate the cache id seperately from `stableOptions` because we don't
   // want changes to non key fields in the `from` property to affect
   // `stableOptions` and retrigger our subscription. If the cache identifier
   // stays the same between renders, we want to reuse the existing subscription.
-  const id = React.useMemo(
-    () =>
-      typeof from === "string" ? from
-      : from === null ? null
-      : cache.identify(from),
-    [cache, from]
-  );
+  const stableOptions = useDeepMemo(() => {
+    const { from, ...rest } = options;
+    const fromArray = Array.isArray(from) ? from : [from];
 
-  const stableOptions = useDeepMemo(() => ({ ...rest, from: id! }), [rest, id]);
+    return {
+      ...rest,
+      from: fromArray.map((value) =>
+        typeof value === "string" ? value
+        : value === null ? null
+        : cache.identify(value)
+      ),
+    };
+  }, [cache, options]);
 
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
-  const diff = React.useMemo(() => {
+  const diffs = React.useMemo(() => {
     const { fragment, fragmentName, from, optimistic = true } = stableOptions;
 
-    if (from === null) {
+    return from.map((id) => {
+      if (id === null) {
+        return {
+          result: diffToResult({
+            result: {},
+            complete: false,
+          } as Cache.DiffResult<TData>),
+        };
+      }
+
+      const { cache } = client;
+      const diff = cache.diff<TData, TVariables>({
+        ...stableOptions,
+        returnPartialData: true,
+        id,
+        query: cache["getFragmentDoc"](
+          client["transform"](fragment),
+          fragmentName
+        ),
+        optimistic,
+      });
+
       return {
-        result: diffToResult({
-          result: {},
-          complete: false,
-        } as Cache.DiffResult<TData>),
+        result: diffToResult<TData>({
+          ...diff,
+          result: client["queryManager"].maskFragment({
+            fragment,
+            fragmentName,
+            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+            // valid return value
+            data: diff.result === null ? {} : diff.result,
+          }) as any,
+        }),
       };
-    }
-
-    const { cache } = client;
-    const diff = cache.diff<TData, TVariables>({
-      ...stableOptions,
-      returnPartialData: true,
-      id: from,
-      query: cache["getFragmentDoc"](
-        client["transform"](fragment),
-        fragmentName
-      ),
-      optimistic,
     });
-
-    return {
-      result: diffToResult<TData>({
-        ...diff,
-        result: client["queryManager"].maskFragment({
-          fragment,
-          fragmentName,
-          // TODO: Revert to `diff.result` once `useFragment` supports `null` as
-          // valid return value
-          data: diff.result === null ? {} : diff.result,
-        }) as any,
-      }),
-    };
   }, [client, stableOptions]);
 
-  // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = React.useCallback(() => diff.result, [diff]);
+  const result = React.useMemo(
+    () => (isArray ? diffs.map((d) => d.result) : diffs[0].result),
+    [diffs, isArray]
+  );
 
   return useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
+        const subscriptions = stableOptions.from.map((id, idx) => {
+          if (id === null) {
+            return null;
+          }
 
-        const subscription =
-          stableOptions.from === null ?
-            null
-          : client.watchFragment(stableOptions).subscribe({
+          return client
+            .watchFragment({ ...stableOptions, from: id! })
+            .subscribe({
               next: (result) => {
                 // Avoid unnecessarily rerendering this hook for the initial result
                 // emitted from watchFragment which should be equal to
                 // `diff.result`.
-                if (equal(result, diff.result)) return;
-                diff.result = result;
+                if (equal(result, diffs[idx].result)) return;
+                diffs[idx].result = result;
                 // If we get another update before we've re-rendered, bail out of
                 // the update and try again. This ensures that the relative timing
                 // between useQuery and useFragment stays roughly the same as
@@ -235,15 +266,17 @@ function useFragment_<TData, TVariables extends OperationVariables>(
                 lastTimeout = setTimeout(forceUpdate) as any;
               },
             });
+        });
+
         return () => {
-          subscription?.unsubscribe();
+          subscriptions.forEach((sub) => sub?.unsubscribe());
           clearTimeout(lastTimeout);
         };
       },
-      [client, stableOptions, diff]
+      [client, stableOptions, diffs]
     ),
-    getSnapshot,
-    getSnapshot
+    () => result,
+    () => result
   );
 }
 

@@ -3195,7 +3195,13 @@ describe.skip("Type Tests", () => {
     expectTypeOf<
       useFragment.Options<TData, TVariables>
     >().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference | FragmentType<TData> | null;
+      from:
+        | string
+        | StoreObject
+        | Reference
+        | FragmentType<TData>
+        | null
+        | Array<string | StoreObject | Reference | FragmentType<TData> | null>;
       fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
       fragmentName?: string;
       optimistic?: boolean;

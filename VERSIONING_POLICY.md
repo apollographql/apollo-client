@@ -90,4 +90,4 @@ We reserve the right to update dependencies in minor releases of Apollo Client, 
 ### Peer dependencies
 
 The rules stated above apply to peer dependencies as well. Peer dependencies can be updated in minor releases, just like regular dependencies.
-However, we do commit to not adding new peer depenencies during the lifetime of a major - but if an existing peer dependency is renamed, we might follow that rename in a minor release.
+However, we do commit to not adding new peer dependencies during the lifetime of a major - but if an existing peer dependency is renamed, we might follow that rename in a minor release.

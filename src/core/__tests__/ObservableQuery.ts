@@ -7731,7 +7731,7 @@ describe.skip("type tests", () => {
     });
   });
 
-  test("variables with optional variales", () => {
+  test("variables with optional variables", () => {
     const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
       gql``;
     const client = new ApolloClient({
@@ -7803,7 +7803,7 @@ describe.skip("type tests", () => {
     });
   });
 
-  test("variables with required variales", () => {
+  test("variables with required variables", () => {
     const query: TypedDocumentNode<{ character: string }, { id: string }> =
       gql``;
     const client = new ApolloClient({

@@ -423,7 +423,7 @@ export class InternalQueryReference<
 
     // If the data returned from the fetch is deeply equal to the data already
     // in the cache, `handleNext` will not be triggered leaving the promise we
-    // created in a pending state forever. To avoid this situtation, we attempt
+    // created in a pending state forever. To avoid this situation, we attempt
     // to resolve the promise if `handleNext` hasn't been run to ensure the
     // promise is resolved correctly.
     returnedPromise

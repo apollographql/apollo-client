@@ -155,7 +155,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   const { cache } = client;
   const { from, ...rest } = options;
 
-  // We calculate the cache id seperately from `stableOptions` because we don't
+  // We calculate the cache id separately from `stableOptions` because we don't
   // want changes to non key fields in the `from` property to affect
   // `stableOptions` and retrigger our subscription. If the cache identifier
   // stays the same between renders, we want to reuse the existing subscription.

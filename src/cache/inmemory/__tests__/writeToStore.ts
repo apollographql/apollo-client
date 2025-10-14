@@ -2288,9 +2288,9 @@ describe("writing to the store", () => {
       });
     });
 
-    it("should not warn if a field is defered", () => {
+    it("should not warn if a field is deferred", () => {
       using _consoleSpy = spyOnConsole.takeSnapshots("error");
-      const defered = gql`
+      const deferred = gql`
         query LazyLoad {
           id
           expensive @defer
@@ -2308,7 +2308,7 @@ describe("writing to the store", () => {
 
       const newStore = writeQueryToStore({
         writer,
-        query: defered,
+        query: deferred,
         result,
       });
 

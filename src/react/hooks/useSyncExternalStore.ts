@@ -26,7 +26,7 @@ const usingJSDOM: boolean =
   // https://github.com/jsdom/jsdom/issues/1537#issuecomment-229405327
   //
   // Since we control the version of Jest and jsdom used when running Apollo
-  // Client tests, and that version is recent enought to include " jsdom/x.y.z"
+  // Client tests, and that version is recent enough to include " jsdom/x.y.z"
   // at the end of the user agent string, I believe this case is all we need to
   // check. Testing for "Node.js" was recommended for backwards compatibility
   // with older version of jsdom, but we don't have that problem.

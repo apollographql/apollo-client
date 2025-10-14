@@ -90,7 +90,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
 
   /*
    * Note:
-   * This method is only memoized so it can serve as a dependency to `tranform`,
+   * This method is only memoized so it can serve as a dependency to `transform`,
    * so calling `invalidate` will invalidate cache entries for `transform`.
    */
   public lookup(fragmentName: string): FragmentDefinitionNode | null {

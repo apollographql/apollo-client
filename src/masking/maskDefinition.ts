@@ -86,7 +86,7 @@ function maskSelectionSet(
   for (const selection of selectionSet.selections) {
     let value: any;
 
-    // we later want to add acessor warnings to the final result
+    // we later want to add accessor warnings to the final result
     // so we need a new object to add the accessor warning to
     if (migration) {
       knownChanged.add(memo);

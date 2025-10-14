@@ -3749,7 +3749,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
     // The query was never retained since the error was thrown before the
-    // useEffect coud run. We need to wait for the auto dispose timeout to kick
+    // useEffect could run. We need to wait for the auto dispose timeout to kick
     // in before we check whether the observable was cleaned up
     jest.advanceTimersByTime(30_000);
 
@@ -7426,7 +7426,7 @@ describe("useSuspenseQuery", () => {
     const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();
 
-    // We are intentionally writing partial data to the cache. Supress console
+    // We are intentionally writing partial data to the cache. Suppress console
     // warnings to avoid unnecessary noise in the test.
     {
       using _consoleSpy = spyOnConsole("error");
@@ -8389,7 +8389,7 @@ describe("useSuspenseQuery", () => {
   // This test reflects the behavior as it exists today, but will need
   // to be updated once the core bug is fixed.
   //
-  // NOTE: A duplicate it.failng test has been added right below this one with
+  // NOTE: A duplicate it.failing test has been added right below this one with
   // the expected behavior added in (i.e. the commented code in this test). Once
   // the core bug is fixed, this test can be removed in favor of the other test.
   //

@@ -392,7 +392,7 @@ describe("useFragment", () => {
     screen.getByText(/Item #1/);
   });
 
-  it("allows the client to be overriden", () => {
+  it("allows the client to be overridden", () => {
     const ItemFragment: TypedDocumentNode<Item> = gql`
       fragment ItemFragment on Item {
         id

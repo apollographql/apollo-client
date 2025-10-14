@@ -469,7 +469,7 @@ export abstract class ApolloCache {
       });
     };
 
-    let lastResult:
+    let currentResult:
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
       | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
     let activeSubscribers = 0;
@@ -483,10 +483,10 @@ export abstract class ApolloCache {
           | ApolloCache.WatchFragmentResult<Unmasked<TData>>
           | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
       ) => {
-        if (!equal(result, lastResult)) {
-          lastResult = result;
+        if (!equal(result, currentResult)) {
+          currentResult = result;
         }
-        observer.next(lastResult);
+        observer.next(currentResult);
       };
 
       if (!Array.isArray(from)) {
@@ -524,8 +524,8 @@ export abstract class ApolloCache {
 
     return Object.assign(observable, {
       getCurrentResult: () => {
-        if (activeSubscribers > 0 && lastResult) {
-          return lastResult as any;
+        if (activeSubscribers > 0 && currentResult) {
+          return currentResult as any;
         }
 
         const diffs = ids.map((id) => {
@@ -546,11 +546,11 @@ export abstract class ApolloCache {
 
         const result = Array.isArray(from) ? diffs : diffs[0];
 
-        if (!equal(result, lastResult)) {
-          lastResult = result as any;
+        if (!equal(result, currentResult)) {
+          currentResult = result as any;
         }
 
-        return lastResult;
+        return currentResult;
       },
     });
   }

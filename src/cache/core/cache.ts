@@ -547,7 +547,25 @@ export abstract class ApolloCache {
     }) as Observable<any>;
 
     return Object.assign(observable, {
-      reobserve: () => {},
+      reobserve: (
+        options:
+          | ApolloCache.WatchFragmentReobserveOptions<
+              ApolloCache.WatchFragmentResult<TData>
+            >
+          | ApolloCache.WatchFragmentReobserveOptions<
+              Array<ApolloCache.WatchFragmentResult<TData>>
+            >
+      ) => {
+        const isOrigArray = Array.isArray(from);
+        const isArray = Array.isArray(options.from);
+
+        invariant(
+          isOrigArray === isArray,
+          isOrigArray ?
+            "Cannot change `from` option from array to non-array. Please provide `from` as an array."
+          : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+        );
+      },
       getCurrentResult: () => {
         if (activeSubscribers > 0 && currentResult) {
           return currentResult as any;
@@ -577,7 +595,7 @@ export abstract class ApolloCache {
 
         return currentResult;
       },
-    });
+    }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

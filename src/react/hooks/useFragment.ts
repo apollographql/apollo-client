@@ -190,20 +190,10 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     [cache, ids, rest]
   );
 
-  function createObservable() {
-    return client.watchFragment<TData, TVariables>(stableOptions as any);
-  }
-
-  const [previousStableOptions, setPreviousStableOptions] =
-    React.useState(stableOptions);
-  const [previousClient, setPreviousClient] = React.useState(client);
-  const [observable, setObservable] = React.useState(createObservable);
-
-  if (stableOptions !== previousStableOptions || client !== previousClient) {
-    setPreviousStableOptions(stableOptions);
-    setPreviousClient(client);
-    setObservable(createObservable());
-  }
+  const observable = React.useMemo(
+    () => client.watchFragment<TData, TVariables>(stableOptions as any),
+    [client, stableOptions]
+  );
 
   const getSnapshot = React.useCallback(
     () => observable.getCurrentResult(),

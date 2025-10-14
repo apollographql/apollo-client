@@ -1192,9 +1192,7 @@ export class ApolloClient {
         | Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
     };
 
-    const piped = observable.pipe(map(mask));
-
-    return Object.assign(piped, {
+    return Object.assign(observable.pipe(map(mask)), {
       getCurrentResult: () => mask(observable.getCurrentResult()),
     }) as ApolloClient.WatchFragmentObservable<any>;
   }

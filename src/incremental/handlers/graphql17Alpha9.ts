@@ -259,7 +259,10 @@ export class GraphQL17Alpha9Handler
     if (hasDirectives(["defer", "stream"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});
-      http.accept = ["multipart/mixed", ...(http.accept || [])];
+      http.accept = [
+        "multipart/mixed;incrementalDeliverySpec=graphql/incremental/v0.1",
+        ...(http.accept || []),
+      ];
 
       request.context = context;
     }

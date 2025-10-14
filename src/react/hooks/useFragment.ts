@@ -1,4 +1,3 @@
-import { equal } from "@wry/equality";
 import * as React from "react";
 
 import type {
@@ -9,12 +8,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import type {
-  Cache,
-  MissingTree,
-  Reference,
-  StoreObject,
-} from "@apollo/client/cache";
+import type { MissingTree, Reference, StoreObject } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 
@@ -172,127 +166,73 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
 ): useFragment.Result<TData> | Array<useFragment.Result<TData>> {
   const client = useApolloClient(options.client);
+  const { from, ...rest } = options;
   const { cache } = client;
-  const isArray = Array.isArray(options.from);
 
-  const stableOptions = useDeepMemo(() => {
-    const { from, ...rest } = options;
+  // We calculate the cache id seperately from `stableOptions` because we don't
+  // want changes to non key fields in the `from` property to affect
+  // `stableOptions` and retrigger our subscription. If the cache identifier
+  // stays the same between renders, we want to reuse the existing subscription.
+  const ids = useDeepMemo(() => {
     const fromArray = Array.isArray(from) ? from : [from];
 
-    return {
-      ...rest,
-      // We calculate the cache id seperately from `stableOptions` because we don't
-      // want changes to non key fields in the `from` property to affect
-      // `stableOptions` and retrigger our subscription. If the cache identifier
-      // stays the same between renders, we want to reuse the existing subscription.
-      from: fromArray.map((value) =>
-        typeof value === "string" ? value
-        : value === null ? null
-        : cache.identify(value)
-      ),
-    };
-  }, [cache, options]);
+    const ids = fromArray.map((value) =>
+      typeof value === "string" ? value
+      : value === null ? null
+      : cache.identify(value)
+    );
 
-  // Since .next is async, we need to make sure that we
-  // get the correct diff on the next render given new diffOptions
-  const diffs = React.useMemo(() => {
-    const { fragment, fragmentName, from, optimistic = true } = stableOptions;
+    return Array.isArray(from) ? ids : ids[0];
+  }, [from]);
 
-    return from.map((id) => {
-      if (id === null) {
-        return {
-          result: diffToResult({
-            result: {},
-            complete: false,
-          } as Cache.DiffResult<TData>),
-        };
-      }
-
-      const { cache } = client;
-      const diff = cache.diff<TData, TVariables>({
-        ...stableOptions,
-        returnPartialData: true,
-        id,
-        query: cache["getFragmentDoc"](
-          client["transform"](fragment),
-          fragmentName
-        ),
-        optimistic,
-      });
-
-      return {
-        result: diffToResult<TData>({
-          ...diff,
-          result: client["queryManager"].maskFragment({
-            fragment,
-            fragmentName,
-            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
-            // valid return value
-            data: diff.result === null ? {} : diff.result,
-          }) as any,
-        }),
-      };
-    });
-  }, [client, stableOptions]);
-
-  const results = React.useMemo(
-    () => ({ items: diffs.map((d) => d.result) }),
-    [diffs]
+  const stableOptions = useDeepMemo(
+    () => ({ ...rest, from: ids }),
+    [cache, ids, rest]
   );
+
+  function createObservable() {
+    return client.watchFragment<TData, TVariables>(stableOptions as any);
+  }
+
+  const [previousStableOptions, setPreviousStableOptions] =
+    React.useState(stableOptions);
+  const [previousClient, setPreviousClient] = React.useState(client);
+  const [observable, setObservable] = React.useState(createObservable);
+
+  if (stableOptions !== previousStableOptions || client !== previousClient) {
+    setPreviousStableOptions(stableOptions);
+    setPreviousClient(client);
+    setObservable(createObservable());
+  }
+
   const getSnapshot = React.useCallback(
-    () => (isArray ? results.items : results.items[0]),
-    [results, isArray]
+    () => observable.getCurrentResult(),
+    [observable]
   );
 
   return useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = client
-          .watchFragment({
-            ...stableOptions,
-            from: stableOptions.from as string[],
-          })
-          .subscribe({
-            next: (nextResults) => {
-              // Avoid unnecessarily rerendering this hook for the initial result
-              // emitted from watchFragment which should be equal to
-              // `diff.result`.
-              if (equal(results.items, nextResults)) return;
-              results.items = nextResults;
-              // If we get another update before we've re-rendered, bail out of
-              // the update and try again. This ensures that the relative timing
-              // between useQuery and useFragment stays roughly the same as
-              // fixed in https://github.com/apollographql/apollo-client/pull/11083
-              clearTimeout(lastTimeout);
-              lastTimeout = setTimeout(forceUpdate) as any;
-            },
-          });
+        const subscription = observable.subscribe({
+          next: () => {
+            // If we get another update before we've re-rendered, bail out of
+            // the update and try again. This ensures that the relative timing
+            // between useQuery and useFragment stays roughly the same as
+            // fixed in https://github.com/apollographql/apollo-client/pull/11083
+            clearTimeout(lastTimeout);
+            lastTimeout = setTimeout(forceUpdate) as any;
+          },
+        });
 
         return () => {
           subscription.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },
-      [client, stableOptions, results]
+      [observable]
     ),
     getSnapshot,
     getSnapshot
   );
-}
-
-function diffToResult<TData>(
-  diff: Cache.DiffResult<TData>
-): useFragment.Result<TData> {
-  const result = {
-    data: diff.result,
-    complete: !!diff.complete,
-    dataState: diff.complete ? "complete" : "partial",
-  } as useFragment.Result<TData>; // TODO: Remove assertion once useFragment returns null
-
-  if (diff.missing) {
-    result.missing = diff.missing.missing;
-  }
-
-  return result;
 }

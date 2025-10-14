@@ -124,7 +124,7 @@ export declare namespace ApolloCache {
     from: T extends Array<ApolloCache.WatchFragmentResult<infer TData>> ?
       Array<StoreObject | Reference | FragmentType<TData> | string>
     : T extends ApolloCache.WatchFragmentResult<infer TData> ?
-      StoreObject | Reference | FragmentType<NoInfer<TData>> | string
+      StoreObject | Reference | FragmentType<TData> | string
     : never;
   }
 }

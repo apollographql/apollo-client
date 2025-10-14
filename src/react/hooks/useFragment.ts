@@ -169,10 +169,10 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   const { from, ...rest } = options;
   const { cache } = client;
 
-  // We calculate the cache id seperately from `stableOptions` because we don't
-  // want changes to non key fields in the `from` property to affect
-  // `stableOptions` and retrigger our subscription. If the cache identifier
-  // stays the same between renders, we want to reuse the existing subscription.
+  // We calculate the cache id seperately because we don't want changes to non
+  // key fields in the `from` property to recreate the observable. If the cache
+  // identifier stays the same between renders, we want to reuse the existing
+  // subscription.
   const ids = useDeepMemo(() => {
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -185,15 +185,12 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     return Array.isArray(from) ? ids : ids[0];
   }, [from]);
 
-  const stableOptions = useDeepMemo(
-    () => ({ ...rest, from: ids }),
-    [cache, ids, rest]
-  );
-
-  const observable = React.useMemo(
-    () => client.watchFragment<TData, TVariables>(stableOptions as any),
-    [client, stableOptions]
-  );
+  const observable = useDeepMemo(() => {
+    return client.watchFragment<TData, TVariables>({
+      ...rest,
+      from: ids as any,
+    });
+  }, [client, ids, rest]);
 
   const getSnapshot = React.useCallback(
     () => observable.getCurrentResult(),

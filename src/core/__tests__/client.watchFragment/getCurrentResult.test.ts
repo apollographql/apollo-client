@@ -417,4 +417,27 @@ test("getCurrentResult handles arrays", async () => {
       complete: true,
     },
   ]);
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
 });

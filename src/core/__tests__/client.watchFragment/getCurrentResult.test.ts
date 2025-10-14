@@ -441,3 +441,141 @@ test("getCurrentResult handles arrays", async () => {
     },
   ]);
 });
+
+test("works with data masking", async () => {
+  type ItemDetails = {
+    __typename: string;
+    text: string;
+  } & { " $fragmentName"?: "ItemDetailsFragment" };
+
+  type Item = {
+    __typename: string;
+    id: number;
+  } & {
+    " $fragmentRefs"?: { ItemDetailsFragment: ItemDetails };
+  };
+
+  const detailsFragment: TypedDocumentNode<ItemDetails> = gql`
+    fragment ItemDetailsFragment on Item {
+      text
+    }
+  `;
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      ...ItemDetailsFragment
+    }
+
+    ${detailsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      fragmentName: "ItemFragment",
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  const parentObservable = client.watchFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+  const childObservable = client.watchFragment({
+    fragment: detailsFragment,
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+
+  expect(parentObservable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1 },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2 },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5 },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+  expect(childObservable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+  });
+
+  expect(parentObservable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1 },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2 },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5 },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  expect(childObservable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+});

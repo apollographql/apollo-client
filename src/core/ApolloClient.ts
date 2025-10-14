@@ -349,7 +349,23 @@ export declare namespace ApolloClient {
     ApolloCache.WatchFragmentResult<TData>;
 
   export interface WatchFragmentObservable<T> extends Observable<T> {
+    /**
+     * Return the current result for the fragment.
+     */
     getCurrentResult: () => T;
+
+    /**
+     * Re-evaluate the fragment against the updated `from` value.
+     *
+     * @example
+     *
+     * ```ts
+     * const observable = client.watchFragment(options);
+     *
+     * observable.reobserve({ from: newFrom });
+     * ```
+     */
+    reobserve: (options: ApolloCache.WatchFragmentReobserveOptions<T>) => void;
   }
 
   /**
@@ -1194,6 +1210,7 @@ export class ApolloClient {
 
     return Object.assign(observable.pipe(map(mask)), {
       getCurrentResult: () => mask(observable.getCurrentResult()),
+      reobserve: observable.reobserve.bind(observable),
     }) as ApolloClient.WatchFragmentObservable<any>;
   }
 

@@ -101,7 +101,31 @@ export declare namespace ApolloCache {
       } & GetDataState<TData, "partial">);
 
   export interface WatchFragmentObservable<T> extends Observable<T> {
+    /**
+     * Return the current result for the fragment.
+     */
     getCurrentResult: () => T;
+
+    /**
+     * Re-evaluate the fragment against the updated `from` value.
+     *
+     * @example
+     *
+     * ```ts
+     * const observable = cache.watchFragment(options);
+     *
+     * observable.reobserve({ from: newFrom });
+     * ```
+     */
+    reobserve: (options: ApolloCache.WatchFragmentReobserveOptions<T>) => void;
+  }
+
+  export interface WatchFragmentReobserveOptions<T> {
+    from: T extends Array<ApolloCache.WatchFragmentResult<infer TData>> ?
+      Array<StoreObject | Reference | FragmentType<TData> | string>
+    : T extends ApolloCache.WatchFragmentResult<infer TData> ?
+      StoreObject | Reference | FragmentType<NoInfer<TData>> | string
+    : never;
   }
 }
 
@@ -523,6 +547,7 @@ export abstract class ApolloCache {
     }) as Observable<any>;
 
     return Object.assign(observable, {
+      reobserve: () => {},
       getCurrentResult: () => {
         if (activeSubscribers > 0 && currentResult) {
           return currentResult as any;

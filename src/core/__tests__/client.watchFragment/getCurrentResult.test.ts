@@ -1,6 +1,9 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 interface Item {
   __typename: "Item";
@@ -578,4 +581,116 @@ test("works with data masking", async () => {
       complete: true,
     },
   ]);
+});
+
+test("works with data masking @unmask migrate mode", async () => {
+  using consoleSpy = spyOnConsole("warn");
+  type ItemDetails = {
+    __typename: string;
+    text: string;
+  } & { " $fragmentName"?: "ItemDetailsFragment" };
+
+  type Item = {
+    __typename: string;
+    id: number;
+    text: string;
+  } & {
+    " $fragmentRefs"?: { ItemDetailsFragment: ItemDetails };
+  };
+
+  const detailsFragment: TypedDocumentNode<ItemDetails> = gql`
+    fragment ItemDetailsFragment on Item {
+      text
+    }
+  `;
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      ...ItemDetailsFragment @unmask(mode: "migrate")
+    }
+
+    ${detailsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      fragmentName: "ItemFragment",
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  expect(console.warn).toHaveBeenCalledTimes(3);
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
+    "fragment 'ItemFragment'",
+    "text"
+  );
+  consoleSpy.warn.mockClear();
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 5, text: "Item #5" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  expect(console.warn).toHaveBeenCalledTimes(3);
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
+    "fragment 'ItemFragment'",
+    "text"
+  );
 });

@@ -483,8 +483,10 @@ export abstract class ApolloCache {
           | ApolloCache.WatchFragmentResult<Unmasked<TData>>
           | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
       ) => {
-        lastResult = result;
-        observer.next(result);
+        if (!equal(result, lastResult)) {
+          lastResult = result;
+        }
+        observer.next(lastResult);
       };
 
       if (!Array.isArray(from)) {

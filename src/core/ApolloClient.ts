@@ -1181,7 +1181,7 @@ export class ApolloClient {
           if (dataMasking) {
             return Array.isArray(resultOrResults) ?
                 resultOrResults.map(mask)
-              : mask(resultOrResults);
+              : mask(resultOrResults as any);
           }
         }
 

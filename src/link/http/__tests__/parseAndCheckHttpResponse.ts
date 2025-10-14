@@ -70,7 +70,7 @@ describe("parseAndCheckResponse", () => {
   });
 
   it("throws a server error on incorrect data", async () => {
-    const data = { hello: "world" }; //does not contain data or erros
+    const data = { hello: "world" }; //does not contain data or errors
     fetchMock.mock("begin:/incorrect", data);
     const error = await fetch("incorrect")
       .then(parseAndCheckHttpResponse(operations))

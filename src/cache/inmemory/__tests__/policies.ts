@@ -6156,7 +6156,7 @@ describe("type policies", function () {
             currentTask: {
               merge(existing, incoming) {
                 // Not a very reasonable merge strategy, but returning
-                // existing here triggers issue #6245, persumably because
+                // existing here triggers issue #6245, presumably because
                 // the existing data is frozen.
                 return existing || incoming;
               },

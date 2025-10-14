@@ -244,7 +244,7 @@ We then import our shared fragment registry into our component file and register
   You need to register fragment definitions with the fragment registry before
   executing operations that use them. This can be problematic when lazy loading
   component files because the application might not register the fragment
-  definition with the registery until after the query begins executing. Move the
+  definition with the registry until after the query begins executing. Move the
   fragment definition to a shared file that isn't lazy-loaded.
 </Caution>
 
@@ -1488,7 +1488,7 @@ npx jscodeshift ... --tag myGql
   Comments in GraphQL documents may be lost after running the codemod because
   the `graphql` library's `print` function used by the codemod doesn't retain
   comments. Always check the output from changes made by the codemod before
-  comitting them.
+  committing them.
 </Caution>
 
 #### 2. Enable `dataMasking`

@@ -30,7 +30,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 - New documentation
 - Subscription support
 
-_These changes will take longer than anticipated due to prioritization of other libaries and integrations_
+_These changes will take longer than anticipated due to prioritization of other libraries and integrations_
 
 ### VSCode Extension
 

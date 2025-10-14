@@ -310,7 +310,7 @@ export const dontTouchThis: ApolloClient<MyCacheShape> = new ApolloClient<MyCach
   });
 });
 
-describe("http link intialization", () => {
+describe("http link initialization", () => {
   test("all options", () => {
     expect(
       transform("explicitLinkConstruction")`

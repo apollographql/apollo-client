@@ -251,7 +251,7 @@ export declare namespace ObservableQuery {
    */
   interface ResultPromise<T> extends Promise<T> {
     /**
-     * Kepp the network operation running until it is finished, even if
+     * Keep the network operation running until it is finished, even if
      * `ObservableQuery` unsubscribed from the operation.
      */
     retain(): this;
@@ -651,7 +651,7 @@ export class ObservableQuery<
           // not be notified about future cache changes with an equal `diff`.
           // That would be the case if we are working with client-only fields
           // that are forced or with `exports` fields that might change, causing
-          // local resovlers to return a new result.
+          // local resolvers to return a new result.
           // This is based on an implementation detail of `InMemoryCache`, which
           // is not optimal - but the only alternative to this would be to
           // resubscribe to the cache asynchonouly, which would bear the risk of
@@ -1564,7 +1564,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           .then((result) => toQueryResult(this.maskResult(result)))
           .finally(() => {
             if (!this.hasObservers() && this.activeOperations.size === 0) {
-              // If `reobserve` was called on a query without any obervers,
+              // If `reobserve` was called on a query without any observers,
               // the teardown logic would never be called, so we need to
               // call it here to ensure the query is properly torn down.
               this.tearDownQuery();
@@ -1678,7 +1678,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     ) {
       const diff = this.getCacheDiff();
       if (
-        // `fromOptimisticTransaction` is not avaiable through the `cache.diff`
+        // `fromOptimisticTransaction` is not available through the `cache.diff`
         // code path, so we need to check it this way
         equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
       ) {

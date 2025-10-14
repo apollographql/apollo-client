@@ -196,7 +196,7 @@ export interface QueryResultDocumentation {
    */
   previousData: unknown;
   /**
-   * A single ErrorLike object describing the error that occured during the latest
+   * A single ErrorLike object describing the error that occurred during the latest
    * query execution.
    *
    * For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).

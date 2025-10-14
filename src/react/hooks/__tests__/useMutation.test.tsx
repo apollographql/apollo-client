@@ -3830,7 +3830,7 @@ describe("useMutation Hook", () => {
 
         expect(useQueryResult.loading).toBe(false);
         expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
-        // This mutation did not braodcast results, so we expect our numbers to
+        // This mutation did not broadcast results, so we expect our numbers to
         // equal the previous set.
         expect(useQueryResult.data).toEqual(getNumbersData(5));
 

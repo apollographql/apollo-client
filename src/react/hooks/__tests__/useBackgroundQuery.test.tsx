@@ -3844,7 +3844,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   const link = new MockSubscriptionLink();
   const cache = new InMemoryCache();
 
-  // We are intentionally writing partial data to the cache. Supress console
+  // We are intentionally writing partial data to the cache. Suppress console
   // warnings to avoid unnecessary noise in the test.
   {
     using _consoleSpy = spyOnConsole("error");

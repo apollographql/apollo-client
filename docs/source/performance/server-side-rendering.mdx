@@ -202,7 +202,7 @@ prerenderStatic({
       ).replace(/</g, "\\u003c")}`,
       bootstrapScripts: ["/client.js"],
       onShellReady() {
-        // Start streaming the reponse to the browser
+        // Start streaming the response to the browser
         res.setHeader("Content-Type", "text/html");
         res.statusCode = 200;
         pipe(res);

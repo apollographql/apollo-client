@@ -785,3 +785,74 @@ test("can change size of lists with reobserve", async () => {
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("throws when changing `from` option from array to non-array", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observableArray = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+    ],
+  });
+
+  expect(() =>
+    observableArray.reobserve({
+      // @ts-expect-error
+      from: { __typename: "Item", id: 2 },
+    })
+  ).toThrow(
+    "Cannot change `from` option from array to non-array. Please provide `from` as an array."
+  );
+});
+
+test("throws when changing `from` option from non-array to array", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observableArray = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  expect(() =>
+    observableArray.reobserve({
+      // @ts-expect-error
+      from: [{ __typename: "Item", id: 2 }],
+    })
+  ).toThrow(
+    "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+  );
+});

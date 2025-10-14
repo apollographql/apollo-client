@@ -175,16 +175,16 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   const { cache } = client;
   const isArray = Array.isArray(options.from);
 
-  // We calculate the cache id seperately from `stableOptions` because we don't
-  // want changes to non key fields in the `from` property to affect
-  // `stableOptions` and retrigger our subscription. If the cache identifier
-  // stays the same between renders, we want to reuse the existing subscription.
   const stableOptions = useDeepMemo(() => {
     const { from, ...rest } = options;
     const fromArray = Array.isArray(from) ? from : [from];
 
     return {
       ...rest,
+      // We calculate the cache id seperately from `stableOptions` because we don't
+      // want changes to non key fields in the `from` property to affect
+      // `stableOptions` and retrigger our subscription. If the cache identifier
+      // stays the same between renders, we want to reuse the existing subscription.
       from: fromArray.map((value) =>
         typeof value === "string" ? value
         : value === null ? null

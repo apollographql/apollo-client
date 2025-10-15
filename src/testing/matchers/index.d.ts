@@ -8,6 +8,7 @@ import type { MatcherHintOptions } from "jest-matcher-utils";
 import type {
   ApolloClient,
   DocumentNode,
+  InMemoryCache,
   ObservableQuery,
   OperationVariables,
 } from "@apollo/client";
@@ -55,6 +56,9 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * comparing their printed values. The document must be parsed by `gql`.
    */
   toMatchDocument(document: DocumentNode): R;
+
+  toHaveNumWatches: T extends InMemoryCache ? (size: number) => R
+  : { error: "matcher needs to be called on an InMemoryCache instance" };
 
   /**
    * Used to determine if the Suspense cache has a cache entry.

@@ -187,6 +187,77 @@ test("can change size of lists with reobserve", async () => {
   await expect(stream).not.toEmitAnything();
 });
 
+test("can reorder same array list", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+    ],
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  observable.reobserve({
+    from: [
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 1 },
+    ],
+  });
+
+  await expect(stream).toEmitTypedValue([
+    {
+      data: { __typename: "Item", id: 2, text: "Item #2" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("can change observed non-array entity with reobserve", async () => {
   type Item = {
     __typename: string;

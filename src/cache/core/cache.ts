@@ -6,7 +6,7 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { Observable } from "rxjs";
+import { Observable, shareReplay } from "rxjs";
 
 import type {
   GetDataState,
@@ -546,56 +546,59 @@ export abstract class ApolloCache {
       };
     }) as Observable<any>;
 
-    return Object.assign(observable, {
-      reobserve: (
-        options:
-          | ApolloCache.WatchFragmentReobserveOptions<
-              ApolloCache.WatchFragmentResult<TData>
-            >
-          | ApolloCache.WatchFragmentReobserveOptions<
-              Array<ApolloCache.WatchFragmentResult<TData>>
-            >
-      ) => {
-        const isOrigArray = Array.isArray(from);
-        const isArray = Array.isArray(options.from);
+    return Object.assign(
+      observable.pipe(shareReplay({ refCount: true, bufferSize: 1 })),
+      {
+        reobserve: (
+          options:
+            | ApolloCache.WatchFragmentReobserveOptions<
+                ApolloCache.WatchFragmentResult<TData>
+              >
+            | ApolloCache.WatchFragmentReobserveOptions<
+                Array<ApolloCache.WatchFragmentResult<TData>>
+              >
+        ) => {
+          const isOrigArray = Array.isArray(from);
+          const isArray = Array.isArray(options.from);
 
-        invariant(
-          isOrigArray === isArray,
-          isOrigArray ?
-            "Cannot change `from` option from array to non-array. Please provide `from` as an array."
-          : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
-        );
-      },
-      getCurrentResult: () => {
-        if (activeSubscribers > 0 && currentResult) {
-          return currentResult as any;
-        }
-
-        const diffs = ids.map((id) => {
-          if (id === null) {
-            return diffToResult({ result: {}, complete: false });
+          invariant(
+            isOrigArray === isArray,
+            isOrigArray ?
+              "Cannot change `from` option from array to non-array. Please provide `from` as an array."
+            : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+          );
+        },
+        getCurrentResult: () => {
+          if (activeSubscribers > 0 && currentResult) {
+            return currentResult as any;
           }
 
-          return diffToResult(
-            this.diff({
-              id,
-              query,
-              returnPartialData: true,
-              optimistic,
-              variables: otherOptions.variables,
-            })
-          );
-        });
+          const diffs = ids.map((id) => {
+            if (id === null) {
+              return diffToResult({ result: {}, complete: false });
+            }
 
-        const result = Array.isArray(from) ? diffs : diffs[0];
+            return diffToResult(
+              this.diff({
+                id,
+                query,
+                returnPartialData: true,
+                optimistic,
+                variables: otherOptions.variables,
+              })
+            );
+          });
 
-        if (!equal(result, currentResult)) {
-          currentResult = result as any;
-        }
+          const result = Array.isArray(from) ? diffs : diffs[0];
 
-        return currentResult;
-      },
-    }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
+          if (!equal(result, currentResult)) {
+            currentResult = result as any;
+          }
+
+          return currentResult;
+        },
+      }
+    ) satisfies ApolloCache.WatchFragmentObservable<any> as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

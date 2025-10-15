@@ -10,14 +10,17 @@ export const toHaveNumWatches: MatcherFunction<[size: number]> = function (
     isNot: this.isNot,
   });
   const cache = _cache as InMemoryCache;
-  const pass = cache["watches"].size === size;
+  const watchSize = cache["watches"].size;
+  const pass = watchSize === size;
 
   return {
     pass,
     message: () => {
       return `${hint}\n\nExpected cache ${
         this.isNot ? "not " : ""
-      }to have ${size} ${size === 1 ? "watch" : "watches"}`;
+      }to have ${size} ${
+        size === 1 ? "watch" : "watches"
+      } but instead it had ${watchSize} watches.`;
     },
   };
 };

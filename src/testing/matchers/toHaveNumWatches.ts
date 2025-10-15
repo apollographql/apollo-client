@@ -13,14 +13,18 @@ export const toHaveNumWatches: MatcherFunction<[size: number]> = function (
   const watchSize = cache["watches"].size;
   const pass = watchSize === size;
 
+  const plural = (size: number) => (size === 1 ? "watch" : "watches");
+
   return {
     pass,
     message: () => {
       return `${hint}\n\nExpected cache ${
         this.isNot ? "not " : ""
-      }to have ${size} ${
-        size === 1 ? "watch" : "watches"
-      } but instead it had ${watchSize} watches.`;
+      }to have ${this.utils.printExpected(size)} ${plural(
+        size
+      )} but instead it had ${this.utils.printReceived(watchSize)} ${plural(
+        watchSize
+      )}.`;
     },
   };
 };

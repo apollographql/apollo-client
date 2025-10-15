@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-10-01**
+**Last updated: 2025-10-15**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -24,6 +24,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 - Improvements for existing incremental delivery implementation
   - Improvements to array merging behavior
   - Improvements to `readFragment`/`writeFragment` (add `from` option)
+- Add support for `useFragment`/`useSuspenseFragment` with arrays
 
 ### GraphQL Testing Library
 

@@ -6,7 +6,7 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { combineLatest, map, Observable, shareReplay, tap } from "rxjs";
+import { combineLatest, map, Observable, shareReplay } from "rxjs";
 
 import type {
   GetDataState,
@@ -514,12 +514,7 @@ export abstract class ApolloCache {
 
     const observable = combineLatest(ids.map(watch)).pipe(
       shareReplay({ bufferSize: 1, refCount: true }),
-      map((results) => (Array.isArray(from) ? results : results[0])),
-      tap({
-        subscribe: () => (subscribed = true),
-        unsubscribe: () => (subscribed = false),
-        next: (result) => (currentResult = result),
-      })
+      map((results) => (Array.isArray(from) ? results : results[0]))
     );
 
     return Object.assign(observable, {
@@ -543,6 +538,7 @@ export abstract class ApolloCache {
         );
       },
       getCurrentResult: () => {
+        // TODO: Need to fix this now that watch returns an observable
         if (subscribed && currentResult) {
           return currentResult as any;
         }

@@ -17,7 +17,7 @@ export const toHaveNumWatches: MatcherFunction<[size: number]> = function (
     message: () => {
       return `${hint}\n\nExpected cache ${
         this.isNot ? "not " : ""
-      }to have ${size} watches`;
+      }to have ${size} ${size === 1 ? "watch" : "watches"}`;
     },
   };
 };

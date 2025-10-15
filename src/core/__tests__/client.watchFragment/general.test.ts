@@ -86,7 +86,6 @@ test("dedupes watches when subscribing multiple times", async () => {
     cache,
     link: ApolloLink.empty(),
   });
-  jest.spyOn(cache, "watch");
 
   client.writeFragment({
     fragment: ItemFragment,
@@ -98,18 +97,19 @@ test("dedupes watches when subscribing multiple times", async () => {
     from: { __typename: "Item", id: 1 },
   });
 
+  expect(cache["watches"].size).toBe(0);
+
   const sub1 = observable.subscribe(() => {});
   const sub2 = observable.subscribe(() => {});
-  expect(client.cache.watch).toHaveBeenCalledTimes(1);
+  expect(cache["watches"].size).toBe(1);
 
   const sub3 = observable.subscribe(() => {});
-  expect(client.cache.watch).toHaveBeenCalledTimes(1);
   expect(cache["watches"].size).toBe(1);
 
   [sub1, sub2, sub3].forEach((sub) => sub.unsubscribe());
+  expect(cache["watches"].size).toBe(0);
 
   const sub4 = observable.subscribe(() => {});
-  expect(cache.watch).toHaveBeenCalledTimes(2);
   expect(cache["watches"].size).toBe(1);
 
   sub4.unsubscribe();

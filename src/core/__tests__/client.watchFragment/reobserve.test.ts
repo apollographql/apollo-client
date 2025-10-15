@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 test("throws when changing `from` option from array to non-array", async () => {
   type Item = {
@@ -182,6 +183,78 @@ test("can change size of lists with reobserve", async () => {
       missing: "Dangling reference to missing Item:6 object",
     },
   ]);
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("can change observed non-array entity with reobserve", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 2; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: { __typename: "Item", id: 2 },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: { __typename: "Item", id: 5 },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Item", id: 5, text: "Item #5" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: { __typename: "Item", id: 6 },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {},
+    dataState: "partial",
+    complete: false,
+    missing: "Dangling reference to missing Item:6 object",
+  });
 
   await expect(stream).not.toEmitAnything();
 });

@@ -66,3 +66,52 @@ test("can subscribe multiple times to watchFragment", async () => {
   await expect(stream1).not.toEmitAnything();
   await expect(stream2).not.toEmitAnything();
 });
+
+test("dedupes watches when subscribing multiple times", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const ItemFragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: ApolloLink.empty(),
+  });
+  jest.spyOn(cache, "watch");
+
+  client.writeFragment({
+    fragment: ItemFragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  const observable = client.watchFragment({
+    fragment: ItemFragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  const sub1 = observable.subscribe(() => {});
+  const sub2 = observable.subscribe(() => {});
+  expect(client.cache.watch).toHaveBeenCalledTimes(1);
+
+  const sub3 = observable.subscribe(() => {});
+  expect(client.cache.watch).toHaveBeenCalledTimes(1);
+  expect(cache["watches"].size).toBe(1);
+
+  [sub1, sub2, sub3].forEach((sub) => sub.unsubscribe());
+
+  const sub4 = observable.subscribe(() => {});
+  expect(cache.watch).toHaveBeenCalledTimes(2);
+  expect(cache["watches"].size).toBe(1);
+
+  sub4.unsubscribe();
+  expect(cache["watches"].size).toBe(0);
+});

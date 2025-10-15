@@ -121,7 +121,7 @@ export declare namespace ApolloCache {
   }
 
   export interface WatchFragmentReobserveOptions<T> {
-    from: T extends Array<ApolloCache.WatchFragmentResult<infer TData>> ?
+    from: T extends ApolloCache.WatchFragmentResult<Array<infer TData>> ?
       Array<StoreObject | Reference | FragmentType<TData> | string>
     : T extends ApolloCache.WatchFragmentResult<infer TData> ?
       StoreObject | Reference | FragmentType<TData> | string
@@ -351,7 +351,7 @@ export abstract class ApolloCache {
       from: Array<any>;
     }
   ): ApolloCache.WatchFragmentObservable<
-    Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
   >;
 
   public watchFragment<
@@ -374,7 +374,7 @@ export abstract class ApolloCache {
         ApolloCache.WatchFragmentResult<Unmasked<TData>>
       >
     | ApolloCache.WatchFragmentObservable<
-        Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+        ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
       > {
     const {
       fragment,

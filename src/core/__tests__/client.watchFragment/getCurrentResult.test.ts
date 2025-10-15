@@ -403,46 +403,30 @@ test("getCurrentResult handles arrays", async () => {
     ],
   });
 
-  expect(observable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   client.writeFragment({
     fragment,
     data: { __typename: "Item", id: 2, text: "Item #2 updated" },
   });
 
-  expect(observable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 });
 
 test("works with data masking", async () => {
@@ -505,40 +489,24 @@ test("works with data masking", async () => {
     ],
   });
 
-  expect(parentObservable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5 },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
-  expect(childObservable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(parentObservable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  expect(childObservable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", text: "Item #1" },
+      { __typename: "Item", text: "Item #2" },
+      { __typename: "Item", text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   client.writeFragment({
     fragment,
@@ -546,41 +514,24 @@ test("works with data masking", async () => {
     data: { __typename: "Item", id: 2, text: "Item #2 updated" },
   });
 
-  expect(parentObservable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5 },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
-
-  expect(childObservable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(parentObservable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  expect(childObservable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", text: "Item #1" },
+      { __typename: "Item", text: "Item #2 updated" },
+      { __typename: "Item", text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 });
 
 test("works with data masking @unmask migrate mode", async () => {
@@ -637,23 +588,15 @@ test("works with data masking @unmask migrate mode", async () => {
     ],
   });
 
-  expect(observable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   expect(console.warn).toHaveBeenCalledTimes(3);
   expect(console.warn).toHaveBeenCalledWith(
@@ -669,23 +612,15 @@ test("works with data masking @unmask migrate mode", async () => {
     data: { __typename: "Item", id: 2, text: "Item #2 updated" },
   });
 
-  expect(observable.getCurrentResult()).toStrictEqualTyped([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   expect(console.warn).toHaveBeenCalledTimes(3);
   expect(console.warn).toHaveBeenCalledWith(

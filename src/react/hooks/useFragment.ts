@@ -139,7 +139,7 @@ export function useFragment<
   options: useFragment.Options<TData, TVariables> & {
     from: Array<any>;
   }
-): Array<useFragment.Result<TData>>;
+): useFragment.Result<Array<TData>>;
 
 /** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
 export function useFragment<

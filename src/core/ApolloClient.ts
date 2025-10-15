@@ -1142,7 +1142,7 @@ export class ApolloClient {
       from: Array<any>;
     }
   ): ApolloClient.WatchFragmentObservable<
-    Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>
+    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>>
   >;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */

@@ -513,8 +513,8 @@ export abstract class ApolloCache {
     const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
 
     const observable = combineLatest(ids.map(watch)).pipe(
-      shareReplay({ bufferSize: 1, refCount: true }),
-      map((results) => (Array.isArray(from) ? results : results[0]))
+      map((results) => (Array.isArray(from) ? results : results[0])),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     return Object.assign(observable, {

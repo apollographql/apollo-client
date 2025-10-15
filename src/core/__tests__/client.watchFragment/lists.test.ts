@@ -726,6 +726,20 @@ test("can subscribe to the same object multiple times", async () => {
     data: { __typename: "Item", id: 1, text: `Item #1 updated` },
   });
 
+  // TODO: figure out if we can batch this
+  await expect(stream).toEmitTypedValue([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
   await expect(stream).toEmitTypedValue([
     {
       data: { __typename: "Item", id: 1, text: "Item #1 updated" },

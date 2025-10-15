@@ -38,23 +38,15 @@ test("can use list for `from` to get list of items", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   await expect(stream).not.toEmitAnything();
 });
@@ -91,23 +83,15 @@ test("allows mix of array identifiers", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 3, text: "Item #3" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 3, text: "Item #3" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   await expect(stream).not.toEmitAnything();
 });
@@ -141,7 +125,11 @@ test("returns empty array with empty from", async () => {
   const observable = client.watchFragment({ fragment, from: [] });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([]);
+  await expect(stream).toEmitTypedValue({
+    data: [],
+    dataState: "complete",
+    complete: true,
+  });
   await expect(stream).not.toEmitAnything();
 });
 
@@ -174,26 +162,16 @@ test("returns incomplete results when cache is empty", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:1 object",
+  await expect(stream).toEmitTypedValue({
+    data: [{}, {}, {}],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      0: "Dangling reference to missing Item:1 object",
+      1: "Dangling reference to missing Item:2 object",
+      2: "Dangling reference to missing Item:5 object",
     },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:2 object",
-    },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:5 object",
-    },
-  ]);
+  });
 
   await expect(stream).not.toEmitAnything();
 });
@@ -234,24 +212,16 @@ test("can use static lists with useFragment with partially fulfilled items", asy
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:5 object",
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      {},
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: { 2: "Dangling reference to missing Item:5 object" },
+  });
 
   await expect(stream).not.toEmitAnything();
 });
@@ -293,24 +263,18 @@ test("updates items in the list with cache writes", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      {},
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      2: "Dangling reference to missing Item:5 object",
     },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:5 object",
-    },
-  ]);
+  });
 
   client.writeFragment({
     fragment,
@@ -321,24 +285,18 @@ test("updates items in the list with cache writes", async () => {
     },
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      {},
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      2: "Dangling reference to missing Item:5 object",
     },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:5 object",
-    },
-  ]);
+  });
 
   client.cache.batch({
     update: (cache) => {
@@ -362,42 +320,28 @@ test("updates items in the list with cache writes", async () => {
     },
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1 from batch" },
-      dataState: "complete",
-      complete: true,
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 from batch" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      {},
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      2: "Dangling reference to missing Item:5 object",
     },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:5 object",
-    },
-  ]);
+  });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 from batch" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      { __typename: "Item", id: 5, text: "Item #5 from batch" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   cache.modify({
     id: cache.identify({ __typename: "Item", id: 1 }),
@@ -406,26 +350,27 @@ test("updates items in the list with cache writes", async () => {
     },
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1 },
-      dataState: "partial",
-      complete: false,
-      missing: {
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      { __typename: "Item", id: 5, text: "Item #5 from batch" },
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      0: {
         text: "Can't find field 'text' on Item:1 object",
       },
     },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Item", id: 1 }),
+    fields: {
+      text: (_, { DELETE }) => DELETE,
     },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  });
 
   // should not cause rerender since its an item not watched
   client.writeFragment({
@@ -503,40 +448,24 @@ test("works with data masking", async () => {
   const parentStream = new ObservableStream(parentObservable);
   const childStream = new ObservableStream(childObsrevable);
 
-  await expect(parentStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2 },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5 },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
-  await expect(childStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(parentStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(childStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", text: "Item #1" },
+      { __typename: "Item", text: "Item #2" },
+      { __typename: "Item", text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   client.writeFragment({
     fragment,
@@ -548,23 +477,15 @@ test("works with data masking", async () => {
     },
   });
 
-  await expect(childStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(childStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", text: "Item #1" },
+      { __typename: "Item", text: "Item #2 updated" },
+      { __typename: "Item", text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
   await expect(parentStream).not.toEmitAnything();
 
   client.cache.batch({
@@ -591,41 +512,26 @@ test("works with data masking", async () => {
     },
   });
 
-  await expect(childStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", text: "Item #1 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(childStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", text: "Item #1 from batch" },
+      { __typename: "Item", text: "Item #2 updated" },
+      { __typename: "Item", text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
-  await expect(childStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", text: "Item #1 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(childStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", text: "Item #1 from batch" },
+      { __typename: "Item", text: "Item #2 updated" },
+      { __typename: "Item", text: "Item #5 from batch" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
   await expect(parentStream).not.toEmitAnything();
 
   cache.modify({
@@ -635,26 +541,20 @@ test("works with data masking", async () => {
     },
   });
 
-  await expect(childStream).toEmitTypedValue([
-    {
-      data: { __typename: "Item" },
-      dataState: "partial",
-      complete: false,
-      missing: {
+  await expect(childStream).toEmitTypedValue({
+    data: [
+      { __typename: "Item" },
+      { __typename: "Item", text: "Item #2 updated" },
+      { __typename: "Item", text: "Item #5 from batch" },
+    ],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      0: {
         text: "Can't find field 'text' on Item:1 object",
       },
     },
-    {
-      data: { __typename: "Item", text: "Item #2 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", text: "Item #5 from batch" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  });
   await expect(parentStream).not.toEmitAnything();
 
   // should not cause rerender since its an item not watched
@@ -708,18 +608,14 @@ test("can subscribe to the same object multiple times", async () => {
   // ensure we only watch the item once
   expect(cache).toHaveNumWatches(1);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 1, text: "Item #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   client.writeFragment({
     fragment,
@@ -727,31 +623,22 @@ test("can subscribe to the same object multiple times", async () => {
   });
 
   // TODO: figure out if we can batch this
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
-
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   await expect(stream).not.toEmitAnything();
 });

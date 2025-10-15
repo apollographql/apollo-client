@@ -108,18 +108,14 @@ test("can change size of lists with reobserve", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   observable.reobserve({
     from: [
@@ -129,23 +125,15 @@ test("can change size of lists with reobserve", async () => {
     ],
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   observable.reobserve({
     from: [
@@ -154,35 +142,35 @@ test("can change size of lists with reobserve", async () => {
     ],
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 5, text: "Item #5" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   observable.reobserve({ from: [] });
 
-  await expect(stream).toEmitTypedValue([]);
+  await expect(stream).toEmitTypedValue({
+    data: [],
+    dataState: "complete",
+    complete: true,
+  });
 
   observable.reobserve({
     from: [{ __typename: "Item", id: 6 }],
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: {},
-      dataState: "partial",
-      complete: false,
-      missing: "Dangling reference to missing Item:6 object",
+  await expect(stream).toEmitTypedValue({
+    data: [{}],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      0: "Dangling reference to missing Item:6 object",
     },
-  ]);
+  });
 
   await expect(stream).not.toEmitAnything();
 });
@@ -222,18 +210,14 @@ test("can reorder same array list", async () => {
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   observable.reobserve({
     from: [
@@ -242,18 +226,14 @@ test("can reorder same array list", async () => {
     ],
   });
 
-  await expect(stream).toEmitTypedValue([
-    {
-      data: { __typename: "Item", id: 2, text: "Item #2" },
-      dataState: "complete",
-      complete: true,
-    },
-    {
-      data: { __typename: "Item", id: 1, text: "Item #1" },
-      dataState: "complete",
-      complete: true,
-    },
-  ]);
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
   await expect(stream).not.toEmitAnything();
 });

@@ -496,11 +496,11 @@ export abstract class ApolloCache {
     let currentResult:
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
       | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
-    let activeSubscribers = 0;
+    let subscribed = false;
     const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
 
     const observable = new Observable((observer) => {
-      activeSubscribers++;
+      subscribed = true;
 
       const emit = (
         result:
@@ -541,7 +541,7 @@ export abstract class ApolloCache {
       });
 
       return () => {
-        activeSubscribers--;
+        subscribed = false;
         subscriptions.forEach((unsub) => unsub());
       };
     }) as Observable<any>;
@@ -569,7 +569,7 @@ export abstract class ApolloCache {
           );
         },
         getCurrentResult: () => {
-          if (activeSubscribers > 0 && currentResult) {
+          if (subscribed && currentResult) {
             return currentResult as any;
           }
 

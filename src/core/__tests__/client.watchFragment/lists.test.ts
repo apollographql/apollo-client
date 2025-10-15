@@ -671,3 +671,73 @@ test("works with data masking", async () => {
   await expect(parentStream).not.toEmitAnything();
   await expect(childStream).not.toEmitAnything();
 });
+
+test("can subscribe to the same object multiple times", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: `Item #1` },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 1 },
+    ],
+  });
+  const stream = new ObservableStream(observable);
+  // ensure we only watch the item once
+  expect(cache).toHaveNumWatches(1);
+
+  await expect(stream).toEmitTypedValue([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: `Item #1 updated` },
+  });
+
+  await expect(stream).toEmitTypedValue([
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+    {
+      data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+      dataState: "complete",
+      complete: true,
+    },
+  ]);
+
+  await expect(stream).not.toEmitAnything();
+});

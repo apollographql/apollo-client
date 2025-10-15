@@ -1208,8 +1208,24 @@ export class ApolloClient {
         | Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
     };
 
+    let currentResult:
+      | ApolloClient.WatchFragmentResult<Unmasked<TData>>
+      | Array<ApolloClient.WatchFragmentResult<Unmasked<TData>>>;
+    let stableMaskedResult:
+      | ApolloClient.WatchFragmentResult<MaybeMasked<TData>>
+      | Array<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
+
     return Object.assign(observable.pipe(map(mask)), {
-      getCurrentResult: () => mask(observable.getCurrentResult()),
+      getCurrentResult: () => {
+        const result = observable.getCurrentResult();
+
+        if (result !== currentResult) {
+          currentResult = result;
+          stableMaskedResult = mask(currentResult);
+        }
+
+        return stableMaskedResult;
+      },
       reobserve: observable.reobserve.bind(observable),
     }) as ApolloClient.WatchFragmentObservable<any>;
   }

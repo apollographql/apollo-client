@@ -6,7 +6,7 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { Observable, shareReplay } from "rxjs";
+import { combineLatest, map, Observable, shareReplay, tap } from "rxjs";
 
 import type {
   GetDataState,
@@ -443,54 +443,67 @@ export abstract class ApolloCache {
       return id as string | null;
     };
 
-    const watch = (
-      id: string | null,
-      cb: (result: ApolloCache.WatchFragmentResult<Unmasked<TData>>) => void
-    ) => {
+    const watches = new Map<
+      string | null,
+      Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+    >();
+
+    const watch = (id: string | null) => {
       let latestDiff: Cache.DiffResult<TData> | undefined;
 
-      if (id === null) {
-        cb({
-          data: {},
-          dataState: "partial",
-          complete: false,
-        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>);
-        return () => {};
+      if (watches.has(id)) {
+        return watches.get(id)!;
       }
 
-      return this.watch<TData, TVariables>({
-        ...otherOptions,
-        returnPartialData: true,
-        id,
-        query,
-        optimistic,
-        immediate: true,
-        callback: (diff) => {
-          let data = diff.result;
+      const observable = new Observable<
+        ApolloCache.WatchFragmentResult<Unmasked<TData>>
+      >((observer) => {
+        if (id === null) {
+          return observer.next({
+            data: {},
+            dataState: "partial",
+            complete: false,
+          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>);
+        }
 
-          // TODO: Remove this once `watchFragment` supports `null` as valid
-          // value emitted
-          if (data === null) {
-            data = {} as any;
-          }
+        return this.watch<TData, TVariables>({
+          ...otherOptions,
+          returnPartialData: true,
+          id,
+          query,
+          optimistic,
+          immediate: true,
+          callback: (diff) => {
+            let data = diff.result;
 
-          if (
-            // Always ensure we deliver the first result
-            latestDiff &&
-            equalByQuery(
-              query,
-              { data: latestDiff.result },
-              { data },
-              options.variables
-            )
-          ) {
-            return;
-          }
+            // TODO: Remove this once `watchFragment` supports `null` as valid
+            // value emitted
+            if (data === null) {
+              data = {} as any;
+            }
 
-          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
-          cb(diffToResult(latestDiff));
-        },
-      });
+            if (
+              // Always ensure we deliver the first result
+              latestDiff &&
+              equalByQuery(
+                query,
+                { data: latestDiff.result },
+                { data },
+                options.variables
+              )
+            ) {
+              return;
+            }
+
+            latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
+            observer.next(diffToResult(latestDiff));
+          },
+        });
+      }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+      watches.set(id, observable);
+
+      return observable;
     };
 
     let currentResult:
@@ -499,106 +512,66 @@ export abstract class ApolloCache {
     let subscribed = false;
     const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
 
-    const observable = new Observable((observer) => {
-      subscribed = true;
+    const observable = combineLatest(ids.map(watch)).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }),
+      map((results) => (Array.isArray(from) ? results : results[0])),
+      tap({
+        subscribe: () => (subscribed = true),
+        unsubscribe: () => (subscribed = false),
+        next: (result) => (currentResult = result),
+      })
+    );
 
-      const emit = (
-        result:
-          | ApolloCache.WatchFragmentResult<Unmasked<TData>>
-          | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+    return Object.assign(observable, {
+      reobserve: (
+        options:
+          | ApolloCache.WatchFragmentReobserveOptions<
+              ApolloCache.WatchFragmentResult<TData>
+            >
+          | ApolloCache.WatchFragmentReobserveOptions<
+              Array<ApolloCache.WatchFragmentResult<TData>>
+            >
       ) => {
-        if (!equal(result, currentResult)) {
-          currentResult = result;
+        const isOrigArray = Array.isArray(from);
+        const isArray = Array.isArray(options.from);
+
+        invariant(
+          isOrigArray === isArray,
+          isOrigArray ?
+            "Cannot change `from` option from array to non-array. Please provide `from` as an array."
+          : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+        );
+      },
+      getCurrentResult: () => {
+        if (subscribed && currentResult) {
+          return currentResult as any;
         }
-        observer.next(currentResult);
-      };
 
-      if (!Array.isArray(from)) {
-        return watch(ids[0], emit);
-      }
-
-      if (from.length === 0) {
-        return emit([]);
-      }
-
-      let results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>> = [];
-      let initialized = false;
-
-      let subscriptions = ids.map((id, idx) => {
-        return watch(id, (result) => {
-          // Shallow copy array to allow for Object.is or === checks to detect a
-          // change has occurred
-          results = [...results];
-          results[idx] = result;
-
-          // Wait for all watches to emit a value before emitting the first
-          // result
-          initialized ||= results.length === from.length;
-          if (initialized) {
-            emit(results);
+        const diffs = ids.map((id) => {
+          if (id === null) {
+            return diffToResult({ result: {}, complete: false });
           }
-        });
-      });
 
-      return () => {
-        subscribed = false;
-        subscriptions.forEach((unsub) => unsub());
-      };
-    }) as Observable<any>;
-
-    return Object.assign(
-      observable.pipe(shareReplay({ refCount: true, bufferSize: 1 })),
-      {
-        reobserve: (
-          options:
-            | ApolloCache.WatchFragmentReobserveOptions<
-                ApolloCache.WatchFragmentResult<TData>
-              >
-            | ApolloCache.WatchFragmentReobserveOptions<
-                Array<ApolloCache.WatchFragmentResult<TData>>
-              >
-        ) => {
-          const isOrigArray = Array.isArray(from);
-          const isArray = Array.isArray(options.from);
-
-          invariant(
-            isOrigArray === isArray,
-            isOrigArray ?
-              "Cannot change `from` option from array to non-array. Please provide `from` as an array."
-            : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+          return diffToResult(
+            this.diff({
+              id,
+              query,
+              returnPartialData: true,
+              optimistic,
+              variables: otherOptions.variables,
+            })
           );
-        },
-        getCurrentResult: () => {
-          if (subscribed && currentResult) {
-            return currentResult as any;
-          }
+        });
 
-          const diffs = ids.map((id) => {
-            if (id === null) {
-              return diffToResult({ result: {}, complete: false });
-            }
+        const result = Array.isArray(from) ? diffs : diffs[0];
 
-            return diffToResult(
-              this.diff({
-                id,
-                query,
-                returnPartialData: true,
-                optimistic,
-                variables: otherOptions.variables,
-              })
-            );
-          });
+        if (!equal(result, currentResult)) {
+          currentResult = result as any;
+        }
 
-          const result = Array.isArray(from) ? diffs : diffs[0];
-
-          if (!equal(result, currentResult)) {
-            currentResult = result as any;
-          }
-
-          return currentResult;
-        },
-      }
-    ) satisfies ApolloCache.WatchFragmentObservable<any> as any;
+        return currentResult;
+      },
+    }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

@@ -97,21 +97,21 @@ test("dedupes watches when subscribing multiple times", async () => {
     from: { __typename: "Item", id: 1 },
   });
 
-  expect(cache["watches"].size).toBe(0);
+  expect(cache).toHaveNumWatches(0);
 
   const sub1 = observable.subscribe(() => {});
   const sub2 = observable.subscribe(() => {});
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   const sub3 = observable.subscribe(() => {});
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   [sub1, sub2, sub3].forEach((sub) => sub.unsubscribe());
-  expect(cache["watches"].size).toBe(0);
+  expect(cache).toHaveNumWatches(0);
 
   const sub4 = observable.subscribe(() => {});
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   sub4.unsubscribe();
-  expect(cache["watches"].size).toBe(0);
+  expect(cache).toHaveNumWatches(0);
 });

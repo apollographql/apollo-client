@@ -599,11 +599,14 @@ test("works with data masking @unmask migrate mode", async () => {
   });
 
   expect(console.warn).toHaveBeenCalledTimes(3);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
-    "fragment 'ItemFragment'",
-    "text"
-  );
+  for (let i = 0; i < 3; i++) {
+    expect(console.warn).toHaveBeenNthCalledWith(
+      i + 1,
+      expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
+      "fragment 'ItemFragment'",
+      `[${i}].text`
+    );
+  }
   consoleSpy.warn.mockClear();
 
   client.writeFragment({
@@ -623,9 +626,12 @@ test("works with data masking @unmask migrate mode", async () => {
   });
 
   expect(console.warn).toHaveBeenCalledTimes(3);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
-    "fragment 'ItemFragment'",
-    "text"
-  );
+  for (let i = 0; i < 3; i++) {
+    expect(console.warn).toHaveBeenNthCalledWith(
+      i + 1,
+      expect.stringContaining("Accessing unmasked field on %s at path '%s'."),
+      "fragment 'ItemFragment'",
+      `[${i}].text`
+    );
+  }
 });

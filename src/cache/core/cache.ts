@@ -140,7 +140,7 @@ export declare namespace ApolloCache {
 
   export interface WatchFragmentReobserveOptions<T> {
     from: T extends ApolloCache.WatchFragmentResult<Array<infer TData>> ?
-      Array<StoreObject | Reference | FragmentType<TData> | string>
+      Array<StoreObject | Reference | FragmentType<TData> | string | null>
     : T extends ApolloCache.WatchFragmentResult<infer TData> ?
       StoreObject | Reference | FragmentType<TData> | string
     : never;

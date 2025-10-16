@@ -507,6 +507,32 @@ export abstract class ApolloCache {
       return observable;
     };
 
+    function toResult(diffs: Array<Cache.DiffResult<TData>>) {
+      if (!Array.isArray(from)) {
+        return diffToResult(diffs[0]);
+      }
+
+      return diffs.reduce(
+        (memo, item, idx) => {
+          memo.data.push((item.result ?? {}) as any);
+          memo.complete &&= item.complete;
+          memo.dataState = memo.complete ? "complete" : "partial";
+
+          if (item.missing) {
+            memo.missing ||= {};
+            (memo.missing as any)[idx] = item.missing.missing;
+          }
+
+          return memo;
+        },
+        {
+          data: [],
+          dataState: "complete",
+          complete: true,
+        } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+      );
+    }
+
     let currentResult:
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
       | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
@@ -521,33 +547,7 @@ export abstract class ApolloCache {
       : new Observable((observer) => observer.next([]));
 
     const observable = diffs.pipe(
-      map((diffs) => {
-        const result = diffs.reduce(
-          (memo, item, idx) => {
-            memo.data.push(item.result as any);
-            memo.complete &&= item.complete;
-            memo.dataState = memo.complete ? "complete" : "partial";
-
-            if (item.missing) {
-              memo.missing ||= {};
-              (memo.missing as any)[idx] = item.missing.missing;
-            }
-
-            return memo;
-          },
-          {
-            data: [],
-            dataState: "complete",
-            complete: true,
-          } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
-        );
-
-        if (!Array.isArray(from)) {
-          (result as any).data = result.data[0];
-        }
-
-        return result;
-      }),
+      map(toResult),
       shareReplay({ bufferSize: 1, refCount: true }),
       tap({
         subscribe: () => (subscribed = true),
@@ -577,28 +577,25 @@ export abstract class ApolloCache {
         );
       },
       getCurrentResult: () => {
-        // TODO: Need to fix this now that watch returns an observable
         if (subscribed && currentResult) {
           return currentResult as any;
         }
 
-        const diffs = ids.map((id) => {
+        const diffs = ids.map((id): Cache.DiffResult<TData> => {
           if (id === null) {
-            return diffToResult({ result: {}, complete: false });
+            return { result: {} as any, complete: false };
           }
 
-          return diffToResult(
-            this.diff({
-              id,
-              query,
-              returnPartialData: true,
-              optimistic,
-              variables: otherOptions.variables,
-            })
-          );
+          return this.diff<TData>({
+            id,
+            query,
+            returnPartialData: true,
+            optimistic,
+            variables: otherOptions.variables,
+          });
         });
 
-        const result = Array.isArray(from) ? diffs : diffs[0];
+        const result = toResult(diffs);
 
         if (!equal(result, currentResult)) {
           currentResult = result as any;

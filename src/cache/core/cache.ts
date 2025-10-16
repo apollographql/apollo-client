@@ -6,7 +6,15 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { combineLatest, map, Observable, shareReplay, tap } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  map,
+  Observable,
+  shareReplay,
+  switchMap,
+  tap,
+} from "rxjs";
 
 import type {
   GetDataState,
@@ -537,16 +545,20 @@ export abstract class ApolloCache {
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
       | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
     let subscribed = false;
-    const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
+    const ids$ = new BehaviorSubject(
+      Array.isArray(from) ? from.map(getId) : [getId(from)]
+    );
 
-    // combineLatest completes immediately when given an empty array. We want to
-    // emit an empty array without the complete notifiation instead
-    const diffs: Observable<Array<Cache.DiffResult<TData>>> =
-      ids.length > 0 ?
-        combineLatest(ids.map(watch))
-      : new Observable((observer) => observer.next([]));
-
-    const observable = diffs.pipe(
+    const observable = ids$.pipe(
+      switchMap((ids) => {
+        // combineLatest completes immediately when given an empty array. We want to
+        // emit an empty array without the complete notifiation instead
+        return ids.length > 0 ?
+            combineLatest(ids.map(watch))
+          : new Observable<Array<Cache.DiffResult<TData>>>((observer) =>
+              observer.next([])
+            );
+      }),
       map(toResult),
       map((result) => {
         if (!equal(result, currentResult)) {
@@ -587,7 +599,7 @@ export abstract class ApolloCache {
           return currentResult as any;
         }
 
-        const diffs = ids.map((id): Cache.DiffResult<TData> => {
+        const diffs = ids$.getValue().map((id): Cache.DiffResult<TData> => {
           if (id === null) {
             return { result: {} as any, complete: false };
           }

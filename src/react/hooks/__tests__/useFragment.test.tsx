@@ -1442,6 +1442,65 @@ describe("useFragment", () => {
     });
   });
 
+  it("returns correct data when from changes", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+    type User = { __typename: "User"; id: number; name: string };
+    const fragment: TypedDocumentNode<User> = gql`
+      fragment UserFragment on User {
+        id
+        name
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 1, name: "Alice" },
+    });
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 2, name: "Charlie" },
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      ({ id }) => useFragment({ fragment, from: { __typename: "User", id } }),
+      {
+        initialProps: { id: 1 },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toStrictEqualTyped({
+        complete: true,
+        data: { __typename: "User", id: 1, name: "Alice" },
+        dataState: "complete",
+      });
+    }
+
+    await rerender({ id: 2 });
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toStrictEqualTyped({
+        complete: true,
+        data: { __typename: "User", id: 2, name: "Charlie" },
+        dataState: "complete",
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("returns correct data when options change", async () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),

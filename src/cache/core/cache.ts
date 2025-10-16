@@ -109,7 +109,7 @@ export declare namespace ApolloCache {
       } & GetDataState<TData, "complete">)
     | {
         complete: false;
-        missing: MissingTree;
+        missing?: MissingTree;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
         data: TData extends Array<infer TItem> ?
           Array<DataValue.Partial<TItem | null>>

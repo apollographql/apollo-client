@@ -414,48 +414,6 @@ export abstract class ApolloCache {
       return result;
     }
 
-    const getId = (
-      from: Exclude<
-        ApolloCache.WatchFragmentOptions<TData, TVariables>["from"],
-        Array<any>
-      >
-    ) => {
-      // While our TypeScript types do not allow for `undefined` as a valid
-      // `from`, its possible `useFragment` gives us an `undefined` since it
-      // calls` cache.identify` and provides that value to `from`. We are
-      // adding this fix here however to ensure those using plain JavaScript
-      // and using `cache.identify` themselves will avoid seeing the obscure
-      // warning.
-      //
-      // `null` isn't allowed by the TypeScript types either, but we handle it
-      // internally to allow for useFragment to send `null` as a valid array
-      // item. This ensures the array length emitted by client.watchFragment
-      // matches the `from` length provided to useFragment. This also means we
-      // can use client.watchFragment with a `from` array from useFragment
-      const id =
-        (
-          typeof from === "undefined" ||
-          typeof from === "string" ||
-          from === null
-        ) ?
-          from
-        : this.identify(from);
-
-      if (__DEV__) {
-        const actualFragmentName =
-          fragmentName || getFragmentDefinition(fragment).name.value;
-
-        if (id === undefined) {
-          invariant.warn(
-            "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-            actualFragmentName
-          );
-        }
-      }
-
-      return id as string | null;
-    };
-
     const getWatchOptions = wrap((id: string) => {
       let latestDiff: Cache.DiffResult<TData> | undefined;
 
@@ -556,11 +514,46 @@ export abstract class ApolloCache {
       return observable;
     });
 
-    function toStringIds(from: ApolloCache.WatchFragmentOptions["from"]) {
+    const toStringIds = (from: ApolloCache.WatchFragmentOptions["from"]) => {
       const fromArray = Array.isArray(from) ? from : [from];
 
-      return fromArray.map(getId);
-    }
+      return fromArray.map((value) => {
+        // While our TypeScript types do not allow for `undefined` as a valid
+        // `from`, its possible `useFragment` gives us an `undefined` since it
+        // calls` cache.identify` and provides that value to `from`. We are
+        // adding this fix here however to ensure those using plain JavaScript
+        // and using `cache.identify` themselves will avoid seeing the obscure
+        // warning.
+        //
+        // `null` isn't allowed by the TypeScript types either, but we handle it
+        // internally to allow for useFragment to send `null` as a valid array
+        // item. This ensures the array length emitted by client.watchFragment
+        // matches the `from` length provided to useFragment. This also means we
+        // can use client.watchFragment with a `from` array from useFragment
+        const id =
+          (
+            typeof value === "undefined" ||
+            typeof value === "string" ||
+            value === null
+          ) ?
+            value
+          : this.identify(value);
+
+        if (__DEV__) {
+          const actualFragmentName =
+            fragmentName || getFragmentDefinition(fragment).name.value;
+
+          if (id === undefined) {
+            invariant.warn(
+              "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+              actualFragmentName
+            );
+          }
+        }
+
+        return id as string | null;
+      });
+    };
 
     function toResult(diffs: Array<Cache.DiffResult<TData>>) {
       if (!Array.isArray(from)) {

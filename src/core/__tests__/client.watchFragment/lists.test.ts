@@ -1,3 +1,5 @@
+import { waitFor } from "@testing-library/react";
+
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ObservableStream } from "@apollo/client/testing/internal";
@@ -631,7 +633,11 @@ test("can subscribe to the same object multiple times", async () => {
 
   client.writeFragment({
     fragment,
-    data: { __typename: "Item", id: 1, text: `Item #1` },
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
   });
 
   const observable = client.watchFragment({
@@ -673,6 +679,94 @@ test("can subscribe to the same object multiple times", async () => {
       { __typename: "Item", id: 1, text: "Item #1 updated" },
       { __typename: "Item", id: 1, text: "Item #1 updated" },
     ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 1 },
+    ],
+  });
+  expect(cache).toHaveNumWatches(1);
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 1 },
+    ],
+  });
+  expect(cache).toHaveNumWatches(2);
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: `Item #1 updated again` },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: [{ __typename: "Item", id: 1 }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [{ __typename: "Item", id: 1, text: "Item #1 updated again" }],
+    dataState: "complete",
+    complete: true,
+  });
+
+  // Ensure that removing one of the duplicates doesn't remove thw watch
+  // entirely
+  await waitFor(() => expect(cache).toHaveNumWatches(1));
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [{ __typename: "Item", id: 1, text: "Item #1" }],
     dataState: "complete",
     complete: true,
   });

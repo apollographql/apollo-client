@@ -185,7 +185,7 @@ test("can change size of lists with reobserve", async () => {
   });
 
   await expect(stream).toEmitTypedValue({
-    data: [{}],
+    data: [null],
     dataState: "partial",
     complete: false,
     missing: {

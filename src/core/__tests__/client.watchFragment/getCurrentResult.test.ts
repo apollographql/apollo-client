@@ -429,6 +429,33 @@ test("getCurrentResult handles arrays", async () => {
   });
 });
 
+test("getCurrentResult handles arrays with null", async () => {
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [null, null, { __typename: "Item", id: 5 }],
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [null, null, null],
+    dataState: "partial",
+    complete: false,
+    missing: {
+      2: "Dangling reference to missing Item:5 object",
+    },
+  });
+});
+
 test("works with data masking", async () => {
   type ItemDetails = {
     __typename: string;

@@ -90,12 +90,18 @@ export declare namespace useFragment {
         /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: never;
       } & GetDataState<MaybeMasked<TData>, "complete">)
-    | ({
+    | {
         /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#complete:member} */
         complete: false;
         /** {@inheritDoc @apollo/client/react!useFragment.DocumentationTypes.useFragment.Result#missing:member} */
         missing?: MissingTree;
-      } & GetDataState<MaybeMasked<TData>, "partial">);
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: TData extends Array<infer TItem> ?
+          Array<DataValue.Partial<TItem | null>>
+        : DataValue.Partial<TData>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "partial";
+      };
 
   export namespace DocumentationTypes {
     namespace useFragment {

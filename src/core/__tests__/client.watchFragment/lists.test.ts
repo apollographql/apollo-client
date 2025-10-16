@@ -163,12 +163,49 @@ test("returns incomplete results when cache is empty", async () => {
   const stream = new ObservableStream(observable);
 
   await expect(stream).toEmitTypedValue({
-    data: [{}, {}, {}],
+    data: [null, null, null],
     dataState: "partial",
     complete: false,
     missing: {
       0: "Dangling reference to missing Item:1 object",
       1: "Dangling reference to missing Item:2 object",
+      2: "Dangling reference to missing Item:5 object",
+    },
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns null values for null from items", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [null, null, { __typename: "Item", id: 5 }],
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: [null, null, null],
+    dataState: "partial",
+    complete: false,
+    missing: {
       2: "Dangling reference to missing Item:5 object",
     },
   });
@@ -216,7 +253,7 @@ test("can use static lists with useFragment with partially fulfilled items", asy
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -267,7 +304,7 @@ test("updates items in the list with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -289,7 +326,7 @@ test("updates items in the list with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -324,7 +361,7 @@ test("updates items in the list with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1 from batch" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,

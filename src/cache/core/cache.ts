@@ -548,6 +548,13 @@ export abstract class ApolloCache {
 
     const observable = diffs.pipe(
       map(toResult),
+      map((result) => {
+        if (!equal(result, currentResult)) {
+          currentResult = result;
+        }
+
+        return currentResult;
+      }),
       shareReplay({ bufferSize: 1, refCount: true }),
       tap({
         subscribe: () => (subscribed = true),

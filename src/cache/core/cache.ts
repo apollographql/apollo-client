@@ -398,22 +398,6 @@ export abstract class ApolloCache {
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
 
-    function diffToResult<TData>(
-      diff: Cache.DiffResult<TData>
-    ): ApolloCache.WatchFragmentResult<Unmasked<TData>> {
-      const result = {
-        data: diff.result ?? {},
-        complete: !!diff.complete,
-        dataState: diff.complete ? "complete" : "partial",
-      } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
-
-      if (diff.missing) {
-        result.missing = diff.missing.missing;
-      }
-
-      return result;
-    }
-
     const getWatchOptions = wrap((id: string) => {
       let latestDiff: Cache.DiffResult<TData> | undefined;
 
@@ -557,7 +541,18 @@ export abstract class ApolloCache {
 
     function toResult(diffs: Array<Cache.DiffResult<TData>>) {
       if (!Array.isArray(from)) {
-        return diffToResult(diffs[0]);
+        const [diff] = diffs;
+        const result = {
+          data: diff.result ?? {},
+          complete: !!diff.complete,
+          dataState: diff.complete ? "complete" : "partial",
+        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
+
+        if (diff.missing) {
+          result.missing = diff.missing.missing;
+        }
+
+        return result;
       }
 
       return diffs.reduce(

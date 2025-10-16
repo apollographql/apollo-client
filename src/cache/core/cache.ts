@@ -18,16 +18,13 @@ import {
 } from "rxjs";
 
 import type {
+  DataValue,
   GetDataState,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type {
-  DeepPartial,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
@@ -74,7 +71,9 @@ export declare namespace ApolloCache {
       | Reference
       | FragmentType<NoInfer<TData>>
       | string
-      | Array<StoreObject | Reference | FragmentType<NoInfer<TData>> | string>;
+      | Array<
+          StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null
+        >;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -108,10 +107,16 @@ export declare namespace ApolloCache {
         complete: true;
         missing?: never;
       } & GetDataState<TData, "complete">)
-    | ({
+    | {
         complete: false;
         missing: MissingTree;
-      } & GetDataState<TData, "partial">);
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: TData extends Array<infer TItem> ?
+          Array<DataValue.Partial<TItem | null>>
+        : DataValue.Partial<TData>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "partial";
+      };
 
   export interface WatchFragmentObservable<T> extends Observable<T> {
     /**
@@ -417,28 +422,20 @@ export abstract class ApolloCache {
         optimistic,
         immediate: true,
         callback: (diff) => {
-          let data = diff.result;
-
-          // TODO: Remove this once `watchFragment` supports `null` as valid
-          // value emitted
-          if (data === null) {
-            data = {} as any;
-          }
-
           if (
             // Always ensure we deliver the first result
             latestDiff &&
             equalByQuery(
               query,
               { data: latestDiff.result },
-              { data },
+              { data: diff.result },
               options.variables
             )
           ) {
             return;
           }
 
-          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
+          latestDiff = diff;
           subject.next(latestDiff);
         },
       };
@@ -462,10 +459,7 @@ export abstract class ApolloCache {
       }
       const observable = new Observable<Cache.DiffResult<TData>>((observer) => {
         if (id === null) {
-          return observer.next({
-            result: {} as DeepPartial<TData>,
-            complete: false,
-          });
+          return observer.next({ result: null, complete: false });
         }
 
         const watch = getWatchOptions(id);
@@ -543,6 +537,14 @@ export abstract class ApolloCache {
       if (!Array.isArray(from)) {
         const [diff] = diffs;
         const result = {
+          // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
+          // when the diff.result is null. As such, we need to fallback to {}
+          // when diff.result is null to maintain backwards compatibility. We
+          // should plan to change this in v5.
+          //
+          // NOTE: Using `from` with an array will maintain `null` properly
+          // without the need for a similar fullback since watchFragment with
+          // arrays is new functionality in v4.
           data: diff.result ?? {},
           complete: !!diff.complete,
           dataState: diff.complete ? "complete" : "partial",
@@ -557,7 +559,7 @@ export abstract class ApolloCache {
 
       return diffs.reduce(
         (memo, item, idx) => {
-          memo.data.push((item.result ?? {}) as any);
+          memo.data.push(item.result as any);
           memo.complete &&= item.complete;
           memo.dataState = memo.complete ? "complete" : "partial";
 
@@ -636,7 +638,7 @@ export abstract class ApolloCache {
 
         const diffs = ids$.getValue().map((id): Cache.DiffResult<TData> => {
           if (id === null) {
-            return { result: {} as any, complete: false };
+            return { result: null, complete: false };
           }
 
           return this.diff<TData>({

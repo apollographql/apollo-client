@@ -2637,7 +2637,7 @@ test("allows null as list item `from` value", async () => {
   );
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: [{}, {}, {}],
+    data: [null, null, null],
     dataState: "partial",
     complete: false,
   });
@@ -2685,7 +2685,7 @@ test("allows mix of array identifiers", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -2768,7 +2768,7 @@ test("returns incomplete results when cache is empty", async () => {
   );
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: [{}, {}, {}],
+    data: [null, null, null],
     dataState: "partial",
     complete: false,
     missing: {
@@ -2825,7 +2825,7 @@ test("can use static lists with useFragment with partially fulfilled items", asy
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -2935,7 +2935,7 @@ test("handles changing list size", async () => {
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: [{}],
+    data: [null],
     dataState: "partial",
     complete: false,
     missing: {
@@ -2991,7 +2991,7 @@ test("updates items in the list with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,
@@ -3013,7 +3013,7 @@ test("updates items in the list with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
-      {},
+      null,
     ],
     dataState: "partial",
     complete: false,

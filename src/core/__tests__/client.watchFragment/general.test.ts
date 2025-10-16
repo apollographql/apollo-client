@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
 test("can subscribe multiple times to watchFragment", async () => {
   type Item = {
@@ -107,11 +107,13 @@ test("dedupes watches when subscribing multiple times", async () => {
   expect(cache).toHaveNumWatches(1);
 
   [sub1, sub2, sub3].forEach((sub) => sub.unsubscribe());
+  await wait(0);
   expect(cache).toHaveNumWatches(0);
 
   const sub4 = observable.subscribe(() => {});
   expect(cache).toHaveNumWatches(1);
 
   sub4.unsubscribe();
+  await wait(0);
   expect(cache).toHaveNumWatches(0);
 });

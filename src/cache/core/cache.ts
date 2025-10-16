@@ -6,7 +6,7 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { combineLatest, map, Observable, shareReplay } from "rxjs";
+import { combineLatest, map, Observable, shareReplay, tap } from "rxjs";
 
 import type {
   GetDataState,
@@ -548,7 +548,12 @@ export abstract class ApolloCache {
 
         return result;
       }),
-      shareReplay({ bufferSize: 1, refCount: true })
+      shareReplay({ bufferSize: 1, refCount: true }),
+      tap({
+        subscribe: () => (subscribed = true),
+        unsubscribe: () => (subscribed = false),
+        next: (result) => (currentResult = result),
+      })
     );
 
     return Object.assign(observable, {

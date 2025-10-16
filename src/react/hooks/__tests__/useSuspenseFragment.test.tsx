@@ -24,11 +24,7 @@ import {
 } from "@apollo/client";
 import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
-import {
-  renderAsync,
-  spyOnConsole,
-  wait,
-} from "@apollo/client/testing/internal";
+import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
@@ -1553,14 +1549,13 @@ test("tears down the subscription on unmount", async () => {
     expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
   }
 
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   unmount();
-  // We need to wait a tick since the cleanup is run in a setTimeout to
-  // prevent strict mode bugs.
-  await wait(0);
 
-  expect(cache["watches"].size).toBe(0);
+  // Cleanup happens async so we just need to ensure it happens sometime after
+  // mount
+  await waitFor(() => expect(cache).toHaveNumWatches(0));
 });
 
 test("tears down all watches when rendering multiple records", async () => {
@@ -1617,11 +1612,10 @@ test("tears down all watches when rendering multiple records", async () => {
   }
 
   unmount();
-  // We need to wait a tick since the cleanup is run in a setTimeout to
-  // prevent strict mode bugs.
-  await wait(0);
 
-  expect(cache["watches"].size).toBe(0);
+  // Cleanup happens async so we just need to ensure it happens sometime after
+  // mount
+  await waitFor(() => expect(cache).toHaveNumWatches(0));
 });
 
 test("tears down watches after default autoDisposeTimeoutMs if component never renders again after suspending", async () => {
@@ -1686,11 +1680,13 @@ test("tears down watches after default autoDisposeTimeoutMs if component never r
   // clear the microtask queue
   await act(() => Promise.resolve());
 
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   jest.advanceTimersByTime(30_000);
+  // Run unsubscribe timeouts from cache watches
+  jest.runOnlyPendingTimers();
 
-  expect(cache["watches"].size).toBe(0);
+  expect(cache).toHaveNumWatches(0);
 
   jest.useRealTimers();
 });
@@ -1767,11 +1763,13 @@ test("tears down watches after configured autoDisposeTimeoutMs if component neve
   // clear the microtask queue
   await act(() => Promise.resolve());
 
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   jest.advanceTimersByTime(5000);
+  // Run unsubscribe timeouts from cache watches
+  jest.runOnlyPendingTimers();
 
-  expect(cache["watches"].size).toBe(0);
+  expect(cache).toHaveNumWatches(0);
 
   jest.useRealTimers();
 });
@@ -1833,7 +1831,7 @@ test("cancels autoDisposeTimeoutMs if the component renders before timer finishe
 
   jest.advanceTimersByTime(30_000);
 
-  expect(cache["watches"].size).toBe(1);
+  expect(cache).toHaveNumWatches(1);
 
   jest.useRealTimers();
 });

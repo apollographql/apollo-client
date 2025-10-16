@@ -37,8 +37,8 @@ export type DeepPartial<T> =
         T // Test for non-tuples
       ) ?
         readonly TItem[] extends T ?
-          ReadonlyArray<DeepPartial<TItem | undefined>>
-        : Array<DeepPartial<TItem | undefined>>
+          ReadonlyArray<DeepPartial<TItem>>
+        : Array<DeepPartial<TItem>>
       : DeepPartialObject<T>
     : DeepPartialObject<T>
   : unknown;

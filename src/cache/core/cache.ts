@@ -513,7 +513,14 @@ export abstract class ApolloCache {
     let subscribed = false;
     const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
 
-    const observable = combineLatest(ids.map(watch)).pipe(
+    // combineLatest completes immediately when given an empty array. We want to
+    // emit an empty array without the complete notifiation instead
+    const diffs: Observable<Array<Cache.DiffResult<TData>>> =
+      ids.length > 0 ?
+        combineLatest(ids.map(watch))
+      : new Observable((observer) => observer.next([]));
+
+    const observable = diffs.pipe(
       map((diffs) => {
         const result = diffs.reduce(
           (memo, item, idx) => {

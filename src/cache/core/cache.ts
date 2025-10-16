@@ -559,7 +559,6 @@ export abstract class ApolloCache {
       tap({
         subscribe: () => (subscribed = true),
         unsubscribe: () => (subscribed = false),
-        next: (result) => (currentResult = result),
       })
     );
 

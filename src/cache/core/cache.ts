@@ -453,7 +453,7 @@ export abstract class ApolloCache {
       string | null,
       Observable<Cache.DiffResult<TData>>
     >();
-    const watch = wrap((id: string | null) => {
+    const watch = (id: string | null) => {
       if (watches.has(id)) {
         return watches.get(id)!;
       }
@@ -490,7 +490,7 @@ export abstract class ApolloCache {
       watches.set(id, observable);
 
       return observable;
-    });
+    };
 
     const toStringIds = (from: ApolloCache.WatchFragmentOptions["from"]) => {
       const fromArray = Array.isArray(from) ? from : [from];

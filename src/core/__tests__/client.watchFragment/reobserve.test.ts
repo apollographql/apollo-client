@@ -257,7 +257,7 @@ test("can change observed non-array entity with reobserve", async () => {
     link: ApolloLink.empty(),
   });
 
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= 5; i++) {
     client.writeFragment({
       fragment,
       data: { __typename: "Item", id: i, text: `Item #${i}` },

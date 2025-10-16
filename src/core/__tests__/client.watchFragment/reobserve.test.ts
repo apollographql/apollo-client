@@ -1,3 +1,5 @@
+import { waitFor } from "@testing-library/react";
+
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ObservableStream } from "@apollo/client/testing/internal";
@@ -87,8 +89,9 @@ test("can change size of lists with reobserve", async () => {
     }
   `;
 
+  const cache = new InMemoryCache();
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache,
     link: ApolloLink.empty(),
   });
 
@@ -155,6 +158,24 @@ test("can change size of lists with reobserve", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: [],
+    dataState: "complete",
+    complete: true,
+  });
+
+  // watches are unsubscribed in a setTimeout. Wait for them all to
+  // unsubcribe to ensure the change is picked up when reobserved
+  await waitFor(() => expect(cache).toHaveNumWatches(0));
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+  });
+
+  observable.reobserve({
+    from: [{ __typename: "Item", id: 1 }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [{ __typename: "Item", id: 1, text: "Item #1 updated" }],
     dataState: "complete",
     complete: true,
   });

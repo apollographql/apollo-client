@@ -14,7 +14,11 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type { Reference, StoreObject } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
@@ -445,7 +449,7 @@ export abstract class ApolloCache {
 
     const watches = new Map<
       string | null,
-      Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>
+      Observable<Cache.DiffResult<TData>>
     >();
 
     const watch = (id: string | null) => {
@@ -455,15 +459,12 @@ export abstract class ApolloCache {
         return watches.get(id)!;
       }
 
-      const observable = new Observable<
-        ApolloCache.WatchFragmentResult<Unmasked<TData>>
-      >((observer) => {
+      const observable = new Observable<Cache.DiffResult<TData>>((observer) => {
         if (id === null) {
           return observer.next({
-            data: {},
-            dataState: "partial",
+            result: {} as DeepPartial<TData>,
             complete: false,
-          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>);
+          });
         }
 
         return this.watch<TData, TVariables>({
@@ -496,7 +497,7 @@ export abstract class ApolloCache {
             }
 
             latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
-            observer.next(diffToResult(latestDiff));
+            observer.next(latestDiff);
           },
         });
       }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
@@ -508,12 +509,38 @@ export abstract class ApolloCache {
 
     let currentResult:
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
-      | Array<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
+      | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
     let subscribed = false;
     const ids = Array.isArray(from) ? from.map(getId) : [getId(from)];
 
     const observable = combineLatest(ids.map(watch)).pipe(
-      map((results) => (Array.isArray(from) ? results : results[0])),
+      map((diffs) => {
+        const result = diffs.reduce(
+          (memo, item, idx) => {
+            memo.data.push(item.result as any);
+            memo.complete &&= item.complete;
+            memo.dataState = memo.complete ? "complete" : "partial";
+
+            if (item.missing) {
+              memo.missing ||= {};
+              (memo.missing as any)[idx] = item.missing.missing;
+            }
+
+            return memo;
+          },
+          {
+            data: [],
+            dataState: "complete",
+            complete: true,
+          } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+        );
+
+        if (!Array.isArray(from)) {
+          (result as any).data = result.data[0];
+        }
+
+        return result;
+      }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
 

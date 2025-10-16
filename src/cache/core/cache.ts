@@ -9,6 +9,7 @@ import { wrap } from "optimism";
 import {
   BehaviorSubject,
   combineLatest,
+  filter,
   map,
   Observable,
   shareReplay,
@@ -455,18 +456,68 @@ export abstract class ApolloCache {
       return id as string | null;
     };
 
+    const getWatchOptions = wrap((id: string) => {
+      let latestDiff: Cache.DiffResult<TData> | undefined;
+
+      // This BehaviorSubject maintains the last emitted value so that a value
+      // can always be emitted immediately. Normally this is the responsiblity
+      // of immediate: true and the callback, but if cache.watch is called with
+      // the same options object, maybeBroadcastWatch doesn't execute the inner
+      // broadcast function.
+      const subject = new BehaviorSubject<Cache.DiffResult<TData> | undefined>(
+        undefined
+      );
+      const options: Cache.WatchOptions<TData, TVariables> = {
+        ...otherOptions,
+        returnPartialData: true,
+        id,
+        query,
+        optimistic,
+        immediate: true,
+        callback: (diff) => {
+          let data = diff.result;
+
+          // TODO: Remove this once `watchFragment` supports `null` as valid
+          // value emitted
+          if (data === null) {
+            data = {} as any;
+          }
+
+          if (
+            // Always ensure we deliver the first result
+            latestDiff &&
+            equalByQuery(
+              query,
+              { data: latestDiff.result },
+              { data },
+              options.variables
+            )
+          ) {
+            return;
+          }
+
+          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
+          subject.next(latestDiff);
+        },
+      };
+
+      return {
+        // Ensure the initial undefined value is not emitted
+        observable: subject.pipe(filter(Boolean)),
+        options,
+        // mutable field to allow for watch to change this
+        timeoutId: undefined as NodeJS.Timeout | undefined,
+      };
+    });
+
     const watches = new Map<
       string | null,
       Observable<Cache.DiffResult<TData>>
     >();
-
-    const watch = (id: string | null) => {
-      let latestDiff: Cache.DiffResult<TData> | undefined;
-
+    const watch = wrap((id: string | null) => {
       if (watches.has(id)) {
         return watches.get(id)!;
       }
-
       const observable = new Observable<Cache.DiffResult<TData>>((observer) => {
         if (id === null) {
           return observer.next({
@@ -475,50 +526,35 @@ export abstract class ApolloCache {
           });
         }
 
-        const unsubscribe = this.watch<TData, TVariables>({
-          ...otherOptions,
-          returnPartialData: true,
-          id,
-          query,
-          optimistic,
-          immediate: true,
-          callback: (diff) => {
-            let data = diff.result;
+        const watch = getWatchOptions(id);
+        clearTimeout(watch.timeoutId);
 
-            // TODO: Remove this once `watchFragment` supports `null` as valid
-            // value emitted
-            if (data === null) {
-              data = {} as any;
-            }
-
-            if (
-              // Always ensure we deliver the first result
-              latestDiff &&
-              equalByQuery(
-                query,
-                { data: latestDiff.result },
-                { data },
-                options.variables
-              )
-            ) {
-              return;
-            }
-
-            latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
-            observer.next(latestDiff);
-          },
-        });
+        // Hijack the fact that `this.watch` uses a set on the options object to
+        // determine the unique number of watchers. This means calling
+        // `this.watch` multiple times with the same object will only result in
+        // a single watch.
+        //
+        // This, along with the timeout, ensures that calling `reobserve` with a
+        // new list will maintain existing watchers on items with the same id,
+        // rather than unsubscribing the from the watch, then resubscribing
+        // again.
+        const unsubscribe = this.watch<TData, TVariables>(watch.options);
+        // It's important to subscribe to the observable after we call watch to
+        // ensure the watch callback updates the current value before
+        // subscription, otherwise we'll get an emit of a stale value followed
+        // immediately by an emit of the most recent value.
+        const subscription = watch.observable.subscribe(observer);
 
         return () => {
-          latestDiff = undefined;
-          unsubscribe();
+          subscription.unsubscribe();
+          watch.timeoutId = setTimeout(unsubscribe);
         };
       }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       watches.set(id, observable);
 
       return observable;
-    };
+    });
 
     function toResult(diffs: Array<Cache.DiffResult<TData>>) {
       if (!Array.isArray(from)) {
@@ -556,8 +592,8 @@ export abstract class ApolloCache {
 
     const observable = ids$.pipe(
       switchMap((ids) => {
-        // combineLatest completes immediately when given an empty array. We want to
-        // emit an empty array without the complete notifiation instead
+        // combineLatest completes immediately when given an empty array. We
+        // want to emit an empty array without the complete notification instead
         return ids.length > 0 ?
             combineLatest(ids.map(watch))
           : new Observable<Array<Cache.DiffResult<TData>>>((observer) =>

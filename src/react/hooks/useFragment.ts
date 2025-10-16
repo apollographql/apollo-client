@@ -152,7 +152,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables>
-): useFragment.Result<TData> | Array<useFragment.Result<TData>> {
+): useFragment.Result<TData> | useFragment.Result<Array<TData>> {
   "use no memo";
   return wrapHook(
     "useFragment",
@@ -164,7 +164,7 @@ export function useFragment<
 
 function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
-): useFragment.Result<TData> | Array<useFragment.Result<TData>> {
+): useFragment.Result<TData> | useFragment.Result<Array<TData>> {
   const client = useApolloClient(options.client);
   const { from, ...rest } = options;
   const { cache } = client;

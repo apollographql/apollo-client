@@ -427,6 +427,93 @@ test("getCurrentResult handles arrays", async () => {
     dataState: "complete",
     complete: true,
   });
+
+  observable.reobserve({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+    ],
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+});
+
+test("getCurrentResult handles arrays with an active subscription", async () => {
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  for (let i = 1; i <= 5; i++) {
+    client.writeFragment({
+      fragment,
+      data: { __typename: "Item", id: i, text: `Item #${i}` },
+    });
+  }
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+      { __typename: "Item", id: 5 },
+    ],
+  });
+  observable.subscribe();
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+      { __typename: "Item", id: 5, text: "Item #5" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  observable.reobserve({
+    from: [
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+    ],
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 2, text: "Item #2 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 });
 
 test("getCurrentResult handles arrays with null", async () => {

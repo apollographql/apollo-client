@@ -538,12 +538,12 @@ export abstract class ApolloCache {
         const [diff] = diffs;
         const result = {
           // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
-          // when the diff.result is null. As such, we need to fallback to {}
+          // when `from` is a single record. As such, we need to fallback to {}
           // when diff.result is null to maintain backwards compatibility. We
           // should plan to change this in v5.
           //
           // NOTE: Using `from` with an array will maintain `null` properly
-          // without the need for a similar fullback since watchFragment with
+          // without the need for a similar fallback since watchFragment with
           // arrays is new functionality in v4.
           data: diff.result ?? {},
           complete: !!diff.complete,

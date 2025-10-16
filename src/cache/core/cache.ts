@@ -556,6 +556,12 @@ export abstract class ApolloCache {
       return observable;
     });
 
+    function toStringIds(from: ApolloCache.WatchFragmentOptions["from"]) {
+      const fromArray = Array.isArray(from) ? from : [from];
+
+      return fromArray.map(getId);
+    }
+
     function toResult(diffs: Array<Cache.DiffResult<TData>>) {
       if (!Array.isArray(from)) {
         return diffToResult(diffs[0]);
@@ -586,9 +592,7 @@ export abstract class ApolloCache {
       | ApolloCache.WatchFragmentResult<Unmasked<TData>>
       | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
     let subscribed = false;
-    const ids$ = new BehaviorSubject(
-      Array.isArray(from) ? from.map(getId) : [getId(from)]
-    );
+    const ids$ = new BehaviorSubject(toStringIds(from));
 
     const observable = ids$.pipe(
       switchMap((ids) => {
@@ -635,11 +639,7 @@ export abstract class ApolloCache {
           : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
         );
 
-        ids$.next(
-          Array.isArray(options.from) ?
-            options.from.map(getId)
-          : [getId(options.from as any)]
-        );
+        ids$.next(toStringIds(options.from));
       },
       getCurrentResult: () => {
         if (subscribed && currentResult) {

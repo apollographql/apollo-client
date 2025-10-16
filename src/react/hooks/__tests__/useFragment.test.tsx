@@ -1451,25 +1451,32 @@ describe("useFragment", () => {
     const fragment: TypedDocumentNode<User> = gql`
       fragment UserFragment on User {
         id
-        name
+        name(casing: $casing)
       }
     `;
 
     client.writeFragment({
       fragment,
-      data: { __typename: "User", id: 1, name: "Alice" },
+      data: { __typename: "User", id: 1, name: "ALICE" },
+      variables: { casing: "upper" },
     });
 
     client.writeFragment({
       fragment,
-      data: { __typename: "User", id: 2, name: "Charlie" },
+      data: { __typename: "User", id: 1, name: "alice" },
+      variables: { casing: "lower" },
     });
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-      ({ id }) => useFragment({ fragment, from: { __typename: "User", id } }),
+      ({ casing }) =>
+        useFragment({
+          fragment,
+          from: { __typename: "User", id: 1 },
+          variables: { casing },
+        }),
       {
-        initialProps: { id: 1 },
+        initialProps: { casing: "upper" },
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -1481,19 +1488,19 @@ describe("useFragment", () => {
 
       expect(snapshot).toStrictEqualTyped({
         complete: true,
-        data: { __typename: "User", id: 1, name: "Alice" },
+        data: { __typename: "User", id: 1, name: "ALICE" },
         dataState: "complete",
       });
     }
 
-    await rerender({ id: 2 });
+    await rerender({ casing: "lower" });
 
     {
       const snapshot = await takeSnapshot();
 
       expect(snapshot).toStrictEqualTyped({
         complete: true,
-        data: { __typename: "User", id: 2, name: "Charlie" },
+        data: { __typename: "User", id: 1, name: "alice" },
         dataState: "complete",
       });
     }

@@ -475,7 +475,7 @@ export abstract class ApolloCache {
           });
         }
 
-        return this.watch<TData, TVariables>({
+        const unsubscribe = this.watch<TData, TVariables>({
           ...otherOptions,
           returnPartialData: true,
           id,
@@ -508,6 +508,11 @@ export abstract class ApolloCache {
             observer.next(latestDiff);
           },
         });
+
+        return () => {
+          latestDiff = undefined;
+          unsubscribe();
+        };
       }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       watches.set(id, observable);
@@ -592,6 +597,12 @@ export abstract class ApolloCache {
           isOrigArray ?
             "Cannot change `from` option from array to non-array. Please provide `from` as an array."
           : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+        );
+
+        ids$.next(
+          Array.isArray(options.from) ?
+            options.from.map(getId)
+          : [getId(options.from as any)]
         );
       },
       getCurrentResult: () => {

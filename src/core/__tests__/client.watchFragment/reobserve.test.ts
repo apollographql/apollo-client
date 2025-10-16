@@ -193,6 +193,16 @@ test("can change size of lists with reobserve", async () => {
     },
   });
 
+  observable.reobserve({
+    from: [null],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [null],
+    dataState: "partial",
+    complete: false,
+  });
+
   await expect(stream).not.toEmitAnything();
 });
 

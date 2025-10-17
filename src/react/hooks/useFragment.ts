@@ -211,7 +211,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     );
 
     return Array.isArray(from) ? ids : ids[0];
-  }, [from]);
+  }, [cache, from]);
 
   const stableOptions = useDeepMemo(() => rest, [rest]);
 

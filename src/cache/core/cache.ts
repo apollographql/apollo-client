@@ -364,12 +364,18 @@ export abstract class ApolloCache {
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+    TFrom extends Array<any> = Array<any>,
+    TItemData = TFrom extends Array<infer TFromItem> ?
+      null extends TFromItem ?
+        TData | null
+      : TData
+    : never,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<any>;
+      from: TFrom;
     }
   ): ApolloCache.WatchFragmentObservable<
-    ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TItemData>>>
   >;
 
   public watchFragment<
@@ -537,8 +543,9 @@ export abstract class ApolloCache {
       if (Array.isArray(from)) {
         result = diffs.reduce(
           (result, diff, idx) => {
+            const id = ids$.getValue()[idx];
             result.data.push(diff.result as any);
-            result.complete &&= diff.complete;
+            result.complete &&= id === null ? true : diff.complete;
             result.dataState = result.complete ? "complete" : "partial";
 
             if (diff.missing) {

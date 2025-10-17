@@ -128,7 +128,7 @@ test("returns empty array with empty from", async () => {
   await expect(stream).not.toEmitAnything();
 });
 
-test("returns incomplete results when cache is empty", async () => {
+test("returns result as partial when cache is empty", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -171,7 +171,80 @@ test("returns incomplete results when cache is empty", async () => {
   await expect(stream).not.toEmitAnything();
 });
 
-test("returns null values for null from items", async () => {
+test("returns as complete if all `from` items are null", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [null, null, null],
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: [null, null, null],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns as complete if all `from` items are complete or null", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 5, text: "Item #5" },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [null, null, { __typename: "Item", id: 5 }],
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: [null, null, { __typename: "Item", id: 5, text: "Item #5" }],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns as partial if some `from` items are incomplete mixed with null", async () => {
   type Item = {
     __typename: string;
     id: number;

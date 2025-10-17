@@ -141,11 +141,17 @@ export declare namespace useFragment {
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
+  TFrom extends Array<any> = Array<any>,
+  TItemData = TFrom extends Array<infer TFromItem> ?
+    null extends TFromItem ?
+      TData | null
+    : TData
+  : never,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<any>;
+    from: TFrom;
   }
-): useFragment.Result<Array<TData>>;
+): useFragment.Result<Array<TItemData>>;
 
 /** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
 export function useFragment<

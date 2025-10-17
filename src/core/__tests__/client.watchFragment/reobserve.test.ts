@@ -107,7 +107,7 @@ test("can change size of lists with reobserve", async () => {
     from: [
       { __typename: "Item", id: 1 },
       { __typename: "Item", id: 2 },
-    ],
+    ] as Array<Item | null>,
   });
   const stream = new ObservableStream(observable);
 
@@ -199,8 +199,8 @@ test("can change size of lists with reobserve", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: [null],
-    dataState: "partial",
-    complete: false,
+    dataState: "complete",
+    complete: true,
   });
 
   await expect(stream).not.toEmitAnything();

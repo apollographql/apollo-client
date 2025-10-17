@@ -1,4 +1,3 @@
-import type { RenderOptions } from "@testing-library/react";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
@@ -25,16 +24,11 @@ import {
 } from "@apollo/client";
 import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
-import {
-  createClientWrapper,
-  renderAsync,
-  spyOnConsole,
-} from "@apollo/client/testing/internal";
+import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-/** @deprecated */
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
@@ -43,7 +37,6 @@ function createDefaultRenderStream<TData = unknown>() {
   });
 }
 
-/** @deprecated */
 function createDefaultTrackedComponents() {
   function SuspenseFallback() {
     useTrackRenders();
@@ -51,43 +44,6 @@ function createDefaultTrackedComponents() {
   }
 
   return { SuspenseFallback };
-}
-
-async function renderUseSuspenseFragment<TData, Props = never>(
-  renderHook: (props: Props) => useSuspenseFragment.Result<TData>,
-  options: Pick<RenderOptions, "wrapper"> & { initialProps?: Props }
-) {
-  function UseSuspenseFragment({ props }: { props: Props | undefined }) {
-    useTrackRenders({ name: "useSuspenseFragment" });
-    replaceSnapshot(renderHook(props as any));
-
-    return null;
-  }
-
-  function SuspenseFallback() {
-    useTrackRenders({ name: "SuspenseFallback" });
-
-    return null;
-  }
-
-  function App({ props }: { props: Props | undefined }) {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <UseSuspenseFragment props={props} />
-      </Suspense>
-    );
-  }
-
-  const { render, takeRender, replaceSnapshot } =
-    createRenderStream<useSuspenseFragment.Result<TData>>();
-
-  const utils = await render(<App props={options.initialProps} />, options);
-
-  function rerender(props: Props) {
-    return utils.rerender(<App props={props} />);
-  }
-
-  return { takeRender, rerender };
 }
 
 test("validates the GraphQL document is a fragment", () => {

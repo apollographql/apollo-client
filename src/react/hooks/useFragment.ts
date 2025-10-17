@@ -16,8 +16,18 @@ import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
+type FromPrimitive<TData> =
+  | StoreObject
+  | Reference
+  | FragmentType<NoInfer<TData>>
+  | string
+  | null;
+
+type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
+
 export declare namespace useFragment {
   import _self = useFragment;
+
   export interface Options<TData, TVariables extends OperationVariables> {
     /**
      * A GraphQL document created using the `gql` template string tag from
@@ -42,15 +52,7 @@ export declare namespace useFragment {
     /**
      * An object containing a `__typename` and primary key fields (such as `id`) identifying the entity object from which the fragment will be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
      */
-    from:
-      | StoreObject
-      | Reference
-      | FragmentType<NoInfer<TData>>
-      | string
-      | null
-      | Array<
-          StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null
-        >;
+    from: From<TData>;
 
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
@@ -141,17 +143,29 @@ export declare namespace useFragment {
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TFrom extends Array<any> = Array<any>,
-  TItemData = TFrom extends Array<infer TFromItem> ?
-    null extends TFromItem ?
-      TData | null
-    : TData
-  : never,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: TFrom;
+    from: Array<null>;
   }
-): useFragment.Result<Array<TItemData>>;
+): useFragment.Result<Array<null>>;
+
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<From<TData>>>;
+  }
+): useFragment.Result<Array<TData>>;
+
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useFragment.Options<TData, TVariables> & {
+    from: Array<From<TData>>;
+  }
+): useFragment.Result<Array<TData | null>>;
 
 /** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
 export function useFragment<

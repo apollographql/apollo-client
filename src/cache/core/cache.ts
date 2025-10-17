@@ -502,12 +502,6 @@ export abstract class ApolloCache {
         // adding this fix here however to ensure those using plain JavaScript
         // and using `cache.identify` themselves will avoid seeing the obscure
         // warning.
-        //
-        // `null` isn't allowed by the TypeScript types either, but we handle it
-        // internally to allow for useFragment to send `null` as a valid array
-        // item. This ensures the array length emitted by client.watchFragment
-        // matches the `from` length provided to useFragment. This also means we
-        // can use client.watchFragment with a `from` array from useFragment
         const id =
           (
             typeof value === "undefined" ||

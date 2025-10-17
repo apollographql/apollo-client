@@ -117,13 +117,6 @@ test("returns empty array with empty from", async () => {
     link: ApolloLink.empty(),
   });
 
-  for (let i = 1; i <= 5; i++) {
-    client.writeFragment({
-      fragment,
-      data: { __typename: "Item", id: i, text: `Item #${i}` },
-    });
-  }
-
   const observable = client.watchFragment({ fragment, from: [] });
   const stream = new ObservableStream(observable);
 

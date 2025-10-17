@@ -25,8 +25,8 @@ export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
     // Track how many observables are left to emit their first value
     let remainingFirstValues = length;
 
-    // Used to batch updates to each item in the array that share an observable
-    // instance so that they can be batched.
+    // Used to batch an update each item in the array that share an observable
+    // so that they can be emitted together.
     const indexesByObservable = new Map<Observable<T>, Set<number>>();
 
     observables.forEach((source, idx) => {
@@ -37,7 +37,10 @@ export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
       indexesByObservable.get(source)!.add(idx);
     });
 
-    // Subscribe to each unique observable
+    // Subscribe to each unique observable instead of the raw source array of
+    // observables since we want at most 1-subscription per unique observable.
+    // This ensures an update can write to multiple indexes before emitting the
+    // result.
     indexesByObservable.forEach((indexes, source) => {
       let hasFirstValue = false;
       const subscription = source.subscribe({

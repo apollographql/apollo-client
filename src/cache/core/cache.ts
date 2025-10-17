@@ -552,17 +552,17 @@ export abstract class ApolloCache {
       }
 
       return diffs.reduce(
-        (memo, item, idx) => {
-          memo.data.push(item.result as any);
-          memo.complete &&= item.complete;
-          memo.dataState = memo.complete ? "complete" : "partial";
+        (result, diff, idx) => {
+          result.data.push(diff.result as any);
+          result.complete &&= diff.complete;
+          result.dataState = result.complete ? "complete" : "partial";
 
-          if (item.missing) {
-            memo.missing ||= {};
-            (memo.missing as any)[idx] = item.missing.missing;
+          if (diff.missing) {
+            result.missing ||= {};
+            (result.missing as any)[idx] = diff.missing.missing;
           }
 
-          return memo;
+          return result;
         },
         {
           data: [],

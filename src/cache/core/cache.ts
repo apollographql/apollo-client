@@ -8,7 +8,6 @@ import type {
 import { wrap } from "optimism";
 import {
   BehaviorSubject,
-  combineLatest,
   filter,
   map,
   Observable,
@@ -29,6 +28,7 @@ import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
+  combineLatestBatched,
   equalByQuery,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
@@ -587,10 +587,11 @@ export abstract class ApolloCache {
 
     const observable = ids$.pipe(
       switchMap((ids) => {
-        // combineLatest completes immediately when given an empty array. We
-        // want to emit an empty array without the complete notification instead
+        // combineLatestBatched completes immediately when given an empty array.
+        // We want to emit an empty array without the complete notification
+        // instead.
         return ids.length > 0 ?
-            combineLatest(ids.map(watch))
+            combineLatestBatched(ids.map(watch))
           : new Observable<Array<Cache.DiffResult<TData>>>((observer) =>
               observer.next([])
             );

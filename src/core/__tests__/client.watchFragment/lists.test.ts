@@ -665,15 +665,6 @@ test("can subscribe to the same object multiple times", async () => {
     data: { __typename: "Item", id: 1, text: `Item #1 updated` },
   });
 
-  // TODO: figure out if we can batch this
-  await expect(stream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1 updated" },
-      { __typename: "Item", id: 1, text: "Item #1" },
-    ],
-    dataState: "complete",
-    complete: true,
-  });
   await expect(stream).toEmitTypedValue({
     data: [
       { __typename: "Item", id: 1, text: "Item #1 updated" },
@@ -724,16 +715,6 @@ test("can subscribe to the same object multiple times", async () => {
   client.writeFragment({
     fragment,
     data: { __typename: "Item", id: 1, text: `Item #1 updated again` },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1 updated again" },
-      { __typename: "Item", id: 2, text: "Item #2" },
-      { __typename: "Item", id: 1, text: "Item #1 updated" },
-    ],
-    dataState: "complete",
-    complete: true,
   });
 
   await expect(stream).toEmitTypedValue({

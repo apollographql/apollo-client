@@ -164,7 +164,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables>
-): useFragment.Result<TData> | useFragment.Result<Array<TData>> {
+): useFragment.Result<TData> | useFragment.Result<Array<TData | null>> {
   "use no memo";
   return wrapHook(
     "useFragment",
@@ -176,7 +176,7 @@ export function useFragment<
 
 function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
-): useFragment.Result<TData> | useFragment.Result<Array<TData>> {
+): useFragment.Result<TData> | useFragment.Result<Array<TData | null>> {
   const client = useApolloClient(options.client);
   const { from, ...rest } = options;
   const { cache } = client;
@@ -244,7 +244,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
               // getSnapshot has already rendered this value.
               //
               // This can happen when rerendering with new IDs when reobserve is
-              // called since the value is synchronously updated.
+              // called since the value is synchronously updated during render.
               if (currentResultRef.current !== result) {
                 update();
               }

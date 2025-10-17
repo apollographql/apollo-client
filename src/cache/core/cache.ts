@@ -527,10 +527,36 @@ export abstract class ApolloCache {
       });
     };
 
+    let currentResult:
+      | ApolloCache.WatchFragmentResult<Unmasked<TData>>
+      | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
     function toResult(diffs: Array<Cache.DiffResult<TData>>) {
-      if (!Array.isArray(from)) {
+      let result:
+        | ApolloCache.WatchFragmentResult<Unmasked<TData>>
+        | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
+      if (Array.isArray(from)) {
+        result = diffs.reduce(
+          (result, diff, idx) => {
+            result.data.push(diff.result as any);
+            result.complete &&= diff.complete;
+            result.dataState = result.complete ? "complete" : "partial";
+
+            if (diff.missing) {
+              result.missing ||= {};
+              (result.missing as any)[idx] = diff.missing.missing;
+            }
+
+            return result;
+          },
+          {
+            data: [],
+            dataState: "complete",
+            complete: true,
+          } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+        );
+      } else {
         const [diff] = diffs;
-        const result = {
+        result = {
           // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
           // when `from` is a single record. As such, we need to fallback to {}
           // when diff.result is null to maintain backwards compatibility. We
@@ -547,34 +573,15 @@ export abstract class ApolloCache {
         if (diff.missing) {
           result.missing = diff.missing.missing;
         }
-
-        return result;
       }
 
-      return diffs.reduce(
-        (result, diff, idx) => {
-          result.data.push(diff.result as any);
-          result.complete &&= diff.complete;
-          result.dataState = result.complete ? "complete" : "partial";
+      if (!equal(currentResult, result)) {
+        currentResult = result;
+      }
 
-          if (diff.missing) {
-            result.missing ||= {};
-            (result.missing as any)[idx] = diff.missing.missing;
-          }
-
-          return result;
-        },
-        {
-          data: [],
-          dataState: "complete",
-          complete: true,
-        } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
-      );
+      return currentResult;
     }
 
-    let currentResult:
-      | ApolloCache.WatchFragmentResult<Unmasked<TData>>
-      | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
     let subscribed = false;
     const ids$ = new BehaviorSubject(toStringIds(from));
 
@@ -589,13 +596,6 @@ export abstract class ApolloCache {
             );
       }),
       map(toResult),
-      map((result) => {
-        if (!equal(result, currentResult)) {
-          currentResult = result;
-        }
-
-        return currentResult;
-      }),
       shareReplay({ bufferSize: 1, refCount: true }),
       tap({
         subscribe: () => (subscribed = true),
@@ -644,13 +644,7 @@ export abstract class ApolloCache {
           });
         });
 
-        const result = toResult(diffs);
-
-        if (!equal(result, currentResult)) {
-          currentResult = result as any;
-        }
-
-        return currentResult;
+        return toResult(diffs);
       },
     }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
   }

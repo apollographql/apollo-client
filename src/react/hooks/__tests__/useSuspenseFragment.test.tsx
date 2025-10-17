@@ -1990,6 +1990,75 @@ describe.skip("type tests", () => {
     }
   });
 
+  test("returns null[] when `from` is null[]", () => {
+    type Data = { foo: string };
+    type Vars = Record<string, never>;
+    const fragment: TypedDocumentNode<Data, Vars> = gql``;
+
+    {
+      const { data } = useSuspenseFragment({ fragment, from: [null] });
+
+      expectTypeOf(data).toEqualTypeOf<Array<null>>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Data>({
+        fragment: gql``,
+        from: [null],
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<Array<null>>();
+    }
+  });
+
+  test("returns Array<TData | null> when `from` includes null with non-null", () => {
+    type Data = { foo: string };
+    type Vars = Record<string, never>;
+    const fragment: TypedDocumentNode<Data, Vars> = gql``;
+
+    {
+      const { data } = useSuspenseFragment({
+        fragment,
+        from: [null, { __typename: "Item", id: 1 }],
+      });
+
+      expectTypeOf(data).toEqualTypeOf<Array<Data | null>>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Data>({
+        fragment: gql``,
+        from: [null, { __typename: "Item", id: 1 }],
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<Array<Data | null>>();
+    }
+  });
+
+  test("returns TData[] when `from` includes array of non-null", () => {
+    type Data = { foo: string };
+    type Vars = Record<string, never>;
+    const fragment: TypedDocumentNode<Data, Vars> = gql``;
+
+    {
+      const { data } = useSuspenseFragment({
+        fragment,
+        from: [{ __typename: "Item", id: 1 }],
+      });
+
+      expectTypeOf(data).toEqualTypeOf<Array<Data>>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Data>({
+        fragment: gql``,
+        from: [{ __typename: "Item", id: 1 }],
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<Array<Data>>();
+    }
+  });
+
   test("variables are optional and can be anything with an untyped DocumentNode", () => {
     const fragment = gql``;
 

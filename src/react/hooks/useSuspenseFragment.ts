@@ -23,12 +23,14 @@ import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
-type From<TData> =
+type FromPrimitive<TData> =
   | StoreObject
   | Reference
   | FragmentType<NoInfer<TData>>
   | string
   | null;
+
+type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
 
 export declare namespace useSuspenseFragment {
   import _self = useSuspenseFragment;
@@ -103,6 +105,35 @@ const NULL_PLACEHOLDER = [] as unknown as [
 ];
 
 /** #TODO documentation */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<From<TData>>>;
+  }
+): useSuspenseFragment.Result<Array<TData>>;
+
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<null>;
+  }
+): useSuspenseFragment.Result<Array<null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<From<TData>>;
+  }
+): useSuspenseFragment.Result<Array<TData | null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,

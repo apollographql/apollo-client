@@ -2673,7 +2673,7 @@ test("can use list for `from` to get list of items", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("allows null as list item `from` value", async () => {
+test("returns result as complete for null list item `from` value", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -2704,8 +2704,49 @@ test("allows null as list item `from` value", async () => {
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: [null, null, null],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("returns as partial if some `from` items are incomplete mixed with null", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useFragment({
+        fragment,
+        from: [null, null, { __typename: "Item", id: 5 }],
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: [null, null, null],
     dataState: "partial",
     complete: false,
+    missing: {
+      2: "Dangling reference to missing Item:5 object",
+    },
   });
 
   await expect(takeSnapshot).not.toRerender();
@@ -2753,8 +2794,8 @@ test("allows mix of array identifiers", async () => {
       { __typename: "Item", id: 2, text: "Item #2" },
       null,
     ],
-    dataState: "partial",
-    complete: false,
+    dataState: "complete",
+    complete: true,
   });
 
   await expect(takeSnapshot).not.toRerender();

@@ -1137,12 +1137,18 @@ export class ApolloClient {
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+    TFrom extends Array<any> = Array<any>,
+    TItemData = TFrom extends Array<infer TItem> ?
+      null extends TItem ?
+        TData | null
+      : TData
+    : never,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<any>;
+      from: TFrom;
     }
   ): ApolloClient.WatchFragmentObservable<
-    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>>
+    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TItemData>>>
   >;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */

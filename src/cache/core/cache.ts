@@ -44,6 +44,11 @@ import type { MissingTree } from "./types/common.js";
 export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
+  export type WatchFragmentFrom<TData> =
+    | StoreObject
+    | Reference
+    | FragmentType<NoInfer<TData>>
+    | string;
   /**
    * Watched fragment options.
    */
@@ -67,13 +72,8 @@ export declare namespace ApolloCache {
      * @docGroup 1. Required options
      */
     from:
-      | StoreObject
-      | Reference
-      | FragmentType<NoInfer<TData>>
-      | string
-      | Array<
-          StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null
-        >;
+      | ApolloCache.WatchFragmentFrom<TData>
+      | Array<ApolloCache.WatchFragmentFrom<TData> | null>;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -364,18 +364,34 @@ export abstract class ApolloCache {
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TFrom extends Array<any> = Array<any>,
-    TItemData = TFrom extends Array<infer TFromItem> ?
-      null extends TFromItem ?
-        TData | null
-      : TData
-    : never,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: TFrom;
+      from: Array<ApolloCache.WatchFragmentOptions<TData>>;
     }
   ): ApolloCache.WatchFragmentObservable<
-    ApolloCache.WatchFragmentResult<Array<Unmasked<TItemData>>>
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<null>;
+    }
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Array<null>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.WatchFragmentOptions<TData> | null>;
+    }
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>
   >;
 
   public watchFragment<

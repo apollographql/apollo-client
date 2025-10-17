@@ -110,10 +110,11 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<From<TData>>>;
+    from: Array<NonNullable<FromPrimitive<TData>>>;
   }
 ): useSuspenseFragment.Result<Array<TData>>;
 
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -129,7 +130,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<From<TData>>;
+    from: Array<FromPrimitive<TData>>;
   }
 ): useSuspenseFragment.Result<Array<TData | null>>;
 

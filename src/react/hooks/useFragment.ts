@@ -145,19 +145,21 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<null>;
+    from: Array<NonNullable<From<TData>>>;
   }
-): useFragment.Result<Array<null>>;
+): useFragment.Result<Array<TData>>;
 
+/** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<From<TData>>>;
+    from: Array<null>;
   }
-): useFragment.Result<Array<TData>>;
+): useFragment.Result<Array<null>>;
 
+/** {@inheritDoc @apollo/client/react!useFragment:function(1)} */
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

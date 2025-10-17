@@ -4,8 +4,11 @@ import { EMPTY, Observable } from "rxjs";
  * Like `combineLatest` but with some differences:
  *
  * - It only works on arrays as an input
+ * - It doesn't handle many edge cases
  * - Batches updates to each array index that contains a referentially equal
  *   observable
+ * - Doesn't allow for custom scheduler
+ * - Expects array of constructed observables instead of `Array<ObservableInput>`
  */
 export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
   if (observables.length === 0) {

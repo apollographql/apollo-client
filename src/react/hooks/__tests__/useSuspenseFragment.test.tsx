@@ -43,6 +43,7 @@ function createDefaultRenderStream<TData = unknown>() {
   });
 }
 
+/** @deprecated */
 function createDefaultTrackedComponents() {
   function SuspenseFallback() {
     useTrackRenders();

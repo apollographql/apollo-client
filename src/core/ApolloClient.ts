@@ -1137,18 +1137,35 @@ export class ApolloClient {
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TFrom extends Array<any> = Array<any>,
-    TItemData = TFrom extends Array<infer TItem> ?
-      null extends TItem ?
-        TData | null
-      : TData
-    : never,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: TFrom;
+      from: Array<ApolloCache.WatchFragmentFrom<TData>>;
     }
   ): ApolloClient.WatchFragmentObservable<
-    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TItemData>>>
+    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>>
+  >;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<null>;
+    }
+  ): ApolloClient.WatchFragmentObservable<
+    ApolloClient.WatchFragmentResult<Array<null>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.WatchFragmentFrom<TData> | null>;
+    }
+  ): ApolloClient.WatchFragmentObservable<
+    ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData> | null>>
   >;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */

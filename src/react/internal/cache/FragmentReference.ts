@@ -1,7 +1,11 @@
 import { equal } from "@wry/equality";
 import type { Subscription } from "rxjs";
 
-import type { ApolloClient, OperationVariables } from "@apollo/client";
+import type {
+  ApolloCache,
+  ApolloClient,
+  OperationVariables,
+} from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
@@ -109,6 +113,10 @@ export class FragmentReference<
         }
       });
     };
+  }
+
+  reobserve(options: ApolloCache.WatchFragmentReobserveOptions<any>) {
+    this.observable.reobserve(options);
   }
 
   private dispose() {

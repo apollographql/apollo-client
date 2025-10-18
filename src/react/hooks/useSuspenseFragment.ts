@@ -204,14 +204,37 @@ function useSuspenseFragment_<
       : toStringId(cache, from);
   }, [cache, from]);
 
+  // Keep the first key we can store after the initial mount as part of the
+  // cache key so we can take advantage of `observable.reobserve` to maintain
+  // existing watchers as much as possible. If we used the `ids` (which might
+  // change between renders), we'd get a new `client.watchFragment` observable
+  // on every render that changed lists which tears down watchers and recreates
+  // them.
+  let [stableIds, setStableIds] = React.useState(() => ids);
+  const [previousIds, setPreviousIds] = React.useState(ids);
+
+  if (stableIds === null && ids !== null) {
+    stableIds = ids;
+    setStableIds(ids);
+  }
+
   const fragmentRef =
     ids === null ? null : (
       getSuspenseCache(client).getFragmentRef(
-        [ids, options.fragment, canonicalStringify(variables)],
+        [
+          stableIds as string | Array<string | null>,
+          options.fragment,
+          canonicalStringify(variables),
+        ],
         client,
         { ...options, variables: variables as TVariables, from: ids }
       )
     );
+
+  if (ids !== previousIds) {
+    setPreviousIds(ids);
+    fragmentRef?.reobserve({ from: ids as any });
+  }
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]

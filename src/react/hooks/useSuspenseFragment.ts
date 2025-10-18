@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import type {
+  ApolloCache,
   ApolloClient,
   DataValue,
   DocumentNode,
@@ -20,15 +21,17 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
-import { wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
-type From<TData> =
+type FromPrimitive<TData> =
   | StoreObject
   | Reference
   | FragmentType<NoInfer<TData>>
   | string
   | null;
+
+type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
 
 export declare namespace useSuspenseFragment {
   import _self = useSuspenseFragment;
@@ -104,6 +107,36 @@ const NULL_PLACEHOLDER = [] as unknown as [
 
 /** #TODO documentation */
 export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<FromPrimitive<TData>>>;
+  }
+): useSuspenseFragment.Result<Array<TData>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<null>;
+  }
+): useSuspenseFragment.Result<Array<null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<FromPrimitive<TData>>;
+  }
+): useSuspenseFragment.Result<Array<TData | null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -165,22 +198,45 @@ function useSuspenseFragment_<
   const { from, variables } = options;
   const { cache } = client;
 
-  const id = React.useMemo(
-    () =>
-      typeof from === "string" ? from
-      : from === null ? null
-      : cache.identify(from),
-    [cache, from]
-  ) as string | null;
+  const ids = useDeepMemo(() => {
+    return Array.isArray(from) ?
+        from.map((id) => toStringId(cache, id))
+      : toStringId(cache, from);
+  }, [cache, from]);
+
+  // Keep the first set of ids that can be stored after the initial
+  // non-suspended mount to use for the suspense cache key. This ensures we keep
+  // around the same `FragmentReference` even as the `from` option changes so
+  // that we can take advantage of `reobserve` to maintain existing watches as
+  // much as possible. If we used the `ids` in the cache key (which might change
+  // between renders), we'd get a new `client.watchFragment` observable
+  // which would tear down existing watches, even for items that remain the same
+  // between the changed items in the `from` array.
+  let [stableIds, setStableIds] = React.useState(() => ids);
+  const [previousIds, setPreviousIds] = React.useState(ids);
+
+  if (stableIds === null && ids !== null) {
+    stableIds = ids;
+    setStableIds(ids);
+  }
 
   const fragmentRef =
-    id === null ? null : (
+    ids === null ? null : (
       getSuspenseCache(client).getFragmentRef(
-        [id, options.fragment, canonicalStringify(variables)],
+        [
+          stableIds as string | Array<string | null>,
+          options.fragment,
+          canonicalStringify(variables),
+        ],
         client,
-        { ...options, variables: variables as TVariables, from: id }
+        { ...options, variables: variables as TVariables, from: ids }
       )
     );
+
+  if (ids !== previousIds) {
+    setPreviousIds(ids);
+    fragmentRef?.reobserve({ from: ids as any });
+  }
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]
@@ -219,4 +275,11 @@ function useSuspenseFragment_<
   const data = __use(current[1]);
 
   return { data };
+}
+
+function toStringId(cache: ApolloCache, from: FromPrimitive<any>) {
+  return (
+    typeof from === "string" ? from
+    : from === null ? null
+    : cache.identify(from)) as string | null;
 }

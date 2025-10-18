@@ -1,13 +1,23 @@
 import { WeakCache } from "@wry/caches";
+import { equal } from "@wry/equality";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
-import { Observable } from "rxjs";
+import {
+  BehaviorSubject,
+  filter,
+  map,
+  Observable,
+  shareReplay,
+  switchMap,
+  tap,
+} from "rxjs";
 
 import type {
+  DataValue,
   GetDataState,
   OperationVariables,
   TypedDocumentNode,
@@ -18,6 +28,7 @@ import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
+  combineLatestBatched,
   equalByQuery,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
@@ -33,6 +44,11 @@ import type { MissingTree } from "./types/common.js";
 export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
+  export type WatchFragmentFromValue<TData> =
+    | StoreObject
+    | Reference
+    | FragmentType<NoInfer<TData>>
+    | string;
   /**
    * Watched fragment options.
    */
@@ -55,7 +71,9 @@ export declare namespace ApolloCache {
      *
      * @docGroup 1. Required options
      */
-    from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
+    from:
+      | ApolloCache.WatchFragmentFromValue<TData>
+      | Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -89,10 +107,44 @@ export declare namespace ApolloCache {
         complete: true;
         missing?: never;
       } & GetDataState<TData, "complete">)
-    | ({
+    | {
         complete: false;
-        missing: MissingTree;
-      } & GetDataState<TData, "partial">);
+        missing?: MissingTree;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: TData extends Array<infer TItem> ?
+          Array<DataValue.Partial<TItem | null>>
+        : DataValue.Partial<TData>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "partial";
+      };
+
+  export interface WatchFragmentObservable<T> extends Observable<T> {
+    /**
+     * Return the current result for the fragment.
+     */
+    getCurrentResult: () => T;
+
+    /**
+     * Re-evaluate the fragment against the updated `from` value.
+     *
+     * @example
+     *
+     * ```ts
+     * const observable = cache.watchFragment(options);
+     *
+     * observable.reobserve({ from: newFrom });
+     * ```
+     */
+    reobserve: (options: ApolloCache.WatchFragmentReobserveOptions<T>) => void;
+  }
+
+  export interface WatchFragmentReobserveOptions<T> {
+    from: T extends ApolloCache.WatchFragmentResult<Array<infer TData>> ?
+      Array<StoreObject | Reference | FragmentType<TData> | string | null>
+    : T extends ApolloCache.WatchFragmentResult<infer TData> ?
+      StoreObject | Reference | FragmentType<TData> | string
+    : never;
+  }
 }
 
 export abstract class ApolloCache {
@@ -309,13 +361,61 @@ export abstract class ApolloCache {
     });
   }
 
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+    }
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<null>;
+    }
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Array<null>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
+    }
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>
+  >;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
+  ): ApolloCache.WatchFragmentObservable<
+    ApolloCache.WatchFragmentResult<Unmasked<TData>>
+  >;
+
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>> {
+  ):
+    | ApolloCache.WatchFragmentObservable<
+        ApolloCache.WatchFragmentResult<Unmasked<TData>>
+      >
+    | ApolloCache.WatchFragmentObservable<
+        ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+      > {
     const {
       fragment,
       fragmentName,
@@ -324,80 +424,253 @@ export abstract class ApolloCache {
       ...otherOptions
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
-    // While our TypeScript types do not allow for `undefined` as a valid
-    // `from`, its possible `useFragment` gives us an `undefined` since it
-    // calls` cache.identify` and provides that value to `from`. We are
-    // adding this fix here however to ensure those using plain JavaScript
-    // and using `cache.identify` themselves will avoid seeing the obscure
-    // warning.
-    const id =
-      typeof from === "undefined" || typeof from === "string" ?
-        from
-      : this.identify(from);
 
-    if (__DEV__) {
-      const actualFragmentName =
-        fragmentName || getFragmentDefinition(fragment).name.value;
+    const getWatchOptions = wrap((id: string) => {
+      let latestDiff: Cache.DiffResult<TData> | undefined;
 
-      if (!id) {
-        invariant.warn(
-          "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-          actualFragmentName
-        );
-      }
-    }
-
-    const diffOptions: Cache.DiffOptions<TData, TVariables> = {
-      ...otherOptions,
-      returnPartialData: true,
-      id,
-      query,
-      optimistic,
-    };
-
-    let latestDiff: Cache.DiffResult<TData> | undefined;
-
-    return new Observable((observer) => {
-      return this.watch<TData, TVariables>({
-        ...diffOptions,
+      // This BehaviorSubject maintains the last emitted value so that a value
+      // can always be emitted immediately. Normally this is the responsiblity
+      // of immediate: true and the callback, but if cache.watch is called with
+      // the same options object, maybeBroadcastWatch doesn't execute the inner
+      // broadcast function.
+      const subject = new BehaviorSubject<Cache.DiffResult<TData> | undefined>(
+        undefined
+      );
+      const options: Cache.WatchOptions<TData, TVariables> = {
+        ...otherOptions,
+        returnPartialData: true,
+        id,
+        query,
+        optimistic,
         immediate: true,
         callback: (diff) => {
-          let data = diff.result;
-
-          // TODO: Remove this once `watchFragment` supports `null` as valid
-          // value emitted
-          if (data === null) {
-            data = {} as any;
-          }
-
           if (
             // Always ensure we deliver the first result
             latestDiff &&
             equalByQuery(
               query,
               { data: latestDiff.result },
-              { data },
+              { data: diff.result },
               options.variables
             )
           ) {
             return;
           }
 
-          const result = {
-            data,
-            dataState: diff.complete ? "complete" : "partial",
-            complete: !!diff.complete,
-          } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
+          latestDiff = diff;
+          subject.next(latestDiff);
+        },
+      };
 
-          if (diff.missing) {
-            result.missing = diff.missing.missing;
+      return {
+        // Ensure the initial undefined value is not emitted
+        observable: subject.pipe(filter(Boolean)),
+        options,
+        // mutable field to allow for watch to change this
+        timeoutId: undefined as NodeJS.Timeout | undefined,
+      };
+    });
+
+    const watches = new Map<
+      string | null,
+      Observable<Cache.DiffResult<TData>>
+    >();
+    const watch = (id: string | null) => {
+      if (watches.has(id)) {
+        return watches.get(id)!;
+      }
+      const observable = new Observable<Cache.DiffResult<TData>>((observer) => {
+        if (id === null) {
+          return observer.next({ result: null, complete: false });
+        }
+
+        const watch = getWatchOptions(id);
+        clearTimeout(watch.timeoutId);
+
+        // Hijack the fact that `this.watch` uses a set on the options object to
+        // determine the unique number of watchers. This means calling
+        // `this.watch` multiple times with the same object will only result in
+        // a single watch.
+        //
+        // This, along with the timeout, ensures that calling `reobserve` with a
+        // new list will maintain existing watchers on items with the same id,
+        // rather than unsubscribing the from the watch, then resubscribing
+        // again.
+        const unsubscribe = this.watch<TData, TVariables>(watch.options);
+        // It's important to subscribe to the observable after we call watch to
+        // ensure the watch callback updates the current value before
+        // subscription, otherwise we'll get an emit of a stale value followed
+        // immediately by an emit of the most recent value.
+        const subscription = watch.observable.subscribe(observer);
+
+        return () => {
+          subscription.unsubscribe();
+          watch.timeoutId = setTimeout(unsubscribe);
+        };
+      }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+      watches.set(id, observable);
+
+      return observable;
+    };
+
+    const toStringIds = (from: ApolloCache.WatchFragmentOptions["from"]) => {
+      const fromArray = Array.isArray(from) ? from : [from];
+
+      return fromArray.map((value) => {
+        // While our TypeScript types do not allow for `undefined` as a valid
+        // `from`, its possible `useFragment` gives us an `undefined` since it
+        // calls` cache.identify` and provides that value to `from`. We are
+        // adding this fix here however to ensure those using plain JavaScript
+        // and using `cache.identify` themselves will avoid seeing the obscure
+        // warning.
+        const id =
+          (
+            typeof value === "undefined" ||
+            typeof value === "string" ||
+            value === null
+          ) ?
+            value
+          : this.identify(value);
+
+        if (__DEV__) {
+          const actualFragmentName =
+            fragmentName || getFragmentDefinition(fragment).name.value;
+
+          if (id === undefined) {
+            invariant.warn(
+              "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+              actualFragmentName
+            );
+          }
+        }
+
+        return id as string | null;
+      });
+    };
+
+    let currentResult:
+      | ApolloCache.WatchFragmentResult<Unmasked<TData>>
+      | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
+    function toResult(diffs: Array<Cache.DiffResult<TData>>) {
+      let result:
+        | ApolloCache.WatchFragmentResult<Unmasked<TData>>
+        | ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>;
+      if (Array.isArray(from)) {
+        result = diffs.reduce(
+          (result, diff, idx) => {
+            const id = ids$.getValue()[idx];
+            result.data.push(diff.result as any);
+            result.complete &&= id === null ? true : diff.complete;
+            result.dataState = result.complete ? "complete" : "partial";
+
+            if (diff.missing) {
+              result.missing ||= {};
+              (result.missing as any)[idx] = diff.missing.missing;
+            }
+
+            return result;
+          },
+          {
+            data: [],
+            dataState: "complete",
+            complete: true,
+          } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+        );
+      } else {
+        const [diff] = diffs;
+        result = {
+          // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
+          // when `from` is a single record. As such, we need to fallback to {}
+          // when diff.result is null to maintain backwards compatibility. We
+          // should plan to change this in v5.
+          //
+          // NOTE: Using `from` with an array will maintain `null` properly
+          // without the need for a similar fallback since watchFragment with
+          // arrays is new functionality in v4.
+          data: diff.result ?? {},
+          complete: !!diff.complete,
+          dataState: diff.complete ? "complete" : "partial",
+        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
+
+        if (diff.missing) {
+          result.missing = diff.missing.missing;
+        }
+      }
+
+      if (!equal(currentResult, result)) {
+        currentResult = result;
+      }
+
+      return currentResult;
+    }
+
+    let subscribed = false;
+    const ids$ = new BehaviorSubject(toStringIds(from));
+
+    const observable = ids$.pipe(
+      switchMap((ids) => {
+        // combineLatestBatched completes immediately when given an empty array.
+        // We want to emit an empty array without the complete notification
+        // instead.
+        return ids.length > 0 ?
+            combineLatestBatched(ids.map(watch))
+          : new Observable<Array<Cache.DiffResult<TData>>>((observer) =>
+              observer.next([])
+            );
+      }),
+      map(toResult),
+      shareReplay({ bufferSize: 1, refCount: true }),
+      tap({
+        subscribe: () => (subscribed = true),
+        unsubscribe: () => (subscribed = false),
+      })
+    );
+
+    return Object.assign(observable, {
+      reobserve: (
+        options:
+          | ApolloCache.WatchFragmentReobserveOptions<
+              ApolloCache.WatchFragmentResult<TData>
+            >
+          | ApolloCache.WatchFragmentReobserveOptions<
+              Array<ApolloCache.WatchFragmentResult<TData>>
+            >
+      ) => {
+        const isOrigArray = Array.isArray(from);
+        const isArray = Array.isArray(options.from);
+
+        invariant(
+          isOrigArray === isArray,
+          isOrigArray ?
+            "Cannot change `from` option from array to non-array. Please provide `from` as an array."
+          : "Cannot change `from` option from non-array to array. Please provide `from` as an accepted non-array value."
+        );
+
+        ids$.next(toStringIds(options.from));
+      },
+      getCurrentResult: () => {
+        if (subscribed && currentResult) {
+          return currentResult as any;
+        }
+
+        const diffs = ids$.getValue().map((id): Cache.DiffResult<TData> => {
+          if (id === null) {
+            return { result: null, complete: false };
           }
 
-          latestDiff = { ...diff, result: data } as Cache.DiffResult<TData>;
-          observer.next(result);
-        },
-      });
-    });
+          return this.diff<TData>({
+            id,
+            query,
+            returnPartialData: true,
+            optimistic,
+            variables: otherOptions.variables,
+          });
+        });
+
+        return toResult(diffs);
+      },
+    }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

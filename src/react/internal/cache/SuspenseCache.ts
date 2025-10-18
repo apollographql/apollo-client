@@ -63,10 +63,7 @@ export class SuspenseCache {
       from: string | Array<string | null>;
     }
   ) {
-    const [ids, ...rest] = cacheKey;
-    const ref = this.fragmentRefs.lookupArray(
-      Array.isArray(ids) ? [...ids, ...rest] : cacheKey
-    ) as {
+    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
       current?: FragmentReference<TData, TVariables>;
     };
 

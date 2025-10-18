@@ -87,8 +87,21 @@ export type BackgroundQueryHookOptions<TData = unknown, TVariables extends Opera
 // @public
 export function createQueryPreloader(client: ApolloClient): PreloadQueryFunction;
 
+// Warning: (ae-forgotten-export) The symbol "FromPrimitive" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type From<TData> = StoreObject_2 | Reference_2 | FragmentType<NoInfer_2<TData>> | string | null;
+type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
+
+// Warning: (ae-forgotten-export) The symbol "FromPrimitive_2" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type From_2<TData> = FromPrimitive_2<TData> | Array<FromPrimitive_2<TData>>;
+
+// @public (undocumented)
+type FromPrimitive<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+
+// @public (undocumented)
+type FromPrimitive_2<TData> = StoreObject_2 | Reference_2 | FragmentType<NoInfer_2<TData>> | string | null;
 
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
@@ -389,6 +402,21 @@ export namespace useBackgroundQuery {
 export type UseBackgroundQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useBackgroundQuery.Result<TData, TVariables>;
 
 // @public
+export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<From<TData>>>;
+}): useFragment.Result<Array<TData>>;
+
+// @public
+export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables> & {
+    from: Array<null>;
+}): useFragment.Result<Array<null>>;
+
+// @public
+export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables> & {
+    from: Array<From<TData>>;
+}): useFragment.Result<Array<TData | null>>;
+
+// @public
 export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
 
 // @public (undocumented)
@@ -426,7 +454,7 @@ export namespace useFragment {
         client?: ApolloClient;
         fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
         fragmentName?: string;
-        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+        from: From<TData>;
         optimistic?: boolean;
         variables?: NoInfer_2<TVariables>;
     }
@@ -434,10 +462,12 @@ export namespace useFragment {
     export type Result<TData> = ({
         complete: true;
         missing?: never;
-    } & GetDataState<MaybeMasked_2<TData>, "complete">) | ({
+    } & GetDataState<MaybeMasked_2<TData>, "complete">) | {
         complete: false;
         missing?: MissingTree;
-    } & GetDataState<MaybeMasked_2<TData>, "partial">);
+        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem | null>> : DataValue.Partial<TData>;
+        dataState: "partial";
+    };
 }
 
 // @public @deprecated (undocumented)
@@ -913,8 +943,23 @@ export namespace useSubscription {
 }
 
 // @public
+export function useSuspenseFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<FromPrimitive_2<TData>>>;
+}): useSuspenseFragment.Result<Array<TData>>;
+
+// @public
+export function useSuspenseFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<null>;
+}): useSuspenseFragment.Result<Array<null>>;
+
+// @public
+export function useSuspenseFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<FromPrimitive_2<TData>>;
+}): useSuspenseFragment.Result<Array<TData | null>>;
+
+// @public
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: NonNullable<From<TData>>;
+    from: NonNullable<From_2<TData>>;
 }): useSuspenseFragment.Result<TData>;
 
 // @public
@@ -924,7 +969,7 @@ export function useSuspenseFragment<TData, TVariables extends OperationVariables
 
 // @public
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: From<TData>;
+    from: From_2<TData>;
 }): useSuspenseFragment.Result<TData | null>;
 
 // @public
@@ -939,7 +984,7 @@ export namespace useSuspenseFragment {
         export type Options<TData, TVariables extends OperationVariables> = {
             fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
             fragmentName?: string;
-            from: From<TData>;
+            from: From_2<TData>;
             optimistic?: boolean;
             client?: ApolloClient;
         };
@@ -1090,7 +1135,8 @@ export type UseSuspenseQueryResult<TData = unknown, TVariables extends Operation
 
 // Warnings were encountered during analysis:
 //
-// src/react/hooks/useSuspenseFragment.ts:111:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useFragment.ts:148:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:144:5 - (ae-forgotten-export) The symbol "From_2" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

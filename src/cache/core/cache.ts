@@ -44,7 +44,7 @@ import type { MissingTree } from "./types/common.js";
 export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
-  export type WatchFragmentFrom<TData> =
+  export type WatchFragmentFromValue<TData> =
     | StoreObject
     | Reference
     | FragmentType<NoInfer<TData>>
@@ -72,8 +72,8 @@ export declare namespace ApolloCache {
      * @docGroup 1. Required options
      */
     from:
-      | ApolloCache.WatchFragmentFrom<TData>
-      | Array<ApolloCache.WatchFragmentFrom<TData> | null>;
+      | ApolloCache.WatchFragmentFromValue<TData>
+      | Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *

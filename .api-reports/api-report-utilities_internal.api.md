@@ -18,7 +18,7 @@ import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
@@ -73,6 +73,9 @@ export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
+
+// @public
+export function combineLatestBatched<T>(observables: Array<Observable<T>>): Observable<T[]>;
 
 // Warning: (ae-forgotten-export) The symbol "TupleToIntersection" needs to be exported by the entry point index.d.ts
 //

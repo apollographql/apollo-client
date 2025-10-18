@@ -36,8 +36,9 @@ async function renderUseSuspenseFragment<TData, Props = never>(
     );
   }
 
-  const { render, takeRender, replaceSnapshot } =
-    createRenderStream<useSuspenseFragment.Result<TData>>();
+  const { render, takeRender, replaceSnapshot } = createRenderStream<
+    useSuspenseFragment.Result<TData>
+  >({ skipNonTrackingRenders: true });
 
   const utils = await render(<App props={options.initialProps} />, options);
 
@@ -120,7 +121,6 @@ test("updates items in the list with cache writes", async () => {
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
-  const { cache } = client;
 
   for (let i = 1; i <= 5; i++) {
     client.writeFragment({
@@ -512,6 +512,7 @@ test("suspends when an item changes from complete to partial", async () => {
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
+  const { cache } = client;
 
   for (let i = 1; i <= 5; i++) {
     client.writeFragment({
@@ -547,8 +548,8 @@ test("suspends when an item changes from complete to partial", async () => {
     });
   }
 
-  client.cache.modify({
-    id: client.cache.identify({ __typename: "Item", id: 1 }),
+  cache.modify({
+    id: cache.identify({ __typename: "Item", id: 1 }),
     fields: {
       text: (_, { DELETE }) => DELETE,
     },
@@ -560,11 +561,9 @@ test("suspends when an item changes from complete to partial", async () => {
     expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
 
-  client.cache.modify({
-    id: client.cache.identify({ __typename: "Item", id: 1 }),
-    fields: {
-      text: () => "Item #1 is back",
-    },
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1 is back" },
   });
 
   {

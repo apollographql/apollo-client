@@ -366,7 +366,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentOptions<TData>>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
   ): ApolloCache.WatchFragmentObservable<
     ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
@@ -388,7 +388,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentOptions<TData> | null>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }
   ): ApolloCache.WatchFragmentObservable<
     ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>

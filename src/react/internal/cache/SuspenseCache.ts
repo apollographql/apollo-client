@@ -60,10 +60,13 @@ export class SuspenseCache {
     cacheKey: FragmentCacheKey,
     client: ApolloClient,
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: string;
+      from: string | Array<string | null>;
     }
   ) {
-    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
+    const [ids, ...rest] = cacheKey;
+    const ref = this.fragmentRefs.lookupArray(
+      Array.isArray(ids) ? [...ids, ...rest] : cacheKey
+    ) as {
       current?: FragmentReference<TData, TVariables>;
     };
 

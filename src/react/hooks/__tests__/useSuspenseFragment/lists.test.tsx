@@ -494,7 +494,7 @@ test("suspends until all items are complete with partially complete results on i
   await expect(takeRender).not.toRerender();
 });
 
-test("suspends when an item changes from complete to partia", async () => {
+test("suspends when an item changes from complete to partial", async () => {
   type Item = {
     __typename: string;
     id: number;

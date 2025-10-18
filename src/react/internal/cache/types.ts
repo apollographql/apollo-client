@@ -7,7 +7,7 @@ export type CacheKey = [
 ];
 
 export type FragmentCacheKey = [
-  cacheId: string,
+  cacheId: string | Array<string | null>,
   fragment: DocumentNode,
   stringifiedVariables: string,
 ];

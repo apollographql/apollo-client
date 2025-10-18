@@ -1,5 +1,5 @@
 import { equal } from "@wry/equality";
-import type { Observable, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 
 import type { ApolloClient, OperationVariables } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -23,7 +23,7 @@ export class FragmentReference<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: Observable<
+  public readonly observable: ApolloClient.WatchFragmentObservable<
     ApolloClient.WatchFragmentResult<TData>
   >;
   public readonly key: FragmentKey = {};
@@ -44,7 +44,7 @@ export class FragmentReference<
       TData,
       TVariables
     > & {
-      from: string;
+      from: string | Array<string | null>;
     },
     options: FragmentReferenceOptions
   ) {
@@ -58,7 +58,7 @@ export class FragmentReference<
       this.onDispose = options.onDispose;
     }
 
-    const diff = this.getDiff(client, watchFragmentOptions);
+    const result = this.observable.getCurrentResult();
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this fragmentRef in the given time. This
@@ -74,8 +74,8 @@ export class FragmentReference<
     };
 
     this.promise =
-      diff.complete ?
-        createFulfilledPromise(diff.result)
+      result.complete ?
+        createFulfilledPromise(result.data)
       : this.createPendingPromise();
     this.subscribeToFragment();
 
@@ -174,35 +174,5 @@ export class FragmentReference<
         this.reject = reject;
       })
     );
-  }
-
-  private getDiff<TData, TVariables extends OperationVariables>(
-    client: ApolloClient,
-    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: string;
-    }
-  ) {
-    const { cache } = client;
-    const { from, fragment, fragmentName } = options;
-
-    const diff = cache.diff<TData, TVariables>({
-      ...options,
-      query: cache["getFragmentDoc"](
-        client["transform"](fragment),
-        fragmentName
-      ),
-      returnPartialData: true,
-      id: from,
-      optimistic: true,
-    });
-
-    return {
-      ...diff,
-      result: client["queryManager"].maskFragment({
-        fragment,
-        fragmentName,
-        data: diff.result,
-      }) as MaybeMasked<TData>,
-    };
   }
 }

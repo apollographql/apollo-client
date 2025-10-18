@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import type {
+  ApolloCache,
   ApolloClient,
   DataValue,
   DocumentNode,
@@ -20,7 +21,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
-import { wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 type FromPrimitive<TData> =
@@ -197,20 +198,18 @@ function useSuspenseFragment_<
   const { from, variables } = options;
   const { cache } = client;
 
-  const id = React.useMemo(
-    () =>
-      typeof from === "string" ? from
-      : from === null ? null
-      : cache.identify(from),
-    [cache, from]
-  ) as string | null;
+  const ids = useDeepMemo(() => {
+    return Array.isArray(from) ?
+        from.map((id) => toStringId(cache, id))
+      : toStringId(cache, from);
+  }, [cache, from]);
 
   const fragmentRef =
-    id === null ? null : (
+    ids === null ? null : (
       getSuspenseCache(client).getFragmentRef(
-        [id, options.fragment, canonicalStringify(variables)],
+        [ids, options.fragment, canonicalStringify(variables)],
         client,
-        { ...options, variables: variables as TVariables, from: id }
+        { ...options, variables: variables as TVariables, from: ids }
       )
     );
 
@@ -251,4 +250,11 @@ function useSuspenseFragment_<
   const data = __use(current[1]);
 
   return { data };
+}
+
+function toStringId(cache: ApolloCache, from: FromPrimitive<any>) {
+  return (
+    typeof from === "string" ? from
+    : from === null ? null
+    : cache.identify(from)) as string | null;
 }

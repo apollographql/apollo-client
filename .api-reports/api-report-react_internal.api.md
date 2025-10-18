@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
@@ -63,6 +64,8 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     //
     // (undocumented)
     promise: FragmentRefPromise<MaybeMasked<TData>>;
+    // (undocumented)
+    reobserve(options: ApolloCache.WatchFragmentReobserveOptions<any>): void;
     // (undocumented)
     retain(): () => void;
 }

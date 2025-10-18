@@ -40,7 +40,7 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 // @public (undocumented)
 export namespace ApolloCache {
     // (undocumented)
-    export type WatchFragmentFrom<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    export type WatchFragmentFromValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
     export interface WatchFragmentObservable<T> extends Observable<T> {
         getCurrentResult: () => T;
@@ -49,7 +49,7 @@ export namespace ApolloCache {
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
-        from: ApolloCache.WatchFragmentFrom<TData> | Array<ApolloCache.WatchFragmentFrom<TData> | null>;
+        from: ApolloCache.WatchFragmentFromValue<TData> | Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
         optimistic?: boolean;
         variables?: TVariables;
     }

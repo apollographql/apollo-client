@@ -1139,7 +1139,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFrom<TData>>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
   ): ApolloClient.WatchFragmentObservable<
     ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>>
@@ -1162,7 +1162,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFrom<TData> | null>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }
   ): ApolloClient.WatchFragmentObservable<
     ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData> | null>>

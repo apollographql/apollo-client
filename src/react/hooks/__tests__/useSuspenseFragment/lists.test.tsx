@@ -6,7 +6,7 @@ import {
 } from "@testing-library/react-render-stream";
 import React, { Suspense } from "react";
 
-import type { TypedDocumentNode } from "@apollo/client";
+import type { StoreObject, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { useSuspenseFragment } from "@apollo/client/react";
 import { createClientWrapper } from "@apollo/client/testing/internal";
@@ -708,6 +708,235 @@ test("handles changing list size", async () => {
     expect(renderedComponents).toStrictEqual(["useSuspenseFragment"]);
     expect(snapshot).toStrictEqualTyped({
       data: [{ __typename: "Item", id: 6, text: "Item #6" }],
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("rendering same items in multiple useSuspenseFragment hooks allows for rerendering a different list in the other", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  function UseSuspenseFragment({
+    id,
+    items,
+  }: {
+    id: number;
+    items: StoreObject[];
+  }) {
+    useTrackRenders({ name: `useSuspenseFragment ${id}` });
+    mergeSnapshot({
+      [`items${id}`]: useSuspenseFragment({ fragment, from: items }),
+    });
+
+    return null;
+  }
+
+  function SuspenseFallback({ id }: { id: number }) {
+    // Reset snapshot so it doesn't seem like the useSuspenseFragment hook
+    // rendered
+    mergeSnapshot({ [`items${id}`]: undefined });
+    useTrackRenders({ name: `SuspenseFallback ${id}` });
+
+    return null;
+  }
+
+  function App({
+    items1,
+    items2,
+  }: {
+    items1: StoreObject[];
+    items2: StoreObject[];
+  }) {
+    return (
+      <>
+        <Suspense fallback={<SuspenseFallback id={1} />}>
+          <UseSuspenseFragment id={1} items={items1} />
+        </Suspense>
+        <Suspense fallback={<SuspenseFallback id={2} />}>
+          <UseSuspenseFragment id={2} items={items2} />
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { render, takeRender, mergeSnapshot } = createRenderStream<{
+    items1: useSuspenseFragment.Result<Item[]> | undefined;
+    items2: useSuspenseFragment.Result<Item[]> | undefined;
+  }>({
+    skipNonTrackingRenders: true,
+    initialSnapshot: { items1: undefined, items2: undefined },
+  });
+
+  const initialItems = [
+    { __typename: "Item", id: 1 },
+    { __typename: "Item", id: 2 },
+  ];
+
+  const { rerender } = await render(
+    <App items1={initialItems} items2={initialItems} />,
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "SuspenseFallback 2",
+      "SuspenseFallback 1",
+    ]);
+    expect(snapshot).toStrictEqualTyped({
+      items1: undefined,
+      items2: undefined,
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+  });
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useSuspenseFragment 2",
+      "useSuspenseFragment 1",
+    ]);
+    expect(snapshot).toStrictEqual({
+      items1: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+        ],
+      },
+      items2: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+        ],
+      },
+    });
+  }
+
+  await rerender(
+    <App
+      items1={initialItems}
+      items2={[...initialItems, { __typename: "Item", id: 5 }]}
+    />
+  );
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "SuspenseFallback 2",
+      "useSuspenseFragment 1",
+    ]);
+    expect(snapshot).toStrictEqual({
+      items1: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+        ],
+      },
+      items2: undefined,
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 5, text: "Item #5" },
+  });
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseFragment 2"]);
+    expect(snapshot).toStrictEqual({
+      items1: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+        ],
+      },
+      items2: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+          { __typename: "Item", id: 5, text: "Item #5" },
+        ],
+      },
+    });
+  }
+
+  await rerender(
+    <App items1={initialItems} items2={[{ __typename: "Item", id: 2 }]} />
+  );
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useSuspenseFragment 2",
+      "useSuspenseFragment 1",
+    ]);
+    expect(snapshot).toStrictEqual({
+      items1: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2" },
+        ],
+      },
+      items2: {
+        data: [{ __typename: "Item", id: 2, text: "Item #2" }],
+      },
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2 updated" },
+  });
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useSuspenseFragment 2",
+      "useSuspenseFragment 1",
+    ]);
+    expect(snapshot).toStrictEqual({
+      items1: {
+        data: [
+          { __typename: "Item", id: 1, text: "Item #1" },
+          { __typename: "Item", id: 2, text: "Item #2 updated" },
+        ],
+      },
+      items2: {
+        data: [{ __typename: "Item", id: 2, text: "Item #2 updated" }],
+      },
     });
   }
 

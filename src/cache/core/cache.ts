@@ -118,7 +118,7 @@ export declare namespace ApolloCache {
         dataState: "partial";
       };
 
-  export interface WatchFragmentObservable<T> extends Observable<T> {
+  export interface ObservableFragment<T> extends Observable<T> {
     /**
      * Return the current result for the fragment.
      */
@@ -368,7 +368,7 @@ export abstract class ApolloCache {
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
       from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
-  ): ApolloCache.WatchFragmentObservable<
+  ): ApolloCache.ObservableFragment<
     ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
   >;
 
@@ -379,7 +379,7 @@ export abstract class ApolloCache {
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
       from: Array<null>;
     }
-  ): ApolloCache.WatchFragmentObservable<
+  ): ApolloCache.ObservableFragment<
     ApolloCache.WatchFragmentResult<Array<null>>
   >;
 
@@ -390,7 +390,7 @@ export abstract class ApolloCache {
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
       from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }
-  ): ApolloCache.WatchFragmentObservable<
+  ): ApolloCache.ObservableFragment<
     ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>
   >;
 
@@ -399,7 +399,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
-  ): ApolloCache.WatchFragmentObservable<
+  ): ApolloCache.ObservableFragment<
     ApolloCache.WatchFragmentResult<Unmasked<TData>>
   >;
 
@@ -410,10 +410,10 @@ export abstract class ApolloCache {
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
   ):
-    | ApolloCache.WatchFragmentObservable<
+    | ApolloCache.ObservableFragment<
         ApolloCache.WatchFragmentResult<Unmasked<TData>>
       >
-    | ApolloCache.WatchFragmentObservable<
+    | ApolloCache.ObservableFragment<
         ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
       > {
     const {
@@ -670,7 +670,7 @@ export abstract class ApolloCache {
 
         return toResult(diffs);
       },
-    }) satisfies ApolloCache.WatchFragmentObservable<any> as any;
+    }) satisfies ApolloCache.ObservableFragment<any> as any;
   }
 
   // Make sure we compute the same (===) fragment query document every

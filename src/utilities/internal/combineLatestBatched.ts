@@ -4,7 +4,6 @@ import { EMPTY, Observable } from "rxjs";
  * Like `combineLatest` but with some differences:
  *
  * - It only works on arrays as an input
- * - It doesn't handle many edge cases
  * - Batches updates to each array index that contains a referentially equal
  *   observable
  * - Doesn't allow for custom scheduler

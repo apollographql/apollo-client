@@ -27,9 +27,7 @@ export class FragmentReference<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: ApolloClient.WatchFragmentObservable<
-    ApolloClient.WatchFragmentResult<TData>
-  >;
+  public readonly observable: ApolloClient.ObservableFragment<TData>;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 

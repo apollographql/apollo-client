@@ -346,16 +346,14 @@ export declare namespace ApolloClient {
   > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
 
   export type WatchFragmentResult<TData = unknown> =
-    ApolloCache.WatchFragmentResult<TData>;
+    ApolloCache.WatchFragmentResult<MaybeMasked<TData>>;
 
-  export interface WatchFragmentObservable<TData = unknown>
-    extends Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
+  export interface ObservableFragment<TData = unknown>
+    extends Observable<ApolloClient.WatchFragmentResult<TData>> {
     /**
      * Return the current result for the fragment.
      */
-    getCurrentResult: () => ApolloClient.WatchFragmentResult<
-      MaybeMasked<TData>
-    >;
+    getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
 
     /**
      * Re-evaluate the fragment against the updated `from` value.
@@ -1146,7 +1144,7 @@ export class ApolloClient {
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
       from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
-  ): ApolloClient.WatchFragmentObservable<Array<MaybeMasked<TData>>>;
+  ): ApolloClient.ObservableFragment<Array<TData>>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<
@@ -1156,7 +1154,7 @@ export class ApolloClient {
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
       from: Array<null>;
     }
-  ): ApolloClient.WatchFragmentObservable<Array<null>>;
+  ): ApolloClient.ObservableFragment<Array<null>>;
 
   public watchFragment<
     TData = unknown,
@@ -1165,7 +1163,7 @@ export class ApolloClient {
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
       from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }
-  ): ApolloClient.WatchFragmentObservable<Array<MaybeMasked<TData> | null>>;
+  ): ApolloClient.ObservableFragment<Array<TData | null>>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<
@@ -1173,7 +1171,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
-  ): ApolloClient.WatchFragmentObservable<MaybeMasked<TData>>;
+  ): ApolloClient.ObservableFragment<TData>;
 
   public watchFragment<
     TData = unknown,
@@ -1181,8 +1179,8 @@ export class ApolloClient {
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
   ):
-    | ApolloClient.WatchFragmentObservable<MaybeMasked<TData>>
-    | ApolloClient.WatchFragmentObservable<Array<MaybeMasked<TData>>> {
+    | ApolloClient.ObservableFragment<TData>
+    | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
     const observable = this.cache.watchFragment({
       ...options,
@@ -1237,7 +1235,7 @@ export class ApolloClient {
         return stableMaskedResult;
       },
       reobserve: observable.reobserve.bind(observable),
-    }) as ApolloClient.WatchFragmentObservable<any>;
+    }) as ApolloClient.ObservableFragment<any>;
   }
 
   /**

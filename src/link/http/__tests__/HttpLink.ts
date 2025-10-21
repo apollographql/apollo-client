@@ -1636,7 +1636,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed,application/graphql-response+json,application/json;q=0.9",
+                "multipart/mixed;incrementalSpec=v0.2,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -1744,7 +1744,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed,application/graphql-response+json,application/json;q=0.9",
+                "multipart/mixed;incrementalSpec=v0.2,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );

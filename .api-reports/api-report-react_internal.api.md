@@ -59,7 +59,7 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     // (undocumented)
     listen(listener: Listener_2<MaybeMasked<TData>>): () => void;
     // (undocumented)
-    readonly observable: ApolloClient.WatchFragmentObservable<ApolloClient.WatchFragmentResult<TData>>;
+    readonly observable: ApolloClient.ObservableFragment<TData>;
     // Warning: (ae-forgotten-export) The symbol "FragmentRefPromise" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

@@ -184,7 +184,7 @@ Passing `Number.POSITIVE_INFINITY` will cause the mock to be reused indefinitely
 
 ### Dynamic variables
 
-Sometimes, the exact value of the variables being passed are not known. The `MockedResponse` object takes a `variableMatcher` property that is a function that takes the variables and returns a boolean indication if this mock should match the invocation for the provided query. You cannot specify this parameter and `request.variables` at the same time.
+Sometimes, you don't know the exact value of the variables for a query. The `variables` property of the `MockedResponse` object accepts a callback function that takes the variables and returns a boolean indicating whether this mock should match the invocation for the provided query.
 
 For example, this mock will match all dog queries:
 
@@ -194,8 +194,8 @@ import { MockedResponse } from "@apollo/client/testing";
 const dogMock: MockedResponse<Data, Variables> = {
   request: {
     query: GET_DOG_QUERY,
+    variables: (variables) => true,
   },
-  variableMatcher: (variables) => true,
   result: {
     data: { dog: { __typename: "Dog", id: 1, name: "Buck", breed: "poodle" } },
   },
@@ -210,14 +210,14 @@ import { MockedResponse } from "@apollo/client/testing";
 const dogMock: MockedResponse<Data, Variables> = {
   request: {
     query: GET_DOG_QUERY,
+    variables: jest.fn().mockReturnValue(true),
   },
-  variableMatcher: jest.fn().mockReturnValue(true),
   result: {
     data: { dog: { __typename: "Dog", id: 1, name: "Buck", breed: "poodle" } },
   },
 };
 
-expect(variableMatcher).toHaveBeenCalledWith(
+expect(dogMock.request.variables).toHaveBeenCalledWith(
   expect.objectContaining({
     name: "Buck",
   })

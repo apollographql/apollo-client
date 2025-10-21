@@ -518,7 +518,7 @@ function List() {
 }
 ```
 
-<Note>
+<Tip>
   Instead of interpolating fragments within each query document, you can use
   Apollo Client's `createFragmentRegistry` method to pre-register named
   fragments with `InMemoryCache`. This allows Apollo Client to include the
@@ -526,7 +526,7 @@ function List() {
   before the request is sent. For more information, see [Registering named
   fragments using
   `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
-</Note>
+</Tip>
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 
@@ -564,10 +564,10 @@ function Item(props) {
 
 </MultiCodeBlock>
 
-<Note>
+<Tip>
   You may omit the `fragmentName` option when your fragment definition only
   includes a single fragment.
-</Note>
+</Tip>
 
 You may instead prefer to pass the whole `item` as a prop to the `Item` component. This makes the `from` option more concise.
 

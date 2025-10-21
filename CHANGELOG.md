@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.3
+
+### Patch Changes
+
+- [#12973](https://github.com/apollographql/apollo-client/pull/12973) [`072da24`](https://github.com/apollographql/apollo-client/commit/072da24a8daec3a646ef0cce30de32f95ea0bb23) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the `accept` header used with the `GraphQL17Alpha9Handler` to `multipart/mixed;incrementalSpec=v0.2` to ensure the newest incremental delivery format is requested.
+
 ## 4.1.0-alpha.2
 
 ### Minor Changes

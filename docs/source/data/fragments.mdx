@@ -576,7 +576,7 @@ You may instead prefer to pass the whole `item` as a prop to the `Item` componen
 ```tsx
 function Item(props: { item: { __typename: "Item"; id: number } }) {
   const { complete, data } = useFragment({
-    fragment: ItemFragment,
+    fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
     from: props.item,
   });

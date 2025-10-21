@@ -680,11 +680,7 @@ Depending on the GraphQL schema, it's possible the array might contain `null` va
 const { data, dataState, complete } = useFragment({
   fragment: ITEM_FRAGMENT,
   fragmentName: "ItemFragment",
-  from: [
-    { __typename: "Item", id: 1 },
-    { __typename: "Item", id: 2 },
-    null
-  ]
+  from: [{ __typename: "Item", id: 1 }, { __typename: "Item", id: 2 }, null],
 });
 
 console.log({ data, dataState, complete });
@@ -707,8 +703,7 @@ If the `from` array contains `null` values for every item, the result returned f
 const { data, dataState, complete } = useFragment({
   fragment: ITEM_FRAGMENT,
   fragmentName: "ItemFragment",
-  from: [null, null, null]
-  ]
+  from: [null, null, null],
 });
 
 console.log({ data, dataState, complete });
@@ -718,6 +713,7 @@ console.log({ data, dataState, complete });
 //   complete: true
 // }
 ```
+
 </Note>
 
 ## `useSuspenseFragment`

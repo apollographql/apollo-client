@@ -1,5 +1,5 @@
 import type { RenderOptions } from "@testing-library/react";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -730,8 +730,9 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
     }
   `;
 
+  const cache = new InMemoryCache();
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache,
     link: ApolloLink.empty(),
   });
 
@@ -841,6 +842,7 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
       },
     });
   }
+  await waitFor(() => expect(cache).toHaveNumWatches(4));
 
   await rerender(
     <App
@@ -866,6 +868,7 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
       items2: undefined,
     });
   }
+  await waitFor(() => expect(cache).toHaveNumWatches(5));
 
   client.writeFragment({
     fragment,
@@ -916,6 +919,7 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
       },
     });
   }
+  await waitFor(() => expect(cache).toHaveNumWatches(3));
 
   client.writeFragment({
     fragment,

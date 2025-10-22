@@ -1,9 +1,11 @@
 import type { RenderOptions } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
 
 import type { StoreObject, TypedDocumentNode } from "@apollo/client";
@@ -938,6 +940,137 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
         data: [{ __typename: "Item", id: 2, text: "Item #2 updated" }],
       },
     });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("works with transitions", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+  const user = userEvent.setup();
+
+  function UseSuspenseFragment({ items }: { items: StoreObject[] }) {
+    useTrackRenders({ name: "useSuspenseFragment" });
+    replaceSnapshot(useSuspenseFragment({ fragment, from: items }));
+
+    return null;
+  }
+
+  function SuspenseFallback() {
+    useTrackRenders({ name: "SuspenseFallback" });
+
+    return null;
+  }
+
+  function App() {
+    const [items, setItems] = React.useState([
+      { __typename: "Item", id: 1 },
+      { __typename: "Item", id: 2 },
+    ]);
+    const [isPending, startTransition] = React.useTransition();
+
+    return (
+      <>
+        <button
+          disabled={isPending}
+          onClick={() => {
+            startTransition(() => {
+              setItems((prev) => [...prev, { __typename: "Item", id: 5 }]);
+            });
+          }}
+        >
+          Change items
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <UseSuspenseFragment items={items} />
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { render, takeRender, replaceSnapshot } = createRenderStream<
+    useSuspenseFragment.Result<Item[]>
+  >({ skipNonTrackingRenders: true });
+
+  await render(<App />, { wrapper: createClientWrapper(client) });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqualTyped(["SuspenseFallback"]);
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+  });
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqualTyped(["useSuspenseFragment"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: [
+        { __typename: "Item", id: 1, text: "Item #1" },
+        { __typename: "Item", id: 2, text: "Item #2" },
+      ],
+    });
+  }
+
+  const button = screen.getByText("Change items");
+  await user.click(button);
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseFragment"]);
+    expect(snapshot).toStrictEqual({
+      data: [
+        { __typename: "Item", id: 1, text: "Item #1" },
+        { __typename: "Item", id: 2, text: "Item #2" },
+      ],
+    });
+    expect(button).toBeDisabled();
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 5, text: "Item #5" },
+  });
+
+  {
+    const { renderedComponents, snapshot } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseFragment"]);
+    expect(snapshot).toStrictEqual({
+      data: [
+        { __typename: "Item", id: 1, text: "Item #1" },
+        { __typename: "Item", id: 2, text: "Item #2" },
+        { __typename: "Item", id: 5, text: "Item #5" },
+      ],
+    });
+    expect(button).not.toBeDisabled();
   }
 
   await expect(takeRender).not.toRerender();

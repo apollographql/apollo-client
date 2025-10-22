@@ -497,6 +497,7 @@ export abstract class ApolloCache {
           watch.timeoutId = setTimeout(() => {
             unsubscribe();
             getWatchOptions.forget(id);
+            watches.delete(id);
           });
         };
       }).pipe(shareReplay({ bufferSize: 1, refCount: true }));

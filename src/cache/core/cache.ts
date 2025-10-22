@@ -414,6 +414,13 @@ export abstract class ApolloCache {
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
 
+    // We `wrap` this function to ensure we get back the same referentially
+    // equal options object for a given id. When calling `reobserve`, the
+    // `switchMap` below will fully unsubscribe from all observables in the
+    // current array before subscribing to observables in the new array. This
+    // means the observable cleanup function will run, then the setup function.
+    // Without `wrap`, we'd create a 2nd `cache.watch` call upon calling
+    // `reobserve` when the observable callback function runs.
     const getWatchOptions = wrap((id: string) => {
       let latestDiff: Cache.DiffResult<TData> | undefined;
 
@@ -460,6 +467,8 @@ export abstract class ApolloCache {
       };
     });
 
+    // For some reason, `wrap` doesn't work when used with the `watch` function,
+    // so we need to track it ourselves.
     const watches = new Map<
       string | null,
       Observable<Cache.DiffResult<TData>>
@@ -474,6 +483,9 @@ export abstract class ApolloCache {
         }
 
         const watch = getWatchOptions(id);
+        // This `clearTimeout` prevents the previous unsubscribe from the
+        // observable from unsubscribing from the cache watch for ids that
+        // stayed in the array after a reobserve call.
         clearTimeout(watch.timeoutId);
 
         // Hijack the fact that `this.watch` uses a set on the options object to

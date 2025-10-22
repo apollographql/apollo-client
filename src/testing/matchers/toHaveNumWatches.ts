@@ -11,6 +11,9 @@ export const toHaveNumWatches: MatcherFunction<[size: number]> = function (
   });
   const cache = _cache as InMemoryCache;
   const watchSize = cache["watches"].size;
+  const watchIds = Array.from(cache["watches"].values()).map(
+    (watch) => `'${watch.id ?? "ROOT_QUERY"}'`
+  );
   const pass = watchSize === size;
 
   const plural = (size: number) => (size === 1 ? "watch" : "watches");
@@ -24,7 +27,9 @@ export const toHaveNumWatches: MatcherFunction<[size: number]> = function (
         size
       )} but instead it had ${this.utils.printReceived(watchSize)} ${plural(
         watchSize
-      )}.`;
+      )}.\n\nWatches: ${this.utils.printReceived(
+        "[" + watchIds.join(", ") + "]"
+      )}`;
     },
   };
 };

@@ -215,23 +215,10 @@ function useFragment_<TData, TVariables extends OperationVariables>(
 
   const stableOptions = useDeepMemo(() => rest, [rest]);
 
-  const [previous, setPrevious] = React.useReducer(
-    (state, newState) => ({ ...state, ...newState }),
-    { client, ids, stableOptions }
+  const observable = React.useMemo(
+    () => client.watchFragment({ ...stableOptions, from: ids as any }),
+    [client, stableOptions, ids]
   );
-  const [observable, setObservable] = React.useState(() =>
-    client.watchFragment({ ...rest, from: ids as any })
-  );
-
-  if (client !== previous.client || stableOptions !== previous.stableOptions) {
-    setPrevious({ client, stableOptions, ids });
-    setObservable(client.watchFragment({ ...stableOptions, from: ids as any }));
-  }
-
-  if (ids !== previous.ids) {
-    setPrevious({ ids });
-    observable.reobserve({ from: ids as any });
-  }
 
   const currentResultRef =
     React.useRef<ReturnType<typeof observable.getCurrentResult>>(undefined);

@@ -203,40 +203,19 @@ function useSuspenseFragment_<
         from.map((id) => toStringId(cache, id))
       : toStringId(cache, from);
   }, [cache, from]);
-
-  // Keep the first set of ids that can be stored after the initial
-  // non-suspended mount to use for the suspense cache key. This ensures we keep
-  // around the same `FragmentReference` even as the `from` option changes so
-  // that we can take advantage of `reobserve` to maintain existing watches as
-  // much as possible. If we used the `ids` in the cache key (which might change
-  // between renders), we'd get a new `client.watchFragment` observable
-  // which would tear down existing watches, even for items that remain the same
-  // between the changed items in the `from` array.
-  let [stableIds, setStableIds] = React.useState(() => ids);
-  const [previousIds, setPreviousIds] = React.useState(ids);
-
-  if (stableIds === null && ids !== null) {
-    stableIds = ids;
-    setStableIds(ids);
-  }
+  const idString = React.useMemo(
+    () => (Array.isArray(ids) ? ids.join(",") : ids),
+    [ids]
+  );
 
   const fragmentRef =
     ids === null ? null : (
       getSuspenseCache(client).getFragmentRef(
-        [
-          stableIds as string | Array<string | null>,
-          options.fragment,
-          canonicalStringify(variables),
-        ],
+        [options.fragment, canonicalStringify(variables), idString],
         client,
         { ...options, variables: variables as TVariables, from: ids }
       )
     );
-
-  if (ids !== previousIds) {
-    setPreviousIds(ids);
-    fragmentRef?.reobserve({ from: ids as any });
-  }
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]

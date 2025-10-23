@@ -4,7 +4,6 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
@@ -35,9 +34,9 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <T
 
 // @public (undocumented)
 type FragmentCacheKey = [
-cacheId: string | Array<string | null>,
 fragment: DocumentNode,
-stringifiedVariables: string
+stringifiedVariables: string,
+cacheId: string | null
 ];
 
 // @public (undocumented)
@@ -64,8 +63,6 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     //
     // (undocumented)
     promise: FragmentRefPromise<MaybeMasked<TData>>;
-    // (undocumented)
-    reobserve(options: ApolloCache.WatchFragmentReobserveOptions<any>): void;
     // (undocumented)
     retain(): () => void;
 }

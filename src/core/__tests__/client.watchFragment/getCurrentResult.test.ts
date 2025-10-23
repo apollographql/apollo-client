@@ -427,22 +427,6 @@ test("getCurrentResult handles arrays", async () => {
     dataState: "complete",
     complete: true,
   });
-
-  observable.reobserve({
-    from: [
-      { __typename: "Item", id: 1 },
-      { __typename: "Item", id: 2 },
-    ],
-  });
-
-  expect(observable.getCurrentResult()).toStrictEqualTyped({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1" },
-      { __typename: "Item", id: 2, text: "Item #2 updated" },
-    ],
-    dataState: "complete",
-    complete: true,
-  });
 });
 
 test("getCurrentResult handles arrays with an active subscription", async () => {
@@ -494,22 +478,6 @@ test("getCurrentResult handles arrays with an active subscription", async () => 
       { __typename: "Item", id: 1, text: "Item #1" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
       { __typename: "Item", id: 5, text: "Item #5" },
-    ],
-    dataState: "complete",
-    complete: true,
-  });
-
-  observable.reobserve({
-    from: [
-      { __typename: "Item", id: 1 },
-      { __typename: "Item", id: 2 },
-    ],
-  });
-
-  expect(observable.getCurrentResult()).toStrictEqualTyped({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1" },
-      { __typename: "Item", id: 2, text: "Item #2 updated" },
     ],
     dataState: "complete",
     complete: true,

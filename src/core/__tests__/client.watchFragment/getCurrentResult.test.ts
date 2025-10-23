@@ -173,7 +173,7 @@ test("returns updated value if changed before subscribing", async () => {
   });
 });
 
-test("returns referentially stable value when called multiple times", async () => {
+test("returns referentially stable value", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id

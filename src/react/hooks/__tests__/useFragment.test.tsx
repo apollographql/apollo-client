@@ -1836,21 +1836,19 @@ describe("useFragment", () => {
       }
     );
 
-    {
-      const { data, complete } = await takeSnapshot();
-
-      expect(data).toStrictEqualTyped({});
-      expect(complete).toBe(false);
-    }
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: {},
+      dataState: "partial",
+      complete: false,
+    });
 
     await rerender({ from: { __typename: "User", id: "1" } });
 
-    {
-      const { data, complete } = await takeSnapshot();
-
-      expect(data).toStrictEqualTyped({ __typename: "User", id: "1", age: 30 });
-      expect(complete).toBe(true);
-    }
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { __typename: "User", id: "1", age: 30 },
+      dataState: "complete",
+      complete: true,
+    });
   });
 
   describe("tests with incomplete data", () => {

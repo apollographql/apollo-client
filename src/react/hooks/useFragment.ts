@@ -216,9 +216,13 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     [client, stableOptions]
   );
 
+  // Unfortunately we forgot to update the use case of `from: null` on
+  // useFragment in 4.0 to match `useSuspenseFragment`. As such, we need to
+  // fallback to data: {} with complete: false when `from` is `null` to maintain
+  // backwards compatibility. We should plan to change this in v5.
   const getSnapshot = React.useCallback(
-    () => observable.getCurrentResult(),
-    [observable]
+    () => (from === null ? nullResult : observable.getCurrentResult()),
+    [from, observable]
   );
 
   return useSyncExternalStore(
@@ -247,3 +251,9 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     getSnapshot
   );
 }
+
+const nullResult = Object.freeze({
+  data: {},
+  dataState: "partial",
+  complete: false,
+}) as useFragment.Result<any>;

@@ -8,7 +8,6 @@ import type {
   DocumentNode,
   InMemoryCache,
 } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 
 export type KeyOptions = Pick<
   Cache.WatchOptions,

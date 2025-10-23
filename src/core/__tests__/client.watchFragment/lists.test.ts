@@ -1011,6 +1011,23 @@ test("differentiates watches between optimistic and variables", async () => {
   });
   await expect(stream1).not.toEmitAnything();
 
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "FULL REPLACEMENT" },
+    variables: { casing: "UPPER" },
+  });
+
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "FULL REPLACEMENT" },
+      { __typename: "Item", id: 1, text: "FULL REPLACEMENT" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream2).not.toEmitAnything();
+  await expect(stream3).not.toEmitAnything();
+
   expect(cache).toHaveNumWatches(4);
   expect(client).toHaveFragmentWatchesOn(fragment, [
     { id: "Item:1", optimistic: true, variables: { casing: "UPPER" } },

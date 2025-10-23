@@ -568,21 +568,17 @@ export abstract class ApolloCache {
 
     const { optimistic = true, ...otherOptions } = options;
 
-    const diffOptions: Cache.DiffOptions<TData, TVariables> = {
-      ...otherOptions,
-      returnPartialData: true,
-      id,
-      query: fragmentQuery,
-      optimistic,
-    };
-
     const cacheKey = [fragmentQuery, id, optimistic, otherOptions.variables];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
     cacheEntry.observable ??= new Observable<Cache.DiffResult<TData>>(
       (observer) => {
         const cleanup = this.watch<TData, TVariables>({
-          ...diffOptions,
+          ...otherOptions,
+          returnPartialData: true,
+          id,
+          query: fragmentQuery,
+          optimistic,
           immediate: true,
           callback: (diff) => {
             observer.next(diff);

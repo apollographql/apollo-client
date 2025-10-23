@@ -23,7 +23,7 @@ export class FragmentReference<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  public readonly observable: ApolloClient.ObservableFragment<TData>;
+  public readonly observable: ApolloClient.ObservableFragment<TData | null>;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 
@@ -128,7 +128,7 @@ export class FragmentReference<
     this.subscription.add(this.onDispose);
   }
 
-  private handleNext(result: ApolloClient.WatchFragmentResult<TData>) {
+  private handleNext(result: ApolloClient.WatchFragmentResult<TData | null>) {
     switch (this.promise.status) {
       case "pending": {
         if (result.complete) {

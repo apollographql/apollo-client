@@ -1127,7 +1127,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: Array<NonNullable<ApolloCache.WatchFragmentFromValue<TData>>>;
     }
   ): ApolloClient.ObservableFragment<Array<TData>>;
 
@@ -1146,7 +1146,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
   ): ApolloClient.ObservableFragment<Array<TData | null>>;
 
@@ -1165,8 +1165,18 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: NonNullable<ApolloCache.WatchFragmentFromValue<TData>>;
+    }
   ): ApolloClient.ObservableFragment<TData>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+  ): ApolloClient.ObservableFragment<TData | null>;
 
   public watchFragment<
     TData = unknown,
@@ -1183,12 +1193,8 @@ export class ApolloClient {
     });
 
     const mask = (
-      result:
-        | ApolloClient.WatchFragmentResult<Unmasked<TData>>
-        | ApolloClient.WatchFragmentResult<Array<Unmasked<TData>>>
-    ):
-      | ApolloClient.WatchFragmentResult<MaybeMasked<TData>>
-      | ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>> => {
+      result: ApolloClient.WatchFragmentResult<any>
+    ): ApolloClient.WatchFragmentResult<any> => {
       // The transform will remove fragment spreads from the fragment
       // document when dataMasking is enabled. The `mask` function
       // remains to apply warnings to fragments marked as

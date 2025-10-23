@@ -76,7 +76,7 @@ export declare namespace ApolloCache {
      */
     from:
       | ApolloCache.WatchFragmentFromValue<TData>
-      | Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
+      | Array<ApolloCache.WatchFragmentFromValue<TData>>;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -115,7 +115,7 @@ export declare namespace ApolloCache {
           complete: false;
           missing?: MissingTree;
         } & GetDataState<any, "partial">)
-    : null extends TData ?
+    : TData extends null ?
       {
         complete: true;
         missing?: never;
@@ -365,7 +365,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: Array<NonNullable<ApolloCache.WatchFragmentFromValue<TData>>>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
 
@@ -383,7 +383,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
 
@@ -400,8 +400,17 @@ export abstract class ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: NonNullable<ApolloCache.WatchFragmentFromValue<TData>>;
+    }
   ): ApolloCache.ObservableFragment<Unmasked<TData>>;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables>
+  ): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<

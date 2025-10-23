@@ -463,9 +463,8 @@ export abstract class ApolloCache {
       if (Array.isArray(from)) {
         result = diffs.reduce(
           (result, diff, idx) => {
-            const id = ids[idx];
             result.data.push(diff.result as any);
-            result.complete &&= id === null ? true : diff.complete;
+            result.complete &&= diff.complete;
             result.dataState = result.complete ? "complete" : "partial";
 
             if (diff.missing) {
@@ -538,19 +537,21 @@ export abstract class ApolloCache {
           return currentResult as any;
         }
 
-        const diffs = ids.map((id): Cache.DiffResult<Unmasked<TData>> => {
-          if (id === null) {
-            return { result: null, complete: false };
-          }
+        const diffs = ids.map(
+          (id): Cache.DiffResult<Unmasked<TData> | null> => {
+            if (id === null) {
+              return { result: null, complete: true };
+            }
 
-          return this.diff<Unmasked<TData>>({
-            id,
-            query,
-            returnPartialData: true,
-            optimistic,
-            variables,
-          });
-        });
+            return this.diff<Unmasked<TData>>({
+              id,
+              query,
+              returnPartialData: true,
+              optimistic,
+              variables,
+            });
+          }
+        );
 
         return toResult(diffs);
       },

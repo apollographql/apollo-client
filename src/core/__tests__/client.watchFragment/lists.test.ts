@@ -707,102 +707,122 @@ test("can subscribe to the same object multiple times", async () => {
     data: { __typename: "Item", id: 2, text: "Item #2" },
   });
 
-  let stream1, stream2, stream3;
-
-  {
-    const observable = client.watchFragment({
+  const stream1 = new ObservableStream(
+    client.watchFragment({
       fragment,
       from: [
         { __typename: "Item", id: 1 },
         { __typename: "Item", id: 1 },
       ],
-    });
-    stream1 = new ObservableStream(observable);
-    // ensure we only watch the item once
-    expect(cache).toHaveNumWatches(1);
+    })
+  );
+  // ensure we only watch the item once
+  expect(cache).toHaveNumWatches(1);
 
-    await expect(stream1).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "Item #1" },
-        { __typename: "Item", id: 1, text: "Item #1" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1" },
+      { __typename: "Item", id: 1, text: "Item #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
-    client.writeFragment({
-      fragment,
-      data: { __typename: "Item", id: 1, text: `Item #1 updated` },
-    });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: `Item #1 updated` },
+  });
 
-    await expect(stream1).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
-  {
-    const observable = client.watchFragment({
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  const stream2 = new ObservableStream(
+    client.watchFragment({
       fragment,
       from: [
         { __typename: "Item", id: 1 },
         { __typename: "Item", id: 1 },
         { __typename: "Item", id: 1 },
       ],
-    });
-    stream2 = new ObservableStream(observable);
-    expect(cache).toHaveNumWatches(1);
+    })
+  );
+  expect(cache).toHaveNumWatches(1);
 
-    await expect(stream2).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
-  {
-    const observable = client.watchFragment({
+  await expect(stream2).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  const stream3 = new ObservableStream(
+    client.watchFragment({
       fragment,
       from: [
         { __typename: "Item", id: 1 },
         { __typename: "Item", id: 2 },
         { __typename: "Item", id: 1 },
       ],
-    });
-    stream3 = new ObservableStream(observable);
-    expect(cache).toHaveNumWatches(2);
+    })
+  );
+  expect(cache).toHaveNumWatches(2);
 
-    await expect(stream3).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-        { __typename: "Item", id: 2, text: "Item #2" },
-        { __typename: "Item", id: 1, text: "Item #1 updated" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
+  await expect(stream3).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
-    client.writeFragment({
-      fragment,
-      data: { __typename: "Item", id: 1, text: `Item #1 updated again` },
-    });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: `Item #1 updated again` },
+  });
 
-    await expect(stream3).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "Item #1 updated again" },
-        { __typename: "Item", id: 2, text: "Item #2" },
-        { __typename: "Item", id: 1, text: "Item #1 updated again" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
+  await expect(stream3).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 2, text: "Item #2" },
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream2).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+      { __typename: "Item", id: 1, text: "Item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await Promise.all([
+    expect(stream1).not.toEmitAnything(),
+    expect(stream2).not.toEmitAnything(),
+    expect(stream3).not.toEmitAnything(),
+  ]);
 
   function getFragmentWatches() {
     // testing implementation detail to ensure cache.fragmentWatches also cleans up

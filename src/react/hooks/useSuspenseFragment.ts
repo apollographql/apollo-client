@@ -95,11 +95,6 @@ export declare namespace useSuspenseFragment {
   }
 }
 
-const NULL_PLACEHOLDER = [] as unknown as [
-  FragmentKey,
-  Promise<MaybeMasked<any> | null>,
-];
-
 /** #TODO documentation */
 export function useSuspenseFragment<
   TData = unknown,
@@ -203,28 +198,17 @@ function useSuspenseFragment_<
     [ids]
   );
 
-  const fragmentRef =
-    ids === null ? null : (
-      getSuspenseCache(client).getFragmentRef(
-        [options.fragment, canonicalStringify(variables), idString],
-        client,
-        { ...options, variables: variables as TVariables, from: ids }
-      )
-    );
+  const fragmentRef = getSuspenseCache(client).getFragmentRef(
+    [options.fragment, canonicalStringify(variables), idString],
+    client,
+    { ...options, variables: variables as TVariables, from: ids }
+  );
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]
-  >(
-    fragmentRef === null ? NULL_PLACEHOLDER : (
-      [fragmentRef.key, fragmentRef.promise]
-    )
-  );
+  >([fragmentRef.key, fragmentRef.promise]);
 
   React.useEffect(() => {
-    if (fragmentRef === null) {
-      return;
-    }
-
     const dispose = fragmentRef.retain();
     const removeListener = fragmentRef.listen((promise) => {
       setPromise([fragmentRef.key, promise]);
@@ -235,10 +219,6 @@ function useSuspenseFragment_<
       removeListener();
     };
   }, [fragmentRef]);
-
-  if (fragmentRef === null) {
-    return { data: null };
-  }
 
   if (current[0] !== fragmentRef.key) {
     // eslint-disable-next-line react-compiler/react-compiler

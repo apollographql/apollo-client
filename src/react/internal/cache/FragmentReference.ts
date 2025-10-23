@@ -42,7 +42,7 @@ export class FragmentReference<
       TData,
       TVariables
     > & {
-      from: string | Array<string | null>;
+      from: string | null | Array<string | null>;
     },
     options: FragmentReferenceOptions
   ) {

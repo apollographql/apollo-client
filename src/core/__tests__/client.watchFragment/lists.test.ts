@@ -533,7 +533,7 @@ test("works with data masking", async () => {
       { __typename: "Item", id: 5 },
     ],
   });
-  const childObsrevable = client.watchFragment({
+  const childObservable = client.watchFragment({
     fragment: detailsFragment,
     from: [
       { __typename: "Item", id: 1 },
@@ -542,7 +542,7 @@ test("works with data masking", async () => {
     ],
   });
   const parentStream = new ObservableStream(parentObservable);
-  const childStream = new ObservableStream(childObsrevable);
+  const childStream = new ObservableStream(childObservable);
 
   await expect(parentStream).toEmitTypedValue({
     data: [

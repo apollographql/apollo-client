@@ -1,13 +1,13 @@
 import * as React from "react";
 
 import type {
-  ApolloCache,
   ApolloClient,
   DataValue,
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
+import type { ApolloCache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { FragmentKey } from "@apollo/client/react/internal";

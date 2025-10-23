@@ -217,38 +217,23 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     [client, stableOptions]
   );
 
-  const currentResultRef =
-    React.useRef<ReturnType<typeof observable.getCurrentResult>>(undefined);
-
-  const getSnapshot = React.useCallback(() => {
-    const result = observable.getCurrentResult();
-    currentResultRef.current = result;
-    return result;
-  }, [observable]);
+  const getSnapshot = React.useCallback(
+    () => observable.getCurrentResult(),
+    [observable]
+  );
 
   return useSyncExternalStore(
     React.useCallback(
       (update) => {
         let lastTimeout = 0;
         const subscription = observable.subscribe({
-          next: (result) => {
+          next: () => {
             // If we get another update before we've re-rendered, bail out of
             // the update and try again. This ensures that the relative timing
             // between useQuery and useFragment stays roughly the same as
             // fixed in https://github.com/apollographql/apollo-client/pull/11083
             clearTimeout(lastTimeout);
-            lastTimeout = setTimeout(() => {
-              // After the initial mount, React will always rerender the
-              // component when calling update() even if getSnapshot() doesn't
-              // change. We want to avoid rerendering the component if
-              // getSnapshot has already rendered this value.
-              //
-              // This can happen when rerendering with new IDs when reobserve is
-              // called since the value is synchronously updated during render.
-              if (currentResultRef.current !== result) {
-                update();
-              }
-            }) as any;
+            lastTimeout = setTimeout(update) as any;
           },
         });
 

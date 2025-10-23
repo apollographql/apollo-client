@@ -51,6 +51,7 @@ test("getCurrentResult returns initial emitted value after subscribing", async (
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
+  const diffSpy = jest.spyOn(client.cache, "diff");
 
   client.writeFragment({
     fragment,
@@ -69,11 +70,14 @@ test("getCurrentResult returns initial emitted value after subscribing", async (
     complete: true,
   });
 
+  diffSpy.mockClear();
+
   expect(observable.getCurrentResult()).toStrictEqualTyped({
     data: { __typename: "Item", id: 1, text: "Item #1" },
     dataState: "complete",
     complete: true,
   });
+  expect(diffSpy).not.toHaveBeenCalled();
 });
 
 test("getCurrentResult returns most recently emitted value", async () => {

@@ -8,6 +8,7 @@ import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
+import { toHaveFragmentWatchesOn } from "./toHaveFragmentWatchesOn.js";
 import { toHaveNumWatches } from "./toHaveNumWatches.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
@@ -25,6 +26,7 @@ expect.extend({
   toEmitNext,
   toEmitTypedValue,
   toBeDisposed,
+  toHaveFragmentWatchesOn,
   toHaveNumWatches,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

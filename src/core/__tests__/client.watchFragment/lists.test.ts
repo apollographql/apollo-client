@@ -1,8 +1,9 @@
 import type { Trie } from "@wry/trie";
 
-import type { TypedDocumentNode } from "@apollo/client";
+import type { Cache, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
+import { canonicalStringify } from "@apollo/client/utilities";
 
 test("can use list for `from` to get list of items", async () => {
   type Item = {
@@ -833,9 +834,15 @@ test("can subscribe to the same object multiple times", async () => {
     return Array.from(iterateStrongTrieChildren(watchedItems, []));
   }
 
+  function getKey(
+    options: Pick<Cache.WatchOptions, "id" | "optimistic" | "variables">
+  ) {
+    return [canonicalStringify(options)];
+  }
+
   expect(getFragmentWatches()).toStrictEqualTyped([
-    ["Item:1", true, undefined],
-    ["Item:2", true, undefined],
+    getKey({ id: "Item:1", optimistic: true }),
+    getKey({ id: "Item:2", optimistic: true }),
   ]);
   expect(cache).toHaveNumWatches(2);
   stream3.unsubscribe();
@@ -843,7 +850,7 @@ test("can subscribe to the same object multiple times", async () => {
   await wait(2);
   expect(cache).toHaveNumWatches(1);
   expect(getFragmentWatches()).toStrictEqualTyped([
-    ["Item:1", true, undefined],
+    getKey({ id: "Item:1", optimistic: true }),
   ]);
 
   stream1.unsubscribe();
@@ -851,7 +858,7 @@ test("can subscribe to the same object multiple times", async () => {
   expect(cache).toHaveNumWatches(1);
 
   expect(getFragmentWatches()).toStrictEqualTyped([
-    ["Item:1", true, undefined],
+    getKey({ id: "Item:1", optimistic: true }),
   ]);
 
   stream2.unsubscribe();

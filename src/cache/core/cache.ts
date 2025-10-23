@@ -570,9 +570,7 @@ export abstract class ApolloCache {
 
     const cacheKey = [
       fragmentQuery,
-      id,
-      optimistic,
-      canonicalStringify(variables),
+      canonicalStringify({ id, optimistic, variables }),
     ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 

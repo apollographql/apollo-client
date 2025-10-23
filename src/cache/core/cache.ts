@@ -26,7 +26,7 @@ import type {
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
-import { cacheSizes } from "@apollo/client/utilities";
+import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
@@ -404,7 +404,7 @@ export abstract class ApolloCache {
       fragmentName,
       from,
       optimistic = true,
-      ...otherOptions
+      variables,
     } = options;
     const query = this.getFragmentDoc(
       fragment,
@@ -538,7 +538,7 @@ export abstract class ApolloCache {
             query,
             returnPartialData: true,
             optimistic,
-            variables: otherOptions.variables,
+            variables,
           });
         });
 
@@ -566,15 +566,20 @@ export abstract class ApolloCache {
       return nullObservable;
     }
 
-    const { optimistic = true, ...otherOptions } = options;
+    const { optimistic = true, variables } = options;
 
-    const cacheKey = [fragmentQuery, id, optimistic, otherOptions.variables];
+    const cacheKey = [
+      fragmentQuery,
+      id,
+      optimistic,
+      canonicalStringify(variables),
+    ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
     cacheEntry.observable ??= new Observable<Cache.DiffResult<TData>>(
       (observer) => {
         const cleanup = this.watch<TData, TVariables>({
-          ...otherOptions,
+          variables,
           returnPartialData: true,
           id,
           query: fragmentQuery,

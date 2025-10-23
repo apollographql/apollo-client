@@ -904,48 +904,45 @@ test("differentiates watches between optimistic and variables", async () => {
     variables: { casing: "LOWER" },
   });
 
-  let stream1, stream2, stream3;
-
-  {
-    const stream1 = new ObservableStream(
-      client.watchFragment({
-        fragment,
-        from: [
-          { __typename: "Item", id: 1 },
-          { __typename: "Item", id: 1 },
-        ],
-        variables: { casing: "UPPER" },
-      })
-    );
-    // ensure we only watch the item once
-    expect(cache).toHaveNumWatches(1);
-
-    await expect(stream1).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "ITEM #1" },
-        { __typename: "Item", id: 1, text: "ITEM #1" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-
-    client.writeFragment({
+  const stream1 = new ObservableStream(
+    client.watchFragment({
       fragment,
-      data: { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
-      variables: { casing: "UPPER" },
-    });
-
-    await expect(stream1).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
-        { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
+      from: [
+        { __typename: "Item", id: 1 },
+        { __typename: "Item", id: 1 },
       ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
-  {
-    const observable = client.watchFragment({
+      variables: { casing: "UPPER" },
+    })
+  );
+  // ensure we only watch the item once
+  expect(cache).toHaveNumWatches(1);
+
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "ITEM #1" },
+      { __typename: "Item", id: 1, text: "ITEM #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
+    variables: { casing: "UPPER" },
+  });
+
+  await expect(stream1).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
+      { __typename: "Item", id: 1, text: "ITEM #1 UPDATED" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  const stream2 = new ObservableStream(
+    client.watchFragment({
       fragment,
       from: [
         { __typename: "Item", id: 1 },
@@ -953,22 +950,39 @@ test("differentiates watches between optimistic and variables", async () => {
         { __typename: "Item", id: 1 },
       ],
       variables: { casing: "LOWER" },
-    });
-    stream2 = new ObservableStream(observable);
-    expect(cache).toHaveNumWatches(2);
+    })
+  );
+  expect(cache).toHaveNumWatches(2);
 
-    await expect(stream2).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "item #1" },
-        { __typename: "Item", id: 1, text: "item #1" },
-        { __typename: "Item", id: 1, text: "item #1" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
-  {
-    const observable = client.watchFragment({
+  await expect(stream2).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "item #1" },
+      { __typename: "Item", id: 1, text: "item #1" },
+      { __typename: "Item", id: 1, text: "item #1" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "item #1 updated" },
+    variables: { casing: "LOWER" },
+  });
+
+  await expect(stream2).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "item #1 updated" },
+      { __typename: "Item", id: 1, text: "item #1 updated" },
+      { __typename: "Item", id: 1, text: "item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream1).not.toEmitAnything();
+
+  const stream3 = new ObservableStream(
+    client.watchFragment({
       fragment,
       from: [
         { __typename: "Item", id: 1 },
@@ -977,36 +991,45 @@ test("differentiates watches between optimistic and variables", async () => {
       ],
       variables: { casing: "LOWER" },
       optimistic: false,
-    });
-    stream3 = new ObservableStream(observable);
-    expect(cache).toHaveNumWatches(4);
+    })
+  );
+  expect(cache).toHaveNumWatches(4);
 
-    await expect(stream3).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "item #1" },
-        { __typename: "Item", id: 2, text: "item #2" },
-        { __typename: "Item", id: 1, text: "item #1" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
+  await expect(stream3).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "item #1 updated" },
+      { __typename: "Item", id: 2, text: "item #2" },
+      { __typename: "Item", id: 1, text: "item #1 updated" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
 
-    client.writeFragment({
-      fragment,
-      data: { __typename: "Item", id: 1, text: "item #1 updated again" },
-      variables: { casing: "LOWER" },
-    });
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "item #1 updated again" },
+    variables: { casing: "LOWER" },
+  });
 
-    await expect(stream3).toEmitTypedValue({
-      data: [
-        { __typename: "Item", id: 1, text: "item #1 updated again" },
-        { __typename: "Item", id: 2, text: "item #2" },
-        { __typename: "Item", id: 1, text: "item #1 updated again" },
-      ],
-      dataState: "complete",
-      complete: true,
-    });
-  }
+  await expect(stream3).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "item #1 updated again" },
+      { __typename: "Item", id: 2, text: "item #2" },
+      { __typename: "Item", id: 1, text: "item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream2).toEmitTypedValue({
+    data: [
+      { __typename: "Item", id: 1, text: "item #1 updated again" },
+      { __typename: "Item", id: 1, text: "item #1 updated again" },
+      { __typename: "Item", id: 1, text: "item #1 updated again" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(stream1).not.toEmitAnything();
 
   function getFragmentWatches() {
     // testing implementation detail to ensure cache.fragmentWatches also cleans up

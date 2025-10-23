@@ -824,68 +824,31 @@ test("can subscribe to the same object multiple times", async () => {
     expect(stream3).not.toEmitAnything(),
   ]);
 
-  function getFragmentWatches() {
-    // testing implementation detail to ensure cache.fragmentWatches also cleans up
-    const watchedItems: Trie<any> | undefined = cache["fragmentWatches"][
-      "weak"
-    ].get(
-      client.cache["getFragmentDoc"](
-        client["transform"](fragment, true),
-        undefined
-      )
-    );
-    function* iterateStrongTrieChildren(
-      trie: Trie<any> | undefined,
-      path: any[]
-    ): Generator<any[]> {
-      if (!trie) return;
-      if (trie["data"]) {
-        yield path;
-      }
-      if (trie["strong"]) {
-        for (const [key, value] of Array.from(
-          (trie["strong"] as Map<any, Trie<any> | undefined>)?.entries()
-        )) {
-          yield* iterateStrongTrieChildren(value, path.concat(key));
-        }
-      }
-    }
-
-    return Array.from(iterateStrongTrieChildren(watchedItems, []));
-  }
-
-  function getKey(
-    options: Pick<Cache.WatchOptions, "id" | "optimistic" | "variables">
-  ) {
-    return [canonicalStringify(options)];
-  }
-
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true }),
-    getKey({ id: "Item:2", optimistic: true }),
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true },
+    { id: "Item:2", optimistic: true },
   ]);
-  expect(cache).toHaveNumWatches(2);
+
   stream3.unsubscribe();
-  expect(cache).toHaveNumWatches(2);
   await wait(2);
+
   expect(cache).toHaveNumWatches(1);
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true }),
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true },
   ]);
 
   stream1.unsubscribe();
   await wait(2);
-  expect(cache).toHaveNumWatches(1);
 
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true }),
+  expect(cache).toHaveNumWatches(1);
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true },
   ]);
 
   stream2.unsubscribe();
-  expect(cache).toHaveNumWatches(1);
   await wait(2);
+
   expect(cache).toHaveNumWatches(0);
-  expect(getFragmentWatches()).toStrictEqualTyped([]);
 });
 
 test("differentiates watches between optimistic and variables", async () => {
@@ -1051,70 +1014,33 @@ test("differentiates watches between optimistic and variables", async () => {
   });
   await expect(stream1).not.toEmitAnything();
 
-  function getFragmentWatches() {
-    // testing implementation detail to ensure cache.fragmentWatches also cleans up
-    const watchedItems: Trie<any> | undefined = cache["fragmentWatches"][
-      "weak"
-    ].get(
-      client.cache["getFragmentDoc"](
-        client["transform"](fragment, true),
-        undefined
-      )
-    );
-    function* iterateStrongTrieChildren(
-      trie: Trie<any> | undefined,
-      path: any[]
-    ): Generator<any[]> {
-      if (!trie) return;
-      if (trie["data"]) {
-        yield path;
-      }
-      if (trie["strong"]) {
-        for (const [key, value] of Array.from(
-          (trie["strong"] as Map<any, Trie<any> | undefined>)?.entries()
-        )) {
-          yield* iterateStrongTrieChildren(value, path.concat(key));
-        }
-      }
-    }
-
-    return Array.from(iterateStrongTrieChildren(watchedItems, []));
-  }
-
-  function getKey(
-    options: Pick<Cache.WatchOptions, "id" | "optimistic" | "variables">
-  ) {
-    return [canonicalStringify(options)];
-  }
-
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true, variables: { casing: "UPPER" } }),
-    getKey({ id: "Item:1", optimistic: true, variables: { casing: "LOWER" } }),
-    getKey({ id: "Item:1", optimistic: false, variables: { casing: "LOWER" } }),
-    getKey({ id: "Item:2", optimistic: false, variables: { casing: "LOWER" } }),
-  ]);
   expect(cache).toHaveNumWatches(4);
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true, variables: { casing: "UPPER" } },
+    { id: "Item:1", optimistic: true, variables: { casing: "LOWER" } },
+    { id: "Item:1", optimistic: false, variables: { casing: "LOWER" } },
+    { id: "Item:2", optimistic: false, variables: { casing: "LOWER" } },
+  ]);
 
   stream3.unsubscribe();
   await wait(2);
 
   expect(cache).toHaveNumWatches(2);
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true, variables: { casing: "UPPER" } }),
-    getKey({ id: "Item:1", optimistic: true, variables: { casing: "LOWER" } }),
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true, variables: { casing: "UPPER" } },
+    { id: "Item:1", optimistic: true, variables: { casing: "LOWER" } },
   ]);
 
   stream1.unsubscribe();
   await wait(2);
 
   expect(cache).toHaveNumWatches(1);
-  expect(getFragmentWatches()).toStrictEqualTyped([
-    getKey({ id: "Item:1", optimistic: true, variables: { casing: "LOWER" } }),
+  expect(client).toHaveFragmentWatchesOn(fragment, [
+    { id: "Item:1", optimistic: true, variables: { casing: "LOWER" } },
   ]);
 
   stream2.unsubscribe();
   await wait(2);
 
   expect(cache).toHaveNumWatches(0);
-  expect(getFragmentWatches()).toStrictEqualTyped([]);
 });

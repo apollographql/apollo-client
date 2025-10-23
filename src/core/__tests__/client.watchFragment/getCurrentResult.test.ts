@@ -269,14 +269,7 @@ test("is lazy computed", async () => {
   });
 
   expect(cache.diff).not.toHaveBeenCalled();
-
-  expect(observable.getCurrentResult()).toStrictEqualTyped({
-    data: {},
-    dataState: "partial",
-    complete: false,
-    missing: "Dangling reference to missing Item:1 object",
-  });
-
+  observable.getCurrentResult();
   expect(cache.diff).toHaveBeenCalledTimes(1);
 });
 

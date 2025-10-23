@@ -80,6 +80,48 @@ test("getCurrentResult returns initial emitted value after subscribing", async (
   expect(diffSpy).not.toHaveBeenCalled();
 });
 
+test("getCurrentResult is referentially stable", async () => {
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  let lastResult = observable.getCurrentResult();
+  expect(observable.getCurrentResult()).toBe(lastResult);
+
+  const stream = new ObservableStream(observable);
+  const result = await stream.takeNext();
+
+  expect(result).toBe(lastResult);
+  expect(observable.getCurrentResult()).toBe(lastResult);
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+  });
+
+  expect(observable.getCurrentResult()).not.toBe(lastResult);
+
+  lastResult = observable.getCurrentResult();
+  expect(observable.getCurrentResult()).toBe(lastResult);
+});
+
 test("getCurrentResult returns most recently emitted value", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {

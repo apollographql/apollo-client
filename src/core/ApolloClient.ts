@@ -354,21 +354,6 @@ export declare namespace ApolloClient {
      * Return the current result for the fragment.
      */
     getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
-
-    /**
-     * Re-evaluate the fragment against the updated `from` value.
-     *
-     * @example
-     *
-     * ```ts
-     * const observable = client.watchFragment(options);
-     *
-     * observable.reobserve({ from: newFrom });
-     * ```
-     */
-    reobserve: (
-      options: ApolloCache.WatchFragmentReobserveOptions<TData>
-    ) => void;
   }
 
   /**

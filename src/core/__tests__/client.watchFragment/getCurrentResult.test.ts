@@ -11,7 +11,7 @@ interface Item {
   text: string;
 }
 
-test("getCurrentResult returns initial result before subscribing", async () => {
+test("returns initial result before subscribing", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -40,7 +40,7 @@ test("getCurrentResult returns initial result before subscribing", async () => {
   });
 });
 
-test("getCurrentResult returns initial emitted value after subscribing", async () => {
+test("returns initial emitted value after subscribing", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -80,7 +80,7 @@ test("getCurrentResult returns initial emitted value after subscribing", async (
   expect(diffSpy).not.toHaveBeenCalled();
 });
 
-test("getCurrentResult returns most recently emitted value", async () => {
+test("returns most recently emitted value", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -133,7 +133,7 @@ test("getCurrentResult returns most recently emitted value", async () => {
   });
 });
 
-test("getCurrentResult returns updated value if changed before subscribing", async () => {
+test("returns updated value if changed before subscribing", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -173,7 +173,7 @@ test("getCurrentResult returns updated value if changed before subscribing", asy
   });
 });
 
-test("getCurrentResult returns referentially stable value when called multiple times", async () => {
+test("returns referentially stable value when called multiple times", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -223,7 +223,7 @@ test("getCurrentResult returns referentially stable value when called multiple t
   expect(observable.getCurrentResult()).not.toBe(lastResult);
 });
 
-test("getCurrentResult returns empty result with no cache data", async () => {
+test("returns partial result with no cache data", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -248,7 +248,7 @@ test("getCurrentResult returns empty result with no cache data", async () => {
   });
 });
 
-test("getCurrentResult is lazy computed", async () => {
+test("is lazy computed", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -280,7 +280,7 @@ test("getCurrentResult is lazy computed", async () => {
   expect(cache.diff).toHaveBeenCalledTimes(1);
 });
 
-test("getCurrentResult handles arrays", async () => {
+test("handles arrays", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -334,7 +334,7 @@ test("getCurrentResult handles arrays", async () => {
   });
 });
 
-test("getCurrentResult handles arrays with an active subscription", async () => {
+test("handles arrays with an active subscription", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id
@@ -389,7 +389,7 @@ test("getCurrentResult handles arrays with an active subscription", async () => 
   });
 });
 
-test("getCurrentResult handles arrays with null", async () => {
+test("handles arrays with null", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
       id

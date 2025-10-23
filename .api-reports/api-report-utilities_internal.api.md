@@ -187,7 +187,7 @@ export namespace DocumentationTypes {
 }
 
 // @public (undocumented)
-export function equalByQuery(query: DocumentNode, aResult: Partial<ObservableQuery.Result<unknown>> | null, bResult: Partial<ObservableQuery.Result<unknown>> | null, variables?: OperationVariables): boolean;
+export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;

@@ -34,9 +34,9 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <T
 
 // @public (undocumented)
 type FragmentCacheKey = [
-cacheId: string | Array<string | null>,
 fragment: DocumentNode,
-stringifiedVariables: string
+stringifiedVariables: string,
+cacheId: string | null
 ];
 
 // @public (undocumented)

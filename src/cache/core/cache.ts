@@ -127,12 +127,6 @@ export declare namespace ApolloCache {
      */
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
-
-  export interface WatchFragmentReobserveOptions<TData = unknown> {
-    from: TData extends Array<any> ?
-      Array<StoreObject | Reference | FragmentType<TData> | string | null>
-    : StoreObject | Reference | FragmentType<TData> | string;
-  }
 }
 
 export abstract class ApolloCache {

@@ -52,11 +52,6 @@ export namespace ApolloCache {
         optimistic?: boolean;
         variables?: TVariables;
     }
-    // (undocumented)
-    export interface WatchFragmentReobserveOptions<TData = unknown> {
-        // (undocumented)
-        from: TData extends Array<any> ? Array<StoreObject | Reference | FragmentType<TData> | string | null> : StoreObject | Reference | FragmentType<TData> | string;
-    }
     export type WatchFragmentResult<TData = unknown> = ({
         complete: true;
         missing?: never;

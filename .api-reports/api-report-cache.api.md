@@ -42,7 +42,6 @@ export namespace ApolloCache {
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
-        reobserve: (options: ApolloCache.WatchFragmentReobserveOptions<TData>) => void;
     }
     // (undocumented)
     export type WatchFragmentFromValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;

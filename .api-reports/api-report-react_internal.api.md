@@ -49,7 +49,7 @@ export interface FragmentKey {
 class FragmentReference<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string | Array<string | null>;
+        from: string | null | Array<string | null>;
     }, options: FragmentReferenceOptions);
     // (undocumented)
     readonly key: FragmentKey;
@@ -202,7 +202,7 @@ class SuspenseCache {
     //
     // (undocumented)
     getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string | Array<string | null>;
+        from: string | null | Array<string | null>;
     }): FragmentReference<TData, TVariables>;
     // (undocumented)
     getQueryRef<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData, TStates>;

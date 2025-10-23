@@ -8,22 +8,13 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import type { MissingTree, Reference, StoreObject } from "@apollo/client/cache";
-import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { ApolloCache, MissingTree } from "@apollo/client/cache";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-
-type FromPrimitive<TData> =
-  | StoreObject
-  | Reference
-  | FragmentType<NoInfer<TData>>
-  | string
-  | null;
-
-type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
 
 export declare namespace useFragment {
   import _self = useFragment;
@@ -52,7 +43,7 @@ export declare namespace useFragment {
     /**
      * An object containing a `__typename` and primary key fields (such as `id`) identifying the entity object from which the fragment will be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
      */
-    from: From<TData>;
+    from: useFragment.FromValue<TData> | Array<useFragment.FromValue<TData>>;
 
     /**
      * Whether to read from optimistic or non-optimistic cache data. If
@@ -82,6 +73,9 @@ export declare namespace useFragment {
       > extends _self.Options<TData, TVariables> {}
     }
   }
+
+  export type FromValue<TData> =
+    ApolloCache.WatchFragmentFromValue<TData> | null;
 
   // TODO: Update this to return `null` when there is no data returned from the
   // fragment.
@@ -145,7 +139,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<From<TData>>>;
+    from: Array<NonNullable<useFragment.FromValue<TData>>>;
   }
 ): useFragment.Result<Array<TData>>;
 
@@ -165,7 +159,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<From<TData>>;
+    from: Array<useFragment.FromValue<TData>>;
   }
 ): useFragment.Result<Array<TData | null>>;
 

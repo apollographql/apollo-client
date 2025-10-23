@@ -2007,7 +2007,7 @@ describe.skip("type tests", () => {
         from: [null],
       });
 
-      expectTypeOf(data).branded.toEqualTypeOf<Array<null>>();
+      expectTypeOf(data).toEqualTypeOf<Array<null>>();
     }
   });
 
@@ -2031,7 +2031,7 @@ describe.skip("type tests", () => {
         from: [null, { __typename: "Item", id: 1 }],
       });
 
-      expectTypeOf(data).branded.toEqualTypeOf<Array<Data | null>>();
+      expectTypeOf(data).toEqualTypeOf<Array<Data | null>>();
     }
   });
 
@@ -2055,7 +2055,7 @@ describe.skip("type tests", () => {
         from: [{ __typename: "Item", id: 1 }],
       });
 
-      expectTypeOf(data).branded.toEqualTypeOf<Array<Data>>();
+      expectTypeOf(data).toEqualTypeOf<Array<Data>>();
     }
   });
 

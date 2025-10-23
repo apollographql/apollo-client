@@ -203,11 +203,15 @@ function useSuspenseFragment_<
         from.map((id) => toStringId(cache, id))
       : toStringId(cache, from);
   }, [cache, from]);
+  const idString = React.useMemo(
+    () => (Array.isArray(ids) ? ids.join(",") : ids),
+    [ids]
+  );
 
   const fragmentRef =
     ids === null ? null : (
       getSuspenseCache(client).getFragmentRef(
-        [ids, options.fragment, canonicalStringify(variables)],
+        [options.fragment, canonicalStringify(variables), idString],
         client,
         { ...options, variables: variables as TVariables, from: ids }
       )

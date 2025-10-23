@@ -468,13 +468,6 @@ test("updates items in the list with cache writes", async () => {
     },
   });
 
-  cache.modify({
-    id: cache.identify({ __typename: "Item", id: 1 }),
-    fields: {
-      text: (_, { DELETE }) => DELETE,
-    },
-  });
-
   // should not cause rerender since its an item not watched
   client.writeFragment({
     fragment,

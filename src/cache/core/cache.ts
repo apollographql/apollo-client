@@ -115,11 +115,11 @@ export declare namespace ApolloCache {
           complete: false;
           missing?: MissingTree;
         } & GetDataState<any, "partial">)
-    : TData extends null ?
+    : TData extends null | null[] ?
       {
         complete: true;
         missing?: never;
-      } & GetDataState<null, "complete">
+      } & GetDataState<TData, "complete">
     : | ({
           complete: true;
           missing?: never;

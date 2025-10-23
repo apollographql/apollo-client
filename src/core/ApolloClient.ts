@@ -1234,7 +1234,6 @@ export class ApolloClient {
 
         return stableMaskedResult;
       },
-      reobserve: observable.reobserve.bind(observable),
     }) as ApolloClient.ObservableFragment<any>;
   }
 

@@ -133,48 +133,6 @@ test("getCurrentResult returns most recently emitted value", async () => {
   });
 });
 
-test("getCurrentResult is referentially stable", async () => {
-  const fragment: TypedDocumentNode<Item> = gql`
-    fragment ItemFragment on Item {
-      id
-      text
-    }
-  `;
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  client.writeFragment({
-    fragment,
-    data: { __typename: "Item", id: 1, text: "Item #1" },
-  });
-
-  const observable = client.watchFragment({
-    fragment,
-    from: { __typename: "Item", id: 1 },
-  });
-
-  let lastResult = observable.getCurrentResult();
-  expect(observable.getCurrentResult()).toBe(lastResult);
-
-  const stream = new ObservableStream(observable);
-  const result = await stream.takeNext();
-
-  expect(result).toBe(lastResult);
-  expect(observable.getCurrentResult()).toBe(lastResult);
-
-  client.writeFragment({
-    fragment,
-    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-  });
-
-  expect(observable.getCurrentResult()).not.toBe(lastResult);
-
-  lastResult = observable.getCurrentResult();
-  expect(observable.getCurrentResult()).toBe(lastResult);
-});
-
 test("getCurrentResult returns updated value if changed before subscribing", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
@@ -247,6 +205,22 @@ test("getCurrentResult returns referentially stable value when called multiple t
   expect(observable.getCurrentResult()).toBe(lastResult);
   expect(observable.getCurrentResult()).toBe(lastResult);
   expect(observable.getCurrentResult()).toBe(lastResult);
+
+  const stream = new ObservableStream(observable);
+  const result = await stream.takeNext();
+
+  // Ensure subscribing to the obserable doesn't change the identity of the
+  // object
+  expect(result).toBe(lastResult);
+  expect(observable.getCurrentResult()).toBe(lastResult);
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+  });
+
+  // ensure it changes identity when a new value is emitted
+  expect(observable.getCurrentResult()).not.toBe(lastResult);
 });
 
 test("getCurrentResult returns empty result with no cache data", async () => {

@@ -343,12 +343,7 @@ export abstract class ApolloCache {
     });
   }
 
-  private fragmentWatches = new Trie(
-    true,
-    (): {
-      observable?: Observable<any>;
-    } => ({})
-  );
+  private fragmentWatches = new Trie<{ observable?: Observable<any> }>(true);
 
   public watchFragment<
     TData = unknown,

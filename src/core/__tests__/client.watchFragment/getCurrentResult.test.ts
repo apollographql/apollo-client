@@ -80,6 +80,59 @@ test("getCurrentResult returns initial emitted value after subscribing", async (
   expect(diffSpy).not.toHaveBeenCalled();
 });
 
+test("getCurrentResult returns most recently emitted value", async () => {
+  const fragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
+    dataState: "complete",
+    complete: true,
+  });
+});
+
 test("getCurrentResult is referentially stable", async () => {
   const fragment: TypedDocumentNode<Item> = gql`
     fragment ItemFragment on Item {
@@ -120,62 +173,6 @@ test("getCurrentResult is referentially stable", async () => {
 
   lastResult = observable.getCurrentResult();
   expect(observable.getCurrentResult()).toBe(lastResult);
-});
-
-test("getCurrentResult returns most recently emitted value", async () => {
-  const fragment: TypedDocumentNode<Item> = gql`
-    fragment ItemFragment on Item {
-      id
-      text
-    }
-  `;
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  client.writeFragment({
-    fragment,
-    data: { __typename: "Item", id: 1, text: "Item #1" },
-  });
-
-  const observable = client.watchFragment({
-    fragment,
-    from: { __typename: "Item", id: 1 },
-  });
-  const stream = new ObservableStream(observable);
-
-  let lastResult = observable.getCurrentResult();
-  expect(lastResult).toStrictEqualTyped({
-    data: { __typename: "Item", id: 1, text: "Item #1" },
-    dataState: "complete",
-    complete: true,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { __typename: "Item", id: 1, text: "Item #1" },
-    dataState: "complete",
-    complete: true,
-  });
-
-  expect(observable.getCurrentResult()).toBe(lastResult);
-
-  client.writeFragment({
-    fragment,
-    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-    dataState: "complete",
-    complete: true,
-  });
-
-  expect(observable.getCurrentResult()).toStrictEqualTyped({
-    data: { __typename: "Item", id: 1, text: "Item #1 updated" },
-    dataState: "complete",
-    complete: true,
-  });
 });
 
 test("getCurrentResult returns updated value if changed before subscribing", async () => {

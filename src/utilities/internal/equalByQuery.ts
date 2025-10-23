@@ -26,10 +26,15 @@ import { shouldInclude } from "./shouldInclude.js";
 // selected by the given query, ignoring any fields marked as @nonreactive.
 export function equalByQuery(
   query: DocumentNode,
-  { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>,
-  { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>,
+  aResult: Partial<ObservableQuery.Result<unknown>> | null,
+  bResult: Partial<ObservableQuery.Result<unknown>> | null,
   variables?: OperationVariables
 ): boolean {
+  if (!aResult || !bResult) {
+    return aResult === bResult;
+  }
+  const { data: aData, ...aRest } = aResult;
+  const { data: bData, ...bRest } = bResult;
   return (
     equal(aRest, bRest) &&
     equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {

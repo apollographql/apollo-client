@@ -8,6 +8,7 @@ import type {
 } from "graphql";
 import { wrap } from "optimism";
 import {
+  distinctUntilChanged,
   map,
   Observable,
   ReplaySubject,
@@ -30,6 +31,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
   combineLatestBatched,
+  equalByQuery,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
@@ -577,19 +579,29 @@ export abstract class ApolloCache {
     const cacheKey = [fragmentQuery, id, optimistic, otherOptions.variables];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
-    cacheEntry.observable ??= new Observable((observer) => {
-      const cleanup = this.watch<TData, TVariables>({
-        ...diffOptions,
-        immediate: true,
-        callback: (diff) => {
-          observer.next(diff);
-        },
-      });
-      return () => {
-        cleanup();
-        this.fragmentWatches.removeArray(cacheKey);
-      };
-    }).pipe(
+    cacheEntry.observable ??= new Observable<Cache.DiffResult<TData>>(
+      (observer) => {
+        const cleanup = this.watch<TData, TVariables>({
+          ...diffOptions,
+          immediate: true,
+          callback: (diff) => {
+            observer.next(diff);
+          },
+        });
+        return () => {
+          cleanup();
+          this.fragmentWatches.removeArray(cacheKey);
+        };
+      }
+    ).pipe(
+      distinctUntilChanged((previous, current) =>
+        equalByQuery(
+          fragmentQuery,
+          { data: previous.result },
+          { data: current.result },
+          options.variables
+        )
+      ),
       share({
         connector: () => new ReplaySubject(1),
         // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one
@@ -773,7 +785,7 @@ if (__DEV__) {
 const nullObservable = new Observable<Cache.DiffResult<null>>((observer) => {
   observer.next({
     result: null,
-    complete: true,
+    complete: false,
   });
 });
 

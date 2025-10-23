@@ -842,10 +842,7 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
       },
     });
   }
-  // We expect 4 watchers instead of 2 because we want each hook to have its own
-  // `FragmentReference`, otherwise `reobserve` will affect both hooks. More
-  // than 4 indicates we are recreating fragment refs more than necessary
-  await waitFor(() => expect(cache).toHaveNumWatches(4));
+  await waitFor(() => expect(cache).toHaveNumWatches(2));
 
   await rerender(
     <App
@@ -871,7 +868,7 @@ test("rendering same items in multiple useSuspenseFragment hooks allows for rere
       items2: undefined,
     });
   }
-  await waitFor(() => expect(cache).toHaveNumWatches(5));
+  await waitFor(() => expect(cache).toHaveNumWatches(3));
 
   client.writeFragment({
     fragment,

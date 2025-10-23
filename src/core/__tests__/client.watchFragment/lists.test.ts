@@ -1,9 +1,6 @@
-import type { Trie } from "@wry/trie";
-
-import type { Cache, TypedDocumentNode } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
-import { canonicalStringify } from "@apollo/client/utilities";
 
 test("can use list for `from` to get list of items", async () => {
   type Item = {

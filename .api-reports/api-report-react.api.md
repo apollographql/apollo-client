@@ -447,7 +447,7 @@ export namespace useFragment {
     } & GetDataState<MaybeMasked_2<TData>, "complete">) | {
         complete: false;
         missing?: MissingTree;
-        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem | null>> : DataValue.Partial<TData>;
+        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem> | null> : DataValue.Partial<TData>;
         dataState: "partial";
     };
 }

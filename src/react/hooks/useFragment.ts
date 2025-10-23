@@ -93,7 +93,7 @@ export declare namespace useFragment {
         missing?: MissingTree;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
         data: TData extends Array<infer TItem> ?
-          Array<DataValue.Partial<TItem | null>>
+          Array<DataValue.Partial<TItem> | null>
         : DataValue.Partial<TData>;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "partial";

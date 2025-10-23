@@ -207,11 +207,14 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     return Array.isArray(from) ? ids : ids[0];
   }, [cache, from]);
 
-  const stableOptions = useDeepMemo(() => rest, [rest]);
+  const stableOptions = useDeepMemo(
+    () => ({ ...rest, from: ids as any }),
+    [rest, ids]
+  );
 
   const observable = React.useMemo(
-    () => client.watchFragment({ ...stableOptions, from: ids as any }),
-    [client, stableOptions, ids]
+    () => client.watchFragment(stableOptions),
+    [client, stableOptions]
   );
 
   const currentResultRef =

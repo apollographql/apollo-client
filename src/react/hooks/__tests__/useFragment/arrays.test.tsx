@@ -8,7 +8,7 @@ import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { useFragment } from "@apollo/client/react";
 import { createClientWrapper } from "@apollo/client/testing/internal";
 
-test("can use list for `from` to get list of items", async () => {
+test("can use array for `from` to get array of items", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -61,7 +61,7 @@ test("can use list for `from` to get list of items", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("returns result as complete for null list item `from` value", async () => {
+test("returns result as complete for null array item `from` value", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -276,7 +276,7 @@ test("returns incomplete results when cache is empty", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("can use static lists with useFragment with partially fulfilled items", async () => {
+test("can use static arrays with useFragment with partially fulfilled items", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -332,7 +332,7 @@ test("can use static lists with useFragment with partially fulfilled items", asy
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("handles changing list size", async () => {
+test("handles changing array size", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -441,7 +441,7 @@ test("handles changing list size", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("updates items in the list with cache writes", async () => {
+test("updates items in the array with cache writes", async () => {
   type Item = {
     __typename: string;
     id: number;

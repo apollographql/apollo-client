@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
-test("can use list for `from` to get list of items", async () => {
+test("can use array for `from` to get array of items", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -279,7 +279,7 @@ test("returns as partial if some `from` items are incomplete mixed with null", a
   await expect(stream).not.toEmitAnything();
 });
 
-test("can use static lists with useFragment with partially fulfilled items", async () => {
+test("can use static arrays with useFragment with partially fulfilled items", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -329,7 +329,7 @@ test("can use static lists with useFragment with partially fulfilled items", asy
   await expect(stream).not.toEmitAnything();
 });
 
-test("updates items in the list with cache writes", async () => {
+test("updates items in the array with cache writes", async () => {
   type Item = {
     __typename: string;
     id: number;

@@ -51,7 +51,7 @@ async function renderUseSuspenseFragment<TData, Props = never>(
   return { takeRender, rerender };
 }
 
-test("renders list and does not suspend list for `from` array when written to cache", async () => {
+test("renders array and does not suspend array for `from` array when written to cache", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -105,7 +105,7 @@ test("renders list and does not suspend list for `from` array when written to ca
   await expect(takeRender).not.toRerender();
 });
 
-test("updates items in the list with cache writes", async () => {
+test("updates items in the array with cache writes", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -584,7 +584,7 @@ test("suspends when an item changes from complete to partial", async () => {
   await expect(takeRender).not.toRerender();
 });
 
-test("handles changing list size", async () => {
+test("handles changing array size", async () => {
   type Item = {
     __typename: string;
     id: number;
@@ -716,7 +716,7 @@ test("handles changing list size", async () => {
   await expect(takeRender).not.toRerender();
 });
 
-test("rendering same items in multiple useSuspenseFragment hooks allows for rerendering a different list in the other", async () => {
+test("rendering same items in multiple useSuspenseFragment hooks allows for rerendering a different array in the other", async () => {
   type Item = {
     __typename: string;
     id: number;

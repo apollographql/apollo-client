@@ -28,7 +28,7 @@ import type { FragmentType, Unmasked } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { NoInfer } from "@apollo/client/utilities/internal";
+import type { IsAny, NoInfer } from "@apollo/client/utilities/internal";
 import {
   combineLatestBatched,
   equalByQuery,
@@ -50,7 +50,8 @@ export declare namespace ApolloCache {
     | StoreObject
     | Reference
     | FragmentType<NoInfer<TData>>
-    | string;
+    | string
+    | null;
   /**
    * Watched fragment options.
    */
@@ -105,20 +106,34 @@ export declare namespace ApolloCache {
    * Watched fragment results.
    */
   export type WatchFragmentResult<TData = unknown> =
-    | ({
+    true extends IsAny<TData> ?
+      | ({
+          complete: true;
+          missing?: never;
+        } & GetDataState<any, "complete">)
+      | ({
+          complete: false;
+          missing?: MissingTree;
+        } & GetDataState<any, "partial">)
+    : null extends TData ?
+      {
         complete: true;
         missing?: never;
-      } & GetDataState<TData, "complete">)
-    | {
-        complete: false;
-        missing?: MissingTree;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: TData extends Array<infer TItem> ?
-          Array<DataValue.Partial<TItem> | null>
-        : DataValue.Partial<TData>;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "partial";
-      };
+      } & GetDataState<null, "complete">
+    : | ({
+          complete: true;
+          missing?: never;
+        } & GetDataState<TData, "complete">)
+      | {
+          complete: false;
+          missing?: MissingTree;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+          data: TData extends Array<infer TItem> ?
+            Array<DataValue.Partial<TItem> | null>
+          : DataValue.Partial<TData>;
+          /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+          dataState: "partial";
+        };
 
   export interface ObservableFragment<TData = unknown>
     extends Observable<ApolloCache.WatchFragmentResult<TData>> {
@@ -376,6 +391,15 @@ export abstract class ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
+    options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+      from: null;
+    }
+  ): ApolloCache.ObservableFragment<null>;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables>
   ): ApolloCache.ObservableFragment<Unmasked<TData>>;
 
@@ -433,13 +457,9 @@ export abstract class ApolloCache {
       return id as string | null;
     });
 
-    let currentResult:
-      | ApolloCache.WatchFragmentResult<Unmasked<TData> | null>
-      | ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>;
+    let currentResult: ApolloCache.WatchFragmentResult<any>;
     function toResult(diffs: Array<Cache.DiffResult<Unmasked<TData> | null>>) {
-      let result:
-        | ApolloCache.WatchFragmentResult<Unmasked<TData> | null>
-        | ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>;
+      let result: ApolloCache.WatchFragmentResult<any>;
       if (Array.isArray(from)) {
         result = diffs.reduce(
           (result, diff, idx) => {
@@ -467,13 +487,14 @@ export abstract class ApolloCache {
           // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
           // when `from` is a single record. As such, we need to fallback to {}
           // when diff.result is null to maintain backwards compatibility. We
-          // should plan to change this in v5.
+          // should plan to change this in v5. We do howeever support `null` if
+          // `from` is explicitly `null`.
           //
           // NOTE: Using `from` with an array will maintain `null` properly
           // without the need for a similar fallback since watchFragment with
           // arrays is new functionality in v4.
-          data: diff.result ?? {},
-          complete: !!diff.complete,
+          data: from === null ? diff.result : diff.result ?? {},
+          complete: diff.complete,
           dataState: diff.complete ? "complete" : "partial",
         } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
 
@@ -771,10 +792,7 @@ if (__DEV__) {
 }
 
 const nullObservable = new Observable<Cache.DiffResult<null>>((observer) => {
-  observer.next({
-    result: null,
-    complete: false,
-  });
+  observer.next({ result: null, complete: true });
 });
 
 const emptyArrayObservable = new Observable<

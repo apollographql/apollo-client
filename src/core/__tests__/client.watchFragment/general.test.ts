@@ -117,3 +117,38 @@ test("dedupes watches when subscribing multiple times", async () => {
   await wait(0);
   expect(cache).toHaveNumWatches(0);
 });
+
+test("emits null with from: null", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const ItemFragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment: ItemFragment,
+    from: null,
+  });
+
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: null,
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

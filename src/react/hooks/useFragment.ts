@@ -74,8 +74,7 @@ export declare namespace useFragment {
     }
   }
 
-  export type FromValue<TData> =
-    ApolloCache.WatchFragmentFromValue<TData> | null;
+  export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
 
   // TODO: Update this to return `null` when there is no data returned from the
   // fragment.

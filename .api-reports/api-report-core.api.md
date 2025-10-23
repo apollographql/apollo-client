@@ -381,6 +381,9 @@ export class ApolloClient {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }): ApolloClient.ObservableFragment<Array<TData | null>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: null;
+    }): ApolloClient.ObservableFragment<null>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): ApolloClient.ObservableFragment<TData>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WriteFragmentOptions<TData, TVariables>): Reference_2 | undefined;

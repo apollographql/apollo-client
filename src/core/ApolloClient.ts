@@ -1155,6 +1155,16 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: null;
+    }
+  ): ApolloClient.ObservableFragment<null>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
   ): ApolloClient.ObservableFragment<TData>;
 

@@ -44,7 +44,7 @@ export namespace ApolloCache {
     // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type WatchFragmentFromValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    export type WatchFragmentFromValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
@@ -52,7 +52,17 @@ export namespace ApolloCache {
         optimistic?: boolean;
         variables?: TVariables;
     }
-    export type WatchFragmentResult<TData = unknown> = ({
+    // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+    export type WatchFragmentResult<TData = unknown> = true extends IsAny<TData> ? ({
+        complete: true;
+        missing?: never;
+    } & GetDataState<any, "complete">) | ({
+        complete: false;
+        missing?: MissingTree;
+    } & GetDataState<any, "partial">) : null extends TData ? {
+        complete: true;
+        missing?: never;
+    } & GetDataState<null, "complete"> : ({
         complete: true;
         missing?: never;
     } & GetDataState<TData, "complete">) | {
@@ -128,6 +138,10 @@ export abstract class ApolloCache {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
         from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: null;
+    }): ApolloCache.ObservableFragment<null>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData>>;
     // (undocumented)
@@ -419,6 +433,9 @@ export class ApolloClient {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: Array<ApolloCache.WatchFragmentFromValue<TData> | null>;
     }): ApolloClient.ObservableFragment<Array<TData | null>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: null;
+    }): ApolloClient.ObservableFragment<null>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): ApolloClient.ObservableFragment<TData>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
@@ -2408,8 +2425,6 @@ type RefetchQueriesIncludeShorthand = "all" | "active";
 // @public @deprecated (undocumented)
 export type RefetchQueriesOptions<TCache extends ApolloCache, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloClient.QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
@@ -2754,7 +2769,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:114:9 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:116:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

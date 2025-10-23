@@ -73,8 +73,7 @@ export declare namespace useSuspenseFragment {
     }
   }
 
-  export type FromValue<TData> =
-    ApolloCache.WatchFragmentFromValue<TData> | null;
+  export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
 
   export interface Result<TData> {
     data: DataValue.Complete<MaybeMasked<TData>>;

@@ -58,7 +58,7 @@ export namespace ApolloCache {
     } & GetDataState<TData, "complete">) | {
         complete: false;
         missing?: MissingTree;
-        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem | null>> : DataValue.Partial<TData>;
+        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem> | null> : DataValue.Partial<TData>;
         dataState: "partial";
     };
 }

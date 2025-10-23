@@ -6,12 +6,10 @@ import type {
   DataValue,
   DocumentNode,
   OperationVariables,
-  Reference,
-  StoreObject,
   TypedDocumentNode,
 } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
-import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
@@ -23,15 +21,6 @@ import type {
 import { __use } from "./internal/__use.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-
-type FromPrimitive<TData> =
-  | StoreObject
-  | Reference
-  | FragmentType<NoInfer<TData>>
-  | string
-  | null;
-
-type From<TData> = FromPrimitive<TData> | Array<FromPrimitive<TData>>;
 
 export declare namespace useSuspenseFragment {
   import _self = useSuspenseFragment;
@@ -51,7 +40,11 @@ export declare namespace useSuspenseFragment {
        * `fragment` document then that fragment will be used.
        */
       fragmentName?: string;
-      from: From<TData>;
+
+      from:
+        | useSuspenseFragment.FromValue<TData>
+        | Array<useSuspenseFragment.FromValue<TData>>;
+
       // Override this field to make it optional (default: true).
       optimistic?: boolean;
       /**
@@ -79,6 +72,9 @@ export declare namespace useSuspenseFragment {
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
+
+  export type FromValue<TData> =
+    ApolloCache.WatchFragmentFromValue<TData> | null;
 
   export interface Result<TData> {
     data: DataValue.Complete<MaybeMasked<TData>>;
@@ -111,7 +107,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<FromPrimitive<TData>>>;
+    from: Array<NonNullable<useSuspenseFragment.FromValue<TData>>>;
   }
 ): useSuspenseFragment.Result<Array<TData>>;
 
@@ -131,7 +127,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<FromPrimitive<TData>>;
+    from: Array<useSuspenseFragment.FromValue<TData>>;
   }
 ): useSuspenseFragment.Result<Array<TData | null>>;
 
@@ -141,7 +137,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: NonNullable<From<TData>>;
+    from: NonNullable<useSuspenseFragment.FromValue<TData>>;
   }
 ): useSuspenseFragment.Result<TData>;
 
@@ -161,7 +157,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: From<TData>;
+    from: useSuspenseFragment.FromValue<TData>;
   }
 ): useSuspenseFragment.Result<TData | null>;
 
@@ -256,7 +252,10 @@ function useSuspenseFragment_<
   return { data };
 }
 
-function toStringId(cache: ApolloCache, from: FromPrimitive<any>) {
+function toStringId(
+  cache: ApolloCache,
+  from: useSuspenseFragment.FromValue<any>
+) {
   return (
     typeof from === "string" ? from
     : from === null ? null

@@ -97,7 +97,6 @@ class DeferRequest<TData extends Record<string, unknown>>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -133,6 +132,8 @@ class DeferRequest<TData extends Record<string, unknown>>
           arrayMerge
         );
       }
+    } else {
+      this.merge(chunk);
     }
 
     const result: FormattedExecutionResult<TData> = { data: this.data };

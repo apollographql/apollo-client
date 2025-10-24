@@ -1037,3 +1037,78 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
   });
   await expect(observableStream).not.toEmitAnything();
 });
+
+// Servers that return a `data` property in subsequent payloads are technically
+// invalid, but we still want to handle cases where the server misbehaves.
+//
+// See the following issue for more information:
+// https://github.com/apollographql/apollo-client/issues/12976
+test("ignores invalid `data` property added by subsequent chunks", async () => {
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: { hero: { __typename: "Hero", id: "1" } },
+    hasNext: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    // @ts-expect-error simulate misbehaving server
+    data: null,
+    incremental: [{ data: { name: "Luke" }, path: ["hero"] }],
+    hasNext: false,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        name: "Luke",
+      },
+    },
+    dataState: "complete",
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});

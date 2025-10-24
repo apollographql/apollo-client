@@ -195,24 +195,24 @@ test("returns referentially stable value", async () => {
     from: { __typename: "Item", id: 1 },
   });
 
-  const lastResult = observable.getCurrentResult();
-  expect(lastResult).toStrictEqualTyped({
+  const firstResult = observable.getCurrentResult();
+  expect(firstResult).toStrictEqualTyped({
     data: { __typename: "Item", id: 1, text: "Item #1" },
     dataState: "complete",
     complete: true,
   });
 
-  expect(observable.getCurrentResult()).toBe(lastResult);
-  expect(observable.getCurrentResult()).toBe(lastResult);
-  expect(observable.getCurrentResult()).toBe(lastResult);
+  expect(observable.getCurrentResult()).toBe(firstResult);
+  expect(observable.getCurrentResult()).toBe(firstResult);
+  expect(observable.getCurrentResult()).toBe(firstResult);
 
   const stream = new ObservableStream(observable);
   const result = await stream.takeNext();
 
   // Ensure subscribing to the observable and emitting the first value doesn't
   // change the identity of the object
-  expect(result).toBe(lastResult);
-  expect(observable.getCurrentResult()).toBe(lastResult);
+  expect(result).toBe(firstResult);
+  expect(observable.getCurrentResult()).toBe(firstResult);
 
   client.writeFragment({
     fragment,
@@ -220,7 +220,15 @@ test("returns referentially stable value", async () => {
   });
 
   // ensure it changes identity when a new value is emitted
-  expect(observable.getCurrentResult()).not.toBe(lastResult);
+  const secondResult = observable.getCurrentResult();
+
+  expect(secondResult).not.toBe(firstResult);
+  expect(observable.getCurrentResult()).toBe(secondResult);
+  expect(observable.getCurrentResult()).toBe(secondResult);
+  expect(observable.getCurrentResult()).toBe(secondResult);
+
+  const result2 = await stream.takeNext();
+  expect(result2).toBe(secondResult);
 });
 
 test("returns partial result with no cache data", async () => {

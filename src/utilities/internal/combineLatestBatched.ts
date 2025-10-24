@@ -20,12 +20,6 @@ export function combineLatestBatched<T>(
     const { length } = observables;
     // Keeps track of current values for each observable
     const values: T[] = Array.from({ length });
-    // Track the number of active subscriptions so we know when to complete this
-    // observable
-    let active = length;
-    // Track how many observables are left to emit their first value
-    let remainingFirstValues = length;
-
     // Used to batch an update each item in the array that share an observable
     // so that they can be emitted together.
     const indexesByObservable = new Map<Observable<T>, Set<number>>();
@@ -37,6 +31,12 @@ export function combineLatestBatched<T>(
 
       indexesByObservable.get(source)!.add(idx);
     });
+
+    // Track the number of active subscriptions so we know when to complete this
+    // observable
+    let active = indexesByObservable.size;
+    // Track how many observables are left to emit their first value
+    let remainingFirstValues = indexesByObservable.size;
 
     let currentBatch: Set<Observable<T>> | undefined;
 
@@ -52,7 +52,7 @@ export function combineLatestBatched<T>(
 
           if (!hasFirstValue) {
             hasFirstValue = true;
-            remainingFirstValues -= indexes.size;
+            remainingFirstValues--;
           }
 
           if (!remainingFirstValues) {
@@ -65,7 +65,7 @@ export function combineLatestBatched<T>(
           }
         },
         complete: () => {
-          active -= indexes.size;
+          active--;
 
           if (!active) {
             observer.complete();

@@ -209,8 +209,8 @@ test("returns referentially stable value", async () => {
   const stream = new ObservableStream(observable);
   const result = await stream.takeNext();
 
-  // Ensure subscribing to the obserable doesn't change the identity of the
-  // object
+  // Ensure subscribing to the observable and emitting the first value doesn't
+  // change the identity of the object
   expect(result).toBe(lastResult);
   expect(observable.getCurrentResult()).toBe(lastResult);
 

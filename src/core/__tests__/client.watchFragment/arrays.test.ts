@@ -427,19 +427,6 @@ test("updates items in the array with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1 from batch" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
-      null,
-    ],
-    dataState: "partial",
-    complete: false,
-    missing: {
-      2: "Dangling reference to missing Item:5 object",
-    },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1 from batch" },
-      { __typename: "Item", id: 2, text: "Item #2 updated" },
       { __typename: "Item", id: 5, text: "Item #5 from batch" },
     ],
     dataState: "complete",

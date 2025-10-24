@@ -5,12 +5,11 @@ import type {
   DataValue,
   DocumentNode,
   OperationVariables,
-  Reference,
-  StoreObject,
   TypedDocumentNode,
 } from "@apollo/client";
+import type { ApolloCache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
-import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
@@ -20,15 +19,8 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
-import { wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-
-type From<TData> =
-  | StoreObject
-  | Reference
-  | FragmentType<NoInfer<TData>>
-  | string
-  | null;
 
 export declare namespace useSuspenseFragment {
   import _self = useSuspenseFragment;
@@ -48,7 +40,16 @@ export declare namespace useSuspenseFragment {
        * `fragment` document then that fragment will be used.
        */
       fragmentName?: string;
-      from: From<TData>;
+
+      /**
+       * An object or array containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+       */
+      from:
+        | useSuspenseFragment.FromValue<TData>
+        | Array<useSuspenseFragment.FromValue<TData>>;
+
       // Override this field to make it optional (default: true).
       optimistic?: boolean;
       /**
@@ -77,6 +78,11 @@ export declare namespace useSuspenseFragment {
     }
   }
 
+  /**
+   * Acceptable values provided to the `from` option.
+   */
+  export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
+
   export interface Result<TData> {
     data: DataValue.Complete<MaybeMasked<TData>>;
   }
@@ -97,18 +103,43 @@ export declare namespace useSuspenseFragment {
   }
 }
 
-const NULL_PLACEHOLDER = [] as unknown as [
-  FragmentKey,
-  Promise<MaybeMasked<any> | null>,
-];
-
 /** #TODO documentation */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<NonNullable<useSuspenseFragment.FromValue<TData>>>;
+  }
+): useSuspenseFragment.Result<Array<TData>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<null>;
+  }
+): useSuspenseFragment.Result<Array<null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: Array<useSuspenseFragment.FromValue<TData>>;
+  }
+): useSuspenseFragment.Result<Array<TData | null>>;
+
+/** {@inheritDoc @apollo/client/react!useSuspenseFragment:function(1)} */
 export function useSuspenseFragment<
   TData,
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: NonNullable<From<TData>>;
+    from: NonNullable<useSuspenseFragment.FromValue<TData>>;
   }
 ): useSuspenseFragment.Result<TData>;
 
@@ -128,7 +159,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: From<TData>;
+    from: useSuspenseFragment.FromValue<TData>;
   }
 ): useSuspenseFragment.Result<TData | null>;
 
@@ -165,36 +196,27 @@ function useSuspenseFragment_<
   const { from, variables } = options;
   const { cache } = client;
 
-  const id = React.useMemo(
-    () =>
-      typeof from === "string" ? from
-      : from === null ? null
-      : cache.identify(from),
-    [cache, from]
-  ) as string | null;
+  const ids = useDeepMemo(() => {
+    return Array.isArray(from) ?
+        from.map((id) => toStringId(cache, id))
+      : toStringId(cache, from);
+  }, [cache, from]);
+  const idString = React.useMemo(
+    () => (Array.isArray(ids) ? ids.join(",") : ids),
+    [ids]
+  );
 
-  const fragmentRef =
-    id === null ? null : (
-      getSuspenseCache(client).getFragmentRef(
-        [id, options.fragment, canonicalStringify(variables)],
-        client,
-        { ...options, variables: variables as TVariables, from: id }
-      )
-    );
+  const fragmentRef = getSuspenseCache(client).getFragmentRef(
+    [options.fragment, canonicalStringify(variables), idString],
+    client,
+    { ...options, variables: variables as TVariables, from: ids }
+  );
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]
-  >(
-    fragmentRef === null ? NULL_PLACEHOLDER : (
-      [fragmentRef.key, fragmentRef.promise]
-    )
-  );
+  >([fragmentRef.key, fragmentRef.promise]);
 
   React.useEffect(() => {
-    if (fragmentRef === null) {
-      return;
-    }
-
     const dispose = fragmentRef.retain();
     const removeListener = fragmentRef.listen((promise) => {
       setPromise([fragmentRef.key, promise]);
@@ -206,10 +228,6 @@ function useSuspenseFragment_<
     };
   }, [fragmentRef]);
 
-  if (fragmentRef === null) {
-    return { data: null };
-  }
-
   if (current[0] !== fragmentRef.key) {
     // eslint-disable-next-line react-compiler/react-compiler
     current[0] = fragmentRef.key;
@@ -219,4 +237,14 @@ function useSuspenseFragment_<
   const data = __use(current[1]);
 
   return { data };
+}
+
+function toStringId(
+  cache: ApolloCache,
+  from: useSuspenseFragment.FromValue<any>
+) {
+  return (
+    typeof from === "string" ? from
+    : from === null ? null
+    : cache.identify(from)) as string | null;
 }

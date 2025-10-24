@@ -11,7 +11,6 @@ import type { DocumentNode } from 'graphql';
 import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
-import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 
@@ -35,9 +34,9 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <T
 
 // @public (undocumented)
 type FragmentCacheKey = [
-cacheId: string,
 fragment: DocumentNode,
-stringifiedVariables: string
+stringifiedVariables: string,
+cacheId: string | null
 ];
 
 // @public (undocumented)
@@ -50,7 +49,7 @@ export interface FragmentKey {
 class FragmentReference<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string;
+        from: string | null | Array<string | null>;
     }, options: FragmentReferenceOptions);
     // (undocumented)
     readonly key: FragmentKey;
@@ -59,7 +58,7 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     // (undocumented)
     listen(listener: Listener_2<MaybeMasked<TData>>): () => void;
     // (undocumented)
-    readonly observable: Observable<ApolloClient.WatchFragmentResult<TData>>;
+    readonly observable: ApolloClient.ObservableFragment<TData | null>;
     // Warning: (ae-forgotten-export) The symbol "FragmentRefPromise" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -203,7 +202,7 @@ class SuspenseCache {
     //
     // (undocumented)
     getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string;
+        from: string | null | Array<string | null>;
     }): FragmentReference<TData, TVariables>;
     // (undocumented)
     getQueryRef<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData, TStates>;

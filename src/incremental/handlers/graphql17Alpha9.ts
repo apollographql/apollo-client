@@ -119,8 +119,6 @@ class IncrementalRequest<TData>
       }
     }
 
-    this.merge(chunk, "truncate");
-
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
         const pending = this.pending.find(({ id }) => incremental.id === id);
@@ -194,6 +192,8 @@ class IncrementalRequest<TData>
           arrayMerge
         );
       }
+    } else {
+      this.merge(chunk, "truncate");
     }
 
     if ("completed" in chunk && chunk.completed) {
@@ -286,7 +286,7 @@ export class GraphQL17Alpha9Handler
 
     if (this.isIncrementalResult(result)) {
       push(new IncrementalRequest().handle(undefined, result));
-    } else {
+    } else if ("errors" in result) {
       push(result);
     }
 

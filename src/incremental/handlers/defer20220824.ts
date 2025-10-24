@@ -33,8 +33,6 @@ export declare namespace Defer20220824Handler {
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
     incremental?: Array<IncrementalResult<TData>>;
@@ -99,7 +97,6 @@ class DeferRequest<TData extends Record<string, unknown>>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -135,6 +132,8 @@ class DeferRequest<TData extends Record<string, unknown>>
           arrayMerge
         );
       }
+    } else {
+      this.merge(chunk);
     }
 
     const result: FormattedExecutionResult<TData> = { data: this.data };
@@ -178,7 +177,9 @@ export class Defer20220824Handler
       }
     };
     if (this.isIncrementalResult(result)) {
-      push(result);
+      if ("errors" in result) {
+        push(result);
+      }
       if (hasIncrementalChunks(result)) {
         result.incremental.forEach(push);
       }

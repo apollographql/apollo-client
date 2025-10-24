@@ -50,6 +50,9 @@ import type { MissingTree } from "./types/common.js";
 export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
+  /**
+   * Acceptable values provided to the `from` option for `watchFragment`.
+   */
   export type WatchFragmentFromValue<TData> =
     | StoreObject
     | Reference

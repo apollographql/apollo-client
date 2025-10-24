@@ -429,7 +429,6 @@ export namespace useFragment {
     export namespace DocumentationTypes {
         export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, from, fragmentName, variables, optimistic, client, }: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
     }
-    // (undocumented)
     export type FromValue<TData> = ApolloCache_2.WatchFragmentFromValue<TData>;
     // (undocumented)
     export interface Options<TData, TVariables extends OperationVariables> {
@@ -993,7 +992,6 @@ export namespace useSuspenseFragment {
     export namespace DocumentationTypes {
         export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables>): useSuspenseFragment.Result<TData>;
     }
-    // (undocumented)
     export type FromValue<TData> = ApolloCache_2.WatchFragmentFromValue<TData>;
     // (undocumented)
     export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer_2<TVariables>>;

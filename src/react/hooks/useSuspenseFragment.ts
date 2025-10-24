@@ -41,6 +41,11 @@ export declare namespace useSuspenseFragment {
        */
       fragmentName?: string;
 
+      /**
+       * An object or array containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+       */
       from:
         | useSuspenseFragment.FromValue<TData>
         | Array<useSuspenseFragment.FromValue<TData>>;
@@ -73,6 +78,9 @@ export declare namespace useSuspenseFragment {
     }
   }
 
+  /**
+   * Acceptable values provided to the `from` option.
+   */
   export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
 
   export interface Result<TData> {

@@ -41,7 +41,9 @@ export declare namespace useFragment {
     variables?: NoInfer<TVariables>;
 
     /**
-     * An object containing a `__typename` and primary key fields (such as `id`) identifying the entity object from which the fragment will be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+     * An object or array containing a `__typename` and primary key fields
+     * (such as `id`) identifying the entity object from which the fragment will
+     * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
      */
     from: useFragment.FromValue<TData> | Array<useFragment.FromValue<TData>>;
 
@@ -74,6 +76,9 @@ export declare namespace useFragment {
     }
   }
 
+  /**
+   * Acceptable values provided to the `from` option.
+   */
   export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
 
   // TODO: Update this to return `null` when there is no data returned from the

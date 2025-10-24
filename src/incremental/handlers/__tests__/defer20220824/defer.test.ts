@@ -1043,7 +1043,7 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
 //
 // See the following issue for more information:
 // https://github.com/apollographql/apollo-client/issues/12976
-test("ignores invalid `data` property added by subsequent chunks", async () => {
+test("ignores `data` property added to subsequent chunks by misbehaving servers", async () => {
   const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
     mockDefer20220824();
   const client = new ApolloClient({

@@ -1212,15 +1212,13 @@ export class ApolloClient {
         }
       }
 
-      return result as
-        | ApolloClient.WatchFragmentResult<MaybeMasked<TData>>
-        | ApolloClient.WatchFragmentResult<Array<MaybeMasked<TData>>>;
+      return result;
     };
 
     let currentResult: ApolloClient.WatchFragmentResult<any>;
     let stableMaskedResult: ApolloClient.WatchFragmentResult<any>;
 
-    return Object.assign(observable.pipe(map(mask) as any), {
+    return Object.assign(observable.pipe(map(mask)), {
       getCurrentResult: () => {
         const result = observable.getCurrentResult();
 

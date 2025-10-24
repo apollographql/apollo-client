@@ -152,3 +152,39 @@ test("emits null with from: null", async () => {
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("emits empty object when data is not in the cache", async () => {
+  type Item = {
+    __typename: string;
+    id: number;
+    text?: string;
+  };
+
+  const ItemFragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment: ItemFragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: {},
+    dataState: "partial",
+    complete: false,
+    missing: "Dangling reference to missing Item:1 object",
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

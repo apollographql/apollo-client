@@ -1005,6 +1005,33 @@ useQuery(QUERY, {
 });
 ```
 
+### Subscription deduplication
+
+Subscriptions are now deduplicated when `queryDeduplication` is enabled (the default). Subscriptions that qualify for deduplication attach to the same connection as a previously connected subscription.
+
+To disable query deduplication, provide `queryDeduplication: false` to the `context` option when creating the subscription.
+
+```ts
+// with React's `useSubscription`
+useSubscription(SUBSCRIPTION, {
+  context: { queryDeduplication: false },
+});
+
+// with the core API
+const observable = client.subscribe({
+  query: SUBSCRIPTION,
+  context: { queryDeduplication: false },
+});
+```
+
+<Caution>
+
+Some GraphQL servers emit an initial value when the subscription first connects. A subscription that attaches to an existing connection because of deduplication does not receive an update until the server next emits a value. Depending on the frequency of updates pushed from the server, the deduplicated subscription might wait for an extended period of time before receiving its first value.<br/><br/>
+
+If you rely on the initial value to read data from the subscription, we recommend disabling query deduplication so that the subscription creates a new connection.
+
+</Caution>
+
 ## New error handling
 
 Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.

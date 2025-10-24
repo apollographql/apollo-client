@@ -369,7 +369,9 @@ export abstract class ApolloCache {
     });
   }
 
-  private fragmentWatches = new Trie<{ observable?: Observable<any> }>(true);
+  private fragmentWatches = new Trie<{
+    observable?: Observable<any> & { dirty: boolean };
+  }>(true);
 
   public watchFragment<
     TData = unknown,
@@ -577,6 +579,12 @@ export abstract class ApolloCache {
     >) as any;
   }
 
+  /**
+   * Can be overridden by subclasses to delay calling the provided callback
+   * until after all broadcasts have been completed - e.g. in a cache scenario
+   * where many watchers are notified in parallel.
+   */
+  protected onAfterBroadcast = (cb: () => void) => cb();
   private watchSingleFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -587,7 +595,7 @@ export abstract class ApolloCache {
       ApolloCache.WatchFragmentOptions<TData, TVariables>,
       "from" | "fragment" | "fragmentName"
     >
-  ): Observable<Cache.DiffResult<Unmasked<TData> | null>> {
+  ): Observable<Cache.DiffResult<Unmasked<TData> | null>> & { dirty: boolean } {
     if (id === null) {
       return nullObservable;
     }
@@ -600,8 +608,10 @@ export abstract class ApolloCache {
     ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
-    cacheEntry.observable ??= new Observable<Cache.DiffResult<TData>>(
-      (observer) => {
+    if (!cacheEntry.observable) {
+      const observable: Observable<Cache.DiffResult<TData>> & {
+        dirty?: boolean;
+      } = new Observable<Cache.DiffResult<TData>>((observer) => {
         const cleanup = this.watch<TData, TVariables>({
           variables,
           returnPartialData: true,
@@ -610,29 +620,34 @@ export abstract class ApolloCache {
           optimistic,
           immediate: true,
           callback: (diff) => {
-            observer.next(diff);
+            observable.dirty = true;
+            this.onAfterBroadcast(() => {
+              observer.next(diff);
+              observable.dirty = false;
+            });
           },
         });
         return () => {
           cleanup();
           this.fragmentWatches.removeArray(cacheKey);
         };
-      }
-    ).pipe(
-      distinctUntilChanged((previous, current) =>
-        equalByQuery(
-          fragmentQuery,
-          { data: previous.result },
-          { data: current.result },
-          options.variables
-        )
-      ),
-      share({
-        connector: () => new ReplaySubject(1),
-        // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one
-        resetOnRefCountZero: () => timer(0),
-      })
-    );
+      }).pipe(
+        distinctUntilChanged((previous, current) =>
+          equalByQuery(
+            fragmentQuery,
+            { data: previous.result },
+            { data: current.result },
+            options.variables
+          )
+        ),
+        share({
+          connector: () => new ReplaySubject(1),
+          // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one
+          resetOnRefCountZero: () => timer(0),
+        })
+      );
+      cacheEntry.observable = Object.assign(observable, { dirty: false });
+    }
 
     return cacheEntry.observable;
   }
@@ -807,9 +822,12 @@ if (__DEV__) {
   ApolloCache.prototype.getMemoryInternals = getApolloCacheMemoryInternals;
 }
 
-const nullObservable = new Observable<Cache.DiffResult<null>>((observer) => {
-  observer.next({ result: null, complete: true });
-});
+const nullObservable = Object.assign(
+  new Observable<Cache.DiffResult<null>>((observer) => {
+    observer.next({ result: null, complete: true });
+  }),
+  { dirty: false }
+);
 
 const emptyArrayObservable = new Observable<
   ApolloCache.WatchFragmentResult<never[]>

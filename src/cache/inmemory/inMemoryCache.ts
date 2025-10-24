@@ -536,7 +536,17 @@ export class InMemoryCache extends ApolloCache {
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
-      this.watches.forEach((c) => this.maybeBroadcastWatch(c, options));
+      const prevOnAfter = this.onAfterBroadcast;
+      const callbacks = new Set<() => void>();
+      this.onAfterBroadcast = (cb: () => void) => {
+        callbacks.add(cb);
+      };
+      try {
+        this.watches.forEach((c) => this.maybeBroadcastWatch(c, options));
+        callbacks.forEach((cb) => cb());
+      } finally {
+        this.onAfterBroadcast = prevOnAfter;
+      }
     }
   }
 

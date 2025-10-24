@@ -427,19 +427,6 @@ test("updates items in the array with cache writes", async () => {
     data: [
       { __typename: "Item", id: 1, text: "Item #1 from batch" },
       { __typename: "Item", id: 2, text: "Item #2 updated" },
-      null,
-    ],
-    dataState: "partial",
-    complete: false,
-    missing: {
-      2: "Dangling reference to missing Item:5 object",
-    },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", id: 1, text: "Item #1 from batch" },
-      { __typename: "Item", id: 2, text: "Item #2 updated" },
       { __typename: "Item", id: 5, text: "Item #5 from batch" },
     ],
     dataState: "complete",
@@ -606,16 +593,6 @@ test("works with data masking", async () => {
         },
       });
     },
-  });
-
-  await expect(childStream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", text: "Item #1 from batch" },
-      { __typename: "Item", text: "Item #2 updated" },
-      { __typename: "Item", text: "Item #5" },
-    ],
-    dataState: "complete",
-    complete: true,
   });
 
   await expect(childStream).toEmitTypedValue({

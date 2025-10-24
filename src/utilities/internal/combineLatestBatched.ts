@@ -9,7 +9,9 @@ import { EMPTY, Observable } from "rxjs";
  * - Doesn't allow for custom scheduler
  * - Expects array of constructed observables instead of `Array<ObservableInput>`
  */
-export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
+export function combineLatestBatched<T>(
+  observables: Array<Observable<T> & { dirty: boolean }>
+) {
   if (observables.length === 0) {
     return EMPTY;
   }
@@ -36,6 +38,8 @@ export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
       indexesByObservable.get(source)!.add(idx);
     });
 
+    let currentBatch: Set<Observable<T>> | undefined;
+
     // Subscribe to each unique observable instead of the raw source array of
     // observables since we want at most 1-subscription per unique observable.
     // This ensures an update can write to multiple indexes before emitting the
@@ -52,7 +56,12 @@ export function combineLatestBatched<T>(observables: Array<Observable<T>>) {
           }
 
           if (!remainingFirstValues) {
-            observer.next(values.slice());
+            currentBatch ||= new Set(observables.filter((obs) => obs.dirty));
+            currentBatch.delete(source);
+            if (!currentBatch.size) {
+              observer.next(values.slice());
+              currentBatch = undefined;
+            }
           }
         },
         complete: () => {

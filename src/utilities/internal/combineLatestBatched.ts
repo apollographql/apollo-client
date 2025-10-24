@@ -19,7 +19,7 @@ export function combineLatestBatched<T>(
   return new Observable<Array<T>>((observer) => {
     const { length } = observables;
     // Keeps track of current values for each observable
-    const values: T[] = Array.from({ length });
+    const values: T[] = new Array(length);
     // Used to batch an update each item in the array that share an observable
     // so that they can be emitted together.
     const indexesByObservable = new Map<Observable<T>, Set<number>>();

@@ -28,7 +28,11 @@ import type { FragmentType, Unmasked } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { IsAny, NoInfer } from "@apollo/client/utilities/internal";
+import type {
+  IsAny,
+  NoInfer,
+  Prettify,
+} from "@apollo/client/utilities/internal";
 import {
   combineLatestBatched,
   equalByQuery,
@@ -116,14 +120,18 @@ export declare namespace ApolloCache {
           missing?: MissingTree;
         } & GetDataState<any, "partial">)
     : TData extends null | null[] ?
-      {
-        complete: true;
-        missing?: never;
-      } & GetDataState<TData, "complete">
-    : | ({
+      Prettify<
+        {
           complete: true;
           missing?: never;
-        } & GetDataState<TData, "complete">)
+        } & GetDataState<TData, "complete">
+      >
+    : | Prettify<
+          {
+            complete: true;
+            missing?: never;
+          } & GetDataState<TData, "complete">
+        >
       | {
           complete: false;
           missing?: MissingTree;

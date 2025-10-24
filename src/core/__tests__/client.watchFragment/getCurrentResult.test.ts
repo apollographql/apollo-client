@@ -220,15 +220,14 @@ test("returns referentially stable value", async () => {
   });
 
   // ensure it changes identity when a new value is emitted
+  const result2 = await stream.takeNext();
   const secondResult = observable.getCurrentResult();
 
   expect(secondResult).not.toBe(firstResult);
+  expect(secondResult).toBe(result2);
   expect(observable.getCurrentResult()).toBe(secondResult);
   expect(observable.getCurrentResult()).toBe(secondResult);
   expect(observable.getCurrentResult()).toBe(secondResult);
-
-  const result2 = await stream.takeNext();
-  expect(result2).toBe(secondResult);
 });
 
 test("returns partial result with no cache data", async () => {

@@ -475,7 +475,9 @@ export abstract class ApolloCache {
     });
 
     let currentResult: ApolloCache.WatchFragmentResult<any>;
-    function toResult(diffs: Array<Cache.DiffResult<Unmasked<TData> | null>>) {
+    function toResult(
+      diffs: Array<Cache.DiffResult<Unmasked<TData> | null>>
+    ): ApolloCache.WatchFragmentResult<any> {
       let result: ApolloCache.WatchFragmentResult<any>;
       if (Array.isArray(from)) {
         result = diffs.reduce(
@@ -495,7 +497,7 @@ export abstract class ApolloCache {
             data: [],
             dataState: "complete",
             complete: true,
-          } as ApolloCache.WatchFragmentResult<Array<Unmasked<TData>>>
+          } as ApolloCache.WatchFragmentResult<any>
         );
       } else {
         const [diff] = diffs;
@@ -539,14 +541,7 @@ export abstract class ApolloCache {
             unsubscribe: () => (subscribed = false),
           }),
           shareReplay({ bufferSize: 1, refCount: true })
-        ) satisfies Observable<
-          | ApolloCache.WatchFragmentResult<Unmasked<TData> | null>
-          | ApolloCache.WatchFragmentResult<(Unmasked<TData> | null)[]>
-        > as
-          | Observable<ApolloCache.WatchFragmentResult<Unmasked<TData> | null>>
-          | Observable<
-              ApolloCache.WatchFragmentResult<Array<Unmasked<TData> | null>>
-            >);
+        ) satisfies Observable<ApolloCache.WatchFragmentResult<any>>);
 
     return Object.assign(observable, {
       getCurrentResult: () => {

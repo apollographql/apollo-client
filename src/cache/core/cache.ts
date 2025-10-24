@@ -371,7 +371,6 @@ export abstract class ApolloCache {
 
   private fragmentWatches = new Trie<{
     observable?: Observable<any> & { dirty: boolean };
-    dirty?: boolean;
   }>(true);
 
   public watchFragment<

@@ -10,7 +10,7 @@ import { EMPTY, Observable } from "rxjs";
  * - Expects array of constructed observables instead of `Array<ObservableInput>`
  */
 export function combineLatestBatched<T>(
-  observables: Array<Observable<T> & { dirty: boolean }>
+  observables: Array<Observable<T> & { dirty?: boolean }>
 ) {
   if (observables.length === 0) {
     return EMPTY;

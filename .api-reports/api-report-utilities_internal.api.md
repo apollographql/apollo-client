@@ -76,7 +76,7 @@ export function cloneDeep<T>(value: T): T;
 
 // @public
 export function combineLatestBatched<T>(observables: Array<Observable<T> & {
-    dirty: boolean;
+    dirty?: boolean;
 }>): Observable<T[]>;
 
 // Warning: (ae-forgotten-export) The symbol "TupleToIntersection" needs to be exported by the entry point index.d.ts

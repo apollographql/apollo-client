@@ -2436,20 +2436,6 @@ describe("has the same timing as `useQuery`", () => {
     });
 
     {
-      // unintended extra render
-      const { withinDOM } = await renderStream.takeRender();
-      const parent = withinDOM().getByTestId("parent");
-      const children = withinDOM().getByTestId("children");
-
-      expect(within(parent).queryAllByText(/Item #1/).length).toBe(1);
-      expect(within(children).queryAllByText(/Item #1/).length).toBe(1);
-
-      // problem: useFragment renders before useQuery catches up
-      expect(within(parent).queryAllByText(/Item #2/).length).toBe(1);
-      expect(within(children).queryAllByText(/Item #2/).length).toBe(0);
-    }
-
-    {
       const { withinDOM } = await renderStream.takeRender();
       const parent = withinDOM().getByTestId("parent");
       const children = withinDOM().getByTestId("children");

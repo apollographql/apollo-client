@@ -53,19 +53,20 @@ export namespace ApolloCache {
         variables?: TVariables;
     }
     // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
     export type WatchFragmentResult<TData = unknown> = true extends IsAny<TData> ? ({
         complete: true;
         missing?: never;
     } & GetDataState<any, "complete">) | ({
         complete: false;
         missing?: MissingTree;
-    } & GetDataState<any, "partial">) : TData extends null ? {
+    } & GetDataState<any, "partial">) : TData extends null | null[] ? Prettify<{
         complete: true;
         missing?: never;
-    } & GetDataState<null, "complete"> : ({
+    } & GetDataState<TData, "complete">> : Prettify<{
         complete: true;
         missing?: never;
-    } & GetDataState<TData, "complete">) | {
+    } & GetDataState<TData, "complete">> | {
         complete: false;
         missing?: MissingTree;
         data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem> | null> : DataValue.Partial<TData>;
@@ -2210,6 +2211,11 @@ namespace PreserveTypes {
 }
 
 // @internal @deprecated (undocumented)
+type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+
+// @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
@@ -2776,7 +2782,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:116:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:120:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

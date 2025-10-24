@@ -25,6 +25,7 @@ import { isReference } from '@apollo/client/utilities';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
+import type { Prettify } from '@apollo/client/utilities/internal';
 import { Reference } from '@apollo/client/utilities';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
@@ -59,13 +60,13 @@ export namespace ApolloCache {
     } & GetDataState<any, "complete">) | ({
         complete: false;
         missing?: MissingTree;
-    } & GetDataState<any, "partial">) : TData extends null ? {
+    } & GetDataState<any, "partial">) : TData extends null | null[] ? Prettify<{
         complete: true;
         missing?: never;
-    } & GetDataState<null, "complete"> : ({
+    } & GetDataState<TData, "complete">> : Prettify<{
         complete: true;
         missing?: never;
-    } & GetDataState<TData, "complete">) | {
+    } & GetDataState<TData, "complete">> | {
         complete: false;
         missing?: MissingTree;
         data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem> | null> : DataValue.Partial<TData>;

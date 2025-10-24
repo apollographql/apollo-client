@@ -75,7 +75,9 @@ export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode
 export function cloneDeep<T>(value: T): T;
 
 // @public
-export function combineLatestBatched<T>(observables: Array<Observable<T>>): Observable<T[]>;
+export function combineLatestBatched<T>(observables: Array<Observable<T> & {
+    dirty: boolean;
+}>): Observable<T[]>;
 
 // Warning: (ae-forgotten-export) The symbol "TupleToIntersection" needs to be exported by the entry point index.d.ts
 //

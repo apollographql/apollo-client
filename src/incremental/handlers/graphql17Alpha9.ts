@@ -286,7 +286,7 @@ export class GraphQL17Alpha9Handler
 
     if (this.isIncrementalResult(result)) {
       push(new IncrementalRequest().handle(undefined, result));
-    } else {
+    } else if ("errors" in result) {
       push(result);
     }
 

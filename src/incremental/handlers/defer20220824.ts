@@ -177,7 +177,9 @@ export class Defer20220824Handler
       }
     };
     if (this.isIncrementalResult(result)) {
-      push(result);
+      if ("errors" in result) {
+        push(result);
+      }
       if (hasIncrementalChunks(result)) {
         result.incremental.forEach(push);
       }

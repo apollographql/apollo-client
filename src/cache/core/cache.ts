@@ -610,29 +610,29 @@ export abstract class ApolloCache {
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
     if (!cacheEntry.observable) {
-      cacheEntry.observable = new Observable<Cache.DiffResult<TData>>(
-        (observer) => {
-          const cleanup = this.watch<TData, TVariables>({
-            variables,
-            returnPartialData: true,
-            id,
-            query: fragmentQuery,
-            optimistic,
-            immediate: true,
-            callback: (diff) => {
-              cacheEntry.dirty = true;
-              this.onAfterBrodcast(() => {
-                observer.next(diff);
-                cacheEntry.dirty = false;
-              });
-            },
-          });
-          return () => {
-            cleanup();
-            this.fragmentWatches.removeArray(cacheKey);
-          };
-        }
-      ).pipe(
+      const observable: Observable<Cache.DiffResult<TData>> & {
+        dirty?: boolean;
+      } = new Observable<Cache.DiffResult<TData>>((observer) => {
+        const cleanup = this.watch<TData, TVariables>({
+          variables,
+          returnPartialData: true,
+          id,
+          query: fragmentQuery,
+          optimistic,
+          immediate: true,
+          callback: (diff) => {
+            observable.dirty = true;
+            this.onAfterBrodcast(() => {
+              observer.next(diff);
+              observable.dirty = false;
+            });
+          },
+        });
+        return () => {
+          cleanup();
+          this.fragmentWatches.removeArray(cacheKey);
+        };
+      }).pipe(
         distinctUntilChanged((previous, current) =>
           equalByQuery(
             fragmentQuery,
@@ -646,10 +646,8 @@ export abstract class ApolloCache {
           // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one
           resetOnRefCountZero: () => timer(0),
         })
-      ) as Observable<Cache.DiffResult<TData>> & { dirty: boolean };
-      Object.defineProperty(cacheEntry.observable, "dirty", {
-        get: () => !!cacheEntry.dirty,
-      });
+      );
+      cacheEntry.observable = Object.assign(observable, { dirty: false });
     }
 
     return cacheEntry.observable;

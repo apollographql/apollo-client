@@ -2629,3 +2629,79 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
   });
   await expect(observableStream).not.toEmitAnything();
 });
+
+// Servers that return a `data` property in subsequent payloads are technically
+// invalid, but we still want to handle cases where the server misbehaves.
+//
+// See the following issue for more information:
+// https://github.com/apollographql/apollo-client/issues/12976
+test("ignores invalid `data` property added by subsequent chunks", async () => {
+  const stream = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    link: stream.httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query HeroNameQuery {
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(client.watchQuery({ query }));
+
+  stream.enqueueInitialChunk({
+    data: { hero: { __typename: "Hero", id: "1" } },
+    pending: [{ id: "0", path: ["hero"] }],
+    hasNext: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      hero: {
+        __typename: "Hero",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  stream.enqueueSubsequentChunk({
+    // @ts-expect-error simulate misbehaving server
+    data: null,
+    incremental: [{ data: { name: "Luke" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: false,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        name: "Luke",
+      },
+    },
+    dataState: "complete",
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});

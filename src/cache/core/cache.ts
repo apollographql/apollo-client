@@ -532,7 +532,7 @@ export abstract class ApolloCache {
     const observable =
       ids.length === 0 ?
         emptyArrayObservable
-      : (combineLatestBatched(
+      : combineLatestBatched(
           ids.map((id) => this.watchSingleFragment(id, query, options))
         ).pipe(
           map(toResult),
@@ -541,7 +541,7 @@ export abstract class ApolloCache {
             unsubscribe: () => (subscribed = false),
           }),
           shareReplay({ bufferSize: 1, refCount: true })
-        ) satisfies Observable<ApolloCache.WatchFragmentResult<any>>);
+        );
 
     return Object.assign(observable, {
       getCurrentResult: () => {

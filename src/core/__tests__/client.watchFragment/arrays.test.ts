@@ -599,16 +599,6 @@ test("works with data masking", async () => {
     data: [
       { __typename: "Item", text: "Item #1 from batch" },
       { __typename: "Item", text: "Item #2 updated" },
-      { __typename: "Item", text: "Item #5" },
-    ],
-    dataState: "complete",
-    complete: true,
-  });
-
-  await expect(childStream).toEmitTypedValue({
-    data: [
-      { __typename: "Item", text: "Item #1 from batch" },
-      { __typename: "Item", text: "Item #2 updated" },
       { __typename: "Item", text: "Item #5 from batch" },
     ],
     dataState: "complete",

@@ -585,7 +585,7 @@ export abstract class ApolloCache {
    * until after all broadcasts have been completed - e.g. in a cache scenario
    * where many watchers are notified in parallel.
    */
-  protected onAfterBrodcast = (cb: () => void) => cb();
+  protected onAfterBroadcast = (cb: () => void) => cb();
   private watchSingleFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -622,7 +622,7 @@ export abstract class ApolloCache {
           immediate: true,
           callback: (diff) => {
             observable.dirty = true;
-            this.onAfterBrodcast(() => {
+            this.onAfterBroadcast(() => {
               observer.next(diff);
               observable.dirty = false;
             });

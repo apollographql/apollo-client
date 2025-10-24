@@ -33,8 +33,6 @@ export declare namespace Defer20220824Handler {
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
     incremental?: Array<IncrementalResult<TData>>;

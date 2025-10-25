@@ -521,7 +521,10 @@ export class InMemoryCache extends ApolloCache {
 
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string
+    typename: string,
+    _: {
+      unnormalizedResult: { [key: string]: unknown } | undefined;
+    }
   ): boolean {
     return this.policies.fragmentMatches(fragment, typename);
   }

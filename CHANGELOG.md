@@ -1,5 +1,61 @@
 # @apollo/client
 
+## 4.1.0-alpha.3
+
+### Minor Changes
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `from: null` in `client.watchFragment` and `cache.watchFragment`. When `from` is `null`, the emitted result is:
+
+  ```ts
+  {
+    data: null,
+    dataState: "complete",
+    complete: true,
+  }
+  ```
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for arrays with `useFragment`, `useSuspenseFragment`, and `client.watchFragment`. This allows the ability to use a fragment to watch multiple entities in the cache. Passing an array to `from` will return `data` as an array where each array index corresponds to the index in the `from` array.
+
+  ```ts
+  function MyComponent() {
+    const result = useFragment({
+      fragment,
+      from: [item1, item2, item3],
+    });
+
+    // `data` is an array with 3 items
+    console.log(result); // { data: [{...}, {...}, {...}], dataState: "complete", complete: true }
+  }
+  ```
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a `getCurrentResult` function to the observable returned by `client.watchFragment` and `cache.watchFragment` that returns the current value for the watched fragment.
+
+  ```ts
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  console.log(observable.getCurrentResult());
+  // {
+  //   data: {...},
+  //   dataState: "complete",
+  //   complete: true,
+  // }
+  ```
+
+### Patch Changes
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deduplicate watches created by `useFragment`, `client.watchFragment`, and `cache.watchFragment` that contain the same fragment, variables, and identifier. This should improve performance in situations where a `useFragment` or a `client.watchFragment` is used to watch the same object in multiple places of an application.
+
+- [#12982](https://github.com/apollographql/apollo-client/pull/12982) [`5c56b32`](https://github.com/apollographql/apollo-client/commit/5c56b3210a2c03e247ec9e600f1e27eb71df5e96) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ignore top-level `data` values on subsequent chunks in incremental responses.
+
+- [#12982](https://github.com/apollographql/apollo-client/pull/12982) [`5c56b32`](https://github.com/apollographql/apollo-client/commit/5c56b3210a2c03e247ec9e600f1e27eb71df5e96) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the `Defer20220824Handler.SubsequentResult` type to match the `FormattedSubsequentIncrementalExecutionResult` type in `graphql@17.0.0-alpha.2`.
+
+- [#12973](https://github.com/apollographql/apollo-client/pull/12973) [`072da24`](https://github.com/apollographql/apollo-client/commit/072da24a8daec3a646ef0cce30de32f95ea0bb23) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the `accept` header used with the `GraphQL17Alpha9Handler` to `multipart/mixed;incrementalSpec=v0.2` to ensure the newest incremental delivery format is requested.
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `DeepPartial<Array<TData>>` now returns `Array<DeepPartial<TData>>` instead of `Array<DeepPartial<TData | undefined>>`.
+
 ## 4.1.0-alpha.2
 
 ### Minor Changes

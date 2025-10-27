@@ -7,9 +7,9 @@ export type CacheKey = [
 ];
 
 export type FragmentCacheKey = [
-  cacheId: string,
   fragment: DocumentNode,
   stringifiedVariables: string,
+  cacheId: string | null,
 ];
 
 export interface QueryKey {

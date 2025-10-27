@@ -346,7 +346,15 @@ export declare namespace ApolloClient {
   > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
 
   export type WatchFragmentResult<TData = unknown> =
-    ApolloCache.WatchFragmentResult<TData>;
+    ApolloCache.WatchFragmentResult<MaybeMasked<TData>>;
+
+  export interface ObservableFragment<TData = unknown>
+    extends Observable<ApolloClient.WatchFragmentResult<TData>> {
+    /**
+     * Return the current result for the fragment.
+     */
+    getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
+  }
 
   /**
    * Watched query options.
@@ -1114,42 +1122,114 @@ export class ApolloClient {
    * the cache to identify the fragment and optionally specify whether to react
    * to optimistic updates.
    */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<NonNullable<ApolloCache.WatchFragmentFromValue<TData>>>;
+    }
+  ): ApolloClient.ObservableFragment<Array<TData>>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<null>;
+    }
+  ): ApolloClient.ObservableFragment<Array<null>>;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+    }
+  ): ApolloClient.ObservableFragment<Array<TData | null>>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: null;
+    }
+  ): ApolloClient.ObservableFragment<null>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: NonNullable<ApolloCache.WatchFragmentFromValue<TData>>;
+    }
+  ): ApolloClient.ObservableFragment<TData>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+  ): ApolloClient.ObservableFragment<TData | null>;
 
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
+  ):
+    | ApolloClient.ObservableFragment<TData>
+    | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
+    const observable = this.cache.watchFragment({
+      ...options,
+      fragment: this.transform(options.fragment, dataMasking),
+    });
 
-    return this.cache
-      .watchFragment({
-        ...options,
-        fragment: this.transform(options.fragment, dataMasking),
-      })
-      .pipe(
-        map((result) => {
-          // The transform will remove fragment spreads from the fragment
-          // document when dataMasking is enabled. The `maskFragment` function
-          // remains to apply warnings to fragments marked as
-          // `@unmask(mode: "migrate")`. Since these warnings are only applied
-          // in dev, we can skip the masking algorithm entirely for production.
-          if (__DEV__) {
-            if (dataMasking) {
-              const data = this.queryManager.maskFragment({
-                ...options,
-                data: result.data,
-              });
-              return { ...result, data } as ApolloClient.WatchFragmentResult<
-                MaybeMasked<TData>
-              >;
-            }
-          }
+    const mask = (
+      result: ApolloClient.WatchFragmentResult<any>
+    ): ApolloClient.WatchFragmentResult<any> => {
+      // The transform will remove fragment spreads from the fragment
+      // document when dataMasking is enabled. The `mask` function
+      // remains to apply warnings to fragments marked as
+      // `@unmask(mode: "migrate")`. Since these warnings are only applied
+      // in dev, we can skip the masking algorithm entirely for production.
+      if (__DEV__) {
+        if (dataMasking) {
+          return {
+            ...result,
+            data: this.queryManager.maskFragment({
+              ...options,
+              data: result.data,
+            }),
+          } as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+        }
+      }
 
-          return result as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
-        })
-      );
+      return result;
+    };
+
+    let currentResult: ApolloClient.WatchFragmentResult<any>;
+    let stableMaskedResult: ApolloClient.WatchFragmentResult<any>;
+
+    return Object.assign(observable.pipe(map(mask)), {
+      getCurrentResult: () => {
+        const result = observable.getCurrentResult();
+
+        if (result !== currentResult) {
+          currentResult = result as any;
+          stableMaskedResult = mask(currentResult);
+        }
+
+        return stableMaskedResult;
+      },
+    }) as ApolloClient.ObservableFragment<any>;
   }
 
   /**

@@ -431,6 +431,7 @@ Array [
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
+  "combineLatestBatched",
   "compact",
   "createFragmentMap",
   "createFulfilledPromise",

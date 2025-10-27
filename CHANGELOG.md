@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.8
+
+### Patch Changes
+
+- [#12983](https://github.com/apollographql/apollo-client/pull/12983) [`f6d0efa`](https://github.com/apollographql/apollo-client/commit/f6d0efac4d99375c67255aee6d9b2981753b6f55) Thanks [@CarsonF](https://github.com/CarsonF)! - Fix cache.modify() mapping readonly arrays to singular reference
+
 ## 4.0.7
 
 ### Patch Changes

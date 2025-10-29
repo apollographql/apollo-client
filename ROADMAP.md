@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-10-15**
+**Last updated: 2025-10-29**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -18,6 +18,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 ### Apollo Client
 
 #### 4.1.0
+_Release candidate - November 14th, 2025_
 
 - Support for `@stream`
 - Add support for the `graphql@17.0.0-alpha.9` incremental delivery format
@@ -43,7 +44,7 @@ _No outstanding work_
 
 ### Apollo Client DevTools
 
-_No outstanding work_
+- Support cache write history
 
 ### Apollo Client React Framework Integrations
 

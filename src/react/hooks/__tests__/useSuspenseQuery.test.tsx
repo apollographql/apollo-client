@@ -13,7 +13,7 @@ import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary } from "react-error-boundary";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloCache,
@@ -306,7 +306,10 @@ function useVariablesQueryCase() {
         character: { __typename: "Character", id: String(index + 1), name },
       },
     },
-    delay: 20,
+    // React runs layout effects much later in React 18 which means tracked
+    // components aren't captured correctly, specifically when changing
+    // variables that cause the component to suspend.
+    delay: IS_REACT_19 ? 20 : 200,
   }));
 
   return { query, mocks };
@@ -1729,7 +1732,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1742,7 +1745,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1755,7 +1758,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
@@ -1855,7 +1858,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1868,7 +1871,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1881,7 +1884,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
@@ -1975,7 +1978,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1988,7 +1991,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -2001,7 +2004,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
@@ -3534,10 +3537,7 @@ describe("useSuspenseQuery", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink((operation) => {
-        return new Observable((observer) => {
-          observer.next({ data: { vars: operation.variables } });
-          observer.complete();
-        });
+        return of({ data: { vars: operation.variables } }).pipe(delay(200));
       }),
       defaultOptions: {
         watchQuery: {
@@ -4385,14 +4385,14 @@ describe("useSuspenseQuery", () => {
         result: {
           errors: graphQLErrors,
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
         result: {
           data: { user: { id: "2", name: "Captain Marvel" } },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 

@@ -1,4 +1,5 @@
 import { disableActEnvironment } from "@testing-library/react-render-stream";
+import React from "react";
 import { delay, of } from "rxjs";
 
 import {
@@ -114,8 +115,12 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
   await expect(takeRender).not.toRerender();
 });
 
-test.only("suspends and fetches when changing variables when no longer using skipToken", async () => {
-  const { query, mocks } = setupVariablesCase();
+test("suspends and fetches when changing variables when no longer using skipToken", async () => {
+  const { query, mocks } = setupVariablesCase({
+    // React 18 needs a longer delay to commit the render when unskipping
+    // for some reason
+    delay: React.version.startsWith("18") ? 200 : 20,
+  });
 
   using _disabledAct = disableActEnvironment();
   const { rerender, takeRender } = await renderSuspenseHook(

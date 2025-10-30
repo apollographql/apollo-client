@@ -32,6 +32,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -451,6 +452,21 @@ function useBackgroundQuery_<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
+  const canonicalVariables = canonicalStringify(variables);
+
+  // This state value let's us maintain the variables used for the cache key
+  // when `skipToken` is used to skip a query after its been executed.
+  // Since options are provided when using `skipToken`, `variables` disappear,
+  // which means a cache key without a variables value is used to create a new
+  // `ObservableQuery` instance. This was particularly problematic when
+  // `refetchQueries` was used because it meant refetching against an
+  // `ObservableQuery` instance that had no variables.
+  let [cacheKeyVariables, setCacheKeyVariables] =
+    React.useState(canonicalVariables);
+
+  if (options !== skipToken && cacheKeyVariables !== canonicalVariables) {
+    setCacheKeyVariables((cacheKeyVariables = canonicalVariables));
+  }
 
   // This ref tracks the first time query execution is enabled to determine
   // whether to return a query ref or `undefined`. When initialized
@@ -463,7 +479,7 @@ function useBackgroundQuery_<
 
   const cacheKey: CacheKey = [
     query,
-    canonicalStringify(variables),
+    cacheKeyVariables,
     ...([] as any[]).concat(queryKey),
   ];
 

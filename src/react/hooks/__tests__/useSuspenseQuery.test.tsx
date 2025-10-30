@@ -102,8 +102,8 @@ interface SimpleQueryData {
 
 /**
  * @deprecated
- * Use `renderSuspenseHook` aliased to `renderUseSuspenseQueryHook` from utils
- * which uses render streams instead of render counting.
+ * Use the `renderUseSuspenseQuery` helper from utils which uses render streams
+ * instead of function call render counting.
  */
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,

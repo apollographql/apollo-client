@@ -109,7 +109,7 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
 });
 
 test("suspends and fetches when changing variables when no longer using skipToken", async () => {
-  const { query, mocks } = setupVariablesCase();
+  const { query, mocks } = setupVariablesCase({ delay: 200 });
 
   using _disabledAct = disableActEnvironment();
   const { takeRender, rerender } = await renderSuspenseHook(

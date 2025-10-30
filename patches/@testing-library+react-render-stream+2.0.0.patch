@@ -1,0 +1,20 @@
+diff --git a/node_modules/@testing-library/react-render-stream/dist/pure.d.cts b/node_modules/@testing-library/react-render-stream/dist/pure.d.cts
+index 8964c27..8875af7 100644
+--- a/node_modules/@testing-library/react-render-stream/dist/pure.d.cts
++++ b/node_modules/@testing-library/react-render-stream/dist/pure.d.cts
+@@ -306,4 +306,4 @@ declare namespace disableActEnvironment {
+     var defaultOptions: Required<DisableActEnvironmentOptions>;
+ }
+ 
+-export { type Assertable, type RenderWithoutActAsync as AsyncRenderFn, type DisableActEnvironmentOptions, type NextRenderOptions, type RenderStream, type RenderStreamOptions, type RenderStreamWithRenderFn, type SnapshotStream, type SyncScreen, WaitForRenderTimeoutError, cleanup, createRenderStream, disableActEnvironment, renderHookToSnapshotStream, useTrackRenders };
++export { type Assertable, type RenderWithoutActAsync as AsyncRenderFn, type DisableActEnvironmentOptions, type NextRenderOptions, type Render, type RenderStream, type RenderStreamOptions, type RenderStreamWithRenderFn, type SnapshotStream, type SyncScreen, WaitForRenderTimeoutError, cleanup, createRenderStream, disableActEnvironment, renderHookToSnapshotStream, useTrackRenders };
+diff --git a/node_modules/@testing-library/react-render-stream/dist/pure.d.ts b/node_modules/@testing-library/react-render-stream/dist/pure.d.ts
+index 8964c27..8875af7 100644
+--- a/node_modules/@testing-library/react-render-stream/dist/pure.d.ts
++++ b/node_modules/@testing-library/react-render-stream/dist/pure.d.ts
+@@ -306,4 +306,4 @@ declare namespace disableActEnvironment {
+     var defaultOptions: Required<DisableActEnvironmentOptions>;
+ }
+ 
+-export { type Assertable, type RenderWithoutActAsync as AsyncRenderFn, type DisableActEnvironmentOptions, type NextRenderOptions, type RenderStream, type RenderStreamOptions, type RenderStreamWithRenderFn, type SnapshotStream, type SyncScreen, WaitForRenderTimeoutError, cleanup, createRenderStream, disableActEnvironment, renderHookToSnapshotStream, useTrackRenders };
++export { type Assertable, type RenderWithoutActAsync as AsyncRenderFn, type DisableActEnvironmentOptions, type NextRenderOptions, type Render, type RenderStream, type RenderStreamOptions, type RenderStreamWithRenderFn, type SnapshotStream, type SyncScreen, WaitForRenderTimeoutError, cleanup, createRenderStream, disableActEnvironment, renderHookToSnapshotStream, useTrackRenders };

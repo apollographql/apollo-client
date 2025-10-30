@@ -39,9 +39,15 @@ const ignoreDTSFiles = ".d.ts$";
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
-const react17TestFileIgnoreList = [
+const reactSharedTestFileIgnoreList = [
   ignoreDTSFiles,
   ignoreTSFiles,
+  "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
+  "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
+];
+
+const react17TestFileIgnoreList = [
+  ...reactSharedTestFileIgnoreList,
   // We only support Suspense with React 18, so don't test suspense hooks with
   // React 17
   "src/testing/experimental/__tests__/createTestSchema.test.tsx",
@@ -81,23 +87,15 @@ const tsRxJSMinConfig = {
 const standardReact19Config = {
   ...defaults,
   displayName: "ReactDOM 19",
-  testPathIgnorePatterns: [
-    ignoreDTSFiles,
-    ignoreTSFiles,
-    "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
-    "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
-  ],
+  testPathIgnorePatterns: reactSharedTestFileIgnoreList,
 };
 
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [
-    ignoreDTSFiles,
-    ignoreTSFiles,
+    ...reactSharedTestFileIgnoreList,
     "src/react/ssr/__tests__/prerenderStatic.test.tsx",
-    "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
-    "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
   ],
   moduleNameMapper: {
     ...defaults.moduleNameMapper,

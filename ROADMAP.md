@@ -18,6 +18,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 ### Apollo Client
 
 #### 4.1.0
+
 _Release candidate - November 14th, 2025_
 
 - Support for `@stream`

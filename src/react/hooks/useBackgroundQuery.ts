@@ -12,10 +12,8 @@ import type {
   WatchQueryFetchPolicy,
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 import type { QueryRef } from "@apollo/client/react";
 import type {
-  CacheKey,
   FetchMoreFunction,
   RefetchFunction,
 } from "@apollo/client/react/internal";
@@ -32,8 +30,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
-import { skipToken } from "./constants.js";
-import { wrapHook } from "./internal/index.js";
+import { useSuspenseHookCacheKey, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
@@ -450,23 +447,8 @@ function useBackgroundQuery_<
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
-  const canonicalVariables = canonicalStringify(variables);
-
-  // This state value let's us maintain the variables used for the cache key
-  // when `skipToken` is used to skip a query after its been executed.
-  // Since options are provided when using `skipToken`, `variables` disappear,
-  // which means a cache key without a variables value is used to create a new
-  // `ObservableQuery` instance. This was particularly problematic when
-  // `refetchQueries` was used because it meant refetching against an
-  // `ObservableQuery` instance that had no variables.
-  let [cacheKeyVariables, setCacheKeyVariables] =
-    React.useState(canonicalVariables);
-
-  if (options !== skipToken && cacheKeyVariables !== canonicalVariables) {
-    setCacheKeyVariables((cacheKeyVariables = canonicalVariables));
-  }
+  const { fetchPolicy } = watchQueryOptions;
+  const cacheKey = useSuspenseHookCacheKey(query, options);
 
   // This ref tracks the first time query execution is enabled to determine
   // whether to return a query ref or `undefined`. When initialized
@@ -476,12 +458,6 @@ function useBackgroundQuery_<
   // skipped again later.
   const didFetchResult = React.useRef(fetchPolicy !== "standby");
   didFetchResult.current ||= fetchPolicy !== "standby";
-
-  const cacheKey: CacheKey = [
-    query,
-    cacheKeyVariables,
-    ...([] as any[]).concat(queryKey),
-  ];
 
   const queryRef = suspenseCache.getQueryRef<TData, TStates>(cacheKey, () =>
     client.watchQuery(

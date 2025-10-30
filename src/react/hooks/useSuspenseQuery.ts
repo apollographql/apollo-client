@@ -17,9 +17,7 @@ import type {
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
-  CacheKey,
   FetchMoreFunction,
   QueryKey,
   RefetchFunction,
@@ -34,7 +32,12 @@ import type {
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import {
+  __use,
+  useDeepMemo,
+  useSuspenseHookCacheKey,
+  wrapHook,
+} from "./internal/index.js";
 import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 
@@ -375,29 +378,8 @@ function useSuspenseQuery_<
     query,
     options,
   });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
-  const canonicalVariables = canonicalStringify(variables);
-
-  // This state value let's us maintain the variables used for the cache key
-  // when `skipToken` is used to skip a query after its been executed.
-  // Since options are provided when using `skipToken`, `variables` disappear,
-  // which means a cache key without a variables value is used to create a new
-  // `ObservableQuery` instance. This was particularly problematic when
-  // `refetchQueries` was used because it meant refetching against an
-  // `ObservableQuery` instance that had no variables.
-  let [cacheKeyVariables, setCacheKeyVariables] =
-    React.useState(canonicalVariables);
-
-  if (options !== skipToken && cacheKeyVariables !== canonicalVariables) {
-    setCacheKeyVariables((cacheKeyVariables = canonicalVariables));
-  }
-
-  const cacheKey: CacheKey = [
-    query,
-    cacheKeyVariables,
-    ...([] as any[]).concat(queryKey),
-  ];
+  const { fetchPolicy } = watchQueryOptions;
+  const cacheKey = useSuspenseHookCacheKey(query, options);
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)

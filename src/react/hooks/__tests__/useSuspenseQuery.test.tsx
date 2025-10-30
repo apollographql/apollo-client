@@ -1,4 +1,4 @@
-import type { RenderHookOptions, RenderOptions } from "@testing-library/react";
+import type { RenderHookOptions } from "@testing-library/react";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
@@ -12,13 +12,12 @@ import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary } from "react-error-boundary";
-import { delay, Observable, of } from "rxjs";
+import { Observable, of } from "rxjs";
 
 import type {
   ApolloCache,
   DataValue,
   DocumentNode,
-  ErrorLike,
   ErrorPolicy,
   ObservableQuery,
   OperationVariables,
@@ -51,12 +50,10 @@ import type {
 import {
   actAsync,
   createClientWrapper,
-  createMockWrapper,
   markAsStreaming,
   renderAsync,
   renderHookAsync,
   setupPaginatedCase,
-  setupVariablesCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
@@ -66,7 +63,7 @@ import {
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { compact, getMainDefinition } from "@apollo/client/utilities/internal";
-import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type {
   RefetchWritePolicy,
@@ -99,71 +96,6 @@ interface SimpleQueryData {
   greeting: string;
 }
 
-async function renderUseSuspenseQueryHook<
-  TData,
-  TVariables extends OperationVariables,
-  Props = never,
->(
-  renderHook: (
-    props: Props extends never ? undefined : Props
-  ) => useSuspenseQuery.Result<TData, TVariables>,
-  options: Pick<RenderOptions, "wrapper"> & { initialProps?: Props }
-) {
-  function UseSuspenseQuery({ props }: { props: Props | undefined }) {
-    useTrackRenders({ name: "useSuspenseQuery" });
-    replaceSnapshot(renderHook(props as any));
-
-    return null;
-  }
-
-  function SuspenseFallback() {
-    useTrackRenders({ name: "SuspenseFallback" });
-
-    return null;
-  }
-
-  function ErrorFallback() {
-    useTrackRenders({ name: "ErrorBoundary" });
-
-    return null;
-  }
-
-  function App({ props }: { props: Props | undefined }) {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          onError={(error) => replaceSnapshot({ error })}
-        >
-          <UseSuspenseQuery props={props} />
-        </ErrorBoundary>
-      </Suspense>
-    );
-  }
-
-  const { render, takeRender, replaceSnapshot, getCurrentRender } =
-    createRenderStream<
-      useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
-    >({ skipNonTrackingRenders: true });
-
-  const utils = await render(<App props={options.initialProps} />, options);
-
-  function rerender(props: Props) {
-    return utils.rerender(<App props={props} />);
-  }
-
-  function getCurrentSnapshot() {
-    const { snapshot } = getCurrentRender();
-
-    invariant("data" in snapshot, "Snapshot is not a hook snapshot");
-
-    return snapshot;
-  }
-
-  return { getCurrentSnapshot, takeRender, rerender };
-}
-
-/** @deprecated use `renderUseSuspenseQueryHook` which uses renderSnapshotStream */
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}
@@ -5894,257 +5826,6 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       },
     ]);
-  });
-
-  // https://github.com/apollographql/apollo-client/issues/12989
-  test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {
-    const { query } = setupVariablesCase();
-
-    const client = new ApolloClient({
-      link: new ApolloLink((operation) => {
-        return of(
-          operation.variables.id === "1" ?
-            {
-              data: {
-                character: {
-                  __typename: "Character",
-                  id: "1",
-                  name: "Spider-Man",
-                },
-              },
-            }
-          : {
-              data: null,
-              errors: [
-                { message: `Fetched wrong id: ${operation.variables.id}` },
-              ],
-            }
-        ).pipe(delay(10));
-      }),
-      cache: new InMemoryCache(),
-    });
-
-    using _disabledAct = disableActEnvironment();
-    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
-      ({ id }) =>
-        useSuspenseQuery(
-          query,
-          id === undefined ? skipToken : { variables: { id } }
-        ),
-      {
-        initialProps: { id: "1" as string | undefined },
-        wrapper: createClientWrapper(client),
-      }
-    );
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot } = await takeRender();
-
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await rerender({ id: undefined });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await expect(takeRender).not.toRerender();
-
-    await expect(
-      client.refetchQueries({ include: [query] })
-    ).resolves.toStrictEqualTyped([
-      {
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-      },
-    ]);
-
-    await expect(takeRender).not.toRerender();
-  });
-
-  test("suspends and fetches when changing variables when no longer using skipToken", async () => {
-    const { query, mocks } = setupVariablesCase();
-
-    using _disabledAct = disableActEnvironment();
-    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
-      ({ id }) =>
-        useSuspenseQuery(
-          query,
-          id === undefined ? skipToken : { variables: { id } }
-        ),
-      {
-        initialProps: { id: "1" as string | undefined },
-        wrapper: createMockWrapper({ mocks }),
-      }
-    );
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot } = await takeRender();
-
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await rerender({ id: undefined });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await expect(takeRender).not.toRerender();
-
-    await rerender({ id: "2" });
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot } = await takeRender();
-
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "2", name: "Black Widow" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await expect(takeRender).not.toRerender();
-  });
-
-  test("does not suspend for data in the cache when changing variables when no longer using skipToken", async () => {
-    const { query, mocks } = setupVariablesCase();
-
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
-
-    client.writeQuery({
-      query,
-      data: {
-        character: { __typename: "Character", id: "2", name: "Cached Widow" },
-      },
-      variables: { id: "2" },
-    });
-
-    using _disabledAct = disableActEnvironment();
-    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
-      ({ id }) =>
-        useSuspenseQuery(
-          query,
-          id === undefined ? skipToken : { variables: { id } }
-        ),
-      {
-        initialProps: { id: "1" as string | undefined },
-        wrapper: createClientWrapper(client),
-      }
-    );
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    {
-      const { snapshot } = await takeRender();
-
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await rerender({ id: undefined });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "1", name: "Spider-Man" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await rerender({ id: "2" });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          character: { __typename: "Character", id: "2", name: "Cached Widow" },
-        },
-        dataState: "complete",
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
-    await expect(takeRender).not.toRerender();
   });
 
   it("does not make network requests when `skip` is `true`", async () => {

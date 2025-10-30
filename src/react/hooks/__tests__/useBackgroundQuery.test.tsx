@@ -2013,6 +2013,92 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
   await expect(renderStream).not.toRerender();
 });
 
+test("suspends and fetches when changing variables when no longer using skipToken", async () => {
+  const { query, mocks } = setupVariablesCase();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(renderStream);
+
+  function App({ id }: { id: string | undefined }) {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(
+      query,
+      id === undefined ? skipToken : { variables: { id } }
+    );
+
+    return (
+      <>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App id="1" />, {
+    wrapper: createMockWrapper({ mocks }),
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await rerender(<App id={undefined} />);
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await rerender(<App id="2" />);
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(renderStream).not.toRerender();
+});
+
 it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
   const { query, mocks } = setupSimpleCase();
   const user = userEvent.setup();

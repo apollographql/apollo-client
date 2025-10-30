@@ -10,7 +10,7 @@ import type { ErrorLike, OperationVariables } from "@apollo/client";
 import type { useSuspenseQuery } from "@apollo/client/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-export async function renderSuspenseHook<
+export async function renderUseSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
   Props = never,

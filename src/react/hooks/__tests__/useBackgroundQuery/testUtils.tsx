@@ -10,7 +10,7 @@ import type { DataState, ErrorLike, OperationVariables } from "@apollo/client";
 import type { QueryRef, useBackgroundQuery } from "@apollo/client/react";
 import { useReadQuery } from "@apollo/client/react";
 
-export async function renderSuspenseHook<
+export async function renderUseBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
   TQueryRef extends QueryRef<any, any, any>,

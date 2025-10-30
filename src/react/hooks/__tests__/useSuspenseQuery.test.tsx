@@ -72,7 +72,7 @@ import type {
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
 
-import { renderSuspenseHook as renderUseSuspenseQueryHook } from "./useSuspenseQuery/testUtils.js";
+import { renderUseSuspenseQuery } from "./useSuspenseQuery/testUtils.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -1098,7 +1098,7 @@ describe("useSuspenseQuery", () => {
     const { query, mocks } = useVariablesQueryCase();
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
@@ -1581,7 +1581,7 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
@@ -1649,7 +1649,7 @@ describe("useSuspenseQuery", () => {
     const { query, mocks } = useVariablesQueryCase();
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-first",
@@ -1763,7 +1763,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-and-network",
@@ -1889,7 +1889,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
@@ -2009,7 +2009,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "no-cache",
@@ -2088,7 +2088,7 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
@@ -2386,7 +2386,7 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-first",
@@ -2875,7 +2875,7 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-and-network",
@@ -3092,7 +3092,7 @@ describe("useSuspenseQuery", () => {
       const { query, mocks } = useVariablesQueryCase();
 
       using _disabledAct = disableActEnvironment();
-      const { takeRender, rerender } = await renderUseSuspenseQueryHook(
+      const { takeRender, rerender } = await renderUseSuspenseQuery(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
         { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
       );
@@ -3547,7 +3547,7 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
+    const { takeRender, rerender } = await renderUseSuspenseQuery(
       ({ source }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
@@ -4397,7 +4397,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     using _disabledAct = disableActEnvironment();
-    const { rerender, takeRender } = await renderUseSuspenseQueryHook(
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, { errorPolicy: "all", variables: { id } }),
       { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }

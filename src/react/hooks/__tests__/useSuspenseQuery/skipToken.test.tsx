@@ -15,7 +15,7 @@ import {
   setupVariablesCase,
 } from "@apollo/client/testing/internal";
 
-import { renderSuspenseHook } from "./testUtils.js";
+import { renderUseSuspenseQuery } from "./testUtils.js";
 
 // https://github.com/apollographql/apollo-client/issues/12989
 test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {
@@ -46,7 +46,7 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, rerender } = await renderSuspenseHook(
+  const { takeRender, rerender } = await renderUseSuspenseQuery(
     ({ id }) =>
       useSuspenseQuery(
         query,
@@ -112,7 +112,7 @@ test("suspends and fetches when changing variables when no longer using skipToke
   const { query, mocks } = setupVariablesCase({ delay: 200 });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, rerender } = await renderSuspenseHook(
+  const { takeRender, rerender } = await renderUseSuspenseQuery(
     ({ id }) =>
       useSuspenseQuery(
         query,
@@ -202,7 +202,7 @@ test("does not suspend for data in the cache when changing variables when no lon
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, rerender } = await renderSuspenseHook(
+  const { takeRender, rerender } = await renderUseSuspenseQuery(
     ({ id }) =>
       useSuspenseQuery(
         query,

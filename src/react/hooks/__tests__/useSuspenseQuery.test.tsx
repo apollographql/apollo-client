@@ -168,19 +168,24 @@ async function renderSuspenseHook<Result, Props>(
 }
 
 function useSimpleQueryCase() {
-  const query: TypedDocumentNode<SimpleQueryData, Record<string, never>> = gql`
-    query UserQuery {
+  const query: TypedDocumentNode<
+    SimpleQueryData,
+    { optionalVariable?: string }
+  > = gql`
+    query UserQuery($optionalVariable: String) {
       greeting
     }
   `;
 
   const mocks = [
     {
-      request: { query },
+      request: { query, variables: () => true },
       result: { data: { greeting: "Hello" } },
       delay: 20,
     },
-  ];
+  ] satisfies Array<
+    MockLink.MockedResponse<SimpleQueryData, { optionalVariable?: string }>
+  >;
 
   return { query, mocks };
 }
@@ -5780,11 +5785,14 @@ describe("useSuspenseQuery", () => {
 
   it.only("renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled", async () => {
     const { query, mocks } = useSimpleQueryCase();
-
     const cache = new InMemoryCache();
 
     const { result, renders, rerenderAsync } = await renderSuspenseHook(
-      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
+      ({ skip }) =>
+        useSuspenseQuery(
+          query,
+          skip ? skipToken : { variables: { optionalVariable: "foo" } }
+        ),
       { cache, mocks, initialProps: { skip: false } }
     );
 

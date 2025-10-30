@@ -5901,13 +5901,6 @@ describe("useSuspenseQuery", () => {
   // https://github.com/apollographql/apollo-client/issues/12989
   test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {
     const { query } = setupVariablesCase();
-    const { takeRender, render, replaceSnapshot } = createRenderStream<
-      useSuspenseQuery.Result<
-        VariablesScenarioData,
-        VariablesScenarioVariables,
-        "empty" | "streaming" | "complete"
-      >
-    >({ skipNonTrackingRenders: true });
 
     const client = new ApolloClient({
       link: new ApolloLink((operation) => {
@@ -5933,42 +5926,23 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    function SuspenseFallback() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function UseSuspenseQuery({ id }: { id: string | undefined }) {
-      useTrackRenders();
-      replaceSnapshot(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
+      ({ id }) =>
         useSuspenseQuery(
           query,
           id === undefined ? skipToken : { variables: { id } }
-        )
-      );
-
-      return null;
-    }
-
-    function App({ id }: { id: string | undefined }) {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <UseSuspenseQuery id={id} />
-        </Suspense>
-      );
-    }
-
-    using _disabledAct = disableActEnvironment();
-
-    const { rerender } = await render(<App id="1" />, {
-      wrapper: createClientWrapper(client),
-    });
+        ),
+      {
+        initialProps: { id: "1" as string | undefined },
+        wrapper: createClientWrapper(client),
+      }
+    );
 
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
@@ -5984,12 +5958,12 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await rerender(<App id={undefined} />);
+    await rerender({ id: undefined });
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([UseSuspenseQuery]);
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -6017,50 +5991,24 @@ describe("useSuspenseQuery", () => {
 
   test("suspends and fetches when changing variables when no longer using skipToken", async () => {
     const { query, mocks } = setupVariablesCase();
-    const { takeRender, render, replaceSnapshot } =
-      createRenderStream<
-        useSuspenseQuery.Result<
-          VariablesScenarioData,
-          VariablesScenarioVariables,
-          "empty" | "streaming" | "complete"
-        >
-      >();
 
-    function SuspenseFallback() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function UseSuspenseQuery({ id }: { id: string | undefined }) {
-      useTrackRenders();
-      replaceSnapshot(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
+      ({ id }) =>
         useSuspenseQuery(
           query,
           id === undefined ? skipToken : { variables: { id } }
-        )
-      );
-
-      return null;
-    }
-
-    function App({ id }: { id: string | undefined }) {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <UseSuspenseQuery id={id} />
-        </Suspense>
-      );
-    }
-
-    using _disabledAct = disableActEnvironment();
-    const { rerender } = await render(<App id="1" />, {
-      wrapper: createMockWrapper({ mocks }),
-    });
+        ),
+      {
+        initialProps: { id: "1" as string | undefined },
+        wrapper: createMockWrapper({ mocks }),
+      }
+    );
 
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
@@ -6076,12 +6024,12 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await rerender(<App id={undefined} />);
+    await rerender({ id: undefined });
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([UseSuspenseQuery]);
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -6094,12 +6042,12 @@ describe("useSuspenseQuery", () => {
 
     await expect(takeRender).not.toRerender();
 
-    await rerender(<App id="2" />);
+    await rerender({ id: "2" });
 
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
@@ -6120,13 +6068,6 @@ describe("useSuspenseQuery", () => {
 
   test("does not suspend for data in the cache when changing variables when no longer using skipToken", async () => {
     const { query, mocks } = setupVariablesCase();
-    const { takeRender, render, replaceSnapshot } = createRenderStream<
-      useSuspenseQuery.Result<
-        VariablesScenarioData,
-        VariablesScenarioVariables,
-        "empty" | "streaming" | "complete"
-      >
-    >({ skipNonTrackingRenders: true });
 
     const client = new ApolloClient({
       link: new MockLink(mocks),
@@ -6141,41 +6082,23 @@ describe("useSuspenseQuery", () => {
       variables: { id: "2" },
     });
 
-    function SuspenseFallback() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function UseSuspenseQuery({ id }: { id: string | undefined }) {
-      useTrackRenders();
-      replaceSnapshot(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderUseSuspenseQueryHook(
+      ({ id }) =>
         useSuspenseQuery(
           query,
           id === undefined ? skipToken : { variables: { id } }
-        )
-      );
-
-      return null;
-    }
-
-    function App({ id }: { id: string | undefined }) {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <UseSuspenseQuery id={id} />
-        </Suspense>
-      );
-    }
-
-    using _disabledAct = disableActEnvironment();
-    const { rerender } = await render(<App id="1" />, {
-      wrapper: createClientWrapper(client),
-    });
+        ),
+      {
+        initialProps: { id: "1" as string | undefined },
+        wrapper: createClientWrapper(client),
+      }
+    );
 
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
@@ -6191,12 +6114,12 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await rerender(<App id={undefined} />);
+    await rerender({ id: undefined });
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([UseSuspenseQuery]);
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -6207,12 +6130,12 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await rerender(<App id="2" />);
+    await rerender({ id: "2" });
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([UseSuspenseQuery]);
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "2", name: "Cached Widow" },

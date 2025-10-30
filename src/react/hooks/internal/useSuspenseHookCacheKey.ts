@@ -26,11 +26,11 @@ export function useSuspenseHookCacheKey(
 
   // This state value let's us maintain the variables used for the cache key
   // when `skipToken` is used to skip a query after its been executed.
-  // Since options are provided when using `skipToken`, `variables` disappear,
-  // which means a cache key without a variables value is used to create a new
-  // `ObservableQuery` instance. This was particularly problematic when
-  // `refetchQueries` was used because it meant refetching against an
-  // `ObservableQuery` instance that had no variables.
+  // Since options aren't provided when using `skipToken`, `variables` would
+  // otherwise disappear which means we'd return a new cache key without a
+  // variables value which creates a new `ObservableQuery` instance. This was
+  // particularly problematic when `refetchQueries` was used because it meant
+  // refetching against an `ObservableQuery` instance that had no variables.
   let [cacheKeyVariables, setCacheKeyVariables] =
     React.useState(canonicalVariables);
 

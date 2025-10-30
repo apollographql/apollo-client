@@ -38,7 +38,9 @@ export interface VariablesCaseVariables {
   id: string;
 }
 
-export function setupVariablesCase() {
+export function setupVariablesCase({
+  delay = 20,
+}: { delay?: MockLink.Delay } = {}) {
   const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
     gql`
       query CharacterQuery($id: ID!) {
@@ -60,7 +62,7 @@ export function setupVariablesCase() {
         character: { __typename: "Character", id: String(index + 1), name },
       },
     },
-    delay: 20,
+    delay,
   }));
 
   return { mocks, query };

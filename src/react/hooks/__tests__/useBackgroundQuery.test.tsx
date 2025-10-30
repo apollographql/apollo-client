@@ -1910,6 +1910,65 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
   await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
+it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const user = userEvent.setup();
+  const renderStream = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(renderStream);
+
+  function App() {
+    useTrackRenders();
+    const [skip, setSkip] = React.useState(false);
+    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
+
+    return (
+      <>
+        <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { greeting: "Hello" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await user.click(screen.getByText("Toggle skip"));
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { greeting: "Hello" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(renderStream).not.toRerender({ timeout: 50 });
+});
+
 // https://github.com/apollographql/apollo-client/issues/12989
 test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {
   const { query } = setupVariablesCase();
@@ -2188,65 +2247,6 @@ test("does not suspend for data in the cache when changing variables when no lon
   }
 
   await expect(renderStream).not.toRerender();
-});
-
-it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
-  const { query, mocks } = setupSimpleCase();
-  const user = userEvent.setup();
-  const renderStream = createDefaultProfiler<SimpleCaseData>();
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [skip, setSkip] = React.useState(false);
-    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
-
-    return (
-      <>
-        <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <ReadQueryHook queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  using _disabledAct = disableActEnvironment();
-  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
-
-  {
-    const { renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
-  }
-
-  {
-    const { snapshot } = await renderStream.takeRender();
-
-    expect(snapshot.result).toStrictEqualTyped({
-      data: { greeting: "Hello" },
-      dataState: "complete",
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-
-  await user.click(screen.getByText("Toggle skip"));
-
-  {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toStrictEqualTyped({
-      data: { greeting: "Hello" },
-      dataState: "complete",
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-
-  await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
 it("does not make network requests when `skip` is `true`", async () => {

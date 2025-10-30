@@ -47,8 +47,6 @@ import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
   PaginatedCaseVariables,
-  VariablesCaseData as VariablesScenarioData,
-  VariablesCaseVariables as VariablesScenarioVariables,
 } from "@apollo/client/testing/internal";
 import {
   actAsync,

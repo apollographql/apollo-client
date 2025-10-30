@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import * as React from "react";
 
 import type {
@@ -383,8 +384,6 @@ function useSuspenseQuery_<
     canonicalStringify(variables),
     ...([] as any[]).concat(queryKey),
   ];
-
-  console.log(cacheKey);
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
@@ -501,12 +500,19 @@ export function useWatchQueryOptions<
   TData,
   TVariables
 >): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  const incomingVariables =
+    options === skipToken ? undefined : options.variables || ({} as TVariables);
+  let [variables, setLastVariables] = React.useState(incomingVariables);
+  if (options !== skipToken && !equal(incomingVariables, variables)) {
+    setLastVariables((variables = incomingVariables));
+  }
+
   return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
       return {
         query,
         fetchPolicy: "standby",
-        variables: { [skipToken]: true } as any,
+        variables: { [skipToken]: true, ...variables } as any,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 
@@ -517,13 +523,13 @@ export function useWatchQueryOptions<
 
     const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
       {
-        variables: {},
         ...options,
+        variables,
         fetchPolicy,
         query,
         notifyOnNetworkStatusChange: false,
         nextFetchPolicy: void 0,
-      };
+      } satisfies ApolloClient.WatchQueryOptions<TData, any> as any;
 
     if (__DEV__) {
       validateSuspenseHookOptions(watchQueryOptions);

@@ -1068,7 +1068,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public applyOptions(
     newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
   ): void {
-    console.log("applying options", newOptions);
     const mergedOptions = compact(this.options, newOptions || {});
     if (skipToken in (newOptions.variables || {})) {
       Object.assign(
@@ -1076,7 +1075,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.options.variables,
         newOptions.variables
       );
-      console.log("merging variables to", mergedOptions);
     }
     assign(this.options, mergedOptions);
     this.updatePolling();

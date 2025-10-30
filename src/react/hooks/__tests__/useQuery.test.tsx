@@ -1749,7 +1749,7 @@ describe("useQuery Hook", () => {
       });
 
       await rerender(skipToken);
-
+      // !!! rerenders with `undefined` variables
       await expect(renderStream).toRerenderWithSimilarSnapshot();
 
       client.writeQuery({
@@ -1889,7 +1889,7 @@ describe("useQuery Hook", () => {
     });
 
     await rerender(skipToken);
-
+    // !!! rerenders with `undefined` variables
     await expect(renderStream).toRerenderWithSimilarSnapshot();
 
     client.writeQuery({
@@ -8702,6 +8702,7 @@ describe("useQuery Hook", () => {
         const { fetchPolicy, initialFetchPolicy } = observable.options;
 
         expect(fetchPolicy).toBe(expectedFetchPolicy);
+        // last failing test, should be "cache-and-network", but is "cache-first"
         expect(initialFetchPolicy).toBe(expectedInitialFetchPolicy);
       }
 

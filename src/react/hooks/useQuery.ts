@@ -439,6 +439,14 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   let [state, setState] = React.useState(createState);
 
+  // TODO: needs to move into non-memoized hook
+  if (options === skipToken && state.observable[lastWatchOptions]?.variables) {
+    watchQueryOptions.variables = {
+      ...state.observable[lastWatchOptions].variables,
+      [skipToken]: true,
+    };
+  }
+
   if (client !== state.client || query !== state.query) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
@@ -602,19 +610,16 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  watchQueryOptions: Readonly<ApolloClient.WatchQueryOptions<TData, TVariables>>
+  watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables>
 ) {
   "use no memo";
-  if (
-    observable[lastWatchOptions] &&
-    !equal(observable[lastWatchOptions], watchQueryOptions)
-  ) {
+  const lastOptions = observable[lastWatchOptions];
+  if (lastOptions && !equal(lastOptions, watchQueryOptions)) {
     // If skipToken was used to generate options, we won't know the correct
     // initialFetchPolicy until the hook is rerendered with real options, so we
     // set it the next time we get real options
     if (
-      (observable as ObsQueryWithMeta<TData, TVariables>)[lastWatchOptions]!
-        .variables?.[skipToken] &&
+      lastOptions.variables?.[skipToken] &&
       !watchQueryOptions.initialFetchPolicy
     ) {
       (watchQueryOptions.initialFetchPolicy as any) =
@@ -628,7 +633,7 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    if (shouldReobserve(observable[lastWatchOptions], watchQueryOptions)) {
+    if (shouldReobserve(lastOptions, watchQueryOptions)) {
       observable.reobserve(watchQueryOptions);
     } else {
       observable.applyOptions(watchQueryOptions);

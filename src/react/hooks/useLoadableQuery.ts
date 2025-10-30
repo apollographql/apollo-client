@@ -282,7 +282,7 @@ export function useLoadableQuery<
           "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
         );
 
-        const [variables] = args;
+        const [variables = {}] = args;
 
         const cacheKey: CacheKey = [
           query,

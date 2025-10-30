@@ -1115,11 +1115,17 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1612,10 +1618,16 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1676,7 +1688,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(7 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -1687,6 +1699,18 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1796,7 +1820,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(8 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -1809,6 +1833,18 @@ describe("useSuspenseQuery", () => {
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.loading,
         error: undefined,
       },
       {
@@ -1915,7 +1951,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(8 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -1926,6 +1962,18 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2028,7 +2076,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(8 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -2039,6 +2087,18 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2114,7 +2174,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(8 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
@@ -2124,6 +2184,18 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2400,7 +2472,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -2411,6 +2483,12 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[0].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2890,7 +2968,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toStrictEqualTyped([
       {
@@ -2901,6 +2979,12 @@ describe("useSuspenseQuery", () => {
       },
       {
         ...mocks[0].result,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -3101,11 +3185,17 @@ describe("useSuspenseQuery", () => {
       // 2. Unsuspend and return results from initial fetch
       // 3. Change variables and suspend
       // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
+      expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toStrictEqualTyped([
         {
           ...mocks[0].result,
+          dataState: "complete",
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
           dataState: "complete",
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -3567,6 +3657,14 @@ describe("useSuspenseQuery", () => {
       {
         data: {
           vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
+        },
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
         },
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
@@ -4401,7 +4499,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
@@ -4411,6 +4509,12 @@ describe("useSuspenseQuery", () => {
         dataState: "empty",
         networkStatus: NetworkStatus.error,
         error: expectedError,
+      },
+      {
+        data: mocks[1].result.data,
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
       },
       {
         data: mocks[1].result.data,
@@ -5715,12 +5819,18 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         dataState: "empty",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -5783,58 +5893,60 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.only("renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled", async () => {
-    const { query, mocks } = useSimpleQueryCase();
-    const cache = new InMemoryCache();
+  it.each([
+    ["with options", { variables: { optionalVariable: "foo" } }],
+    ["no options", undefined],
+  ] as const)(
+    "renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled (%s)",
+    async (_, options) => {
+      const { query, mocks } = useSimpleQueryCase();
+      const cache = new InMemoryCache();
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
-      ({ skip }) =>
-        useSuspenseQuery(
-          query,
-          skip ? skipToken : { variables: { optionalVariable: "foo" } }
-        ),
-      { cache, mocks, initialProps: { skip: false } }
-    );
+      const { result, renders, rerenderAsync } = await renderSuspenseHook(
+        ({ skip }) => useSuspenseQuery(query, skip ? skipToken : options),
+        { cache, mocks, initialProps: { skip: false } }
+      );
 
-    expect(renders.suspenseCount).toBe(1);
+      expect(renders.suspenseCount).toBe(1);
 
-    await waitFor(() => {
+      await waitFor(() => {
+        expect(result.current).toStrictEqualTyped({
+          ...mocks[0].result,
+          dataState: "complete",
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        });
+      });
+
+      await rerenderAsync({ skip: true });
+
+      expect(renders.suspenseCount).toBe(1);
+
       expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
 
-    await rerenderAsync({ skip: true });
-
-    expect(renders.suspenseCount).toBe(1);
-
-    expect(result.current).toStrictEqualTyped({
-      ...mocks[0].result,
-      dataState: "complete",
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
+      expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toStrictEqualTyped([
+        {
+          ...mocks[0].result,
+          dataState: "complete",
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          dataState: "complete",
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    }
+  );
 
   it("does not make network requests when `skip` is `true`", async () => {
     const { query, mocks } = useVariablesQueryCase();

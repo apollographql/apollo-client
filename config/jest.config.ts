@@ -49,6 +49,7 @@ const react17TestFileIgnoreList = [
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery/*",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
+  "src/react/hooks/__tests__/useBackgroundQuery/*",
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
@@ -83,7 +84,8 @@ const standardReact19Config = {
   testPathIgnorePatterns: [
     ignoreDTSFiles,
     ignoreTSFiles,
-    "src/react/hooks/__tests__/useSuspenseQuery/utils.tsx",
+    "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
+    "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
   ],
 };
 

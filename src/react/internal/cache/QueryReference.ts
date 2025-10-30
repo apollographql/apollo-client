@@ -320,6 +320,7 @@ export class InternalQueryReference<
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
+    console.log("queryRef applying options", watchQueryOptions);
     if (
       currentFetchPolicy === "standby" &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy

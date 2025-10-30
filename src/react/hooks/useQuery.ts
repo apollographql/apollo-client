@@ -37,15 +37,15 @@ import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
+  SkipToken,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import {
   maybeDeepFreeze,
   mergeOptions,
+  skipToken,
 } from "@apollo/client/utilities/internal";
 
-import type { SkipToken } from "./constants.js";
-import { skipToken } from "./constants.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -212,7 +212,7 @@ const lastWatchOptions = Symbol();
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
   [lastWatchOptions]?: Readonly<
-    ApolloClient.WatchQueryOptions<TData, TVariables>
+    ApolloClient.WatchQueryOptions<TData, TVariables & { [skipToken]?: true }>
   >;
 }
 
@@ -491,8 +491,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, client, observable, previousData, obsQueryFields]);
 }
 
-const fromSkipToken = Symbol();
-
 function useOptions<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
@@ -504,9 +502,8 @@ function useOptions<TData, TVariables extends OperationVariables>(
         mergeOptions(defaultOptions as any, {
           query,
           fetchPolicy: "standby",
+          variables: { [skipToken]: true },
         });
-
-      (opts as any)[fromSkipToken] = true;
 
       return opts;
     }
@@ -616,7 +613,8 @@ function useResubscribeIfNecessary<
     // initialFetchPolicy until the hook is rerendered with real options, so we
     // set it the next time we get real options
     if (
-      (observable[lastWatchOptions] as any)[fromSkipToken] &&
+      (observable as ObsQueryWithMeta<TData, TVariables>)[lastWatchOptions]!
+        .variables?.[skipToken] &&
       !watchQueryOptions.initialFetchPolicy
     ) {
       (watchQueryOptions.initialFetchPolicy as any) =

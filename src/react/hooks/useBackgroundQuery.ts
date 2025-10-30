@@ -28,10 +28,10 @@ import {
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
+  SkipToken,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 
-import type { SkipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";

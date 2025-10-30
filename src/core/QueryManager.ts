@@ -61,6 +61,7 @@ import {
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
+  skipToken,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {
@@ -1295,7 +1296,10 @@ export class QueryManager {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq) => {
-        if (oq.options.fetchPolicy === "cache-only") {
+        if (
+          oq.options.fetchPolicy === "cache-only" ||
+          skipToken in oq.options.variables
+        ) {
           return;
         }
 

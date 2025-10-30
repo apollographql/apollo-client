@@ -15,8 +15,8 @@ export { useSuspenseFragment } from "./hooks/useSuspenseFragment.js";
 export { useLoadableQuery } from "./hooks/useLoadableQuery.js";
 export { useQueryRefHandlers } from "./hooks/useQueryRefHandlers.js";
 export { useReadQuery } from "./hooks/useReadQuery.js";
-export { skipToken } from "./hooks/constants.js";
-export type { SkipToken } from "./hooks/constants.js";
+export { skipToken } from "@apollo/client/utilities/internal";
+export type { SkipToken } from "@apollo/client/utilities/internal";
 
 export type {
   PreloadQueryFetchPolicy,

@@ -31,9 +31,9 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import type { SkipToken } from "@apollo/client/utilities/internal";
+import { skipToken } from "@apollo/client/utilities/internal";
 
-import type { SkipToken } from "./constants.js";
-import { skipToken } from "./constants.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -384,6 +384,7 @@ function useSuspenseQuery_<
     ...([] as any[]).concat(queryKey),
   ];
 
+  console.log(cacheKey);
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
@@ -505,6 +506,7 @@ export function useWatchQueryOptions<
       return {
         query,
         fetchPolicy: "standby",
+        variables: { [skipToken]: true } as any,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 
@@ -515,6 +517,7 @@ export function useWatchQueryOptions<
 
     const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
       {
+        variables: {},
         ...options,
         fetchPolicy,
         query,

@@ -467,6 +467,7 @@ Array [
   "removeMaskedFragmentSpreads",
   "resultKeyNameFromField",
   "shouldInclude",
+  "skipToken",
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "toQueryResult",

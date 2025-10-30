@@ -5778,7 +5778,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it("renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled", async () => {
+  it.only("renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const cache = new InMemoryCache();

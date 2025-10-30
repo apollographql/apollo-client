@@ -1,4 +1,4 @@
-import type { RenderHookOptions } from "@testing-library/react";
+import type { RenderHookOptions, RenderOptions } from "@testing-library/react";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
@@ -18,6 +18,7 @@ import type {
   ApolloCache,
   DataValue,
   DocumentNode,
+  ErrorLike,
   ErrorPolicy,
   ObservableQuery,
   OperationVariables,
@@ -67,7 +68,7 @@ import {
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { compact, getMainDefinition } from "@apollo/client/utilities/internal";
-import { InvariantError } from "@apollo/client/utilities/invariant";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 import type {
   RefetchWritePolicy,
@@ -100,6 +101,71 @@ interface SimpleQueryData {
   greeting: string;
 }
 
+async function renderUseSuspenseQueryHook<
+  TData,
+  TVariables extends OperationVariables,
+  Props = never,
+>(
+  renderHook: (
+    props: Props extends never ? undefined : Props
+  ) => useSuspenseQuery.Result<TData, TVariables>,
+  options: Pick<RenderOptions, "wrapper"> & { initialProps?: Props }
+) {
+  function UseSuspenseQuery({ props }: { props: Props | undefined }) {
+    useTrackRenders({ name: "useSuspenseQuery" });
+    replaceSnapshot(renderHook(props as any));
+
+    return null;
+  }
+
+  function SuspenseFallback() {
+    useTrackRenders({ name: "SuspenseFallback" });
+
+    return null;
+  }
+
+  function ErrorFallback() {
+    useTrackRenders({ name: "ErrorBoundary" });
+
+    return null;
+  }
+
+  function App({ props }: { props: Props | undefined }) {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={(error) => replaceSnapshot({ error })}
+        >
+          <UseSuspenseQuery props={props} />
+        </ErrorBoundary>
+      </Suspense>
+    );
+  }
+
+  const { render, takeRender, replaceSnapshot, getCurrentRender } =
+    createRenderStream<
+      useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
+    >({ skipNonTrackingRenders: true });
+
+  const utils = await render(<App props={options.initialProps} />, options);
+
+  function rerender(props: Props) {
+    return utils.rerender(<App props={props} />);
+  }
+
+  function getCurrentSnapshot() {
+    const { snapshot } = getCurrentRender();
+
+    invariant("data" in snapshot, "Snapshot is not a hook snapshot");
+
+    return snapshot;
+  }
+
+  return { getCurrentSnapshot, takeRender, rerender };
+}
+
+/** @deprecated use `renderUseSuspenseQueryHook` which uses renderSnapshotStream */
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}

@@ -1106,7 +1106,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1126,7 +1126,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1589,7 +1589,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1609,7 +1609,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1661,7 +1661,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1681,7 +1681,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1775,7 +1775,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1795,7 +1795,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1901,7 +1901,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1921,7 +1921,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -1941,7 +1941,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2021,7 +2021,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2041,7 +2041,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2061,7 +2061,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2096,7 +2096,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2116,7 +2116,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2428,7 +2428,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -2917,7 +2917,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -3100,7 +3100,7 @@ describe("useSuspenseQuery", () => {
       {
         const { renderedComponents } = await takeRender();
 
-        expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
       }
 
       {
@@ -3120,7 +3120,7 @@ describe("useSuspenseQuery", () => {
       {
         const { renderedComponents } = await takeRender();
 
-        expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
       }
 
       {
@@ -3562,7 +3562,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -3584,7 +3584,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -4408,7 +4408,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {
@@ -4428,7 +4428,7 @@ describe("useSuspenseQuery", () => {
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
     }
 
     {

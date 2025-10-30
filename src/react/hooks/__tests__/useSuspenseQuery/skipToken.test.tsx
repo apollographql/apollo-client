@@ -61,7 +61,7 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
   {
     const { renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
   }
 
   {
@@ -127,7 +127,7 @@ test("suspends and fetches when changing variables when no longer using skipToke
   {
     const { renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
   }
 
   {
@@ -166,7 +166,7 @@ test("suspends and fetches when changing variables when no longer using skipToke
   {
     const { renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
   }
 
   {
@@ -217,7 +217,7 @@ test("does not suspend for data in the cache when changing variables when no lon
   {
     const { renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
   }
 
   {

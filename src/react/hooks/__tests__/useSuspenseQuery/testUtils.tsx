@@ -26,13 +26,13 @@ export async function renderUseSuspenseQuery<
   }
 
   function SuspenseFallback() {
-    useTrackRenders({ name: "SuspenseFallback" });
+    useTrackRenders({ name: "<Suspense />" });
 
     return null;
   }
 
   function ErrorFallback() {
-    useTrackRenders({ name: "ErrorBoundary" });
+    useTrackRenders({ name: "<ErrorBoundary />" });
 
     return null;
   }

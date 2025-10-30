@@ -15,7 +15,7 @@ import {
   setupVariablesCase,
 } from "@apollo/client/testing/internal";
 
-import { renderSuspenseHook } from "./utils.js";
+import { renderSuspenseHook } from "./testUtils.js";
 
 // https://github.com/apollographql/apollo-client/issues/12989
 test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {

@@ -72,7 +72,7 @@ import type {
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
 
-import { renderSuspenseHook as renderUseSuspenseQueryHook } from "./useSuspenseQuery/utils.js";
+import { renderSuspenseHook as renderUseSuspenseQueryHook } from "./useSuspenseQuery/testUtils.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

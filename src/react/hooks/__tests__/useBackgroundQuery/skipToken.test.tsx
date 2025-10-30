@@ -117,8 +117,6 @@ test("maintains variables when switching to `skipToken` and calling `refetchQuer
 
 test("suspends and fetches when changing variables when no longer using skipToken", async () => {
   const { query, mocks } = setupVariablesCase({
-    // React 18 needs a longer delay to commit the render when unskipping
-    // for some reason
     delay: React.version.startsWith("18") ? 200 : 20,
   });
 

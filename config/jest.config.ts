@@ -96,7 +96,8 @@ const standardReact18Config = {
     ignoreDTSFiles,
     ignoreTSFiles,
     "src/react/ssr/__tests__/prerenderStatic.test.tsx",
-    "src/react/hooks/__tests__/useSuspenseQuery/utils.tsx",
+    "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
+    "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
   ],
   moduleNameMapper: {
     ...defaults.moduleNameMapper,

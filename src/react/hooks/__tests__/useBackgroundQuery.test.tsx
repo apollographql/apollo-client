@@ -12,7 +12,7 @@ import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type {
   DataState,
@@ -1908,6 +1908,109 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
   }
 
   await expect(renderStream).not.toRerender({ timeout: 50 });
+});
+
+// https://github.com/apollographql/apollo-client/issues/12989
+test("maintains variables when switching to `skipToken` and calling `refetchQueries` while skipped after initial request", async () => {
+  const { query } = setupVariablesCase();
+  const user = userEvent.setup();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(renderStream);
+
+  const client = new ApolloClient({
+    link: new ApolloLink((operation) => {
+      return of(
+        operation.variables.id === "1" ?
+          {
+            data: {
+              character: {
+                __typename: "Character",
+                id: "1",
+                name: "Spider-Man",
+              },
+            },
+          }
+        : {
+            data: null,
+            errors: [
+              { message: `Fetched wrong id: ${operation.variables.id}` },
+            ],
+          }
+      ).pipe(delay(10));
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  function App() {
+    useTrackRenders();
+    const [skip, setSkip] = React.useState(false);
+    const [queryRef] = useBackgroundQuery(
+      query,
+      skip ? skipToken : { variables: { id: "1" } }
+    );
+
+    return (
+      <>
+        <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await user.click(screen.getByText("Toggle skip"));
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(renderStream).not.toRerender();
+
+  await expect(
+    client.refetchQueries({ include: [query] })
+  ).resolves.toStrictEqualTyped([
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    },
+  ]);
+
+  await expect(renderStream).not.toRerender();
 });
 
 it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {

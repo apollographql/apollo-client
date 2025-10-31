@@ -174,7 +174,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({ children: null });
+      await rerender();
 
       {
         const result = await takeSnapshot();
@@ -244,7 +244,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({ children: null });
+      await rerender();
 
       {
         const result = await takeSnapshot();
@@ -400,7 +400,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender(undefined);
+      await rerender();
 
       {
         const result = await takeSnapshot();
@@ -471,7 +471,7 @@ describe("useQuery Hook", () => {
         expect(subscribeToMore).toBe(result.subscribeToMore);
       }
 
-      await rerender(undefined);
+      await rerender();
 
       {
         const result = await takeSnapshot();
@@ -1244,7 +1244,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({});
+      await rerender();
 
       {
         const [result0, result1] = await takeSnapshot();
@@ -4064,7 +4064,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender(undefined);
+      await rerender();
 
       {
         const result = await takeSnapshot();
@@ -8103,7 +8103,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await rerender(undefined);
+      await rerender();
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,

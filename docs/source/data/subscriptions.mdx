@@ -169,7 +169,7 @@ The following example expands on the previous one by initializing both a `GraphQ
 
 ```ts title="index.ts"
 import { OperationTypeNode } from "graphql";
-import { split, HttpLink } from "@apollo/client";
+import { ApolloLink, HttpLink } from "@apollo/client";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 
@@ -188,7 +188,7 @@ const wsLink = new GraphQLWsLink(
 // * A function that's called for each operation to execute
 // * The Link to use for an operation if the function returns a "truthy" value
 // * The Link to use for an operation if the function returns a "falsy" value
-const splitLink = split(
+const splitLink = ApolloLink.split(
   ({ operationType }) => {
     return operationType === OperationTypeNode.SUBSCRIPTION;
   },

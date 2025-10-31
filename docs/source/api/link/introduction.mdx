@@ -91,24 +91,17 @@ No matter how your chain branches, each branch always ends in a [terminating lin
 
 #### Additive composition
 
-Additive composition composes a link chain by executing links in serial order. You use the [`from`](#from) and [`concat`](#concat) helpers to create a link chain using additive composition.
+Additive composition composes a link chain by executing links in serial order. You use the [`ApolloLink.from`](#from) and [`ApolloLink.concat`](#concat) helpers to create a link chain using additive composition.
 
-##### `from`
+##### `ApolloLink.from`
 
-The most common way to compose multiple links together is to use the `from` helper. Pass an array of link objects to `from` to create a composed link that executes each link in serial order:
+The most common way to compose multiple links together is to use the static `ApolloLink.from` helper. Pass an array of link objects to `ApolloLink.from` to create a composed link that executes each link in serial order:
 
 ```ts
-import { from, HttpLink, ApolloLink } from "@apollo/client";
+import { HttpLink, ApolloLink } from "@apollo/client";
 import { RetryLink } from "@apollo/client/link/retry";
 import MyAuthLink from "../auth";
 
-const link = from([
-  new RetryLink(),
-  new MyAuthLink(),
-  new HttpLink({ uri: "http://localhost:4000/graphql" }),
-]);
-
-// this also works
 const link = ApolloLink.from([
   new RetryLink(),
   new MyAuthLink(),
@@ -116,25 +109,7 @@ const link = ApolloLink.from([
 ]);
 ```
 
-##### `concat`
-
-Combine two links together into a single composed link using the `concat` method.
-
-```ts
-import { concat, ApolloLink, HttpLink } from "@apollo/client";
-import MyAuthLink from "../auth";
-
-const link = concat(
-  new MyAuthLink(),
-  new HttpLink({ uri: "http://localhost:4000/graphql" })
-);
-
-// this also works
-const link = ApolloLink.concat(
-  new MyAuthLink(),
-  new HttpLink({ uri: "http://localhost:4000/graphql" })
-);
-```
+##### `ApolloLink.concat`
 
 Each link object includes a `concat` instance method to combine two links into a single composed link. This is useful to combine multiple links together using a chain of function calls:
 
@@ -156,9 +131,9 @@ The link chain created by the `from` and `concat` examples are functionally equi
 
 #### Directional composition
 
-You might want your link chain's execution to branch, depending on the details of the operation being performed. You use the `split` function to create a link that conditionally routes to different sub-chains.
+You might want your link chain's execution to branch, depending on the details of the operation being performed. You use the `ApolloLink.split` method to create a link that conditionally routes to different sub-chains.
 
-The `split` function takes three arguments:
+The `ApolloLink.split` function takes three arguments:
 
 | Name    | Description                                                                                                                                                                                        |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -166,18 +141,11 @@ The `split` function takes three arguments:
 | `left`  | The link passed as the second argument to `split`. This link executes when the `test` function returns `true`.                                                                                     |
 | `right` | An optional link passed as the third argument to `split`. This link executes when the `test` function returns `false`. If this is not provided, the request handler's `forward` parameter is used. |
 
-The following example uses `split` to create a link that routes to different `HttpLink` instances depending on the associated context's `version`:
+The following example uses `ApolloLink.split` to create a link that routes to different `HttpLink` instances depending on the associated context's `version`:
 
 ```ts
-import { ApolloLink, HttpLink, split } from "@apollo/client";
+import { ApolloLink, HttpLink } from "@apollo/client";
 
-const link = split(
-  (operation) => operation.getContext().version === 1,
-  new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
-  new HttpLink({ uri: "http://localhost:4000/v2/graphql" })
-);
-
-// this also works
 const link = ApolloLink.split(
   (operation) => operation.getContext().version === 1,
   new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
@@ -214,12 +182,12 @@ Other uses for the `split` method include:
 In the following example, all subscription operations are sent to `GraphQLWsLink`, with all other operations sent to `HttpLink`:
 
 ```ts
-import { split, HttpLink } from "@apollo/client";
+import { ApolloLink, HttpLink } from "@apollo/client";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { OperationTypeNode } from "graphql";
 import { createClient } from "graphql-ws";
 
-const link = split(
+const link = ApolloLink.split(
   ({ operationType }) => {
     return operationType === OperationTypeNode.SUBSCRIPTION;
   },

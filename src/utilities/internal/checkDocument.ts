@@ -15,8 +15,6 @@ import {
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { cacheSizes } from "../caching/sizes.js";
 
-import { getOperationName } from "./getOperationName.js";
-
 /**
  * Checks the document for errors and throws an exception if there is an error.
  *
@@ -84,13 +82,13 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
           }
           fieldPath.splice(-1, 1, field.name.value);
 
-          throw newInvariantError(
-            '`%s` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
-            field.alias.value,
-            fieldPath.join("."),
-            operations[0].operation,
-            getOperationName(doc, "(anonymous)")
-          );
+          // throw newInvariantError(
+          //   '`%s` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
+          //   field.alias.value,
+          //   fieldPath.join("."),
+          //   operations[0].operation,
+          //   getOperationName(doc, "(anonymous)")
+          // );
         }
       },
     });

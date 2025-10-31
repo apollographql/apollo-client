@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.9
+
+### Patch Changes
+
+- [#12993](https://github.com/apollographql/apollo-client/pull/12993) [`8f3bc9b`](https://github.com/apollographql/apollo-client/commit/8f3bc9b7253a737062dc0d652cd4f8b354f68ccc) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where switching from options with `variables` to `skipToken` with `useSuspenseQuery` and `useBackgroundQuery` would create a new `ObservableQuery`. This could cause unintended refetches where `variables` were absent in the request when the query was referenced with `refetchQueries`.
+
 ## 4.0.8
 
 ### Patch Changes

@@ -73,7 +73,7 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 5. Apollo Client notifies all affected queries again. The associated components re-render, but if the server's response matches our `optimisticResponse`, this is invisible to the user.
 
-6. If the mutation returns a GraphQL error, the optimistic version of the object is discarded and Apollo Client rolls back to the previous state.
+6. If the mutation returns a GraphQL error, Apollo Client discards the optimistic version of the object and rolls back to the previous state.
 
 ## Bailing out of an optimistic update
 

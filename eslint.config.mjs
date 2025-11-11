@@ -15,15 +15,15 @@ if (!process.features.typescript) {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
+import { fixupPluginRules } from "@eslint/compat";
 import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import _import from "eslint-plugin-import";
 import * as mdx from "eslint-plugin-mdx";
-import reactCompiler from "eslint-plugin-react-compiler";
 import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
 
 import localRules from "./eslint-local-rules/index.mjs";
 
@@ -143,19 +143,23 @@ export default [
       ],
     },
   },
-  ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
-    (config) => ({
-      ...config,
-      files: ["**/*.ts", "**/*.tsx"],
-      ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
-    })
-  ),
+  {
+    ...reactHooks.configs.flat.recommended,
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
+    rules: {
+      // ...((() => {
+      //   console.log(reactHooks.configs.flat);
+      // })() || {}),
+      ...reactHooks.configs.flat.recommended.rules,
+      // "react-hooks/unsupported-syntax": "warn",
+    },
+  },
   {
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
 
     plugins: {
-      "react-compiler": reactCompiler,
       ...tsPlugins,
     },
 
@@ -178,7 +182,6 @@ export default [
 
     // rules for source files, but no tests
     rules: {
-      "react-compiler/react-compiler": "error",
       "@typescript-eslint/consistent-type-exports": ["error"],
       "@typescript-eslint/no-import-type-side-effects": "error",
       "@typescript-eslint/no-restricted-types": [

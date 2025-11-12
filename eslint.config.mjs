@@ -145,15 +145,8 @@ export default [
   },
   {
     ...reactHooks.configs.flat.recommended,
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["src/react/**/*.ts", "src/react/**/*.tsx"],
     ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
-    rules: {
-      // ...((() => {
-      //   console.log(reactHooks.configs.flat);
-      // })() || {}),
-      ...reactHooks.configs.flat.recommended.rules,
-      // "react-hooks/unsupported-syntax": "warn",
-    },
   },
   {
     files: ["**/*.ts", "**/*.tsx"],

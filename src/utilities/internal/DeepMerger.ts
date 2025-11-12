@@ -2,15 +2,14 @@ import { isNonNullObject } from "./isNonNullObject.js";
 
 const { hasOwnProperty } = Object.prototype;
 
-type ReconcilerFunction<TContextArgs extends any[]> = (
-  this: DeepMerger<TContextArgs>,
+type ReconcilerFunction = (
+  this: DeepMerger,
   target: Record<string | number, any>,
   source: Record<string | number, any>,
-  property: string | number,
-  ...context: TContextArgs
+  property: string | number
 ) => any;
 
-const defaultReconciler: ReconcilerFunction<any[]> = function (
+const defaultReconciler: ReconcilerFunction = function (
   target,
   source,
   property
@@ -22,6 +21,11 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
 export declare namespace DeepMerger {
   export interface Options {
     arrayMerge?: DeepMerger.ArrayMergeStrategy;
+    reconciler?: ReconcilerFunction;
+  }
+
+  export interface MergeOptions {
+    atPath?: ReadonlyArray<string | number>;
   }
 
   export type ArrayMergeStrategy =
@@ -33,14 +37,44 @@ export declare namespace DeepMerger {
     | "combine";
 }
 
-/** @internal */
-export class DeepMerger<TContextArgs extends any[] = any[]> {
-  constructor(
-    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>,
-    private options: DeepMerger.Options = {}
-  ) {}
+const objForKey = (key: string | number) => {
+  return isNaN(+key) ? {} : [];
+};
 
-  public merge(target: any, source: any, ...context: TContextArgs): any {
+/** @internal */
+export class DeepMerger {
+  private reconciler: ReconcilerFunction;
+  constructor(private options: DeepMerger.Options = {}) {
+    this.reconciler = options.reconciler || defaultReconciler;
+  }
+
+  public merge(
+    target: any,
+    source: any,
+    mergeOptions: DeepMerger.MergeOptions = {}
+  ): any {
+    const atPath = mergeOptions.atPath;
+
+    if (atPath?.length) {
+      const [head, ...tail] = atPath;
+      if (target === undefined) {
+        target = objForKey(head);
+      }
+      let nestedTarget = target[head];
+      if (nestedTarget === undefined && tail.length) {
+        nestedTarget = objForKey(tail[0]);
+      }
+      const nestedSource = this.merge(nestedTarget, source, {
+        ...mergeOptions,
+        atPath: tail,
+      });
+      if (nestedTarget !== nestedSource) {
+        target = this.shallowCopyForMerge(target);
+        target[head] = nestedSource;
+      }
+      return target;
+    }
+
     if (
       Array.isArray(target) &&
       Array.isArray(source) &&
@@ -56,12 +90,7 @@ export class DeepMerger<TContextArgs extends any[] = any[]> {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {
-            const result = this.reconciler(
-              target,
-              source,
-              sourceKey,
-              ...context
-            );
+            const result = this.reconciler(target, source, sourceKey);
             // A well-implemented reconciler may return targetValue to indicate
             // the merge changed nothing about the structure of the target.
             if (result !== targetValue) {

@@ -80,12 +80,14 @@ class DeferRequest<TData extends Record<string, unknown>>
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
-    arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate"
+    arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate",
+    atPath?: DeepMerger.MergeOptions["atPath"]
   ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger(undefined, { arrayMerge }).merge(
+      this.data = new DeepMerger({ arrayMerge }).merge(
         this.data,
-        normalized.data
+        normalized.data,
+        { atPath }
       );
     }
     if (normalized.errors) {
@@ -106,7 +108,6 @@ class DeferRequest<TData extends Record<string, unknown>>
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
-        let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
 
         if ("items" in incremental) {
           // Remove the array index from the end of the array so we can check
@@ -124,7 +125,7 @@ class DeferRequest<TData extends Record<string, unknown>>
           }
         }
 
-        let data =
+        let data: any =
           // The item merged from a `@stream` chunk is always the first item in
           // the `items` array
           "items" in incremental ? incremental.items?.[0]
@@ -133,25 +134,14 @@ class DeferRequest<TData extends Record<string, unknown>>
           : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
-        if (data !== undefined && path) {
-          for (let i = path.length - 1; i >= 0; --i) {
-            const key = path[i];
-            const isNumericKey = !isNaN(+key);
-            const parent: Record<string | number, any> = isNumericKey ? [] : {};
-            if (isNumericKey) {
-              arrayMerge = "combine";
-            }
-            parent[key] = data;
-            data = parent as typeof data;
-          }
-        }
         this.merge(
           {
             errors,
             extensions,
-            data: data ? (data as TData) : undefined,
+            data,
           },
-          arrayMerge
+          "truncate",
+          path
         );
       }
     } else {

@@ -7,7 +7,7 @@
 import type { ApolloCache } from '@apollo/client';
 import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from '@apollo/client';
-import { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import type { HKT } from '@apollo/client/utilities';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import type { Prettify } from '@apollo/client/utilities/internal';
@@ -64,7 +64,7 @@ type ExtractByMatchingTypeNames<Union extends {
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type FragmentType<TFragmentDataOrTypedDocumentNode> = TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? FragmentType<TFragmentData> : ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode>;
+export type FragmentType<TFragmentDataOrTypedDocumentNode> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? FragmentType<TFragmentData> : TFragmentDataOrTypedDocumentNode>;
 
 // @public (undocumented)
 export namespace GraphQLCodegenDataMasking {

@@ -8,7 +8,7 @@ import type { ASTNode } from 'graphql';
 import { disableExperimentalFragmentVariables } from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
-import { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
@@ -1217,7 +1217,7 @@ interface FragmentRegistryAPI {
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type FragmentType<TFragmentDataOrTypedDocumentNode> = TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? FragmentType<TFragmentData> : ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode>;
+export type FragmentType<TFragmentDataOrTypedDocumentNode> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? FragmentType<TFragmentData> : TFragmentDataOrTypedDocumentNode>;
 
 // @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;

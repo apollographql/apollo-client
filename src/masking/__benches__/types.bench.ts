@@ -3,7 +3,11 @@ import { setup } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type {
+  MaybeMasked,
+  Unmasked,
+  FragmentType,
+} from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 
 import type { ContainsFragmentsRefs } from "../internal/types.js";
@@ -267,7 +271,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, Unmasked<unknown>>();
-  }).types([48, "instantiations"]);
+  }).types([46, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<Unmasked<unknown>>().toBeUnknown();
@@ -659,5 +663,49 @@ test("Unmasked handles branded primitive types", (prefix) => {
       name: string;
       age: number;
     }>();
+  });
+});
+
+test("FragmentType", () => {
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" } & {
+    " $fragmentRefs"?: {
+      NameFieldsFragment: NameFieldsFragment;
+    };
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  } & { " $fragmentName"?: "NameFieldsFragment" };
+
+  type Source = UserFieldsFragment;
+
+  const USER_FIELDS_FRAGMENT: TypedDocumentNode<UserFieldsFragment> = {} as any;
+
+  bench("normal usage", () => {
+    expectTypeOf<FragmentType<Source>>().toEqualTypeOf<{
+      " $fragmentRefs"?: {
+        UserFieldsFragment: UserFieldsFragment;
+      };
+    }>();
+  });
+
+  bench("passing in the type of a `TypedDocumentNode`", () => {
+    expectTypeOf<FragmentType<typeof USER_FIELDS_FRAGMENT>>().toEqualTypeOf<{
+      " $fragmentRefs"?: {
+        UserFieldsFragment: UserFieldsFragment;
+      };
+    }>();
+  });
+
+  bench("both usages yield the same result", () => {
+    expectTypeOf<FragmentType<Source>>().toEqualTypeOf<
+      FragmentType<typeof USER_FIELDS_FRAGMENT>
+    >();
   });
 });

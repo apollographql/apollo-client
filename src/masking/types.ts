@@ -14,7 +14,7 @@ export type FragmentType<TFragmentDataOrTypedDocumentNode> =
     TFragmentDataOrTypedDocumentNode extends (
       DocumentTypeDecoration<infer TFragmentData, any>
     ) ?
-      FragmentType<TFragmentData>
+      TFragmentData
     : TFragmentDataOrTypedDocumentNode
   >;
 

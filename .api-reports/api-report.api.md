@@ -1217,7 +1217,7 @@ interface FragmentRegistryAPI {
 // Warning: (ae-forgotten-export) The symbol "PreserveTypes" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type FragmentType<TFragmentDataOrTypedDocumentNode> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? FragmentType<TFragmentData> : TFragmentDataOrTypedDocumentNode>;
+export type FragmentType<TFragmentDataOrTypedDocumentNode> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", PreserveTypes.TypeOverrides, TFragmentDataOrTypedDocumentNode extends (DocumentTypeDecoration<infer TFragmentData, any>) ? TFragmentData : TFragmentDataOrTypedDocumentNode>;
 
 // @public @deprecated (undocumented)
 export const from: typeof ApolloLink.from;

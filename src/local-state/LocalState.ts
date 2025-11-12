@@ -561,7 +561,9 @@ export class LocalState<
         selection.kind === Kind.INLINE_FRAGMENT &&
         selection.typeCondition &&
         rootValue?.__typename &&
-        cache.fragmentMatches(selection, rootValue.__typename)
+        cache.fragmentMatches(selection, rootValue.__typename, {
+          unnormalizedResult: rootValue,
+        })
       ) {
         const fragmentResult = await this.resolveSelectionSet(
           selection.selectionSet,
@@ -587,7 +589,9 @@ export class LocalState<
 
         const matches =
           typename === typeCondition ||
-          cache.fragmentMatches(fragment, typename ?? "");
+          cache.fragmentMatches(fragment, typename ?? "", {
+            unnormalizedResult: rootValue || undefined,
+          });
 
         if (matches) {
           const fragmentResult = await this.resolveSelectionSet(

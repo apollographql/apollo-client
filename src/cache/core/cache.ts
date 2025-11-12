@@ -168,7 +168,14 @@ export abstract class ApolloCache {
   // condition for a union or interface matches a particular type.
   public abstract fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string
+    typename: string,
+    {}: {
+      unnormalizedResult:
+        | {
+            [key: string]: unknown;
+          }
+        | undefined;
+    }
   ): boolean;
 
   // Function used to lookup a fragment when a fragment definition is not part

@@ -119,7 +119,7 @@ class IncrementalRequest<TData>
       }
     }
 
-    this.merge(chunk, "truncate");
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
@@ -133,7 +133,6 @@ class IncrementalRequest<TData>
         const path = pending.path.concat(incremental.subPath ?? []);
 
         let data: any;
-        let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
         if ("items" in incremental) {
           const items = incremental.items as any[];
           const parent: any[] = [];
@@ -174,24 +173,13 @@ class IncrementalRequest<TData>
           }
         }
 
-        for (let i = path.length - 1; i >= 0; i--) {
-          const key = path[i];
-          const parent: Record<string | number, any> =
-            typeof key === "number" ? [] : {};
-          parent[key] = data;
-          if (typeof key === "number") {
-            arrayMerge = "combine";
-          }
-          data = parent;
-        }
-
         this.merge(
           {
             data,
             extensions: incremental.extensions,
             errors: incremental.errors,
           },
-          arrayMerge
+          path
         );
       }
     }
@@ -221,12 +209,13 @@ class IncrementalRequest<TData>
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
-    arrayMerge: DeepMerger.ArrayMergeStrategy
+    atPath?: DeepMerger.MergeOptions["atPath"]
   ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger(undefined, { arrayMerge }).merge(
+      this.data = new DeepMerger({ arrayMerge: "truncate" }).merge(
         this.data,
-        normalized.data
+        normalized.data,
+        { atPath }
       );
     }
 

@@ -131,10 +131,9 @@ export abstract class EntityStore implements NormalizedCache {
 
     invariant(typeof dataId === "string", "store.merge expects a string ID");
 
-    const merged: StoreObject = new DeepMerger(storeObjectReconciler).merge(
-      existing,
-      incoming
-    );
+    const merged: StoreObject = new DeepMerger({
+      reconciler: storeObjectReconciler,
+    }).merge(existing, incoming);
 
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.

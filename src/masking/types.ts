@@ -7,16 +7,16 @@ import type { PreserveTypes } from "./PreserveTypes.js";
  * Type used with [fragments](https://apollographql.com/docs/react/data/fragments#using-with-fragments) to ensure parent objects contain the fragment spread from the type.
  */
 export type FragmentType<TFragmentDataOrTypedDocumentNode> =
-  TFragmentDataOrTypedDocumentNode extends (
-    DocumentTypeDecoration<infer TFragmentData, any>
-  ) ?
-    FragmentType<TFragmentData>
-  : ApplyHKTImplementationWithDefault<
-      TypeOverrides,
-      "FragmentType",
-      PreserveTypes.TypeOverrides,
-      TFragmentDataOrTypedDocumentNode
-    >;
+  ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "FragmentType",
+    PreserveTypes.TypeOverrides,
+    TFragmentDataOrTypedDocumentNode extends (
+      DocumentTypeDecoration<infer TFragmentData, any>
+    ) ?
+      FragmentType<TFragmentData>
+    : TFragmentDataOrTypedDocumentNode
+  >;
 
 /** Unwraps `TData` into its unmasked type. */
 export type Unmasked<TData> = ApplyHKTImplementationWithDefault<

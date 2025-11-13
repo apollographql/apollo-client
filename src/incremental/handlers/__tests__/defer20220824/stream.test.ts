@@ -1975,3 +1975,63 @@ test("properly merges cache data when list is included in deferred chunk", async
     expect(request.hasNext).toBe(false);
   }
 });
+
+// This behavior isn't exhibited in the graphql.js test suite, but we want to
+// test for it in case other server implementations send multiple items in a
+// stream payload.
+test("handles streams with more than one item in a chunk", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        name
+        id
+      }
+    }
+  `;
+
+  const handler = new Defer20220824Handler();
+  const request = handler.startRequest({ query });
+
+  {
+    const chunk: Defer20220824Handler.InitialResult = {
+      data: { friendList: [{ name: "Luke", id: "1" }] },
+      hasNext: true,
+    };
+
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: {
+        friendList: [{ name: "Luke", id: "1" }],
+      },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const chunk: Defer20220824Handler.SubsequentResult<
+      Array<Record<string, any>>
+    > = {
+      incremental: [
+        {
+          items: [
+            { name: "Han", id: "2" },
+            { name: "Leia", id: "3" },
+          ],
+          path: ["friendList", 1],
+        },
+      ],
+      hasNext: false,
+    };
+
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: {
+        friendList: [
+          { name: "Luke", id: "1" },
+          { name: "Han", id: "2" },
+          { name: "Leia", id: "3" },
+        ],
+      },
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});

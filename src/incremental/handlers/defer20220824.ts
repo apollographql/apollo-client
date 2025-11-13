@@ -128,21 +128,25 @@ class DeferRequest<TData extends Record<string, unknown>>
         let data: any =
           // The item merged from a `@stream` chunk is always the first item in
           // the `items` array
-          "items" in incremental ? incremental.items?.[0]
+          "items" in incremental ? incremental.items
             // Ensure `data: null` isn't merged for `@defer` responses by
             // falling back to `undefined`
           : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
-        this.merge(
-          {
-            errors,
-            extensions,
-            data,
-          },
-          "truncate",
-          path
-        );
+        if (Array.isArray(data)) {
+          const startingIdx = path!.at(-1) as number;
+          data.forEach((item, idx) => {
+            this.merge({ data: item }, "truncate", [
+              ...path!.slice(0, -1),
+              startingIdx + idx,
+            ]);
+          });
+        } else {
+          this.merge({ data }, "truncate", path);
+        }
+
+        this.merge({ errors, extensions });
       }
     } else {
       this.merge(chunk);

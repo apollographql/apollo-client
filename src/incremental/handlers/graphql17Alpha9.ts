@@ -285,7 +285,15 @@ export class GraphQL17Alpha9Handler
     };
 
     if (this.isIncrementalResult(result)) {
-      push(new IncrementalRequest().handle(undefined, result));
+      if ("errors" in result) {
+        push(result);
+      }
+      if (hasIncrementalChunks(result)) {
+        result.incremental.forEach(push);
+      }
+      if (hasCompletedChunks(result)) {
+        result.completed.forEach(push);
+      }
     } else if ("errors" in result) {
       push(result);
     }
@@ -305,4 +313,10 @@ function hasIncrementalChunks(
   result: Record<string, any>
 ): result is Required<GraphQL17Alpha9Handler.SubsequentResult> {
   return isNonEmptyArray(result.incremental);
+}
+
+function hasCompletedChunks(
+  result: Record<string, any>
+): result is Required<GraphQL17Alpha9Handler.SubsequentResult> {
+  return isNonEmptyArray(result.completed);
 }

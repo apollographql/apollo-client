@@ -62,10 +62,10 @@ test("should handle streamed queries", async () => {
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useQuery(query),
-    { wrapper: createClientWrapper(client) }
-  );
+  const renderStream = await renderHookToSnapshotStream(() => useQuery(query), {
+    wrapper: createClientWrapper(client),
+  });
+  const { takeSnapshot } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -78,76 +78,65 @@ test("should handle streamed queries", async () => {
 
   subject.next(friends[0]);
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
-      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      data: markAsStreaming({
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
     }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.streaming,
-    previousData: undefined,
-    variables: {},
   });
 
   subject.next(friends[1]);
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      }),
+      dataState: "streaming",
+      previousData: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
     }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.streaming,
-    previousData: {
-      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    },
-    variables: {},
   });
 
   subject.next(friends[2]);
   subject.complete();
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Leia" },
-      ],
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "streaming",
+      previousData: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      },
     }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.streaming,
-    previousData: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
-    },
-    variables: {},
   });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Leia" },
-      ],
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
-    },
-    variables: {},
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    }),
   });
 
   await expect(takeSnapshot).not.toRerender();

@@ -10,12 +10,16 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import { Defer20220824Handler } from "@apollo/client/incremental";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink } from "@apollo/client/link/error";
 import {
   executeWithDefaultContext as execute,
   mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
   mockMultipartSubscriptionStream,
   ObservableStream,
   wait,
@@ -294,6 +298,117 @@ describe("error handling", () => {
             ],
           },
         ],
+      },
+    });
+  });
+
+  it("handles errors emitted in incremental chunks with GraphQL17Alpha9Handler", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          ... @defer {
+            bar
+          }
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
+
+    const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+      mockDeferStreamGraphQL17Alpha9();
+    const link = errorLink.concat(httpLink);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    const stream = new ObservableStream(execute(link, { query }, { client }));
+
+    enqueueInitialChunk({
+      hasNext: true,
+      data: { foo: {} },
+      pending: [{ id: "0", path: ["foo"] }],
+    });
+
+    enqueueSubsequentChunk({
+      completed: [
+        {
+          id: "0",
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+            },
+          ],
+        },
+      ],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      hasNext: true,
+      data: { foo: {} },
+      // @ts-ignore our tests expect the defer20220824 format
+      pending: [{ id: "0", path: ["foo"] }],
+    });
+
+    await expect(stream).toEmitTypedValue({
+      // @ts-ignore our tests expect the defer20220824 format
+      completed: [
+        {
+          id: "0",
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+            },
+          ],
+        },
+      ],
+      hasNext: false,
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error: new CombinedGraphQLErrors({
+        errors: [
+          {
+            message: "could not read data",
+            extensions: {
+              code: "INCREMENTAL_ERROR",
+            },
+          },
+        ],
+      }),
+      result: {
+        completed: [
+          {
+            id: "0",
+            errors: [
+              {
+                message: "could not read data",
+                extensions: {
+                  code: "INCREMENTAL_ERROR",
+                },
+              },
+            ],
+          },
+        ],
+        hasNext: false,
       },
     });
   });

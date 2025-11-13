@@ -8,11 +8,14 @@ import type { ApolloClient } from '@apollo/client';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
+import type { ResultOf } from '@graphql-typed-document-node/core';
+import type { VariablesOf } from '@graphql-typed-document-node/core';
 
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //
@@ -184,6 +187,12 @@ export interface QueryRef<TData = unknown, TVariables extends OperationVariables
         data: TData;
         states: TStates;
     };
+}
+
+// @public (undocumented)
+export namespace QueryRef {
+    // (undocumented)
+    export type ForQuery<Document extends DocumentTypeDecoration<any, any>, TStates extends DataState<ResultOf<Document>>["dataState"] = "complete" | "streaming"> = QueryRef<ResultOf<Document>, VariablesOf<Document>, TStates>;
 }
 
 // @public (undocumented)

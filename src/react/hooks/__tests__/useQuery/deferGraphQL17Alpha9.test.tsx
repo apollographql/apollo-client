@@ -207,6 +207,39 @@ test("should handle deferred queries in lists", async () => {
         },
         id: "0",
       },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: markAsStreaming({
+      greetings: [
+        {
+          message: "Hello world",
+          __typename: "Greeting",
+          recipient: { name: "Alice", __typename: "Person" },
+        },
+        {
+          message: "Hello again",
+          __typename: "Greeting",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    previousData: {
+      greetings: [
+        { message: "Hello world", __typename: "Greeting" },
+        { message: "Hello again", __typename: "Greeting" },
+      ],
+    },
+    variables: {},
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
       {
         data: {
           recipient: {
@@ -218,7 +251,7 @@ test("should handle deferred queries in lists", async () => {
         id: "1",
       },
     ],
-    completed: [{ id: "0" }, { id: "1" }],
+    completed: [{ id: "1" }],
     hasNext: false,
   });
 
@@ -242,7 +275,11 @@ test("should handle deferred queries in lists", async () => {
     networkStatus: NetworkStatus.ready,
     previousData: {
       greetings: [
-        { message: "Hello world", __typename: "Greeting" },
+        {
+          message: "Hello world",
+          __typename: "Greeting",
+          recipient: { name: "Alice", __typename: "Person" },
+        },
         { message: "Hello again", __typename: "Greeting" },
       ],
     },

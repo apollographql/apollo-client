@@ -1,6 +1,8 @@
+import type { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
+
 import type { TypeOverrides } from "@apollo/client";
 import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities/internal";
-import type { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
+
 import type { PreserveTypes } from "./PreserveTypes.js";
 
 /**

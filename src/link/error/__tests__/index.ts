@@ -201,7 +201,7 @@ describe("error handling", () => {
     }
   });
 
-  it("handles errors emitted in incremental chunks", async () => {
+  it("handles errors emitted in incremental chunks with Defer20220824Handler", async () => {
     const query = gql`
       query Foo {
         foo {

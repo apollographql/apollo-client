@@ -2,6 +2,7 @@ import type { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
@@ -9,6 +10,7 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink } from "@apollo/client/link/error";
 import {
@@ -199,7 +201,7 @@ describe("error handling", () => {
     }
   });
 
-  it.failing("handles errors emitted in incremental chunks", async () => {
+  it("handles errors emitted in incremental chunks", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -216,11 +218,18 @@ describe("error handling", () => {
     const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
       mockDefer20220824();
     const link = errorLink.concat(httpLink);
-    const stream = new ObservableStream(execute(link, { query }));
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      incrementalHandler: new Defer20220824Handler(),
+    });
+
+    const stream = new ObservableStream(execute(link, { query }, { client }));
 
     enqueueInitialChunk({
       hasNext: true,
-      data: {},
+      data: { foo: {} },
     });
 
     enqueueErrorChunk([
@@ -233,7 +242,7 @@ describe("error handling", () => {
     ]);
 
     await expect(stream).toEmitTypedValue({
-      data: {},
+      data: { foo: {} },
       hasNext: true,
     });
 
@@ -271,7 +280,21 @@ describe("error handling", () => {
           },
         ],
       }),
-      result: {},
+      result: {
+        hasNext: true,
+        incremental: [
+          {
+            errors: [
+              {
+                message: "could not read data",
+                extensions: {
+                  code: "INCREMENTAL_ERROR",
+                },
+              },
+            ],
+          },
+        ],
+      },
     });
   });
 

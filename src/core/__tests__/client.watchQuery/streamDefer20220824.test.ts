@@ -16,6 +16,7 @@ import {
   mockDefer20220824,
   ObservableStream,
   promiseWithResolvers,
+  wait,
 } from "@apollo/client/testing/internal";
 import { hasDirectives } from "@apollo/client/utilities/internal";
 
@@ -661,6 +662,262 @@ test("handles errors thrown due to null returned in non-null list items after in
           message:
             "Cannot return null for non-nullable field Query.nonNullFriendList.",
           path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+test("ensures all chunks are streamed even when another non-null list returns an error", async () => {
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: async function* () {
+        yield friends[0];
+        await wait(50);
+        yield friends[1];
+        await wait(50);
+        yield friends[2];
+      },
+      nonNullFriendList: () => [friends[0], null, friends[1]],
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+      nonNullFriendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    }),
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+test("combines errors from other streamed fields with null items from non-null streamed fields", async () => {
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: async function* () {
+        yield friends[0];
+        await wait(50);
+        throw new Error("Oops");
+      },
+      nonNullFriendList: () => [friends[0], null, friends[1]],
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+      nonNullFriendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
+        nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+        {
+          message: "Oops",
+          path: ["friendList", 1],
         },
       ],
     }),

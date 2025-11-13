@@ -85,7 +85,7 @@ class IncrementalRequest<TData>
   private data: any = {};
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
-  private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
+  private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -103,10 +103,10 @@ class IncrementalRequest<TData>
     this.data = cacheData;
 
     if (chunk.pending) {
-      this.pending.push(...chunk.pending);
+      for (const pending of chunk.pending) {
+        this.pending.set(pending.id, pending);
 
-      if ("data" in chunk) {
-        for (const pending of chunk.pending) {
+        if ("data" in chunk) {
           const dataAtPath = pending.path.reduce(
             (data, key) => (data as any)[key],
             chunk.data
@@ -121,7 +121,7 @@ class IncrementalRequest<TData>
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
-        const pending = this.pending.find(({ id }) => incremental.id === id);
+        const pending = this.pending.get(incremental.id);
 
         invariant(
           pending,
@@ -152,7 +152,7 @@ class IncrementalRequest<TData>
           // that we can update streamPositions with the initial length of the
           // array to ensure future streamed items are inserted at the right
           // starting index.
-          for (const pendingItem of this.pending) {
+          this.pending.forEach((pendingItem) => {
             if (!(pendingItem.id in this.streamPositions)) {
               // Check if this incremental data contains array data for the pending path
               // The pending path is absolute, but incremental data is relative to the defer
@@ -169,7 +169,7 @@ class IncrementalRequest<TData>
                 this.streamPositions[pendingItem.id] = dataAtPath.length;
               }
             }
-          }
+          });
         }
 
         for (let i = path.length - 1; i >= 0; i--) {
@@ -198,7 +198,7 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
-        this.pending = this.pending.filter(({ id }) => id !== completed.id);
+        this.pending.delete(completed.id);
 
         if (completed.errors) {
           this.errors.push(...completed.errors);

@@ -335,6 +335,125 @@ describe("error handling", () => {
     });
 
     enqueueSubsequentChunk({
+      incremental: [
+        {
+          id: "0",
+          data: { bar: null },
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+              path: ["foo", "bar"],
+            },
+          ],
+        },
+      ],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      hasNext: true,
+      data: { foo: {} },
+      // @ts-ignore our tests expect the defer20220824 format
+      pending: [{ id: "0", path: ["foo"] }],
+    });
+
+    await expect(stream).toEmitTypedValue({
+      // @ts-ignore our tests expect the defer20220824 format
+      incremental: [
+        {
+          // @ts-ignore our tests expect the defer20220824 format
+          id: "0",
+          data: { bar: null },
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+              path: ["foo", "bar"],
+            },
+          ],
+        },
+      ],
+      hasNext: false,
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error: new CombinedGraphQLErrors({
+        errors: [
+          {
+            message: "could not read data",
+            extensions: {
+              code: "INCREMENTAL_ERROR",
+            },
+            path: ["foo", "bar"],
+          },
+        ],
+      }),
+      result: {
+        incremental: [
+          {
+            id: "0",
+            data: { bar: null },
+            errors: [
+              {
+                message: "could not read data",
+                extensions: {
+                  code: "INCREMENTAL_ERROR",
+                },
+                path: ["foo", "bar"],
+              },
+            ],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+  });
+
+  it("handles errors emitted in completed subsequent chunk with GraphQL17Alpha9Handler", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          ... @defer {
+            bar
+          }
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
+
+    const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+      mockDeferStreamGraphQL17Alpha9();
+    const link = errorLink.concat(httpLink);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    const stream = new ObservableStream(execute(link, { query }, { client }));
+
+    enqueueInitialChunk({
+      hasNext: true,
+      data: { foo: {} },
+      pending: [{ id: "0", path: ["foo"] }],
+    });
+
+    enqueueSubsequentChunk({
       completed: [
         {
           id: "0",

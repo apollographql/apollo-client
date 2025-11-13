@@ -72,6 +72,11 @@ class DeferRequest<TData extends Record<string, unknown>>
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
+  // This tracks paths for `@stream` arrays that returns items: null due to
+  // errors thrown for non-null array items. We stop processing future updates
+  // to these stream arrays to prevent creating sparse arrays or inserting
+  // `null` for an expected non-null value which could cause runtime crashes.
+  private ignoredImpossibleStreamPaths = new Set<string>();
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
@@ -102,6 +107,23 @@ class DeferRequest<TData extends Record<string, unknown>>
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
         let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
+
+        if ("items" in incremental) {
+          // Remove the array index from the end of the array so we can check
+          // ignore this field in future chunks
+          const stringPath = path?.slice(0, -1).join(".") ?? "";
+
+          // Ignore
+          if (incremental.items === null) {
+            this.ignoredImpossibleStreamPaths.add(stringPath);
+          }
+
+          if (this.ignoredImpossibleStreamPaths.has(stringPath)) {
+            this.merge({ errors, extensions });
+            continue;
+          }
+        }
+
         let data =
           // The item merged from a `@stream` chunk is always the first item in
           // the `items` array

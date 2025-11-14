@@ -100,9 +100,20 @@ export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise
 export function decoratePromise<TValue>(promise: Promise<TValue>): DecoratedPromise<TValue>;
 
 // @internal @deprecated (undocumented)
-export class DeepMerger<TContextArgs extends any[]> {
+export namespace DeepMerger {
+    // (undocumented)
+    export type ArrayMergeStrategy = "truncate" | "combine";
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        arrayMerge?: DeepMerger.ArrayMergeStrategy;
+    }
+}
+
+// @internal @deprecated (undocumented)
+export class DeepMerger<TContextArgs extends any[] = any[]> {
     // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-    constructor(reconciler?: ReconcilerFunction<TContextArgs>);
+    constructor(reconciler?: ReconcilerFunction<TContextArgs>, options?: DeepMerger.Options);
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)

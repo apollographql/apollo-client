@@ -368,13 +368,7 @@ test('does not suspend streamed queries with data in the cache and using a "cach
   await expect(takeRender).not.toRerender();
 });
 
-// TODO: Determine how we handle partial data with streamed responses. While this
-// works as expected and renders correctly, this also emits missing field
-// warnings in the console when writing the result to the cache since array items
-// with partial cache data are still included for items that haven't streamed in
-// yet.
 test('does not suspend streamed queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
-  using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
   const { subject, stream } = asyncIterableSubject();
 
   const query = gql`
@@ -386,12 +380,22 @@ test('does not suspend streamed queries with partial data in the cache and using
     }
   `;
 
-  const cache = new InMemoryCache();
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
 
   // We are intentionally writing partial data to the cache. Supress console
   // warnings to avoid unnecessary noise in the test.
   {
-    // using _consoleSpy = spyOnConsole("error");
+    using _consoleSpy = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -446,11 +450,7 @@ test('does not suspend streamed queries with partial data in the cache and using
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke" },
-          { __typename: "Friend", id: "2" },
-          { __typename: "Friend", id: "3" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -469,7 +469,6 @@ test('does not suspend streamed queries with partial data in the cache and using
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
-          { __typename: "Friend", id: "3" },
         ],
       }),
       dataState: "streaming",
@@ -514,7 +513,17 @@ test('does not suspend streamed queries with data in the cache and using a "cach
   `;
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            friendList: {
+              merge: (_, incoming) => incoming,
+            },
+          },
+        },
+      },
+    }),
     link: createLink({ friendList: () => stream }),
     incrementalHandler: new Defer20220824Handler(),
   });
@@ -562,11 +571,7 @@ test('does not suspend streamed queries with data in the cache and using a "cach
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke" },
-          { __typename: "Friend", id: "2", name: "Cached Han" },
-          { __typename: "Friend", id: "3", name: "Cached Leia" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -689,11 +694,7 @@ test("incrementally rerenders data returned by a `refetch` for a streamed query"
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke (refetch)" },
-          { __typename: "Friend", id: "2", name: "Han" },
-          { __typename: "Friend", id: "3", name: "Leia" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke (refetch)" }],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -1615,11 +1616,7 @@ test("can refetch and respond to cache updates after encountering an error in an
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [
-          { __typename: "Friend", id: "1", name: "Luke" },
-          null,
-          { __typename: "Friend", id: "3", name: "Leia" },
-        ],
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -1638,7 +1635,6 @@ test("can refetch and respond to cache updates after encountering an error in an
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
-          { __typename: "Friend", id: "3", name: "Leia" },
         ],
       }),
       dataState: "streaming",

@@ -13,7 +13,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink } from "@apollo/client/link/error";
 import {
   executeWithDefaultContext as execute,
-  mockDeferStream,
+  mockDefer20220824,
   mockMultipartSubscriptionStream,
   ObservableStream,
   wait,
@@ -214,7 +214,7 @@ describe("error handling", () => {
     const errorLink = new ErrorLink(callback);
 
     const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
-      mockDeferStream();
+      mockDefer20220824();
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(execute(link, { query }));
 

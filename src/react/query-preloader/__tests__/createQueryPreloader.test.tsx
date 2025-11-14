@@ -25,7 +25,6 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { PreloadedQueryRef, QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -33,7 +32,7 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
-import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import type {
   MaskedVariablesCaseData,
   SimpleCaseData,
@@ -41,7 +40,6 @@ import type {
 } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
-  markAsStreaming,
   renderHookAsync,
   setupMaskedVariablesCase,
   setupSimpleCase,
@@ -1802,97 +1800,6 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
       dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
-    });
-  }
-});
-
-test("suspends deferred queries until initial chunk loads then rerenders with deferred data", async () => {
-  const query = gql`
-    query {
-      greeting {
-        message
-        ... on Greeting @defer {
-          recipient {
-            name
-          }
-        }
-      }
-    }
-  `;
-
-  const link = new MockSubscriptionLink();
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link,
-    incrementalHandler: new Defer20220824Handler(),
-  });
-
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(query);
-
-  using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
-
-  {
-    const { renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
-  }
-
-  link.simulateResult({
-    result: {
-      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-      hasNext: true,
-    },
-  });
-
-  {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toStrictEqualTyped({
-      data: markAsStreaming({
-        greeting: { message: "Hello world", __typename: "Greeting" },
-      }),
-      dataState: "streaming",
-      error: undefined,
-      networkStatus: NetworkStatus.streaming,
-    });
-  }
-
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
-      },
-    },
-    true
-  );
-
-  {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toStrictEqualTyped({
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello world",
-          recipient: { __typename: "Person", name: "Alice" },
-        },
-      },
-      dataState: "complete",
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
     });
   }
 });

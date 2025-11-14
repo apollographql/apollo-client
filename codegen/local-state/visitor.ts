@@ -446,10 +446,10 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     })();
 
     const fieldsContent = (
-      node.fields as unknown as FieldDefinitionPrintFn[]
+      node.fields as unknown as FieldDefinitionResult[]
     ).map((f) => {
-      return f(
-        typeName,
+      return f.printContent(
+        node,
         (rootType === "query" && this.config.avoidOptionals.query) ||
           (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
           (rootType === "subscription" &&

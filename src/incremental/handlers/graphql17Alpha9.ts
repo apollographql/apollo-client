@@ -86,6 +86,14 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending: GraphQL17Alpha9Handler.PendingResult[] = [];
+  // `streamPositions` maps `pending.id` to the index that should be set by the
+  // next `incremental` stream chunk to ensure the streamed array item is placed
+  // at the correct point in the data array. `this.data` contains cached
+  // references with the full array so we can't rely on the array length in
+  // `this.data` to determine where to place item. This also ensures that items
+  // updated by the cache between a streamed chunk aren't overwritten by merges
+  // of future stream items from already merged stream items.
+  private streamPositions: Record<string, number> = {};
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -96,43 +104,88 @@ class IncrementalRequest<TData>
 
     if (chunk.pending) {
       this.pending.push(...chunk.pending);
+
+      if ("data" in chunk) {
+        for (const pending of chunk.pending) {
+          const dataAtPath = pending.path.reduce(
+            (data, key) => (data as any)[key],
+            chunk.data
+          );
+
+          if (Array.isArray(dataAtPath)) {
+            this.streamPositions[pending.id] = dataAtPath.length;
+          }
+        }
+      }
     }
 
-    this.merge(chunk, new DeepMerger());
+    this.merge(chunk);
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
-        // TODO: Implement support for `@stream`. For now we will skip handling
-        // streamed responses
-        if ("items" in incremental) {
-          continue;
-        }
-
         const pending = this.pending.find(({ id }) => incremental.id === id);
+
         invariant(
           pending,
           "Could not find pending chunk for incremental value. Please file an issue for the Apollo Client team to investigate."
         );
 
-        let { data } = incremental;
         const path = pending.path.concat(incremental.subPath ?? []);
+
+        let data: any;
+        if ("items" in incremental) {
+          const items = incremental.items as any[];
+          const parent: any[] = [];
+
+          // This creates a sparse array with values set at the indices streamed
+          // from the server. DeepMerger uses Object.keys and will correctly
+          // place the values in this array in the correct place
+          for (let i = 0; i < items.length; i++) {
+            parent[i + this.streamPositions[pending.id]] = items[i];
+          }
+
+          this.streamPositions[pending.id] += items.length;
+          data = parent;
+        } else {
+          data = incremental.data;
+
+          // Check if any pending streams added arrays from deferred data so
+          // that we can update streamPositions with the initial length of the
+          // array to ensure future streamed items are inserted at the right
+          // starting index.
+          for (const pendingItem of this.pending) {
+            if (!(pendingItem.id in this.streamPositions)) {
+              // Check if this incremental data contains array data for the pending path
+              // The pending path is absolute, but incremental data is relative to the defer
+              // E.g., pending.path = ["nestedObject"], pendingItem.path = ["nestedObject", "nestedFriendList"]
+              // incremental.data = { scalarField: "...", nestedFriendList: [...] }
+              // So we need the path from pending.path onwards
+              const relativePath = pendingItem.path.slice(pending.path.length);
+              const dataAtPath = relativePath.reduce(
+                (data, key) => (data as any)?.[key],
+                incremental.data
+              );
+
+              if (Array.isArray(dataAtPath)) {
+                this.streamPositions[pendingItem.id] = dataAtPath.length;
+              }
+            }
+          }
+        }
 
         for (let i = path.length - 1; i >= 0; i--) {
           const key = path[i];
           const parent: Record<string | number, any> =
             typeof key === "number" ? [] : {};
           parent[key] = data;
-          data = parent as typeof data;
+          data = parent;
         }
 
-        this.merge(
-          {
-            data: data as TData,
-            extensions: incremental.extensions,
-            errors: incremental.errors,
-          },
-          new DeepMerger()
-        );
+        this.merge({
+          data,
+          extensions: incremental.extensions,
+          errors: incremental.errors,
+        });
       }
     }
 
@@ -159,12 +212,9 @@ class IncrementalRequest<TData>
     return result;
   }
 
-  private merge(
-    normalized: FormattedExecutionResult<TData>,
-    merger: DeepMerger<any[]>
-  ) {
+  private merge(normalized: FormattedExecutionResult<TData>) {
     if (normalized.data !== undefined) {
-      this.data = merger.merge(this.data, normalized.data);
+      this.data = new DeepMerger().merge(this.data, normalized.data);
     }
 
     if (normalized.errors) {
@@ -193,7 +243,7 @@ export class GraphQL17Alpha9Handler
 
   /** @internal */
   prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
-    if (hasDirectives(["defer"], request.query)) {
+    if (hasDirectives(["defer", "stream"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});
       http.accept = ["multipart/mixed", ...(http.accept || [])];

@@ -1,13 +1,6 @@
 import assert from "node:assert";
 
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  FormattedInitialIncrementalExecutionResult,
-  FormattedSubsequentIncrementalExecutionResult,
-} from "graphql-17-alpha9";
 import {
-  experimentalExecuteIncrementally,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -15,7 +8,9 @@ import {
   GraphQLSchema,
   GraphQLString,
 } from "graphql-17-alpha9";
+import { from } from "rxjs";
 
+import type { DocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -23,13 +18,14 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  Observable,
 } from "@apollo/client";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
+  executeSchemaGraphQL17Alpha9,
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  promiseWithResolvers,
   wait,
 } from "@apollo/client/testing/internal";
 
@@ -153,65 +149,22 @@ function resolveOnNextTick(): Promise<void> {
   return Promise.resolve(undefined);
 }
 
-type PromiseOrValue<T> = Promise<T> | T;
-
-function promiseWithResolvers<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T | PromiseOrValue<T>) => void;
-  reject: (reason?: any) => void;
-} {
-  // these are assigned synchronously within the Promise constructor
-  let resolve!: (value: T | PromiseOrValue<T>) => void;
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
-
-async function* run(
+function run(
   document: DocumentNode,
-  rootValue: Record<string, unknown> = { hero },
-  enableEarlyExecution = false
-): AsyncGenerator<
-  | FormattedInitialIncrementalExecutionResult
-  | FormattedSubsequentIncrementalExecutionResult
-  | FormattedExecutionResult,
-  void
-> {
-  const result = await experimentalExecuteIncrementally({
+  rootValue: unknown = { hero },
+  enableEarlyExecution?: boolean
+) {
+  return executeSchemaGraphQL17Alpha9(
     schema,
     document,
     rootValue,
-    enableEarlyExecution,
-  });
-
-  if ("initialResult" in result) {
-    yield JSON.parse(
-      JSON.stringify(result.initialResult)
-    ) as FormattedInitialIncrementalExecutionResult;
-
-    for await (const incremental of result.subsequentResults) {
-      yield JSON.parse(
-        JSON.stringify(incremental)
-      ) as FormattedSubsequentIncrementalExecutionResult;
-    }
-  } else {
-    yield JSON.parse(JSON.stringify(result)) as FormattedExecutionResult;
-  }
+    enableEarlyExecution
+  );
 }
 
 function createSchemaLink(rootValue?: Record<string, unknown>) {
   return new ApolloLink((operation) => {
-    return new Observable((observer) => {
-      void (async () => {
-        for await (const chunk of run(operation.query, rootValue)) {
-          observer.next(chunk);
-        }
-        observer.complete();
-      })();
-    });
+    return from(run(operation.query, rootValue));
   });
 }
 

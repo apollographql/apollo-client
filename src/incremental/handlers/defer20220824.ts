@@ -114,7 +114,6 @@ class DeferRequest<TData extends Record<string, unknown>>
           // ignore this field in future chunks
           const stringPath = path?.slice(0, -1).join(".") ?? "";
 
-          // Ignore
           if (incremental.items === null) {
             this.ignoredImpossibleStreamPaths.add(stringPath);
           }

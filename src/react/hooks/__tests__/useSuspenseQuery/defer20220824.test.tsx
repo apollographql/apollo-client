@@ -24,7 +24,6 @@ import {
   markAsStreaming,
   mockDefer20220824,
   spyOnConsole,
-  wait,
 } from "@apollo/client/testing/internal";
 import { offsetLimitPagination } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -1171,18 +1170,8 @@ test("incrementally renders data returned after skipping a deferred query", asyn
   await expect(takeRender).not.toRerender();
 });
 
-// TODO: This test is a bit of a lie. `fetchMore` should incrementally
-// rerender when using `@defer` but there is currently a bug in the core
-// implementation that prevents updates until the final result is returned.
-// This test reflects the behavior as it exists today, but will need
-// to be updated once the core bug is fixed.
-//
-// NOTE: A duplicate it.failng test has been added right below this one with
-// the expected behavior added in (i.e. the commented code in this test). Once
-// the core bug is fixed, this test can be removed in favor of the other test.
-//
 // https://github.com/apollographql/apollo-client/issues/11034
-test("rerenders data returned by `fetchMore` for a deferred query", async () => {
+test("incrementally rerenders data returned by a `fetchMore` for a deferred query", async () => {
   const query = gql`
     query ($offset: Int) {
       greetings(offset: $offset) {
@@ -1307,35 +1296,33 @@ test("rerenders data returned by `fetchMore` for a deferred query", async () => 
     hasNext: true,
   });
 
-  // TODO: Re-enable once the core bug is fixed
-  // {
-  //   const { snapshot, renderedComponents } = await takeRender();
-  //
-  //   expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-  //   expect(snapshot).toStrictEqualTyped({
-  //     data: markAsStreaming({
-  //       greetings: [
-  //         {
-  //           __typename: "Greeting",
-  //           message: "Hello world",
-  //           recipient: {
-  //             __typename: "Person",
-  //             name: "Alice",
-  //           },
-  //         },
-  //         {
-  //           __typename: "Greeting",
-  //           message: "Goodbye",
-  //         },
-  //       ],
-  //     }),
-  //     dataState: "streaming",
-  //     networkStatus: NetworkStatus.streaming,
-  //     error: undefined,
-  //   });
-  // }
+  {
+    const { snapshot, renderedComponents } = await takeRender();
 
-  await wait(0);
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        greetings: [
+          {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: {
+              __typename: "Person",
+              name: "Alice",
+            },
+          },
+          {
+            __typename: "Greeting",
+            message: "Goodbye",
+          },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
   enqueueSubsequentChunk({
     incremental: [
       {
@@ -1396,227 +1383,6 @@ test("rerenders data returned by `fetchMore` for a deferred query", async () => 
 
   await expect(takeRender).not.toRerender();
 });
-
-// TODO: This is a duplicate of the test above, but with the expected behavior
-// added (hence the `it.failing`). Remove the previous test once issue #11034
-// is fixed.
-//
-// https://github.com/apollographql/apollo-client/issues/11034
-it.failing(
-  "incrementally rerenders data returned by a `fetchMore` for a deferred query",
-  async () => {
-    const query = gql`
-      query ($offset: Int) {
-        greetings(offset: $offset) {
-          message
-          ... @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
-      mockDefer20220824();
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            greetings: offsetLimitPagination(),
-          },
-        },
-      },
-    });
-
-    const client = new ApolloClient({
-      link: httpLink,
-      cache,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    using _disabledAct = disableActEnvironment();
-    const { takeRender, getCurrentSnapshot } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { variables: { offset: 0 } }),
-      {
-        wrapper: createClientWrapper(client),
-      }
-    );
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    enqueueInitialChunk({
-      data: {
-        greetings: [{ __typename: "Greeting", message: "Hello world" }],
-      },
-      hasNext: true,
-    });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
-          greetings: [{ __typename: "Greeting", message: "Hello world" }],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    }
-
-    enqueueSubsequentChunk({
-      incremental: [
-        {
-          data: {
-            recipient: { name: "Alice", __typename: "Person" },
-          },
-          path: ["greetings", 0],
-        },
-      ],
-      hasNext: false,
-    });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    }
-
-    const fetchMorePromise = getCurrentSnapshot().fetchMore({
-      variables: { offset: 1 },
-    });
-
-    {
-      const { renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
-    }
-
-    enqueueInitialChunk({
-      data: {
-        greetings: [
-          {
-            __typename: "Greeting",
-            message: "Goodbye",
-          },
-        ],
-      },
-      hasNext: true,
-    });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    }
-
-    enqueueSubsequentChunk({
-      incremental: [
-        {
-          data: {
-            recipient: { name: "Bob", __typename: "Person" },
-          },
-          path: ["greetings", 0],
-        },
-      ],
-      hasNext: false,
-    });
-
-    {
-      const { snapshot, renderedComponents } = await takeRender();
-
-      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
-      expect(snapshot).toStrictEqualTyped({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-              recipient: {
-                __typename: "Person",
-                name: "Bob",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    }
-
-    await expect(fetchMorePromise!).resolves.toStrictEqualTyped({
-      data: {
-        greetings: [
-          {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Bob",
-            },
-          },
-        ],
-      },
-    });
-
-    await expect(takeRender).not.toRerender();
-  }
-);
 
 test("throws network errors returned by deferred queries", async () => {
   using _consoleSpy = spyOnConsole("error");

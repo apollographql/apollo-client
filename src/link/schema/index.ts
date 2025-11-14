@@ -116,7 +116,7 @@ export declare namespace SchemaLink {
 /**
  * `SchemaLink` is a terminating link that executes GraphQL operations against
  * a local GraphQL schema instead of making network requests. This is commonly
- * used for server-side rendering (SSR) and mocking dataa.
+ * used for server-side rendering (SSR) and mocking data.
  *
  * > [!NOTE]
  * > While `SchemaLink` can provide GraphQL results on the client, the GraphQL

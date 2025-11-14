@@ -349,7 +349,6 @@ export function useSuspenseQuery<
   "use no memo";
   return wrapHook(
     "useSuspenseQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options ?? ({} as any));
@@ -394,13 +393,15 @@ function useSuspenseQuery_<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
-    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/immutability
     current[0] = queryRef.key;
+    // eslint-disable-next-line react-hooks/immutability
     current[1] = queryRef.promise;
   }
   let promise = current[1];
 
   if (queryRef.didChangeOptions(watchQueryOptions)) {
+    // eslint-disable-next-line react-hooks/immutability
     current[1] = promise = queryRef.applyOptions(watchQueryOptions);
   }
 

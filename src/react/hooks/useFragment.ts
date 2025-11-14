@@ -182,7 +182,6 @@ export function useFragment<
   "use no memo";
   return wrapHook(
     "useFragment",
-    // eslint-disable-next-line react-compiler/react-compiler
     useFragment_,
     useApolloClient(options.client)
   )(options);

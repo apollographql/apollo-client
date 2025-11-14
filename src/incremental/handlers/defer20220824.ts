@@ -133,8 +133,8 @@ class DeferRequest<TData extends Record<string, unknown>>
           : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
-        if (Array.isArray(data)) {
-          const startingIdx = path!.at(-1) as number;
+        if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
+          const startingIdx = path.at(-1) as number;
           data.forEach((item, idx) => {
             this.merge({ data: item }, "truncate", [
               ...path!.slice(0, -1),

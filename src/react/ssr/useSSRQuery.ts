@@ -17,10 +17,12 @@ const skipStandbyResult: ObservableQuery.Result<any> = maybeDeepFreeze({
 });
 
 export const useSSRQuery = function (
+  // eslint-disable-next-line react-hooks/unsupported-syntax
   this: PrerenderStaticInternalContext,
   query: DocumentNode,
   options: useQuery.Options<any, any> = {}
 ): useQuery.Result<any, any> {
+  "use no memo";
   function notAllowed(): never {
     throw new Error("This method cannot be called during SSR.");
   }

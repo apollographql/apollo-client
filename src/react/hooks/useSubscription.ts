@@ -372,7 +372,7 @@ export function useSubscription<
     } else {
       observable?.restart();
     }
-  }, [optionsRef, recreateRef, observable]);
+  }, [observable, setObservable, optionsRef, recreateRef]);
 
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }

@@ -180,7 +180,6 @@ export function useSuspenseFragment<
   "use no memo";
   return wrapHook(
     "useSuspenseFragment",
-    // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseFragment_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(options);
@@ -229,8 +228,9 @@ function useSuspenseFragment_<
   }, [fragmentRef]);
 
   if (current[0] !== fragmentRef.key) {
-    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/immutability
     current[0] = fragmentRef.key;
+    // eslint-disable-next-line react-hooks/immutability
     current[1] = fragmentRef.promise;
   }
 

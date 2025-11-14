@@ -386,7 +386,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   }
 
   EnumTypeDefinition(node: EnumTypeDefinitionNode): string {
-    const rawTypeName = node.name as any;
+    const rawTypeName = node.name.value;
 
     // If we have enumValues set, and it's point to an external enum - we need to allow internal values resolvers
     // In case we have enumValues set but as explicit values, no need to to do mapping since it's already
@@ -430,7 +430,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     const name = this.convertName(node, {
       suffix: this.config.resolverTypeSuffix,
     });
-    const typeName = node.name as any as string;
+    const typeName = node.name.value;
 
     const rootType = ((): false | "query" | "mutation" | "subscription" => {
       if (this.schema.getQueryType()?.name === typeName) {
@@ -445,18 +445,18 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       return false;
     })();
 
-    const fieldsContent = (
-      node.fields as unknown as FieldDefinitionResult[]
-    ).map((f) => {
-      return f.printContent(
-        node,
-        (rootType === "query" && this.config.avoidOptionals.query) ||
-          (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
-          (rootType === "subscription" &&
-            this.config.avoidOptionals.subscription) ||
-          (rootType === false && this.config.avoidOptionals.resolvers)
-      );
-    });
+    const fieldsContent = (node.fields as unknown as FieldDefinitionResult[])
+      .map((f) => {
+        return f.printContent(
+          node,
+          (rootType === "query" && this.config.avoidOptionals.query) ||
+            (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
+            (rootType === "subscription" &&
+              this.config.avoidOptionals.subscription) ||
+            (rootType === false && this.config.avoidOptionals.resolvers)
+        ).value;
+      })
+      .filter((v) => v);
 
     const block = new DeclarationBlock(this._declarationBlockConfig)
       .export()
@@ -464,7 +464,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       .withName(name)
       .withBlock(fieldsContent.join("\n"));
 
-    this._collectedResolvers[node.name as any] = {
+    this._collectedResolvers[typeName] = {
       typename: name,
       baseGeneratedTypename: name,
     };
@@ -559,7 +559,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
           type: string;
           genericTypes: string[];
         } = {
-          name: node.name as any,
+          name: node.name.value,
           modifier: avoidResolverOptionals ? "" : "?",
           type: resolverType,
           genericTypes: [
@@ -671,7 +671,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     const valuesMap = `{ ${(node.values || [])
       .map(
         (v) =>
-          `${v.name as any as string}${
+          `${v.name.value}${
             this.config.avoidOptionals.resolvers ? "" : "?"
           }: any`
       )
@@ -688,7 +688,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   ): string {
     return `{ ${(node.values || [])
       .map((v) => {
-        const valueName = v.name as any as string;
+        const valueName = v.name.value;
         const mappedValue = valuesMapping[valueName];
 
         return `${valueName}: ${

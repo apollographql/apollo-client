@@ -87,6 +87,8 @@ export const plugin: PluginFunction<
 
   const resolversTypeMapping = visitor.buildResolversTypes();
   const resolversParentTypeMapping = visitor.buildResolversParentTypes();
+  const resolversUnionTypeMapping = visitor.buildResolversUnionTypes();
+  const resolversInterfaceTypeMapping = visitor.buildResolversInterfaceTypes();
   const { getRootResolver, mappersImports, unusedMappers } = visitor;
 
   if (showUnusedMappers && unusedMappers.length) {
@@ -111,6 +113,8 @@ export const plugin: PluginFunction<
     content: [
       resolversTypeMapping,
       resolversParentTypeMapping,
+      resolversInterfaceTypeMapping,
+      resolversUnionTypeMapping,
       ...visitorResult.definitions.filter(
         (d: unknown) => typeof d === "string"
       ),

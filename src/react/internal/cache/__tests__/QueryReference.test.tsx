@@ -1,7 +1,12 @@
+import { expectTypeOf } from "expect-type";
 import React from "react";
 import { of } from "rxjs";
 
-import type { DataState, OperationVariables } from "@apollo/client";
+import type {
+  DataState,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { InternalQueryReference } from "@apollo/client/react/internal";
 import { setupSimpleCase } from "@apollo/client/testing/internal";
@@ -239,5 +244,29 @@ test.skip("type tests", () => {
         </>
       </>;
     }
+  });
+
+  test("QueryRef.ForQuery", () => {
+    const ANY: any = {};
+
+    interface Data {
+      foo: string;
+    }
+    type Vars = {
+      bar: string;
+    };
+    const query: TypedDocumentNode<Data, Vars> = ANY;
+
+    expectTypeOf<QueryRef.ForQuery<typeof query>>().toEqualTypeOf<
+      QueryRef<Data, Vars>
+    >();
+
+    expectTypeOf<QueryRef.ForQuery<typeof query, "complete">>().toEqualTypeOf<
+      QueryRef<Data, Vars, "complete">
+    >();
+
+    expectTypeOf<
+      QueryRef.ForQuery<typeof query, "empty" | "partial" | "complete">
+    >().toEqualTypeOf<QueryRef<Data, Vars, "empty" | "partial" | "complete">>();
   });
 });

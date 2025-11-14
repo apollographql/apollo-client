@@ -1,3 +1,8 @@
+import type {
+  DocumentTypeDecoration,
+  ResultOf,
+  VariablesOf,
+} from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { Subscription } from "rxjs";
 import { filter } from "rxjs";
@@ -46,6 +51,15 @@ export interface QueryRef<
 > {
   /** @internal */
   [QUERY_REF_BRAND]?(variables: TVariables): { data: TData; states: TStates };
+}
+
+export declare namespace QueryRef {
+  export type ForQuery<
+    Document extends DocumentTypeDecoration<any, any>,
+    TStates extends DataState<ResultOf<Document>>["dataState"] =
+      | "complete"
+      | "streaming",
+  > = QueryRef<ResultOf<Document>, VariablesOf<Document>, TStates>;
 }
 
 /**

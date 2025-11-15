@@ -53,7 +53,7 @@ jobs:
 
       - name: Comment sha reminder
         if: steps.parse-sha.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@v4.0.0
+        uses: peter-evans/create-or-update-comment@v5.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -114,7 +114,7 @@ jobs:
 
       - name: Add comment if no new changesets exist
         if: ${{ steps.added-files.outputs.changesets == '' }}
-        uses: peter-evans/create-or-update-comment@v4.0.0
+        uses: peter-evans/create-or-update-comment@v5.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -144,7 +144,7 @@ jobs:
 
       - name: Create comment
         if: ${{ steps.added-files.outputs.changesets != '' }}
-        uses: peter-evans/create-or-update-comment@v4.0.0
+        uses: peter-evans/create-or-update-comment@v5.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

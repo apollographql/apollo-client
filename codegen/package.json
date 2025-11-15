@@ -34,13 +34,15 @@
     "prepack": "npm run build",
     "publint": "publint run --strict ."
   },
-  "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@graphql-codegen/plugin-helpers": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.0",
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0"
   },
   "peerDependencies": {
-    "@graphql-codegen/plugin-helpers": "^5.0.0",
-    "@graphql-codegen/typescript": "^4.0.0",
-    "@graphql-codegen/visitor-plugin-common": "^5.0.0"
+    "@graphql-codegen/plugin-helpers": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.0",
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0"
   }
 }

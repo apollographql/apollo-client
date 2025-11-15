@@ -28,6 +28,7 @@
 import { TypeScriptOperationVariablesToObject } from "@graphql-codegen/typescript";
 import type {
   DeclarationKind,
+  FieldDefinitionResult,
   ParsedMapper,
   ParsedResolversConfig,
   ResolverTypes,
@@ -147,6 +148,17 @@ export class LocalStateVisitor extends BaseResolversVisitor<
         getTypeToUse,
         currentType,
         shouldInclude,
+        onNotMappedObjectType: ({ typeName, initialType }) => {
+          let result = initialType;
+          if (
+            this._federation.getMeta()[typeName]?.referenceSelectionSetsString
+          ) {
+            result += ` | ${this.convertName(
+              "FederationReferenceTypes"
+            )}['${typeName}']`;
+          }
+          return result;
+        },
       });
     }
 
@@ -374,7 +386,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   }
 
   EnumTypeDefinition(node: EnumTypeDefinitionNode): string {
-    const rawTypeName = node.name as any;
+    const rawTypeName = node.name.value;
 
     // If we have enumValues set, and it's point to an external enum - we need to allow internal values resolvers
     // In case we have enumValues set but as explicit values, no need to to do mapping since it's already
@@ -418,7 +430,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     const name = this.convertName(node, {
       suffix: this.config.resolverTypeSuffix,
     });
-    const typeName = node.name as any as string;
+    const typeName = node.name.value;
 
     const rootType = ((): false | "query" | "mutation" | "subscription" => {
       if (this.schema.getQueryType()?.name === typeName) {
@@ -433,18 +445,18 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       return false;
     })();
 
-    const fieldsContent = (
-      node.fields as unknown as FieldDefinitionPrintFn[]
-    ).map((f) => {
-      return f(
-        typeName,
-        (rootType === "query" && this.config.avoidOptionals.query) ||
-          (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
-          (rootType === "subscription" &&
-            this.config.avoidOptionals.subscription) ||
-          (rootType === false && this.config.avoidOptionals.resolvers)
-      );
-    });
+    const fieldsContent = (node.fields as unknown as FieldDefinitionResult[])
+      .map((f) => {
+        return f.printContent(
+          node,
+          (rootType === "query" && this.config.avoidOptionals.query) ||
+            (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
+            (rootType === "subscription" &&
+              this.config.avoidOptionals.subscription) ||
+            (rootType === false && this.config.avoidOptionals.resolvers)
+        ).value;
+      })
+      .filter((v) => v);
 
     const block = new DeclarationBlock(this._declarationBlockConfig)
       .export()
@@ -452,7 +464,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       .withName(name)
       .withBlock(fieldsContent.join("\n"));
 
-    this._collectedResolvers[node.name as any] = {
+    this._collectedResolvers[typeName] = {
       typename: name,
       baseGeneratedTypename: name,
     };
@@ -472,91 +484,103 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     node: FieldDefinitionNode,
     key: string | number,
     parent: any
-  ): FieldDefinitionPrintFn {
+  ): FieldDefinitionResult {
     const hasArguments = node.arguments && node.arguments.length > 0;
     const declarationKind = "type";
 
-    return (parentName, avoidResolverOptionals) => {
-      const original: FieldDefinitionNode = parent[key];
+    const original: FieldDefinitionNode = parent[key];
 
-      let argsType =
-        hasArguments ?
-          this.convertName(
-            parentName +
-              (this.config.addUnderscoreToArgsType ? "_" : "") +
-              this.convertName(node.name, {
-                useTypesPrefix: false,
-                useTypesSuffix: false,
-              }) +
-              "Args",
-            {
-              useTypesPrefix: true,
-            },
-            true
-          )
-        : null;
+    return {
+      node: original,
+      printContent: (
+        parentNode: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
+        avoidResolverOptionals
+      ) => {
+        const parentName = parentNode.name.value;
 
-      if (argsType !== null) {
-        const argsToForceRequire = original.arguments!.filter(
-          (arg) => !!arg.defaultValue || arg.type.kind === "NonNullType"
-        );
+        let argsType =
+          hasArguments ?
+            this.convertName(
+              parentName +
+                (this.config.addUnderscoreToArgsType ? "_" : "") +
+                this.convertName(node.name, {
+                  useTypesPrefix: false,
+                  useTypesSuffix: false,
+                }) +
+                "Args",
+              {
+                useTypesPrefix: true,
+              },
+              true
+            )
+          : null;
 
-        if (argsToForceRequire.length > 0) {
-          argsType = this.applyRequireFields(argsType, argsToForceRequire);
-        } else if (original.arguments!.length > 0) {
-          argsType = this.applyOptionalFields(argsType, original.arguments!);
+        if (argsType !== null) {
+          const argsToForceRequire = original.arguments!.filter(
+            (arg) => !!arg.defaultValue || arg.type.kind === "NonNullType"
+          );
+
+          if (argsToForceRequire.length > 0) {
+            argsType = this.applyRequireFields(argsType, argsToForceRequire);
+          } else if (original.arguments!.length > 0) {
+            argsType = this.applyOptionalFields(argsType, original.arguments!);
+          }
         }
-      }
-      const { mappedTypeKey, resolverType } = ((): {
-        mappedTypeKey: string;
-        resolverType: string;
-      } => {
-        const baseType = getBaseTypeNode(original.type);
-        const realType = baseType.name.value;
-        const typeToUse = this.getTypeToUse(realType);
-        /**
-         * Turns GraphQL type to TypeScript types (`mappedType`) e.g.
-         *
-         * - String! -> ResolversTypes['String']>
-         * - String -> Maybe<ResolversTypes['String']>
-         * - [String] -> Maybe<Array<Maybe<ResolversTypes['String']>>>
-         * - [String!]! -> Array<ResolversTypes['String']>
-         */
-        const mappedType = this._variablesTransformer.wrapAstTypeWithModifiers(
-          typeToUse,
-          original.type
-        );
+        const { mappedTypeKey, resolverType } = ((): {
+          mappedTypeKey: string;
+          resolverType: string;
+        } => {
+          const baseType = getBaseTypeNode(original.type);
+          const realType = baseType.name.value;
+          const typeToUse = this.getTypeToUse(realType);
+          /**
+           * Turns GraphQL type to TypeScript types (`mappedType`) e.g.
+           *
+           * - String! -> ResolversTypes['String']>
+           * - String -> Maybe<ResolversTypes['String']>
+           * - [String] -> Maybe<Array<Maybe<ResolversTypes['String']>>>
+           * - [String!]! -> Array<ResolversTypes['String']>
+           */
+          const mappedType =
+            this._variablesTransformer.wrapAstTypeWithModifiers(
+              typeToUse,
+              original.type
+            );
+
+          return {
+            mappedTypeKey: mappedType,
+            resolverType: "LocalState.Resolver",
+          };
+        })();
+
+        const signature: {
+          name: string;
+          modifier: string;
+          type: string;
+          genericTypes: string[];
+        } = {
+          name: node.name.value,
+          modifier: avoidResolverOptionals ? "" : "?",
+          type: resolverType,
+          genericTypes: [
+            mappedTypeKey,
+            this.getParentTypeToUse(parentName),
+            this.config.contextType.type,
+            argsType!,
+          ].filter((f) => f),
+        };
 
         return {
-          mappedTypeKey: mappedType,
-          resolverType: "LocalState.Resolver",
+          value: indent(
+            `${signature.name}${signature.modifier}: ${
+              signature.type
+            }<${signature.genericTypes.join(", ")}>${this.getPunctuation(
+              declarationKind
+            )}`
+          ),
+          meta: {},
         };
-      })();
-
-      const signature: {
-        name: string;
-        modifier: string;
-        type: string;
-        genericTypes: string[];
-      } = {
-        name: node.name as any,
-        modifier: avoidResolverOptionals ? "" : "?",
-        type: resolverType,
-        genericTypes: [
-          mappedTypeKey,
-          this.getParentTypeToUse(parentName),
-          this.config.contextType.type,
-          argsType!,
-        ].filter((f) => f),
-      };
-
-      return indent(
-        `${signature.name}${signature.modifier}: ${
-          signature.type
-        }<${signature.genericTypes.join(", ")}>${this.getPunctuation(
-          declarationKind
-        )}`
-      );
+      },
     };
   }
 
@@ -583,6 +607,9 @@ export class LocalStateVisitor extends BaseResolversVisitor<
               if (resolverType.baseGeneratedTypename) {
                 userDefinedTypes[schemaTypeName] = {
                   name: resolverType.baseGeneratedTypename,
+                  hasIsTypeOf:
+                    this._parsedSchemaMeta.typesWithIsTypeOf[schemaTypeName] ||
+                    false,
                 };
               }
 
@@ -644,7 +671,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     const valuesMap = `{ ${(node.values || [])
       .map(
         (v) =>
-          `${v.name as any as string}${
+          `${v.name.value}${
             this.config.avoidOptionals.resolvers ? "" : "?"
           }: any`
       )
@@ -661,7 +688,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   ): string {
     return `{ ${(node.values || [])
       .map((v) => {
-        const valueName = v.name as any as string;
+        const valueName = v.name.value;
         const mappedValue = valuesMapping[valueName];
 
         return `${valueName}: ${

@@ -17,7 +17,7 @@ describe("aliases if `legacyEntryPoints` transform was not applied", () => {
       `"import { somethingElse, useQuery } from "@apollo/client/react/react.cjs";"`
     );
   });
-  test("if nonexistant, creates new modern entry points", () => {
+  test("if nonexistent, creates new modern entry points", () => {
     expect(
       transform`
     import { useQuery } from "@apollo/client/index.js";

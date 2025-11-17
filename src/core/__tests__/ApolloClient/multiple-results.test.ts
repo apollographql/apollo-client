@@ -7,7 +7,7 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
-describe("mutiple results", () => {
+describe("multiple results", () => {
   it("allows multiple query results from link", async () => {
     const query = gql`
       query LazyLoadLuke {

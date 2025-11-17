@@ -2491,7 +2491,7 @@ describe("ApolloClient", () => {
         },
         {
           request: { query },
-          error: new Error("Network error ocurred"),
+          error: new Error("Network error occurred"),
         },
       ]),
     });

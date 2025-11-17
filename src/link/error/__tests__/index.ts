@@ -486,7 +486,7 @@ describe("error handling", () => {
     await expect(stream).toComplete();
   });
 
-  it("can be unsubcribed", async () => {
+  it("can be unsubscribed", async () => {
     const query = gql`
       {
         foo {
@@ -763,7 +763,7 @@ describe("error handling with class", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it("can be unsubcribed", async () => {
+  it("can be unsubscribed", async () => {
     const query = gql`
       {
         foo {

@@ -2834,8 +2834,7 @@ describe("useLazyQuery Hook", () => {
     const [originalExecute] = getCurrentSnapshot();
 
     countRef.current++;
-    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
-    await rerender(undefined);
+    await rerender();
 
     {
       const [, result] = await takeSnapshot();
@@ -2890,8 +2889,7 @@ describe("useLazyQuery Hook", () => {
 
     countRef.current++;
 
-    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
-    await rerender(undefined);
+    await rerender();
 
     {
       const [, result] = await takeSnapshot();
@@ -2950,8 +2948,7 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     countRef.current++;
-    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
-    await rerender(undefined);
+    await rerender();
 
     [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);

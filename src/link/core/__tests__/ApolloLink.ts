@@ -72,7 +72,7 @@ describe("ApolloLink", () => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
         op.setContext({ add: 3 });
-        op.setContext({ substract: 1 });
+        op.setContext({ subtract: 1 });
 
         return forward(op);
       });
@@ -80,7 +80,7 @@ describe("ApolloLink", () => {
         new ApolloLink((op) => {
           expect(op.getContext()).toEqual({
             add: 3,
-            substract: 1,
+            subtract: 1,
           });
           return of({ data: { count: op.getContext().add } });
         })

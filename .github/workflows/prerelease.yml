@@ -33,7 +33,7 @@ jobs:
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Fetch entire git history so  Changesets can generate changelogs
@@ -50,7 +50,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ">=23.6.0"
 
@@ -114,7 +114,7 @@ jobs:
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
 
@@ -128,7 +128,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ">=23.6.0"
 
@@ -137,7 +137,7 @@ jobs:
 
       - name: Tag release with next on npm
         run: |
-          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt(process.env.PUBLISHED,"${{ matrix.package.version }}")?0:1)'; then
+          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt("${{ matrix.package.version }}",process.env.NEXT)?0:1)'; then
             npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next;
           fi
 

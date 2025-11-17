@@ -54,7 +54,7 @@ export declare namespace MockLink {
   }
 
   export interface MockedResponse<
-    // @ts-ignore
+    /** @ts-ignore */
     out TData = Record<string, any>,
     out TVariables extends OperationVariables = Record<string, any>,
   > {
@@ -336,10 +336,10 @@ export interface MockApolloLink extends ApolloLink {
   operation?: ApolloLink.Operation;
 }
 
-// This is similiar to the stringifyForDisplay utility we ship, but includes
+// This is similar to the stringifyForDisplay utility we ship, but includes
 // support for NaN in addition to undefined. More values may be handled in the
 // future. This is not added to the primary stringifyForDisplay helper since it
-// is used for the cache and other purposes. We need this for debuggging only.
+// is used for the cache and other purposes. We need this for debugging only.
 function stringifyForDebugging(value: any, space = 0): string {
   if (typeof value === "string") {
     return value;

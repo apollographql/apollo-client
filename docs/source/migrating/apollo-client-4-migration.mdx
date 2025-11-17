@@ -38,7 +38,7 @@ Apollo Client 4.0 is a major-version release that includes breaking changes. If 
 Install Apollo Client 4 along with its peer dependencies with the following command:
 
 ```sh showLineNumbers=false
-npm install @apollo/client graphql rxjs
+npm install @apollo/client@latest graphql rxjs
 ```
 
 <Note>
@@ -1005,6 +1005,33 @@ useQuery(QUERY, {
 });
 ```
 
+### Subscription deduplication
+
+Subscriptions are now deduplicated when `queryDeduplication` is enabled (the default). Subscriptions that qualify for deduplication attach to the same connection as a previously connected subscription.
+
+To disable query deduplication, provide `queryDeduplication: false` to the `context` option when creating the subscription.
+
+```ts
+// with React's `useSubscription`
+useSubscription(SUBSCRIPTION, {
+  context: { queryDeduplication: false },
+});
+
+// with the core API
+const observable = client.subscribe({
+  query: SUBSCRIPTION,
+  context: { queryDeduplication: false },
+});
+```
+
+<Caution>
+
+Some GraphQL servers emit an initial value when the subscription first connects. A subscription that attaches to an existing connection because of deduplication does not receive an update until the server next emits a value. Depending on the frequency of updates pushed from the server, the deduplicated subscription might wait for an extended period of time before receiving its first value.<br/><br/>
+
+If you rely on the initial value to read data from the subscription, we recommend disabling query deduplication so that the subscription creates a new connection.
+
+</Caution>
+
 ## New error handling
 
 Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.
@@ -1445,6 +1472,58 @@ async function onUserInteraction() {
 
 </Tip>
 
+#### Changes to promise resolution with errors for the `execute` function
+
+The promise returned from the `execute` function is now consistently resolved or rejected based on your configured `errorPolicy` when errors are returned. With an `errorPolicy` of `none`, the promise always rejects. With an `errorPolicy` of `all`, the promise always resolves and sets the `error` property on the result. With an `errorPolicy` of `ignore`, the promise always resolves and discards the errors.
+
+Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of your configured error policy. This change unifies the error behavior across all error types to ensure errors are handled consistently.
+
+To migrate code that uses an `errorPolicy` of `none`, wrap the call to `execute` in a `try`/`catch` block and use `CombinedGraphQLErrors.is(error)` to check for GraphQL errors.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "none",
+});
+
+async function onUserInteraction() {
+  const { data, error } = await execute({ variables });// [!code --:4]
+  if (error.graphQLErrors) {
+    // handle GraphQL errors
+  }
+
+  try {// [!code ++:6]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      // handle GraphQL errors
+    }
+  }
+}
+```
+
+To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements because the promise resolves for all error types.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "all",
+});
+
+async function onUserInteraction() {
+  try {// [!code --:7]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (error.graphQLErrors) {
+      // handle GraphQL errors
+    }
+  }
+
+  const { data, error } = await execute({ variables });// [!code ++:4]
+  if (CombinedGraphQLErrors.is(error)) {
+    // handle GraphQL errors
+  }
+}
+```
+
 ### Changes to `useMutation`
 
 `useMutation` has been modified to work with our [philosophy](#a-note-about-hook-usage) that React hooks should be used to synchronize hook state with your component.
@@ -1565,6 +1644,17 @@ new ApolloClient<any>({ // [!code --]
 new ApolloClient({ // [!code ++]
   // ...
 });
+```
+
+### Removal of `<TSerialized>` generic argument
+
+The `TSerialized` generic argument has been removed from the `ApolloCache` abstract class. Most users set this type to `any` which provided little benefit for type safety. APIs that previously relied on `TSerialized` are now set to `unknown`.
+
+To migrate, remove the `TSerialized` generic argument when referencing `ApolloCache`.
+
+```ts
+const cache: ApolloCache<any> = ... // [!code --]
+const cache: ApolloCache = ... // [!code ++]
 ```
 
 ## Apollo Link changes

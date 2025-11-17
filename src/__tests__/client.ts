@@ -6083,7 +6083,7 @@ describe("custom document transforms", () => {
     });
   });
 
-  it("runs custom document transforms with fragments defined in the fragment registery", async () => {
+  it("runs custom document transforms with fragments defined in the fragment registry", async () => {
     const query = gql`
       query TestQuery {
         product {
@@ -6155,7 +6155,7 @@ describe("custom document transforms", () => {
     });
   });
 
-  it("runs custom document transforms on fragments that override registered fragments in the fragment registery", async () => {
+  it("runs custom document transforms on fragments that override registered fragments in the fragment registry", async () => {
     const query = gql`
       query TestQuery {
         product {

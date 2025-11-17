@@ -2262,7 +2262,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   }
 
   // Because we switched to a `no-cache` fetch policy, we should not see the
-  // newly fetched data in the cache after the fetch occured.
+  // newly fetched data in the cache after the fetch occurred.
   expect(cache.readQuery({ query })).toStrictEqualTyped({
     character: {
       __typename: "Character",

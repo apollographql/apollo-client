@@ -5,13 +5,14 @@ import { $ } from "zx";
 
 import { babelTransform } from "./babel.ts";
 import { compileTs } from "./compileTs.ts";
-import { reactCompiler } from "./react-compiler.ts";
 import { deprecateInternals } from "./deprecateInternals.ts";
 import { addExports } from "./exports.ts";
 import { distDir } from "./helpers.ts";
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
 import { prepareDist } from "./prepareDist.ts";
+import { preserveTsIgnore } from "./preserveTsIgnore.ts";
 import { processInvariants } from "./processInvariants.ts";
+import { reactCompiler } from "./react-compiler.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { updateVersion, verifyVersion } from "./version.ts";
 
@@ -42,6 +43,7 @@ const buildSteps = {
   updateVersion,
   inlineInheritDoc,
   deprecateInternals,
+  preserveTsIgnore,
   processInvariants,
   reactCompiler,
   verifyVersion,

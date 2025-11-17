@@ -914,7 +914,7 @@ type StorageType = Record<string, any>;
 export { StoreObject }
 
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? [
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends ReadonlyArray<Record<string, any>> ? StoreVal extends ReadonlyArray<infer Item> ? [
 Item
 ] extends [Record<string, any>] ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 

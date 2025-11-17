@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-09-03**
+**Last updated: 2025-11-12**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -19,14 +19,21 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 #### 4.1.0
 
-_In planning_
+_Release candidate - November 21st, 2025_
+
+- Support for `@stream`
+- Add support for the `graphql@17.0.0-alpha.9` incremental delivery format
+- Improvements for existing incremental delivery implementation
+  - Improvements to array merging behavior
+  - Improvements to `readFragment`/`writeFragment` (add `from` option)
+- Add support for `useFragment`/`useSuspenseFragment` with arrays
 
 ### GraphQL Testing Library
 
 - New documentation
 - Subscription support
 
-_These changes will take longer than anticipated due to prioritization of other libaries and integrations_
+_These changes will take longer than anticipated due to prioritization of other libraries and integrations_
 
 ### VSCode Extension
 
@@ -38,7 +45,7 @@ _No outstanding work_
 
 ### Apollo Client DevTools
 
-_No outstanding work_
+- Support cache write history
 
 ### Apollo Client React Framework Integrations
 

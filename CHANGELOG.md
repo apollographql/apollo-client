@@ -134,6 +134,36 @@
 
 - [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`01cace0`](https://github.com/apollographql/apollo-client/commit/01cace0a6d4faf79e8a4188b93c7d13c4b26d6d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the cache data loss warning message when `existing` or `incoming` is an array.
 
+## 4.0.9
+
+### Patch Changes
+
+- [#12993](https://github.com/apollographql/apollo-client/pull/12993) [`8f3bc9b`](https://github.com/apollographql/apollo-client/commit/8f3bc9b7253a737062dc0d652cd4f8b354f68ccc) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where switching from options with `variables` to `skipToken` with `useSuspenseQuery` and `useBackgroundQuery` would create a new `ObservableQuery`. This could cause unintended refetches where `variables` were absent in the request when the query was referenced with `refetchQueries`.
+
+## 4.0.8
+
+### Patch Changes
+
+- [#12983](https://github.com/apollographql/apollo-client/pull/12983) [`f6d0efa`](https://github.com/apollographql/apollo-client/commit/f6d0efac4d99375c67255aee6d9b2981753b6f55) Thanks [@CarsonF](https://github.com/CarsonF)! - Fix cache.modify() mapping readonly arrays to singular reference
+
+## 4.0.7
+
+### Patch Changes
+
+- [#12950](https://github.com/apollographql/apollo-client/pull/12950) [`5b4f36a`](https://github.com/apollographql/apollo-client/commit/5b4f36a2b249d15e2e8165bd32d9b2fca7e70217) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't send `operationType` in the payload sent by `GraphQLWsLink`.
+
+## 4.0.6
+
+### Patch Changes
+
+- [#12937](https://github.com/apollographql/apollo-client/pull/12937) [`3b0d89b`](https://github.com/apollographql/apollo-client/commit/3b0d89bc9dde3eaee9ddf0aec387da43fe71abc0) Thanks [@phryneas](https://github.com/phryneas)! - Fix a problem with `fetchMore` where the loading state wouldn't reset if the result wouldn't result in a data update.
+
+## 4.0.5
+
+### Patch Changes
+
+- [#12920](https://github.com/apollographql/apollo-client/pull/12920) [`e2fc385`](https://github.com/apollographql/apollo-client/commit/e2fc3850ddb2aa756fc44420390ae357daf31948) Thanks [@phryneas](https://github.com/phryneas)! - Fix an invariance type error in the `MockedResponse` type.
+
 ## 4.0.4
 
 ### Patch Changes

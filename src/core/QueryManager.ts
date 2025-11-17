@@ -1082,7 +1082,7 @@ export class QueryManager {
             }),
         } as ObservableQuery.Result<TData>;
 
-        // In the case we start multiple network requests simulatenously, we
+        // In the case we start multiple network requests simultaneously, we
         // want to ensure we properly set `data` if we're reporting on an old
         // result which will not be caught by the conditional above that ends up
         // throwing the markError result.

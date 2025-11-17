@@ -27,7 +27,7 @@ import type {
 
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class
-// intances that we filter out.
+// instances that we filter out.
 type KnownClassInstances = ApolloClient | ObservableQuery<any, any>;
 type FilterUnserializableProperties<
   T,

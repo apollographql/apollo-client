@@ -112,8 +112,8 @@ export type Modifier<T> = (
 ) => DeepPartial<T> | DeleteModifier | InvalidateModifier | undefined;
 
 type StoreObjectValueMaybeReference<StoreVal> =
-  StoreVal extends Array<Record<string, any>> ?
-    StoreVal extends Array<infer Item> ?
+  StoreVal extends ReadonlyArray<Record<string, any>> ?
+    StoreVal extends ReadonlyArray<infer Item> ?
       [Item] extends [Record<string, any>] ?
         ReadonlyArray<AsStoreObject<Item> | Reference>
       : never

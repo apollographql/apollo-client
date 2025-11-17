@@ -17,9 +17,7 @@ import type {
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
-  CacheKey,
   FetchMoreFunction,
   QueryKey,
   RefetchFunction,
@@ -34,7 +32,12 @@ import type {
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import {
+  __use,
+  useDeepMemo,
+  useSuspenseHookCacheKey,
+  wrapHook,
+} from "./internal/index.js";
 import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 
@@ -375,14 +378,8 @@ function useSuspenseQuery_<
     query,
     options,
   });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
-
-  const cacheKey: CacheKey = [
-    query,
-    canonicalStringify(variables),
-    ...([] as any[]).concat(queryKey),
-  ];
+  const { fetchPolicy } = watchQueryOptions;
+  const cacheKey = useSuspenseHookCacheKey(query, options);
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)

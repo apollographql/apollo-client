@@ -8,11 +8,12 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
+import type { GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary } from "react-error-boundary";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloCache,
@@ -50,6 +51,7 @@ import type {
 import {
   actAsync,
   createClientWrapper,
+  createMockWrapper,
   markAsStreaming,
   renderAsync,
   renderHookAsync,
@@ -69,6 +71,8 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
+
+import { renderUseSuspenseQuery } from "./useSuspenseQuery/testUtils.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -96,6 +100,11 @@ interface SimpleQueryData {
   greeting: string;
 }
 
+/**
+ * @deprecated
+ * Use the `renderUseSuspenseQuery` helper from utils which uses render streams
+ * instead of function call render counting.
+ */
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}
@@ -297,7 +306,10 @@ function useVariablesQueryCase() {
         character: { __typename: "Character", id: String(index + 1), name },
       },
     },
-    delay: 20,
+    // React runs layout effects much later in React 18 which means tracked
+    // components aren't captured correctly, specifically when changing
+    // variables that cause the component to suspend.
+    delay: IS_REACT_19 ? 20 : 200,
   }));
 
   return { query, mocks };
@@ -1085,47 +1097,51 @@ describe("useSuspenseQuery", () => {
   it("suspends when changing variables", async () => {
     const { query, mocks } = useVariablesQueryCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("suspends and fetches data from new client when changing clients", async () => {
@@ -1564,135 +1580,137 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { client, initialProps: { id: "1" } }
+      { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
+    }
+
+    client.writeQuery({
+      query,
+      variables: { id: "2" },
+      data: { character: { id: "2", name: "Cached hero" } },
     });
 
-    act(() => {
-      client.writeQuery({
-        query,
-        variables: { id: "2" },
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "2", name: "Cached hero" } },
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
-    });
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: { character: { id: "2", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { character: { id: "2", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("uses cached result and does not suspend when switching back to already used variables while using `cache-first` fetch policy", async () => {
     const { query, mocks } = useVariablesQueryCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-first",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    expect(result.current).toStrictEqualTyped({
-      ...mocks[0].result,
-      dataState: "complete",
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
@@ -1714,7 +1732,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1727,7 +1745,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1740,85 +1758,85 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-and-network",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    expect(result.current).toStrictEqualTyped({
-      ...mocks[0].result,
-      dataState: "complete",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
@@ -1840,7 +1858,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1853,7 +1871,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1866,72 +1884,79 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
         dataState: "complete",
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
@@ -1953,7 +1978,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1966,7 +1991,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1979,72 +2004,79 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "no-cache",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("responds to cache updates after changing back to already fetched variables", async () => {
@@ -2055,87 +2087,83 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { client, initialProps: { id: "1" } }
+      { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
+    }
+
+    client.writeQuery({
+      query,
+      variables: { id: "1" },
+      data: { character: { id: "1", name: "Cached hero" } },
     });
 
-    act(() => {
-      client.writeQuery({
-        query,
-        variables: { id: "1" },
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1", name: "Cached hero" } },
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
-    });
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: { character: { id: "1", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { character: { id: "1", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
@@ -2357,66 +2385,65 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-first",
           returnPartialData: true,
           variables: { id },
         }),
-      { cache, mocks, initialProps: { id: "1" } }
+      {
+        wrapper: createMockWrapper({ cache, mocks }),
+        initialProps: { id: "1" },
+      }
     );
 
-    expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toStrictEqualTyped({
-      data: { character: { id: "1" } },
-      dataState: "partial",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await rerenderAsync({ id: "2" });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1" } },
         dataState: "partial",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    await rerender({ id: "2" });
+
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
@@ -2847,66 +2874,65 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-and-network",
           returnPartialData: true,
           variables: { id },
         }),
-      { cache, mocks, initialProps: { id: "1" } }
+      {
+        wrapper: createMockWrapper({ cache, mocks }),
+        initialProps: { id: "1" },
+      }
     );
 
-    expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toStrictEqualTyped({
-      data: { character: { id: "1" } },
-      dataState: "partial",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await rerenderAsync({ id: "2" });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1" } },
         dataState: "partial",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    await rerender({ id: "2" });
+
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it.each<useSuspenseQuery.FetchPolicy>([
@@ -3065,53 +3091,51 @@ describe("useSuspenseQuery", () => {
     async (fetchPolicy) => {
       const { query, mocks } = useVariablesQueryCase();
 
-      const { result, rerenderAsync, renders } = await renderSuspenseHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeRender, rerender } = await renderUseSuspenseQuery(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
-        { mocks, initialProps: { id: "1" } }
+        { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
       );
 
-      expect(renders.suspenseCount).toBe(1);
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
+      {
+        const { renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+      }
+
+      {
+        const { snapshot, renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+        expect(snapshot).toStrictEqualTyped({
           ...mocks[0].result,
           dataState: "complete",
           networkStatus: NetworkStatus.ready,
           error: undefined,
         });
-      });
+      }
 
-      await rerenderAsync({ id: "2" });
+      await rerender({ id: "2" });
 
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
+      {
+        const { renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+      }
+
+      {
+        const { snapshot, renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+        expect(snapshot).toStrictEqualTyped({
           ...mocks[1].result,
           dataState: "complete",
           networkStatus: NetworkStatus.ready,
           error: undefined,
         });
-      });
+      }
 
-      // Renders:
-      // 1. Initiate fetch and suspend
-      // 2. Unsuspend and return results from initial fetch
-      // 3. Change variables and suspend
-      // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-      expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toStrictEqualTyped([
-        {
-          ...mocks[0].result,
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-        {
-          ...mocks[1].result,
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-      ]);
+      await expect(takeRender).not.toRerender();
     }
   );
 
@@ -3513,10 +3537,7 @@ describe("useSuspenseQuery", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink((operation) => {
-        return new Observable((observer) => {
-          observer.next({ data: { vars: operation.variables } });
-          observer.complete();
-        });
+        return of({ data: { vars: operation.variables } }).pipe(delay(200));
       }),
       defaultOptions: {
         watchQuery: {
@@ -3525,17 +3546,30 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderUseSuspenseQuery(
       ({ source }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
           variables: { source, localOnlyVar: true },
         }),
-      { client, initialProps: { source: "local" } }
+      {
+        wrapper: createClientWrapper(client),
+        initialProps: { source: "local" },
+      }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: {
           vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3543,12 +3577,21 @@ describe("useSuspenseQuery", () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ source: "rerender" });
+    await rerender({ source: "rerender" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: {
           vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3556,26 +3599,9 @@ describe("useSuspenseQuery", () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("can unset a globally defined variable", async () => {
@@ -4349,7 +4375,9 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const graphQLErrors = [new GraphQLError("Could not fetch user 1")];
+    const graphQLErrors: GraphQLFormattedError[] = [
+      { message: "Could not fetch user 1" },
+    ];
 
     const mocks = [
       {
@@ -4357,63 +4385,65 @@ describe("useSuspenseQuery", () => {
         result: {
           errors: graphQLErrors,
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
         result: {
           data: { user: { id: "2", name: "Captain Marvel" } },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, { errorPolicy: "all", variables: { id } }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
     const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: undefined,
         dataState: "empty",
         networkStatus: NetworkStatus.error,
         error: expectedError,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: mocks[1].result.data,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: undefined,
-        dataState: "empty",
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      },
-      {
-        data: mocks[1].result.data,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("re-suspends when calling `refetch`", async () => {

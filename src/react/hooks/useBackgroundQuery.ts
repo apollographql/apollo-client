@@ -12,10 +12,8 @@ import type {
   WatchQueryFetchPolicy,
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 import type { QueryRef } from "@apollo/client/react";
 import type {
-  CacheKey,
   FetchMoreFunction,
   RefetchFunction,
 } from "@apollo/client/react/internal";
@@ -32,7 +30,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
-import { wrapHook } from "./internal/index.js";
+import { useSuspenseHookCacheKey, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
@@ -449,8 +447,8 @@ function useBackgroundQuery_<
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
+  const { fetchPolicy } = watchQueryOptions;
+  const cacheKey = useSuspenseHookCacheKey(query, options);
 
   // This ref tracks the first time query execution is enabled to determine
   // whether to return a query ref or `undefined`. When initialized
@@ -460,12 +458,6 @@ function useBackgroundQuery_<
   // skipped again later.
   const didFetchResult = React.useRef(fetchPolicy !== "standby");
   didFetchResult.current ||= fetchPolicy !== "standby";
-
-  const cacheKey: CacheKey = [
-    query,
-    canonicalStringify(variables),
-    ...([] as any[]).concat(queryKey),
-  ];
 
   const queryRef = suspenseCache.getQueryRef<TData, TStates>(cacheKey, () =>
     client.watchQuery(

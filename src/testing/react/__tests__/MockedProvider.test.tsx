@@ -5,6 +5,7 @@ import React from "react";
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
+import type { TypedDocumentNode } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { useQuery } from "@apollo/client/react";
@@ -24,7 +25,7 @@ const user = {
   ...userWithoutTypeName,
 };
 
-const query: DocumentNode = gql`
+const query: TypedDocumentNode<Data, Variables> = gql`
   query GetUser($username: String!) {
     user(username: $username) {
       id
@@ -560,7 +561,7 @@ describe("General use", () => {
   it('should return "No more mocked responses" errors in response', async () => {
     let finished = false;
     function Component() {
-      const { loading, error } = useQuery(query);
+      const { loading, error } = useQuery(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
         finished = true;

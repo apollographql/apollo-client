@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.1.0-alpha.4
+
+### Patch Changes
+
+- [#12927](https://github.com/apollographql/apollo-client/pull/12927) [`259ae9b`](https://github.com/apollographql/apollo-client/commit/259ae9bafaa8122996b0a52dd99828b2261087e5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `FragmentType` not only to be called as `FragmentType<TData>`, but also as `FragmentType<TypedDocumentNode>`.
+
+- [#12927](https://github.com/apollographql/apollo-client/pull/12927) [`44706a2`](https://github.com/apollographql/apollo-client/commit/44706a2e7ae2c977fa917214a1ff5e5fe4a9b3a7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add helper type `QueryRef.ForQuery<TypedDocumentNode>`
+
 ## 4.1.0-alpha.3
 
 ### Minor Changes

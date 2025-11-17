@@ -8,7 +8,7 @@ jobs:
     name: Ubuntu/Node v20
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
       - name: Run knip

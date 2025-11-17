@@ -72,7 +72,7 @@ VueJS example:
 ```js
 import ApolloClient from "apollo-client";
 import { HttpLink } from "apollo-link-http";
-import { ApolloLink, concat } from "apollo-link";
+import { ApolloLink } from "apollo-link";
 import { InMemoryCache } from "apollo-cache-inmemory";
 import { getMainDefinition } from "apollo-utilities";
 
@@ -89,7 +89,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 export const apolloClient = new ApolloClient({
-  link: concat(authMiddleware, httpLink),
+  link: authMiddleware.concat(httpLink),
   cache: new InMemoryCache(),
 });
 ```

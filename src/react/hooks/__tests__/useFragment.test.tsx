@@ -1835,7 +1835,11 @@ describe("useFragment", () => {
 
   describe("return value `complete` property", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
-    const ItemFragment = gql`
+    const ItemFragment: TypedDocumentNode<{
+      __typename: "Item";
+      id: number;
+      text: string;
+    }> = gql`
       fragment ItemFragment on Item {
         id
         text

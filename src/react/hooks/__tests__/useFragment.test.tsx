@@ -1880,13 +1880,17 @@ describe("useFragment", () => {
     });
 
     test("if only partial data is available, `complete` is `false`", () => {
-      cache.writeFragment({
-        fragment: ItemFragment,
-        data: {
-          __typename: "Item",
-          id: 5,
-        },
-      });
+      {
+        using _ = spyOnConsole("error");
+        cache.writeFragment({
+          fragment: ItemFragment,
+          // @ts-expect-error purposefully omitting text
+          data: {
+            __typename: "Item",
+            id: 5,
+          },
+        });
+      }
 
       const { result } = renderHook(
         () =>

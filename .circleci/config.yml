@@ -1,15 +1,6 @@
 version: 2.1
 
 jobs:
-  # Filesize:
-  #   docker:
-  #     - image: cimg/node:20.2.0
-  #   steps:
-  #     - checkout
-  #     - run: npm version
-  #     - run: npm ci
-  #     - run: npm run bundlesize
-
   Circularity:
     docker:
       - image: cimg/node:24.11.1

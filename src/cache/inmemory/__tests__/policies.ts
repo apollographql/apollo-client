@@ -461,7 +461,7 @@ describe("type policies", function () {
           book: theInformationBookData,
         },
       });
-    }).toThrowError(
+    }).toThrow(
       `Missing field 'year' while extracting keyFields from ${stringifyForDisplay(
         theInformationBookData,
         2

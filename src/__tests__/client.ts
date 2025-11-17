@@ -1760,7 +1760,7 @@ describe("client", () => {
           query,
           returnPartialData: true,
         } as ApolloClient.QueryOptions);
-      }).toThrowError(/returnPartialData/);
+      }).toThrow(/returnPartialData/);
     });
 
     it("errors when returnPartialData is used on watchQuery", () => {
@@ -1773,7 +1773,7 @@ describe("client", () => {
           query,
           returnPartialData: true,
         } as ApolloClient.QueryOptions);
-      }).toThrowError(/returnPartialData/);
+      }).toThrow(/returnPartialData/);
     });
   });
 

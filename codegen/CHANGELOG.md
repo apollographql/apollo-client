@@ -1,5 +1,11 @@
 # @apollo/client-graphql-codegen
 
+## 2.0.0
+
+### Major Changes
+
+- [#13014](https://github.com/apollographql/apollo-client/pull/13014) [`b9a1964`](https://github.com/apollographql/apollo-client/commit/b9a19647442842d1192a67bfded3bd8b27952832) Thanks [@phryneas](https://github.com/phryneas)! - bump upstream dependencies by major version
+
 ## 1.0.0
 
 ### Major Changes

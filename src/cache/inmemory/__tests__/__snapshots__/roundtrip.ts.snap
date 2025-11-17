@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`roundtrip fragments should throw an error on two of the same inline fragment types 1`] = `
 [MockFunction] {

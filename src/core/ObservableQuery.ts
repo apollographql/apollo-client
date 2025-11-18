@@ -1042,9 +1042,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         .then((result) => toQueryResult(this.maskResult(result)))
         .finally(() => {
           subscription.unsubscribe();
-          if (isCached && !wasUpdated) {
-            finalize();
+          finalize();
 
+          if (isCached && !wasUpdated) {
             const lastResult = this.getCurrentResult();
 
             if (lastResult.networkStatus === NetworkStatus.streaming) {

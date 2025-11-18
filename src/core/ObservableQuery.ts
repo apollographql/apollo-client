@@ -894,20 +894,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
 
-    const { promise, operator } = getTrackingOperatorPromise(
-      (value: QueryNotification.Value<TFetchData>) => {
-        switch (value.kind) {
-          case "E": {
-            throw value.error;
-          }
-          case "N": {
-            if (value.source !== "newNetworkStatus" && !value.value.loading) {
-              return value.value;
-            }
-          }
-        }
-      }
-    );
+    const { promise, operator } = getTrackingOperatorPromise<TFetchData>();
 
     const { observable } = this.queryManager.fetchObservableWithInfo(
       combinedOptions,
@@ -1610,15 +1597,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.resubscribeCache();
     const { promise, operator: promiseOperator } = getTrackingOperatorPromise(
-      (value: QueryNotification.Value<TData>) => {
-        switch (value.kind) {
-          case "E":
-            throw value.error;
-          case "N":
-            if (value.source !== "newNetworkStatus" && !value.value.loading)
-              return value.value;
-        }
-      },
       // This default value should only be used when using a `fetchPolicy` of
       // `standby` since that fetch policy completes without emitting a
       // result. Since we are converting this to a QueryResult type, we
@@ -2039,46 +2017,49 @@ function isEqualQuery(
   return !!(a && b && a.query === b.query && equal(a.variables, b.variables));
 }
 
-function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
-  filterMapCb: (value: ObservedValue) => ReturnValue | undefined,
-  defaultValue?: ReturnValue
+function getTrackingOperatorPromise<TData>(
+  defaultValue?: ObservableQuery.Result<TData>
 ) {
   let lastValue = defaultValue,
-    resolve: (value: ReturnValue) => void,
+    resolve: (value: ObservableQuery.Result<TData>) => void,
     reject: (error: unknown) => void;
-  const promise = new Promise<ReturnValue>((res, rej) => {
+  const promise = new Promise<ObservableQuery.Result<TData>>((res, rej) => {
     resolve = res;
     reject = rej;
   });
-  const operator: MonoTypeOperatorFunction<ObservedValue> = tap({
-    next(value) {
-      try {
-        const newValue = filterMapCb(value);
-        if (newValue !== undefined) {
-          lastValue = newValue;
+  const operator: MonoTypeOperatorFunction<QueryNotification.Value<TData>> =
+    tap({
+      next(value) {
+        if (value.kind === "E") {
+          return reject(value.error);
         }
-      } catch (error) {
-        reject(error);
-      }
-    },
-    finalize: () => {
-      if (lastValue) {
-        resolve(lastValue);
-      } else {
-        const message = "The operation was aborted.";
-        const name = "AbortError";
-        reject(
-          typeof DOMException !== "undefined" ?
-            new DOMException(message, name)
-            // some environments do not have `DOMException`, e.g. node
-            // uses a normal `Error` with a `name` property instead: https://github.com/phryneas/node/blob/d0579b64f0f6b722f8e49bf8a471dd0d0604a21e/lib/internal/errors.js#L964
-            // error.code is a legacy property that is not used anymore,
-            // and also inconsistent across environments (in supporting
-            // browsers it is `20`, in node `'ABORT_ERR'`) so we omit that.
-          : Object.assign(new Error(message), { name })
-        );
-      }
-    },
-  });
+
+        if (
+          value.kind === "N" &&
+          value.source !== "newNetworkStatus" &&
+          !value.value.loading
+        ) {
+          lastValue = value.value;
+        }
+      },
+      finalize: () => {
+        if (lastValue) {
+          resolve(lastValue);
+        } else {
+          const message = "The operation was aborted.";
+          const name = "AbortError";
+          reject(
+            typeof DOMException !== "undefined" ?
+              new DOMException(message, name)
+              // some environments do not have `DOMException`, e.g. node
+              // uses a normal `Error` with a `name` property instead: https://github.com/phryneas/node/blob/d0579b64f0f6b722f8e49bf8a471dd0d0604a21e/lib/internal/errors.js#L964
+              // error.code is a legacy property that is not used anymore,
+              // and also inconsistent across environments (in supporting
+              // browsers it is `20`, in node `'ABORT_ERR'`) so we omit that.
+            : Object.assign(new Error(message), { name })
+          );
+        }
+      },
+    });
   return { promise, operator };
 }

@@ -1047,7 +1047,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           if (isCached && !wasUpdated) {
             const lastResult = this.getCurrentResult();
 
-            if (lastResult.networkStatus === NetworkStatus.streaming) {
+            if (lastResult.dataState === "streaming") {
               pushNotification({
                 kind: "N",
                 source: "network",

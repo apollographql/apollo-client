@@ -852,7 +852,7 @@ describe("useQuery Hook", () => {
                 update(cache, { data }) {
                   cache.writeQuery({
                     query,
-                    data: { hello: data.updateGreeting },
+                    data: { hello: data.updateName },
                   });
                 },
               }),
@@ -3724,7 +3724,7 @@ describe("useQuery Hook", () => {
           request: { query },
           result: {
             data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
+            errors: [{ message: 'Could not fetch "hello"' }],
           },
         },
       ];

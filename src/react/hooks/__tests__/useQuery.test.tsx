@@ -3559,6 +3559,7 @@ describe("useQuery Hook", () => {
             cache={cache}
             // This test uses fake timers and does not expect a delay
             mockLinkDefaultOptions={{ delay: 0 }}
+            showWarnings={false}
           >
             {children}
           </MockedProvider>

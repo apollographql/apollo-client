@@ -21,6 +21,8 @@ import {
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 
+const IS_REACT_17 = React.version.startsWith("17");
+
 const variables = {
   username: "mock_username",
 };
@@ -761,12 +763,23 @@ describe("General use", () => {
       .refetch()
       .catch(() => {});
 
+    if (IS_REACT_17) {
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+    }
+
     await expect(renderStream).toRerenderWithSimilarSnapshot({
       expected: (previous) => ({
         ...previous,
         error: expect.objectContaining({
           message: expect.stringContaining("No more mocked responses"),
         }),
+        loading: false,
         networkStatus: NetworkStatus.error,
       }),
     });
@@ -840,10 +853,11 @@ describe("General use", () => {
     const link = ApolloLink.from([errorLink, mockLink]);
 
     using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(() => useQuery(query, { variables }), {
-        wrapper: createMockWrapper({ link }),
-      });
+    const renderStream = await renderHookToSnapshotStream(
+      () => useQuery(query, { variables }),
+      { wrapper: createMockWrapper({ link }) }
+    );
+    const { takeSnapshot, getCurrentSnapshot } = renderStream;
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
@@ -866,6 +880,16 @@ describe("General use", () => {
     await expect(getCurrentSnapshot().refetch()).rejects.toThrow(
       /No more mocked responses/
     );
+
+    if (IS_REACT_17) {
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+    }
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: { user },

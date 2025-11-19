@@ -1187,10 +1187,6 @@ export class ApolloClient {
     | ApolloClient.ObservableFragment<TData>
     | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
-    const observable = this.cache.watchFragment({
-      ...options,
-      fragment: this.transform(options.fragment, dataMasking),
-    });
 
     const mask = (
       result: ApolloClient.WatchFragmentResult<any>
@@ -1215,21 +1211,13 @@ export class ApolloClient {
       return result;
     };
 
-    let currentResult: ApolloClient.WatchFragmentResult<any>;
-    let stableMaskedResult: ApolloClient.WatchFragmentResult<any>;
+    const observable = this.cache.watchFragment({
+      ...options,
+      fragment: this.transform(options.fragment, dataMasking),
+      [Symbol.for("apollo.transform")]: mask,
+    });
 
-    return Object.assign(observable.pipe(map(mask)), {
-      getCurrentResult: () => {
-        const result = observable.getCurrentResult();
-
-        if (result !== currentResult) {
-          currentResult = result as any;
-          stableMaskedResult = mask(currentResult);
-        }
-
-        return stableMaskedResult;
-      },
-    }) as ApolloClient.ObservableFragment<any>;
+    return observable as ApolloClient.ObservableFragment<any>;
   }
 
   /**

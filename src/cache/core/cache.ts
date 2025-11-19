@@ -439,6 +439,10 @@ export abstract class ApolloCache {
       fragment,
       fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
+    const transform: (
+      result: ApolloCache.WatchFragmentResult<TData>
+    ) => ApolloCache.WatchFragmentResult<TData> =
+      (options as any)[Symbol.for("apollo.transform")] ?? ((v) => v);
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -486,15 +490,17 @@ export abstract class ApolloCache {
         // without the need for a similar fallback since watchFragment with
         // arrays is new functionality in v4.1.
         transform: (result) =>
-          from === null ? result : { ...result, data: result.data ?? {} },
+          transform(
+            from === null ? result : { ...result, data: result.data ?? {} }
+          ),
       });
     }
 
-    let currentResult: ApolloCache.WatchFragmentResult<any>;
+    let currentResult: ApolloCache.WatchFragmentResult<TData>;
     function toResult(
       results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData> | null>>
     ): ApolloCache.WatchFragmentResult<any> {
-      const result = results.reduce(
+      let result = results.reduce(
         (finalResult, res, idx) => {
           const result = res as ApolloCache.WatchFragmentResult<TData>;
 
@@ -513,8 +519,10 @@ export abstract class ApolloCache {
           data: [],
           dataState: "complete",
           complete: true,
-        } as ApolloCache.WatchFragmentResult<any>
+        } as ApolloCache.WatchFragmentResult<TData>
       );
+
+      result = transform(result);
 
       if (!equal(currentResult, result)) {
         currentResult = result;
@@ -617,7 +625,15 @@ export abstract class ApolloCache {
             this.onAfterBroadcast(() => {
               const result = transform(toWatchFragmentResult(diff));
 
-              if (!equal(currentResult, result)) {
+              if (
+                !currentResult ||
+                !equalByQuery(
+                  fragmentQuery,
+                  { data: currentResult.data },
+                  { data: result.data },
+                  options.variables
+                )
+              ) {
                 currentResult = result;
               }
 
@@ -632,14 +648,7 @@ export abstract class ApolloCache {
           this.fragmentWatches.removeArray(cacheKey);
         };
       }).pipe(
-        distinctUntilChanged((previous, current) =>
-          equalByQuery(
-            fragmentQuery,
-            { data: previous.data },
-            { data: current.data },
-            options.variables
-          )
-        ),
+        distinctUntilChanged(),
         share({
           connector: () => new ReplaySubject(1),
           // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one

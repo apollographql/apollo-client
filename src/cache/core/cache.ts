@@ -498,22 +498,20 @@ export abstract class ApolloCache {
 
     let currentResult: ApolloCache.WatchFragmentResult<TData>;
     function toResult(
-      results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData> | null>>
+      results: Array<ApolloCache.WatchFragmentResult<TData>>
     ): ApolloCache.WatchFragmentResult<any> {
       let result = results.reduce(
-        (finalResult, res, idx) => {
-          const result = res as ApolloCache.WatchFragmentResult<TData>;
-
-          finalResult.data.push(result.data);
-          finalResult.complete &&= result.complete;
-          finalResult.dataState = finalResult.complete ? "complete" : "partial";
+        (memo, result, idx) => {
+          memo.data.push(result.data);
+          memo.complete &&= result.complete;
+          memo.dataState = memo.complete ? "complete" : "partial";
 
           if (result.missing) {
-            finalResult.missing ||= {};
-            (finalResult.missing as any)[idx] = result.missing;
+            memo.missing ||= {};
+            (memo.missing as any)[idx] = result.missing;
           }
 
-          return finalResult;
+          return memo;
         },
         {
           data: [],
@@ -534,7 +532,7 @@ export abstract class ApolloCache {
     let subscribed = false;
     const observables = ids.map((id) =>
       this.watchSingleFragment(id, query, options)
-    );
+    ) as Array<ApolloCache.ObservableFragment<TData>>;
 
     const observable =
       ids.length === 0 ?

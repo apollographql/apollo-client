@@ -483,7 +483,7 @@ export abstract class ApolloCache {
         // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
         // when `from` is a single record. As such, we need to fallback to {}
         // when diff.result is null to maintain backwards compatibility. We
-        // should plan to change this in v5. We do howeever support `null` if
+        // should plan to change this in v5. We do however support `null` if
         // `from` is explicitly `null`.
         //
         // NOTE: Using `from` with an array will maintain `null` properly

@@ -109,20 +109,28 @@ export namespace DeepMerger {
     // (undocumented)
     export type ArrayMergeStrategy = "truncate" | "combine";
     // (undocumented)
+    export interface MergeOptions {
+        // (undocumented)
+        atPath?: ReadonlyArray<string | number>;
+    }
+    // (undocumented)
     export interface Options {
         // (undocumented)
         arrayMerge?: DeepMerger.ArrayMergeStrategy;
+        // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        reconciler?: ReconcilerFunction;
     }
 }
 
 // @internal @deprecated (undocumented)
-export class DeepMerger<TContextArgs extends any[] = any[]> {
-    // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-    constructor(reconciler?: ReconcilerFunction<TContextArgs>, options?: DeepMerger.Options);
+export class DeepMerger {
+    constructor(options?: DeepMerger.Options);
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)
-    merge(target: any, source: any, ...context: TContextArgs): any;
+    merge(target: any, source: any, mergeOptions?: DeepMerger.MergeOptions): any;
     // (undocumented)
     shallowCopyForMerge<T>(value: T): T;
 }
@@ -400,7 +408,7 @@ export type Primitive = null | undefined | string | number | boolean | symbol | 
 // Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
 //
 // @public (undocumented)
-type ReconcilerFunction<TContextArgs extends any[]> = (this: DeepMerger<TContextArgs>, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number, ...context: TContextArgs) => any;
+type ReconcilerFunction = (this: DeepMerger, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number) => any;
 
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //

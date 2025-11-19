@@ -72,15 +72,21 @@ class DeferRequest<TData extends Record<string, unknown>>
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
+  // This tracks paths for `@stream` arrays that returns items: null due to
+  // errors thrown for non-null array items. We stop processing future updates
+  // to these stream arrays to prevent creating sparse arrays or inserting
+  // `null` for an expected non-null value which could cause runtime crashes.
+  private ignoredImpossibleStreamPaths = new Set<string>();
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
-    arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate"
+    atPath?: DeepMerger.MergeOptions["atPath"]
   ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger(undefined, { arrayMerge }).merge(
+      this.data = new DeepMerger({ arrayMerge: "truncate" }).merge(
         this.data,
-        normalized.data
+        normalized.data,
+        { atPath }
       );
     }
     if (normalized.errors) {
@@ -101,36 +107,43 @@ class DeferRequest<TData extends Record<string, unknown>>
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
         const { path, errors, extensions } = incremental;
-        let arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate";
-        let data =
-          // The item merged from a `@stream` chunk is always the first item in
-          // the `items` array
-          "items" in incremental ? incremental.items?.[0]
+
+        if ("items" in incremental) {
+          // Remove the array index from the end of the array since each future
+          // chunk sends a different array index. This normalizes the path to
+          // ensure we ignore updates to this field if `items` is `null`.
+          const stringPath = path?.slice(0, -1).join(".") ?? "";
+
+          if (incremental.items === null) {
+            this.ignoredImpossibleStreamPaths.add(stringPath);
+          }
+
+          if (this.ignoredImpossibleStreamPaths.has(stringPath)) {
+            this.merge({ errors, extensions });
+            continue;
+          }
+        }
+
+        let data: any =
+          "items" in incremental ? incremental.items
             // Ensure `data: null` isn't merged for `@defer` responses by
             // falling back to `undefined`
           : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
-        if (data !== undefined && path) {
-          for (let i = path.length - 1; i >= 0; --i) {
-            const key = path[i];
-            const isNumericKey = !isNaN(+key);
-            const parent: Record<string | number, any> = isNumericKey ? [] : {};
-            if (isNumericKey) {
-              arrayMerge = "combine";
-            }
-            parent[key] = data;
-            data = parent as typeof data;
-          }
+        if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
+          const startingIdx = path.at(-1) as number;
+          data.forEach((item, idx) => {
+            this.merge({ data: item }, [
+              ...path!.slice(0, -1),
+              startingIdx + idx,
+            ]);
+          });
+        } else {
+          this.merge({ data }, path);
         }
-        this.merge(
-          {
-            errors,
-            extensions,
-            data: data ? (data as TData) : undefined,
-          },
-          arrayMerge
-        );
+
+        this.merge({ errors, extensions });
       }
     } else {
       this.merge(chunk);

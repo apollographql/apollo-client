@@ -125,8 +125,6 @@ class DeferRequest<TData extends Record<string, unknown>>
         }
 
         let data: any =
-          // The item merged from a `@stream` chunk is always the first item in
-          // the `items` array
           "items" in incremental ? incremental.items
             // Ensure `data: null` isn't merged for `@defer` responses by
             // falling back to `undefined`

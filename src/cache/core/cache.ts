@@ -661,10 +661,6 @@ export abstract class ApolloCache {
             return currentResult;
           }
 
-          if (id === null) {
-            return nullResult;
-          }
-
           const diff = this.diff<TData>({
             id,
             query: fragmentQuery,

@@ -495,16 +495,16 @@ export abstract class ApolloCache {
       results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData> | null>>
     ): ApolloCache.WatchFragmentResult<any> {
       const result = results.reduce(
-        (finalResult, result, idx) => {
-          const res = result as ApolloCache.WatchFragmentResult<TData>;
+        (finalResult, res, idx) => {
+          const result = res as ApolloCache.WatchFragmentResult<TData>;
 
-          finalResult.data.push(res.data);
-          finalResult.complete &&= res.complete;
+          finalResult.data.push(result.data);
+          finalResult.complete &&= result.complete;
           finalResult.dataState = finalResult.complete ? "complete" : "partial";
 
-          if (res.missing) {
+          if (result.missing) {
             finalResult.missing ||= {};
-            (finalResult.missing as any)[idx] = res.missing;
+            (finalResult.missing as any)[idx] = result.missing;
           }
 
           return finalResult;

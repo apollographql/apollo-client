@@ -25,7 +25,11 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type { Reference, StoreObject } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -440,9 +444,9 @@ export abstract class ApolloCache {
       fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
     const transform: (
-      result: ApolloCache.WatchFragmentResult<TData>
-    ) => ApolloCache.WatchFragmentResult<TData> =
-      (options as any)[Symbol.for("apollo.transform")] ?? ((v) => v);
+      data: TData | DeepPartial<TData> | null
+    ) => TData | DeepPartial<TData> | null =
+      (options as any)[Symbol.for("apollo.transform")] ?? ((data) => data);
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -489,10 +493,8 @@ export abstract class ApolloCache {
         // NOTE: Using `from` with an array will maintain `null` properly
         // without the need for a similar fallback since watchFragment with
         // arrays is new functionality in v4.1.
-        transform: (result) =>
-          transform(
-            from === null ? result : { ...result, data: result.data ?? {} }
-          ),
+        transform: (data) =>
+          transform(from === null ? data : data ?? ({} as any)),
       });
     }
 
@@ -500,7 +502,7 @@ export abstract class ApolloCache {
     function toResult(
       results: Array<ApolloCache.WatchFragmentResult<TData>>
     ): ApolloCache.WatchFragmentResult<any> {
-      let result = results.reduce(
+      const result = results.reduce(
         (memo, result, idx) => {
           memo.data.push(result.data);
           memo.complete &&= result.complete;
@@ -520,7 +522,7 @@ export abstract class ApolloCache {
         } as ApolloCache.WatchFragmentResult<TData>
       );
 
-      result = transform(result);
+      result.data = transform(result.data);
 
       if (!equal(currentResult, result)) {
         currentResult = result;
@@ -582,8 +584,8 @@ export abstract class ApolloCache {
       "from" | "fragment" | "fragmentName"
     > & {
       transform?: (
-        result: ApolloCache.WatchFragmentResult<TData>
-      ) => ApolloCache.WatchFragmentResult<TData>;
+        data: TData | DeepPartial<TData> | null
+      ) => TData | DeepPartial<TData> | null;
     }
   ): ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
     dirty: boolean;
@@ -595,7 +597,7 @@ export abstract class ApolloCache {
     const {
       optimistic = true,
       variables,
-      transform = (result) => result,
+      transform = (data) => data,
     } = options;
 
     const cacheKey = [
@@ -606,26 +608,26 @@ export abstract class ApolloCache {
     let currentResult: ApolloCache.WatchFragmentResult<TData>;
 
     function getNewestResult(diff: Cache.DiffResult<TData>) {
-      const result = transform({
-        data: diff.result,
-        dataState: diff.complete ? "complete" : "partial",
-        complete: diff.complete,
-      } as ApolloCache.WatchFragmentResult<TData>);
-
-      if (diff.missing) {
-        result.missing = diff.missing.missing;
-      }
+      const data = transform(diff.result);
 
       if (
         !currentResult ||
         !equalByQuery(
           fragmentQuery,
           { data: currentResult.data },
-          { data: result.data },
+          { data },
           options.variables
         )
       ) {
-        currentResult = result;
+        currentResult = {
+          data,
+          dataState: diff.complete ? "complete" : "partial",
+          complete: diff.complete,
+        } as ApolloCache.WatchFragmentResult<TData>;
+
+        if (diff.missing) {
+          currentResult.missing = diff.missing.missing;
+        }
       }
 
       return currentResult;

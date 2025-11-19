@@ -1188,9 +1188,7 @@ export class ApolloClient {
     | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
 
-    const mask = (
-      result: ApolloClient.WatchFragmentResult<any>
-    ): ApolloClient.WatchFragmentResult<any> => {
+    const mask = (data: TData): TData => {
       // The transform will remove fragment spreads from the fragment
       // document when dataMasking is enabled. The `mask` function
       // remains to apply warnings to fragments marked as
@@ -1198,17 +1196,11 @@ export class ApolloClient {
       // in dev, we can skip the masking algorithm entirely for production.
       if (__DEV__) {
         if (dataMasking) {
-          return {
-            ...result,
-            data: this.queryManager.maskFragment({
-              ...options,
-              data: result.data,
-            }),
-          } as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+          return this.queryManager.maskFragment({ ...options, data });
         }
       }
 
-      return result;
+      return data;
     };
 
     const observable = this.cache.watchFragment({

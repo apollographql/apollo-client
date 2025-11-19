@@ -2782,7 +2782,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:123:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:127:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

@@ -80,11 +80,10 @@ class DeferRequest<TData extends Record<string, unknown>>
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
-    arrayMerge: DeepMerger.ArrayMergeStrategy = "truncate",
     atPath?: DeepMerger.MergeOptions["atPath"]
   ) {
     if (normalized.data !== undefined) {
-      this.data = new DeepMerger({ arrayMerge }).merge(
+      this.data = new DeepMerger({ arrayMerge: "truncate" }).merge(
         this.data,
         normalized.data,
         { atPath }
@@ -136,13 +135,13 @@ class DeferRequest<TData extends Record<string, unknown>>
         if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
           const startingIdx = path.at(-1) as number;
           data.forEach((item, idx) => {
-            this.merge({ data: item }, "truncate", [
+            this.merge({ data: item }, [
               ...path!.slice(0, -1),
               startingIdx + idx,
             ]);
           });
         } else {
-          this.merge({ data }, "truncate", path);
+          this.merge({ data }, path);
         }
 
         this.merge({ errors, extensions });

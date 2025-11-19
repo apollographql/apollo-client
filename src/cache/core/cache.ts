@@ -606,7 +606,15 @@ export abstract class ApolloCache {
     let currentResult: ApolloCache.WatchFragmentResult<TData>;
 
     function getNewestResult(diff: Cache.DiffResult<TData>) {
-      const result = transform(toWatchFragmentResult(diff));
+      const result = transform({
+        data: diff.result,
+        dataState: diff.complete ? "complete" : "partial",
+        complete: diff.complete,
+      } as ApolloCache.WatchFragmentResult<TData>);
+
+      if (diff.missing) {
+        result.missing = diff.missing.missing;
+      }
 
       if (
         !currentResult ||
@@ -875,19 +883,3 @@ const emptyArrayObservable = new Observable<
     complete: true,
   });
 });
-
-function toWatchFragmentResult<TData>(
-  diff: Cache.DiffResult<TData>
-): ApolloCache.WatchFragmentResult<TData> {
-  const result = {
-    data: diff.result,
-    dataState: diff.complete ? "complete" : "partial",
-    complete: diff.complete,
-  } as ApolloCache.WatchFragmentResult<TData>;
-
-  if (diff.missing) {
-    result.missing = diff.missing.missing;
-  }
-
-  return result;
-}

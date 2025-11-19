@@ -370,7 +370,7 @@ export abstract class ApolloCache {
   }
 
   private fragmentWatches = new Trie<{
-    observable?: Observable<any> & { dirty: boolean };
+    observable?: ApolloCache.ObservableFragment<any> & { dirty: boolean };
   }>(true);
 
   public watchFragment<
@@ -478,6 +478,23 @@ export abstract class ApolloCache {
 
       return id as string | null;
     });
+
+    if (!Array.isArray(from)) {
+      return this.watchSingleFragment(ids[0], query, {
+        ...options,
+        // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
+        // when `from` is a single record. As such, we need to fallback to {}
+        // when diff.result is null to maintain backwards compatibility. We
+        // should plan to change this in v5. We do howeever support `null` if
+        // `from` is explicitly `null`.
+        //
+        // NOTE: Using `from` with an array will maintain `null` properly
+        // without the need for a similar fallback since watchFragment with
+        // arrays is new functionality in v4.1.
+        transform: (result) =>
+          from === null ? result : { ...result, data: result.data ?? {} },
+      });
+    }
 
     let currentResult: ApolloCache.WatchFragmentResult<any>;
     function toResult(
@@ -594,13 +611,23 @@ export abstract class ApolloCache {
     options: Omit<
       ApolloCache.WatchFragmentOptions<TData, TVariables>,
       "from" | "fragment" | "fragmentName"
-    >
-  ): Observable<Cache.DiffResult<Unmasked<TData> | null>> & { dirty: boolean } {
+    > & {
+      transform?: (
+        result: ApolloCache.WatchFragmentResult<TData>
+      ) => ApolloCache.WatchFragmentResult<TData>;
+    }
+  ): ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
+    dirty: boolean;
+  } {
     if (id === null) {
-      return nullObservable;
+      return nullObservable as any;
     }
 
-    const { optimistic = true, variables } = options;
+    const {
+      optimistic = true,
+      variables,
+      transform = (result) => result,
+    } = options;
 
     const cacheKey = [
       fragmentQuery,
@@ -609,9 +636,12 @@ export abstract class ApolloCache {
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
     if (!cacheEntry.observable) {
-      const observable: Observable<Cache.DiffResult<TData>> & {
+      let subscribed = false;
+      let currentResult: ApolloCache.WatchFragmentResult<TData>;
+      const observable: Observable<ApolloCache.WatchFragmentResult<TData>> & {
         dirty?: boolean;
-      } = new Observable<Cache.DiffResult<TData>>((observer) => {
+      } = new Observable<ApolloCache.WatchFragmentResult<TData>>((observer) => {
+        subscribed = true;
         const cleanup = this.watch<TData, TVariables>({
           variables,
           returnPartialData: true,
@@ -622,12 +652,19 @@ export abstract class ApolloCache {
           callback: (diff) => {
             observable.dirty = true;
             this.onAfterBroadcast(() => {
-              observer.next(diff);
+              const result = transform(toWatchFragmentResult(diff));
+
+              if (!equal(currentResult, result)) {
+                currentResult = result;
+              }
+
+              observer.next(currentResult);
               observable.dirty = false;
             });
           },
         });
         return () => {
+          subscribed = false;
           cleanup();
           this.fragmentWatches.removeArray(cacheKey);
         };
@@ -635,8 +672,8 @@ export abstract class ApolloCache {
         distinctUntilChanged((previous, current) =>
           equalByQuery(
             fragmentQuery,
-            { data: previous.result },
-            { data: current.result },
+            { data: previous.data },
+            { data: current.data },
             options.variables
           )
         ),
@@ -646,10 +683,40 @@ export abstract class ApolloCache {
           resetOnRefCountZero: () => timer(0),
         })
       );
-      cacheEntry.observable = Object.assign(observable, { dirty: false });
+
+      cacheEntry.observable = Object.assign(observable, {
+        dirty: false,
+        getCurrentResult: () => {
+          if (subscribed && currentResult) {
+            return currentResult;
+          }
+
+          if (id === null) {
+            return toWatchFragmentResult({ result: null, complete: true });
+          }
+
+          const diff = this.diff<TData>({
+            id,
+            query: fragmentQuery,
+            returnPartialData: true,
+            optimistic,
+            variables,
+          });
+
+          const result = transform(toWatchFragmentResult(diff));
+
+          if (!equal(currentResult, result)) {
+            currentResult = result;
+          }
+
+          return currentResult;
+        },
+      });
     }
 
-    return cacheEntry.observable;
+    return cacheEntry.observable as ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
+      dirty: boolean;
+    };
   }
 
   // Make sure we compute the same (===) fragment query document every
@@ -822,11 +889,17 @@ if (__DEV__) {
   ApolloCache.prototype.getMemoryInternals = getApolloCacheMemoryInternals;
 }
 
+const nullResult = Object.freeze({
+  data: null,
+  dataState: "complete",
+  complete: true,
+}) as ApolloCache.WatchFragmentResult<null>;
+
 const nullObservable = Object.assign(
-  new Observable<Cache.DiffResult<null>>((observer) => {
-    observer.next({ result: null, complete: true });
+  new Observable((observer) => {
+    observer.next(nullResult);
   }),
-  { dirty: false }
+  { dirty: false, getCurrentResult: () => nullResult }
 );
 
 const emptyArrayObservable = new Observable<
@@ -838,3 +911,19 @@ const emptyArrayObservable = new Observable<
     complete: true,
   });
 });
+
+function toWatchFragmentResult<TData>(
+  diff: Cache.DiffResult<TData>
+): ApolloCache.WatchFragmentResult<TData> {
+  const result = {
+    data: diff.result,
+    dataState: diff.complete ? "complete" : "partial",
+    complete: diff.complete,
+  } as ApolloCache.WatchFragmentResult<TData>;
+
+  if (diff.missing) {
+    result.missing = diff.missing.missing;
+  }
+
+  return result;
+}

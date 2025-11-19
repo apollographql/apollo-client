@@ -603,10 +603,28 @@ export abstract class ApolloCache {
       canonicalStringify({ id, optimistic, variables }),
     ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
+    let currentResult: ApolloCache.WatchFragmentResult<TData>;
+
+    function getNewestResult(diff: Cache.DiffResult<TData>) {
+      const result = transform(toWatchFragmentResult(diff));
+
+      if (
+        !currentResult ||
+        !equalByQuery(
+          fragmentQuery,
+          { data: currentResult.data },
+          { data: result.data },
+          options.variables
+        )
+      ) {
+        currentResult = result;
+      }
+
+      return currentResult;
+    }
 
     if (!cacheEntry.observable) {
       let subscribed = false;
-      let currentResult: ApolloCache.WatchFragmentResult<TData>;
       const observable: Observable<ApolloCache.WatchFragmentResult<TData>> & {
         dirty?: boolean;
       } = new Observable<ApolloCache.WatchFragmentResult<TData>>((observer) => {
@@ -621,21 +639,7 @@ export abstract class ApolloCache {
           callback: (diff) => {
             observable.dirty = true;
             this.onAfterBroadcast(() => {
-              const result = transform(toWatchFragmentResult(diff));
-
-              if (
-                !currentResult ||
-                !equalByQuery(
-                  fragmentQuery,
-                  { data: currentResult.data },
-                  { data: result.data },
-                  options.variables
-                )
-              ) {
-                currentResult = result;
-              }
-
-              observer.next(currentResult);
+              observer.next(getNewestResult(diff));
               observable.dirty = false;
             });
           },
@@ -661,21 +665,15 @@ export abstract class ApolloCache {
             return currentResult;
           }
 
-          const diff = this.diff<TData>({
-            id,
-            query: fragmentQuery,
-            returnPartialData: true,
-            optimistic,
-            variables,
-          });
-
-          const result = transform(toWatchFragmentResult(diff));
-
-          if (!equal(currentResult, result)) {
-            currentResult = result;
-          }
-
-          return currentResult;
+          return getNewestResult(
+            this.diff<TData>({
+              id,
+              query: fragmentQuery,
+              returnPartialData: true,
+              optimistic,
+              variables,
+            })
+          );
         },
       });
     }

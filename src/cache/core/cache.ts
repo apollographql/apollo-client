@@ -606,36 +606,37 @@ export abstract class ApolloCache {
       canonicalStringify({ id, optimistic, variables }),
     ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
-    let currentResult: ApolloCache.WatchFragmentResult<TData>;
-
-    function getNewestResult(diff: Cache.DiffResult<TData>) {
-      const data = transform(diff.result);
-
-      if (
-        !currentResult ||
-        !equalByQuery(
-          fragmentQuery,
-          { data: currentResult.data },
-          { data },
-          options.variables
-        )
-      ) {
-        currentResult = {
-          data,
-          dataState: diff.complete ? "complete" : "partial",
-          complete: diff.complete,
-        } as ApolloCache.WatchFragmentResult<TData>;
-
-        if (diff.missing) {
-          currentResult.missing = diff.missing.missing;
-        }
-      }
-
-      return currentResult;
-    }
 
     if (!cacheEntry.observable) {
       let subscribed = false;
+      let currentResult: ApolloCache.WatchFragmentResult<TData>;
+
+      function getNewestResult(diff: Cache.DiffResult<TData>) {
+        const data = transform(diff.result);
+
+        if (
+          !currentResult ||
+          !equalByQuery(
+            fragmentQuery,
+            { data: currentResult.data },
+            { data },
+            options.variables
+          )
+        ) {
+          currentResult = {
+            data,
+            dataState: diff.complete ? "complete" : "partial",
+            complete: diff.complete,
+          } as ApolloCache.WatchFragmentResult<TData>;
+
+          if (diff.missing) {
+            currentResult.missing = diff.missing.missing;
+          }
+        }
+
+        return currentResult;
+      }
+
       const observable: Observable<ApolloCache.WatchFragmentResult<TData>> & {
         dirty?: boolean;
       } = new Observable<ApolloCache.WatchFragmentResult<TData>>((observer) => {

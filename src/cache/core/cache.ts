@@ -664,7 +664,7 @@ export abstract class ApolloCache {
           }
 
           if (id === null) {
-            return toWatchFragmentResult({ result: null, complete: true });
+            return nullResult;
           }
 
           const diff = this.diff<TData>({

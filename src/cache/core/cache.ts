@@ -531,22 +531,23 @@ export abstract class ApolloCache {
       return currentResult;
     }
 
+    if (ids.length === 0) {
+      return emptyArrayObservable;
+    }
+
     let subscribed = false;
     const observables = ids.map((id) =>
       this.watchSingleFragment(id, query, options)
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
-    const observable =
-      ids.length === 0 ?
-        emptyArrayObservable
-      : combineLatestBatched(observables).pipe(
-          map(toResult),
-          tap({
-            subscribe: () => (subscribed = true),
-            unsubscribe: () => (subscribed = false),
-          }),
-          shareReplay({ bufferSize: 1, refCount: true })
-        );
+    const observable = combineLatestBatched(observables).pipe(
+      map(toResult),
+      tap({
+        subscribe: () => (subscribed = true),
+        unsubscribe: () => (subscribed = false),
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
 
     return Object.assign(observable, {
       getCurrentResult: () => {
@@ -876,12 +877,16 @@ const nullObservable = Object.assign(
   { dirty: false, getCurrentResult: () => nullResult }
 );
 
-const emptyArrayObservable = new Observable<
-  ApolloCache.WatchFragmentResult<never[]>
->((observer) => {
-  observer.next({
-    data: [],
-    dataState: "complete",
-    complete: true,
-  });
+const emptyArrayResult = Object.freeze({
+  data: [],
+  dataState: "complete",
+  complete: true,
 });
+
+const emptyArrayObservable: ApolloCache.ObservableFragment<any[]> =
+  Object.assign(
+    new Observable<ApolloCache.WatchFragmentResult<never[]>>((observer) => {
+      observer.next(emptyArrayResult);
+    }),
+    { getCurrentResult: () => emptyArrayResult }
+  );

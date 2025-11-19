@@ -109,8 +109,9 @@ class DeferRequest<TData extends Record<string, unknown>>
         const { path, errors, extensions } = incremental;
 
         if ("items" in incremental) {
-          // Remove the array index from the end of the array so we can check
-          // ignore this field in future chunks
+          // Remove the array index from the end of the array since each future
+          // chunk sends a different array index. This normalizes the path to
+          // ensure we ignore updates to this field if `items` is `null`.
           const stringPath = path?.slice(0, -1).join(".") ?? "";
 
           if (incremental.items === null) {

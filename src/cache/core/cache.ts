@@ -434,13 +434,7 @@ export abstract class ApolloCache {
   ):
     | ApolloCache.ObservableFragment<Unmasked<TData> | null>
     | ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>> {
-    const {
-      fragment,
-      fragmentName,
-      from,
-      optimistic = true,
-      variables,
-    } = options;
+    const { fragment, fragmentName, from } = options;
     const query = this.getFragmentDoc(
       fragment,
       fragmentName
@@ -498,50 +492,29 @@ export abstract class ApolloCache {
 
     let currentResult: ApolloCache.WatchFragmentResult<any>;
     function toResult(
-      diffs: Array<Cache.DiffResult<Unmasked<TData> | null>>
+      results: Array<ApolloCache.WatchFragmentResult<Unmasked<TData> | null>>
     ): ApolloCache.WatchFragmentResult<any> {
-      let result: ApolloCache.WatchFragmentResult<any>;
-      if (Array.isArray(from)) {
-        result = diffs.reduce(
-          (result, diff, idx) => {
-            result.data.push(diff.result as any);
-            result.complete &&= diff.complete;
-            result.dataState = result.complete ? "complete" : "partial";
+      const result = results.reduce(
+        (finalResult, result, idx) => {
+          const res = result as ApolloCache.WatchFragmentResult<TData>;
 
-            if (diff.missing) {
-              result.missing ||= {};
-              (result.missing as any)[idx] = diff.missing.missing;
-            }
+          finalResult.data.push(res.data);
+          finalResult.complete &&= res.complete;
+          finalResult.dataState = finalResult.complete ? "complete" : "partial";
 
-            return result;
-          },
-          {
-            data: [],
-            dataState: "complete",
-            complete: true,
-          } as ApolloCache.WatchFragmentResult<any>
-        );
-      } else {
-        const [diff] = diffs;
-        result = {
-          // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
-          // when `from` is a single record. As such, we need to fallback to {}
-          // when diff.result is null to maintain backwards compatibility. We
-          // should plan to change this in v5. We do howeever support `null` if
-          // `from` is explicitly `null`.
-          //
-          // NOTE: Using `from` with an array will maintain `null` properly
-          // without the need for a similar fallback since watchFragment with
-          // arrays is new functionality in v4.
-          data: from === null ? diff.result : diff.result ?? {},
-          complete: diff.complete,
-          dataState: diff.complete ? "complete" : "partial",
-        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
+          if (res.missing) {
+            finalResult.missing ||= {};
+            (finalResult.missing as any)[idx] = res.missing;
+          }
 
-        if (diff.missing) {
-          result.missing = diff.missing.missing;
-        }
-      }
+          return finalResult;
+        },
+        {
+          data: [],
+          dataState: "complete",
+          complete: true,
+        } as ApolloCache.WatchFragmentResult<any>
+      );
 
       if (!equal(currentResult, result)) {
         currentResult = result;
@@ -551,12 +524,14 @@ export abstract class ApolloCache {
     }
 
     let subscribed = false;
+    const observables = ids.map((id) =>
+      this.watchSingleFragment(id, query, options)
+    );
+
     const observable =
       ids.length === 0 ?
         emptyArrayObservable
-      : combineLatestBatched(
-          ids.map((id) => this.watchSingleFragment(id, query, options))
-        ).pipe(
+      : combineLatestBatched(observables).pipe(
           map(toResult),
           tap({
             subscribe: () => (subscribed = true),
@@ -571,23 +546,11 @@ export abstract class ApolloCache {
           return currentResult as any;
         }
 
-        const diffs = ids.map(
-          (id): Cache.DiffResult<Unmasked<TData> | null> => {
-            if (id === null) {
-              return { result: null, complete: true };
-            }
-
-            return this.diff<Unmasked<TData>>({
-              id,
-              query,
-              returnPartialData: true,
-              optimistic,
-              variables,
-            });
-          }
+        const results = observables.map((observable) =>
+          observable.getCurrentResult()
         );
 
-        return toResult(diffs);
+        return toResult(results);
       },
     } satisfies Pick<
       | ApolloCache.ObservableFragment<Unmasked<TData> | null>

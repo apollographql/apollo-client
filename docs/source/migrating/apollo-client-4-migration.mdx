@@ -366,6 +366,12 @@ End: Inserted by Apollo Client 3->4 migration codemod.
 
 ### Running the codemod
 
+<Note>
+
+The codemod requires a Node.js version that supports loading ECMAScript modules with `require`. See the table in the [Node.js documentation](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) for the versions that support this feature (you might need to expand the "History" section to see the table.)
+
+</Note>
+
 To run the codemod, use the following command:
 
 ```sh showLineNumbers=false
@@ -375,6 +381,12 @@ npx @apollo/client-codemod-migrate-3-to-4 src
 <Note>
 
 This command behaves similarly to [`jscodeshift`](https://github.com/facebook/jscodeshift) with a preselected codemod.
+
+</Note>
+
+<Note>
+
+This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
 
 </Note>
 
@@ -392,12 +404,6 @@ If you have a TypeScript project, we recommend running the codemod against `.ts`
 npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
 npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
-
-<Note>
-
-This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
-
-</Note>
 
 ### Running specific modifications
 
@@ -1031,6 +1037,60 @@ Some GraphQL servers emit an initial value when the subscription first connects.
 If you rely on the initial value to read data from the subscription, we recommend disabling query deduplication so that the subscription creates a new connection.
 
 </Caution>
+
+### `ObservableQuery` no longer inherits from `Observable`
+
+`ObservableQuery` instances returned from `client.watchQuery` no longer inherit from `Observable`. This might cause TypeScript errors when using `ObservableQuery` with some RxJS utilities that expect `Observable` instances, such as [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom).
+
+Convert `ObservableQuery` to an `Observable` using the [`from`](https://rxjs.dev/api/index/function/from) function.
+
+```ts
+import { from } from "rxjs";
+
+const observable = from(observableQuery);
+//    ^? Observable<ObservableQuery.Result<MaybeMasked<TData>>>
+```
+
+<Note>
+
+`ObservableQuery` implements the [`Subscribable`](https://rxjs.dev/api/index/interface/Subscribable) interface, so you can call `subscribe` directly without converting to an `Observable`. It also implements the `pipe` function, so you can chain operators.<br/><br/>
+
+Use `from` only for functions that require an `Observable` instance.
+
+</Note>
+
+### Removal of `Observable` utilities
+
+Apollo Client 3 included several utilities for working with `Observable` instances from the `zen-observable` library. Apollo Client 4 removes these utilities in favor of RxJS's operators.
+
+#### `fromError`
+
+Use the [`throwError`](https://rxjs.dev/api/index/function/throwError) function instead.
+
+```ts
+const observable = fromError(new Error("Oops"));// [!code --]
+const observable = throwError(() => {// [!code ++:3]
+  return new Error("Oops");
+});
+```
+
+#### `fromPromise`
+
+Use the [`from`](https://rxjs.dev/api/index/function/from) function instead.
+
+```ts
+const observable = fromPromise(promise);// [!code --]
+const observable = from(promise);// [!code ++]
+```
+
+#### `toPromise`
+
+Use the [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) function instead.
+
+```ts
+const promise = toPromise(observable);// [!code --]
+const promise = firstValueFrom(observable);// [!code ++]
+```
 
 ## New error handling
 

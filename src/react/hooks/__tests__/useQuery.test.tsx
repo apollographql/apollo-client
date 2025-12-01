@@ -850,7 +850,7 @@ describe("useQuery Hook", () => {
                 update(cache, { data }) {
                   cache.writeQuery({
                     query,
-                    data: { hello: data.updateGreeting },
+                    data: { hello: data.updateName },
                   });
                 },
               }),
@@ -3557,6 +3557,7 @@ describe("useQuery Hook", () => {
             cache={cache}
             // This test uses fake timers and does not expect a delay
             mockLinkDefaultOptions={{ delay: 0 }}
+            showWarnings={false}
           >
             {children}
           </MockedProvider>
@@ -3722,7 +3723,7 @@ describe("useQuery Hook", () => {
           request: { query },
           result: {
             data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
+            errors: [{ message: 'Could not fetch "hello"' }],
           },
         },
       ];

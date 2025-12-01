@@ -484,16 +484,16 @@ export abstract class ApolloCache {
     if (!Array.isArray(from)) {
       return this.watchSingleFragment(ids[0], query, {
         ...options,
-        // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
-        // when `from` is a single record. As such, we need to fallback to {}
-        // when diff.result is null to maintain backwards compatibility. We
-        // should plan to change this in v5. We do however support `null` if
-        // `from` is explicitly `null`.
-        //
-        // NOTE: Using `from` with an array will maintain `null` properly
-        // without the need for a similar fallback since watchFragment with
-        // arrays is new functionality in v4.1.
         transform: (data) =>
+          // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
+          // when `from` is a single record. As such, we need to fallback to {}
+          // when diff.result is null to maintain backwards compatibility. We
+          // should plan to change this in v5. We do however support `null` if
+          // `from` is explicitly `null`.
+          //
+          // NOTE: Using `from` with an array will maintain `null` properly
+          // without the need for a similar fallback since watchFragment with
+          // arrays is new functionality in v4.1.
           transform(from === null ? data : data ?? ({} as any)),
       });
     }

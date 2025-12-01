@@ -1059,6 +1059,39 @@ Because of this, you only need to use `from` for utilities that require an `Obse
 
 </Note>
 
+### Removal of `Observable` utilities
+
+Apollo Client 3 included several utilities for working with `Observable` instances from the `zen-observable` library. Because Apollo Client 4 switched to RxJS, these utilities were removed in favor of RxJS's operators.
+
+#### `fromError`
+
+Use the [`throwError`](https://rxjs.dev/api/index/function/throwError) function instead.
+
+```ts
+const observable = fromError(new Error("Oops"));// [!code --]
+const observable = throwError(() => {// [!code ++:3]
+  return new Error("Oops");
+});
+```
+
+#### `fromPromise`
+
+Use the [`from`](https://rxjs.dev/api/index/function/from) function instead.
+
+```ts
+const observable = fromPromise(promise);// [!code --]
+const observable = from(promise);// [!code ++]
+```
+
+#### `toPromise`
+
+Use the [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) function instead.
+
+```ts
+const promise = toPromise(observable);// [!code --]
+const promise = firstValueFrom(observable);// [!code ++]
+```
+
 ## New error handling
 
 Error handling in Apollo Client 4 has changed significantly to be more predictable and intuitive.

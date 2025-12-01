@@ -25,7 +25,11 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type { Reference, StoreObject } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -370,7 +374,7 @@ export abstract class ApolloCache {
   }
 
   private fragmentWatches = new Trie<{
-    observable?: Observable<any> & { dirty: boolean };
+    observable?: ApolloCache.ObservableFragment<any> & { dirty: boolean };
   }>(true);
 
   public watchFragment<
@@ -434,17 +438,15 @@ export abstract class ApolloCache {
   ):
     | ApolloCache.ObservableFragment<Unmasked<TData> | null>
     | ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>> {
-    const {
-      fragment,
-      fragmentName,
-      from,
-      optimistic = true,
-      variables,
-    } = options;
+    const { fragment, fragmentName, from } = options;
     const query = this.getFragmentDoc(
       fragment,
       fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
+    const transformData: (
+      data: TData | DeepPartial<TData> | null
+    ) => TData | DeepPartial<TData> | null =
+      (options as any)[Symbol.for("apollo.transformData")] ?? ((data) => data);
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -479,52 +481,48 @@ export abstract class ApolloCache {
       return id as string | null;
     });
 
-    let currentResult: ApolloCache.WatchFragmentResult<any>;
-    function toResult(
-      diffs: Array<Cache.DiffResult<Unmasked<TData> | null>>
-    ): ApolloCache.WatchFragmentResult<any> {
-      let result: ApolloCache.WatchFragmentResult<any>;
-      if (Array.isArray(from)) {
-        result = diffs.reduce(
-          (result, diff, idx) => {
-            result.data.push(diff.result as any);
-            result.complete &&= diff.complete;
-            result.dataState = result.complete ? "complete" : "partial";
-
-            if (diff.missing) {
-              result.missing ||= {};
-              (result.missing as any)[idx] = diff.missing.missing;
-            }
-
-            return result;
-          },
-          {
-            data: [],
-            dataState: "complete",
-            complete: true,
-          } as ApolloCache.WatchFragmentResult<any>
-        );
-      } else {
-        const [diff] = diffs;
-        result = {
+    if (!Array.isArray(from)) {
+      return this.watchSingleFragment(ids[0], query, {
+        ...options,
+        transformData: (data) =>
           // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
           // when `from` is a single record. As such, we need to fallback to {}
           // when diff.result is null to maintain backwards compatibility. We
-          // should plan to change this in v5. We do howeever support `null` if
+          // should plan to change this in v5. We do however support `null` if
           // `from` is explicitly `null`.
           //
           // NOTE: Using `from` with an array will maintain `null` properly
           // without the need for a similar fallback since watchFragment with
-          // arrays is new functionality in v4.
-          data: from === null ? diff.result : diff.result ?? {},
-          complete: diff.complete,
-          dataState: diff.complete ? "complete" : "partial",
-        } as ApolloCache.WatchFragmentResult<Unmasked<TData>>;
+          // arrays is new functionality in v4.1.
+          transformData(from === null ? data : data ?? ({} as any)),
+      });
+    }
 
-        if (diff.missing) {
-          result.missing = diff.missing.missing;
-        }
-      }
+    let currentResult: ApolloCache.WatchFragmentResult<TData>;
+    function toResult(
+      results: Array<ApolloCache.WatchFragmentResult<TData>>
+    ): ApolloCache.WatchFragmentResult<any> {
+      const result = results.reduce(
+        (memo, result, idx) => {
+          memo.data.push(result.data);
+          memo.complete &&= result.complete;
+          memo.dataState = memo.complete ? "complete" : "partial";
+
+          if (result.missing) {
+            memo.missing ||= {};
+            (memo.missing as any)[idx] = result.missing;
+          }
+
+          return memo;
+        },
+        {
+          data: [],
+          dataState: "complete",
+          complete: true,
+        } as ApolloCache.WatchFragmentResult<TData>
+      );
+
+      result.data = transformData(result.data);
 
       if (!equal(currentResult, result)) {
         currentResult = result;
@@ -533,20 +531,23 @@ export abstract class ApolloCache {
       return currentResult;
     }
 
+    if (ids.length === 0) {
+      return emptyArrayObservable;
+    }
+
     let subscribed = false;
-    const observable =
-      ids.length === 0 ?
-        emptyArrayObservable
-      : combineLatestBatched(
-          ids.map((id) => this.watchSingleFragment(id, query, options))
-        ).pipe(
-          map(toResult),
-          tap({
-            subscribe: () => (subscribed = true),
-            unsubscribe: () => (subscribed = false),
-          }),
-          shareReplay({ bufferSize: 1, refCount: true })
-        );
+    const observables = ids.map((id) =>
+      this.watchSingleFragment(id, query, options)
+    ) as Array<ApolloCache.ObservableFragment<TData>>;
+
+    const observable = combineLatestBatched(observables).pipe(
+      map(toResult),
+      tap({
+        subscribe: () => (subscribed = true),
+        unsubscribe: () => (subscribed = false),
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
 
     return Object.assign(observable, {
       getCurrentResult: () => {
@@ -554,23 +555,11 @@ export abstract class ApolloCache {
           return currentResult as any;
         }
 
-        const diffs = ids.map(
-          (id): Cache.DiffResult<Unmasked<TData> | null> => {
-            if (id === null) {
-              return { result: null, complete: true };
-            }
-
-            return this.diff<Unmasked<TData>>({
-              id,
-              query,
-              returnPartialData: true,
-              optimistic,
-              variables,
-            });
-          }
+        const results = observables.map((observable) =>
+          observable.getCurrentResult()
         );
 
-        return toResult(diffs);
+        return toResult(results);
       },
     } satisfies Pick<
       | ApolloCache.ObservableFragment<Unmasked<TData> | null>
@@ -594,13 +583,23 @@ export abstract class ApolloCache {
     options: Omit<
       ApolloCache.WatchFragmentOptions<TData, TVariables>,
       "from" | "fragment" | "fragmentName"
-    >
-  ): Observable<Cache.DiffResult<Unmasked<TData> | null>> & { dirty: boolean } {
+    > & {
+      transformData?: (
+        data: TData | DeepPartial<TData> | null
+      ) => TData | DeepPartial<TData> | null;
+    }
+  ): ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
+    dirty: boolean;
+  } {
     if (id === null) {
-      return nullObservable;
+      return nullObservable as any;
     }
 
-    const { optimistic = true, variables } = options;
+    const {
+      optimistic = true,
+      variables,
+      transformData = (data) => data,
+    } = options;
 
     const cacheKey = [
       fragmentQuery,
@@ -609,9 +608,39 @@ export abstract class ApolloCache {
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
     if (!cacheEntry.observable) {
-      const observable: Observable<Cache.DiffResult<TData>> & {
+      let subscribed = false;
+      let currentResult: ApolloCache.WatchFragmentResult<TData>;
+
+      function getNewestResult(diff: Cache.DiffResult<TData>) {
+        const data = transformData(diff.result);
+
+        if (
+          !currentResult ||
+          !equalByQuery(
+            fragmentQuery,
+            { data: currentResult.data },
+            { data },
+            options.variables
+          )
+        ) {
+          currentResult = {
+            data,
+            dataState: diff.complete ? "complete" : "partial",
+            complete: diff.complete,
+          } as ApolloCache.WatchFragmentResult<TData>;
+
+          if (diff.missing) {
+            currentResult.missing = diff.missing.missing;
+          }
+        }
+
+        return currentResult;
+      }
+
+      const observable: Observable<ApolloCache.WatchFragmentResult<TData>> & {
         dirty?: boolean;
-      } = new Observable<Cache.DiffResult<TData>>((observer) => {
+      } = new Observable<ApolloCache.WatchFragmentResult<TData>>((observer) => {
+        subscribed = true;
         const cleanup = this.watch<TData, TVariables>({
           variables,
           returnPartialData: true,
@@ -622,34 +651,48 @@ export abstract class ApolloCache {
           callback: (diff) => {
             observable.dirty = true;
             this.onAfterBroadcast(() => {
-              observer.next(diff);
+              observer.next(getNewestResult(diff));
               observable.dirty = false;
             });
           },
         });
         return () => {
+          subscribed = false;
           cleanup();
           this.fragmentWatches.removeArray(cacheKey);
         };
       }).pipe(
-        distinctUntilChanged((previous, current) =>
-          equalByQuery(
-            fragmentQuery,
-            { data: previous.result },
-            { data: current.result },
-            options.variables
-          )
-        ),
+        distinctUntilChanged(),
         share({
           connector: () => new ReplaySubject(1),
           // debounce so a synchronous unsubscribe+resubscribe doesn't tear down the watch and create a new one
           resetOnRefCountZero: () => timer(0),
         })
       );
-      cacheEntry.observable = Object.assign(observable, { dirty: false });
+
+      cacheEntry.observable = Object.assign(observable, {
+        dirty: false,
+        getCurrentResult: () => {
+          if (subscribed && currentResult) {
+            return currentResult;
+          }
+
+          return getNewestResult(
+            this.diff<TData>({
+              id,
+              query: fragmentQuery,
+              returnPartialData: true,
+              optimistic,
+              variables,
+            })
+          );
+        },
+      });
     }
 
-    return cacheEntry.observable;
+    return cacheEntry.observable as ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
+      dirty: boolean;
+    };
   }
 
   // Make sure we compute the same (===) fragment query document every
@@ -822,19 +865,29 @@ if (__DEV__) {
   ApolloCache.prototype.getMemoryInternals = getApolloCacheMemoryInternals;
 }
 
+const nullResult = Object.freeze({
+  data: null,
+  dataState: "complete",
+  complete: true,
+}) as ApolloCache.WatchFragmentResult<null>;
+
 const nullObservable = Object.assign(
-  new Observable<Cache.DiffResult<null>>((observer) => {
-    observer.next({ result: null, complete: true });
+  new Observable((observer) => {
+    observer.next(nullResult);
   }),
-  { dirty: false }
+  { dirty: false, getCurrentResult: () => nullResult }
 );
 
-const emptyArrayObservable = new Observable<
-  ApolloCache.WatchFragmentResult<never[]>
->((observer) => {
-  observer.next({
-    data: [],
-    dataState: "complete",
-    complete: true,
-  });
+const emptyArrayResult = Object.freeze({
+  data: [],
+  dataState: "complete",
+  complete: true,
 });
+
+const emptyArrayObservable: ApolloCache.ObservableFragment<any[]> =
+  Object.assign(
+    new Observable<ApolloCache.WatchFragmentResult<never[]>>((observer) => {
+      observer.next(emptyArrayResult);
+    }),
+    { getCurrentResult: () => emptyArrayResult }
+  );

@@ -15,6 +15,7 @@ import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { VariablesOption } from "@apollo/client/utilities/internal";
@@ -1187,14 +1188,10 @@ export class ApolloClient {
     | ApolloClient.ObservableFragment<TData>
     | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
-    const observable = this.cache.watchFragment({
-      ...options,
-      fragment: this.transform(options.fragment, dataMasking),
-    });
 
     const mask = (
-      result: ApolloClient.WatchFragmentResult<any>
-    ): ApolloClient.WatchFragmentResult<any> => {
+      data: TData | DeepPartial<TData> | null
+    ): TData | DeepPartial<TData> | null => {
       // The transform will remove fragment spreads from the fragment
       // document when dataMasking is enabled. The `mask` function
       // remains to apply warnings to fragments marked as
@@ -1202,34 +1199,20 @@ export class ApolloClient {
       // in dev, we can skip the masking algorithm entirely for production.
       if (__DEV__) {
         if (dataMasking) {
-          return {
-            ...result,
-            data: this.queryManager.maskFragment({
-              ...options,
-              data: result.data,
-            }),
-          } as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+          return this.queryManager.maskFragment({ ...options, data });
         }
       }
 
-      return result;
+      return data;
     };
 
-    let currentResult: ApolloClient.WatchFragmentResult<any>;
-    let stableMaskedResult: ApolloClient.WatchFragmentResult<any>;
+    const observable = this.cache.watchFragment({
+      ...options,
+      fragment: this.transform(options.fragment, dataMasking),
+      [Symbol.for("apollo.transformData")]: mask,
+    });
 
-    return Object.assign(observable.pipe(map(mask)), {
-      getCurrentResult: () => {
-        const result = observable.getCurrentResult();
-
-        if (result !== currentResult) {
-          currentResult = result as any;
-          stableMaskedResult = mask(currentResult);
-        }
-
-        return stableMaskedResult;
-      },
-    }) as ApolloClient.ObservableFragment<any>;
+    return observable as ApolloClient.ObservableFragment<any>;
   }
 
   /**

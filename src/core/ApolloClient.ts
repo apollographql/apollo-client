@@ -1209,7 +1209,7 @@ export class ApolloClient {
     const observable = this.cache.watchFragment({
       ...options,
       fragment: this.transform(options.fragment, dataMasking),
-      [Symbol.for("apollo.transform")]: mask,
+      [Symbol.for("apollo.transformData")]: mask,
     });
 
     return observable as ApolloClient.ObservableFragment<any>;

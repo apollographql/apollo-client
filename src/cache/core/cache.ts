@@ -443,10 +443,10 @@ export abstract class ApolloCache {
       fragment,
       fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
-    const transform: (
+    const transformData: (
       data: TData | DeepPartial<TData> | null
     ) => TData | DeepPartial<TData> | null =
-      (options as any)[Symbol.for("apollo.transform")] ?? ((data) => data);
+      (options as any)[Symbol.for("apollo.transformData")] ?? ((data) => data);
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -484,7 +484,7 @@ export abstract class ApolloCache {
     if (!Array.isArray(from)) {
       return this.watchSingleFragment(ids[0], query, {
         ...options,
-        transform: (data) =>
+        transformData: (data) =>
           // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
           // when `from` is a single record. As such, we need to fallback to {}
           // when diff.result is null to maintain backwards compatibility. We
@@ -494,7 +494,7 @@ export abstract class ApolloCache {
           // NOTE: Using `from` with an array will maintain `null` properly
           // without the need for a similar fallback since watchFragment with
           // arrays is new functionality in v4.1.
-          transform(from === null ? data : data ?? ({} as any)),
+          transformData(from === null ? data : data ?? ({} as any)),
       });
     }
 
@@ -522,7 +522,7 @@ export abstract class ApolloCache {
         } as ApolloCache.WatchFragmentResult<TData>
       );
 
-      result.data = transform(result.data);
+      result.data = transformData(result.data);
 
       if (!equal(currentResult, result)) {
         currentResult = result;
@@ -584,7 +584,7 @@ export abstract class ApolloCache {
       ApolloCache.WatchFragmentOptions<TData, TVariables>,
       "from" | "fragment" | "fragmentName"
     > & {
-      transform?: (
+      transformData?: (
         data: TData | DeepPartial<TData> | null
       ) => TData | DeepPartial<TData> | null;
     }
@@ -598,7 +598,7 @@ export abstract class ApolloCache {
     const {
       optimistic = true,
       variables,
-      transform = (data) => data,
+      transformData = (data) => data,
     } = options;
 
     const cacheKey = [
@@ -612,7 +612,7 @@ export abstract class ApolloCache {
       let currentResult: ApolloCache.WatchFragmentResult<TData>;
 
       function getNewestResult(diff: Cache.DiffResult<TData>) {
-        const data = transform(diff.result);
+        const data = transformData(diff.result);
 
         if (
           !currentResult ||

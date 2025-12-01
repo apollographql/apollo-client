@@ -384,6 +384,12 @@ This command behaves similarly to [`jscodeshift`](https://github.com/facebook/js
 
 </Note>
 
+<Note>
+
+This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
+
+</Note>
+
 For more details on the available options, run the command using the `--help` option.
 
 ```sh showLineNumbers=false
@@ -398,12 +404,6 @@ If you have a TypeScript project, we recommend running the codemod against `.ts`
 npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
 npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
-
-<Note>
-
-This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
-
-</Note>
 
 ### Running specific modifications
 

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.6
+
+### Patch Changes
+
+- [#13026](https://github.com/apollographql/apollo-client/pull/13026) [`05eee67`](https://github.com/apollographql/apollo-client/commit/05eee67e91b480252923879987534e81d2866aba) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reduce the number of observables created by `watchFragment` by reusing existing observables as much as possible. This should improve performance when watching the same item in the cache multiple times after a cache update occurs.
+
 ## 4.1.0-alpha.5
 
 ### Patch Changes

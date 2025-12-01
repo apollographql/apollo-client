@@ -368,7 +368,7 @@ End: Inserted by Apollo Client 3->4 migration codemod.
 
 <Note>
 
-The codemod requires a Node.js version that supports loading ECMAScript modules with `require`. See the table in the [Node.js documentation](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) for the versions that support this feature (you may need to expand the "History" section to see the table.)
+The codemod requires a Node.js version that supports loading ECMAScript modules with `require`. See the table in the [Node.js documentation](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) for the versions that support this feature (you might need to expand the "History" section to see the table.)
 
 </Note>
 
@@ -1040,9 +1040,9 @@ If you rely on the initial value to read data from the subscription, we recommen
 
 ### `ObservableQuery` no longer inherits from `Observable`
 
-`ObservableQuery` instances returned from `client.watchQuery` no longer inherit from `Observable`. This may cause TypeScript errors when using `ObservableQuery` with some RxJS utilities that expect `Observable` instances, such as [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom).
+`ObservableQuery` instances returned from `client.watchQuery` no longer inherit from `Observable`. This might cause TypeScript errors when using `ObservableQuery` with some RxJS utilities that expect `Observable` instances, such as [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom).
 
-You can convert `ObservableQuery` to an `Observable` using the [`from`](https://rxjs.dev/api/index/function/from) function.
+Convert `ObservableQuery` to an `Observable` using the [`from`](https://rxjs.dev/api/index/function/from) function.
 
 ```ts
 import { from } from "rxjs";
@@ -1053,15 +1053,15 @@ const observable = from(observableQuery);
 
 <Note>
 
-`ObservableQuery` implements the [`Subscribable`](https://rxjs.dev/api/index/interface/Subscribable) interface so that you can call `subscribe` on the `ObservableQuery` directly without the need to convert it to an `Observable` first using `from`. `ObservableQuery` also implements the `pipe` function so that you can chain operators for the same reason.<br/><br/>
+`ObservableQuery` implements the [`Subscribable`](https://rxjs.dev/api/index/interface/Subscribable) interface, so you can call `subscribe` directly without converting to an `Observable`. It also implements the `pipe` function, so you can chain operators.<br/><br/>
 
-Because of this, you only need to use `from` for utilities that require an `Observable` instance.
+Use `from` only for functions that require an `Observable` instance.
 
 </Note>
 
 ### Removal of `Observable` utilities
 
-Apollo Client 3 included several utilities for working with `Observable` instances from the `zen-observable` library. Because Apollo Client 4 switched to RxJS, these utilities were no longer needed and were removed in favor of RxJS's operators and utilities.
+Apollo Client 3 included several utilities for working with `Observable` instances from the `zen-observable` library. Apollo Client 4 removes these utilities in favor of RxJS's operators.
 
 #### `fromError`
 

@@ -801,18 +801,22 @@ export abstract class ApolloCache {
     variables,
     overwrite,
     id,
+    from,
     broadcast,
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+
   public writeFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >({
-    id,
     data,
     fragment,
     fragmentName,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
+    const id =
+      options.from !== undefined ? this.toCacheId(options.from) : options.id;
+
     return this.write(
       Object.assign(options, {
         query: this.getFragmentDoc(fragment, fragmentName),

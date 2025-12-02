@@ -1458,6 +1458,97 @@ describe("Cache", () => {
         });
       }
     );
+
+    itWithCacheConfig("can use the `from` option", {}, (proxy) => {
+      proxy.writeFragment({
+        data: {
+          id: 1,
+          a: 1,
+          b: 2,
+          __typename: "Foo",
+        },
+        from: { __typename: "Foo", id: 1 },
+        fragment: gql`
+          fragment foo on Foo {
+            id
+            a
+            b
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          c: 3,
+          d: 4,
+          __typename: "Foo",
+        },
+        from: { __ref: "Foo:1" },
+        fragment: gql`
+          fragment foo on Foo {
+            c
+            d
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          e: 5,
+          f: 6,
+          __typename: "Foo",
+        },
+        from: "Foo:1",
+        fragment: gql`
+          fragment foo on Foo {
+            e
+            f
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+          e: 5,
+          f: 6,
+        },
+      });
+    });
   });
 
   describe("cache.updateQuery and cache.updateFragment", () => {

@@ -5,6 +5,7 @@ import { map } from "rxjs";
 
 import type {
   ApolloCache,
+  Cache,
   IgnoreModifier,
   Reference,
 } from "@apollo/client/cache";
@@ -521,22 +522,7 @@ export declare namespace ApolloClient {
     TVariables extends OperationVariables,
   > = Base.ReadFragmentOptions<TData, TVariables> &
     VariablesOption<TVariables> &
-    (
-      | {
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#id:member} */
-          id?: string;
-
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#from:member} */
-          from?: never;
-        }
-      | {
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#id:member} */
-          id?: never;
-
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#from:member} */
-          from?: ApolloCache.FromValue<TData>;
-        }
-    );
+    Cache.CacheIdentifierOption<TData>;
 
   export namespace DocumentationTypes {
     export interface WriteQueryOptions<
@@ -645,20 +631,7 @@ export declare namespace ApolloClient {
     TVariables extends OperationVariables,
   > = Base.WriteFragmentOptions<TData, TVariables> &
     VariablesOption<TVariables> &
-    (
-      | {
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.WriteFragmentOptions#id:member} */
-          id?: string;
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.WriteFragmentOptions#from:member} */
-          from?: never;
-        }
-      | {
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.WriteFragmentOptions#id:member} */
-          id?: never;
-          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.WriteFragmentOptions#from:member} */
-          from?: ApolloCache.FromValue<TData>;
-        }
-    );
+    Cache.CacheIdentifierOption<TData>;
 
   export namespace DocumentationTypes {
     export interface WriteFragmentOptions<

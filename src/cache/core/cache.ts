@@ -55,16 +55,6 @@ export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
   /**
-   * Acceptable values provided to the `from` option for `watchFragment`.
-   */
-  export type WatchFragmentFromValue<TData> =
-    | StoreObject
-    | Reference
-    | FragmentType<NoInfer<TData>>
-    | string
-    | null;
-
-  /**
    * Acceptable values provided to the `from` option.
    */
   export type FromValue<TData> =
@@ -96,8 +86,9 @@ export declare namespace ApolloCache {
      * @docGroup 1. Required options
      */
     from:
-      | ApolloCache.WatchFragmentFromValue<TData>
-      | Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      | ApolloCache.FromValue<TData>
+      | Array<ApolloCache.FromValue<TData> | null>
+      | null;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -392,7 +383,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<NonNullable<ApolloCache.WatchFragmentFromValue<TData>>>;
+      from: Array<ApolloCache.FromValue<TData>>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
 
@@ -410,7 +401,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: Array<ApolloCache.FromValue<TData> | null>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
 
@@ -428,7 +419,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: NonNullable<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: ApolloCache.FromValue<TData>;
     }
   ): ApolloCache.ObservableFragment<Unmasked<TData>>;
 

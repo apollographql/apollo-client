@@ -48,7 +48,8 @@ export declare namespace useSuspenseFragment {
        */
       from:
         | useSuspenseFragment.FromValue<TData>
-        | Array<useSuspenseFragment.FromValue<TData>>;
+        | Array<useSuspenseFragment.FromValue<TData> | null>
+        | null;
 
       // Override this field to make it optional (default: true).
       optimistic?: boolean;
@@ -81,7 +82,7 @@ export declare namespace useSuspenseFragment {
   /**
    * Acceptable values provided to the `from` option.
    */
-  export type FromValue<TData> = ApolloCache.WatchFragmentFromValue<TData>;
+  export type FromValue<TData> = ApolloCache.FromValue<TData>;
 
   export interface Result<TData> {
     data: DataValue.Complete<MaybeMasked<TData>>;
@@ -109,7 +110,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<useSuspenseFragment.FromValue<TData>>>;
+    from: Array<useSuspenseFragment.FromValue<TData>>;
   }
 ): useSuspenseFragment.Result<Array<TData>>;
 
@@ -129,7 +130,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<useSuspenseFragment.FromValue<TData>>;
+    from: Array<useSuspenseFragment.FromValue<TData> | null>;
   }
 ): useSuspenseFragment.Result<Array<TData | null>>;
 
@@ -139,7 +140,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: NonNullable<useSuspenseFragment.FromValue<TData>>;
+    from: useSuspenseFragment.FromValue<TData>;
   }
 ): useSuspenseFragment.Result<TData>;
 
@@ -159,7 +160,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: useSuspenseFragment.FromValue<TData>;
+    from: useSuspenseFragment.FromValue<TData> | null;
   }
 ): useSuspenseFragment.Result<TData | null>;
 

@@ -868,7 +868,9 @@ export abstract class ApolloCache {
   ): Unmasked<TData> | null {
     return this.batch({
       update(cache) {
-        const value = cache.readFragment<TData, TVariables>(options);
+        const value = cache.readFragment<TData, TVariables>(
+          options as Cache.ReadFragmentOptions<TData, TVariables>
+        );
         const data = update(value);
         if (data === void 0 || data === null) return value;
         cache.writeFragment<TData, TVariables>({ ...options, data });

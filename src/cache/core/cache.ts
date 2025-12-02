@@ -741,18 +741,8 @@ export abstract class ApolloCache {
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
-    let id: string | undefined = undefined;
-
-    if ("from" in options) {
-      const { from } = options;
-
-      id =
-        typeof from === "string" || from === undefined ?
-          from
-        : this.identify(from);
-    } else {
-      id = options.id;
-    }
+    const id =
+      options.from !== undefined ? this.toCacheId(options.from) : options.id;
 
     return this.read({
       ...options,
@@ -868,6 +858,12 @@ export abstract class ApolloCache {
         return data;
       },
     });
+  }
+
+  private toCacheId(from: ApolloCache.FromValue<any>) {
+    return typeof from === "string" || from === undefined ?
+        from
+      : this.identify(from);
   }
 
   /**

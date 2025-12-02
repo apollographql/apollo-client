@@ -461,13 +461,6 @@ export declare namespace ApolloClient {
       TVariables extends OperationVariables,
     > {
       /**
-       * The root id to be used. This id should take the same form as the
-       * value returned by the `cache.identify` function. If a value with your
-       * id does not exist in the store, `null` will be returned.
-       */
-      id?: string;
-
-      /**
        * A GraphQL document created using the `gql` template string tag
        * with one or more fragments which will be used to determine
        * the shape of data to read. If you provide more than one fragment in this
@@ -497,10 +490,53 @@ export declare namespace ApolloClient {
       optimistic?: boolean;
     }
   }
+
+  export namespace DocumentationTypes {
+    export interface ReadFragmentOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.ReadFragmentOptions<TData, TVariables> {
+      /**
+       * The root id to be used. This id should take the same form as the
+       * value returned by the `cache.identify` function. If a value with your
+       * id does not exist in the store, `null` will be returned.
+       */
+      id?: string;
+
+      /**
+       * An object containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+       * (uncommon).
+       *
+       * @remarks
+       * `from` is given precedence over `id` when both are provided.
+       */
+      from?: ApolloCache.ReadFragmentFromValue<TData>;
+    }
+  }
+
   export type ReadFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+  > = Base.ReadFragmentOptions<TData, TVariables> &
+    VariablesOption<TVariables> &
+    (
+      | {
+          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#id:member} */
+          id?: string;
+
+          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#from:member} */
+          from?: never;
+        }
+      | {
+          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#id:member} */
+          id?: never;
+
+          /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#from:member} */
+          from?: ApolloCache.ReadFragmentFromValue<TData>;
+        }
+    );
 
   export namespace DocumentationTypes {
     export interface WriteQueryOptions<

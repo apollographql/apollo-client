@@ -2,4 +2,4 @@
 "@apollo/client": minor
 ---
 
-Add the `from` option to `readFragment` and `watchFragment`.
+Add the `from` option to `readFragment`, `watchFragment`, and `updateFragment`.

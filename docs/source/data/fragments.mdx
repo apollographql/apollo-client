@@ -1476,7 +1476,11 @@ This is rather tedious to do by hand for large applications. Apollo Client provi
      without the development-only warnings.
    </Note>
 
-The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. Use the `graphql` parser when running the codemod against GraphQL files.
+The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. For `.graphql` and `.gql` files, explicitly specify the file extensions.
+
+```sh
+npx jscodeshift -t ../path/to/apollo-client/scripts/codemods/data-masking/unmask.ts --extensions graphql ./src/**/*.graphql --mode migrate
+```
 
 By default, the codemod searches for `gql` and `graphql` tags in source files. If your application uses a custom name, use the `--tag` option to specify the name. Use `--tag` more than once to specify multiple names.
 

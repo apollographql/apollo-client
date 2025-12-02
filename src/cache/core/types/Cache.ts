@@ -399,14 +399,15 @@ export declare namespace Cache {
       "data"
     > {}
 
-  export interface UpdateFragmentOptions<
+  export type UpdateFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > extends Omit<
-      ReadFragmentOptions<TData, TVariables> &
-        WriteFragmentOptions<TData, TVariables>,
-      "data"
-    > {}
+  > = Omit<
+    ReadFragmentOptions<TData, TVariables> &
+      WriteFragmentOptions<TData, TVariables>,
+    "data" | "id" | "from"
+  > &
+    Cache.CacheIdentifierOption<TData>;
 
   export type DiffResult<TData> =
     | {

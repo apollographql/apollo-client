@@ -1720,6 +1720,41 @@ describe("Cache", () => {
 
       cancel();
     });
+
+    it("can use `from` with `updateFragment`", async () => {
+      type Data = { a: number; b: number; __typename: "Foo" };
+
+      const cache = new InMemoryCache();
+      const fragment: TypedDocumentNode<Data, Record<string, never>> = gql`
+        fragment foo on Foo {
+          a
+          b
+        }
+      `;
+
+      function update(data: Data | null): Data {
+        if (!data) {
+          return { a: 1, b: 2, __typename: "Foo" };
+        }
+
+        return { a: data.a + 1, b: data.b + 1, __typename: "Foo" };
+      }
+
+      expect(
+        cache.updateFragment(
+          { fragment, from: { __typename: "Foo", id: 1 } },
+          update
+        )
+      ).toStrictEqualTyped({ __typename: "Foo", a: 1, b: 2 });
+
+      expect(
+        cache.updateFragment({ fragment, from: { __ref: "Foo:1" } }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 2, b: 3 });
+
+      expect(
+        cache.updateFragment({ fragment, from: "Foo:1" }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 3, b: 4 });
+    });
   });
 
   describe("cache.restore", () => {

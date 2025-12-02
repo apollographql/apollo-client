@@ -1476,7 +1476,7 @@ This is rather tedious to do by hand for large applications. Apollo Client provi
      without the development-only warnings.
    </Note>
 
-The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. For `.graphql` and `.gql` files, make sure to specify the file extensions to operate on explicitly.
+The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. For `.graphql` and `.gql` files, explicitly specify the file extensions.
 
 ```sh
 npx jscodeshift -t ../path/to/apollo-client/scripts/codemods/data-masking/unmask.ts --extensions graphql ./src/**/*.graphql --mode migrate

@@ -383,7 +383,7 @@ export type UseBackgroundQueryResult<TData = unknown, TVariables extends Operati
 
 // @public
 export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<useFragment.FromValue<TData>>>;
+    from: Array<useFragment.FromValue<TData>>;
 }): useFragment.Result<Array<TData>>;
 
 // @public
@@ -393,7 +393,7 @@ export function useFragment<TData = unknown, TVariables extends OperationVariabl
 
 // @public
 export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables> & {
-    from: Array<useFragment.FromValue<TData>>;
+    from: Array<useFragment.FromValue<TData> | null>;
 }): useFragment.Result<Array<TData | null>>;
 
 // @public
@@ -429,13 +429,13 @@ export namespace useFragment {
     export namespace DocumentationTypes {
         export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, from, fragmentName, variables, optimistic, client, }: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
     }
-    export type FromValue<TData> = ApolloCache_2.WatchFragmentFromValue<TData>;
+    export type FromValue<TData> = ApolloCache_2.FromValue<TData>;
     // (undocumented)
     export interface Options<TData, TVariables extends OperationVariables> {
         client?: ApolloClient;
         fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
         fragmentName?: string;
-        from: useFragment.FromValue<TData> | Array<useFragment.FromValue<TData>>;
+        from: useFragment.FromValue<TData> | Array<useFragment.FromValue<TData> | null> | null;
         optimistic?: boolean;
         variables?: NoInfer_2<TVariables>;
     }
@@ -925,7 +925,7 @@ export namespace useSubscription {
 
 // @public
 export function useSuspenseFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<NonNullable<useSuspenseFragment.FromValue<TData>>>;
+    from: Array<useSuspenseFragment.FromValue<TData>>;
 }): useSuspenseFragment.Result<Array<TData>>;
 
 // @public
@@ -935,12 +935,12 @@ export function useSuspenseFragment<TData = unknown, TVariables extends Operatio
 
 // @public
 export function useSuspenseFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<useSuspenseFragment.FromValue<TData>>;
+    from: Array<useSuspenseFragment.FromValue<TData> | null>;
 }): useSuspenseFragment.Result<Array<TData | null>>;
 
 // @public
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: NonNullable<useSuspenseFragment.FromValue<TData>>;
+    from: useSuspenseFragment.FromValue<TData>;
 }): useSuspenseFragment.Result<TData>;
 
 // @public
@@ -950,7 +950,7 @@ export function useSuspenseFragment<TData, TVariables extends OperationVariables
 
 // @public
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: useSuspenseFragment.FromValue<TData>;
+    from: useSuspenseFragment.FromValue<TData> | null;
 }): useSuspenseFragment.Result<TData | null>;
 
 // @public
@@ -965,7 +965,7 @@ export namespace useSuspenseFragment {
         export type Options<TData, TVariables extends OperationVariables> = {
             fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
             fragmentName?: string;
-            from: useSuspenseFragment.FromValue<TData> | Array<useSuspenseFragment.FromValue<TData>>;
+            from: useSuspenseFragment.FromValue<TData> | Array<useSuspenseFragment.FromValue<TData> | null> | null;
             optimistic?: boolean;
             client?: ApolloClient;
         };
@@ -992,7 +992,7 @@ export namespace useSuspenseFragment {
     export namespace DocumentationTypes {
         export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables>): useSuspenseFragment.Result<TData>;
     }
-    export type FromValue<TData> = ApolloCache_2.WatchFragmentFromValue<TData>;
+    export type FromValue<TData> = ApolloCache_2.FromValue<TData>;
     // (undocumented)
     export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer_2<TVariables>>;
     // (undocumented)

@@ -863,9 +863,7 @@ export abstract class ApolloCache {
   }
 
   private toCacheId(from: ApolloCache.FromOptionValue<any>) {
-    return typeof from === "string" || from === undefined ?
-        from
-      : this.identify(from);
+    return typeof from === "string" ? from : this.identify(from);
   }
 
   /**

@@ -382,6 +382,6 @@ export declare namespace Cache {
          * @remarks
          * `from` is given precedence over `id` when both are provided.
          */
-        from?: ApolloCache.FromValue<TData>;
+        from?: ApolloCache.FromOptionValue<TData>;
       };
 }

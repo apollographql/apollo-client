@@ -46,8 +46,8 @@ export declare namespace useFragment {
      * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
      */
     from:
-      | useFragment.FromValue<TData>
-      | Array<useFragment.FromValue<TData> | null>
+      | useFragment.FromOptionValue<TData>
+      | Array<useFragment.FromOptionValue<TData> | null>
       | null;
 
     /**
@@ -82,7 +82,7 @@ export declare namespace useFragment {
   /**
    * Acceptable values provided to the `from` option.
    */
-  export type FromValue<TData> = ApolloCache.FromValue<TData>;
+  export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
 
   // TODO: Update this to return `null` when there is no data returned from the
   // fragment.
@@ -146,7 +146,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<useFragment.FromValue<TData>>;
+    from: Array<useFragment.FromOptionValue<TData>>;
   }
 ): useFragment.Result<Array<TData>>;
 
@@ -166,7 +166,7 @@ export function useFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useFragment.Options<TData, TVariables> & {
-    from: Array<useFragment.FromValue<TData> | null>;
+    from: Array<useFragment.FromOptionValue<TData> | null>;
   }
 ): useFragment.Result<Array<TData | null>>;
 

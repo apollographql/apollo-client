@@ -175,7 +175,7 @@ export namespace ApolloClient {
     export namespace DocumentationTypes {
         // (undocumented)
         export interface ReadFragmentOptions<TData, TVariables extends OperationVariables> extends Base.ReadFragmentOptions<TData, TVariables> {
-            from?: ApolloCache.FromValue<TData>;
+            from?: ApolloCache.FromOptionValue<TData>;
             id?: string;
         }
     }
@@ -197,7 +197,7 @@ export namespace ApolloClient {
     export namespace DocumentationTypes {
         // (undocumented)
         export interface WriteFragmentOptions<TData, TVariables extends OperationVariables> extends Base.WriteFragmentOptions<TData, TVariables> {
-            from?: ApolloCache.FromValue<TData>;
+            from?: ApolloCache.FromOptionValue<TData>;
             id?: string;
             variables?: TVariables;
         }
@@ -380,20 +380,20 @@ export class ApolloClient {
     // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: Array<ApolloCache.FromValue<TData>>;
+        from: Array<ApolloCache.FromOptionValue<TData>>;
     }): ApolloClient.ObservableFragment<Array<TData>>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: Array<null>;
     }): ApolloClient.ObservableFragment<Array<null>>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: Array<ApolloCache.FromValue<TData> | null>;
+        from: Array<ApolloCache.FromOptionValue<TData> | null>;
     }): ApolloClient.ObservableFragment<Array<TData | null>>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
         from: null;
     }): ApolloClient.ObservableFragment<null>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: ApolloCache.FromValue<TData>;
+        from: ApolloCache.FromOptionValue<TData>;
     }): ApolloClient.ObservableFragment<TData>;
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): ApolloClient.ObservableFragment<TData | null>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;

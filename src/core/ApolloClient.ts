@@ -513,7 +513,7 @@ export declare namespace ApolloClient {
        * @remarks
        * `from` is given precedence over `id` when both are provided.
        */
-      from?: ApolloCache.FromValue<TData>;
+      from?: ApolloCache.FromOptionValue<TData>;
     }
   }
 
@@ -654,7 +654,7 @@ export declare namespace ApolloClient {
        * @remarks
        * `from` is given precedence over `id` when both are provided.
        */
-      from?: ApolloCache.FromValue<TData>;
+      from?: ApolloCache.FromOptionValue<TData>;
 
       /**
        * Any variables that your GraphQL fragments depend on.
@@ -1162,7 +1162,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.FromValue<TData>>;
+      from: Array<ApolloCache.FromOptionValue<TData>>;
     }
   ): ApolloClient.ObservableFragment<Array<TData>>;
 
@@ -1181,7 +1181,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.FromValue<TData> | null>;
+      from: Array<ApolloCache.FromOptionValue<TData> | null>;
     }
   ): ApolloClient.ObservableFragment<Array<TData | null>>;
 
@@ -1201,7 +1201,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: ApolloCache.FromValue<TData>;
+      from: ApolloCache.FromOptionValue<TData>;
     }
   ): ApolloClient.ObservableFragment<TData>;
 

@@ -47,8 +47,8 @@ export declare namespace useSuspenseFragment {
        * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
        */
       from:
-        | useSuspenseFragment.FromValue<TData>
-        | Array<useSuspenseFragment.FromValue<TData> | null>
+        | useSuspenseFragment.FromOptionValue<TData>
+        | Array<useSuspenseFragment.FromOptionValue<TData> | null>
         | null;
 
       // Override this field to make it optional (default: true).
@@ -82,7 +82,7 @@ export declare namespace useSuspenseFragment {
   /**
    * Acceptable values provided to the `from` option.
    */
-  export type FromValue<TData> = ApolloCache.FromValue<TData>;
+  export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
 
   export interface Result<TData> {
     data: DataValue.Complete<MaybeMasked<TData>>;
@@ -110,7 +110,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<useSuspenseFragment.FromValue<TData>>;
+    from: Array<useSuspenseFragment.FromOptionValue<TData>>;
   }
 ): useSuspenseFragment.Result<Array<TData>>;
 
@@ -130,7 +130,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: Array<useSuspenseFragment.FromValue<TData> | null>;
+    from: Array<useSuspenseFragment.FromOptionValue<TData> | null>;
   }
 ): useSuspenseFragment.Result<Array<TData | null>>;
 
@@ -140,7 +140,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: useSuspenseFragment.FromValue<TData>;
+    from: useSuspenseFragment.FromOptionValue<TData>;
   }
 ): useSuspenseFragment.Result<TData>;
 
@@ -160,7 +160,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: useSuspenseFragment.Options<TData, TVariables> & {
-    from: useSuspenseFragment.FromValue<TData> | null;
+    from: useSuspenseFragment.FromOptionValue<TData> | null;
   }
 ): useSuspenseFragment.Result<TData | null>;
 
@@ -242,7 +242,7 @@ function useSuspenseFragment_<
 
 function toStringId(
   cache: ApolloCache,
-  from: useSuspenseFragment.FromValue<any> | null
+  from: useSuspenseFragment.FromOptionValue<any> | null
 ) {
   return (
     typeof from === "string" ? from

@@ -57,7 +57,7 @@ export declare namespace ApolloCache {
   /**
    * Acceptable values provided to the `from` option.
    */
-  export type FromValue<TData> =
+  export type FromOptionValue<TData> =
     | StoreObject
     | Reference
     | FragmentType<NoInfer<TData>>
@@ -86,8 +86,8 @@ export declare namespace ApolloCache {
      * @docGroup 1. Required options
      */
     from:
-      | ApolloCache.FromValue<TData>
-      | Array<ApolloCache.FromValue<TData> | null>
+      | ApolloCache.FromOptionValue<TData>
+      | Array<ApolloCache.FromOptionValue<TData> | null>
       | null;
     /**
      * Any variables that the GraphQL fragment may depend on.
@@ -383,7 +383,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.FromValue<TData>>;
+      from: Array<ApolloCache.FromOptionValue<TData>>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
 
@@ -401,7 +401,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.FromValue<TData> | null>;
+      from: Array<ApolloCache.FromOptionValue<TData> | null>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
 
@@ -419,7 +419,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: ApolloCache.FromValue<TData>;
+      from: ApolloCache.FromOptionValue<TData>;
     }
   ): ApolloCache.ObservableFragment<Unmasked<TData>>;
 
@@ -862,7 +862,7 @@ export abstract class ApolloCache {
     });
   }
 
-  private toCacheId(from: ApolloCache.FromValue<any>) {
+  private toCacheId(from: ApolloCache.FromOptionValue<any>) {
     return typeof from === "string" || from === undefined ?
         from
       : this.identify(from);

@@ -41,7 +41,7 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
-    export type FromValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
@@ -49,7 +49,7 @@ export namespace ApolloCache {
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
-        from: ApolloCache.FromValue<TData> | Array<ApolloCache.FromValue<TData> | null> | null;
+        from: ApolloCache.FromOptionValue<TData> | Array<ApolloCache.FromOptionValue<TData> | null> | null;
         optimistic?: boolean;
         variables?: TVariables;
     }
@@ -127,7 +127,7 @@ export abstract class ApolloCache {
     abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-        from: Array<ApolloCache.FromValue<TData>>;
+        from: Array<ApolloCache.FromOptionValue<TData>>;
     }): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
@@ -135,7 +135,7 @@ export abstract class ApolloCache {
     }): ApolloCache.ObservableFragment<Array<null>>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-        from: Array<ApolloCache.FromValue<TData> | null>;
+        from: Array<ApolloCache.FromOptionValue<TData> | null>;
     }): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
@@ -143,7 +143,7 @@ export abstract class ApolloCache {
     }): ApolloCache.ObservableFragment<null>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-        from: ApolloCache.FromValue<TData>;
+        from: ApolloCache.FromOptionValue<TData>;
     }): ApolloCache.ObservableFragment<Unmasked<TData>>;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
@@ -180,7 +180,7 @@ namespace Cache_2 {
         from?: never;
     } | {
         id?: never;
-        from?: ApolloCache.FromValue<TData>;
+        from?: ApolloCache.FromOptionValue<TData>;
     };
     // (undocumented)
     interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadOptions<TData, TVariables>, "rootId"> {

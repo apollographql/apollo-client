@@ -242,7 +242,7 @@ function useSuspenseFragment_<
 
 function toStringId(
   cache: ApolloCache,
-  from: useSuspenseFragment.FromValue<any>
+  from: useSuspenseFragment.FromValue<any> | null
 ) {
   return (
     typeof from === "string" ? from

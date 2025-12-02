@@ -512,7 +512,7 @@ export declare namespace ApolloClient {
        * @remarks
        * `from` is given precedence over `id` when both are provided.
        */
-      from?: ApolloCache.ReadFragmentFromValue<TData>;
+      from?: ApolloCache.FromValue<TData>;
     }
   }
 
@@ -534,7 +534,7 @@ export declare namespace ApolloClient {
           id?: never;
 
           /** {@inheritDoc @apollo/client/core!ApolloClient.DocumentationTypes.ReadFragmentOptions#from:member} */
-          from?: ApolloCache.ReadFragmentFromValue<TData>;
+          from?: ApolloCache.FromValue<TData>;
         }
     );
 

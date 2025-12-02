@@ -65,9 +65,9 @@ export declare namespace ApolloCache {
     | null;
 
   /**
-   * Acceptable values provided to the `from` option for `readFragment`.
+   * Acceptable values provided to the `from` option.
    */
-  export type ReadFragmentFromValue<TData> =
+  export type FromValue<TData> =
     | StoreObject
     | Reference
     | FragmentType<NoInfer<TData>>

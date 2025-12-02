@@ -63,6 +63,16 @@ export declare namespace ApolloCache {
     | FragmentType<NoInfer<TData>>
     | string
     | null;
+
+  /**
+   * Acceptable values provided to the `from` option for `readFragment`.
+   */
+  export type ReadFragmentFromValue<TData> =
+    | StoreObject
+    | Reference
+    | FragmentType<NoInfer<TData>>
+    | string;
+
   /**
    * Watched fragment options.
    */
@@ -716,9 +726,11 @@ export abstract class ApolloCache {
     variables,
     fragmentName,
     id,
+    from,
     optimistic,
     returnPartialData,
   }: Cache.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -730,6 +742,7 @@ export abstract class ApolloCache {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
+
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -737,10 +750,23 @@ export abstract class ApolloCache {
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
+    let id: string | undefined = undefined;
+
+    if ("from" in options) {
+      const { from } = options;
+
+      id =
+        typeof from === "string" || from === undefined ?
+          from
+        : this.identify(from);
+    } else {
+      id = options.id;
+    }
+
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      rootId: options.id,
+      rootId: id,
       optimistic,
     });
   }

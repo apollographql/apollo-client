@@ -192,17 +192,10 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface ReadFragmentOptions<
+  export type ReadFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by the `cache.identify` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
+  > = {
     /**
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
@@ -236,7 +229,27 @@ export declare namespace Cache {
      * @defaultValue false
      */
     optimistic?: boolean;
-  }
+  } & (
+    | {
+        /**
+         * The root id to be used. This id should take the same form as the
+         * value returned by the `cache.identify` function. If a value with your
+         * id does not exist in the store, `null` will be returned.
+         */
+        id?: string;
+        from?: never;
+      }
+    | {
+        id?: never;
+        /**
+         * An object containing a `__typename` and primary key fields
+         * (such as `id`) identifying the entity object from which the fragment will
+         * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+         * (uncommon).
+         */
+        from?: ApolloCache.ReadFragmentFromValue<TData>;
+      }
+  );
 
   export interface WriteQueryOptions<
     TData,

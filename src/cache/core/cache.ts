@@ -458,14 +458,7 @@ export abstract class ApolloCache {
       // adding this fix here however to ensure those using plain JavaScript
       // and using `cache.identify` themselves will avoid seeing the obscure
       // warning.
-      const id =
-        (
-          typeof value === "undefined" ||
-          typeof value === "string" ||
-          value === null
-        ) ?
-          value
-        : this.identify(value);
+      const id = value == null ? value : this.toCacheId(value);
 
       if (__DEV__) {
         const actualFragmentName =

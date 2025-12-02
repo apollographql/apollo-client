@@ -494,6 +494,114 @@ describe("Cache", () => {
     );
 
     itWithInitialData(
+      "will read some data from the store with `from`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+      }
+    );
+
+    itWithInitialData(
+      "prefers `from` over `id`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+      }
+    );
+
+    itWithInitialData(
       "will read some data from the store with variables",
       [
         {

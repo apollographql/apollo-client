@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.7
+
+### Minor Changes
+
+- [#13038](https://github.com/apollographql/apollo-client/pull/13038) [`109efe7`](https://github.com/apollographql/apollo-client/commit/109efe7e4380b579c6a577982bd9a6e8c6a53892) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the `from` option to `readFragment`, `watchFragment`, and `updateFragment`.
+
 ## 4.1.0-alpha.6
 
 ### Patch Changes

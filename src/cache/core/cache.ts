@@ -55,14 +55,14 @@ export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
   /**
-   * Acceptable values provided to the `from` option for `watchFragment`.
+   * Acceptable values provided to the `from` option.
    */
-  export type WatchFragmentFromValue<TData> =
+  export type FromOptionValue<TData> =
     | StoreObject
     | Reference
     | FragmentType<NoInfer<TData>>
-    | string
-    | null;
+    | string;
+
   /**
    * Watched fragment options.
    */
@@ -86,8 +86,9 @@ export declare namespace ApolloCache {
      * @docGroup 1. Required options
      */
     from:
-      | ApolloCache.WatchFragmentFromValue<TData>
-      | Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      | ApolloCache.FromOptionValue<TData>
+      | Array<ApolloCache.FromOptionValue<TData> | null>
+      | null;
     /**
      * Any variables that the GraphQL fragment may depend on.
      *
@@ -382,7 +383,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<NonNullable<ApolloCache.WatchFragmentFromValue<TData>>>;
+      from: Array<ApolloCache.FromOptionValue<TData>>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
 
@@ -400,7 +401,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: Array<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: Array<ApolloCache.FromOptionValue<TData> | null>;
     }
   ): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
 
@@ -418,7 +419,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
-      from: NonNullable<ApolloCache.WatchFragmentFromValue<TData>>;
+      from: ApolloCache.FromOptionValue<TData>;
     }
   ): ApolloCache.ObservableFragment<Unmasked<TData>>;
 
@@ -457,14 +458,7 @@ export abstract class ApolloCache {
       // adding this fix here however to ensure those using plain JavaScript
       // and using `cache.identify` themselves will avoid seeing the obscure
       // warning.
-      const id =
-        (
-          typeof value === "undefined" ||
-          typeof value === "string" ||
-          value === null
-        ) ?
-          value
-        : this.identify(value);
+      const id = value == null ? value : this.toCacheId(value);
 
       if (__DEV__) {
         const actualFragmentName =
@@ -716,9 +710,11 @@ export abstract class ApolloCache {
     variables,
     fragmentName,
     id,
+    from,
     optimistic,
     returnPartialData,
   }: Cache.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -730,6 +726,7 @@ export abstract class ApolloCache {
      */
     optimistic: boolean
   ): Unmasked<TData> | null;
+
   public readFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -737,10 +734,13 @@ export abstract class ApolloCache {
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
+    const id =
+      options.from !== undefined ? this.toCacheId(options.from) : options.id;
+
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      rootId: options.id,
+      rootId: id,
       optimistic,
     });
   }
@@ -794,18 +794,22 @@ export abstract class ApolloCache {
     variables,
     overwrite,
     id,
+    from,
     broadcast,
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+
   public writeFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >({
-    id,
     data,
     fragment,
     fragmentName,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
+    const id =
+      options.from !== undefined ? this.toCacheId(options.from) : options.id;
+
     return this.write(
       Object.assign(options, {
         query: this.getFragmentDoc(fragment, fragmentName),
@@ -849,6 +853,10 @@ export abstract class ApolloCache {
         return data;
       },
     });
+  }
+
+  private toCacheId(from: ApolloCache.FromOptionValue<any>) {
+    return typeof from === "string" ? from : this.identify(from);
   }
 
   /**

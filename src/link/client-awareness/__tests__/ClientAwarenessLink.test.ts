@@ -85,33 +85,6 @@ describe("feature: client awareness", () => {
     });
   });
 
-  test("can use `extensions` as transport", () => {
-    const terminatingLink = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link: new ClientAwarenessLink({
-        clientAwareness: { transport: "extensions" },
-      }).concat(terminatingLink),
-      cache: new InMemoryCache(),
-      clientAwareness: {
-        name: "test-client",
-        version: "1.0.0",
-      },
-    });
-
-    void client.query({ query });
-    const headers = terminatingLink.operation?.getContext().headers;
-    const extensions = terminatingLink.operation?.extensions;
-    expect(headers).toStrictEqual(undefined);
-    expect(extensions).toStrictEqual(
-      expect.objectContaining({
-        clientApp: {
-          name: "test-client",
-          version: "1.0.0",
-        },
-      })
-    );
-  });
-
   test("can be disabled from `ClientAwarenessLink` constructor, even with options present", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({

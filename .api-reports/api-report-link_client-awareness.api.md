@@ -11,7 +11,7 @@ export namespace ClientAwarenessLink {
     // (undocumented)
     export interface ClientAwarenessOptions {
         name?: string;
-        transport?: "headers" | "extensions" | false;
+        transport?: "headers" | false;
         version?: string;
     }
     export interface ContextOptions {

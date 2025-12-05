@@ -128,7 +128,7 @@ export class ClientAwarenessLink extends ApolloLink {
         );
 
         if (transport === "headers") {
-          operation.setContext(({ headers, extensions }) => {
+          operation.setContext(({ headers }) => {
             return {
               headers: compact(
                 // setting these first so that they can be overridden by user-provided headers

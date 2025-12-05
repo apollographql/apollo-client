@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.8
+
+### Minor Changes
+
+- [#13043](https://github.com/apollographql/apollo-client/pull/13043) [`65e66ca`](https://github.com/apollographql/apollo-client/commit/65e66cafb6828b63d14b64877bbad47af95f66e4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support `headers` transport for enhanced client awareness.
+
 ## 4.1.0-alpha.7
 
 ### Minor Changes

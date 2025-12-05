@@ -804,7 +804,7 @@ namespace ClientAwarenessLink {
     }
     // (undocumented)
     interface EnhancedClientAwarenessOptions {
-        transport?: "extensions" | false;
+        transport?: "headers" | "extensions" | false;
     }
     // (undocumented)
     interface Options {

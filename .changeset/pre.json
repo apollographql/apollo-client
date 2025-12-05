@@ -7,6 +7,7 @@
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
   "changesets": [
+    "beige-hounds-whisper",
     "big-flowers-move",
     "cold-kiwis-give",
     "early-flies-thank",

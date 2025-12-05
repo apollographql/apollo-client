@@ -43,7 +43,7 @@ export declare namespace ClientAwarenessLink {
      *
      * @defaultValue "headers"
      */
-    transport?: "headers" | false;
+    transport?: "headers" | "extensions" | false;
   }
   export interface EnhancedClientAwarenessOptions {
     /**
@@ -140,6 +140,14 @@ export class ClientAwarenessLink extends ApolloLink {
               ),
             };
           });
+        }
+
+        if (transport === "extensions") {
+          operation.extensions = compact(
+            // setting these first so that they can be overridden by user-provided extensions
+            { clientApp: { name, version } },
+            operation.extensions
+          );
         }
       }
       {

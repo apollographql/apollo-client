@@ -796,7 +796,7 @@ namespace ClientAwarenessLink {
     // (undocumented)
     interface ClientAwarenessOptions {
         name?: string;
-        transport?: "headers" | false;
+        transport?: "headers" | "extensions" | false;
         version?: string;
     }
     interface ContextOptions {
@@ -804,7 +804,7 @@ namespace ClientAwarenessLink {
     }
     // (undocumented)
     interface EnhancedClientAwarenessOptions {
-        transport?: "extensions" | false;
+        transport?: "headers" | "extensions" | false;
     }
     // (undocumented)
     interface Options {

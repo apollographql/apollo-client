@@ -54,7 +54,7 @@ export declare namespace ClientAwarenessLink {
      *
      * @defaultValue "extensions"
      */
-    transport?: "extensions" | false;
+    transport?: "headers" | "extensions" | false;
   }
 
   export interface Options {
@@ -167,6 +167,21 @@ export class ClientAwarenessLink extends ApolloLink {
             },
             operation.extensions
           );
+        }
+
+        if (transport === "headers") {
+          operation.setContext(({ headers }) => {
+            return {
+              headers: compact(
+                // setting these first so that they can be overridden by user-provided headers
+                {
+                  "apollographql-library-name": "@apollo/client",
+                  "apollographql-library-version": client.version,
+                },
+                headers
+              ),
+            };
+          });
         }
       }
 

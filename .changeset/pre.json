@@ -1,0 +1,39 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "4.0.4",
+    "@apollo/client-graphql-codegen": "1.0.0",
+    "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
+  },
+  "changesets": [
+    "beige-hounds-whisper",
+    "big-flowers-move",
+    "cold-kiwis-give",
+    "early-flies-thank",
+    "famous-hats-explode",
+    "few-parrots-raise",
+    "flat-worms-notice",
+    "funny-bats-hammer",
+    "large-ligers-prove",
+    "little-yaks-decide",
+    "neat-lemons-shave",
+    "neat-windows-compete",
+    "old-singers-eat",
+    "olive-queens-fold",
+    "perfect-crabs-smile",
+    "poor-knives-smile",
+    "popular-files-glow",
+    "quick-teachers-scream",
+    "rare-pigs-play",
+    "shaggy-brooms-talk",
+    "shaggy-islands-yell",
+    "six-islands-drum",
+    "slimy-ducks-scream",
+    "spicy-eels-switch",
+    "tiny-pumas-compete",
+    "tricky-cycles-buy",
+    "unlucky-cooks-rhyme",
+    "wicked-dingos-approve"
+  ]
+}

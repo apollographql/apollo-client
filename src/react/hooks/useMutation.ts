@@ -160,7 +160,18 @@ export declare namespace useMutation {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
-  > = Options<TData, TVariables, TCache>;
+  > = Options<TData, TVariables, TCache> & {
+    /**
+     * {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member}
+     *
+     * @remarks
+     * When provided as a callback function, the function is called with the
+     * value of `context` provided to the `useMutation` hook.
+     */
+    context?:
+      | DefaultContext
+      | ((hookContext: DefaultContext | undefined) => DefaultContext);
+  };
 
   export namespace DocumentationTypes {
     /** {@inheritDoc @apollo/client/react!useMutation:function(1)} */
@@ -271,6 +282,10 @@ export function useMutation<
       const { options, mutation } = ref.current;
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
+      const context =
+        typeof executeOptions.context === "function" ?
+          executeOptions.context(options?.context)
+        : executeOptions.context;
 
       if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
@@ -285,7 +300,10 @@ export function useMutation<
       }
 
       const mutationId = ++ref.current.mutationId;
-      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
+      const clientOptions = mergeOptions(baseOptions, {
+        ...executeOptions,
+        context,
+      } as any);
 
       return preventUnhandledRejection(
         client

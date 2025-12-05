@@ -26,6 +26,13 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+const WARNINGS = {
+  MISSING_RESOLVER:
+    "Could not find a resolver for the '%s' field nor does the cache resolve the field. The field value has been set to `null`. Either define a resolver for the field or ensure the cache can resolve the value, for example, by adding a 'read' function to a field policy in 'InMemoryCache'.",
+  NO_CACHE:
+    "The '%s' field resolves the value from the cache, for example from a 'read' function, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+};
+
 describe("General functionality", () => {
   test("should not impact normal non-@client use", async () => {
     const query = gql`
@@ -632,7 +639,7 @@ describe("Cache manipulation", () => {
     });
 
     expect(read).toHaveBeenCalledTimes(1);
-    expect(read).toHaveBeenCalledWith(null, expect.anything());
+    expect(read).toHaveBeenCalledWith(undefined, expect.anything());
     expect(console.warn).not.toHaveBeenCalled();
   });
 });
@@ -1508,5 +1515,151 @@ test("throws when executing subscriptions with client fields when local state is
     new InvariantError(
       "Subscription 'OnUserUpdate' contains `@client` fields but local state has not been configured."
     )
+  );
+});
+
+test.each(["cache-first", "network-only"] as const)(
+  "sets existing value of `@client` field to undefined when read function is present",
+  async (fetchPolicy) => {
+    const query = gql`
+      query GetUser {
+        user {
+          firstName @client
+          lastName
+        }
+      }
+    `;
+
+    const read = jest.fn((value = "Fallback") => value);
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              firstName: {
+                read,
+              },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() => {
+        return of({
+          data: { user: { __typename: "User", lastName: "Smith" } },
+        }).pipe(delay(10));
+      }),
+      localState: new LocalState(),
+    });
+
+    await expect(
+      client.query({ query, fetchPolicy })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        user: { __typename: "User", firstName: "Fallback", lastName: "Smith" },
+      },
+    });
+
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledWith(undefined, expect.anything());
+  }
+);
+
+test("sets existing value of `@client` field to null and warns when using no-cache with read function", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const read = jest.fn((value) => value ?? "Fallback");
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            firstName: {
+              read,
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: { user: { __typename: "User", lastName: "Smith" } },
+      }).pipe(delay(10));
+    }),
+    localState: new LocalState(),
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "no-cache" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      user: { __typename: "User", firstName: null, lastName: "Smith" },
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.NO_CACHE,
+    "User.firstName"
+  );
+});
+
+test("sets existing value of `@client` field to null and warns when merge function but not read function is present", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const merge = jest.fn(() => "Fallback");
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            firstName: {
+              merge,
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: { user: { __typename: "User", lastName: "Smith" } },
+      }).pipe(delay(10));
+    }),
+    localState: new LocalState(),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        firstName: "Fallback",
+        lastName: "Smith",
+      },
+    },
+  });
+
+  expect(merge).toHaveBeenCalledTimes(1);
+  expect(merge).toHaveBeenCalledWith(undefined, null, expect.anything());
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.MISSING_RESOLVER,
+    "User.firstName"
   );
 });

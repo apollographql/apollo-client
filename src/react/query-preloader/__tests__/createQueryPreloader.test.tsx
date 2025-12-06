@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -2005,6 +2005,102 @@ test("does not mask results by default", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+});
+
+describe("PreloadedQueryRef` disposal", () => {
+  test("when the `PreloadedQueryRef` is disposed of, the ObservableQuery is unsubscribed", async () => {
+    const { query, mocks } = setupVariablesCase();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    let queryRef: PreloadedQueryRef | null = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef.observable.hasObservers()).toBe(true);
+    expect(internalQueryRef["softReferences"]).toBe(1);
+    queryRef = null;
+
+    await waitFor(() => {
+      global.gc!();
+      expect(internalQueryRef.observable.hasObservers()).toBe(false);
+    });
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
+
+  test("when the `PreloadedQueryRef` is disposed of, while the initial request is still ongoing the ObservableQuery stays subscribed to", async () => {
+    const { query } = setupVariablesCase();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    let queryRef: PreloadedQueryRef | null = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef.observable.hasObservers()).toBe(true);
+    expect(internalQueryRef["softReferences"]).toBe(1);
+    queryRef = null;
+
+    await expect(
+      waitFor(() => {
+        global.gc!();
+        expect(internalQueryRef.observable.hasObservers()).toBe(false);
+      })
+    ).rejects.toThrow();
+    expect(internalQueryRef["softReferences"]).toBe(1);
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            character: { __typename: "Character", id: "1", name },
+          },
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      global.gc!();
+      expect(internalQueryRef.observable.hasObservers()).toBe(false);
+    });
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
+
+  test("when retained by a component, the soft retain lets go", async () => {
+    const { query, mocks } = setupVariablesCase();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    const queryRef = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef["softReferences"]).toBe(1);
+
+    using _disabledAct = disableActEnvironment();
+    const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
+      client,
+      queryRef,
+    });
+    await renderStream.takeRender();
+    await renderStream.takeRender();
+
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
 });
 
 describe.skip("type tests", () => {

@@ -56,7 +56,7 @@ describe("<ApolloProvider /> Component", () => {
           </ApolloProvider>
         </ApolloContext.Provider>
       );
-    }).toThrowError(
+    }).toThrow(
       "ApolloProvider was not passed a client instance. Make " +
         'sure you pass in your client via the "client" prop.'
     );

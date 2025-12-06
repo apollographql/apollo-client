@@ -20,13 +20,12 @@ const defaults = {
       "ts-jest",
       {
         // just transpile, no type checking. We type-check in CI by running `tsc` directly.
-        isolatedModules: true,
         tsconfig: join(import.meta.dirname, "..", "tsconfig.tests.json"),
       },
     ],
   },
   resolver: "<rootDir>/config/jest/resolver.ts",
-  transformIgnorePatterns: ["/node_modules/(?!(rxjs)/)"],
+  transformIgnorePatterns: ["/node_modules/(?!(rxjs|jsdom|parse5)/)"],
   prettierPath: null,
   moduleNameMapper: {
     // Our internal testing utilities are not part of the final build, so we

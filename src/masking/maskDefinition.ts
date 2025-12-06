@@ -150,7 +150,9 @@ function maskSelectionSet(
     if (
       selection.kind === Kind.INLINE_FRAGMENT &&
       (!selection.typeCondition ||
-        context.cache.fragmentMatches(selection, data.__typename))
+        context.cache.fragmentMatches(selection, data.__typename, {
+          unnormalizedResult: data,
+        }))
     ) {
       value = maskSelectionSet(
         data,

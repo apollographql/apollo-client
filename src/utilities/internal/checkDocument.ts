@@ -1,10 +1,10 @@
 // Checks the document for errors and throws an exception if there is an error.
 
 import { WeakCache } from "@wry/caches";
+import { Trie } from "@wry/trie";
 import type { ASTNode } from "graphql";
 import type { DocumentNode, OperationTypeNode } from "graphql";
 import { Kind, visit } from "graphql";
-import { wrap } from "optimism";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -17,6 +17,11 @@ import { cacheSizes } from "../caching/sizes.js";
 
 import { getOperationName } from "./getOperationName.js";
 
+const keys = new Trie(true, () => ({}));
+const cache = new WeakCache<{}, { error?: Error }>(
+  cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"]
+);
+
 /**
  * Checks the document for errors and throws an exception if there is an error.
  *
@@ -25,8 +30,18 @@ import { getOperationName } from "./getOperationName.js";
 export const checkDocument: (
   doc: DocumentNode,
   expectedType?: OperationTypeNode
-) => void = wrap(
-  (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
+) => void = (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
+  const cacheKey = keys.lookupArray([doc, expectedType]);
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    if (cached.error) {
+      throw cached.error;
+    }
+    return;
+  }
+
+  const entry = cache.set(cacheKey, {});
+  try {
     invariant(
       doc && doc.kind === "Document",
       `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
@@ -94,9 +109,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
         }
       },
     });
-  },
-  {
-    max: cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"],
-    cache: WeakCache,
+  } catch (error) {
+    entry.error = error as Error;
+    throw error;
   }
-);
+};

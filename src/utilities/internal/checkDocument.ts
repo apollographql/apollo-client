@@ -1,7 +1,5 @@
 // Checks the document for errors and throws an exception if there is an error.
 
-import { WeakCache } from "@wry/caches";
-import { Trie } from "@wry/trie";
 import type { ASTNode } from "graphql";
 import type { DocumentNode, OperationTypeNode } from "graphql";
 import { Kind, visit } from "graphql";
@@ -16,11 +14,7 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { cacheSizes } from "../caching/sizes.js";
 
 import { getOperationName } from "./getOperationName.js";
-
-const keys = new Trie(true, () => ({}));
-const cache = new WeakCache<{}, { error?: Error }>(
-  cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"]
-);
+import { memoize } from "./memoize.js";
 
 /**
  * Checks the document for errors and throws an exception if there is an error.
@@ -30,18 +24,8 @@ const cache = new WeakCache<{}, { error?: Error }>(
 export const checkDocument: (
   doc: DocumentNode,
   expectedType?: OperationTypeNode
-) => void = (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
-  const cacheKey = keys.lookupArray([doc, expectedType]);
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    if (cached.error) {
-      throw cached.error;
-    }
-    return;
-  }
-
-  const entry = cache.set(cacheKey, {});
-  try {
+) => void = memoize(
+  (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
     invariant(
       doc && doc.kind === "Document",
       `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
@@ -109,8 +93,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
         }
       },
     });
-  } catch (error) {
-    entry.error = error as Error;
-    throw error;
+  },
+  {
+    max: cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"],
   }
-};
+);

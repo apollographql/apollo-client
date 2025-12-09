@@ -27,8 +27,7 @@ export function memoize<TArgs extends any[], TResult>(
 
     const entry = cache.set(cacheKey, {});
     try {
-      const result = (entry.result = fn(...args));
-      return result;
+      return (entry.result = fn(...args));
     } catch (error) {
       entry.error = error;
       throw error;

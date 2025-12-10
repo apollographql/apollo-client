@@ -392,7 +392,6 @@ export function useQuery<
   "use no memo";
   return wrapHook(
     "useQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
@@ -568,7 +567,6 @@ function useResult<TData, TVariables extends OperationVariables>(
               return;
             }
 
-            // eslint-disable-next-line react-compiler/react-compiler
             resultData.variables = observable.variables;
 
             if (previous.data && !equal(previous.data, result.data)) {

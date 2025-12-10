@@ -313,6 +313,25 @@ describe("feature: enhanced client awareness", () => {
     });
   });
 
+  test("can use `headers` as transport", () => {
+    const terminatingLink = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link: new ClientAwarenessLink({
+        enhancedClientAwareness: { transport: "headers" },
+      }).concat(terminatingLink),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    const headers = terminatingLink.operation?.getContext().headers;
+    const extensions = terminatingLink.operation?.extensions;
+    expect(headers).toStrictEqual({
+      "apollographql-library-name": "@apollo/client",
+      "apollographql-library-version": version,
+    });
+    expect(extensions).not.toHaveProperty("clientLibrary");
+  });
+
   test("can be disabled from `ApolloClient` options", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({

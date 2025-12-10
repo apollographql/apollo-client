@@ -1,3 +1,8 @@
+import type {
+  DocumentTypeDecoration,
+  ResultOf,
+  VariablesOf,
+} from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { Subscription } from "rxjs";
 import { filter } from "rxjs";
@@ -46,6 +51,15 @@ export interface QueryRef<
 > {
   /** @internal */
   [QUERY_REF_BRAND]?(variables: TVariables): { data: TData; states: TStates };
+}
+
+export declare namespace QueryRef {
+  export type ForQuery<
+    Document extends DocumentTypeDecoration<any, any>,
+    TStates extends DataState<ResultOf<Document>>["dataState"] =
+      | "complete"
+      | "streaming",
+  > = QueryRef<ResultOf<Document>, VariablesOf<Document>, TStates>;
 }
 
 /**
@@ -186,6 +200,7 @@ export class InternalQueryReference<
 
   public promise!: QueryRefPromise<TData, TStates>;
 
+  private queue: QueryRefPromise<TData, TStates> | undefined;
   private subscription!: Subscription;
   private listeners = new Set<Listener<TData, TStates>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
@@ -335,6 +350,11 @@ export class InternalQueryReference<
   listen(listener: Listener<TData, TStates>) {
     this.listeners.add(listener);
 
+    if (this.queue) {
+      this.deliver(this.queue);
+      this.queue = undefined;
+    }
+
     return () => {
       this.listeners.delete(listener);
     };
@@ -412,6 +432,18 @@ export class InternalQueryReference<
   }
 
   private deliver(promise: QueryRefPromise<TData, TStates>) {
+    // Maintain a queue of the last item we tried to deliver so that we can
+    // deliver it as soon as we get the first listener. This helps in cases such
+    // as `@stream` where React may render a component and incremental results
+    // are loaded in between when the component renders and effects are run. If
+    // effects are run after the incremntal chunks are delivered, we'll have
+    // rendered a stale value. The queue ensures we can deliver the most
+    // up-to-date value as soon as the component is ready to listen for new
+    // values.
+    if (this.listeners.size === 0) {
+      this.queue = promise;
+    }
+
     this.listeners.forEach((listener) => listener(promise));
   }
 

@@ -124,7 +124,6 @@ export namespace ApolloClient {
         export interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
             fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
             fragmentName?: string;
-            id?: string;
             optimistic?: boolean;
             returnPartialData?: boolean;
         }
@@ -148,7 +147,6 @@ export namespace ApolloClient {
             data: Unmasked<TData>;
             fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
             fragmentName?: string;
-            id?: string;
             overwrite?: boolean;
         }
     }
@@ -176,6 +174,14 @@ export namespace ApolloClient {
     // (undocumented)
     export namespace DocumentationTypes {
         // (undocumented)
+        export interface ReadFragmentOptions<TData, TVariables extends OperationVariables> extends Base.ReadFragmentOptions<TData, TVariables> {
+            from?: ApolloCache.FromOptionValue<TData>;
+            id?: string;
+        }
+    }
+    // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> extends Base.WriteQueryOptions<TData, TVariables> {
             variables?: TVariables;
         }
@@ -191,8 +197,17 @@ export namespace ApolloClient {
     export namespace DocumentationTypes {
         // (undocumented)
         export interface WriteFragmentOptions<TData, TVariables extends OperationVariables> extends Base.WriteFragmentOptions<TData, TVariables> {
+            from?: ApolloCache.FromOptionValue<TData>;
+            id?: string;
             variables?: TVariables;
         }
+    }
+    // (undocumented)
+    export interface Experiment {
+        // (undocumented)
+        (this: ApolloClient, options: ApolloClient.Options): void;
+        // (undocumented)
+        v: 1;
     }
     // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
@@ -217,6 +232,10 @@ export namespace ApolloClient {
         extensions?: Record<string, unknown>;
     }
     // (undocumented)
+    export interface ObservableFragment<TData = unknown> extends Observable_2<ApolloClient.WatchFragmentResult<TData>> {
+        getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
+    }
+    // (undocumented)
     export interface Options {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
@@ -231,6 +250,7 @@ export namespace ApolloClient {
         documentTransform?: DocumentTransform;
         // (undocumented)
         enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+        experiments?: ApolloClient.Experiment[];
         incrementalHandler?: Incremental.Handler<any>;
         link: ApolloLink;
         // (undocumented)
@@ -251,7 +271,7 @@ export namespace ApolloClient {
         error?: ErrorLike;
     }
     // (undocumented)
-    export type ReadFragmentOptions<TData, TVariables extends OperationVariables> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+    export type ReadFragmentOptions<TData, TVariables extends OperationVariables> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     export type ReadQueryOptions<TData, TVariables extends OperationVariables> = Base.ReadQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
     export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
@@ -287,7 +307,7 @@ export namespace ApolloClient {
     // (undocumented)
     export type WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = ApolloCache.WatchFragmentOptions<TData, TVariables>;
     // (undocumented)
-    export type WatchFragmentResult<TData = unknown> = ApolloCache.WatchFragmentResult<TData>;
+    export type WatchFragmentResult<TData = unknown> = ApolloCache.WatchFragmentResult<MaybeMasked<TData>>;
     export type WatchQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
         fetchPolicy?: WatchQueryFetchPolicy;
         nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
@@ -302,7 +322,7 @@ export namespace ApolloClient {
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
-    export type WriteFragmentOptions<TData, TVariables extends OperationVariables> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+    export type WriteFragmentOptions<TData, TVariables extends OperationVariables> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     export type WriteQueryOptions<TData, TVariables extends OperationVariables> = Base.WriteQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
 }
@@ -359,7 +379,23 @@ export class ApolloClient {
     subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.SubscribeOptions<TData, TVariables>): SubscriptionObservable<ApolloClient.SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
-    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): Observable_2<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<ApolloCache.FromOptionValue<TData>>;
+    }): ApolloClient.ObservableFragment<Array<TData>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<null>;
+    }): ApolloClient.ObservableFragment<Array<null>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<ApolloCache.FromOptionValue<TData> | null>;
+    }): ApolloClient.ObservableFragment<Array<TData | null>>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: null;
+    }): ApolloClient.ObservableFragment<null>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+        from: ApolloCache.FromOptionValue<TData>;
+    }): ApolloClient.ObservableFragment<TData>;
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchFragmentOptions<TData, TVariables>): ApolloClient.ObservableFragment<TData | null>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>): ObservableQuery<TData, TVariables>;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WriteFragmentOptions<TData, TVariables>): Reference_2 | undefined;
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.WriteQueryOptions<TData, TVariables>): Reference_2 | undefined;
@@ -1132,8 +1168,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:361:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:372:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:368:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

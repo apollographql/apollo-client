@@ -37,6 +37,7 @@ test("passes parent value as empty object to root resolver for client-only query
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
@@ -79,6 +80,7 @@ test("passes rootValue as remote result to root resolver when server fields are 
       context: {},
       variables: {},
       remoteResult: { data: { bar: { __typename: "Bar", baz: true } } },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {

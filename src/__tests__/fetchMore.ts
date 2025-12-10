@@ -19,7 +19,7 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   markAsStreaming,
-  mockDeferStream,
+  mockDefer20220824,
   ObservableStream,
   setupPaginatedCase,
 } from "@apollo/client/testing/internal";
@@ -2478,7 +2478,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
 });
 
 test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring yet will not put it into completed state", async () => {
-  const defer = mockDeferStream();
+  const defer = mockDefer20220824();
   const baseLink = new MockSubscriptionLink();
 
   const client = new ApolloClient({

@@ -1,0 +1,16 @@
+diff --git a/node_modules/graphql-17-alpha9/execution/types.d.ts b/node_modules/graphql-17-alpha9/execution/types.d.ts
+index 48ef2e9..6ef2ab3 100644
+--- a/node_modules/graphql-17-alpha9/execution/types.d.ts
++++ b/node_modules/graphql-17-alpha9/execution/types.d.ts
+@@ -95,9 +95,8 @@ export interface CompletedResult {
+     errors?: ReadonlyArray<GraphQLError>;
+ }
+ export interface FormattedCompletedResult {
+-    path: ReadonlyArray<string | number>;
+-    label?: string;
+-    errors?: ReadonlyArray<GraphQLError>;
++    id: string;
++    errors?: ReadonlyArray<GraphQLFormattedError>;
+ }
+ export declare function isPendingExecutionGroup(incrementalDataRecord: IncrementalDataRecord): incrementalDataRecord is PendingExecutionGroup;
+ export type CompletedExecutionGroup = SuccessfulExecutionGroup | FailedExecutionGroup;

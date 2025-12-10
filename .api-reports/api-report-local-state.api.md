@@ -14,6 +14,7 @@ import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { OperationVariables } from '@apollo/client';
 import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@apollo/client';
+import type { WatchQueryFetchPolicy } from '@apollo/client';
 
 // @public (undocumented)
 type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
@@ -91,7 +92,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
     ]);
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
-    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, fetchPolicy, }: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -99,6 +100,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
         returnPartialData?: boolean;
+        fetchPolicy: WatchQueryFetchPolicy;
     }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
     getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {

@@ -170,6 +170,12 @@
 
 - [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`01cace0`](https://github.com/apollographql/apollo-client/commit/01cace0a6d4faf79e8a4188b93c7d13c4b26d6d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the cache data loss warning message when `existing` or `incoming` is an array.
 
+## 4.0.10
+
+### Patch Changes
+
+- [#13045](https://github.com/apollographql/apollo-client/pull/13045) [`af4acdc`](https://github.com/apollographql/apollo-client/commit/af4acdc88bd3bac0d697ab300816241e4065842c) Thanks [@phryneas](https://github.com/phryneas)! - Fix memory leak #13036
+
 ## 4.0.9
 
 ### Patch Changes

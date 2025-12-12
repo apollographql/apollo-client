@@ -180,11 +180,62 @@ export abstract class ApolloCache {
 
   // Transactional API
 
-  // The batch method is intended to replace/subsume both performTransaction
-  // and recordOptimisticTransaction, but performTransaction came first, so we
-  // provide a default batch implementation that's just another way of calling
-  // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
-  // override the batch method to do more interesting things with its options.
+  /**
+   * Executes multiple cache operations as a single batch, ensuring that
+   * watchers are only notified once after all operations complete. This is
+   * useful for improving performance when making multiple cache updates, as it
+   * prevents unnecessary re-renders or query refetches between individual
+   * operations.
+   *
+   * The `batch` method supports both optimistic and non-optimistic updates, and
+   * provides fine-grained control over which cache layer receives the updates
+   * and when watchers are notified.
+   *
+   * @example
+   * ```js
+   * cache.batch({
+   *   update(cache) {
+   *     cache.writeQuery({
+   *       query: GET_TODOS,
+   *       data: { todos: updatedTodos },
+   *     });
+   *     cache.evict({ id: 'Todo:123' });
+   *     cache.gc();
+   *   },
+   * });
+   * ```
+   *
+   * @example
+   * ```js
+   * // Optimistic update with a custom layer ID
+   * cache.batch({
+   *   optimistic: 'add-todo-optimistic',
+   *   update(cache) {
+   *     cache.modify({
+   *       fields: {
+   *         todos(existing = []) {
+   *           return [...existing, newTodoRef];
+   *         },
+   *       },
+   *     });
+   *   },
+   * });
+   * ```
+   *
+   * @param options - Configuration options for the batch operation.
+   * @param options.update - A function that performs cache operations. Receives
+   *   the cache instance as its argument and can return a value.
+   * @param options.optimistic - Controls how optimistic data is handled:
+   *   - `string`: Creates a new optimistic layer with this ID
+   *   - `true` (default): Updates the current top layer
+   *   - `false`: Updates only the root (non-optimistic) cache data
+   * @param options.removeOptimistic - If provided, removes the optimistic layer
+   *   with this ID after the batch completes, triggering at most one broadcast.
+   * @param options.onWatchUpdated - Optional callback invoked for each watcher
+   *   affected by the batch. Return `false` to prevent broadcasting to that
+   *   watcher.
+   * @returns The return value of the `update` function.
+   */
   public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic

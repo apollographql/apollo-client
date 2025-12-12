@@ -940,6 +940,124 @@ public updateFragment<TData = unknown, TVariables = OperationVariables>(
 ): TData | null
 ```
 
+## `batch`
+
+Executes multiple cache operations as a single batch transaction, ensuring that watchers are notified only once after all operations complete. This improves performance when making multiple cache updates by preventing unnecessary re-renders between individual operations.
+
+```js
+cache.batch({
+  update(cache) {
+    cache.writeQuery({
+      query: GET_TODOS,
+      data: { todos: updatedTodos },
+    });
+    cache.evict({ id: 'Todo:123' });
+    cache.gc();
+  },
+});
+```
+
+For usage instructions, see [Interacting with cached data: `cache.batch`](../../caching/cache-interaction/#using-cachebatch).
+
+Takes an `options` object as a parameter. Supported fields of this object are described below.
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `update`
+
+`(cache: InMemoryCache) => TUpdateResult`
+
+</td>
+<td>
+
+**Required.** A function that performs cache operations. Receives the cache instance as its argument.
+
+The return value of this function becomes the return value of `batch`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`string | boolean`
+
+</td>
+<td>
+
+Controls how optimistic data is handled:
+
+- `string`: Creates a new optimistic layer with this ID. Use `removeOptimistic` later to remove it.
+- `true`: Updates the current top layer of the cache (including any optimistic data).
+- `false`: Updates only the root (non-optimistic) cache data.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `removeOptimistic`
+
+`string`
+
+</td>
+<td>
+
+If provided, removes the optimistic layer with this ID after the batch completes.
+
+This is useful for atomically applying server data while removing a pending optimistic update, triggering at most one broadcast for both operations.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `onWatchUpdated`
+
+`(watch, diff, lastDiff?) => any`
+
+</td>
+<td>
+
+Optional callback invoked for each watcher affected by the batch operation.
+
+Receives the watch options, the new diff result, and optionally the previous diff result.
+
+Return `false` to prevent broadcasting to that specific watcher.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
+
+```ts title="src/cache/core/cache.ts"
+batch<TUpdateResult>(
+  options: Cache.BatchOptions<InMemoryCache, TUpdateResult>
+): TUpdateResult
+```
+
 ## `identify`
 
 Returns the canonical ID for a specified cached object.

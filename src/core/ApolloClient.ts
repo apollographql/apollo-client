@@ -384,6 +384,17 @@ export declare namespace ApolloClient {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * Indicates that the variables are unknown at the time of query creation.
+     * This option can only be set when `fetchPolicy` is `'standby'`.
+     * Setting this to `true` will prevent `client.refetchQueries` from refetching
+     * this query before it has left the `'standby'` state, either by setting a
+     * `fetchPolicy`, or by calling `observableQuery.refetch()` explicitly.
+     *
+     * Changing this option after the query has been created will have no effect.
+     */
+    variablesUnknown?: boolean;
   } & VariablesOption<NoInfer<TVariables>>;
 
   namespace Base {

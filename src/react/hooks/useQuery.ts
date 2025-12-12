@@ -504,6 +504,7 @@ function useOptions<TData, TVariables extends OperationVariables>(
         mergeOptions(defaultOptions as any, {
           query,
           fetchPolicy: "standby",
+          variablesUnknown: options === skipToken,
         });
 
       (opts as any)[fromSkipToken] = true;

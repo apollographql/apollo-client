@@ -502,6 +502,7 @@ export function useWatchQueryOptions<
       return {
         query,
         fetchPolicy: "standby",
+        variablesUnknown: true,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 

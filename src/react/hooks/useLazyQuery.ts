@@ -344,6 +344,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
+      variablesUnknown: true,
     } as ApolloClient.WatchQueryOptions<TData, TVariables>);
   }
 

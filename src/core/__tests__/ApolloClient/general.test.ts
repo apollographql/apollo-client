@@ -6852,7 +6852,7 @@ describe("ApolloClient", () => {
         variablesUnknown: true,
       });
 
-      // since a `standby` query never emits anytyhing, even when refetched manually,
+      // since a `standby` query never emits anything, even when refetched manually,
       // we just use this to subscribe but don't consume values
       using _keepSubscribed = new ObservableStream(observable);
       await expect(operationStream).not.toEmitAnything();

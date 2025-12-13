@@ -848,7 +848,7 @@ describe("BatchLink", () => {
         const checkCalls = mock.mock.calls.slice(0, -1);
         expect(checkCalls.length).toBe(2);
         checkCalls.forEach((args) => expect(args[0]).toBe(0));
-        expect(mock).lastCalledWith(1);
+        expect(mock).toHaveBeenLastCalledWith(1);
         expect(batchHandler.mock.calls.length).toBe(1);
 
         runBatchInterval();

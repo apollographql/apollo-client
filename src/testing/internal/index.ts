@@ -1,6 +1,7 @@
 export {
   enableFakeTimers,
   spyOnConsole,
+  withCacheSizes,
   withCleanup,
   withProdMode,
 } from "./disposables/index.js";

@@ -366,7 +366,7 @@ export function makeReference(id: string): Reference;
 export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
-export function mapObservableFragmentMemoized<From, To>(observable: ApolloCache.ObservableFragment<From>, memoizationSymbol: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>): ApolloCache.ObservableFragment<To>;
+export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>) => ApolloCache.ObservableFragment<To>;
 
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;

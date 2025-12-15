@@ -1,5 +1,6 @@
 import type { ApolloCache } from "@apollo/client";
 import { map } from "rxjs";
+import { memoize } from "./memoize.js";
 
 function mapObservableFragment<From, To>(
   observable: ApolloCache.ObservableFragment<From>,
@@ -25,15 +26,18 @@ function mapObservableFragment<From, To>(
   });
 }
 
-export function mapObservableFragmentMemoized<From, To>(
-  observable: ApolloCache.ObservableFragment<From>,
-  memoizationSymbol: symbol,
-  mapFn: (
-    from: ApolloCache.WatchFragmentResult<From>
-  ) => ApolloCache.WatchFragmentResult<To>
-): ApolloCache.ObservableFragment<To> {
-  return ((observable as any)[memoizationSymbol] ??= mapObservableFragment(
-    observable,
-    mapFn
-  ));
-}
+export const mapObservableFragmentMemoized = memoize(
+  function mapObservableFragmentMemoized<From, To>(
+    observable: ApolloCache.ObservableFragment<From>,
+    /**
+     * used together with `observable` as memoization key, `mapFn` is explicitly not used as memoization key
+     */
+    _cacheKey: symbol,
+    mapFn: (
+      from: ApolloCache.WatchFragmentResult<From>
+    ) => ApolloCache.WatchFragmentResult<To>
+  ): ApolloCache.ObservableFragment<To> {
+    return mapObservableFragment(observable, mapFn);
+  },
+  { max: 1, makeCacheKey: (args) => args.slice(0, 2) }
+);

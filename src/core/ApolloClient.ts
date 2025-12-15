@@ -16,7 +16,6 @@ import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { VariablesOption } from "@apollo/client/utilities/internal";
@@ -24,6 +23,7 @@ import {
   checkDocument,
   compact,
   getApolloClientMemoryInternals,
+  mapObservableFragmentMemoized,
   mergeOptions,
   removeMaskedFragmentSpreads,
 } from "@apollo/client/utilities/internal";
@@ -1222,29 +1222,31 @@ export class ApolloClient {
     | ApolloClient.ObservableFragment<TData>
     | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
-
-    const mask = (
-      data: TData | DeepPartial<TData> | null
-    ): TData | DeepPartial<TData> | null => {
-      // The transform will remove fragment spreads from the fragment
-      // document when dataMasking is enabled. The `mask` function
-      // remains to apply warnings to fragments marked as
-      // `@unmask(mode: "migrate")`. Since these warnings are only applied
-      // in dev, we can skip the masking algorithm entirely for production.
-      if (__DEV__) {
-        if (dataMasking) {
-          return this.queryManager.maskFragment({ ...options, data });
-        }
-      }
-
-      return data;
-    };
-
     const observable = this.cache.watchFragment({
       ...options,
       fragment: this.transform(options.fragment, dataMasking),
-      [Symbol.for("apollo.transformData")]: mask,
     });
+
+    if (__DEV__) {
+      return mapObservableFragmentMemoized(
+        observable,
+        Symbol.for("apollo.transform.dev.mask"),
+        (
+          result: ApolloClient.WatchFragmentResult<any>
+        ): ApolloClient.WatchFragmentResult<any> => ({
+          ...result,
+          // The transform will remove fragment spreads from the fragment
+          // document when dataMasking is enabled. The `mask` function
+          // remains to apply warnings to fragments marked as
+          // `@unmask(mode: "migrate")`. Since these warnings are only applied
+          // in dev, we can skip the masking algorithm entirely for production.
+          data: this.queryManager.maskFragment({
+            ...options,
+            data: result.data,
+          }),
+        })
+      ) satisfies ApolloClient.ObservableFragment<any> as ApolloClient.ObservableFragment<any>;
+    }
 
     return observable as ApolloClient.ObservableFragment<any>;
   }

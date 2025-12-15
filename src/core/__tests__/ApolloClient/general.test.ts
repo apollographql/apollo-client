@@ -20,6 +20,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
+import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
 import {
   InvariantError,
   setVerbosity,
@@ -6760,7 +6761,7 @@ describe("ApolloClient", () => {
         query,
         variables,
         fetchPolicy: "standby",
-        variablesUnknown: true,
+        [variablesUnknownSymbol]: true,
       });
       const stream = new ObservableStream(observable);
       await expect(stream).not.toEmitAnything();
@@ -6849,7 +6850,7 @@ describe("ApolloClient", () => {
         query,
         variables,
         fetchPolicy: "standby",
-        variablesUnknown: true,
+        [variablesUnknownSymbol]: true,
       });
 
       // since a `standby` query never emits anything, even when refetched manually,

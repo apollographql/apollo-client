@@ -1,5 +1,7 @@
-import type { ApolloCache } from "@apollo/client";
 import { map } from "rxjs";
+
+import type { ApolloCache } from "@apollo/client";
+
 import { memoize } from "./memoize.js";
 
 function mapObservableFragment<From, To>(

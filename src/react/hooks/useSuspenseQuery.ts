@@ -24,10 +24,11 @@ import type {
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type {
-  DocumentationTypes as UtilityDocumentationTypes,
-  NoInfer,
-  VariablesOption,
+import {
+  type DocumentationTypes as UtilityDocumentationTypes,
+  type NoInfer,
+  type VariablesOption,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
@@ -502,7 +503,7 @@ export function useWatchQueryOptions<
       return {
         query,
         fetchPolicy: "standby",
-        variablesUnknown: true,
+        [variablesUnknownSymbol]: true,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 

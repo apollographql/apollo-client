@@ -25,6 +25,7 @@ import {
   getQueryDefinition,
   preventUnhandledRejection,
   toQueryResult,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -385,7 +386,7 @@ export class ObservableQuery<
       ),
     } = options;
 
-    if (options.variablesUnknown) {
+    if (options[variablesUnknownSymbol]) {
       invariant(
         fetchPolicy === "standby",
         "The `variablesUnknown` option can only be used together with a `standby` fetch policy."

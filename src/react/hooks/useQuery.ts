@@ -42,6 +42,7 @@ import type {
 import {
   maybeDeepFreeze,
   mergeOptions,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
@@ -504,7 +505,7 @@ function useOptions<TData, TVariables extends OperationVariables>(
         mergeOptions(defaultOptions as any, {
           query,
           fetchPolicy: "standby",
-          variablesUnknown: true,
+          [variablesUnknownSymbol]: true,
         });
 
       (opts as any)[fromSkipToken] = true;

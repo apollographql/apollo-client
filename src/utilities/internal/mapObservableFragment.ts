@@ -1,4 +1,4 @@
-import { map } from "rxjs";
+import { map, shareReplay } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client";
 
@@ -23,9 +23,15 @@ function mapObservableFragment<From, To>(
     return stableMappedResult;
   }
 
-  return Object.assign(observable.pipe(map(toMapped)), {
-    getCurrentResult: () => toMapped(observable.getCurrentResult()),
-  });
+  return Object.assign(
+    observable.pipe(
+      map(toMapped),
+      shareReplay({ bufferSize: 1, refCount: true })
+    ),
+    {
+      getCurrentResult: () => toMapped(observable.getCurrentResult()),
+    }
+  );
 }
 
 export const mapObservableFragmentMemoized = memoize(

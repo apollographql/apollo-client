@@ -1787,10 +1787,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // as for now we just take the "latest" operation that is still active,
     // as that lines up best with previous behavior[]
 
-    const operation = Array.from(this.activeOperations.values()).findLast(
-      (operation) =>
-        isEqualQuery(operation, this) && operation.override !== undefined
-    );
+    const operation = Array.from(this.activeOperations.values())
+      .reverse()
+      .find(
+        (operation) =>
+          isEqualQuery(operation, this) && operation.override !== undefined
+      );
     return operation?.override ?? baseNetworkStatus;
   }
 

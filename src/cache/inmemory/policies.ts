@@ -234,7 +234,7 @@ export interface FieldFunctionOptions<
   mergeObjects: MergeObjectsFunction;
 
   // Extensions that were provided when writing to the cache via writeQuery.
-  extensions: Record<string, unknown> | undefined;
+  extensions?: Record<string, unknown>;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -975,7 +975,7 @@ function makeFieldFunctionOptions(
   const variables = fieldSpec.variables || context.variables;
   const { toReference, canRead } = context.store;
 
-  return {
+  const options: FieldFunctionOptions = {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
     fieldName,
@@ -993,8 +993,18 @@ function makeFieldFunctionOptions(
       );
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
-    extensions: context.extensions,
   };
+
+  // Make `extensions` only available in `merge` functions, but not `read`
+  // functions since we currently only support merge functions. Even though
+  // `context.extensions` will result in `undefined`, we don't want the key to
+  // exist in the options object to avoid the appearance that its supported in
+  // `read` functions.
+  if ("extensions" in context) {
+    options.extensions = context.extensions;
+  }
+
+  return options;
 }
 
 export function normalizeReadFieldOptions(

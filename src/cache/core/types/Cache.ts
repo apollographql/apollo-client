@@ -77,6 +77,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * Extensions for the write. These will be made available in `merge`
+     * functions.
+     */
+    extensions?: Record<string, unknown>;
   }
 
   export interface DiffOptions<
@@ -269,6 +275,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * Extensions for the write. These will be made available in `merge`
+     * functions.
+     */
+    extensions?: Record<string, unknown>;
   }
 
   export type WriteFragmentOptions<

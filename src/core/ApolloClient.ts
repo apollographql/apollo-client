@@ -586,6 +586,11 @@ export declare namespace ApolloClient {
        * @defaultValue false
        */
       overwrite?: boolean;
+      /**
+       * Extensions for the write. These will be made available in `merge`
+       * functions.
+       */
+      extensions?: Record<string, unknown>;
     }
   }
   export type WriteQueryOptions<

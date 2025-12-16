@@ -29,6 +29,7 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
@@ -502,6 +503,7 @@ export function useWatchQueryOptions<
       return {
         query,
         fetchPolicy: "standby",
+        [variablesUnknownSymbol]: true,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 

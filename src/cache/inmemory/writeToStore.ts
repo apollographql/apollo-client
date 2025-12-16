@@ -85,6 +85,7 @@ export interface WriteContext extends ReadMergeModifyContext {
   clientOnly: boolean;
   deferred: boolean;
   flavors: Map<string, FlavorableWriteContext>;
+  extensions?: Record<string, unknown>;
 }
 
 type FlavorableWriteContext = Pick<
@@ -146,6 +147,7 @@ export class StoreWriter {
       dataId,
       variables,
       overwrite,
+      extensions,
     }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -170,6 +172,7 @@ export class StoreWriter {
       clientOnly: false,
       deferred: false,
       flavors: new Map(),
+      extensions,
     };
 
     const ref = this.processSelectionSet({

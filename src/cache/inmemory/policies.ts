@@ -232,6 +232,9 @@ export interface FieldFunctionOptions<
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
+
+  // Extensions that were provided when writing to the cache via writeQuery.
+  extensions: Record<string, unknown> | undefined;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -990,6 +993,7 @@ function makeFieldFunctionOptions(
       );
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
+    extensions: context.extensions,
   };
 }
 

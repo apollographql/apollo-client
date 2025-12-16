@@ -447,6 +447,9 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
     variables: TVariables;
 };
 
+// @internal @deprecated
+export const variablesUnknownSymbol: unique symbol;
+
 // Warnings were encountered during analysis:
 //
 // src/utilities/internal/getStoreKeyName.ts:88:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts

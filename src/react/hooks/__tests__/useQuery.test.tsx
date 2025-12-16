@@ -8364,11 +8364,12 @@ describe("useQuery Hook", () => {
       );
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        (options: SkipToken | useQuery.Options<any, any>) =>
-          useQuery(query, options),
-        { wrapper, initialProps: skipToken }
-      );
+      const { takeSnapshot, rerender, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          (options: SkipToken | useQuery.Options<any, any>) =>
+            useQuery(query, options),
+          { wrapper, initialProps: skipToken }
+        );
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8378,9 +8379,10 @@ describe("useQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
+      expect(getCurrentSnapshot().observable["variablesUnknown"]).toBe(true);
       await expect(operationStream).not.toEmitAnything();
 
-      await client.refetchQueries({ include: [query] });
+      void client.refetchQueries({ include: [query] });
       await expect(takeSnapshot).not.toRerender();
       await expect(operationStream).not.toEmitAnything();
 
@@ -8407,8 +8409,12 @@ describe("useQuery Hook", () => {
 
       link.simulateResult({ result: { data: secondReqData } }, true);
       await client.refetchQueries({ include: [query] });
-      await expect(takeSnapshot()).resolves.toMatchObject({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: secondReqData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data,
         variables: { id: "1234" },
       });
     });

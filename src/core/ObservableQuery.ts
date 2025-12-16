@@ -296,7 +296,7 @@ export class ObservableQuery<
 {
   public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryName?: string;
-  public variablesUnknown: boolean = false;
+  private variablesUnknown: boolean = false;
 
   /** @internal will be read and written from `QueryInfo` */
   public _lastWrite?: unknown;

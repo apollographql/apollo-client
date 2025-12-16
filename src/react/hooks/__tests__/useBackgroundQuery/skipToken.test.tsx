@@ -381,8 +381,11 @@ test("client.refetchQueries should not refetch queries that start with skipToken
   {
     const { snapshot } = await takeRender();
 
-    expect(snapshot).toMatchObject({
+    expect(snapshot).toStrictEqualTyped({
       data: secondReqData,
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
   }
 });

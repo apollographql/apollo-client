@@ -6192,13 +6192,13 @@ test("executes network request when calling `refetch` on a cache-only query", as
 
 test("client.refetchQueries should not refetch queries that have not been executed yet", async () => {
   const query = gql`
-      query getAuthor($id: ID!) {
-        author(id: $id) {
-          firstName
-          lastName
-        }
+    query getAuthor($id: ID!) {
+      author(id: $id) {
+        firstName
+        lastName
       }
-    `;
+    }
+  `;
   const data = {
     author: {
       firstName: "John",

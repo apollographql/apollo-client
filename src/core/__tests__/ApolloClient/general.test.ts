@@ -6766,10 +6766,24 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
       await expect(stream).not.toEmitAnything();
       await expect(operationStream).not.toEmitAnything();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
 
       await client.refetchQueries({ include: [query] });
       await expect(stream).not.toEmitAnything();
       await expect(operationStream).not.toEmitAnything();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
 
       void observable.reobserve({ fetchPolicy: "cache-first" });
 
@@ -6781,9 +6795,23 @@ describe("ApolloClient", () => {
         partial: true,
       });
       await expect(operationStream).toEmitNext();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       link.simulateResult({ result: { data } }, true);
       await expect(stream).toEmitTypedValue({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data,
         dataState: "complete",
         loading: false,
@@ -6799,11 +6827,25 @@ describe("ApolloClient", () => {
           networkStatus: NetworkStatus.refetch,
         }),
       });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data,
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
       await expect(operationStream).toEmitNext();
 
       link.simulateResult({ result: { data: secondReqData } }, true);
 
       await expect(stream).toEmitTypedValue({
+        data: secondReqData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: secondReqData,
         dataState: "complete",
         loading: false,
@@ -6855,7 +6897,7 @@ describe("ApolloClient", () => {
 
       // since a `standby` query never emits anything, even when refetched manually,
       // we just use this to subscribe but don't consume values
-      using _keepSubscribed = new ObservableStream(observable);
+      using stream = new ObservableStream(observable);
       await expect(operationStream).not.toEmitAnything();
 
       await client.refetchQueries({ include: [query] });
@@ -6871,6 +6913,8 @@ describe("ApolloClient", () => {
       void client.refetchQueries({ include: [query] });
       await expect(operationStream).toEmitNext();
       link.simulateResult({ result: { data: secondReqData } }, true);
+
+      await expect(stream).not.toEmitAnything();
     });
   });
 

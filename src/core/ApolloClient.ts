@@ -389,8 +389,8 @@ export declare namespace ApolloClient {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /**
-     * @internal This API is not meant for everyday use.
-     * It should be used by framework integrators only.
+     * @internal This API is meant for framework integrations only.
+     * Do not use for everyday use.
      *
      * Indicates that the variables are unknown at the time of query creation.
      * This option can only be set when `fetchPolicy` is `'standby'`.

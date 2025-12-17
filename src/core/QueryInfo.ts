@@ -395,6 +395,7 @@ export class QueryInfo<
         dataId: "ROOT_MUTATION",
         query: mutation.document,
         variables: mutation.variables,
+        extensions: result.extensions,
       });
 
       const { updateQueries } = mutation;

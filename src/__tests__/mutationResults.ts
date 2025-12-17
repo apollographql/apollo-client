@@ -602,6 +602,75 @@ describe("mutation results", () => {
     });
   });
 
+  it("provides extensions in merge functions", async () => {
+    const merge = jest.fn((_, incoming) => incoming);
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          fields: {
+            name: {
+              merge,
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: {
+                    __typename: "Person",
+                    name: operation.variables.newName,
+                  },
+                },
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+              observer.complete();
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+        errorPolicy: "ignore",
+      })
+    ).resolves.toStrictEqualTyped({
+      data: { newPerson: { __typename: "Person", name: "Hugh Willson" } },
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge).toHaveBeenCalledWith(
+      undefined,
+      "Hugh Willson",
+      expect.objectContaining({ extensions: { requestLimit: 10 } })
+    );
+  });
+
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     let handle: any;

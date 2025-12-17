@@ -963,92 +963,10 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 
 ### Options
 
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-<tbody>
-
-<tr class="required">
-<td>
-
-###### `update`
-
-`(cache: InMemoryCache) => TUpdateResult`
-
-</td>
-<td>
-
-**Required.** A function that performs cache operations. Receives the cache instance as its argument.
-
-The return value of this function becomes the return value of `batch`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `optimistic`
-
-`string | boolean`
-
-</td>
-<td>
-
-Controls how optimistic data is handled:
-
-- `string`: Creates a new optimistic layer with this ID. Use `removeOptimistic` later to remove it.
-- `true`: Updates the current top layer of the cache (including any optimistic data).
-- `false`: Updates only the root (non-optimistic) cache data.
-
-The default value is `true`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `removeOptimistic`
-
-`string`
-
-</td>
-<td>
-
-If provided, removes the optimistic layer with this ID after the batch completes.
-
-This is useful for atomically applying server data while removing a pending optimistic update, triggering at most one broadcast for both operations.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `onWatchUpdated`
-
-`(watch, diff, lastDiff?) => any`
-
-</td>
-<td>
-
-Optional callback invoked for each watcher affected by the batch operation.
-
-Receives the watch options, the new diff result, and optionally the previous diff result.
-
-Return `false` to prevent broadcasting to that specific watcher.
-
-</td>
-</tr>
-
-</tbody>
-</table>
+<PropertySignatureTable
+  canonicalReference="@apollo/client/cache!Cache.BatchOptions:interface"
+  idPrefix="instanceproperties"
+/>
 
 ### Signature
 

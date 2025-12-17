@@ -908,7 +908,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const { observable } = this.queryManager.fetchObservableWithInfo(
       combinedOptions,
-      { networkStatus: NetworkStatus.fetchMore }
+      { networkStatus: NetworkStatus.fetchMore, includeExtensions: true }
     );
 
     const subscription = observable
@@ -927,6 +927,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (notification) => {
           wasUpdated = false;
           const fetchMoreResult = notification.value;
+          const extensions = (fetchMoreResult as any)[
+            Symbol.for("apollo.result.extensions")
+          ] as Record<string, unknown> | undefined;
 
           if (isNetworkRequestSettled(notification.value.networkStatus)) {
             finalize();
@@ -950,6 +953,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                       variables: this.variables,
                       returnPartialData: true,
                       optimistic: false,
+                      extensions,
                     },
                     (previous) =>
                       updateQuery(previous! as any, {
@@ -967,6 +971,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     query: combinedOptions.query,
                     variables: combinedOptions.variables,
                     data: fetchMoreResult.data as Unmasked<any>,
+                    extensions,
                   });
                 }
               },

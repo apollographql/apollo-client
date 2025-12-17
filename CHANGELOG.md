@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.10
+
+### Patch Changes
+
+- [#13045](https://github.com/apollographql/apollo-client/pull/13045) [`af4acdc`](https://github.com/apollographql/apollo-client/commit/af4acdc88bd3bac0d697ab300816241e4065842c) Thanks [@phryneas](https://github.com/phryneas)! - Fix memory leak #13036
+
 ## 4.0.9
 
 ### Patch Changes

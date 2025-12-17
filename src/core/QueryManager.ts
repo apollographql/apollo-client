@@ -1028,10 +1028,12 @@ export class QueryManager {
       queryInfo,
       cacheWriteBehavior,
       observableQuery,
+      includeExtensions,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      includeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1081,6 +1083,11 @@ export class QueryManager {
               partial: !result.data,
             }),
         } as ObservableQuery.Result<TData>;
+
+        if (includeExtensions && "extensions" in result) {
+          (aqr as any)[Symbol.for("apollo.result.extensions")] =
+            result.extensions;
+        }
 
         // In the case we start multiple network requests simultaneously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1138,12 +1145,14 @@ export class QueryManager {
       fetchQueryOperator = (x) => x,
       onCacheHit = () => {},
       observableQuery,
+      includeExtensions,
     }: {
       networkStatus?: NetworkStatus;
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
       observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+      includeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVariables;
@@ -1194,7 +1203,13 @@ export class QueryManager {
         : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVariables>(
         normalized,
-        { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
+        {
+          queryInfo,
+          cacheWriteBehavior,
+          onCacheHit,
+          observableQuery,
+          includeExtensions,
+        }
       );
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
@@ -1523,11 +1538,13 @@ export class QueryManager {
       onCacheHit,
       queryInfo,
       observableQuery,
+      includeExtensions,
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
       queryInfo: QueryInfo<TData, TVariables>;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      includeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const readCache = () =>
@@ -1646,6 +1663,7 @@ export class QueryManager {
           cacheWriteBehavior,
           queryInfo,
           observableQuery,
+          includeExtensions,
         }
       ).pipe(
         validateDidEmitValue(),

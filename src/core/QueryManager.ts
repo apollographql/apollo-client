@@ -1028,12 +1028,12 @@ export class QueryManager {
       queryInfo,
       cacheWriteBehavior,
       observableQuery,
-      includeExtensions,
+      exposeExtensions,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
-      includeExtensions?: boolean;
+      exposeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1084,7 +1084,7 @@ export class QueryManager {
             }),
         } as ObservableQuery.Result<TData>;
 
-        if (includeExtensions && "extensions" in result) {
+        if (exposeExtensions && "extensions" in result) {
           (aqr as any)[Symbol.for("apollo.result.extensions")] =
             result.extensions;
         }
@@ -1145,14 +1145,23 @@ export class QueryManager {
       fetchQueryOperator = (x) => x,
       onCacheHit = () => {},
       observableQuery,
-      includeExtensions,
+      exposeExtensions,
     }: {
       networkStatus?: NetworkStatus;
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
       observableQuery?: ObservableQuery<TData, TVariables> | undefined;
-      includeExtensions?: boolean;
+      /**
+       * Attach `extensions` to the result object so that it is accessible by
+       * the calling code without being exposed to the emitted result.
+       *
+       * @remarks
+       * Used by e.g. `fetchMore` to add `extensions` to the `cache.writeQuery`
+       * call since it uses a `no-cache` query and cannot be written in
+       * `QueryInfo`.
+       */
+      exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVariables;
@@ -1208,7 +1217,7 @@ export class QueryManager {
           cacheWriteBehavior,
           onCacheHit,
           observableQuery,
-          includeExtensions,
+          exposeExtensions,
         }
       );
       observableWithInfo.observable =
@@ -1538,13 +1547,13 @@ export class QueryManager {
       onCacheHit,
       queryInfo,
       observableQuery,
-      includeExtensions,
+      exposeExtensions,
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
       queryInfo: QueryInfo<TData, TVariables>;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
-      includeExtensions?: boolean;
+      exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const readCache = () =>
@@ -1663,7 +1672,7 @@ export class QueryManager {
           cacheWriteBehavior,
           queryInfo,
           observableQuery,
-          includeExtensions,
+          exposeExtensions,
         }
       ).pipe(
         validateDidEmitValue(),

@@ -908,7 +908,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const { observable } = this.queryManager.fetchObservableWithInfo(
       combinedOptions,
-      { networkStatus: NetworkStatus.fetchMore, includeExtensions: true }
+      { networkStatus: NetworkStatus.fetchMore, exposeExtensions: true }
     );
 
     const subscription = observable

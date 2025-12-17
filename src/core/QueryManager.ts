@@ -1295,7 +1295,7 @@ export class QueryManager {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq) => {
-        if (oq.options.fetchPolicy === "cache-only") {
+        if (oq.options.fetchPolicy === "cache-only" || oq["variablesUnknown"]) {
           return;
         }
 

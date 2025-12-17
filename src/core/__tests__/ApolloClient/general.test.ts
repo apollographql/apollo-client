@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer } from "rxjs";
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import type { ObservableQuery, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
@@ -12,7 +12,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
   ObservableStream,
@@ -20,6 +20,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
+import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
 import {
   InvariantError,
   setVerbosity,
@@ -6720,6 +6721,200 @@ describe("ApolloClient", () => {
       const context = (client.link as MockApolloLink).operation!.getContext();
       expect(context.headers).not.toBeUndefined();
       expect(context.headers.someHeader).toEqual(headers.someHeader);
+    });
+
+    it("should not refetch queries with variablesUnknown: true until they have been executed (via reobserve with new fetchPolicy)", async () => {
+      const query = gql`
+        query getAuthor($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+      const variables = { id: "1234" };
+
+      const operationSubject = new Subject<ApolloLink.Operation>();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          operationSubject.next(operation);
+          return forward(operation);
+        }).concat(link),
+      });
+
+      const operationStream = new ObservableStream(operationSubject);
+      const observable = client.watchQuery({
+        query,
+        variables,
+        fetchPolicy: "standby",
+        [variablesUnknownSymbol]: true,
+      });
+      const stream = new ObservableStream(observable);
+      await expect(stream).not.toEmitAnything();
+      await expect(operationStream).not.toEmitAnything();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      await client.refetchQueries({ include: [query] });
+      await expect(stream).not.toEmitAnything();
+      await expect(operationStream).not.toEmitAnything();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      void observable.reobserve({ fetchPolicy: "cache-first" });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      await expect(operationStream).toEmitNext();
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      link.simulateResult({ result: { data } }, true);
+      await expect(stream).toEmitTypedValue({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      void client.refetchQueries({ include: [query] });
+      await expect(stream).toEmitSimilarValue({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data,
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+      await expect(operationStream).toEmitNext();
+
+      link.simulateResult({ result: { data: secondReqData } }, true);
+
+      await expect(stream).toEmitTypedValue({
+        data: secondReqData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: secondReqData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+    });
+
+    it("should not refetch queries with variablesUnknown: true until they have been executed (via manual refetch)", async () => {
+      const query = gql`
+        query getAuthor($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+      const variables = { id: "1234" };
+
+      const operationSubject = new Subject<ApolloLink.Operation>();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          operationSubject.next(operation);
+          return forward(operation);
+        }).concat(link),
+      });
+
+      const operationStream = new ObservableStream(operationSubject);
+      const observable = client.watchQuery({
+        query,
+        variables,
+        fetchPolicy: "standby",
+        [variablesUnknownSymbol]: true,
+      });
+
+      // since a `standby` query never emits anything, even when refetched manually,
+      // we just use this to subscribe but don't consume values
+      using stream = new ObservableStream(observable);
+      await expect(operationStream).not.toEmitAnything();
+
+      await client.refetchQueries({ include: [query] });
+      await expect(operationStream).not.toEmitAnything();
+
+      void observable.refetch();
+      await expect(operationStream).toEmitNext();
+      link.simulateResult({ result: { data } }, true);
+
+      // wait a tick to avoid query deduplication
+      await wait(0);
+
+      void client.refetchQueries({ include: [query] });
+      await expect(operationStream).toEmitNext();
+      link.simulateResult({ result: { data: secondReqData } }, true);
+
+      await expect(stream).not.toEmitAnything();
     });
   });
 

@@ -42,6 +42,7 @@ import type {
 import {
   maybeDeepFreeze,
   mergeOptions,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
@@ -500,12 +501,13 @@ function useOptions<TData, TVariables extends OperationVariables>(
 ): ApolloClient.WatchQueryOptions<TData, TVariables> {
   return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
     if (options === skipToken) {
-      const opts: ApolloClient.WatchQueryOptions<TData, TVariables> =
-        mergeOptions(defaultOptions as any, {
+      const opts: ApolloClient.WatchQueryOptions<TData, TVariables> = {
+        ...mergeOptions(defaultOptions as any, {
           query,
           fetchPolicy: "standby",
-        });
-
+        }),
+        [variablesUnknownSymbol]: true,
+      };
       (opts as any)[fromSkipToken] = true;
 
       return opts;

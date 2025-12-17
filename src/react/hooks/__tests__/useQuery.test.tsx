@@ -17,7 +17,7 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { ReactNode } from "react";
 import React, { Fragment, useEffect, useState } from "react";
-import { asapScheduler, EMPTY, Observable, observeOn, of } from "rxjs";
+import { asapScheduler, EMPTY, Observable, observeOn, of, Subject } from "rxjs";
 
 import type {
   DataValue,
@@ -54,6 +54,7 @@ import type {
 import {
   enableFakeTimers,
   markAsStreaming,
+  ObservableStream,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
@@ -8323,6 +8324,99 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("client.refetchQueries should not refetch queries that start with skipToken until they have been executed", async () => {
+      const query = gql`
+        query getAuthor($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const operationSubject = new Subject<ApolloLink.Operation>();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          operationSubject.next(operation);
+          return forward(operation);
+        }).concat(link),
+      });
+
+      const operationStream = new ObservableStream(operationSubject);
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          (options: SkipToken | useQuery.Options<any, any>) =>
+            useQuery(query, options),
+          { wrapper, initialProps: skipToken }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(getCurrentSnapshot().observable["variablesUnknown"]).toBe(true);
+      await expect(operationStream).not.toEmitAnything();
+
+      void client.refetchQueries({ include: [query] });
+      await expect(takeSnapshot).not.toRerender();
+      await expect(operationStream).not.toEmitAnything();
+
+      await rerender({ variables: { id: "1234" } });
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: "1234" },
+      });
+      await expect(operationStream).toEmitNext();
+
+      link.simulateResult({ result: { data } });
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1234" },
+      });
+
+      link.simulateResult({ result: { data: secondReqData } }, true);
+      await client.refetchQueries({ include: [query] });
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: secondReqData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data,
+        variables: { id: "1234" },
+      });
     });
 
     it("should not automatically set `data` to `undefined` when `skip` becomes `true`", async () => {

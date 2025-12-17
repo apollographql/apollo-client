@@ -602,6 +602,7 @@ export class QueryInfo<
           result: result.data as any,
           dataId: "ROOT_SUBSCRIPTION",
           variables: variables,
+          extensions: result.extensions,
         });
       }
 

@@ -587,8 +587,8 @@ export declare namespace ApolloClient {
        */
       overwrite?: boolean;
       /**
-       * Extensions for the write. These will be made available in `merge`
-       * functions.
+       * GraphQL extensions for the write operation. Any provided `extensions`
+       * are available in `merge` functions.
        */
       extensions?: Record<string, unknown>;
     }

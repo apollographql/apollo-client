@@ -259,6 +259,7 @@ export class QueryInfo<
               data: result.data as Unmasked<any>,
               variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+              extensions: result.extensions,
             });
 
             this.lastWrite = {

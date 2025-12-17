@@ -424,7 +424,9 @@ export class StoreReader {
     }
 
     if (field.selectionSet) {
-      array = array.filter(context.store.canRead);
+      array = array.filter(
+        (item) => item === undefined || context.store.canRead(item)
+      );
     }
 
     array = array.map((item, i) => {

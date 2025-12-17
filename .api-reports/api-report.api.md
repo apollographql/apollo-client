@@ -183,6 +183,7 @@ export namespace ApolloClient {
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
             data: Unmasked<TData>;
+            extensions?: Record<string, unknown>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -753,6 +754,7 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        extensions?: Record<string, unknown>;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -763,6 +765,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
+        extensions?: Record<string, unknown>;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1146,6 +1149,8 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;
     // (undocumented)
@@ -2260,12 +2265,13 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, includeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode;
         fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+        includeExtensions?: boolean;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, networkStatus?: NetworkStatus): Promise<ApolloClient.QueryResult<TData>>;
@@ -2419,6 +2425,8 @@ interface ReadFieldOptions extends FieldSpecifier {
 
 // @public (undocumented)
 export interface ReadMergeModifyContext {
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -2771,6 +2779,8 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

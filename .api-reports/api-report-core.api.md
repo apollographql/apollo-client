@@ -135,6 +135,7 @@ export namespace ApolloClient {
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
             data: Unmasked<TData>;
+            extensions?: Record<string, unknown>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -889,12 +890,13 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, includeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode_2;
         fetchQueryOperator?: <T>(source: Observable_2<T>) => Observable_2<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+        includeExtensions?: boolean;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, networkStatus?: NetworkStatus): Promise<ApolloClient.QueryResult<TData>>;

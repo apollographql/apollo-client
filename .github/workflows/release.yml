@@ -37,19 +37,10 @@ jobs:
         with:
           files: ".changeset/pre.json"
 
-      - name: Append NPM token to .npmrc
-        run: |
-          cat << EOF > "$HOME/.npmrc"
-            provenance=true
-            //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          EOF
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ">=23.6.0"
+          node-version: "24.x"
 
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
@@ -63,7 +54,7 @@ jobs:
           publish: npm run changeset-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ""
 
   postrelease:
     name: Postrelease

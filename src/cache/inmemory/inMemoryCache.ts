@@ -402,6 +402,9 @@ export class InMemoryCache extends ApolloCache {
 
   private txCount = 0;
 
+  /**
+   * {@inheritDoc @apollo/client/cache!ApolloCache#batch:member(1)}
+   */
   public batch<TUpdateResult>(
     options: Cache.BatchOptions<InMemoryCache, TUpdateResult>
   ): TUpdateResult {

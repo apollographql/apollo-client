@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.9
+
+### Minor Changes
+
+- [#13056](https://github.com/apollographql/apollo-client/pull/13056) [`b224efc`](https://github.com/apollographql/apollo-client/commit/b224efc25515370c68b514405762e68a443e4a4a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `InMemoryCache` no longer filters out explicitly returned `undefined` items from `read` functions for array fields. This now makes it possible to create `read` functions on array fields that return partial data and trigger a fetch for the full list.
+
 ## 4.1.0-alpha.8
 
 ### Minor Changes

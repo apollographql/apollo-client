@@ -50,6 +50,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  extensionsSymbol,
   filterMap,
   getDefaultValues,
   getOperationDefinition,
@@ -1085,8 +1086,7 @@ export class QueryManager {
         } as ObservableQuery.Result<TData>;
 
         if (exposeExtensions && "extensions" in result) {
-          (aqr as any)[Symbol.for("apollo.result.extensions")] =
-            result.extensions;
+          (aqr as any)[extensionsSymbol] = result.extensions;
         }
 
         // In the case we start multiple network requests simultaneously, we

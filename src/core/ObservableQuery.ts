@@ -22,6 +22,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
   equalByQuery,
+  extensionsSymbol,
   filterMap,
   getOperationDefinition,
   getOperationName,
@@ -927,9 +928,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (notification) => {
           wasUpdated = false;
           const fetchMoreResult = notification.value;
-          const extensions = (fetchMoreResult as any)[
-            Symbol.for("apollo.result.extensions")
-          ] as Record<string, unknown> | undefined;
+          const extensions = (fetchMoreResult as any)[extensionsSymbol] as
+            | Record<string, unknown>
+            | undefined;
 
           if (isNetworkRequestSettled(notification.value.networkStatus)) {
             finalize();

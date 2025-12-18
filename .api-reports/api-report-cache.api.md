@@ -283,6 +283,7 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        extensions?: Record<string, unknown>;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -293,6 +294,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
+        extensions?: Record<string, unknown>;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -437,6 +439,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
+    extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;
     // (undocumented)
@@ -864,6 +867,8 @@ export interface ReadFieldOptions extends FieldSpecifier {
 // @public (undocumented)
 export interface ReadMergeModifyContext {
     // (undocumented)
+    extensions?: Record<string, unknown>;
+    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
@@ -963,6 +968,8 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

@@ -64,7 +64,7 @@ export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
-export { variablesUnknownSymbol } from "./constants.js";
+export { extensionsSymbol, variablesUnknownSymbol } from "./constants.js";
 
 export {
   getApolloCacheMemoryInternals,

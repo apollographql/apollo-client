@@ -232,6 +232,12 @@ export interface FieldFunctionOptions<
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
+
+  /**
+   * Any `extensions` provided when writing the cache. `extensions` is only
+   * available in `merge` functions and never available in `read` functions.
+   */
+  extensions?: Record<string, unknown>;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -972,7 +978,7 @@ function makeFieldFunctionOptions(
   const variables = fieldSpec.variables || context.variables;
   const { toReference, canRead } = context.store;
 
-  return {
+  const options: FieldFunctionOptions = {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
     fieldName,
@@ -991,6 +997,17 @@ function makeFieldFunctionOptions(
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
   };
+
+  // Make `extensions` only available in `merge` functions, but not `read`
+  // functions since we currently only support merge functions. Even though
+  // `context.extensions` will result in `undefined`, we don't want the key to
+  // exist in the options object to avoid the appearance that its supported in
+  // `read` functions.
+  if ("extensions" in context) {
+    options.extensions = context.extensions;
+  }
+
+  return options;
 }
 
 export function normalizeReadFieldOptions(

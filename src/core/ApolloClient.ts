@@ -586,6 +586,11 @@ export declare namespace ApolloClient {
        * @defaultValue false
        */
       overwrite?: boolean;
+      /**
+       * GraphQL extensions for the write operation. Any provided `extensions`
+       * are available in `merge` functions.
+       */
+      extensions?: Record<string, unknown>;
     }
   }
   export type WriteQueryOptions<

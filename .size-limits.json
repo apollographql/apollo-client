@@ -1,6 +1,6 @@
 {
-  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (CJS)": 46127,
-  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (production) (CJS)": 40692,
-  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\"": 34967,
-  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (production)": 28761
+  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (CJS)": 46220,
+  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (production) (CJS)": 40876,
+  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\"": 35104,
+  "import { ApolloClient, InMemoryCache, HttpLink } from \"@apollo/client\" (production)": 28857
 }

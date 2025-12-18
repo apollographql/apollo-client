@@ -764,5 +764,8 @@ interface FieldFunctionOptions {
     existing: T,
     incoming: T
   ): T | undefined;
+
+  // Extensions that were provided when writing to the cache.
+  extensions?: Record<string, unknown>;
 }
 ```

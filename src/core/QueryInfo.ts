@@ -259,6 +259,7 @@ export class QueryInfo<
               data: result.data as Unmasked<any>,
               variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+              extensions: result.extensions,
             });
 
             this.lastWrite = {
@@ -394,6 +395,7 @@ export class QueryInfo<
         dataId: "ROOT_MUTATION",
         query: mutation.document,
         variables: mutation.variables,
+        extensions: result.extensions,
       });
 
       const { updateQueries } = mutation;
@@ -600,6 +602,7 @@ export class QueryInfo<
           result: result.data as any,
           dataId: "ROOT_SUBSCRIPTION",
           variables: variables,
+          extensions: result.extensions,
         });
       }
 

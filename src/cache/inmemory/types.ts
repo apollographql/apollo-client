@@ -157,4 +157,5 @@ export interface ReadMergeModifyContext {
   variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
+  extensions?: Record<string, unknown>;
 }

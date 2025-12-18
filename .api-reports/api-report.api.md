@@ -182,6 +182,7 @@ export namespace ApolloClient {
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
             data: Unmasked<TData>;
+            extensions?: Record<string, unknown>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -748,6 +749,7 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        extensions?: Record<string, unknown>;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -758,6 +760,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
+        extensions?: Record<string, unknown>;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1115,6 +1118,9 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
+// @internal @deprecated
+const extensionsSymbol: unique symbol;
+
 // @public (undocumented)
 export const fallbackHttpConfig: {
     http: BaseHttpLink.HttpOptions;
@@ -1141,6 +1147,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
+    extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;
     // (undocumented)
@@ -2227,6 +2234,14 @@ type Prettify<T> = {
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
+namespace QueryManager {
+    // (undocumented)
+    type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
+        [extensionsSymbol]?: Record<string, unknown>;
+    };
+}
+
+// @public (undocumented)
 class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
     constructor(options: QueryManagerOptions);
@@ -2254,12 +2269,13 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode;
         fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+        exposeExtensions?: boolean;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, networkStatus?: NetworkStatus): Promise<ApolloClient.QueryResult<TData>>;
@@ -2413,6 +2429,8 @@ interface ReadFieldOptions extends FieldSpecifier {
 
 // @public (undocumented)
 export interface ReadMergeModifyContext {
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -2765,6 +2783,8 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2800,8 +2820,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:370:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:192:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

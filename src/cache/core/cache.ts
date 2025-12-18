@@ -203,7 +203,6 @@ export abstract class ApolloCache {
    *       data: { todos: updatedTodos },
    *     });
    *     cache.evict({ id: "Todo:123" });
-   *     cache.gc();
    *   },
    * });
    * ```

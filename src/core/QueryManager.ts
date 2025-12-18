@@ -76,6 +76,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
+  DataState,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -144,6 +145,16 @@ interface QueryManagerOptions {
   dataMasking: boolean;
   localState: LocalState | undefined;
   incrementalHandler: Incremental.Handler;
+}
+
+export declare namespace QueryManager {
+  export type Result<
+    TData,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = ObservableQuery.Result<TData, TStates> & {
+    [extensionsSymbol]?: Record<string, unknown>;
+  };
 }
 
 export class QueryManager {
@@ -1068,7 +1079,7 @@ export class QueryManager {
           throw new CombinedGraphQLErrors(result);
         }
 
-        const aqr = {
+        const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
             {
@@ -1086,7 +1097,7 @@ export class QueryManager {
         } as ObservableQuery.Result<TData>;
 
         if (exposeExtensions && "extensions" in result) {
-          (aqr as any)[extensionsSymbol] = result.extensions;
+          aqr[extensionsSymbol] = result.extensions;
         }
 
         // In the case we start multiple network requests simultaneously, we

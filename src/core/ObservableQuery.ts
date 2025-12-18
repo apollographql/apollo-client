@@ -928,9 +928,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (notification) => {
           wasUpdated = false;
           const fetchMoreResult = notification.value;
-          const extensions = (fetchMoreResult as any)[extensionsSymbol] as
-            | Record<string, unknown>
-            | undefined;
+          const extensions = (fetchMoreResult as QueryManager.Result<TData>)[
+            extensionsSymbol
+          ];
 
           if (isNetworkRequestSettled(notification.value.networkStatus)) {
             finalize();

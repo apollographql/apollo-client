@@ -233,7 +233,10 @@ export interface FieldFunctionOptions<
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
 
-  // Extensions that were provided when writing to the cache.
+  /**
+   * Any `extensions` provided when writing the cache. `extensions` is only
+   * available in `merge` functions and never available in `read` functions.
+   */
   extensions?: Record<string, unknown>;
 }
 

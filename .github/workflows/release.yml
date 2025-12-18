@@ -78,7 +78,17 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
+    outputs:
+      tag: ${{ steps.set-tag.outputs.tag }}
     steps:
+      - name: Determine npm tag
+        id: set-tag
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag=next" >> $GITHUB_OUTPUT
+          fi
       - name: Send a Slack notification on publish
         id: slack
         uses: slackapi/slack-github-action@v1.27.0
@@ -107,7 +117,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Tag:*\n`latest`"
+                      "text": "*Tag:*\n`${{ steps.set-tag.outputs.tag }}`"
                     },
                     {
                       "type": "mrkdwn",
@@ -129,6 +139,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: github.ref_name != 'main' && needs.release.result == 'success' && needs.release.outputs.published == 'true'
+    permissions:
+      id-token: write
     strategy:
       matrix:
         package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}

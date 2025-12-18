@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.9
+
+### Minor Changes
+
+- [#13056](https://github.com/apollographql/apollo-client/pull/13056) [`b224efc`](https://github.com/apollographql/apollo-client/commit/b224efc25515370c68b514405762e68a443e4a4a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `InMemoryCache` no longer filters out explicitly returned `undefined` items from `read` functions for array fields. This now makes it possible to create `read` functions on array fields that return partial data and trigger a fetch for the full list.
+
 ## 4.1.0-alpha.8
 
 ### Minor Changes
@@ -169,6 +175,19 @@
 - [#12925](https://github.com/apollographql/apollo-client/pull/12925) [`f538a83`](https://github.com/apollographql/apollo-client/commit/f538a83621e1d110286c056dd8e91611dfd9a1d3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where calling `fetchMore` with `@defer` or `@stream` would not rerender incremental results as they were streamed.
 
 - [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`01cace0`](https://github.com/apollographql/apollo-client/commit/01cace0a6d4faf79e8a4188b93c7d13c4b26d6d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the cache data loss warning message when `existing` or `incoming` is an array.
+
+## 4.0.11
+
+### Patch Changes
+
+- [#13050](https://github.com/apollographql/apollo-client/pull/13050) [`8020829`](https://github.com/apollographql/apollo-client/commit/8020829d8a3bdb3219a37e8d1f7b89179f721037) Thanks [@phryneas](https://github.com/phryneas)! - Replace usage of `findLast` with more backwards-compatible methods.
+
+- [#13049](https://github.com/apollographql/apollo-client/pull/13049) [`05638de`](https://github.com/apollographql/apollo-client/commit/05638deaf598c5bf5d03b82d7deaf57468546229) Thanks [@phryneas](https://github.com/phryneas)! - Fixes an issue where queries starting with `skipToken` or lazy queries from `useLazyQuery` were included in `client.refetchQueries()` before they had been executed for the first time. While generally queries with a `standby` `fetchPolicy` should be included in refetch, these queries never had `variables` passed in, so they should be excluded until they have run once and received their actual variables.
+
+  These queries are now properly excluded from refetch operations until after their initial execution.
+
+  This change adds a new hidden option to `client.watchQuery`, `[variablesUnknownSymbol]`, which may be set `true` for queries starting with a `fetchPolicy` of `standby`. It will only be applied when creating the `ObservableQuery` instance and cannot be changed later. This flag indicates that the query's variables are not yet known, and thus it should be excluded from refetch operations until they are.
+  **This option is not meant for everyday use and is intended for framework integrations only.**
 
 ## 4.0.10
 

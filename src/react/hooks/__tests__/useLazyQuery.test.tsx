@@ -9,7 +9,7 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import type {
   DataValue,
@@ -33,6 +33,7 @@ import type {
   VariablesCaseVariables,
 } from "@apollo/client/testing/internal";
 import {
+  ObservableStream,
   renderAsync,
   setupSimpleCase,
   setupVariablesCase,
@@ -6185,6 +6186,136 @@ test("executes network request when calling `refetch` on a cache-only query", as
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
+    });
+  }
+});
+
+test("client.refetchQueries should not refetch queries that have not been executed yet", async () => {
+  const query = gql`
+    query getAuthor($id: ID!) {
+      author(id: $id) {
+        firstName
+        lastName
+      }
+    }
+  `;
+  const data = {
+    author: {
+      firstName: "John",
+      lastName: "Smith",
+    },
+  };
+  const secondReqData = {
+    author: {
+      firstName: "Jane",
+      lastName: "Johnson",
+    },
+  };
+
+  const operationSubject = new Subject<ApolloLink.Operation>();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation, forward) => {
+      operationSubject.next(operation);
+      return forward(operation);
+    }).concat(link),
+  });
+
+  const operationStream = new ObservableStream(operationSubject);
+
+  const wrapper = ({ children }: any) => (
+    <ApolloProvider client={client}>{children}</ApolloProvider>
+  );
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    { wrapper }
+  );
+
+  {
+    const [, result] = await renderStream.takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+  await expect(operationStream).not.toEmitAnything();
+
+  await client.refetchQueries({ include: [query] });
+  await expect(renderStream).not.toRerender();
+  await expect(operationStream).not.toEmitAnything();
+
+  {
+    const [execute] = renderStream.getCurrentSnapshot();
+    execute({ variables: { id: "1234" } });
+  }
+
+  {
+    const [, result] = await renderStream.takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { id: "1234" },
+    });
+  }
+  await expect(operationStream).toEmitNext();
+
+  link.simulateResult({ result: { data } }, true);
+
+  {
+    const [, result] = await renderStream.takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data,
+      dataState: "complete",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1234" },
+    });
+  }
+
+  void client.refetchQueries({ include: [query] });
+  await expect(operationStream).toEmitNext();
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => [
+      previous[0],
+      {
+        ...previous[1],
+        previousData: undefined,
+        networkStatus: NetworkStatus.refetch,
+        loading: true,
+      },
+    ],
+  });
+
+  link.simulateResult({ result: { data: secondReqData } }, true);
+  {
+    const [, result] = await renderStream.takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: secondReqData,
+      dataState: "complete",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: data,
+      variables: { id: "1234" },
     });
   }
 });

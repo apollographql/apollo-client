@@ -25,7 +25,10 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
-import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
+import {
+  maybeDeepFreeze,
+  variablesUnknownSymbol,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useRenderGuard } from "./internal/index.js";
@@ -344,6 +347,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
+      [variablesUnknownSymbol]: true,
     } as ApolloClient.WatchQueryOptions<TData, TVariables>);
   }
 

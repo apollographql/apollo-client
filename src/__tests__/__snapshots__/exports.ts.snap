@@ -480,6 +480,7 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "toQueryResult",
+  "variablesUnknownSymbol",
 ]
 `;
 

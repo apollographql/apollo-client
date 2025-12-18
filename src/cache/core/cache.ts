@@ -192,6 +192,7 @@ export abstract class ApolloCache {
    * and when watchers are notified.
    *
    * @example
+   *
    * ```js
    * cache.batch({
    *   update(cache) {
@@ -199,17 +200,18 @@ export abstract class ApolloCache {
    *       query: GET_TODOS,
    *       data: { todos: updatedTodos },
    *     });
-   *     cache.evict({ id: 'Todo:123' });
+   *     cache.evict({ id: "Todo:123" });
    *     cache.gc();
    *   },
    * });
    * ```
    *
    * @example
+   *
    * ```js
    * // Optimistic update with a custom layer ID
    * cache.batch({
-   *   optimistic: 'add-todo-optimistic',
+   *   optimistic: "add-todo-optimistic",
    *   update(cache) {
    *     cache.modify({
    *       fields: {
@@ -224,17 +226,18 @@ export abstract class ApolloCache {
    *
    * @param options - Configuration options for the batch operation.
    * @param options.update - A function that performs cache operations. Receives
-   *   the cache instance as its argument and can return a value.
+   * the cache instance as its argument and can return a value.
    * @param options.optimistic - Controls how optimistic data is handled:
-   *   - `string`: Creates a new optimistic layer with this ID
-   *   - `true` (default): Updates the current top layer
-   *   - `false`: Updates only the root (non-optimistic) cache data
-   * @param options.removeOptimistic - If provided, removes the optimistic layer
+   *
+   * - `string`: Creates a new optimistic layer with this ID
+   * - `true` (default): Updates the current top layer
+   * - `false`: Updates only the root (non-optimistic) cache data
+   *   @param options.removeOptimistic - If provided, removes the optimistic layer
    *   with this ID after the batch completes, triggering at most one broadcast.
-   * @param options.onWatchUpdated - Optional callback invoked for each watcher
+   *   @param options.onWatchUpdated - Optional callback invoked for each watcher
    *   affected by the batch. Return `false` to prevent broadcasting to that
    *   watcher.
-   * @returns The return value of the `update` function.
+   *   @returns The return value of the `update` function.
    */
   public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =

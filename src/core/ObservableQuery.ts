@@ -927,10 +927,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .subscribe({
         next: (notification) => {
           wasUpdated = false;
-          const fetchMoreResult = notification.value;
-          const extensions = (fetchMoreResult as QueryManager.Result<TData>)[
-            extensionsSymbol
-          ];
+          const fetchMoreResult: QueryManager.Result<TFetchData> =
+            notification.value;
+          const extensions = fetchMoreResult[extensionsSymbol];
 
           if (isNetworkRequestSettled(notification.value.networkStatus)) {
             finalize();

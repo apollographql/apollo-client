@@ -439,6 +439,7 @@ Array [
   "dealias",
   "decoratePromise",
   "equalByQuery",
+  "extensionsSymbol",
   "filterMap",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",

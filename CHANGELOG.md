@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 4.1.0-alpha.9
+
+### Minor Changes
+
+- [#13056](https://github.com/apollographql/apollo-client/pull/13056) [`b224efc`](https://github.com/apollographql/apollo-client/commit/b224efc25515370c68b514405762e68a443e4a4a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `InMemoryCache` no longer filters out explicitly returned `undefined` items from `read` functions for array fields. This now makes it possible to create `read` functions on array fields that return partial data and trigger a fetch for the full list.
+
+- [#13058](https://github.com/apollographql/apollo-client/pull/13058) [`121a2cb`](https://github.com/apollographql/apollo-client/commit/121a2cb68820727186ecd74ce1041ef95284682e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an `extensions` option to `cache.write`, `cache.writeQuery`, and `client.writeQuery`. This makes `extensions` available in cache `merge` functions which can be accessed with the other merge function options.
+
+  As a result of this change, any `extensions` returned in GraphQL operations are now available in `merge` in the cache writes for these operations.
+
+### Patch Changes
+
+- [#13053](https://github.com/apollographql/apollo-client/pull/13053) [`23ca0ba`](https://github.com/apollographql/apollo-client/commit/23ca0ba895473b397805e6bcc70e0fcf987547c5) Thanks [@phryneas](https://github.com/phryneas)! - Use memoized observable mapping when using `watchFragment`, `useFragment` or `useSuspenseFragment`.
+
 ## 4.1.0-alpha.10
 
 ### Patch Changes

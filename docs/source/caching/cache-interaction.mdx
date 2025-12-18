@@ -305,10 +305,10 @@ The update function's return value is passed to either `writeQuery` or `writeFra
 
 ### Using `cache.batch`
 
-When you need to perform multiple cache operations together, `cache.batch` lets you group them into a single transaction. This provides two key benefits:
+Use `cache.batch` to group multiple cache operations into a single transaction. This provides two key benefits:
 
-1. **Performance**: Watchers (and thereby React components) are notified only once after all operations complete, rather than after each individual operation.
-2. **Control**: You gain fine-grained control over optimistic updates and can intercept watcher notifications.
+- **Performance**: Watchers (and thereby React components) are notified only once after all operations complete, rather than after each individual operation.
+- **Control**: You gain fine-grained control over optimistic updates and can intercept watcher notifications.
 
 Here's an example that updates multiple cached items at once:
 
@@ -331,7 +331,7 @@ cache.batch({
     });
 
     // Cleanup after the updates
-    cache.evict({ id: 'Todo:old-item' });
+    cache.evict({ id: "Todo:old-item" });
     cache.gc();
   },
 });
@@ -344,7 +344,7 @@ The `optimistic` option controls how `batch` handles optimistic data:
 ```js
 // Create a new optimistic layer with a specific ID
 cache.batch({
-  optimistic: 'add-todo-123',
+  optimistic: "add-todo-123",
   update(cache) {
     cache.modify({
       fields: {
@@ -376,17 +376,17 @@ cache.batch({
     });
   },
   // Remove the optimistic layer in the same batch
-  removeOptimistic: 'add-todo-123',
+  removeOptimistic: "add-todo-123",
 });
 ```
 
 The `optimistic` option accepts three types of values:
 
-| Value | Behavior |
-| --- | --- |
-| `string` | Creates a new optimistic layer with the given ID. Use this when you want to later remove these specific changes. |
-| `true` (default) | Updates happen on the current top layer of the cache. |
-| `false` | Updates apply only to the root (non-optimistic) cache data, ignoring any optimistic layers. |
+| Value            | Behavior                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| `string`         | Creates a new optimistic layer with the given ID. Use this to remove these specific changes later. |
+| `true` (default) | Updates happen on the current top layer of the cache.                                              |
+| `false`          | Updates apply only to the root (non-optimistic) cache data, ignoring any optimistic layers.        |
 
 #### Intercepting watcher notifications
 
@@ -401,10 +401,10 @@ cache.batch({
     });
   },
   onWatchUpdated(watch, diff, lastDiff) {
-    console.log('Query affected:', watch.query);
-    console.log('New result:', diff.result);
+    console.log("Query affected:", watch.query);
+    console.log("New result:", diff.result);
 
-    // Return false to prevent this watcher from being notified
+    // Return false to prevent notifying this watcher
     if (shouldSkipUpdate(watch)) {
       return false;
     }
@@ -428,7 +428,7 @@ const result = cache.batch({
   },
 });
 
-console.log('Previous count was:', result);
+console.log("Previous count was:", result);
 ```
 
 > See the full API reference for [`cache.batch`](../api/cache/InMemoryCache/#batch).

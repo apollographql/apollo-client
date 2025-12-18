@@ -940,41 +940,11 @@ public updateFragment<TData = unknown, TVariables = OperationVariables>(
 ): TData | null
 ```
 
-## `batch`
-
-Executes multiple cache operations as a single batch transaction, ensuring that watchers are notified only once after all operations complete. This improves performance when making multiple cache updates by preventing unnecessary re-renders between individual operations.
-
-```js
-cache.batch({
-  update(cache) {
-    cache.writeQuery({
-      query: GET_TODOS,
-      data: { todos: updatedTodos },
-    });
-    cache.evict({ id: 'Todo:123' });
-    cache.gc();
-  },
-});
-```
-
-For usage instructions, see [Interacting with cached data: `cache.batch`](../../caching/cache-interaction/#using-cachebatch).
-
-Takes an `options` object as a parameter. Supported fields of this object are described below.
-
-### Options
-
-<PropertySignatureTable
-  canonicalReference="@apollo/client/cache!Cache.BatchOptions:interface"
-  idPrefix="instanceproperties"
+<FunctionDetails
+  canonicalReference="@apollo/client!InMemoryCache#batch:member(1)"
+  headingLevel={2}
+  result={false}
 />
-
-### Signature
-
-```ts title="src/cache/core/cache.ts"
-batch<TUpdateResult>(
-  options: Cache.BatchOptions<InMemoryCache, TUpdateResult>
-): TUpdateResult
-```
 
 ## `identify`
 

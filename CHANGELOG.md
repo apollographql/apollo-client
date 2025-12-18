@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.0-alpha.10
+
+### Patch Changes
+
+- [#13053](https://github.com/apollographql/apollo-client/pull/13053) [`23ca0ba`](https://github.com/apollographql/apollo-client/commit/23ca0ba895473b397805e6bcc70e0fcf987547c5) Thanks [@phryneas](https://github.com/phryneas)! - Use memoized observable mapping when using `watchFragment`, `useFragment` or `useSuspenseFragment`.
+
 ## 4.1.0-alpha.9
 
 ### Minor Changes

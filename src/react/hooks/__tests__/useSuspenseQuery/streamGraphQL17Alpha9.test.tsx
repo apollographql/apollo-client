@@ -1559,3 +1559,156 @@ test("can refetch and respond to cache updates after encountering an error in an
 
   await expect(takeRender).not.toRerender();
 });
+
+test.only("reports data as partial if a cache merge function returns partial data", async () => {
+  using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
+  const { subject, stream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: (existing = [], incoming, { cache }) => {
+              const max = Math.max(existing.length, incoming.length);
+              const results = [];
+
+              for (let i = 0; i < max; i++) {
+                results[i] = incoming[i] ? incoming[i] : existing[i];
+              }
+
+              console.dir(
+                { existing, incoming, results, snapshot: cache.extract() },
+                { depth: null }
+              );
+
+              return results;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // We are intentionally writing partial data to the cache. Supress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: friends.map((friend) => ({
+          __typename: "Friend",
+          id: String(friend.id),
+        })),
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => stream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderSuspenseHook(
+    () =>
+      useSuspenseQuery(query, {
+        fetchPolicy: "cache-first",
+        returnPartialData: true,
+      }),
+    {
+      wrapper: createClientWrapper(client),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        friendList: friends.map((friend) => ({
+          __typename: "Friend",
+          id: String(friend.id),
+        })),
+      },
+      dataState: "partial",
+      networkStatus: NetworkStatus.loading,
+      error: undefined,
+    });
+  }
+
+  subject.next(friends[0]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2" },
+          { __typename: "Friend", id: "3" },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  subject.next(friends[1]);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      }),
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});

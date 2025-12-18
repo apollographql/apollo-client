@@ -138,7 +138,7 @@ export declare namespace Cache {
      * - `true`: Updates the current top layer of the cache (including any optimistic data).
      * - `false`: Updates only the root (non-optimistic) cache data.
      *
-     * @defaultValue true
+     * @defaultValue false
      */
     optimistic?: string | boolean;
 

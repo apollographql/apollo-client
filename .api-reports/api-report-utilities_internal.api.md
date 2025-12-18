@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { DataValue } from '@apollo/client';
@@ -363,6 +364,9 @@ export function makeReference(id: string): Reference;
 
 // @internal @deprecated
 export function makeUniqueId(prefix: string): string;
+
+// @public (undocumented)
+export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>) => ApolloCache.ObservableFragment<To>;
 
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;

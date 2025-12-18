@@ -180,11 +180,53 @@ export abstract class ApolloCache {
 
   // Transactional API
 
-  // The batch method is intended to replace/subsume both performTransaction
-  // and recordOptimisticTransaction, but performTransaction came first, so we
-  // provide a default batch implementation that's just another way of calling
-  // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
-  // override the batch method to do more interesting things with its options.
+  /**
+   * Executes multiple cache operations as a single batch, ensuring that
+   * watchers are only notified once after all operations complete. This is
+   * useful for improving performance when making multiple cache updates, as it
+   * prevents unnecessary re-renders or query refetches between individual
+   * operations.
+   *
+   * The `batch` method supports both optimistic and non-optimistic updates, and
+   * provides fine-grained control over which cache layer receives the updates
+   * and when watchers are notified.
+   *
+   * For usage instructions, see [Interacting with cached data: `cache.batch`](https://www.apollographql.com/docs/react/caching/cache-interaction#using-cachebatch).
+   *
+   * @example
+   *
+   * ```js
+   * cache.batch({
+   *   update(cache) {
+   *     cache.writeQuery({
+   *       query: GET_TODOS,
+   *       data: { todos: updatedTodos },
+   *     });
+   *     cache.evict({ id: "Todo:123" });
+   *   },
+   * });
+   * ```
+   *
+   * @example
+   *
+   * ```js
+   * // Optimistic update with a custom layer ID
+   * cache.batch({
+   *   optimistic: "add-todo-optimistic",
+   *   update(cache) {
+   *     cache.modify({
+   *       fields: {
+   *         todos(existing = []) {
+   *           return [...existing, newTodoRef];
+   *         },
+   *       },
+   *     });
+   *   },
+   * });
+   * ```
+   *
+   * @returns The return value of the `update` function.
+   */
   public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic

@@ -373,6 +373,7 @@ Array [
   "setupVariablesCase",
   "spyOnConsole",
   "wait",
+  "withCacheSizes",
   "withCleanup",
   "withProdMode",
 ]

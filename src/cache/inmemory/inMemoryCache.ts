@@ -403,24 +403,7 @@ export class InMemoryCache extends ApolloCache {
   private txCount = 0;
 
   /**
-   * Executes multiple cache operations as a single batch transaction, ensuring that watchers are notified only once after all operations complete. This improves performance when making multiple cache updates by preventing unnecessary re-renders between individual operations.
-   *
-   * For usage instructions, see [Interacting with cached data: `cache.batch`](https://www.apollographql.com/docs/react/caching/cache-interaction#using-cachebatch).
-   *
-   * @example
-   *
-   * ```js
-   * cache.batch({
-   *   update(cache) {
-   *     cache.writeQuery({
-   *       query: GET_TODOS,
-   *       data: { todos: updatedTodos },
-   *     });
-   *     cache.evict({ id: "Todo:123" });
-   *     cache.gc();
-   *   },
-   * });
-   * ```
+   * {@inheritDoc @apollo/client/cache!ApolloCache#batch:member(1)}
    */
   public batch<TUpdateResult>(
     options: Cache.BatchOptions<InMemoryCache, TUpdateResult>

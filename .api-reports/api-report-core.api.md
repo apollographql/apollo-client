@@ -101,6 +101,7 @@ import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
 import { Unmasked } from '@apollo/client/masking';
 import type { VariablesOption } from '@apollo/client/utilities/internal';
+import type { variablesUnknownSymbol } from '@apollo/client/utilities/internal';
 import { WatchFragmentOptions } from '@apollo/client/cache';
 import { WatchFragmentResult } from '@apollo/client/cache';
 
@@ -320,6 +321,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
     export type WriteFragmentOptions<TData, TVariables extends OperationVariables> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
@@ -1168,8 +1170,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:372:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:368:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:370:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

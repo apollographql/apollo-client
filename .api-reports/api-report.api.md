@@ -376,6 +376,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
     export type WriteFragmentOptions<TData, TVariables extends OperationVariables> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
@@ -2738,6 +2739,9 @@ type VariablesOption<TVariables extends OperationVariables> = {} extends TVariab
     variables: TVariables;
 };
 
+// @internal @deprecated
+const variablesUnknownSymbol: unique symbol;
+
 // Warning: (ae-forgotten-export) The symbol "verbosityLevels" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -2800,9 +2804,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:170:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:372:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:368:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:370:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

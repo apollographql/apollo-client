@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-11-12**
+**Last updated: 2025-12-17**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -19,7 +19,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 #### 4.1.0
 
-_Release candidate - November 21st, 2025_
+_Release candidate - December 19th, 2025_
 
 - Support for `@stream`
 - Add support for the `graphql@17.0.0-alpha.9` incremental delivery format
@@ -30,30 +30,27 @@ _Release candidate - November 21st, 2025_
 
 ### GraphQL Testing Library
 
-- New documentation
-- Subscription support
-
-_These changes will take longer than anticipated due to prioritization of other libraries and integrations_
+_No planned work_
 
 ### VSCode Extension
 
-_No outstanding work_
+_No planned work_
 
 ### GraphQL Tag
 
-- `Release 3.0` will be our next major release of `graphql-tag` and is still in planning. See Github [3.0 Milestone](https://github.com/apollographql/graphql-tag/milestone/3) for more details.
+_No planned work_
 
 ### Apollo Client DevTools
 
-- Support cache write history
+_No planned work_
 
 ### Apollo Client React Framework Integrations
 
-- New/more robust documentation
+- Client integration documentation
 
 **TanStack Start**
 
-- Support for Apollo Client Streaming in TanStack Router - will stay alpha
+- Support for Apollo Client Streaming in TanStack Start - will stay release candidate
 
 **React Router**
 

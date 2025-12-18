@@ -59,7 +59,6 @@ export namespace ApolloCache {
 export abstract class ApolloCache {
     // (undocumented)
     readonly assumeImmutableResults: boolean;
-    // (undocumented)
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
     abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
@@ -124,13 +123,9 @@ type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" |
 namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {
-        // (undocumented)
         onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
-        // (undocumented)
         optimistic?: string | boolean;
-        // (undocumented)
         removeOptimistic?: string;
-        // (undocumented)
         update(cache: TCache): TUpdateResult;
     }
     // (undocumented)
@@ -497,7 +492,6 @@ export class InMemoryCache extends ApolloCache {
     constructor(config?: InMemoryCacheConfig);
     // (undocumented)
     readonly assumeImmutableResults = true;
-    // (undocumented)
     batch<TUpdateResult>(options: Cache_2.BatchOptions<InMemoryCache, TUpdateResult>): TUpdateResult;
     // Warning: (ae-forgotten-export) The symbol "BroadcastOptions" needs to be exported by the entry point index.d.ts
     //

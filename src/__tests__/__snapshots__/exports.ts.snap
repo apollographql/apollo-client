@@ -466,6 +466,7 @@ Array [
   "isPlainObject",
   "makeReference",
   "makeUniqueId",
+  "mapObservableFragmentMemoized",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",

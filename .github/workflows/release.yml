@@ -107,7 +107,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Tag:*\n`latest`"
+                      "text": "*Tag:*\n`${{ github.ref_name == 'main' && 'latest' || 'next' }}`"
                     },
                     {
                       "type": "mrkdwn",
@@ -129,6 +129,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: github.ref_name != 'main' && needs.release.result == 'success' && needs.release.outputs.published == 'true'
+    permissions:
+      id-token: write
     strategy:
       matrix:
         package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}

@@ -1149,7 +1149,6 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
-    // (undocumented)
     extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;

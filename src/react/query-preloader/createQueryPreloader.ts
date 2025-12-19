@@ -238,15 +238,17 @@ function softRetainWhileReferenced(
   queryRef.retain = unregisterOnRetain(queryRef.retain, softDispose);
 }
 
+type RetainFunction = (
+  this: InternalQueryReference,
+  ...args: Parameters<InternalQueryReference["retain"]>
+) => ReturnType<InternalQueryReference["retain"]>;
+
 // this is an individual function to avoid closing over any values more than necessary
 function unregisterOnRetain(
-  originalRetain: InternalQueryReference["retain"],
+  originalRetain: RetainFunction,
   softDispose: () => void
-) {
-  return function (
-    this: InternalQueryReference,
-    ...args: Parameters<InternalQueryReference["retain"]>
-  ) {
+): RetainFunction {
+  return function (...args) {
     registry.unregister(this);
     const dispose = originalRetain.apply(this, args);
     softDispose();

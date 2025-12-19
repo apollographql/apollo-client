@@ -238,6 +238,21 @@ export interface FieldFunctionOptions<
    * available in `merge` functions and never available in `read` functions.
    */
   extensions?: Record<string, unknown>;
+
+  /**
+   * Details about the field when the `@stream` directive is used. Useful with
+   * custom merge functions to determine how to merge existing cache data with
+   * the incoming stream array.
+   *
+   * This field is only available when the `@stream` directive is used on the
+   * field.
+   */
+  streamFieldDetails?: StreamFieldDetails;
+}
+
+interface StreamFieldDetails {
+  isFirstChunk: boolean;
+  isLastChunk: boolean;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(

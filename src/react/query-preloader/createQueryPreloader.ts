@@ -263,7 +263,8 @@ function getCleanup(queryRef: InternalQueryReference) {
 
   return {
     softDispose,
-    delayedSoftDispose: () => initialPromise.finally(softDispose),
+    delayedSoftDispose: () =>
+      initialPromise.finally(softDispose).catch(() => {}),
   };
 }
 

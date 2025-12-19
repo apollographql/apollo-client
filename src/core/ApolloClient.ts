@@ -17,7 +17,10 @@ import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { VariablesOption } from "@apollo/client/utilities/internal";
+import type {
+  VariablesOption,
+  variablesUnknownSymbol,
+} from "@apollo/client/utilities/internal";
 import {
   checkDocument,
   compact,
@@ -384,6 +387,20 @@ export declare namespace ApolloClient {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * @internal This API is meant for framework integrations only.
+     * Do not use for everyday use.
+     *
+     * Indicates that the variables are unknown at the time of query creation.
+     * This option can only be set when `fetchPolicy` is `'standby'`.
+     * Setting this to `true` will prevent `client.refetchQueries` from refetching
+     * this query before it has left the `'standby'` state, either by setting a
+     * `fetchPolicy`, or by calling `observableQuery.refetch()` explicitly.
+     *
+     * Changing this option after the query has been created will have no effect.
+     */
+    [variablesUnknownSymbol]?: boolean;
   } & VariablesOption<NoInfer<TVariables>>;
 
   namespace Base {

@@ -13,6 +13,7 @@ Apollo Client supports multiple strategies for interacting with cached data:
 | [Using GraphQL queries](#using-graphql-queries)        | `readQuery` / `writeQuery` / `updateQuery`                          | Use standard GraphQL queries for managing both remote and local data.                          |
 | [Using GraphQL fragments](#using-graphql-fragments)    | `readFragment` / `writeFragment` / `updateFragment` / `useFragment` | Access the fields of any cached object without composing an entire query to reach that object. |
 | [Directly modifying cached fields](#using-cachemodify) | `cache.modify`                                                      | Manipulate cached data without using GraphQL at all.                                           |
+| [Batching cache operations](#using-cachebatch)         | `cache.batch`                                                       | Group multiple cache operations into a single transaction for better performance.              |
 
 You can use whichever combination of strategies and methods are most helpful for your use case.
 
@@ -301,6 +302,135 @@ If the update function shouldn't make _any_ changes to the cached data, it can r
 The update function's return value is passed to either `writeQuery` or `writeFragment`, which modifies the cached data.
 
 > See the full API reference for [`cache.updateQuery`](../api/cache/InMemoryCache/#updatequery) and [`cache.updateFragment`](../api/cache/InMemoryCache/#updatefragment).
+
+### Using `cache.batch`
+
+Use `cache.batch` to group multiple cache operations into a single transaction. This provides two key benefits:
+
+- **Performance**: Watchers (and thereby React components) are notified only once after all operations complete, rather than after each individual operation.
+- **Control**: You gain fine-grained control over optimistic updates and can intercept watcher notifications.
+
+Here's an example that updates multiple cached items at once:
+
+```js
+cache.batch({
+  update(cache) {
+    // All these operations happen in a single batch
+    cache.writeQuery({
+      query: GET_TODOS,
+      data: { todos: updatedTodos },
+    });
+
+    cache.modify({
+      id: cache.identify(currentUser),
+      fields: {
+        todoCount(existing) {
+          return existing + 1;
+        },
+      },
+    });
+
+    // Cleanup after the updates
+    cache.evict({ id: "Todo:old-item" });
+  },
+});
+```
+
+#### Working with optimistic updates
+
+The `optimistic` option controls how `batch` handles optimistic data:
+
+```js
+// Create a new optimistic layer with a specific ID
+cache.batch({
+  optimistic: "add-todo-123",
+  update(cache) {
+    cache.modify({
+      fields: {
+        todos(existing = []) {
+          const newTodoRef = cache.writeFragment({
+            data: optimisticTodo,
+            fragment: gql`
+              fragment NewTodo on Todo {
+                id
+                text
+                completed
+              }
+            `,
+          });
+          return [...existing, newTodoRef];
+        },
+      },
+    });
+  },
+});
+
+// Later, remove the optimistic layer when the server responds
+cache.batch({
+  update(cache) {
+    // Write the real server data
+    cache.writeQuery({
+      query: GET_TODOS,
+      data: serverResponse.data,
+    });
+  },
+  // Remove the optimistic layer in the same batch
+  removeOptimistic: "add-todo-123",
+});
+```
+
+The `optimistic` option accepts three types of values:
+
+| Value            | Behavior                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| `string`         | Creates a new optimistic layer with the given ID. Use this to remove these specific changes later. |
+| `true` (default) | Updates happen on the current top layer of the cache.                                              |
+| `false`          | Updates apply only to the root (non-optimistic) cache data, ignoring any optimistic layers.        |
+
+#### Intercepting watcher notifications
+
+Use the `onWatchUpdated` callback to inspect or prevent notifications to specific watchers:
+
+```js
+cache.batch({
+  update(cache) {
+    cache.writeQuery({
+      query: GET_USER,
+      data: { user: updatedUser },
+    });
+  },
+  onWatchUpdated(watch, diff, lastDiff) {
+    console.log("Query affected:", watch.query);
+    console.log("New result:", diff.result);
+
+    // Return false to prevent notifying this watcher
+    if (shouldSkipUpdate(watch)) {
+      return false;
+    }
+  },
+});
+```
+
+#### Return values
+
+The `batch` method returns whatever value your `update` function returns:
+
+```js
+const result = cache.batch({
+  update(cache) {
+    const before = cache.readQuery({ query: GET_COUNT });
+    cache.writeQuery({
+      query: GET_COUNT,
+      data: { count: before.count + 1 },
+    });
+    return before.count; // Return the previous count
+  },
+});
+
+console.log("Previous count was:", result);
+```
+
+> See the full API reference for [`cache.batch`](../api/cache/InMemoryCache/#batch).
 
 ## Using `cache.modify`
 

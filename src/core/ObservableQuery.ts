@@ -25,6 +25,7 @@ import {
   getQueryDefinition,
   preventUnhandledRejection,
   toQueryResult,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -295,6 +296,7 @@ export class ObservableQuery<
 {
   public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryName?: string;
+  private variablesUnknown: boolean = false;
 
   /** @internal will be read and written from `QueryInfo` */
   public _lastWrite?: unknown;
@@ -383,6 +385,14 @@ export class ObservableQuery<
         fetchPolicy
       ),
     } = options;
+
+    if (options[variablesUnknownSymbol]) {
+      invariant(
+        fetchPolicy === "standby",
+        "The `variablesUnknown` option can only be used together with a `standby` fetch policy."
+      );
+      this.variablesUnknown = true;
+    }
 
     this.lastQuery = transformedQuery;
 
@@ -1447,6 +1457,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
+
+    // This request will hit the network, so even if there are no variables,
+    // we now know that's intentional. (see #12996)
+    // Even if that happens only once, we want `variablesUnknown` to stay false permanently.
+    this.variablesUnknown &&= mergedOptions.fetchPolicy === "standby";
+
     const options =
       useDisposableObservable ?
         // Disposable Observable fetches receive a shallow copy of this.options
@@ -1771,10 +1787,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // as for now we just take the "latest" operation that is still active,
     // as that lines up best with previous behavior[]
 
-    const operation = Array.from(this.activeOperations.values()).findLast(
-      (operation) =>
-        isEqualQuery(operation, this) && operation.override !== undefined
-    );
+    const operation = Array.from(this.activeOperations.values())
+      .reverse()
+      .find(
+        (operation) =>
+          isEqualQuery(operation, this) && operation.override !== undefined
+      );
     return operation?.override ?? baseNetworkStatus;
   }
 

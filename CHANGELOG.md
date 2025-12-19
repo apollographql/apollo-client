@@ -1,5 +1,24 @@
 # @apollo/client
 
+## 4.0.11
+
+### Patch Changes
+
+- [#13050](https://github.com/apollographql/apollo-client/pull/13050) [`8020829`](https://github.com/apollographql/apollo-client/commit/8020829d8a3bdb3219a37e8d1f7b89179f721037) Thanks [@phryneas](https://github.com/phryneas)! - Replace usage of `findLast` with more backwards-compatible methods.
+
+- [#13049](https://github.com/apollographql/apollo-client/pull/13049) [`05638de`](https://github.com/apollographql/apollo-client/commit/05638deaf598c5bf5d03b82d7deaf57468546229) Thanks [@phryneas](https://github.com/phryneas)! - Fixes an issue where queries starting with `skipToken` or lazy queries from `useLazyQuery` were included in `client.refetchQueries()` before they had been executed for the first time. While generally queries with a `standby` `fetchPolicy` should be included in refetch, these queries never had `variables` passed in, so they should be excluded until they have run once and received their actual variables.
+
+  These queries are now properly excluded from refetch operations until after their initial execution.
+
+  This change adds a new hidden option to `client.watchQuery`, `[variablesUnknownSymbol]`, which may be set `true` for queries starting with a `fetchPolicy` of `standby`. It will only be applied when creating the `ObservableQuery` instance and cannot be changed later. This flag indicates that the query's variables are not yet known, and thus it should be excluded from refetch operations until they are.
+  **This option is not meant for everyday use and is intended for framework integrations only.**
+
+## 4.0.10
+
+### Patch Changes
+
+- [#13045](https://github.com/apollographql/apollo-client/pull/13045) [`af4acdc`](https://github.com/apollographql/apollo-client/commit/af4acdc88bd3bac0d697ab300816241e4065842c) Thanks [@phryneas](https://github.com/phryneas)! - Fix memory leak #13036
+
 ## 4.0.9
 
 ### Patch Changes

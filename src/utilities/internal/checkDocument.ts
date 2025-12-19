@@ -1,10 +1,8 @@
 // Checks the document for errors and throws an exception if there is an error.
 
-import { WeakCache } from "@wry/caches";
 import type { ASTNode } from "graphql";
 import type { DocumentNode, OperationTypeNode } from "graphql";
 import { Kind, visit } from "graphql";
-import { wrap } from "optimism";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -16,6 +14,7 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { cacheSizes } from "../caching/sizes.js";
 
 import { getOperationName } from "./getOperationName.js";
+import { memoize } from "./memoize.js";
 
 /**
  * Checks the document for errors and throws an exception if there is an error.
@@ -25,7 +24,7 @@ import { getOperationName } from "./getOperationName.js";
 export const checkDocument: (
   doc: DocumentNode,
   expectedType?: OperationTypeNode
-) => void = wrap(
+) => void = memoize(
   (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
     invariant(
       doc && doc.kind === "Document",
@@ -97,6 +96,5 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   },
   {
     max: cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"],
-    cache: WeakCache,
   }
 );

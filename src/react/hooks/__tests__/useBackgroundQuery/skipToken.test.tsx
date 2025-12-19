@@ -1,6 +1,7 @@
 import { disableActEnvironment } from "@testing-library/react-render-stream";
+import { gql } from "graphql-tag";
 import React from "react";
-import { delay, of } from "rxjs";
+import { delay, of, Subject } from "rxjs";
 
 import {
   ApolloClient,
@@ -9,9 +10,11 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { skipToken, useBackgroundQuery } from "@apollo/client/react";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   createClientWrapper,
   createMockWrapper,
+  ObservableStream,
   setupVariablesCase,
 } from "@apollo/client/testing/internal";
 
@@ -290,4 +293,99 @@ test("does not suspend for data in the cache when changing variables when no lon
   }
 
   await expect(takeRender).not.toRerender();
+});
+
+test("client.refetchQueries should not refetch queries that start with skipToken until they have been executed", async () => {
+  const query = gql`
+    query getAuthor($id: ID!) {
+      author(id: $id) {
+        firstName
+        lastName
+      }
+    }
+  `;
+  const data = {
+    author: {
+      firstName: "John",
+      lastName: "Smith",
+    },
+  };
+  const secondReqData = {
+    author: {
+      firstName: "Jane",
+      lastName: "Johnson",
+    },
+  };
+
+  const operationSubject = new Subject<ApolloLink.Operation>();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation, forward) => {
+      operationSubject.next(operation);
+      return forward(operation);
+    }).concat(link),
+  });
+
+  const operationStream = new ObservableStream(operationSubject);
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender, takeRender } = await renderUseBackgroundQuery(
+    (options) => useBackgroundQuery(query, options),
+    {
+      initialProps: skipToken as
+        | typeof skipToken
+        | useBackgroundQuery.Options<{ id: string }>,
+      wrapper: createClientWrapper(client),
+    }
+  );
+
+  await expect(operationStream).not.toEmitAnything();
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useBackgroundQuery"]);
+  }
+
+  void client.refetchQueries({ include: [query] });
+  await expect(operationStream).not.toEmitAnything();
+  await expect(takeRender).not.toRerender();
+
+  await rerender({ variables: { id: "1234" } });
+  await expect(operationStream).toEmitNext();
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  link.simulateResult({ result: { data } }, true);
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data,
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  void client.refetchQueries({ include: [query] });
+  await expect(operationStream).toEmitNext();
+  link.simulateResult({ result: { data: secondReqData } }, true);
+  {
+    const { snapshot } = await takeRender();
+
+    expect(snapshot).toStrictEqualTyped({
+      data: secondReqData,
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });

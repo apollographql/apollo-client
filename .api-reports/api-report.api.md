@@ -58,7 +58,6 @@ export namespace ApolloCache {
 export abstract class ApolloCache {
     // (undocumented)
     readonly assumeImmutableResults: boolean;
-    // (undocumented)
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
     abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
@@ -314,6 +313,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
     export type WriteFragmentOptions<TData, TVariables extends OperationVariables> = Base.WriteFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
@@ -550,13 +550,9 @@ export const build: "source" | "esm" | "cjs";
 namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {
-        // (undocumented)
         onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
-        // (undocumented)
         optimistic?: string | boolean;
-        // (undocumented)
         removeOptimistic?: string;
-        // (undocumented)
         update(cache: TCache): TUpdateResult;
     }
     // (undocumented)
@@ -1324,7 +1320,6 @@ export class InMemoryCache extends ApolloCache {
     constructor(config?: InMemoryCacheConfig);
     // (undocumented)
     readonly assumeImmutableResults = true;
-    // (undocumented)
     batch<TUpdateResult>(options: Cache_2.BatchOptions<InMemoryCache, TUpdateResult>): TUpdateResult;
     // Warning: (ae-forgotten-export) The symbol "BroadcastOptions" needs to be exported by the entry point index.d.ts
     //
@@ -2649,6 +2644,9 @@ type VariablesOption<TVariables extends OperationVariables> = {} extends TVariab
     variables: TVariables;
 };
 
+// @internal @deprecated
+const variablesUnknownSymbol: unique symbol;
+
 // Warning: (ae-forgotten-export) The symbol "verbosityLevels" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -2711,9 +2709,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:159:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:353:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:361:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:162:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:356:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:363:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:147:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:200:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

@@ -32,7 +32,7 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   MaskedVariablesCaseData,
   SimpleCaseData,
@@ -1914,7 +1914,7 @@ test("does not mask results by default", async () => {
   }
 });
 
-describe("PreloadedQueryRef` disposal", () => {
+describe("`PreloadedQueryRef` disposal", () => {
   test("when the `PreloadedQueryRef` is disposed of, the ObservableQuery is unsubscribed", async () => {
     const { query, mocks } = setupVariablesCase();
     const client = new ApolloClient({
@@ -1969,7 +1969,7 @@ describe("PreloadedQueryRef` disposal", () => {
       {
         result: {
           data: {
-            character: { __typename: "Character", id: "1", name },
+            character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
       },

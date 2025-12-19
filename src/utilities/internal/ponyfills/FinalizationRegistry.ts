@@ -30,6 +30,7 @@ export const FinalizationRegistry: typeof globalThis.FinalizationRegistry = clas
     this.references.forEach((entry) => {
       if (entry.targetRef.deref() === undefined) {
         this.references.delete(entry);
+        // Spec deviation: Not catching errors here, might get necessary if used in more places.
         this.callback(entry.value);
       }
     });

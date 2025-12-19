@@ -7,7 +7,8 @@ interface Entry<T> {
 
 /**
  * An approximation of `FinalizationRegistry` based on `WeakRef`.
- * Checks every 500ms if registered values have been garbage collected.
+ * While there are registered values, checks every 500ms if any have been garbage collected.
+ * The polling interval is cleared once all registered entries have been removed.
  */
 export const FinalizationRegistry: typeof globalThis.FinalizationRegistry = class FinalizationRegistry<
   T,

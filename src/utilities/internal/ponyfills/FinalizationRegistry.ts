@@ -48,6 +48,9 @@ export const FinalizationRegistry: typeof globalThis.FinalizationRegistry = clas
     }
   }
   unregister(unregisterToken: WeakKey): boolean {
+    // Calling `(weak)Set.delete(undefined)` is not covered by the TypeScript types,
+    // but valid by the spec (see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-weakset.prototype.delete).
+    // Shaving a few bytes here by skipping the undefined check.
     this.references.delete(this.unregisterTokens.get(unregisterToken)!);
     return this.unregisterTokens.delete(unregisterToken);
   }

@@ -25,7 +25,7 @@ const defaults = {
     ],
   },
   resolver: "<rootDir>/config/jest/resolver.ts",
-  transformIgnorePatterns: ["/node_modules/(?!(rxjs|jsdom|parse5)/)"],
+  transformIgnorePatterns: ["/node_modules/(?!(rxjs)/)"],
   prettierPath: null,
   moduleNameMapper: {
     // Our internal testing utilities are not part of the final build, so we

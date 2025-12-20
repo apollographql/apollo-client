@@ -1208,8 +1208,6 @@ interface FieldSpecifier {
     // (undocumented)
     fieldName: string;
     // (undocumented)
-    path?: Array<string | number>;
-    // (undocumented)
     typename?: string;
     // (undocumented)
     variables?: Record<string, any>;

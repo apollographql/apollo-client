@@ -1063,7 +1063,7 @@ function makeFieldFunctionOptions(
 function makeMergeFieldFunctionOptions(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
-  fieldSpec: FieldSpecifier,
+  fieldSpec: FieldSpecifier & { path: Array<string | number> | undefined },
   context: ReadMergeModifyContext,
   storage: StorageType,
   previousData?: unknown

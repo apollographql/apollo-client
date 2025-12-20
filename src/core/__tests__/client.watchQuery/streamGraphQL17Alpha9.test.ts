@@ -1,5 +1,6 @@
 import { from } from "rxjs";
 
+import type { FieldMergeFunction } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -10,6 +11,7 @@ import {
 } from "@apollo/client";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
+  asyncIterableSubject,
   executeSchemaGraphQL17Alpha9,
   friendListSchemaGraphQL17Alpha9,
   markAsStreaming,
@@ -24,6 +26,8 @@ const friends = [
   { name: "Han", id: 2 },
   { name: "Leia", id: 3 },
 ];
+
+type Friend = (typeof friends)[number];
 
 function createLink(rootValue?: Record<string, unknown>) {
   return new ApolloLink((operation) => {
@@ -1004,4 +1008,251 @@ test("can use custom merge function to combine cached and streamed lists", async
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("provides streamFieldDetails to merge functions", async () => {
+  const merge = createMockStreamMergeFn();
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge,
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: () => friends.map((friend) => Promise.resolve(friend)),
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(merge).toHaveBeenCalledTimes(3);
+  expect(merge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    [{ __ref: "Friend:1" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    2,
+    [{ __ref: "Friend:1" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    3,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+});
+
+test("returns correct streamFieldDetails when final chunk is only hasNext: false", async () => {
+  const merge = createMockStreamMergeFn();
+  const { stream: friendStream, subject } = asyncIterableSubject<Friend>();
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge,
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: async () => friendStream,
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[2]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(merge).toHaveBeenCalledTimes(4);
+  expect(merge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    [{ __ref: "Friend:1" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    2,
+    [{ __ref: "Friend:1" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    3,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    4,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
 });

@@ -1376,3 +1376,206 @@ test("provides streamFieldDetails to merge functions in nested stream fields", a
     })
   );
 });
+
+test("provides streamFieldDetails to merge functions in sibling stream fields", async () => {
+  const friendListMerge = createMockStreamMergeFn();
+  const nonNullFriendListMerge = createMockStreamMergeFn();
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: friendListMerge,
+          },
+          nonNullFriendList: {
+            merge: nonNullFriendListMerge,
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: () => friends.map((friend) => Promise.resolve(friend)),
+      nonNullFriendList: () => friends.map((friend) => Promise.resolve(friend)),
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+      nonNullFriendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+      nonNullFriendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+      nonNullFriendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+      nonNullFriendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(friendListMerge).toHaveBeenCalledTimes(4);
+  expect(friendListMerge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    [{ __ref: "Friend:1" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(friendListMerge).toHaveBeenNthCalledWith(
+    2,
+    [{ __ref: "Friend:1" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(friendListMerge).toHaveBeenNthCalledWith(
+    3,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+  expect(friendListMerge).toHaveBeenNthCalledWith(
+    4,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+
+  expect(nonNullFriendListMerge).toHaveBeenCalledTimes(4);
+  expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    [{ __ref: "Friend:1" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
+    2,
+    [{ __ref: "Friend:1" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
+    3,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
+    4,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+});
+
+function createMockStreamMergeFn() {
+  return jest.fn<
+    ReturnType<FieldMergeFunction<any[]>>,
+    Parameters<FieldMergeFunction<any[]>>
+  >((existing = [], incoming) => {
+    const length = Math.max(existing.length, incoming.length);
+    const result = [];
+
+    for (let i = 0; i < length; i++) {
+      result[i] = incoming[i] === undefined ? existing[i] : incoming[i];
+    }
+
+    return result;
+  });
+}

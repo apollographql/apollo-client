@@ -47,6 +47,7 @@ const query = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString),
           },
           nestedFriendList: { type: new GraphQLList(friendType) },
+          scalarList: { type: new GraphQLList(GraphQLString) },
           deeperNestedObject: {
             type: new GraphQLObjectType({
               name: "DeeperNestedObject",

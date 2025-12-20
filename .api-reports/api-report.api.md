@@ -1158,6 +1158,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     //
     // (undocumented)
     mergeObjects: MergeObjectsFunction;
+    previousData?: unknown;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1166,6 +1167,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     storage: StorageType;
     // (undocumented)
     storeFieldName: string;
+    streamFieldDetails?: Incremental.StreamFieldDetails;
     // (undocumented)
     toReference: ToReferenceFunction;
     // (undocumented)
@@ -1193,6 +1195,8 @@ interface FieldSpecifier {
     field?: FieldNode;
     // (undocumented)
     fieldName: string;
+    // (undocumented)
+    path?: Array<string | number>;
     // (undocumented)
     typename?: string;
     // (undocumented)
@@ -1396,6 +1400,13 @@ namespace Incremental {
     }
     // (undocumented)
     type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    interface StreamFieldDetails {
+        // (undocumented)
+        isFirstChunk: boolean;
+        // (undocumented)
+        isLastChunk: boolean;
+    }
 }
 
 // @public (undocumented)
@@ -1740,6 +1751,8 @@ export interface MergeInfo {
     field: FieldNode;
     // (undocumented)
     merge: FieldMergeFunction;
+    // (undocumented)
+    path?: Array<string | number>;
     // (undocumented)
     typename: string | undefined;
 }
@@ -2170,7 +2183,7 @@ class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -2814,14 +2827,14 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:125:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:192:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:193:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

@@ -209,6 +209,13 @@ export namespace Incremental {
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    export interface StreamFieldDetails {
+        // (undocumented)
+        isFirstChunk: boolean;
+        // (undocumented)
+        isLastChunk: boolean;
+    }
 }
 
 // @public (undocumented)

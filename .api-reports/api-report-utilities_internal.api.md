@@ -16,6 +16,7 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
@@ -31,6 +32,7 @@ import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
+import type { Trie } from '@wry/trie';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
@@ -202,6 +204,16 @@ export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Par
 
 // @internal @deprecated
 export const extensionsSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
+    // (undocumented)
+    [streamDetailsSymbol]?: {
+        current: Trie<{
+            current: Incremental.StreamFieldDetails;
+        }>;
+    };
+}
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
@@ -461,6 +473,9 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
+
+// @internal @deprecated
+export const streamDetailsSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;

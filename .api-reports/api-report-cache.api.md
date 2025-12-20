@@ -19,6 +19,7 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
@@ -450,6 +451,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     //
     // (undocumented)
     mergeObjects: MergeObjectsFunction;
+    previousData?: unknown;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -458,6 +460,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     storage: StorageType;
     // (undocumented)
     storeFieldName: string;
+    streamFieldDetails?: Incremental.StreamFieldDetails;
     // (undocumented)
     toReference: ToReferenceFunction;
     // (undocumented)
@@ -488,6 +491,8 @@ interface FieldSpecifier {
     field?: FieldNode;
     // (undocumented)
     fieldName: string;
+    // (undocumented)
+    path?: Array<string | number>;
     // (undocumented)
     typename?: string;
     // (undocumented)
@@ -680,6 +685,8 @@ export interface MergeInfo {
     // (undocumented)
     merge: FieldMergeFunction;
     // (undocumented)
+    path?: Array<string | number>;
+    // (undocumented)
     typename: string | undefined;
 }
 
@@ -823,7 +830,7 @@ export class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -996,8 +1003,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

@@ -7,6 +7,7 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type { ExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
   streamDetailsSymbol,
@@ -90,9 +91,9 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamDetails = new Trie<Incremental.StreamFieldDetails>(
+  private streamDetails = new Trie<{ current: Incremental.StreamFieldDetails }>(
     true,
-    () => ({ isFirstChunk: true, isLastChunk: false })
+    () => ({ current: { isFirstChunk: true, isLastChunk: false } })
   );
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
@@ -122,8 +123,10 @@ class IncrementalRequest<TData>
 
           if (Array.isArray(dataAtPath)) {
             this.streamPositions[pending.id] = dataAtPath.length;
-            this.streamDetails.lookupArray(pending.path as any[]).isFirstChunk =
-              true;
+            this.streamDetails.lookupArray(pending.path as any[]).current = {
+              isFirstChunk: true,
+              isLastChunk: false,
+            };
           }
         }
       }
@@ -153,7 +156,10 @@ class IncrementalRequest<TData>
           }
 
           this.streamPositions[pending.id] += items.length;
-          this.streamDetails.lookupArray(path).isFirstChunk = false;
+          this.streamDetails.lookupArray(path).current = {
+            isFirstChunk: false,
+            isLastChunk: false,
+          };
           data = parent;
         } else {
           data = incremental.data;
@@ -198,11 +204,10 @@ class IncrementalRequest<TData>
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
         const { path } = this.pending.get(completed.id)!;
-        const entry = this.streamDetails.lookupArray(path as any[]);
-        if (entry) {
-          entry.isFirstChunk = false;
-          entry.isLastChunk = true;
-        }
+        this.streamDetails.lookupArray(path as any[]).current = {
+          isFirstChunk: false,
+          isLastChunk: true,
+        };
         this.pending.delete(completed.id);
 
         if (completed.errors) {
@@ -226,7 +231,7 @@ class IncrementalRequest<TData>
       // Create a new object so we can check for === in QueryInfo to trigger a
       // final cache write when emitting a `hasNext: false` by itself.
       [streamDetailsSymbol]: { current: this.streamDetails },
-    };
+    } satisfies ExtensionsWithStreamDetails;
 
     return result;
   }

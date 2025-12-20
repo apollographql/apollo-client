@@ -1072,7 +1072,7 @@ function makeFieldFunctionOptions(
         const streamFieldDetails = streamDetails.current.lookupArray(
           fieldSpec.path
         );
-        options.streamFieldDetails = streamFieldDetails;
+        options.streamFieldDetails = streamFieldDetails.current;
       }
 
       // If the only key in `extensions` was the stream details key, we didn't

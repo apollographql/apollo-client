@@ -6,5 +6,7 @@ import type { streamDetailsSymbol } from "../constants.js";
 
 /** @internal */
 export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
-  [streamDetailsSymbol]?: { current: Trie<Incremental.StreamFieldDetails> };
+  [streamDetailsSymbol]?: {
+    current: Trie<{ current: Incremental.StreamFieldDetails }>;
+  };
 }

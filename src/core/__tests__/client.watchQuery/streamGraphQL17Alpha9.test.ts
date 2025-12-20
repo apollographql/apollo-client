@@ -1564,6 +1564,93 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
   );
 });
 
+test("provides undefined streamFieldDetails to non-stream merge functions", async () => {
+  const nestedObjectMerge = jest.fn((_, incoming) => incoming);
+  const friendListMerge = jest.fn((_, incoming) => incoming);
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: friendListMerge,
+          },
+          nestedObject: {
+            merge: nestedObjectMerge,
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: () => friends,
+      nestedObject: () => ({}),
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      nestedObject {
+        __typename
+      }
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+      nestedObject: {
+        __typename: "NestedObject",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(friendListMerge).toHaveBeenCalledTimes(1);
+  expect(friendListMerge).toHaveBeenCalledWith(
+    undefined,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.not.objectContaining({
+      streamFieldDetails: expect.anything(),
+    })
+  );
+  expect(nestedObjectMerge).toHaveBeenCalledTimes(1);
+  expect(nestedObjectMerge).toHaveBeenCalledWith(
+    undefined,
+    { __typename: "NestedObject" },
+    expect.not.objectContaining({
+      streamFieldDetails: expect.anything(),
+    })
+  );
+});
+
 function createMockStreamMergeFn() {
   return jest.fn<
     ReturnType<FieldMergeFunction<any[]>>,

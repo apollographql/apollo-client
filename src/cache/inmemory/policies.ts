@@ -252,8 +252,7 @@ export interface FieldMergeFunctionOptions<
   TVariables extends OperationVariables = Record<string, any>,
 > extends FieldFunctionOptions<TArgs, TVariables> {
   /**
-   * Any `extensions` provided when writing the cache. `extensions` is only
-   * available in `merge` functions and never available in `read` functions.
+   * Any `extensions` provided when writing the cache.
    */
   extensions: Record<string, unknown> | undefined;
 
@@ -268,9 +267,8 @@ export interface FieldMergeFunctionOptions<
   streamFieldDetails?: Incremental.StreamFieldDetails;
 
   /**
-   * The same value as the `existing` argument, but preserves the value on
-   * refetches when `refetchWritePolicy` is `overwrite` (the default). This
-   * field is only available in `merge` functions.
+   * The same value as the `existing` argument, but preserves the `existing`
+   * value on refetches when `refetchWritePolicy` is `overwrite` (the default).
    */
   previousData?: unknown;
 }

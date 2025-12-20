@@ -303,6 +303,24 @@ const mergeTrueFn: FieldMergeFunction<any> = (
 ) => mergeObjects(existing, incoming);
 const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 
+export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
+  existing,
+  incoming
+) => {
+  if (!existing) {
+    return incoming;
+  }
+
+  const maxLength = Math.max(existing.length, incoming.length);
+  const results = [];
+
+  for (let i = 0; i < maxLength; i++) {
+    results[i] = incoming[i] ? incoming[i] : existing[i];
+  }
+
+  return results;
+};
+
 export type PossibleTypesMap = {
   [supertype: string]: string[];
 };

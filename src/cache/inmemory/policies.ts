@@ -255,6 +255,13 @@ export interface FieldFunctionOptions<
    * directive is used on the field.
    */
   streamFieldDetails?: Incremental.StreamFieldDetails;
+
+  /**
+   * The same value as the `existing` argument, but preserves the value on
+   * refetches when `refetchWritePolicy` is `overwrite` (the default). This
+   * field is only available in `merge` functions.
+   */
+  previousData?: unknown;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -952,6 +959,8 @@ export class Policies {
     context: WriteContext,
     storage?: StorageType
   ) {
+    // Preserve the value in case `context.overwrite` is set.
+    const previousData = existing;
     if (merge === mergeTrueFn) {
       // Instead of going to the trouble of creating a full
       // FieldFunctionOptions object and calling mergeTrueFn, we can
@@ -1000,7 +1009,8 @@ export class Policies {
           path,
         },
         context,
-        storage || {}
+        storage || {},
+        previousData
       )
     );
   }
@@ -1011,7 +1021,8 @@ function makeFieldFunctionOptions(
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
   context: ReadMergeModifyContext,
-  storage: StorageType
+  storage: StorageType,
+  previousData?: unknown
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
@@ -1037,6 +1048,10 @@ function makeFieldFunctionOptions(
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
   };
+
+  if (previousData) {
+    options.previousData = previousData;
+  }
 
   // Make `extensions` only available in `merge` functions, but not `read`
   // functions since we currently only support merge functions. Even though

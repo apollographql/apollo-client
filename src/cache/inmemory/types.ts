@@ -145,6 +145,7 @@ export interface MergeInfo {
   field: FieldNode;
   typename: string | undefined;
   merge: FieldMergeFunction;
+  path?: Array<string | number>;
 }
 
 export interface MergeTree {

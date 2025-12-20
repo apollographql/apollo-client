@@ -10,6 +10,7 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import {
   getOperationName,
   graphQLResultHasError,
+  streamDetailsSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -168,7 +169,9 @@ export class QueryInfo<
       // the cache will repair what was evicted.
       lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
       equal(variables, lastWrite.variables) &&
-      equal(result.data, lastWrite.result.data)
+      equal(result.data, lastWrite.result.data) &&
+      result.extensions?.[streamDetailsSymbol as any] ===
+        lastWrite.result.extensions?.[streamDetailsSymbol as any]
     );
   }
 

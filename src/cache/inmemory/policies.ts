@@ -175,7 +175,7 @@ export type FieldPolicy<
 export type StorageType = Record<string, any>;
 
 interface ExtensionsWithStreamDetails extends Record<string, unknown> {
-  [streamDetailsSymbol]?: Trie<Incremental.StreamFieldDetails>;
+  [streamDetailsSymbol]?: { current: Trie<Incremental.StreamFieldDetails> };
 }
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
@@ -1048,8 +1048,10 @@ function makeFieldFunctionOptions(
       const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
         extensions;
 
-      if (fieldSpec.path && streamDetails?.peekArray(fieldSpec.path)) {
-        const streamFieldDetails = streamDetails.lookupArray(fieldSpec.path);
+      if (fieldSpec.path && streamDetails?.current.peekArray(fieldSpec.path)) {
+        const streamFieldDetails = streamDetails.current.lookupArray(
+          fieldSpec.path
+        );
         options.streamFieldDetails = streamFieldDetails;
       }
 

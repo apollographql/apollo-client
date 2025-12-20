@@ -223,7 +223,9 @@ class IncrementalRequest<TData>
 
     result.extensions = {
       ...result.extensions,
-      [streamDetailsSymbol]: this.streamDetails,
+      // Create a new object so we can check for === in QueryInfo to trigger a
+      // final cache write when emitting a `hasNext: false` by itself.
+      [streamDetailsSymbol]: { current: this.streamDetails },
     };
 
     return result;

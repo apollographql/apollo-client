@@ -62,6 +62,7 @@ import {
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
+  streamDetailsSymbol,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {
@@ -1063,6 +1064,27 @@ export class QueryManager {
       options.fetchPolicy
     ).observable.pipe(
       map((incoming) => {
+        function adjustExtensionsForError(
+          result: FormattedExecutionResult<any>
+        ) {
+          if (!("extensions" in result)) {
+            return result;
+          }
+
+          const copy = { ...result };
+          delete copy.extensions;
+
+          const extensions: Record<string | symbol, any> = {
+            ...result.extensions,
+          };
+          delete extensions[streamDetailsSymbol];
+
+          if (Object.keys(extensions).length > 0) {
+            return { ...result, extensions };
+          }
+
+          return copy;
+        }
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
@@ -1076,7 +1098,7 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(result);
+          throw new CombinedGraphQLErrors(adjustExtensionsForError(result));
         }
 
         const aqr: QueryManager.Result<TData> = {
@@ -1110,7 +1132,9 @@ export class QueryManager {
             aqr.dataState = "empty";
           }
           if (errorPolicy !== "ignore") {
-            aqr.error = new CombinedGraphQLErrors(result);
+            aqr.error = new CombinedGraphQLErrors(
+              adjustExtensionsForError(result)
+            );
             if (aqr.dataState !== "streaming") {
               aqr.networkStatus = NetworkStatus.error;
             }

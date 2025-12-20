@@ -13,6 +13,7 @@ const friendType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     nonNullName: { type: new GraphQLNonNull(GraphQLString) },
+    scalarList: { type: new GraphQLList(GraphQLString) },
   },
   name: "Friend",
 });

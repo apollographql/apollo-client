@@ -1064,27 +1064,6 @@ export class QueryManager {
       options.fetchPolicy
     ).observable.pipe(
       map((incoming) => {
-        function adjustExtensionsForError(
-          result: FormattedExecutionResult<any>
-        ) {
-          if (!("extensions" in result)) {
-            return result;
-          }
-
-          const copy = { ...result };
-          delete copy.extensions;
-
-          const extensions: Record<string | symbol, any> = {
-            ...result.extensions,
-          };
-          delete extensions[streamDetailsSymbol];
-
-          if (Object.keys(extensions).length > 0) {
-            return { ...result, extensions };
-          }
-
-          return copy;
-        }
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
@@ -1098,7 +1077,9 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(adjustExtensionsForError(result));
+          throw new CombinedGraphQLErrors(
+            removeStreamDetailsFromExtensions(result)
+          );
         }
 
         const aqr: QueryManager.Result<TData> = {
@@ -1133,7 +1114,7 @@ export class QueryManager {
           }
           if (errorPolicy !== "ignore") {
             aqr.error = new CombinedGraphQLErrors(
-              adjustExtensionsForError(result)
+              removeStreamDetailsFromExtensions(result)
             );
             if (aqr.dataState !== "streaming") {
               aqr.networkStatus = NetworkStatus.error;
@@ -1845,4 +1826,26 @@ function addNonReactiveToNamedFragments(document: DocumentNode) {
       };
     },
   });
+}
+
+function removeStreamDetailsFromExtensions(
+  original: FormattedExecutionResult<any>
+) {
+  if (!("extensions" in original)) {
+    return original;
+  }
+
+  const result = { ...original };
+  delete result.extensions;
+
+  const extensions: Record<string | symbol, any> = {
+    ...original.extensions,
+  };
+  delete extensions[streamDetailsSymbol];
+
+  if (Object.keys(extensions).length > 0) {
+    result.extensions = extensions;
+  }
+
+  return result;
 }

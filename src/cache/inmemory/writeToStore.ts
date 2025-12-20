@@ -30,6 +30,7 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
+  hasDirectives,
   isArray,
   isField,
   isNonEmptyArray,
@@ -52,7 +53,10 @@ import {
   storeValueIsStoreObject,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import { normalizeReadFieldOptions } from "./policies.js";
+import {
+  defaultStreamFieldMergeFn,
+  normalizeReadFieldOptions,
+} from "./policies.js";
 import type { StoreReader } from "./readFromStore.js";
 import type {
   InMemoryCacheConfig,
@@ -386,6 +390,15 @@ export class StoreWriter {
             field,
             typename,
             merge,
+          };
+        } else if (
+          hasDirectives(["stream"], field) &&
+          Array.isArray(incomingValue)
+        ) {
+          childTree.info = {
+            field,
+            typename,
+            merge: defaultStreamFieldMergeFn,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);

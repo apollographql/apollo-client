@@ -165,13 +165,16 @@ export type FieldPolicy<
   // The type that the read function actually returns, using TExisting
   // data and options.args as input. Usually the same as TIncoming.
   TReadResult = TIncoming,
-  // Allows FieldFunctionOptions definition to be overwritten by the
+  // Allows FieldReadFunctionOptions definition to be overwritten by the
   // developer
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions,
+  // Allows FieldMergeFunctionOptions definition to be overwritten by the
+  // developer
+  TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions,
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-  merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+  read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+  merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 export type StorageType = Record<string, any>;
@@ -237,12 +240,22 @@ export interface FieldFunctionOptions<
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
+}
 
+export interface FieldReadFunctionOptions<
+  TArgs = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
+> extends FieldFunctionOptions<TArgs, TVariables> {}
+
+export interface FieldMergeFunctionOptions<
+  TArgs = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
+> extends FieldFunctionOptions<TArgs, TVariables> {
   /**
    * Any `extensions` provided when writing the cache. `extensions` is only
    * available in `merge` functions and never available in `read` functions.
    */
-  extensions?: Record<string, unknown>;
+  extensions: Record<string, unknown> | undefined;
 
   /**
    * Details about the field when the `@stream` directive is used. Useful with
@@ -289,7 +302,7 @@ export type FieldMergeFunction<
   TIncoming = TExisting,
   // Passing the whole FieldFunctionOptions makes the current definition
   // independent from its implementation
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions,
 > = (
   existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
@@ -987,7 +1000,7 @@ export class Policies {
     return merge(
       existing,
       incoming,
-      makeFieldFunctionOptions(
+      makeMergeFieldFunctionOptions(
         this,
         // Unlike options.readField for read functions, we do not fall
         // back to the current object if no foreignObjOrRef is provided,
@@ -1021,15 +1034,14 @@ function makeFieldFunctionOptions(
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
   context: ReadMergeModifyContext,
-  storage: StorageType,
-  previousData?: unknown
+  storage: StorageType
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
   const { toReference, canRead } = context.store;
 
-  const options: FieldFunctionOptions = {
+  return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
     fieldName,
@@ -1048,37 +1060,49 @@ function makeFieldFunctionOptions(
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
   };
+}
+
+function makeMergeFieldFunctionOptions(
+  policies: Policies,
+  objectOrReference: StoreObject | Reference | undefined,
+  fieldSpec: FieldSpecifier,
+  context: ReadMergeModifyContext,
+  storage: StorageType,
+  previousData?: unknown
+): FieldMergeFunctionOptions {
+  const options: FieldMergeFunctionOptions = {
+    ...makeFieldFunctionOptions(
+      policies,
+      objectOrReference,
+      fieldSpec,
+      context,
+      storage
+    ),
+    extensions: context.extensions,
+  };
 
   if (previousData) {
     options.previousData = previousData;
   }
 
-  // Make `extensions` only available in `merge` functions, but not `read`
-  // functions since we currently only support merge functions. Even though
-  // `context.extensions` will result in `undefined`, we don't want the key to
-  // exist in the options object to avoid the appearance that its supported in
-  // `read` functions.
-  if ("extensions" in context) {
-    const extensions: ExtensionsWithStreamDetails | undefined =
-      context.extensions;
-    options.extensions = extensions;
+  const extensions: ExtensionsWithStreamDetails | undefined =
+    context.extensions;
 
-    if (extensions && streamDetailsSymbol in extensions) {
-      const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
-        extensions;
+  if (extensions && streamDetailsSymbol in extensions) {
+    const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
+      extensions;
 
-      if (fieldSpec.path && streamDetails?.current.peekArray(fieldSpec.path)) {
-        const streamFieldDetails = streamDetails.current.lookupArray(
-          fieldSpec.path
-        );
-        options.streamFieldDetails = streamFieldDetails.current;
-      }
-
-      // If the only key in `extensions` was the stream details key, we didn't
-      // receive any remote extensions, so we reset extensions back to undefined
-      options.extensions =
-        Object.keys(otherExtensions).length === 0 ? undefined : otherExtensions;
+    if (fieldSpec.path && streamDetails?.current.peekArray(fieldSpec.path)) {
+      const streamFieldDetails = streamDetails.current.lookupArray(
+        fieldSpec.path
+      );
+      options.streamFieldDetails = streamFieldDetails.current;
     }
+
+    // If the only key in `extensions` was the stream details key, we didn't
+    // receive any remote extensions, so we reset extensions back to undefined
+    options.extensions =
+      Object.keys(otherExtensions).length === 0 ? undefined : otherExtensions;
   }
 
   return options;

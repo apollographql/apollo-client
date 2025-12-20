@@ -1256,3 +1256,123 @@ test("returns correct streamFieldDetails when final chunk is only hasNext: false
     })
   );
 });
+
+test("provides streamFieldDetails to merge functions in nested stream fields", async () => {
+  const merge = createMockStreamMergeFn();
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      NestedObject: {
+        fields: {
+          nestedFriendList: {
+            merge,
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    link: createLink({
+      nestedObject: {
+        nestedFriendList: () =>
+          friends.map((friend) => Promise.resolve(friend)),
+      },
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      nestedObject {
+        nestedFriendList @stream(initialCount: 1) {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        nestedFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        nestedFriendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      nestedObject: {
+        __typename: "NestedObject",
+        nestedFriendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(merge).toHaveBeenCalledTimes(3);
+  expect(merge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    [{ __ref: "Friend:1" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    2,
+    [{ __ref: "Friend:1" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(merge).toHaveBeenNthCalledWith(
+    3,
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
+    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+});

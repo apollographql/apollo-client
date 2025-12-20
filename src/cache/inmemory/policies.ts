@@ -330,7 +330,7 @@ export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
   const results = [];
 
   for (let i = 0; i < length; i++) {
-    results[i] = incoming[i] !== undefined ? incoming[i] : previous[i];
+    results[i] = incoming[i] === undefined ? previous[i] : incoming[i];
   }
 
   return results;

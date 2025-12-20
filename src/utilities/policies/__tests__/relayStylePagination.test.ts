@@ -200,6 +200,7 @@ describe("relayStylePagination", () => {
       const result = merge(undefined, incoming, {
         ...options,
         extensions: undefined,
+        previousData: undefined,
       });
       expect(result).toEqual({
         edges: [],
@@ -221,16 +222,18 @@ describe("relayStylePagination", () => {
         { cursor: "omega", node: makeReference("fakeOmega") },
       ];
 
-      const result = merge(
-        {
-          edges: existingEdges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: true,
-            startCursor: "alpha",
-            endCursor: "alpha",
-          },
+      const existing = {
+        edges: existingEdges,
+        pageInfo: {
+          hasPreviousPage: false,
+          hasNextPage: true,
+          startCursor: "alpha",
+          endCursor: "alpha",
         },
+      };
+
+      const result = merge(
+        existing,
         {
           edges: incomingEdges,
           pageInfo: {
@@ -246,6 +249,7 @@ describe("relayStylePagination", () => {
             after: "alpha",
           },
           extensions: undefined,
+          previousData: existing,
         }
       );
 
@@ -283,6 +287,7 @@ describe("relayStylePagination", () => {
           after: "alpha",
         },
         extensions: undefined,
+        previousData: fakeExisting,
       };
 
       const result = merge(fakeExisting, fakeIncoming, fakeOptions);
@@ -309,6 +314,7 @@ describe("relayStylePagination", () => {
           after: "alpha",
         },
         extensions: undefined,
+        previousData: null,
       });
 
       expect(result).toEqual(incoming);
@@ -323,17 +329,19 @@ describe("relayStylePagination", () => {
         { cursor: "omega", node: makeReference("fakeOmega") },
       ];
 
+      const existing = {
+        edges: existingEdges,
+        pageInfo: {
+          hasPreviousPage: false,
+          hasNextPage: true,
+          startCursor: "alpha",
+          endCursor: "alpha",
+          extra: "existing.pageInfo.extra",
+        } as TRelayPageInfo,
+      };
+
       const result = merge(
-        {
-          edges: existingEdges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: true,
-            startCursor: "alpha",
-            endCursor: "alpha",
-            extra: "existing.pageInfo.extra",
-          } as TRelayPageInfo,
-        },
+        existing,
         {
           edges: incomingEdges,
           pageInfo: {
@@ -350,6 +358,7 @@ describe("relayStylePagination", () => {
             after: "alpha",
           },
           extensions: undefined,
+          previousData: existing,
         }
       );
 

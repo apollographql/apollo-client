@@ -1,3 +1,4 @@
+import type { Trie } from "@wry/trie";
 import type {
   FieldNode,
   FragmentDefinitionNode,
@@ -6,6 +7,7 @@ import type {
 } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
+import type { Incremental } from "@apollo/client/incremental";
 import { disableWarningsSlot } from "@apollo/client/masking";
 import type {
   Reference,
@@ -15,6 +17,7 @@ import type {
 import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
+import { streamDetailsSymbol } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
   getStoreKeyName,
@@ -170,6 +173,10 @@ export type FieldPolicy<
 };
 
 export type StorageType = Record<string, any>;
+
+interface ExtensionsWithStreamDetails extends Record<string, unknown> {
+  [streamDetailsSymbol]?: Trie<Incremental.StreamFieldDetails>;
+}
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return (
@@ -1037,7 +1044,20 @@ function makeFieldFunctionOptions(
   // exist in the options object to avoid the appearance that its supported in
   // `read` functions.
   if ("extensions" in context) {
-    options.extensions = context.extensions;
+    let extensions: ExtensionsWithStreamDetails | undefined =
+      context.extensions;
+
+    if (extensions && streamDetailsSymbol in extensions) {
+      delete extensions[streamDetailsSymbol];
+
+      // If the only extension key was our stream details symbol, we didn't get
+      // any other extensions from the request, so set it back to undefined.
+      if (Object.keys(extensions).length === 0) {
+        extensions = undefined;
+      }
+    }
+
+    options.extensions = extensions;
   }
 
   return options;

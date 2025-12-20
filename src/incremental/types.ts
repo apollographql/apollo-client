@@ -34,4 +34,10 @@ export declare namespace Incremental {
       chunk: Chunk
     ) => FormattedExecutionResult<TData>;
   }
+
+  /** @internal */
+  export interface StreamFieldDetails {
+    isFirstChunk: boolean;
+    isLastChunk: boolean;
+  }
 }

@@ -307,16 +307,20 @@ const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 
 export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
   existing,
-  incoming
+  incoming,
+  { streamFieldDetails }
 ) => {
   if (!existing) {
     return incoming;
   }
 
-  const maxLength = Math.max(existing.length, incoming.length);
+  const length =
+    streamFieldDetails?.isLastChunk ?
+      incoming.length
+    : Math.max(existing.length, incoming.length);
   const results = [];
 
-  for (let i = 0; i < maxLength; i++) {
+  for (let i = 0; i < length; i++) {
     results[i] = incoming[i] !== undefined ? incoming[i] : existing[i];
   }
 

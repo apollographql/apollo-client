@@ -254,12 +254,7 @@ export interface FieldFunctionOptions<
    * This field is only available when the `@stream` directive is used on the
    * field.
    */
-  streamFieldDetails?: StreamFieldDetails;
-}
-
-interface StreamFieldDetails {
-  isFirstChunk: boolean;
-  isLastChunk: boolean;
+  streamFieldDetails?: Incremental.StreamFieldDetails;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(

@@ -2243,6 +2243,104 @@ test("truncates array with default merge function on refetch when last chunk is 
   });
 });
 
+test("truncates array when fetched array is shorter than cached array with cache-and-network fetch policy", async () => {
+  let { stream: friendStream, subject } = asyncIterableSubject<Friend>();
+
+  const client = new ApolloClient({
+    link: createLink({
+      friendList: async () => friendStream,
+    }),
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    data: {
+      friendList: friends.map((friend) => ({
+        __typename: "Friend",
+        id: String(friend.id),
+        name: `Cached ${friend.name}`,
+      })),
+    },
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[1]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 function createMockStreamMergeFn() {
   return jest.fn<
     ReturnType<FieldMergeFunction<any[]>>,

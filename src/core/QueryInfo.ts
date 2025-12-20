@@ -170,6 +170,9 @@ export class QueryInfo<
       lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
       equal(variables, lastWrite.variables) &&
       equal(result.data, lastWrite.result.data) &&
+      // We have to compare these values because its possible the final chunk
+      // emitted in the incremental result is just `hasNext: false`. This
+      // ensures we trigger a cache write when we get `isLastChunk: true`.
       result.extensions?.[streamDetailsSymbol as any] ===
         lastWrite.result.extensions?.[streamDetailsSymbol as any]
     );

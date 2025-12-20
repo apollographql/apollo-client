@@ -330,13 +330,12 @@ export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
     return incoming;
   }
 
+  const results = [];
   const previous = existing ?? (previousData as any[]);
-
   const length =
     streamFieldDetails?.isLastChunk ?
       incoming.length
     : Math.max(previous.length, incoming.length);
-  const results = [];
 
   for (let i = 0; i < length; i++) {
     results[i] = incoming[i] === undefined ? previous[i] : incoming[i];

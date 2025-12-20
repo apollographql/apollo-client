@@ -251,8 +251,8 @@ export interface FieldFunctionOptions<
    * custom merge functions to determine how to merge existing cache data with
    * the incoming stream array.
    *
-   * This field is only available when the `@stream` directive is used on the
-   * field.
+   * This field is only available in `merge` functions when the `@stream`
+   * directive is used on the field.
    */
   streamFieldDetails?: Incremental.StreamFieldDetails;
 }

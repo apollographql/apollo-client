@@ -16,7 +16,10 @@ import type {
 } from "@apollo/client/utilities";
 import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { FragmentMap } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamDetails,
+  FragmentMap,
+} from "@apollo/client/utilities/internal";
 import { streamDetailsSymbol } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
@@ -173,10 +176,6 @@ export type FieldPolicy<
 };
 
 export type StorageType = Record<string, any>;
-
-interface ExtensionsWithStreamDetails extends Record<string, unknown> {
-  [streamDetailsSymbol]?: { current: Trie<Incremental.StreamFieldDetails> };
-}
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return (

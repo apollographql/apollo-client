@@ -197,7 +197,10 @@ describe("relayStylePagination", () => {
           endCursor: "xyz",
         },
       };
-      const result = merge(undefined, incoming, options);
+      const result = merge(undefined, incoming, {
+        ...options,
+        extensions: undefined,
+      });
       expect(result).toEqual({
         edges: [],
         pageInfo: {
@@ -242,6 +245,7 @@ describe("relayStylePagination", () => {
           args: {
             after: "alpha",
           },
+          extensions: undefined,
         }
       );
 
@@ -278,6 +282,7 @@ describe("relayStylePagination", () => {
         args: {
           after: "alpha",
         },
+        extensions: undefined,
       };
 
       const result = merge(fakeExisting, fakeIncoming, fakeOptions);
@@ -303,6 +308,7 @@ describe("relayStylePagination", () => {
         args: {
           after: "alpha",
         },
+        extensions: undefined,
       });
 
       expect(result).toEqual(incoming);
@@ -343,6 +349,7 @@ describe("relayStylePagination", () => {
           args: {
             after: "alpha",
           },
+          extensions: undefined,
         }
       );
 

@@ -944,7 +944,7 @@ export class Policies {
   public runMergeFunction(
     existing: StoreValue,
     incoming: StoreValue,
-    { field, typename, merge }: MergeInfo,
+    { field, typename, merge, path }: MergeInfo,
     context: WriteContext,
     storage?: StorageType
   ) {
@@ -993,6 +993,7 @@ export class Policies {
           fieldName: field.name.value,
           field,
           variables: context.variables,
+          path,
         },
         context,
         storage || {}
@@ -1039,20 +1040,24 @@ function makeFieldFunctionOptions(
   // exist in the options object to avoid the appearance that its supported in
   // `read` functions.
   if ("extensions" in context) {
-    let extensions: ExtensionsWithStreamDetails | undefined =
+    const extensions: ExtensionsWithStreamDetails | undefined =
       context.extensions;
+    options.extensions = extensions;
 
     if (extensions && streamDetailsSymbol in extensions) {
-      delete extensions[streamDetailsSymbol];
+      const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
+        extensions;
 
-      // If the only extension key was our stream details symbol, we didn't get
-      // any other extensions from the request, so set it back to undefined.
-      if (Object.keys(extensions).length === 0) {
-        extensions = undefined;
+      if (fieldSpec.path && streamDetails?.peekArray(fieldSpec.path)) {
+        const streamFieldDetails = streamDetails.lookupArray(fieldSpec.path);
+        options.streamFieldDetails = streamFieldDetails;
       }
-    }
 
-    options.extensions = extensions;
+      // If the only key in `extensions` was the stream details key, we didn't
+      // receive any remote extensions, so we reset extensions back to undefined
+      options.extensions =
+        Object.keys(otherExtensions).length === 0 ? undefined : otherExtensions;
+    }
   }
 
   return options;

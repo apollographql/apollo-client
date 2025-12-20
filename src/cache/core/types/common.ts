@@ -60,6 +60,7 @@ export interface FieldSpecifier {
   field?: FieldNode;
   args?: Record<string, any>;
   variables?: Record<string, any>;
+  path?: Array<string | number>;
 }
 
 export interface ReadFieldOptions extends FieldSpecifier {

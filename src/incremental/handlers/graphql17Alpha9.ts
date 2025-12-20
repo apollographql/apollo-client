@@ -204,6 +204,19 @@ class IncrementalRequest<TData>
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
         const { path } = this.pending.get(completed.id)!;
+        const streamPosition = this.streamPositions[completed.id];
+
+        // Truncate any stream arrays in case the chunk only contains `hasNext`
+        // and `completed`.
+        if (streamPosition !== undefined) {
+          const dataAtPath = path.reduce(
+            (data, key) => (data as any)?.[key],
+            this.data
+          );
+
+          this.merge({ data: dataAtPath.slice(0, streamPosition) }, path);
+        }
+
         this.streamDetails.lookupArray(path as any[]).current = {
           isFirstChunk: false,
           isLastChunk: true,

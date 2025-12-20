@@ -90,10 +90,10 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamDetails = new Trie<{
-    isFirstChunk: boolean;
-    isLastChunk: boolean;
-  }>(true, () => ({ isFirstChunk: true, isLastChunk: false }));
+  private streamDetails = new Trie<Incremental.StreamFieldDetails>(
+    true,
+    () => ({ isFirstChunk: true, isLastChunk: false })
+  );
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached

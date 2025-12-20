@@ -270,7 +270,7 @@ export interface FieldMergeFunctionOptions<
    * The same value as the `existing` argument, but preserves the `existing`
    * value on refetches when `refetchWritePolicy` is `overwrite` (the default).
    */
-  previousData?: unknown;
+  previousData: unknown;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -1076,11 +1076,8 @@ function makeMergeFieldFunctionOptions(
       storage
     ),
     extensions: context.extensions,
+    previousData,
   };
-
-  if (previousData) {
-    options.previousData = previousData;
-  }
 
   const extensions: ExtensionsWithStreamDetails | undefined =
     context.extensions;

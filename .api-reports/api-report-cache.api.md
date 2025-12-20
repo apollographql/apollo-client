@@ -470,7 +470,7 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions 
 // @public (undocumented)
 export interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
     extensions: Record<string, unknown> | undefined;
-    previousData?: unknown;
+    previousData: unknown;
     streamFieldDetails?: Incremental.StreamFieldDetails;
 }
 

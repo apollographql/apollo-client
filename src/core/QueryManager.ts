@@ -378,7 +378,9 @@ export class QueryManager {
           map((storeResult) => {
             const hasErrors = graphQLResultHasError(storeResult);
             if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(storeResult);
+              throw new CombinedGraphQLErrors(
+                removeStreamDetailsFromExtensions(storeResult)
+              );
             }
 
             if (mutationStoreValue) {

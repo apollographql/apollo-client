@@ -1147,7 +1147,6 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
-    extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;
     // (undocumented)
@@ -1158,7 +1157,6 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     //
     // (undocumented)
     mergeObjects: MergeObjectsFunction;
-    previousData?: unknown;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1167,25 +1165,39 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     storage: StorageType;
     // (undocumented)
     storeFieldName: string;
-    streamFieldDetails?: Incremental.StreamFieldDetails;
     // (undocumented)
     toReference: ToReferenceFunction;
     // (undocumented)
     variables?: TVariables;
 }
 
+// Warning: (ae-forgotten-export) The symbol "FieldMergeFunctionOptions" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
 
 // @public (undocumented)
-export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = {
+interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+    extensions: Record<string, unknown> | undefined;
+    previousData?: unknown;
+    streamFieldDetails?: Incremental.StreamFieldDetails;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FieldReadFunctionOptions" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions, TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = {
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
-    read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-    merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+    read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+    merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 // @public (undocumented)
 export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+
+// @public (undocumented)
+interface FieldReadFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+}
 
 // @public (undocumented)
 interface FieldSpecifier {
@@ -2828,8 +2840,8 @@ interface WriteContext extends ReadMergeModifyContext {
 //
 // src/cache/core/cache.ts:125:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:172:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts

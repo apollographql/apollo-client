@@ -1651,6 +1651,179 @@ test("provides undefined streamFieldDetails to non-stream merge functions", asyn
   );
 });
 
+test("sets correct streamFieldDetails when field name is same in different locations", async () => {
+  const scalarListMerge = createMockStreamMergeFn();
+  const nestedScalarListMerge = createMockStreamMergeFn();
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          scalarList: {
+            merge: scalarListMerge,
+          },
+        },
+      },
+      NestedObject: {
+        fields: {
+          scalarList: {
+            merge: nestedScalarListMerge,
+          },
+        },
+      },
+    },
+  });
+
+  const list = ["one", "two", "three"];
+
+  const client = new ApolloClient({
+    link: createLink({
+      scalarList: () => list.map((str) => Promise.resolve(str)),
+      nestedObject: () => ({
+        scalarList: list.map((str) => Promise.resolve(str)),
+      }),
+    }),
+    cache,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      scalarList @stream(initialCount: 1)
+      nestedObject {
+        scalarList @stream(initialCount: 1)
+      }
+    }
+  `;
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      scalarList: ["one"],
+      nestedObject: { __typename: "NestedObject", scalarList: ["one"] },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      scalarList: ["one", "two"],
+      nestedObject: { __typename: "NestedObject", scalarList: ["one", "two"] },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      scalarList: ["one", "two", "three"],
+      nestedObject: { __typename: "NestedObject", scalarList: ["one", "two"] },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      scalarList: ["one", "two", "three"],
+      nestedObject: {
+        __typename: "NestedObject",
+        scalarList: ["one", "two", "three"],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(scalarListMerge).toHaveBeenCalledTimes(4);
+  expect(scalarListMerge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    ["one"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(scalarListMerge).toHaveBeenNthCalledWith(
+    2,
+    ["one"],
+    ["one", "two"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(scalarListMerge).toHaveBeenNthCalledWith(
+    3,
+    ["one", "two"],
+    ["one", "two", "three"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+  expect(scalarListMerge).toHaveBeenNthCalledWith(
+    4,
+    ["one", "two", "three"],
+    ["one", "two", "three"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+
+  expect(nestedScalarListMerge).toHaveBeenCalledTimes(4);
+  expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
+    1,
+    undefined,
+    ["one"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+    })
+  );
+  expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
+    2,
+    ["one"],
+    ["one", "two"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
+    3,
+    ["one", "two"],
+    ["one", "two"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+    })
+  );
+  expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
+    4,
+    ["one", "two"],
+    ["one", "two", "three"],
+    expect.objectContaining({
+      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+    })
+  );
+});
+
 function createMockStreamMergeFn() {
   return jest.fn<
     ReturnType<FieldMergeFunction<any[]>>,

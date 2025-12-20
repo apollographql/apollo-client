@@ -1,4 +1,3 @@
-import type { Trie } from "@wry/trie";
 import type {
   FieldNode,
   FragmentDefinitionNode,

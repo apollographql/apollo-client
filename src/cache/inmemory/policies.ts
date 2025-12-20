@@ -1063,7 +1063,7 @@ function makeFieldFunctionOptions(
 function makeMergeFieldFunctionOptions(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
-  fieldSpec: FieldSpecifier & { path: Array<string | number> | undefined },
+  fieldSpec: FieldSpecifier & { path: Array<string | number> },
   context: ReadMergeModifyContext,
   storage: StorageType,
   previousData?: unknown
@@ -1090,7 +1090,7 @@ function makeMergeFieldFunctionOptions(
     const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
       extensions;
 
-    if (fieldSpec.path && streamDetails?.current.peekArray(fieldSpec.path)) {
+    if (streamDetails?.current.peekArray(fieldSpec.path)) {
       const streamFieldDetails = streamDetails.current.lookupArray(
         fieldSpec.path
       );

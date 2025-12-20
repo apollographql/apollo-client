@@ -691,7 +691,7 @@ export interface MergeInfo {
     // (undocumented)
     merge: FieldMergeFunction;
     // (undocumented)
-    path?: Array<string | number>;
+    path: Array<string | number>;
     // (undocumented)
     typename: string | undefined;
 }

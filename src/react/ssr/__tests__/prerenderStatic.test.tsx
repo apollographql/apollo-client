@@ -288,10 +288,6 @@ test.each([
   }
 );
 
-// Behavior of `prerender/prerenderStatic` changed in React 19.2.0
-// This now doesn't re-throw the abort error, but instead returns a partial result
-// with a `postponed: null | PostponedState;` field in the result.
-// This will need a follow-up PR to be handled.
 test.each([
   ["prerender", prerender, resumeAndPrerender],
   [
@@ -300,7 +296,7 @@ test.each([
     resumeAndPrerenderToNodeStream,
   ],
 ])(
-  "%s: AbortSignal times out during render - can be resumed",
+  "%s: AbortSignal times out during render - can be resumed with `resumeAndPrerender`",
   async (_, renderFunction, resumeFunction) => {
     const { Outlet, query1, query2, query3 } = testSetup();
     type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
@@ -574,7 +570,9 @@ test("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1", async (
   });
 
   expect(diagnostics?.renderCount).toBe(1);
-  expect(result).toMatchInlineSnapshot(`"<div><p>Hello <!-- -->world<!-- -->!</p><!--$--><p>My name is <!-- -->Apollo<!-- -->!</p><!--$--><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p><!--/$--><!--/$--></div>"`);
+  expect(result).toMatchInlineSnapshot(
+    `"<div><p>Hello <!-- -->world<!-- -->!</p><!--$--><p>My name is <!-- -->Apollo<!-- -->!</p><!--$--><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p><!--/$--><!--/$--></div>"`
+  );
 });
 
 test("usage with `useQuery`: `diagnostics.renderCount` is 2", async () => {

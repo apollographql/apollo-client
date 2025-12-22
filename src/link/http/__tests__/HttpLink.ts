@@ -6,7 +6,8 @@ import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
 import { map, Observable, Subject, tap } from "rxjs";
-import { ReadableStream } from "web-streams-polyfill";
+import type { ReadableStreamLike } from "web-streams-polyfill";
+import { ReadableStream as RS } from "web-streams-polyfill";
 
 import {
   ApolloClient,
@@ -32,6 +33,14 @@ import {
 } from "@apollo/client/testing/internal";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
+
+// Work around an inconsistency between `web-streams-polyfill` and `undici` typings
+const Response = globalThis.Response as typeof globalThis.Response;
+const ReadableStream = RS as any as typeof globalThis.ReadableStream & {
+  from<R>(
+    asyncIterable: Iterable<R> | AsyncIterable<R> | ReadableStreamLike<R>
+  ): globalThis.ReadableStream<R>;
+};
 
 const sampleQuery = gql`
   query SampleQuery {

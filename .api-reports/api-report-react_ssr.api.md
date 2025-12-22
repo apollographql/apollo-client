@@ -47,7 +47,6 @@ export namespace prerenderStatic {
         signal?: AbortSignal;
         tree: ReactTypes.ReactNode;
     }
-    // (undocumented)
     export type PrerenderFunction = RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
     // (undocumented)
     export type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{

@@ -39,7 +39,7 @@ export interface PrerenderStaticInternalContext {
 }
 
 export declare namespace prerenderStatic {
-  /** {@interitDoc @apollo/client!~prerenderStatic~Options#renderFunction:member} */
+  /** {@inheritDoc @apollo/client!~prerenderStatic~Options#renderFunction:member} */
   export type PrerenderFunction =
     | RenderToString
     | RenderToStringPromise

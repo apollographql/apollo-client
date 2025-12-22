@@ -402,7 +402,7 @@ test.each([
     client3.restore(client2.extract());
     const resumedPromise2 = prerenderStatic({
       tree: <Outlet />,
-      context: { client: client1 },
+      context: { client: client3 },
       renderFunction: (tree) =>
         resumeFunction(tree, resumedResult1.renderFnResult.postponed, {}),
     });

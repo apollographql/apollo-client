@@ -316,8 +316,8 @@ you have an infinite render loop in your application.`,
     if (signal?.aborted) {
       return {
         result,
-        aborted: true,
         renderFnResult,
+        aborted: true,
       } as prerenderStatic.Result<any>;
     }
     return process();

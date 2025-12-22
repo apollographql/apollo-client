@@ -107,7 +107,7 @@ describe("reading from the store", () => {
           }
         `,
       });
-    }).toThrowError(/2 operations/);
+    }).toThrow(/2 operations/);
 
     expect(() => {
       readQueryFromStore(reader, {
@@ -118,7 +118,7 @@ describe("reading from the store", () => {
           }
         `,
       });
-    }).toThrowError(/contain a query/);
+    }).toThrow(/contain a query/);
   });
 
   it("runs a basic query", () => {

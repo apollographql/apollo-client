@@ -98,7 +98,7 @@ describe("abstract cache", () => {
       test.read = jest.fn();
 
       test.readQuery({ query });
-      expect(test.read).toBeCalled();
+      expect(test.read).toHaveBeenCalled();
     });
 
     it("defaults optimistic to false", () => {
@@ -124,7 +124,7 @@ describe("abstract cache", () => {
       };
 
       test.readFragment(fragment);
-      expect(test.read).toBeCalled();
+      expect(test.read).toHaveBeenCalled();
     });
 
     it("defaults optimistic to false", () => {
@@ -153,7 +153,7 @@ describe("abstract cache", () => {
         query: query,
         data: "foo",
       });
-      expect(test.write).toBeCalled();
+      expect(test.write).toHaveBeenCalled();
     });
   });
 
@@ -172,7 +172,7 @@ describe("abstract cache", () => {
       };
 
       test.writeFragment(fragment);
-      expect(test.write).toBeCalled();
+      expect(test.write).toHaveBeenCalled();
     });
   });
 
@@ -184,8 +184,8 @@ describe("abstract cache", () => {
 
       test.updateQuery({ query }, (data) => "foo");
 
-      expect(test.readQuery).toBeCalled();
-      expect(test.writeQuery).toBeCalled();
+      expect(test.readQuery).toHaveBeenCalled();
+      expect(test.writeQuery).toHaveBeenCalled();
     });
 
     it("does not call writeQuery method if data is null", () => {
@@ -195,8 +195,8 @@ describe("abstract cache", () => {
 
       test.updateQuery({ query }, (data) => null);
 
-      expect(test.readQuery).toBeCalled();
-      expect(test.writeQuery).not.toBeCalled();
+      expect(test.readQuery).toHaveBeenCalled();
+      expect(test.writeQuery).not.toHaveBeenCalled();
     });
 
     it("does not call writeQuery method if data is undefined", () => {
@@ -208,8 +208,8 @@ describe("abstract cache", () => {
         return;
       });
 
-      expect(test.readQuery).toBeCalled();
-      expect(test.writeQuery).not.toBeCalled();
+      expect(test.readQuery).toHaveBeenCalled();
+      expect(test.writeQuery).not.toHaveBeenCalled();
     });
 
     it("calls the readQuery & writeQuery methods with the options object", () => {
@@ -226,9 +226,11 @@ describe("abstract cache", () => {
 
       test.updateQuery(options, (data) => "foo");
 
-      expect(test.readQuery).toBeCalledWith(expect.objectContaining(options));
+      expect(test.readQuery).toHaveBeenCalledWith(
+        expect.objectContaining(options)
+      );
 
-      expect(test.writeQuery).toBeCalledWith(
+      expect(test.writeQuery).toHaveBeenCalledWith(
         expect.objectContaining({ ...options, data: "foo" })
       );
     });
@@ -273,8 +275,8 @@ describe("abstract cache", () => {
 
       test.updateFragment({ id: fragmentId, fragment }, (data) => "foo");
 
-      expect(test.readFragment).toBeCalled();
-      expect(test.writeFragment).toBeCalled();
+      expect(test.readFragment).toHaveBeenCalled();
+      expect(test.writeFragment).toHaveBeenCalled();
     });
 
     it("does not call writeFragment method if data is null", () => {
@@ -284,8 +286,8 @@ describe("abstract cache", () => {
 
       test.updateFragment({ id: fragmentId, fragment }, (data) => null);
 
-      expect(test.readFragment).toBeCalled();
-      expect(test.writeFragment).not.toBeCalled();
+      expect(test.readFragment).toHaveBeenCalled();
+      expect(test.writeFragment).not.toHaveBeenCalled();
     });
 
     it("does not call writeFragment method if data is undefined", () => {
@@ -297,8 +299,8 @@ describe("abstract cache", () => {
         return;
       });
 
-      expect(test.readFragment).toBeCalled();
-      expect(test.writeFragment).not.toBeCalled();
+      expect(test.readFragment).toHaveBeenCalled();
+      expect(test.writeFragment).not.toHaveBeenCalled();
     });
 
     it("calls the readFragment & writeFragment methods with the options object", () => {
@@ -317,11 +319,11 @@ describe("abstract cache", () => {
 
       test.updateFragment(options, (data) => "foo");
 
-      expect(test.readFragment).toBeCalledWith(
+      expect(test.readFragment).toHaveBeenCalledWith(
         expect.objectContaining(options)
       );
 
-      expect(test.writeFragment).toBeCalledWith(
+      expect(test.writeFragment).toHaveBeenCalledWith(
         expect.objectContaining({ ...options, data: "foo" })
       );
     });

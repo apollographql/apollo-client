@@ -10,6 +10,10 @@ import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
 import * as React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import type {
+  PrerenderResult,
+  PrerenderToNodeStreamResult,
+} from "react-dom/static";
 import { prerender } from "react-dom/static.browser";
 import { prerenderToNodeStream } from "react-dom/static.node";
 
@@ -731,6 +735,7 @@ it.skip("type tests", async () => {
     })
   ).toEqualTypeOf<{
     result: string;
+    renderFnResult: string;
     aborted: boolean;
     diagnostics?: { renderCount: number };
   }>();
@@ -741,6 +746,7 @@ it.skip("type tests", async () => {
     })
   ).toEqualTypeOf<{
     result: string;
+    renderFnResult: string;
     aborted: boolean;
     diagnostics?: { renderCount: number };
   }>();
@@ -755,6 +761,7 @@ it.skip("type tests", async () => {
       })
     ).toEqualTypeOf<{
       result: string;
+      renderFnResult: PrerenderResult;
       aborted: boolean;
       diagnostics?: { renderCount: number };
     }>();
@@ -765,6 +772,7 @@ it.skip("type tests", async () => {
       })
     ).toEqualTypeOf<{
       result: string;
+      renderFnResult: PrerenderToNodeStreamResult;
       aborted: boolean;
       diagnostics?: { renderCount: number };
     }>();

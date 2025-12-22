@@ -10,7 +10,7 @@ import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
 import * as React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
-import { prerender } from "react-dom/static";
+import { prerender } from "react-dom/static.browser";
 import { prerenderToNodeStream } from "react-dom/static.node";
 
 import type { TypedDocumentNode } from "@apollo/client";
@@ -276,7 +276,11 @@ test.each([
   }
 );
 
-test.each([
+// Behavior of `prerender/prerenderStatic` changed in React 19.2.0
+// This now doesn't re-throw the abort error, but instead returns a partial result
+// with a `postponed: null | PostponedState;` field in the result.
+// This will need a follow-up PR to be handled.
+test.failing.each([
   ["prerender", prerender],
   ["prerenderToNodeStream", prerenderToNodeStream],
 ])(

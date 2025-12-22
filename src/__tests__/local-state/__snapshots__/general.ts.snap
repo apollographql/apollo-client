@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Combining client and server state/operations should handle a simple query with both server and client fields 1`] = `
 [MockFunction] {

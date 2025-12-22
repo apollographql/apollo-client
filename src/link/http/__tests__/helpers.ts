@@ -20,7 +20,7 @@ describe("voidFetchDuringEachTest", () => {
 
   it("hides the global.fetch function", () => {
     expect(window.fetch).toBe(void 0);
-    expect(() => fetch).toThrowError(ReferenceError);
+    expect(() => fetch).toThrow(ReferenceError);
   });
 
   it("globalThis === window", () => {

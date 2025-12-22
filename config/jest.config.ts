@@ -20,7 +20,6 @@ const defaults = {
       "ts-jest",
       {
         // just transpile, no type checking. We type-check in CI by running `tsc` directly.
-        isolatedModules: true,
         tsconfig: join(import.meta.dirname, "..", "tsconfig.tests.json"),
       },
     ],

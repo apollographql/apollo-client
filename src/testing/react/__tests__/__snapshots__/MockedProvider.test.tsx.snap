@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`General use should error if the \`variables\` as callback returns false 1`] = `
 [Error: No more mocked responses for the query:

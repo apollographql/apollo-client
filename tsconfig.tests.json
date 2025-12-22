@@ -5,6 +5,7 @@
     "moduleResolution": "Node",
     "module": "ES2015",
     "allowJs": true,
+    "isolatedModules": true,
     "types": [
       "jest",
       "node",

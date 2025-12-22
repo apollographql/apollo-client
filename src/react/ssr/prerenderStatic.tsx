@@ -242,7 +242,7 @@ export function prerenderStatic<
     },
   };
 
-  async function process(): Promise<prerenderStatic.Result> {
+  async function process(): Promise<prerenderStatic.Result<any>> {
     renderCount++;
     invariant(
       renderCount <= maxRerenders,
@@ -284,15 +284,15 @@ you have an infinite render loop in your application.`,
       return {
         result,
         renderFnResult,
-        aborted: false,
-      } as prerenderStatic.Result<any>;
+        aborted: signal?.aborted ?? false,
+      };
     }
     if (signal?.aborted) {
       return {
         result,
         renderFnResult,
         aborted: true,
-      } as prerenderStatic.Result<any>;
+      };
     }
 
     const dataPromise = Promise.all(

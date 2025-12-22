@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`useQuery Hook SSR should return data written previously to cache during SSR pass if using cache-only fetchPolicy 1`] = `
 Object {

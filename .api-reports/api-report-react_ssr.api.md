@@ -27,7 +27,7 @@ type GetMarkupFromTreeOptions = {
 };
 
 // @public
-export function prerenderStatic({ tree, context, renderFunction, signal, ignoreResults, diagnostics, maxRerenders, }: prerenderStatic.Options): Promise<prerenderStatic.Result>;
+export function prerenderStatic<Prerender extends prerenderStatic.PrerenderFunction = prerenderStatic.PrerenderFunction>({ tree, context, renderFunction, signal, ignoreResults, diagnostics, maxRerenders, }: prerenderStatic.Options<Prerender>): Promise<prerenderStatic.Result<Prerender>>;
 
 // @public (undocumented)
 export namespace prerenderStatic {
@@ -36,17 +36,19 @@ export namespace prerenderStatic {
         renderCount: number;
     }
     // (undocumented)
-    export interface Options {
+    export interface Options<Prerender extends PrerenderFunction = PrerenderFunction> {
         context?: {
             client?: ApolloClient;
         };
         diagnostics?: boolean;
         ignoreResults?: boolean;
         maxRerenders?: number;
-        renderFunction: RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
+        renderFunction: Prerender;
         signal?: AbortSignal;
         tree: ReactTypes.ReactNode;
     }
+    // (undocumented)
+    export type PrerenderFunction = RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
     // (undocumented)
     export type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{
         prelude: AsyncIterable<string | Buffer>;
@@ -60,9 +62,10 @@ export namespace prerenderStatic {
     // (undocumented)
     export type RenderToStringPromise = (element: ReactTypes.ReactNode) => PromiseLike<string>;
     // (undocumented)
-    export interface Result {
+    export interface Result<Prerender extends PrerenderFunction = PrerenderFunction> {
         aborted: boolean;
         diagnostics?: Diagnostics;
+        renderFnResult: ReturnType<Prerender> extends PromiseLike<infer U> ? U : ReturnType<Prerender>;
         result: string;
     }
 }

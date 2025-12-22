@@ -9,7 +9,7 @@ import { expectTypeOf } from "expect-type";
 import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
 import * as React from "react";
-import { renderToStaticMarkup, renderToString, resume } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import {
   type PrerenderResult,
   type PrerenderToNodeStreamResult,

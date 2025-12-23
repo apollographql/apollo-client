@@ -92,7 +92,7 @@ class IncrementalRequest<TData>
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
   private streamDetails = new Trie<{ current: Incremental.StreamFieldDetails }>(
-    true,
+    false,
     () => ({ current: { isFirstChunk: true, isLastChunk: false } })
   );
   // `streamPositions` maps `pending.id` to the index that should be set by the
@@ -239,12 +239,14 @@ class IncrementalRequest<TData>
       result.extensions = this.extensions;
     }
 
-    result.extensions = {
-      ...result.extensions,
-      // Create a new object so we can check for === in QueryInfo to trigger a
-      // final cache write when emitting a `hasNext: false` by itself.
-      [streamDetailsSymbol]: { current: this.streamDetails },
-    } satisfies ExtensionsWithStreamDetails;
+    if (this.streamDetails["strong"]) {
+      result.extensions = {
+        ...result.extensions,
+        // Create a new object so we can check for === in QueryInfo to trigger a
+        // final cache write when emitting a `hasNext: false` by itself.
+        [streamDetailsSymbol]: { current: this.streamDetails },
+      } satisfies ExtensionsWithStreamDetails;
+    }
 
     return result;
   }

@@ -91,7 +91,7 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamDetails = new Trie<{ current: Incremental.StreamFieldDetails }>(
+  private streamDetails = new Trie<{ current: Incremental.StreamFieldInfo }>(
     false,
     () => ({ current: { isFirstChunk: true, isLastChunk: false } })
   );

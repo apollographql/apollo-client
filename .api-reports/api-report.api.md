@@ -1178,9 +1178,9 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions 
 
 // @public (undocumented)
 interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+    existingData: unknown;
     extensions: Record<string, unknown> | undefined;
-    previousData: unknown;
-    streamFieldDetails?: Incremental.StreamFieldDetails;
+    streamFieldInfo?: Incremental.StreamFieldInfo;
 }
 
 // Warning: (ae-forgotten-export) The symbol "FieldReadFunctionOptions" needs to be exported by the entry point index.d.ts
@@ -1411,7 +1411,7 @@ namespace Incremental {
     // (undocumented)
     type Path = ReadonlyArray<string | number>;
     // @internal @deprecated (undocumented)
-    interface StreamFieldDetails {
+    interface StreamFieldInfo {
         // (undocumented)
         isFirstChunk: boolean;
         // (undocumented)
@@ -2844,7 +2844,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:193:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

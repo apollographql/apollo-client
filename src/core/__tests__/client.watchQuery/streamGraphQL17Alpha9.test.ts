@@ -1011,7 +1011,7 @@ test("can use custom merge function to combine cached and streamed lists", async
   await expect(stream).not.toEmitAnything();
 });
 
-test("provides streamFieldDetails to merge functions", async () => {
+test("provides streamFieldInfo to merge functions", async () => {
   const merge = createMockStreamMergeFn();
 
   const cache = new InMemoryCache({
@@ -1098,7 +1098,7 @@ test("provides streamFieldDetails to merge functions", async () => {
     undefined,
     [{ __ref: "Friend:1" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1106,7 +1106,7 @@ test("provides streamFieldDetails to merge functions", async () => {
     [{ __ref: "Friend:1" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1114,12 +1114,12 @@ test("provides streamFieldDetails to merge functions", async () => {
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });
 
-test("returns correct streamFieldDetails when final chunk is only hasNext: false", async () => {
+test("returns correct streamFieldInfo when final chunk is only hasNext: false", async () => {
   const merge = createMockStreamMergeFn();
   const { stream: friendStream, subject } = asyncIterableSubject<Friend>();
 
@@ -1229,7 +1229,7 @@ test("returns correct streamFieldDetails when final chunk is only hasNext: false
     undefined,
     [{ __ref: "Friend:1" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1237,7 +1237,7 @@ test("returns correct streamFieldDetails when final chunk is only hasNext: false
     [{ __ref: "Friend:1" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1245,7 +1245,7 @@ test("returns correct streamFieldDetails when final chunk is only hasNext: false
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1253,12 +1253,12 @@ test("returns correct streamFieldDetails when final chunk is only hasNext: false
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });
 
-test("provides streamFieldDetails to merge functions in nested stream fields", async () => {
+test("provides streamFieldInfo to merge functions in nested stream fields", async () => {
   const merge = createMockStreamMergeFn();
 
   const cache = new InMemoryCache({
@@ -1357,7 +1357,7 @@ test("provides streamFieldDetails to merge functions in nested stream fields", a
     undefined,
     [{ __ref: "Friend:1" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1365,7 +1365,7 @@ test("provides streamFieldDetails to merge functions in nested stream fields", a
     [{ __ref: "Friend:1" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(merge).toHaveBeenNthCalledWith(
@@ -1373,12 +1373,12 @@ test("provides streamFieldDetails to merge functions in nested stream fields", a
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });
 
-test("provides streamFieldDetails to merge functions in sibling stream fields", async () => {
+test("provides streamFieldInfo to merge functions in sibling stream fields", async () => {
   const friendListMerge = createMockStreamMergeFn();
   const nonNullFriendListMerge = createMockStreamMergeFn();
 
@@ -1502,7 +1502,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     undefined,
     [{ __ref: "Friend:1" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(friendListMerge).toHaveBeenNthCalledWith(
@@ -1510,7 +1510,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(friendListMerge).toHaveBeenNthCalledWith(
@@ -1518,7 +1518,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
   expect(friendListMerge).toHaveBeenNthCalledWith(
@@ -1526,7 +1526,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 
@@ -1536,7 +1536,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     undefined,
     [{ __ref: "Friend:1" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
@@ -1544,7 +1544,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
@@ -1552,7 +1552,7 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
@@ -1560,12 +1560,12 @@ test("provides streamFieldDetails to merge functions in sibling stream fields", 
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });
 
-test("provides undefined streamFieldDetails to non-stream merge functions", async () => {
+test("provides undefined streamFieldInfo to non-stream merge functions", async () => {
   const nestedObjectMerge = jest.fn((_, incoming) => incoming);
   const friendListMerge = jest.fn((_, incoming) => incoming);
 
@@ -1639,7 +1639,7 @@ test("provides undefined streamFieldDetails to non-stream merge functions", asyn
     undefined,
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.not.objectContaining({
-      streamFieldDetails: expect.anything(),
+      streamFieldInfo: expect.anything(),
     })
   );
   expect(nestedObjectMerge).toHaveBeenCalledTimes(1);
@@ -1647,12 +1647,12 @@ test("provides undefined streamFieldDetails to non-stream merge functions", asyn
     undefined,
     { __typename: "NestedObject" },
     expect.not.objectContaining({
-      streamFieldDetails: expect.anything(),
+      streamFieldInfo: expect.anything(),
     })
   );
 });
 
-test("sets correct streamFieldDetails when field name is same in different locations", async () => {
+test("sets correct streamFieldInfo when field name is same in different locations", async () => {
   const scalarListMerge = createMockStreamMergeFn();
   const nestedScalarListMerge = createMockStreamMergeFn();
 
@@ -1762,7 +1762,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     undefined,
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(scalarListMerge).toHaveBeenNthCalledWith(
@@ -1770,7 +1770,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one"],
     ["one", "two"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(scalarListMerge).toHaveBeenNthCalledWith(
@@ -1778,7 +1778,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
   expect(scalarListMerge).toHaveBeenNthCalledWith(
@@ -1786,7 +1786,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one", "two", "three"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 
@@ -1796,7 +1796,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     undefined,
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
@@ -1804,7 +1804,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one"],
     ["one", "two"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
@@ -1812,7 +1812,7 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one", "two"],
     ["one", "two"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
@@ -1820,12 +1820,12 @@ test("sets correct streamFieldDetails when field name is same in different locat
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });
 
-test("sets correct streamFieldDetails when stream field is inside another list", async () => {
+test("sets correct streamFieldInfo when stream field is inside another list", async () => {
   const merge = createMockStreamMergeFn();
 
   const cache = new InMemoryCache({
@@ -1990,7 +1990,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     undefined,
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   // friend:2 ["one"]
@@ -1999,7 +1999,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     undefined,
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   // friend:1 ["one", "two"]
@@ -2008,7 +2008,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one"],
     ["one", "two"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   // friend:2 ["one"]
@@ -2017,7 +2017,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one"],
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   // friend:1 ["one", "two", "three"]
@@ -2026,7 +2026,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
   // friend:2 ["one"]
@@ -2035,7 +2035,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one"],
     ["one"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: true, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
     })
   );
   // friend:1 ["one", "two", "three"]
@@ -2044,7 +2044,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one", "two", "three"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
   // friend:2 ["one", "two"]
@@ -2053,7 +2053,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one"],
     ["one", "two"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: false },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
   // friend:1 ["one", "two", "three"]
@@ -2062,7 +2062,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one", "two", "three"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
   // friend:2 ["one", "two", "three"]
@@ -2071,7 +2071,7 @@ test("sets correct streamFieldDetails when stream field is inside another list",
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({
-      streamFieldDetails: { isFirstChunk: false, isLastChunk: true },
+      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 });

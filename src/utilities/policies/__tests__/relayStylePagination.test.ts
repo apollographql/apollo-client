@@ -200,7 +200,7 @@ describe("relayStylePagination", () => {
       const result = merge(undefined, incoming, {
         ...options,
         extensions: undefined,
-        previousData: undefined,
+        existingData: undefined,
       });
       expect(result).toEqual({
         edges: [],
@@ -249,7 +249,7 @@ describe("relayStylePagination", () => {
             after: "alpha",
           },
           extensions: undefined,
-          previousData: existing,
+          existingData: existing,
         }
       );
 
@@ -287,7 +287,7 @@ describe("relayStylePagination", () => {
           after: "alpha",
         },
         extensions: undefined,
-        previousData: fakeExisting,
+        existingData: fakeExisting,
       };
 
       const result = merge(fakeExisting, fakeIncoming, fakeOptions);
@@ -314,7 +314,7 @@ describe("relayStylePagination", () => {
           after: "alpha",
         },
         extensions: undefined,
-        previousData: null,
+        existingData: null,
       });
 
       expect(result).toEqual(incoming);
@@ -358,7 +358,7 @@ describe("relayStylePagination", () => {
             after: "alpha",
           },
           extensions: undefined,
-          previousData: existing,
+          existingData: existing,
         }
       );
 

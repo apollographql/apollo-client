@@ -264,13 +264,13 @@ export interface FieldMergeFunctionOptions<
    * This field is only available in `merge` functions when the `@stream`
    * directive is used on the field.
    */
-  streamFieldDetails?: Incremental.StreamFieldDetails;
+  streamFieldInfo?: Incremental.StreamFieldInfo;
 
   /**
    * The same value as the `existing` argument, but preserves the `existing`
    * value on refetches when `refetchWritePolicy` is `overwrite` (the default).
    */
-  previousData: unknown;
+  existingData: unknown;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -324,16 +324,16 @@ const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
   existing,
   incoming,
-  { streamFieldDetails, previousData }
+  { streamFieldInfo, existingData }
 ) => {
-  if (!existing && !previousData) {
+  if (!existing && !existingData) {
     return incoming;
   }
 
   const results = [];
-  const previous = existing ?? (previousData as any[]);
+  const previous = existing ?? (existingData as any[]);
   const length =
-    streamFieldDetails?.isLastChunk ?
+    streamFieldInfo?.isLastChunk ?
       incoming.length
     : Math.max(previous.length, incoming.length);
 
@@ -1076,7 +1076,7 @@ function makeMergeFieldFunctionOptions(
       storage
     ),
     extensions: context.extensions,
-    previousData,
+    existingData: previousData,
   };
 
   const extensions: ExtensionsWithStreamDetails | undefined =
@@ -1087,10 +1087,8 @@ function makeMergeFieldFunctionOptions(
       extensions;
 
     if (streamDetails?.current.peekArray(fieldSpec.path)) {
-      const streamFieldDetails = streamDetails.current.lookupArray(
-        fieldSpec.path
-      );
-      options.streamFieldDetails = streamFieldDetails.current;
+      const streamFieldInfo = streamDetails.current.lookupArray(fieldSpec.path);
+      options.streamFieldInfo = streamFieldInfo.current;
     }
 
     // If the only key in `extensions` was the stream details key, we didn't

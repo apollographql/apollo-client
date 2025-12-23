@@ -210,7 +210,7 @@ export namespace Incremental {
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
     // @internal @deprecated (undocumented)
-    export interface StreamFieldDetails {
+    export interface StreamFieldInfo {
         // (undocumented)
         isFirstChunk: boolean;
         // (undocumented)

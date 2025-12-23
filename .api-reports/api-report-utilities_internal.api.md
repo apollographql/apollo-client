@@ -210,7 +210,7 @@ export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
     // (undocumented)
     [streamDetailsSymbol]?: {
         current: Trie<{
-            current: Incremental.StreamFieldDetails;
+            current: Incremental.StreamFieldInfo;
         }>;
     };
 }
@@ -495,6 +495,12 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 
 // @internal @deprecated
 export const variablesUnknownSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+export interface WithExtensionsWithStreamDetails {
+    // (undocumented)
+    extensions?: ExtensionsWithStreamDetails;
+}
 
 // Warnings were encountered during analysis:
 //

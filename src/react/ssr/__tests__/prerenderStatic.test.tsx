@@ -10,8 +10,15 @@ import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
 import * as React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
-import { prerender } from "react-dom/static.browser";
-import { prerenderToNodeStream } from "react-dom/static.node";
+import {
+  type PrerenderResult,
+  type PrerenderToNodeStreamResult,
+} from "react-dom/static";
+import { prerender, resumeAndPrerender } from "react-dom/static.browser";
+import {
+  prerenderToNodeStream,
+  resumeAndPrerenderToNodeStream,
+} from "react-dom/static.node";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
@@ -56,10 +63,13 @@ function testSetup() {
 
   function Outlet() {
     const { data } = useSuspenseQuery(query1);
+
     return (
       <div>
         <p>Hello {data.hello}!</p>
-        <Parent />
+        <React.Suspense>
+          <Parent />
+        </React.Suspense>
       </div>
     );
   }
@@ -70,7 +80,9 @@ function testSetup() {
     return (
       <>
         <p>My name is {data.whoami.name}!</p>
-        <Child />
+        <React.Suspense>
+          <Child />
+        </React.Suspense>
       </>
     );
   }
@@ -276,33 +288,32 @@ test.each([
   }
 );
 
-// Behavior of `prerender/prerenderStatic` changed in React 19.2.0
-// This now doesn't re-throw the abort error, but instead returns a partial result
-// with a `postponed: null | PostponedState;` field in the result.
-// This will need a follow-up PR to be handled.
-test.failing.each([
-  ["prerender", prerender],
-  ["prerenderToNodeStream", prerenderToNodeStream],
+test.each([
+  ["prerender", prerender, resumeAndPrerender],
+  [
+    "prerenderToNodeStream",
+    prerenderToNodeStream,
+    resumeAndPrerenderToNodeStream,
+  ],
 ])(
-  "%s: AbortSignal times out during render - React re-throws abort error",
-  async (_, renderFunction) => {
-    const { Outlet, query1, query2 } = testSetup();
+  "%s: AbortSignal times out during render - can be resumed with `resumeAndPrerender`",
+  async (_, renderFunction, resumeFunction) => {
+    const { Outlet, query1, query2, query3 } = testSetup();
     type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
 
     const onError = jest.fn();
 
     const link = new MockSubscriptionLink();
 
-    const client = new ApolloClient({
+    const client1 = new ApolloClient({
       cache: new InMemoryCache(),
       link,
     });
 
-    const controller = new AbortController();
-
+    let controller = new AbortController();
     const promise = prerenderStatic({
       tree: <Outlet />,
-      context: { client },
+      context: { client: client1 },
       renderFunction: (tree) =>
         renderFunction(tree, {
           signal: controller.signal,
@@ -323,6 +334,38 @@ test.failing.each([
     );
 
     await wait(10);
+    controller.abort("AbortReason");
+
+    const initialResult = await promise;
+    expect(initialResult).toStrictEqualTyped({
+      aborted: true,
+      result:
+        '<div><p>Hello <!-- -->world<!-- -->!</p><!--$?--><template id="B:0"></template><!--/$--></div><script>requestAnimationFrame(function(){$RT=performance.now()});</script>',
+      renderFnResult: expect.objectContaining<PrerenderResult>({
+        postponed: expect.any(Object),
+        prelude: expect.anything(), // Readable or ReadableStream depending on the renderer
+      }),
+    });
+
+    expect(initialResult.renderFnResult.postponed).not.toBeNull();
+
+    // The different incremental renders usually don't happen within the same JS context.
+    // We just create a new client to simulate that.
+    const client2 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+    client2.restore(client1.extract());
+    controller = new AbortController();
+    const resumedPromise1 = prerenderStatic({
+      tree: <Outlet />,
+      context: { client: client2 },
+      renderFunction: (tree) =>
+        resumeFunction(tree, initialResult.renderFnResult.postponed, {
+          signal: controller.signal,
+        }),
+      signal: controller.signal,
+    });
 
     link.simulateResult(
       {
@@ -336,10 +379,55 @@ test.failing.each([
     );
 
     await wait(10);
-    controller.abort("AbortReason");
+    controller.abort("AbortReason2");
 
-    await expect(promise).rejects.toEqual("AbortReason");
-    expect(onError).toHaveBeenLastCalledWith("AbortReason", expect.anything());
+    const resumedResult1 = await resumedPromise1;
+    expect(resumedResult1).toStrictEqualTyped({
+      aborted: true,
+      result:
+        '<div hidden id="S:0"><p>My name is <!-- -->Apollo<!-- -->!</p><!--$?--><template id="B:1"></template><!--/$--></div><script>$RB=[];$RV=function(a){$RT=performance.now();for(var b=0;b<a.length;b+=2){var c=a[b],e=a[b+1];null!==e.parentNode&&e.parentNode.removeChild(e);var f=c.parentNode;if(f){var g=c.previousSibling,h=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d||"/&"===d)if(0===h)break;else h--;else"$"!==d&&"$?"!==d&&"$~"!==d&&"$!"!==d&&"&"!==d||h++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;e.firstChild;)f.insertBefore(e.firstChild,c);g.data="$";g._reactRetry&&requestAnimationFrame(g._reactRetry)}}a.length=0};\n' +
+        '$RC=function(a,b){if(b=document.getElementById(b))(a=document.getElementById(a))?(a.previousSibling.data="$~",$RB.push(a,b),2===$RB.length&&("number"!==typeof $RT?requestAnimationFrame($RV.bind(null,$RB)):(a=performance.now(),setTimeout($RV.bind(null,$RB),2300>a&&2E3<a?2300-a:$RT+300-a)))):b.parentNode.removeChild(b)};$RC("B:0","S:0")</script>',
+      renderFnResult: expect.objectContaining<PrerenderResult>({
+        postponed: expect.any(Object),
+        prelude: expect.anything(), // Readable or ReadableStream depending on the renderer
+      }),
+    });
+
+    // The different incremental renders usually don't happen within the same JS context.
+    // We just create a new client to simulate that.
+    const client3 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+    client3.restore(client2.extract());
+    const resumedPromise2 = prerenderStatic({
+      tree: <Outlet />,
+      context: { client: client3 },
+      renderFunction: (tree) =>
+        resumeFunction(tree, resumedResult1.renderFnResult.postponed, {}),
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            currentTime: "now",
+          } satisfies DataFor<typeof query3>,
+        },
+      },
+      true
+    );
+
+    const resumedResult2 = await resumedPromise2;
+    expect(resumedResult2).toStrictEqualTyped({
+      aborted: false,
+      result:
+        '<div hidden id="S:1"><p>Current time is <!-- -->now<!-- -->!</p></div><script>$RC("B:1","S:1")</script>',
+      renderFnResult: expect.objectContaining<PrerenderResult>({
+        postponed: null,
+        prelude: expect.anything(), // Readable or ReadableStream depending on the renderer
+      }),
+    });
   }
 );
 
@@ -483,7 +571,7 @@ test("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1", async (
 
   expect(diagnostics?.renderCount).toBe(1);
   expect(result).toMatchInlineSnapshot(
-    `"<div><p>Hello <!-- -->world<!-- -->!</p><p>My name is <!-- -->Apollo<!-- -->!</p><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p></div>"`
+    `"<div><p>Hello <!-- -->world<!-- -->!</p><!--$--><p>My name is <!-- -->Apollo<!-- -->!</p><!--$--><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p><!--/$--><!--/$--></div>"`
   );
 });
 
@@ -731,6 +819,7 @@ it.skip("type tests", async () => {
     })
   ).toEqualTypeOf<{
     result: string;
+    renderFnResult: string;
     aborted: boolean;
     diagnostics?: { renderCount: number };
   }>();
@@ -741,6 +830,7 @@ it.skip("type tests", async () => {
     })
   ).toEqualTypeOf<{
     result: string;
+    renderFnResult: string;
     aborted: boolean;
     diagnostics?: { renderCount: number };
   }>();
@@ -755,6 +845,7 @@ it.skip("type tests", async () => {
       })
     ).toEqualTypeOf<{
       result: string;
+      renderFnResult: PrerenderResult;
       aborted: boolean;
       diagnostics?: { renderCount: number };
     }>();
@@ -765,6 +856,7 @@ it.skip("type tests", async () => {
       })
     ).toEqualTypeOf<{
       result: string;
+      renderFnResult: PrerenderToNodeStreamResult;
       aborted: boolean;
       diagnostics?: { renderCount: number };
     }>();

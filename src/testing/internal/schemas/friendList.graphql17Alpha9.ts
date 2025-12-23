@@ -13,6 +13,7 @@ const friendType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     nonNullName: { type: new GraphQLNonNull(GraphQLString) },
+    scalarList: { type: new GraphQLList(GraphQLString) },
   },
   name: "Friend",
 });
@@ -47,6 +48,7 @@ const query = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString),
           },
           nestedFriendList: { type: new GraphQLList(friendType) },
+          scalarList: { type: new GraphQLList(GraphQLString) },
           deeperNestedObject: {
             type: new GraphQLObjectType({
               name: "DeeperNestedObject",

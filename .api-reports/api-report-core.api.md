@@ -30,6 +30,7 @@ import { DocumentTransformCacheKey } from '@apollo/client/utilities';
 import { empty } from '@apollo/client/link';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import { execute } from '@apollo/client/link';
+import { extensionsSymbol } from '@apollo/client/utilities/internal';
 import { fallbackHttpConfig } from '@apollo/client/link/http';
 import { FetchResult } from '@apollo/client/link';
 import { FieldFunctionOptions } from '@apollo/client/cache';
@@ -135,6 +136,7 @@ export namespace ApolloClient {
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
             data: Unmasked<TData>;
+            extensions?: Record<string, unknown>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -862,6 +864,14 @@ export { parseAndCheckHttpResponse }
 export { PossibleTypesMap }
 
 // @public (undocumented)
+namespace QueryManager {
+    // (undocumented)
+    type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
+        [extensionsSymbol]?: Record<string, unknown>;
+    };
+}
+
+// @public (undocumented)
 class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
     constructor(options: QueryManagerOptions);
@@ -889,12 +899,13 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode_2;
         fetchQueryOperator?: <T>(source: Observable_2<T>) => Observable_2<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+        exposeExtensions?: boolean;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, networkStatus?: NetworkStatus): Promise<ApolloClient.QueryResult<TData>>;
@@ -1171,8 +1182,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // Warnings were encountered during analysis:
 //
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:370:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

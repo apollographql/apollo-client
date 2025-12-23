@@ -186,6 +186,92 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream).not.toEmitAnything();
   });
 
+  it("provides extensions to merge functions", async () => {
+    const merge = jest.fn((_, incoming) => incoming);
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              name: {
+                merge,
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        variables: { name: "Changping Chen" },
+      })
+    );
+
+    {
+      const { result } = results[0];
+      link.simulateResult({
+        result: { ...result, extensions: { keepAlive: true } },
+        delay: 10,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        ...result,
+        extensions: { keepAlive: true },
+      });
+
+      expect(merge).toHaveBeenCalledTimes(1);
+      expect(merge).toHaveBeenCalledWith(
+        undefined,
+        result.data.user.name,
+        expect.objectContaining({ extensions: { keepAlive: true } })
+      );
+    }
+
+    merge.mockClear();
+
+    {
+      const { result } = results[1];
+      link.simulateResult({
+        result: { ...result, extensions: { keepAlive: false } },
+        delay: 10,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        ...result,
+        extensions: { keepAlive: false },
+      });
+
+      expect(merge).toHaveBeenCalledTimes(1);
+      expect(merge).toHaveBeenCalledWith(
+        results[0].result.data.user.name,
+        result.data.user.name,
+        expect.objectContaining({ extensions: { keepAlive: false } })
+      );
+    }
+
+    merge.mockClear();
+
+    {
+      const { result } = results[2];
+      link.simulateResult({ result, delay: 10 });
+
+      await expect(stream).toEmitTypedValue(result);
+      expect(merge).toHaveBeenCalledTimes(1);
+      expect(merge).toHaveBeenCalledWith(
+        results[1].result.data.user.name,
+        result.data.user.name,
+        expect.objectContaining({ extensions: undefined })
+      );
+    }
+
+    await expect(stream).not.toEmitAnything();
+  });
+
   it("should not cache subscription data if a `no-cache` fetch policy is used", async () => {
     const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();

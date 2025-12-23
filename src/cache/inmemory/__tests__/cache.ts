@@ -290,7 +290,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
@@ -302,7 +302,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -325,7 +325,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
@@ -345,7 +345,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -1212,7 +1212,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
@@ -1225,7 +1225,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -1249,7 +1249,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
@@ -1270,7 +1270,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -3890,19 +3890,19 @@ describe("ReactiveVar and makeVar", () => {
     expect(diffs.length).toBe(5);
 
     expect(cache["watches"].size).toBe(5);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(4);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.shift()!();
     expect(cache["watches"].size).toBe(3);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(2);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     expect(diffs.length).toBe(5);
     unwatchers.push(watch());
@@ -3912,8 +3912,8 @@ describe("ReactiveVar and makeVar", () => {
     unwatchers.forEach((unwatch) => unwatch());
 
     expect(cache["watches"].size).toBe(0);
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(cache);
   });
 
   it("should remove all watchers when cache.reset() called", () => {
@@ -4051,23 +4051,23 @@ describe("ReactiveVar and makeVar", () => {
     expect(names()).toEqual(["Ben", "Ben", "Ben"]);
 
     expect(cache["watches"].size).toBe(3);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(2);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.shift()!();
     expect(cache["watches"].size).toBe(1);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     nameVar("Hugh");
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(0);
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(cache);
 
     // This update is ignored because the cache no longer has any watchers.
     nameVar("ignored");
@@ -4084,8 +4084,8 @@ describe("ReactiveVar and makeVar", () => {
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh", "Jenn"]);
 
     unwatchers.forEach((cancel) => cancel());
-    expect(spy).toBeCalledTimes(2);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledWith(cache);
 
     // Ignored again because all watchers have been cancelled.
     nameVar("also ignored");

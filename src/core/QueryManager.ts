@@ -47,9 +47,11 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { WithExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  extensionsSymbol,
   filterMap,
   getDefaultValues,
   getOperationDefinition,
@@ -61,6 +63,7 @@ import {
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
+  streamDetailsSymbol,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {
@@ -75,6 +78,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
+  DataState,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -143,6 +147,16 @@ interface QueryManagerOptions {
   dataMasking: boolean;
   localState: LocalState | undefined;
   incrementalHandler: Incremental.Handler;
+}
+
+export declare namespace QueryManager {
+  export type Result<
+    TData,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = ObservableQuery.Result<TData, TStates> & {
+    [extensionsSymbol]?: Record<string, unknown>;
+  };
 }
 
 export class QueryManager {
@@ -365,7 +379,9 @@ export class QueryManager {
           map((storeResult) => {
             const hasErrors = graphQLResultHasError(storeResult);
             if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(storeResult);
+              throw new CombinedGraphQLErrors(
+                removeStreamDetailsFromExtensions(storeResult)
+              );
             }
 
             if (mutationStoreValue) {
@@ -1028,10 +1044,12 @@ export class QueryManager {
       queryInfo,
       cacheWriteBehavior,
       observableQuery,
+      exposeExtensions,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      exposeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1062,10 +1080,12 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(result);
+          throw new CombinedGraphQLErrors(
+            removeStreamDetailsFromExtensions(result)
+          );
         }
 
-        const aqr = {
+        const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
             {
@@ -1082,6 +1102,10 @@ export class QueryManager {
             }),
         } as ObservableQuery.Result<TData>;
 
+        if (exposeExtensions && "extensions" in result) {
+          aqr[extensionsSymbol] = result.extensions;
+        }
+
         // In the case we start multiple network requests simultaneously, we
         // want to ensure we properly set `data` if we're reporting on an old
         // result which will not be caught by the conditional above that ends up
@@ -1092,7 +1116,9 @@ export class QueryManager {
             aqr.dataState = "empty";
           }
           if (errorPolicy !== "ignore") {
-            aqr.error = new CombinedGraphQLErrors(result);
+            aqr.error = new CombinedGraphQLErrors(
+              removeStreamDetailsFromExtensions(result)
+            );
             if (aqr.dataState !== "streaming") {
               aqr.networkStatus = NetworkStatus.error;
             }
@@ -1138,12 +1164,23 @@ export class QueryManager {
       fetchQueryOperator = (x) => x,
       onCacheHit = () => {},
       observableQuery,
+      exposeExtensions,
     }: {
       networkStatus?: NetworkStatus;
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
       observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+      /**
+       * Attach `extensions` to the result object so that it is accessible by
+       * the calling code without being exposed to the emitted result.
+       *
+       * @remarks
+       * Used by e.g. `fetchMore` to add `extensions` to the `cache.writeQuery`
+       * call since it uses a `no-cache` query and cannot be written in
+       * `QueryInfo`.
+       */
+      exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVariables;
@@ -1194,7 +1231,13 @@ export class QueryManager {
         : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVariables>(
         normalized,
-        { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
+        {
+          queryInfo,
+          cacheWriteBehavior,
+          onCacheHit,
+          observableQuery,
+          exposeExtensions,
+        }
       );
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
@@ -1523,11 +1566,13 @@ export class QueryManager {
       onCacheHit,
       queryInfo,
       observableQuery,
+      exposeExtensions,
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
       queryInfo: QueryInfo<TData, TVariables>;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
     const readCache = () =>
@@ -1646,6 +1691,7 @@ export class QueryManager {
           cacheWriteBehavior,
           queryInfo,
           observableQuery,
+          exposeExtensions,
         }
       ).pipe(
         validateDidEmitValue(),
@@ -1783,4 +1829,23 @@ function addNonReactiveToNamedFragments(document: DocumentNode) {
       };
     },
   });
+}
+
+function removeStreamDetailsFromExtensions(
+  original: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails
+): FormattedExecutionResult<any> {
+  if (original.extensions?.[streamDetailsSymbol] == null) {
+    return original;
+  }
+
+  const {
+    extensions: { [streamDetailsSymbol]: _, ...extensions },
+    ...result
+  } = original;
+
+  if (Object.keys(extensions).length > 0) {
+    (result as FormattedExecutionResult<any>).extensions = extensions;
+  }
+
+  return result;
 }

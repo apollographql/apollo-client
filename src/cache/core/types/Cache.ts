@@ -77,6 +77,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: Record<string, unknown>;
   }
 
   export interface DiffOptions<
@@ -279,6 +285,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: Record<string, unknown>;
   }
 
   export type WriteFragmentOptions<

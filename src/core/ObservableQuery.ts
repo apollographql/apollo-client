@@ -22,6 +22,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
   equalByQuery,
+  extensionsSymbol,
   filterMap,
   getOperationDefinition,
   getOperationName,
@@ -908,7 +909,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const { observable } = this.queryManager.fetchObservableWithInfo(
       combinedOptions,
-      { networkStatus: NetworkStatus.fetchMore }
+      { networkStatus: NetworkStatus.fetchMore, exposeExtensions: true }
     );
 
     const subscription = observable
@@ -926,7 +927,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .subscribe({
         next: (notification) => {
           wasUpdated = false;
-          const fetchMoreResult = notification.value;
+          const fetchMoreResult: QueryManager.Result<TFetchData> =
+            notification.value;
+          const extensions = fetchMoreResult[extensionsSymbol];
 
           if (isNetworkRequestSettled(notification.value.networkStatus)) {
             finalize();
@@ -950,6 +953,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                       variables: this.variables,
                       returnPartialData: true,
                       optimistic: false,
+                      extensions,
                     },
                     (previous) =>
                       updateQuery(previous! as any, {
@@ -967,6 +971,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     query: combinedOptions.query,
                     variables: combinedOptions.variables,
                     data: fetchMoreResult.data as Unmasked<any>,
+                    extensions,
                   });
                 }
               },

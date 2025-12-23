@@ -182,6 +182,7 @@ export namespace ApolloClient {
         export interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
             broadcast?: boolean;
             data: Unmasked<TData>;
+            extensions?: Record<string, unknown>;
             id?: string;
             overwrite?: boolean;
             query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -748,6 +749,7 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        extensions?: Record<string, unknown>;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -758,6 +760,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
+        extensions?: Record<string, unknown>;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1115,6 +1118,9 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
+// @internal @deprecated
+const extensionsSymbol: unique symbol;
+
 // @public (undocumented)
 export const fallbackHttpConfig: {
     http: BaseHttpLink.HttpOptions;
@@ -1165,18 +1171,33 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     variables?: TVariables;
 }
 
+// Warning: (ae-forgotten-export) The symbol "FieldMergeFunctionOptions" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
 
 // @public (undocumented)
-export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = {
+interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+    existingData: unknown;
+    extensions: Record<string, unknown> | undefined;
+    streamFieldInfo?: Incremental.StreamFieldInfo;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FieldReadFunctionOptions" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions, TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = {
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
-    read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-    merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+    read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+    merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 // @public (undocumented)
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+
+// @public (undocumented)
+interface FieldReadFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+}
 
 // @public (undocumented)
 interface FieldSpecifier {
@@ -1389,6 +1410,13 @@ namespace Incremental {
     }
     // (undocumented)
     type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    interface StreamFieldInfo {
+        // (undocumented)
+        isFirstChunk: boolean;
+        // (undocumented)
+        isLastChunk: boolean;
+    }
 }
 
 // @public (undocumented)
@@ -1733,6 +1761,8 @@ export interface MergeInfo {
     field: FieldNode;
     // (undocumented)
     merge: FieldMergeFunction;
+    // (undocumented)
+    path: Array<string | number>;
     // (undocumented)
     typename: string | undefined;
 }
@@ -2163,7 +2193,7 @@ class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -2227,6 +2257,14 @@ type Prettify<T> = {
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
+namespace QueryManager {
+    // (undocumented)
+    type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
+        [extensionsSymbol]?: Record<string, unknown>;
+    };
+}
+
+// @public (undocumented)
 class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
     constructor(options: QueryManagerOptions);
@@ -2254,12 +2292,13 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode;
         fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
+        exposeExtensions?: boolean;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, networkStatus?: NetworkStatus): Promise<ApolloClient.QueryResult<TData>>;
@@ -2413,6 +2452,8 @@ interface ReadFieldOptions extends FieldSpecifier {
 
 // @public (undocumented)
 export interface ReadMergeModifyContext {
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -2765,6 +2806,8 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
+    // (undocumented)
+    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2794,14 +2837,14 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:125:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:370:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:180:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`exports of public entry points @apollo/client 1`] = `
 Array [
@@ -439,6 +439,7 @@ Array [
   "dealias",
   "decoratePromise",
   "equalByQuery",
+  "extensionsSymbol",
   "filterMap",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
@@ -478,6 +479,7 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
+  "streamDetailsSymbol",
   "stringifyForDisplay",
   "toQueryResult",
   "variablesUnknownSymbol",
@@ -488,6 +490,12 @@ exports[`exports of public entry points @apollo/client/utilities/internal/global
 Array [
   "global",
   "maybe",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/internal/ponyfills 1`] = `
+Array [
+  "FinalizationRegistry",
 ]
 `;
 

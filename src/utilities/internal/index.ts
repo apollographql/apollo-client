@@ -1,5 +1,9 @@
 export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
+export type {
+  ExtensionsWithStreamDetails,
+  WithExtensionsWithStreamDetails,
+} from "./types/ExtensionsWithStreamDetails.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";
@@ -64,7 +68,11 @@ export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
-export { variablesUnknownSymbol } from "./constants.js";
+export {
+  extensionsSymbol,
+  streamDetailsSymbol,
+  variablesUnknownSymbol,
+} from "./constants.js";
 
 export {
   getApolloCacheMemoryInternals,

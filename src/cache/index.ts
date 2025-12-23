@@ -32,8 +32,10 @@ export { cacheSlot, makeVar } from "./inmemory/reactiveVars.js";
 export type {
   FieldFunctionOptions,
   FieldMergeFunction,
+  FieldMergeFunctionOptions,
   FieldPolicy,
   FieldReadFunction,
+  FieldReadFunctionOptions,
   PossibleTypesMap,
   TypePolicies,
   TypePolicy,

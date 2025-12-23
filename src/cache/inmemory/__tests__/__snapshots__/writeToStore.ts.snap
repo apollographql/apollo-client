@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`writing to the store "Cache data may be lost..." warnings should not warn when scalar fields are updated 1`] = `
 Object {

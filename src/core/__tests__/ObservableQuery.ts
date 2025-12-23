@@ -6528,22 +6528,22 @@ test.each(["cache-first", "network-only"] as const)(
         after?: string;
       }
     > = gql`
-  query Items($first: Int, $after: String) {
-    items(first: $first, after: $after) {
-      edges {
-        cursor
-        node {
-          id
-          attributes
+      query Items($first: Int, $after: String) {
+        items(first: $first, after: $after) {
+          edges {
+            cursor
+            node {
+              id
+              attributes
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
         }
       }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`;
+    `;
     const firstResult: ResultOf<typeof query> = {
       items: {
         edges: [

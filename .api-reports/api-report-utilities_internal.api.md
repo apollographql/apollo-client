@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { DataValue } from '@apollo/client';
@@ -15,10 +16,11 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
@@ -30,6 +32,7 @@ import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
+import type { Trie } from '@wry/trie';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
@@ -74,6 +77,11 @@ export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
 
+// @public
+export function combineLatestBatched<T>(observables: Array<Observable<T> & {
+    dirty?: boolean;
+}>): Observable<T[]>;
+
 // Warning: (ae-forgotten-export) The symbol "TupleToIntersection" needs to be exported by the entry point index.d.ts
 //
 // @internal @deprecated
@@ -100,13 +108,32 @@ export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise
 export function decoratePromise<TValue>(promise: Promise<TValue>): DecoratedPromise<TValue>;
 
 // @internal @deprecated (undocumented)
-export class DeepMerger<TContextArgs extends any[]> {
-    // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-    constructor(reconciler?: ReconcilerFunction<TContextArgs>);
+export namespace DeepMerger {
+    // (undocumented)
+    export type ArrayMergeStrategy = "truncate" | "combine";
+    // (undocumented)
+    export interface MergeOptions {
+        // (undocumented)
+        atPath?: ReadonlyArray<string | number>;
+    }
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        arrayMerge?: DeepMerger.ArrayMergeStrategy;
+        // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        reconciler?: ReconcilerFunction;
+    }
+}
+
+// @internal @deprecated (undocumented)
+export class DeepMerger {
+    constructor(options?: DeepMerger.Options);
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)
-    merge(target: any, source: any, ...context: TContextArgs): any;
+    merge(target: any, source: any, mergeOptions?: DeepMerger.MergeOptions): any;
     // (undocumented)
     shallowCopyForMerge<T>(value: T): T;
 }
@@ -174,6 +201,19 @@ export namespace DocumentationTypes {
 
 // @public (undocumented)
 export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+
+// @internal @deprecated
+export const extensionsSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
+    // (undocumented)
+    [streamDetailsSymbol]?: {
+        current: Trie<{
+            current: Incremental.StreamFieldInfo;
+        }>;
+    };
+}
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
@@ -340,6 +380,9 @@ export function makeReference(id: string): Reference;
 // @internal @deprecated
 export function makeUniqueId(prefix: string): string;
 
+// @public (undocumented)
+export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>) => ApolloCache.ObservableFragment<To>;
+
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
 
@@ -384,7 +427,7 @@ export type Primitive = null | undefined | string | number | boolean | symbol | 
 // Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
 //
 // @public (undocumented)
-type ReconcilerFunction<TContextArgs extends any[]> = (this: DeepMerger<TContextArgs>, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number, ...context: TContextArgs) => any;
+type ReconcilerFunction = (this: DeepMerger, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number) => any;
 
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //
@@ -431,6 +474,9 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
+// @internal @deprecated
+export const streamDetailsSymbol: unique symbol;
+
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
 
@@ -450,9 +496,15 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 // @internal @deprecated
 export const variablesUnknownSymbol: unique symbol;
 
+// @internal @deprecated (undocumented)
+export interface WithExtensionsWithStreamDetails {
+    // (undocumented)
+    extensions?: ExtensionsWithStreamDetails;
+}
+
 // Warnings were encountered during analysis:
 //
-// src/utilities/internal/getStoreKeyName.ts:88:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

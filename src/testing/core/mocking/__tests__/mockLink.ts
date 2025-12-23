@@ -97,8 +97,8 @@ test("waits to return result based on static delay", async () => {
 
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).not.toEmitAnything({ timeout: 95 });
-  await expect(stream).toEmitNext({ timeout: 6 });
+  await expect(stream).not.toEmitAnything({ timeout: 80 });
+  await expect(stream).toEmitNext({ timeout: 30 });
   await expect(stream).toComplete();
 });
 

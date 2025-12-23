@@ -7,7 +7,10 @@ import { AutoCleanedWeakCache } from "./caches.js";
  */
 export function memoize<TArgs extends any[], TResult>(
   fn: (...args: TArgs) => TResult,
-  { max }: { max: number }
+  {
+    max,
+    makeCacheKey = (args) => args,
+  }: { max: number; makeCacheKey?: (args: TArgs) => [...any[]] }
 ): (...args: TArgs) => TResult {
   const keys = new Trie<{}>(true);
   const cache = new AutoCleanedWeakCache<
@@ -16,7 +19,7 @@ export function memoize<TArgs extends any[], TResult>(
   >(max);
 
   return (...args: TArgs): TResult => {
-    const cacheKey = keys.lookupArray(args);
+    const cacheKey = keys.lookupArray(makeCacheKey(args));
     const cached = cache.get(cacheKey);
     if (cached) {
       if (cached.error) {

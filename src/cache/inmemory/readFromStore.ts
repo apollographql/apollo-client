@@ -414,7 +414,7 @@ export class StoreReader {
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingTree | undefined;
-    let missingMerger = new DeepMerger<MissingTree[]>();
+    let missingMerger = new DeepMerger();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -424,7 +424,9 @@ export class StoreReader {
     }
 
     if (field.selectionSet) {
-      array = array.filter(context.store.canRead);
+      array = array.filter(
+        (item) => item === undefined || context.store.canRead(item)
+      );
     }
 
     array = array.map((item, i) => {

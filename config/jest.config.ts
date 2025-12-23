@@ -51,11 +51,13 @@ const react17TestFileIgnoreList = [
   // React 17
   "src/testing/experimental/__tests__/createTestSchema.test.tsx",
   "src/react/hooks/__tests__/useSuspenseFragment.test.tsx",
+  "src/react/hooks/__tests__/useSuspenseFragment/*",
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery/*",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
   "src/react/hooks/__tests__/useBackgroundQuery/*",
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",
+  "src/react/hooks/__tests__/useLoadableQuery/*",
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
   "src/react/ssr/__tests__/prerenderStatic.test.tsx",

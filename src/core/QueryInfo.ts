@@ -7,9 +7,11 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
+import type { WithExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
   graphQLResultHasError,
+  streamDetailsSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -44,7 +46,7 @@ export const enum CacheWriteBehavior {
 }
 
 interface LastWrite {
-  result: FormattedExecutionResult<any>;
+  result: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails;
   variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
@@ -157,7 +159,7 @@ export class QueryInfo<
   }
 
   private shouldWrite(
-    result: FormattedExecutionResult<any>,
+    result: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails,
     variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
@@ -168,7 +170,12 @@ export class QueryInfo<
       // the cache will repair what was evicted.
       lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
       equal(variables, lastWrite.variables) &&
-      equal(result.data, lastWrite.result.data)
+      equal(result.data, lastWrite.result.data) &&
+      // We have to compare these values because its possible the final chunk
+      // emitted in the incremental result is just `hasNext: false`. This
+      // ensures we trigger a cache write when we get `isLastChunk: true`.
+      result.extensions?.[streamDetailsSymbol] ===
+        lastWrite.result.extensions?.[streamDetailsSymbol]
     );
   }
 
@@ -259,6 +266,7 @@ export class QueryInfo<
               data: result.data as Unmasked<any>,
               variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+              extensions: result.extensions,
             });
 
             this.lastWrite = {
@@ -394,6 +402,7 @@ export class QueryInfo<
         dataId: "ROOT_MUTATION",
         query: mutation.document,
         variables: mutation.variables,
+        extensions: result.extensions,
       });
 
       const { updateQueries } = mutation;
@@ -600,6 +609,7 @@ export class QueryInfo<
           result: result.data as any,
           dataId: "ROOT_SUBSCRIPTION",
           variables: variables,
+          extensions: result.extensions,
         });
       }
 

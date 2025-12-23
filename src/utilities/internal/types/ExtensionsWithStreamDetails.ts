@@ -10,3 +10,8 @@ export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
     current: Trie<{ current: Incremental.StreamFieldDetails }>;
   };
 }
+
+/** @internal */
+export interface WithExtensionsWithStreamDetails {
+  extensions?: ExtensionsWithStreamDetails;
+}

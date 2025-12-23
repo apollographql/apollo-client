@@ -47,6 +47,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { WithExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
@@ -1831,22 +1832,19 @@ function addNonReactiveToNamedFragments(document: DocumentNode) {
 }
 
 function removeStreamDetailsFromExtensions(
-  original: FormattedExecutionResult<any>
-) {
-  if (!("extensions" in original)) {
+  original: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails
+): FormattedExecutionResult<any> {
+  if (original.extensions?.[streamDetailsSymbol] == null) {
     return original;
   }
 
-  const result = { ...original };
-  delete result.extensions;
-
-  const extensions: Record<string | symbol, any> = {
-    ...original.extensions,
-  };
-  delete extensions[streamDetailsSymbol];
+  const {
+    extensions: { [streamDetailsSymbol]: _, ...extensions },
+    ...result
+  } = original;
 
   if (Object.keys(extensions).length > 0) {
-    result.extensions = extensions;
+    (result as FormattedExecutionResult<any>).extensions = extensions;
   }
 
   return result;

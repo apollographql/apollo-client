@@ -485,7 +485,7 @@ export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TI
 };
 
 // @public (undocumented)
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
 
 // @public (undocumented)
 export interface FieldReadFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {

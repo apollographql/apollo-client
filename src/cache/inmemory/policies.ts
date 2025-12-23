@@ -281,7 +281,7 @@ type MergeObjectsFunction = <T extends StoreObject | Reference>(
 export type FieldReadFunction<
   TExisting = any,
   TReadResult = TExisting,
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions,
 > = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value

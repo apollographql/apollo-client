@@ -217,10 +217,14 @@ class IncrementalRequest<TData>
           this.merge({ data: dataAtPath.slice(0, streamPosition) }, path);
         }
 
-        this.streamDetails.lookupArray(path as any[]).current = {
-          isFirstChunk: false,
-          isLastChunk: true,
-        };
+        // peek instead of lookup to avoid creating an entry for non-array values
+        const details = this.streamDetails.peekArray(path as any[]);
+        if (details) {
+          details.current = {
+            isFirstChunk: false,
+            isLastChunk: true,
+          };
+        }
         this.pending.delete(completed.id);
 
         if (completed.errors) {

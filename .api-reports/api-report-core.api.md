@@ -1183,7 +1183,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 //
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:192:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

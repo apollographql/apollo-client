@@ -1,5 +1,6 @@
 import assert from "node:assert";
 
+import { Trie } from "@wry/trie";
 import { from } from "rxjs";
 
 import type { DocumentNode } from "@apollo/client";
@@ -18,6 +19,7 @@ import {
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
+import { streamDetailsSymbol } from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/stream-test.ts
@@ -51,6 +53,10 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
   });
 }
 
+const extensionsWithStreamDetails = {
+  [streamDetailsSymbol]: { current: expect.any(Trie) },
+};
+
 describe("graphql-js test cases", () => {
   // These test cases mirror stream tests of the `graphql-js` v17.0.0-alpha.9 release:
   // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/stream-test.ts
@@ -78,6 +84,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["apple"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -91,6 +98,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -118,6 +126,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -131,6 +140,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -171,6 +181,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["apple", "banana"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -184,6 +195,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -215,6 +227,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarListList: [["apple", "apple", "apple"]],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -232,6 +245,7 @@ describe("graphql-js test cases", () => {
             ["coconut", "coconut", "coconut"],
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -272,6 +286,7 @@ describe("graphql-js test cases", () => {
             },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -298,6 +313,7 @@ describe("graphql-js test cases", () => {
             },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -329,6 +345,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -342,6 +359,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -358,6 +376,7 @@ describe("graphql-js test cases", () => {
             { name: "Han", id: "2" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -375,6 +394,7 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -413,6 +433,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -426,6 +447,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -439,6 +461,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -452,6 +475,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -494,6 +518,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -507,6 +532,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -550,6 +576,7 @@ describe("graphql-js test cases", () => {
             },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -576,6 +603,7 @@ describe("graphql-js test cases", () => {
             },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -619,6 +647,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -642,6 +671,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -679,6 +709,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -698,6 +729,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -721,6 +753,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -756,6 +789,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -769,6 +803,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -785,23 +820,7 @@ describe("graphql-js test cases", () => {
             { name: "Han", id: "2" },
           ],
         },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
-          friendList: [
-            { name: "Luke", id: "1" },
-            { name: "Han", id: "2" },
-            { name: "Leia", id: "3" },
-          ],
-        },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -819,6 +838,25 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          friendList: [
+            { name: "Luke", id: "1" },
+            { name: "Han", id: "2" },
+            { name: "Leia", id: "3" },
+          ],
+        },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -857,6 +895,7 @@ describe("graphql-js test cases", () => {
             { name: "Han", id: "2" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -874,6 +913,7 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -891,6 +931,7 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -939,6 +980,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -952,6 +994,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -965,6 +1008,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -978,6 +1022,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -991,6 +1036,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1040,6 +1086,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1053,6 +1100,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }, { id: "2" }, { id: "3" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1091,6 +1139,7 @@ describe("graphql-js test cases", () => {
             { name: "Han", id: "2" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1108,6 +1157,7 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1125,6 +1175,7 @@ describe("graphql-js test cases", () => {
             { name: "Leia", id: "3" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1163,6 +1214,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ name: "Luke", id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1182,6 +1234,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1212,6 +1265,7 @@ describe("graphql-js test cases", () => {
         data: {
           nonNullFriendList: [{ name: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1232,6 +1286,7 @@ describe("graphql-js test cases", () => {
             path: ["nonNullFriendList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1264,6 +1319,7 @@ describe("graphql-js test cases", () => {
         data: {
           scalarList: ["Luke"],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1283,6 +1339,7 @@ describe("graphql-js test cases", () => {
             path: ["scalarList", 1],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1319,6 +1376,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ nonNullName: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1338,6 +1396,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1357,6 +1416,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1397,6 +1457,7 @@ describe("graphql-js test cases", () => {
         data: {
           nonNullFriendList: [{ nonNullName: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1416,6 +1477,7 @@ describe("graphql-js test cases", () => {
             path: ["nonNullFriendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1456,6 +1518,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ nonNullName: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1475,6 +1538,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1494,6 +1558,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1513,6 +1578,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 1, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1576,6 +1642,7 @@ describe("graphql-js test cases", () => {
           otherNestedObject: {},
           nestedObject: { nestedFriendList: [] },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1596,6 +1663,7 @@ describe("graphql-js test cases", () => {
             path: ["otherNestedObject", "scalarField"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1616,6 +1684,7 @@ describe("graphql-js test cases", () => {
             path: ["otherNestedObject", "scalarField"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1720,6 +1789,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1740,6 +1810,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 0, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1760,6 +1831,7 @@ describe("graphql-js test cases", () => {
             path: ["friendList", 0, "nonNullName"],
           },
         ],
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1802,6 +1874,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1818,23 +1891,7 @@ describe("graphql-js test cases", () => {
             { id: "2", name: "Han" },
           ],
         },
-      });
-      expect(request.hasNext).toBe(true);
-    }
-
-    {
-      const { value: chunk, done } = await incoming.next();
-
-      assert(!done);
-      assert(handler.isIncrementalResult(chunk));
-      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
-        data: {
-          friendList: [
-            { id: "1", name: "Luke" },
-            { id: "2", name: "Han" },
-            { id: "3", name: "Leia" },
-          ],
-        },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1852,6 +1909,25 @@ describe("graphql-js test cases", () => {
             { id: "3", name: "Leia" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
+      });
+      expect(request.hasNext).toBe(true);
+    }
+
+    {
+      const { value: chunk, done } = await incoming.next();
+
+      assert(!done);
+      assert(handler.isIncrementalResult(chunk));
+      expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        data: {
+          friendList: [
+            { id: "1", name: "Luke" },
+            { id: "2", name: "Han" },
+            { id: "3", name: "Leia" },
+          ],
+        },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -1899,6 +1975,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1914,6 +1991,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ id: "1", name: "Luke" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1932,6 +2010,7 @@ describe("graphql-js test cases", () => {
             ],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -1950,6 +2029,7 @@ describe("graphql-js test cases", () => {
             ],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -2029,6 +2109,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ name: "Luke" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2045,6 +2126,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2061,6 +2143,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -2142,6 +2225,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2158,6 +2242,7 @@ describe("graphql-js test cases", () => {
             nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
           },
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -2206,6 +2291,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2221,6 +2307,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2236,6 +2323,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2249,6 +2337,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2265,6 +2354,7 @@ describe("graphql-js test cases", () => {
             { id: "2", name: "Han" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -2313,6 +2403,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2328,6 +2419,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2341,6 +2433,7 @@ describe("graphql-js test cases", () => {
         data: {
           friendList: [{ id: "1", name: "Luke" }, { id: "2" }],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2357,6 +2450,7 @@ describe("graphql-js test cases", () => {
             { id: "2", name: "Han" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(true);
     }
@@ -2375,6 +2469,7 @@ describe("graphql-js test cases", () => {
             { id: "2", name: "Han" },
           ],
         },
+        extensions: extensionsWithStreamDetails,
       });
       expect(request.hasNext).toBe(false);
     }
@@ -2486,6 +2581,7 @@ test("properly merges streamed data into cache data", async () => {
           { name: "Han", id: "2" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2513,6 +2609,7 @@ test("properly merges streamed data into cache data", async () => {
           { name: "Leia", id: "3" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(false);
   }
@@ -2554,6 +2651,7 @@ test("properly merges streamed data into partial cache data", async () => {
           { name: "Han", id: "2" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2581,6 +2679,7 @@ test("properly merges streamed data into partial cache data", async () => {
           { name: "Leia", id: "3" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(false);
   }
@@ -2622,6 +2721,7 @@ test("properly merges streamed data into list with fewer items", async () => {
           { name: "Han", id: "2" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2649,6 +2749,7 @@ test("properly merges streamed data into list with fewer items", async () => {
           { name: "Leia", id: "3" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(false);
   }
@@ -2695,6 +2796,7 @@ test("properly merges streamed data into list with more items", async () => {
           { name: "Han", id: "2" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2722,6 +2824,7 @@ test("properly merges streamed data into list with more items", async () => {
           { name: "Leia", id: "3" },
         ],
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(false);
   }
@@ -2824,6 +2927,7 @@ test("properly merges cache data when list is included in deferred chunk", async
           nestedFriendList: [{ name: "Luke" }],
         },
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2850,6 +2954,7 @@ test("properly merges cache data when list is included in deferred chunk", async
           nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
         },
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(true);
   }
@@ -2876,6 +2981,7 @@ test("properly merges cache data when list is included in deferred chunk", async
           nestedFriendList: [{ name: "Luke" }, { name: "Han" }],
         },
       },
+      extensions: extensionsWithStreamDetails,
     });
     expect(request.hasNext).toBe(false);
   }

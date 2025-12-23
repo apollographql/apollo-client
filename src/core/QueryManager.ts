@@ -47,6 +47,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { WithExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
@@ -62,6 +63,7 @@ import {
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
+  streamDetailsSymbol,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {
@@ -377,7 +379,9 @@ export class QueryManager {
           map((storeResult) => {
             const hasErrors = graphQLResultHasError(storeResult);
             if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(storeResult);
+              throw new CombinedGraphQLErrors(
+                removeStreamDetailsFromExtensions(storeResult)
+              );
             }
 
             if (mutationStoreValue) {
@@ -1076,7 +1080,9 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(result);
+          throw new CombinedGraphQLErrors(
+            removeStreamDetailsFromExtensions(result)
+          );
         }
 
         const aqr: QueryManager.Result<TData> = {
@@ -1110,7 +1116,9 @@ export class QueryManager {
             aqr.dataState = "empty";
           }
           if (errorPolicy !== "ignore") {
-            aqr.error = new CombinedGraphQLErrors(result);
+            aqr.error = new CombinedGraphQLErrors(
+              removeStreamDetailsFromExtensions(result)
+            );
             if (aqr.dataState !== "streaming") {
               aqr.networkStatus = NetworkStatus.error;
             }
@@ -1821,4 +1829,23 @@ function addNonReactiveToNamedFragments(document: DocumentNode) {
       };
     },
   });
+}
+
+function removeStreamDetailsFromExtensions(
+  original: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails
+): FormattedExecutionResult<any> {
+  if (original.extensions?.[streamDetailsSymbol] == null) {
+    return original;
+  }
+
+  const {
+    extensions: { [streamDetailsSymbol]: _, ...extensions },
+    ...result
+  } = original;
+
+  if (Object.keys(extensions).length > 0) {
+    (result as FormattedExecutionResult<any>).extensions = extensions;
+  }
+
+  return result;
 }

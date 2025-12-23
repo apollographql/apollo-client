@@ -7,6 +7,7 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
+import type { WithExtensionsWithStreamDetails } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
   graphQLResultHasError,
@@ -45,7 +46,7 @@ export const enum CacheWriteBehavior {
 }
 
 interface LastWrite {
-  result: FormattedExecutionResult<any>;
+  result: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails;
   variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
@@ -158,7 +159,7 @@ export class QueryInfo<
   }
 
   private shouldWrite(
-    result: FormattedExecutionResult<any>,
+    result: FormattedExecutionResult<any> & WithExtensionsWithStreamDetails,
     variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
@@ -173,8 +174,8 @@ export class QueryInfo<
       // We have to compare these values because its possible the final chunk
       // emitted in the incremental result is just `hasNext: false`. This
       // ensures we trigger a cache write when we get `isLastChunk: true`.
-      result.extensions?.[streamDetailsSymbol as any] ===
-        lastWrite.result.extensions?.[streamDetailsSymbol as any]
+      result.extensions?.[streamDetailsSymbol] ===
+        lastWrite.result.extensions?.[streamDetailsSymbol]
     );
   }
 

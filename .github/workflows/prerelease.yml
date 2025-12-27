@@ -31,7 +31,7 @@ jobs:
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Fetch entire git history so  Changesets can generate changelogs

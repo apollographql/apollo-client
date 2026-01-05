@@ -21,7 +21,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  ExtensionsWithStreamDetails,
+  ExtensionsWithStreamInfo,
   FragmentMap,
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
@@ -38,7 +38,7 @@ import {
   makeReference,
   resultKeyNameFromField,
   shouldInclude,
-  streamDetailsSymbol,
+  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import {
   invariant,
@@ -402,8 +402,8 @@ export class StoreWriter {
         } else if (
           hasDirectives(["stream"], field) &&
           Array.isArray(incomingValue) &&
-          (context.extensions as ExtensionsWithStreamDetails | undefined)?.[
-            streamDetailsSymbol
+          (context.extensions as ExtensionsWithStreamInfo | undefined)?.[
+            streamInfoSymbol
           ]
         ) {
           childTree.info = {

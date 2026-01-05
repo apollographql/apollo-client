@@ -206,9 +206,9 @@ export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Par
 export const extensionsSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
-export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
+export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
-    [streamDetailsSymbol]?: {
+    [streamInfoSymbol]?: {
         current: Trie<{
             current: Incremental.StreamFieldInfo;
         }>;
@@ -475,7 +475,7 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 let storeKeyNameStringify: (value: any) => string;
 
 // @internal @deprecated
-export const streamDetailsSymbol: unique symbol;
+export const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
@@ -497,9 +497,9 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 export const variablesUnknownSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
-export interface WithExtensionsWithStreamDetails {
+export interface WithExtensionsWithStreamInfo {
     // (undocumented)
-    extensions?: ExtensionsWithStreamDetails;
+    extensions?: ExtensionsWithStreamInfo;
 }
 
 // Warnings were encountered during analysis:

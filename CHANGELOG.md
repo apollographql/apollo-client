@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.0.12-beta.0
+
+### Patch Changes
+
+- [#12884](https://github.com/apollographql/apollo-client/pull/12884) [`d329790`](https://github.com/apollographql/apollo-client/commit/d32979070381f1897c90fb276e25a0c8375cc29a) Thanks [@phryneas](https://github.com/phryneas)! - Ensure that `PreloadedQueryRef` instances are unsubscribed when garbage collected
+
+- [#13069](https://github.com/apollographql/apollo-client/pull/13069) [`9cad04a`](https://github.com/apollographql/apollo-client/commit/9cad04a4228a5059ea330ac9d284407a363fc10d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Truncate @stream arrays only on last chunk by default
+
 ## 4.1.0-alpha.9
 
 ### Minor Changes

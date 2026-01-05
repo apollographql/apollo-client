@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "alpha",
+  "tag": "beta",
   "initialVersions": {
     "@apollo/client": "4.0.4",
     "@apollo/client-graphql-codegen": "1.0.0",
@@ -9,12 +9,14 @@
   "changesets": [
     "beige-hounds-whisper",
     "big-flowers-move",
+    "clever-students-guess",
     "cold-kiwis-give",
     "early-flies-thank",
     "famous-hats-explode",
     "few-parrots-raise",
     "flat-worms-notice",
     "funny-bats-hammer",
+    "gentle-onions-tickle",
     "large-ligers-prove",
     "little-yaks-decide",
     "neat-lemons-shave",

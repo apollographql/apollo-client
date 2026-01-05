@@ -9,7 +9,7 @@ import { getApolloContext } from "../context/ApolloContext.js";
  * @example
  *
  * ```jsx
- * import { useApolloClient } from "@apollo/client";
+ * import { useApolloClient } from "@apollo/client/react";
  *
  * function SomeComponent() {
  *   const client = useApolloClient();

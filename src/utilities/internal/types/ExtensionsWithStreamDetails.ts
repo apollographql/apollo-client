@@ -2,16 +2,16 @@ import type { Trie } from "@wry/trie";
 
 import type { Incremental } from "@apollo/client/incremental";
 
-import type { streamDetailsSymbol } from "../constants.js";
+import type { streamInfoSymbol } from "../constants.js";
 
 /** @internal */
-export interface ExtensionsWithStreamDetails extends Record<string, unknown> {
-  [streamDetailsSymbol]?: {
+export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
+  [streamInfoSymbol]?: {
     current: Trie<{ current: Incremental.StreamFieldInfo }>;
   };
 }
 
 /** @internal */
-export interface WithExtensionsWithStreamDetails {
-  extensions?: ExtensionsWithStreamDetails;
+export interface WithExtensionsWithStreamInfo {
+  extensions?: ExtensionsWithStreamInfo;
 }

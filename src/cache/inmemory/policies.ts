@@ -263,6 +263,9 @@ export interface FieldMergeFunctionOptions<
    *
    * This field is only available in `merge` functions when the `@stream`
    * directive is used on the field.
+   *
+   * > [!NOTE]
+   * > This field is not available when using the `Defer20220824Handler`
    */
   streamFieldInfo?: Incremental.StreamFieldInfo;
 

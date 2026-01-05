@@ -18,6 +18,7 @@ import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
+  bindCacheKey,
   equalByQuery,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
@@ -427,6 +428,7 @@ export abstract class ApolloCache {
       cacheSizes["cache.fragmentQueryDocuments"] ||
       defaultCacheSizes["cache.fragmentQueryDocuments"],
     cache: WeakCache,
+    makeCacheKey: bindCacheKey(this),
   });
 
   /**

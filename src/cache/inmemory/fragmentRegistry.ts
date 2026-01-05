@@ -10,7 +10,10 @@ import { wrap } from "optimism";
 
 import { cacheSizes } from "@apollo/client/utilities";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
-import { getFragmentDefinitions } from "@apollo/client/utilities/internal";
+import {
+  bindCacheKey,
+  getFragmentDefinitions,
+} from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 export interface FragmentRegistryAPI {
@@ -69,18 +72,23 @@ class FragmentRegistry implements FragmentRegistryAPI {
   public resetCaches() {
     const proto = FragmentRegistry.prototype;
     this.invalidate = (this.lookup = wrap(proto.lookup.bind(this), {
+      // This is intentionally an identity function - a string cannot be keyed weakly.
+      // This is not a memory leak, as lifetime is bound to the `FragmentRegistry` instance,
+      // and max size is configurable.
       makeCacheKey: (arg) => arg,
       max:
         cacheSizes["fragmentRegistry.lookup"] ||
         defaultCacheSizes["fragmentRegistry.lookup"],
     })).dirty; // This dirty function is bound to the wrapped lookup method.
     this.transform = wrap(proto.transform.bind(this), {
+      makeCacheKey: bindCacheKey(this),
       cache: WeakCache,
       max:
         cacheSizes["fragmentRegistry.transform"] ||
         defaultCacheSizes["fragmentRegistry.transform"],
     });
     this.findFragmentSpreads = wrap(proto.findFragmentSpreads.bind(this), {
+      makeCacheKey: bindCacheKey(this),
       cache: WeakCache,
       max:
         cacheSizes["fragmentRegistry.findFragmentSpreads"] ||

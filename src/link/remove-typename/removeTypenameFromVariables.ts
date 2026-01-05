@@ -181,7 +181,7 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
     );
   }
 
-  maybeStripTypenameUsingConfig(
+  private maybeStripTypenameUsingConfig(
     query: DocumentNode,
     variables: OperationVariables,
     config: RemoveTypenameFromVariablesLink.KeepTypenameConfig
@@ -204,7 +204,7 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
     );
   }
 
-  maybeStripTypename(
+  private maybeStripTypename(
     value: JSONValue,
     config: RemoveTypenameFromVariablesLink.KeepTypenameConfig[string]
   ): JSONValue {
@@ -240,7 +240,7 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
     return value;
   }
 
-  getVariableDefinitions = wrap(
+  private getVariableDefinitions = wrap(
     (document: DocumentNode) => {
       const definitions: Record<string, string> = {};
 

@@ -419,6 +419,7 @@ Array [
   "AutoCleanedWeakCache",
   "DeepMerger",
   "argumentsObjectFromField",
+  "bindCacheKey",
   "canUseDOM",
   "canonicalStringify",
   "checkDocument",

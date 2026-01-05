@@ -479,7 +479,7 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
-  "streamDetailsSymbol",
+  "streamInfoSymbol",
   "stringifyForDisplay",
   "toQueryResult",
   "variablesUnknownSymbol",

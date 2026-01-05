@@ -8,7 +8,7 @@ import { defaultMakeCacheKey } from "optimism";
  * the `this` context of classes owning wrapped functions, to ensure that
  * the cache keys are collected from memory when the owning object is garbage collected.
  *
- * Without this, cache keys can stay in memory indifenitely, even though the owning
+ * Without this, cache keys can stay in memory indefinitely, even though the owning
  * Apollo Client instance is long gone.
  * This is a risk in long-running processes with `[DocumentNode, string, string]`
  * style cache keys with persistent document nodes.

@@ -970,7 +970,7 @@ export class Policies {
     storage?: StorageType
   ) {
     // Preserve the value in case `context.overwrite` is set.
-    const previousData = existing;
+    const existingData = existing;
     if (merge === mergeTrueFn) {
       // Instead of going to the trouble of creating a full
       // FieldFunctionOptions object and calling mergeTrueFn, we can
@@ -1020,7 +1020,7 @@ export class Policies {
         },
         context,
         storage || {},
-        previousData
+        existingData
       )
     );
   }
@@ -1065,7 +1065,7 @@ function makeMergeFieldFunctionOptions(
   fieldSpec: FieldSpecifier & { path: Array<string | number> },
   context: ReadMergeModifyContext,
   storage: StorageType,
-  previousData?: unknown
+  existingData?: unknown
 ): FieldMergeFunctionOptions {
   const options: FieldMergeFunctionOptions = {
     ...makeFieldFunctionOptions(
@@ -1076,7 +1076,7 @@ function makeMergeFieldFunctionOptions(
       storage
     ),
     extensions: context.extensions,
-    existingData: previousData,
+    existingData,
   };
 
   const extensions: ExtensionsWithStreamDetails | undefined =

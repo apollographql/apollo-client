@@ -1,8 +1,8 @@
 export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type {
-  ExtensionsWithStreamDetails,
-  WithExtensionsWithStreamDetails,
+  ExtensionsWithStreamInfo,
+  WithExtensionsWithStreamInfo,
 } from "./types/ExtensionsWithStreamDetails.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
@@ -70,7 +70,7 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
-  streamDetailsSymbol,
+  streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";
 

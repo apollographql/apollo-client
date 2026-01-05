@@ -19,7 +19,7 @@ import {
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
-import { streamDetailsSymbol } from "@apollo/client/utilities/internal";
+import { streamInfoSymbol } from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/stream-test.ts
@@ -54,7 +54,7 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
 }
 
 const extensionsWithStreamDetails = {
-  [streamDetailsSymbol]: { current: expect.any(Trie) },
+  [streamInfoSymbol]: { current: expect.any(Trie) },
 };
 
 describe("graphql-js test cases", () => {

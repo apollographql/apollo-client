@@ -16,10 +16,10 @@ import type {
 import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  ExtensionsWithStreamDetails,
+  ExtensionsWithStreamInfo,
   FragmentMap,
 } from "@apollo/client/utilities/internal";
-import { streamDetailsSymbol } from "@apollo/client/utilities/internal";
+import { streamInfoSymbol } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
   getStoreKeyName,
@@ -1079,15 +1079,13 @@ function makeMergeFieldFunctionOptions(
     existingData,
   };
 
-  const extensions: ExtensionsWithStreamDetails | undefined =
-    context.extensions;
+  const extensions: ExtensionsWithStreamInfo | undefined = context.extensions;
 
-  if (extensions && streamDetailsSymbol in extensions) {
-    const { [streamDetailsSymbol]: streamDetails, ...otherExtensions } =
-      extensions;
+  if (extensions && streamInfoSymbol in extensions) {
+    const { [streamInfoSymbol]: streamInfo, ...otherExtensions } = extensions;
 
-    if (streamDetails?.current.peekArray(fieldSpec.path)) {
-      const streamFieldInfo = streamDetails.current.lookupArray(fieldSpec.path);
+    if (streamInfo?.current.peekArray(fieldSpec.path)) {
+      const streamFieldInfo = streamInfo.current.lookupArray(fieldSpec.path);
       options.streamFieldInfo = streamFieldInfo.current;
     }
 

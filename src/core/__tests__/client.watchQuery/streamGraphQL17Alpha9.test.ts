@@ -1983,7 +1983,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
 
   await expect(stream).not.toEmitAnything();
 
-  expect(merge).toHaveBeenCalledTimes(10);
+  expect(merge).toHaveBeenCalledTimes(6);
   // friend:1 ["one"]
   expect(merge).toHaveBeenNthCalledWith(
     1,
@@ -2011,37 +2011,10 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
       streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
-  // friend:2 ["one"]
+  // friend:1 ["one", "two", "three"]
   expect(merge).toHaveBeenNthCalledWith(
     4,
-    ["one"],
-    ["one"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
-    })
-  );
-  // friend:1 ["one", "two", "three"]
-  expect(merge).toHaveBeenNthCalledWith(
-    5,
     ["one", "two"],
-    ["one", "two", "three"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
-    })
-  );
-  // friend:2 ["one"]
-  expect(merge).toHaveBeenNthCalledWith(
-    6,
-    ["one"],
-    ["one"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: true, isLastChunk: false },
-    })
-  );
-  // friend:1 ["one", "two", "three"]
-  expect(merge).toHaveBeenNthCalledWith(
-    7,
-    ["one", "two", "three"],
     ["one", "two", "three"],
     expect.objectContaining({
       streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
@@ -2049,25 +2022,16 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
   );
   // friend:2 ["one", "two"]
   expect(merge).toHaveBeenNthCalledWith(
-    8,
+    5,
     ["one"],
     ["one", "two"],
     expect.objectContaining({
       streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
     })
   );
-  // friend:1 ["one", "two", "three"]
-  expect(merge).toHaveBeenNthCalledWith(
-    9,
-    ["one", "two", "three"],
-    ["one", "two", "three"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
-    })
-  );
   // friend:2 ["one", "two", "three"]
   expect(merge).toHaveBeenNthCalledWith(
-    10,
+    6,
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({

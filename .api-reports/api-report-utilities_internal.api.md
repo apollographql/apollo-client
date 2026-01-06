@@ -211,6 +211,11 @@ export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     [streamInfoSymbol]?: {
         current: Trie<{
             current: Incremental.StreamFieldInfo;
+            previous?: {
+                incoming: unknown;
+                streamFieldInfo: Incremental.StreamFieldInfo;
+                result: unknown;
+            };
         }>;
     };
 }

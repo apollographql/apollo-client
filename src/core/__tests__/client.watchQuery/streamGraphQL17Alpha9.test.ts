@@ -1496,7 +1496,7 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
 
   await expect(stream).not.toEmitAnything();
 
-  expect(friendListMerge).toHaveBeenCalledTimes(4);
+  expect(friendListMerge).toHaveBeenCalledTimes(3);
   expect(friendListMerge).toHaveBeenNthCalledWith(
     1,
     undefined,
@@ -1516,21 +1516,13 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
   expect(friendListMerge).toHaveBeenNthCalledWith(
     3,
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
-    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
-    })
-  );
-  expect(friendListMerge).toHaveBeenNthCalledWith(
-    4,
-    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
       streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 
-  expect(nonNullFriendListMerge).toHaveBeenCalledTimes(4);
+  expect(nonNullFriendListMerge).toHaveBeenCalledTimes(3);
   expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
     1,
     undefined,
@@ -1549,14 +1541,6 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
   );
   expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
     3,
-    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
-    [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
-    })
-  );
-  expect(nonNullFriendListMerge).toHaveBeenNthCalledWith(
-    4,
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }],
     [{ __ref: "Friend:1" }, { __ref: "Friend:2" }, { __ref: "Friend:3" }],
     expect.objectContaining({
@@ -1756,7 +1740,7 @@ test("sets correct streamFieldInfo when field name is same in different location
 
   await expect(stream).not.toEmitAnything();
 
-  expect(scalarListMerge).toHaveBeenCalledTimes(4);
+  expect(scalarListMerge).toHaveBeenCalledTimes(3);
   expect(scalarListMerge).toHaveBeenNthCalledWith(
     1,
     undefined,
@@ -1776,21 +1760,13 @@ test("sets correct streamFieldInfo when field name is same in different location
   expect(scalarListMerge).toHaveBeenNthCalledWith(
     3,
     ["one", "two"],
-    ["one", "two", "three"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
-    })
-  );
-  expect(scalarListMerge).toHaveBeenNthCalledWith(
-    4,
-    ["one", "two", "three"],
     ["one", "two", "three"],
     expect.objectContaining({
       streamFieldInfo: { isFirstChunk: false, isLastChunk: true },
     })
   );
 
-  expect(nestedScalarListMerge).toHaveBeenCalledTimes(4);
+  expect(nestedScalarListMerge).toHaveBeenCalledTimes(3);
   expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
     1,
     undefined,
@@ -1809,14 +1785,6 @@ test("sets correct streamFieldInfo when field name is same in different location
   );
   expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
     3,
-    ["one", "two"],
-    ["one", "two"],
-    expect.objectContaining({
-      streamFieldInfo: { isFirstChunk: false, isLastChunk: false },
-    })
-  );
-  expect(nestedScalarListMerge).toHaveBeenNthCalledWith(
-    4,
     ["one", "two"],
     ["one", "two", "three"],
     expect.objectContaining({

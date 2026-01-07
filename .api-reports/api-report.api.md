@@ -749,7 +749,8 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
-        extensions?: Record<string, unknown>;
+        // Warning: (ae-forgotten-export) The symbol "ExtensionsWithStreamInfo" needs to be exported by the entry point index.d.ts
+        extensions?: ExtensionsWithStreamInfo;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -760,7 +761,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
-        extensions?: Record<string, unknown>;
+        extensions?: ExtensionsWithStreamInfo;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1120,6 +1121,14 @@ export const execute: typeof ApolloLink.execute;
 
 // @internal @deprecated
 const extensionsSymbol: unique symbol;
+
+// @public
+interface ExtensionsWithStreamInfo extends Record<string, unknown> {
+    // (undocumented)
+    [streamInfoSymbol]?: {
+        deref(): StreamInfoTrie | undefined;
+    };
+}
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
@@ -2260,7 +2269,7 @@ type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 namespace QueryManager {
     // (undocumented)
     type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
-        [extensionsSymbol]?: Record<string, unknown>;
+        [extensionsSymbol]?: ExtensionsWithStreamInfo;
     };
 }
 
@@ -2453,7 +2462,7 @@ interface ReadFieldOptions extends FieldSpecifier {
 // @public (undocumented)
 export interface ReadMergeModifyContext {
     // (undocumented)
-    extensions?: Record<string, unknown>;
+    extensions?: ExtensionsWithStreamInfo;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -2646,6 +2655,19 @@ Item
 // @public
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
+// @public
+const streamInfoSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+type StreamInfoTrie = Trie<{
+    current: Incremental.StreamFieldInfo;
+    previous?: {
+        incoming: unknown;
+        streamFieldInfo: Incremental.StreamFieldInfo;
+        result: unknown;
+    };
+}>;
+
 // @public (undocumented)
 class Stump extends Layer {
     constructor(root: Root);
@@ -2806,8 +2828,6 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
-    // (undocumented)
-    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2837,10 +2857,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:125:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:104:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:101:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
@@ -2848,6 +2868,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

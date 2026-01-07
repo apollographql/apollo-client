@@ -7,7 +7,7 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type { WithExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
   graphQLResultHasError,
@@ -46,7 +46,7 @@ export const enum CacheWriteBehavior {
 }
 
 interface LastWrite {
-  result: FormattedExecutionResult<any> & WithExtensionsWithStreamInfo;
+  result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>;
   variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
@@ -159,7 +159,7 @@ export class QueryInfo<
   }
 
   private shouldWrite(
-    result: FormattedExecutionResult<any> & WithExtensionsWithStreamInfo,
+    result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>,
     variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
@@ -188,7 +188,8 @@ export class QueryInfo<
     incoming: ApolloLink.Result<TData>,
     query: DocumentNode
   ): FormattedExecutionResult<
-    DataValue.Complete<TData> | DataValue.Streaming<TData>
+    DataValue.Complete<TData> | DataValue.Streaming<TData>,
+    ExtensionsWithStreamInfo
   > {
     const { incrementalHandler } = this.queryManager;
 
@@ -216,7 +217,8 @@ export class QueryInfo<
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
   ): FormattedExecutionResult<
-    DataValue.Complete<TData> | DataValue.Streaming<TData>
+    DataValue.Complete<TData> | DataValue.Streaming<TData>,
+    ExtensionsWithStreamInfo
   > {
     const diffOptions = {
       query,
@@ -359,7 +361,8 @@ export class QueryInfo<
     cache = this.cache
   ): Promise<
     FormattedExecutionResult<
-      DataValue.Complete<TData> | DataValue.Streaming<TData>
+      DataValue.Complete<TData> | DataValue.Streaming<TData>,
+      ExtensionsWithStreamInfo
     >
   > {
     const cacheWrites: Cache.WriteOptions[] = [];

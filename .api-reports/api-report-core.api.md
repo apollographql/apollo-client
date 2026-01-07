@@ -31,6 +31,7 @@ import { empty } from '@apollo/client/link';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import { execute } from '@apollo/client/link';
 import { extensionsSymbol } from '@apollo/client/utilities/internal';
+import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
 import { fallbackHttpConfig } from '@apollo/client/link/http';
 import { FetchResult } from '@apollo/client/link';
 import { FieldFunctionOptions } from '@apollo/client/cache';
@@ -867,7 +868,7 @@ export { PossibleTypesMap }
 namespace QueryManager {
     // (undocumented)
     type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
-        [extensionsSymbol]?: Record<string, unknown>;
+        [extensionsSymbol]?: ExtensionsWithStreamInfo;
     };
 }
 

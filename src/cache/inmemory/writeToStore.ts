@@ -21,7 +21,6 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  ExtensionsWithStreamInfo,
   FragmentMap,
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
@@ -91,7 +90,6 @@ export interface WriteContext extends ReadMergeModifyContext {
   clientOnly: boolean;
   deferred: boolean;
   flavors: Map<string, FlavorableWriteContext>;
-  extensions?: Record<string, unknown>;
 }
 
 type FlavorableWriteContext = Pick<
@@ -402,9 +400,7 @@ export class StoreWriter {
         } else if (
           hasDirectives(["stream"], field) &&
           Array.isArray(incomingValue) &&
-          (context.extensions as ExtensionsWithStreamInfo | undefined)?.[
-            streamInfoSymbol
-          ]
+          context.extensions?.[streamInfoSymbol]
         ) {
           childTree.info = {
             field,

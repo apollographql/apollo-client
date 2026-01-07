@@ -128,7 +128,6 @@ function loadApiModel(options: BuildStepOptions) {
 
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);
     configObject.mainEntryPointFilePath = entryPointFile;
-
     configObject.docModel = {
       ...configObject.docModel,
       enabled: true,

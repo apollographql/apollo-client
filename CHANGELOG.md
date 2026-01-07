@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 4.1.0-rc.0
+
+### Minor Changes
+
+- [#13078](https://github.com/apollographql/apollo-client/pull/13078) [`bf1e0dc`](https://github.com/apollographql/apollo-client/commit/bf1e0dcb2f6c9b94576dc6d049745f1869cd0043) Thanks [@phryneas](https://github.com/phryneas)! - Use the default stream merge function for `@stream` fields only if stream info is present. This change means that using the older `Defer20220824Handler` will not use the default stream merge function and will instead truncate the streamed array on the first chunk.
+
+### Patch Changes
+
+- [#13083](https://github.com/apollographql/apollo-client/pull/13083) [`f3c2be1`](https://github.com/apollographql/apollo-client/commit/f3c2be1665d8e2e260a4f55ec803d6e609748390) Thanks [@phryneas](https://github.com/phryneas)! - Expose the `ExtensionsWithStreamInfo` type for `extensions` in `Cache.writeQuery`, `Cache.write` and `Cache.update` so other cache implementations also can correctly access them.
+
+- [#13082](https://github.com/apollographql/apollo-client/pull/13082) [`c257418`](https://github.com/apollographql/apollo-client/commit/c2574181f6b0d9ae059dfa3822a7842ec5f8ff1f) Thanks [@phryneas](https://github.com/phryneas)! - Pass `streamInfo` through result extensions as a `WeakRef`.
+
+- [#13081](https://github.com/apollographql/apollo-client/pull/13081) [`1e06ad7`](https://github.com/apollographql/apollo-client/commit/1e06ad7399716139fcfbec7423697eafc5750f5e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Avoid calling `merge` functions more than once for the same incremental chunk.
+
 ## 4.0.12-beta.0
 
 ### Patch Changes

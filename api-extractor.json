@@ -21,8 +21,7 @@
    * Determines how the TypeScript compiler engine will be invoked by API Extractor.
    */
   "compiler": {
-    "tsconfigFilePath": "<projectFolder>/tsconfig.json",
-    "overrideTsconfig": {},
+    "overrideTsconfig": { "compilerOptions": { "lib": ["ESNext"] } },
     "skipLibCheck": true
   },
 

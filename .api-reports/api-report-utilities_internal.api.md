@@ -208,9 +208,7 @@ export const extensionsSymbol: unique symbol;
 // @internal @deprecated (undocumented)
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
-    [streamInfoSymbol]?: {
-        current: StreamInfoTrie;
-    };
+    [streamInfoSymbol]?: WeakRef<StreamInfoTrie>;
 }
 
 // @public (undocumented)

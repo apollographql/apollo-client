@@ -129,10 +129,6 @@ function loadApiModel(options: BuildStepOptions) {
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);
     configObject.mainEntryPointFilePath = entryPointFile;
 
-    configObject.compiler!.overrideTsconfig = {
-      compilerOptions: { lib: ["ESNext"] },
-    };
-
     configObject.docModel = {
       ...configObject.docModel,
       enabled: true,

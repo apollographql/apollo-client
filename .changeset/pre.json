@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "beta",
+  "tag": "rc",
   "initialVersions": {
     "@apollo/client": "4.0.4",
     "@apollo/client-graphql-codegen": "1.0.0",

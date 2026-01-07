@@ -6,9 +6,8 @@
 export const extensionsSymbol = Symbol.for("apollo.result.extensions");
 
 /**
- * @internal
- * Used to provide details about `@stream` fields to cache merge functions. Only
- * use internally!
+ * For use in Cache implementations only.
+ * This should not be used in userland code.
  */
 export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 

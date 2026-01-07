@@ -54,7 +54,7 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
 }
 
 const extensionsWithStreamDetails = {
-  [streamInfoSymbol]: { current: expect.any(Trie) },
+  [streamInfoSymbol]: new WeakRef(expect.any(Trie)),
 };
 
 describe("graphql-js test cases", () => {

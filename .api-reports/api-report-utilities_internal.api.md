@@ -209,7 +209,7 @@ export const extensionsSymbol: unique symbol;
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
-        current: StreamInfoTrie;
+        deref(): StreamInfoTrie | undefined;
     };
 }
 

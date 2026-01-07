@@ -5,7 +5,8 @@
 ```ts
 
 // @public (undocumented)
-export const FinalizationRegistry: FinalizationRegistryConstructor;
+const FinalizationRegistry_2: FinalizationRegistryConstructor;
+export { FinalizationRegistry_2 as FinalizationRegistry }
 
 // (No @packageDocumentation comment for this package)
 

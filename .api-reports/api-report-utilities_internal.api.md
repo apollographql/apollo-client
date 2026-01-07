@@ -209,9 +209,7 @@ export const extensionsSymbol: unique symbol;
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
-        current: Trie<{
-            current: Incremental.StreamFieldInfo;
-        }>;
+        current: StreamInfoTrie;
     };
 }
 
@@ -476,6 +474,16 @@ let storeKeyNameStringify: (value: any) => string;
 
 // @internal @deprecated
 export const streamInfoSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+export type StreamInfoTrie = Trie<{
+    current: Incremental.StreamFieldInfo;
+    previous?: {
+        incoming: unknown;
+        streamFieldInfo: Incremental.StreamFieldInfo;
+        result: unknown;
+    };
+}>;
 
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;

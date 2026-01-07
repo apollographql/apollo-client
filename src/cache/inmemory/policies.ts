@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import type {
   FieldNode,
   FragmentDefinitionNode,
@@ -997,7 +998,22 @@ export class Policies {
       existing = void 0;
     }
 
-    return merge(
+    const extensions: ExtensionsWithStreamInfo | undefined = context.extensions;
+    const streamInfo = extensions?.[streamInfoSymbol]?.current.peekArray(path);
+
+    if (streamInfo) {
+      const { current, previous } = streamInfo;
+
+      if (
+        previous &&
+        equal(previous.incoming, incoming) &&
+        equal(previous.streamFieldInfo, current)
+      ) {
+        return previous.result;
+      }
+    }
+
+    const result = merge(
       existing,
       incoming,
       makeMergeFieldFunctionOptions(
@@ -1026,6 +1042,16 @@ export class Policies {
         existingData
       )
     );
+
+    if (streamInfo) {
+      streamInfo.previous = {
+        incoming,
+        streamFieldInfo: streamInfo.current,
+        result,
+      };
+    }
+
+    return result;
   }
 }
 

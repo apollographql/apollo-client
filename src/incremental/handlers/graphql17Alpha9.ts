@@ -7,7 +7,10 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
   streamInfoSymbol,
@@ -91,10 +94,9 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo = new Trie<{ current: Incremental.StreamFieldInfo }>(
-    false,
-    () => ({ current: { isFirstChunk: true, isLastChunk: false } })
-  );
+  private streamInfo: StreamInfoTrie = new Trie(false, () => ({
+    current: { isFirstChunk: true, isLastChunk: false },
+  }));
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached

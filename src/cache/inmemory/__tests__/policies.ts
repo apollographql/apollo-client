@@ -2795,6 +2795,124 @@ describe("type policies", function () {
       });
     });
 
+    it("`readField` in `merge` with indirectly self-nested object works", () => {
+      let messageIdFields: string[];
+      let aliasedMessageTitleFields: string[];
+      const conversationMergePolicy = jest.fn((existing, incoming) => incoming);
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Conversation: {
+            merge: conversationMergePolicy,
+            fields: {
+              messages: {
+                keyArgs: false,
+                merge: (existing, incoming, { readField }) => {
+                  messageIdFields = incoming.map((m: any) =>
+                    readField("id", m)
+                  );
+                  aliasedMessageTitleFields = incoming.map((m: any) =>
+                    // aliased fields can be read by their original name
+                    // even if they haven't been written to the cache yet
+                    // due to a merge function within a circular reference.
+                    readField("title", m)
+                  );
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query GetConversation {
+          conversation {
+            id
+            title
+            messages {
+              id
+              aliased: title
+              conversation {
+                id
+                meta
+              }
+            }
+          }
+        }
+      `;
+
+      const conv1 = {
+        id: "c-1",
+        __typename: "Conversation",
+      };
+
+      cache.writeQuery({
+        query,
+        data: {
+          conversation: {
+            ...conv1,
+            title: "Conversation 1",
+            messages: [
+              {
+                id: "msg-1",
+                aliased: "Message 1",
+                conversation: { ...conv1, meta: "meta-1" },
+                __typename: "Message",
+              },
+              {
+                id: "msg-2",
+                aliased: "Message 2",
+                conversation: { ...conv1 },
+                __typename: "Message",
+              },
+            ],
+          },
+        },
+      });
+
+      expect(messageIdFields!).toEqual(["msg-1", "msg-2"]);
+      expect(aliasedMessageTitleFields!).toEqual(["Message 1", "Message 2"]);
+      // The merge function for the parent-and-child-nested Conversation
+      // object should have been called with the fully merged object as `incoming`.
+      // The fact that this is called 4 times, the first time to a self-reference and then three times
+      // without existing data, is something to be improved in a future PR.
+      expect(conversationMergePolicy).toHaveBeenNthCalledWith(
+        1,
+        // TODO: fix this in a future PR
+        { __ref: "Conversation:c-1" },
+        {
+          __typename: "Conversation",
+          id: "c-1",
+          title: "Conversation 1",
+          meta: "meta-1",
+          messages: expect.any(Array),
+        },
+        expect.any(Object)
+      );
+      expect(conversationMergePolicy).toHaveBeenNthCalledWith(
+        2,
+        // TODO: fix this in a future PR
+        undefined,
+        { __ref: "Conversation:c-1" },
+        expect.any(Object)
+      );
+      expect(conversationMergePolicy).toHaveBeenNthCalledWith(
+        3,
+        // TODO: fix this in a future PR
+        undefined,
+        { __ref: "Conversation:c-1" },
+        expect.any(Object)
+      );
+      expect(conversationMergePolicy).toHaveBeenNthCalledWith(
+        4,
+        // TODO: fix this in a future PR
+        undefined,
+        { __ref: "Conversation:c-1" },
+        expect.any(Object)
+      );
+      expect(conversationMergePolicy).toHaveBeenCalledTimes(4);
+    });
+
     it("readField helper function calls custom read functions", function () {
       using _consoleSpies = spyOnConsole.takeSnapshots("error");
       // Rather than writing ownTime data into the cache, we maintain it

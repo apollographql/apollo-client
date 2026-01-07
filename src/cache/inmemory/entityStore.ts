@@ -565,7 +565,7 @@ export abstract class EntityStore implements NormalizedCache {
       isReference(objectOrReference) ?
         this.get(objectOrReference.__ref, storeFieldName)
       : objectOrReference && objectOrReference[storeFieldName]
-    ) as SafeReadonly<T>;
+    ) as SafeReadonly<T> | undefined;
 
   // Returns true for non-normalized StoreObjects and non-dangling
   // References, indicating that readField(name, objOrRef) has a chance of

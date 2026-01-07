@@ -4,7 +4,9 @@ import type { StreamInfoTrie } from "./StreamInfoTrie.js";
 
 /** @internal */
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
-  [streamInfoSymbol]?: WeakRef<StreamInfoTrie>;
+  [streamInfoSymbol]?: {
+    deref(): StreamInfoTrie | undefined;
+  };
 }
 
 /** @internal */

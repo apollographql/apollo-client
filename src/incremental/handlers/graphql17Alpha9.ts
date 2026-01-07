@@ -250,7 +250,10 @@ class IncrementalRequest<TData>
         ...result.extensions,
         // Create a new object so we can check for === in QueryInfo to trigger a
         // final cache write when emitting a `hasNext: false` by itself.
-        [streamInfoSymbol]: { current: this.streamInfo },
+        // We create a `WeakRef`, not a plain object to avoid retaining memory
+        // in case the `result` or `extensions` stays around longer than the handler
+        // itself.
+        [streamInfoSymbol]: new WeakRef(this.streamInfo),
       } satisfies ExtensionsWithStreamInfo;
     }
 

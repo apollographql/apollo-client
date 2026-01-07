@@ -999,7 +999,7 @@ export class Policies {
     }
 
     const extensions: ExtensionsWithStreamInfo | undefined = context.extensions;
-    const streamInfo = extensions?.[streamInfoSymbol]?.current.peekArray(path);
+    const streamInfo = extensions?.[streamInfoSymbol]?.deref()?.peekArray(path);
 
     if (streamInfo) {
       const { current, previous } = streamInfo;
@@ -1113,8 +1113,8 @@ function makeMergeFieldFunctionOptions(
   if (extensions && streamInfoSymbol in extensions) {
     const { [streamInfoSymbol]: streamInfo, ...otherExtensions } = extensions;
 
-    if (streamInfo?.current.peekArray(fieldSpec.path)) {
-      const streamFieldInfo = streamInfo.current.lookupArray(fieldSpec.path);
+    const streamFieldInfo = streamInfo?.deref()?.peekArray(fieldSpec.path);
+    if (streamFieldInfo) {
       options.streamFieldInfo = streamFieldInfo.current;
     }
 

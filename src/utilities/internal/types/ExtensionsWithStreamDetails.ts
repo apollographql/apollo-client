@@ -8,8 +8,3 @@ export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     deref(): StreamInfoTrie | undefined;
   };
 }
-
-/** @internal */
-export interface WithExtensionsWithStreamInfo {
-  extensions?: ExtensionsWithStreamInfo;
-}

@@ -5,6 +5,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { ApolloCache } from "../cache.js";
 
@@ -82,7 +83,7 @@ export declare namespace Cache {
      * GraphQL extensions for the write operation. Any provided `extensions`
      * are available in `merge` functions.
      */
-    extensions?: Record<string, unknown>;
+    extensions?: ExtensionsWithStreamInfo;
   }
 
   export interface DiffOptions<
@@ -290,7 +291,7 @@ export declare namespace Cache {
      * GraphQL extensions for the write operation. Any provided `extensions`
      * are available in `merge` functions.
      */
-    extensions?: Record<string, unknown>;
+    extensions?: ExtensionsWithStreamInfo;
   }
 
   export type WriteFragmentOptions<

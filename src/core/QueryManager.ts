@@ -47,7 +47,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { WithExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
@@ -155,7 +155,7 @@ export declare namespace QueryManager {
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = ObservableQuery.Result<TData, TStates> & {
-    [extensionsSymbol]?: Record<string, unknown>;
+    [extensionsSymbol]?: ExtensionsWithStreamInfo;
   };
 }
 
@@ -1832,7 +1832,7 @@ function addNonReactiveToNamedFragments(document: DocumentNode) {
 }
 
 function removeStreamDetailsFromExtensions(
-  original: FormattedExecutionResult<any> & WithExtensionsWithStreamInfo
+  original: FormattedExecutionResult<any, ExtensionsWithStreamInfo>
 ): FormattedExecutionResult<any> {
   if (original.extensions?.[streamInfoSymbol] == null) {
     return original;

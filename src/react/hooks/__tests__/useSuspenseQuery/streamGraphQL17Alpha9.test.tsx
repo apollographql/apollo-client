@@ -1583,11 +1583,6 @@ test.failing(
                   results[i] = incoming[i] ? incoming[i] : existing[i];
                 }
 
-                console.dir(
-                  { existing, incoming, results, snapshot: cache.extract() },
-                  { depth: null }
-                );
-
                 return results;
               },
             },

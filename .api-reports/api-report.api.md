@@ -1122,7 +1122,7 @@ export const execute: typeof ApolloLink.execute;
 // @internal @deprecated
 const extensionsSymbol: unique symbol;
 
-// @internal @deprecated (undocumented)
+// @public
 interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
@@ -2655,7 +2655,7 @@ Item
 // @public
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
-// @internal @deprecated
+// @public
 const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
@@ -2868,7 +2868,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:8:5 - (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

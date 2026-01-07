@@ -205,7 +205,7 @@ export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Par
 // @internal @deprecated
 export const extensionsSymbol: unique symbol;
 
-// @internal @deprecated (undocumented)
+// @public
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
@@ -472,7 +472,7 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
-// @internal @deprecated
+// @public
 export const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
@@ -507,6 +507,7 @@ export const variablesUnknownSymbol: unique symbol;
 // Warnings were encountered during analysis:
 //
 // src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
 
 // (No @packageDocumentation comment for this package)
 

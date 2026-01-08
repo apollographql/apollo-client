@@ -9425,6 +9425,89 @@ describe("useSuspenseQuery", () => {
     }
   });
 
+  it.each<[useSuspenseQuery.Options["fetchPolicy"]]>([
+    ["cache-and-network"],
+    ["cache-first"],
+    ["network-only"],
+    ["no-cache"],
+  ])(
+    "unsuspends with `data: {}` and `dataState: 'complete'` when all fields are skipped (using fetchPolicy: %s)",
+    async (fetchPolicy) => {
+      interface Query {
+        hello?: string | null;
+      }
+      interface QueryVariables {
+        skipHello: boolean;
+      }
+
+      const query: TypedDocumentNode<Query, QueryVariables> = gql`
+        query SkipQuery($skipHello: Boolean!) {
+          hello @skip(if: $skipHello)
+        }
+      `;
+
+      const link = new MockLink([
+        {
+          request: { query, variables: { skipHello: true } },
+          result: { data: {} },
+          delay: 20,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as useSuspenseQuery.Result<
+            Query,
+            QueryVariables,
+            "complete" | "streaming" | "empty"
+          > | null,
+        },
+      });
+
+      function App() {
+        const result = useSuspenseQuery(query, {
+          variables: { skipHello: true },
+          fetchPolicy,
+        });
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(
+        <Suspense fallback="Loading">
+          <App />
+        </Suspense>,
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      // loading
+      await renderStream.takeRender();
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+        const { result } = snapshot;
+        expect(result).toStrictEqualTyped({
+          data: {},
+          dataState: "complete",
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        });
+      }
+    }
+  );
+
   describe.skip("type tests", () => {
     it("returns unknown when TData cannot be inferred", () => {
       const query = gql`

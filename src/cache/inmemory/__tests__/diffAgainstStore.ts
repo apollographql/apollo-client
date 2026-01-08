@@ -131,6 +131,32 @@ describe("diffing queries against the store", () => {
     expect(queryResult.result).toEqual(result);
   });
 
+  it("correctly returns a complete result with an empty object if all fields are non-included or skipped", () => {
+    const query = gql`
+      query {
+        firstName @include(if: false)
+        lastName @skip(if: true)
+      }
+    `;
+
+    const store = writeQueryToStore({
+      writer,
+      result: {},
+      query,
+    });
+
+    const queryResult = reader.diffQueryAgainstStore({
+      store,
+      query,
+    });
+
+    expect(queryResult).toStrictEqualTyped({
+      complete: true,
+      result: {},
+      missing: undefined,
+    });
+  });
+
   it("caches root queries both under the ID of the node and the query name", () => {
     const writer = new StoreWriter(
       new InMemoryCache({

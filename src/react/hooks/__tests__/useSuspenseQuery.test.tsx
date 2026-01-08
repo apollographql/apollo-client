@@ -9539,6 +9539,8 @@ describe("useSuspenseQuery", () => {
           const { result } = snapshot;
           expect(result).toStrictEqualTyped(expectedResult);
         }
+
+        await expect(renderStream).not.toRerender();
       }
     );
   }

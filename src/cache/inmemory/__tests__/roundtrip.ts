@@ -275,7 +275,7 @@ describe("roundtrip", () => {
       );
     });
 
-    it("should be able to query with skip directive true", () => {
+    it("should be able to query with include directive false", () => {
       storeRoundtrip(
         gql`
           query {

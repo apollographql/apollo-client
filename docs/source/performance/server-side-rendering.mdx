@@ -348,11 +348,17 @@ Now when the client-side version of the app runs its initial queries, the data i
 
 ##### Partial Pre-rendering with `prerender` and `resumeAndPrerender`
 
-> [!TIP]
-> If you work with node streams, use `prerenderToNodeStream` and `resumeAndPrerenderToNodeStream` instead of `prerender` and `resumeAndPrerender`.
+<Tip>
 
-> [!NOTE]
-> The APIs laid out in this section require React 19.2.0 or later.
+If you work with node streams, use `prerenderToNodeStream` and `resumeAndPrerenderToNodeStream` instead of `prerender` and `resumeAndPrerender`.
+
+</Tip>
+
+<Note>
+
+The APIs laid out in this section require React 19.2.0 or later.
+
+</Note>
 
 Using the [`resume`](https://react.dev/reference/react-dom/server/resume) function from `react-dom/server`, you can prerender some parts of your application (e.g., data common to all users) and then resume SSR for the remaining parts (e.g., user-specific data) later.
 

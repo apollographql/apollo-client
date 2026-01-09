@@ -2638,8 +2638,9 @@ describe("works with skip/non-include of all fields, even if the cache doesn't a
     id: "Dog:1",
     variables: { shouldSkip: true, shouldInclude: false },
   });
-  // we have no good way to prevent the cache from adding __typename
-  // but we want to simulate one that wouldn't do that, so we
+  // we have no good way to prevent `InMemoryCache` from adding __typename
+  // but we want to simulate a 3rd party cache that doesn't add `__typename`
+  // without building an entire mock cache in this test. Instead we
   // override the diff method to strip it out again
   cache.diff = (options) => {
     const diff = (InMemoryCache.prototype.diff<any>).call(cache, options);

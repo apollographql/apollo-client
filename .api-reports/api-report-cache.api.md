@@ -11,6 +11,7 @@ import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
+import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
@@ -19,6 +20,7 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
@@ -283,7 +285,7 @@ namespace Cache_2 {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
-        extensions?: Record<string, unknown>;
+        extensions?: ExtensionsWithStreamInfo;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -294,7 +296,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
-        extensions?: Record<string, unknown>;
+        extensions?: ExtensionsWithStreamInfo;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -439,7 +441,6 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
     cache: InMemoryCache;
     // (undocumented)
     canRead: CanReadFunction;
-    extensions?: Record<string, unknown>;
     // (undocumented)
     field: FieldNode | null;
     // (undocumented)
@@ -465,20 +466,31 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
 }
 
 // @public (undocumented)
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+
+// @public (undocumented)
+export interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+    existingData: unknown;
+    extensions: Record<string, unknown> | undefined;
+    streamFieldInfo?: Incremental.StreamFieldInfo;
+}
 
 // @public (undocumented)
 export function fieldNameFromStoreName(storeFieldName: string): string;
 
 // @public (undocumented)
-export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = {
+export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions, TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = {
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
-    read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-    merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+    read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+    merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 // @public (undocumented)
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+
+// @public (undocumented)
+export interface FieldReadFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+}
 
 // @public (undocumented)
 interface FieldSpecifier {
@@ -680,6 +692,8 @@ export interface MergeInfo {
     // (undocumented)
     merge: FieldMergeFunction;
     // (undocumented)
+    path: Array<string | number>;
+    // (undocumented)
     typename: string | undefined;
 }
 
@@ -823,7 +837,7 @@ export class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -867,7 +881,7 @@ export interface ReadFieldOptions extends FieldSpecifier {
 // @public (undocumented)
 export interface ReadMergeModifyContext {
     // (undocumented)
-    extensions?: Record<string, unknown>;
+    extensions?: ExtensionsWithStreamInfo;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -968,8 +982,6 @@ interface WriteContext extends ReadMergeModifyContext {
     clientOnly: boolean;
     // (undocumented)
     deferred: boolean;
-    // (undocumented)
-    extensions?: Record<string, unknown>;
     // Warning: (ae-forgotten-export) The symbol "FlavorableWriteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -996,9 +1008,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

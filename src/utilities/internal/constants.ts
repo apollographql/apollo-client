@@ -6,6 +6,12 @@
 export const extensionsSymbol = Symbol.for("apollo.result.extensions");
 
 /**
+ * For use in Cache implementations only.
+ * This should not be used in userland code.
+ */
+export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
+
+/**
  * @internal
  * Used as key for `ApolloClient.WatchQueryOptions`.
  *

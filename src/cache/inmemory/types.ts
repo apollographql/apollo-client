@@ -6,6 +6,7 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { Transaction } from "../core/cache.js";
 import type {
@@ -145,6 +146,7 @@ export interface MergeInfo {
   field: FieldNode;
   typename: string | undefined;
   merge: FieldMergeFunction;
+  path: Array<string | number>;
 }
 
 export interface MergeTree {
@@ -157,5 +159,5 @@ export interface ReadMergeModifyContext {
   variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
-  extensions?: Record<string, unknown>;
+  extensions?: ExtensionsWithStreamInfo;
 }

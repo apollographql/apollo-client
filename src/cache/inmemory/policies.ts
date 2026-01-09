@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import type {
   FieldNode,
   FragmentDefinitionNode,
@@ -6,6 +7,7 @@ import type {
 } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
+import type { Incremental } from "@apollo/client/incremental";
 import { disableWarningsSlot } from "@apollo/client/masking";
 import type {
   Reference,
@@ -15,6 +17,7 @@ import type {
 import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
+import { streamInfoSymbol } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
   getStoreKeyName,
@@ -160,13 +163,16 @@ export type FieldPolicy<
   // The type that the read function actually returns, using TExisting
   // data and options.args as input. Usually the same as TIncoming.
   TReadResult = TIncoming,
-  // Allows FieldFunctionOptions definition to be overwritten by the
+  // Allows FieldReadFunctionOptions definition to be overwritten by the
   // developer
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions,
+  // Allows FieldMergeFunctionOptions definition to be overwritten by the
+  // developer
+  TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions,
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-  merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+  read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+  merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 export type StorageType = Record<string, any>;
@@ -232,12 +238,40 @@ export interface FieldFunctionOptions<
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
+}
+
+export interface FieldReadFunctionOptions<
+  TArgs = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
+> extends FieldFunctionOptions<TArgs, TVariables> {}
+
+export interface FieldMergeFunctionOptions<
+  TArgs = Record<string, any>,
+  TVariables extends OperationVariables = Record<string, any>,
+> extends FieldFunctionOptions<TArgs, TVariables> {
+  /**
+   * Any `extensions` provided when writing the cache.
+   */
+  extensions: Record<string, unknown> | undefined;
 
   /**
-   * Any `extensions` provided when writing the cache. `extensions` is only
-   * available in `merge` functions and never available in `read` functions.
+   * Details about the field when the `@stream` directive is used. Useful with
+   * custom merge functions to determine how to merge existing cache data with
+   * the incoming stream array.
+   *
+   * This field is only available in `merge` functions when the `@stream`
+   * directive is used on the field.
+   *
+   * > [!NOTE]
+   * > This field is not available when using the `Defer20220824Handler`
    */
-  extensions?: Record<string, unknown>;
+  streamFieldInfo?: Incremental.StreamFieldInfo;
+
+  /**
+   * The same value as the `existing` argument, but preserves the `existing`
+   * value on refetches when `refetchWritePolicy` is `overwrite` (the default).
+   */
+  existingData: unknown;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -248,7 +282,7 @@ type MergeObjectsFunction = <T extends StoreObject | Reference>(
 export type FieldReadFunction<
   TExisting = any,
   TReadResult = TExisting,
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions,
 > = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
@@ -267,7 +301,7 @@ export type FieldMergeFunction<
   TIncoming = TExisting,
   // Passing the whole FieldFunctionOptions makes the current definition
   // independent from its implementation
-  TOptions extends FieldFunctionOptions = FieldFunctionOptions,
+  TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions,
 > = (
   existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
@@ -287,6 +321,29 @@ const mergeTrueFn: FieldMergeFunction<any> = (
   { mergeObjects }
 ) => mergeObjects(existing, incoming);
 const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
+
+export const defaultStreamFieldMergeFn: FieldMergeFunction<Array<any>> = (
+  existing,
+  incoming,
+  { streamFieldInfo, existingData }
+) => {
+  if (!existing && !existingData) {
+    return incoming;
+  }
+
+  const results = [];
+  const previous = existing ?? (existingData as any[]);
+  const length =
+    streamFieldInfo?.isLastChunk ?
+      incoming.length
+    : Math.max(previous.length, incoming.length);
+
+  for (let i = 0; i < length; i++) {
+    results[i] = incoming[i] === undefined ? previous[i] : incoming[i];
+  }
+
+  return results;
+};
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -909,10 +966,12 @@ export class Policies {
   public runMergeFunction(
     existing: StoreValue,
     incoming: StoreValue,
-    { field, typename, merge }: MergeInfo,
+    { field, typename, merge, path }: MergeInfo,
     context: WriteContext,
     storage?: StorageType
   ) {
+    // Preserve the value in case `context.overwrite` is set.
+    const existingData = existing;
     if (merge === mergeTrueFn) {
       // Instead of going to the trouble of creating a full
       // FieldFunctionOptions object and calling mergeTrueFn, we can
@@ -936,10 +995,26 @@ export class Policies {
       existing = void 0;
     }
 
-    return merge(
+    const streamInfo = context.extensions?.[streamInfoSymbol]
+      ?.deref()
+      ?.peekArray(path);
+
+    if (streamInfo) {
+      const { current, previous } = streamInfo;
+
+      if (
+        previous &&
+        equal(previous.incoming, incoming) &&
+        equal(previous.streamFieldInfo, current)
+      ) {
+        return previous.result;
+      }
+    }
+
+    const result = merge(
       existing,
       incoming,
-      makeFieldFunctionOptions(
+      makeMergeFieldFunctionOptions(
         this,
         // Unlike options.readField for read functions, we do not fall
         // back to the current object if no foreignObjOrRef is provided,
@@ -958,11 +1033,23 @@ export class Policies {
           fieldName: field.name.value,
           field,
           variables: context.variables,
+          path,
         },
         context,
-        storage || {}
+        storage || {},
+        existingData
       )
     );
+
+    if (streamInfo) {
+      streamInfo.previous = {
+        incoming,
+        streamFieldInfo: streamInfo.current,
+        result,
+      };
+    }
+
+    return result;
   }
 }
 
@@ -978,7 +1065,7 @@ function makeFieldFunctionOptions(
   const variables = fieldSpec.variables || context.variables;
   const { toReference, canRead } = context.store;
 
-  const options: FieldFunctionOptions = {
+  return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
     fieldName,
@@ -997,14 +1084,42 @@ function makeFieldFunctionOptions(
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
   };
+}
 
-  // Make `extensions` only available in `merge` functions, but not `read`
-  // functions since we currently only support merge functions. Even though
-  // `context.extensions` will result in `undefined`, we don't want the key to
-  // exist in the options object to avoid the appearance that its supported in
-  // `read` functions.
-  if ("extensions" in context) {
-    options.extensions = context.extensions;
+function makeMergeFieldFunctionOptions(
+  policies: Policies,
+  objectOrReference: StoreObject | Reference | undefined,
+  fieldSpec: FieldSpecifier & { path: Array<string | number> },
+  context: ReadMergeModifyContext,
+  storage: StorageType,
+  existingData?: unknown
+): FieldMergeFunctionOptions {
+  const options: FieldMergeFunctionOptions = {
+    ...makeFieldFunctionOptions(
+      policies,
+      objectOrReference,
+      fieldSpec,
+      context,
+      storage
+    ),
+    extensions: context.extensions,
+    existingData,
+  };
+
+  const extensions = context.extensions;
+
+  if (extensions && streamInfoSymbol in extensions) {
+    const { [streamInfoSymbol]: streamInfo, ...otherExtensions } = extensions;
+
+    const streamFieldInfo = streamInfo?.deref()?.peekArray(fieldSpec.path);
+    if (streamFieldInfo) {
+      options.streamFieldInfo = streamFieldInfo.current;
+    }
+
+    // If the only key in `extensions` was the stream details key, we didn't
+    // receive any remote extensions, so we reset extensions back to undefined
+    options.extensions =
+      Object.keys(otherExtensions).length === 0 ? undefined : otherExtensions;
   }
 
   return options;

@@ -31,6 +31,7 @@ import { empty } from '@apollo/client/link';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import { execute } from '@apollo/client/link';
 import { extensionsSymbol } from '@apollo/client/utilities/internal';
+import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
 import { fallbackHttpConfig } from '@apollo/client/link/http';
 import { FetchResult } from '@apollo/client/link';
 import { FieldFunctionOptions } from '@apollo/client/cache';
@@ -867,7 +868,7 @@ export { PossibleTypesMap }
 namespace QueryManager {
     // (undocumented)
     type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = ObservableQuery.Result<TData, TStates> & {
-        [extensionsSymbol]?: Record<string, unknown>;
+        [extensionsSymbol]?: ExtensionsWithStreamInfo;
     };
 }
 
@@ -1183,7 +1184,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 //
 // src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:192:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

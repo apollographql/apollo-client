@@ -380,17 +380,7 @@ test('does not suspend streamed queries with partial data in the cache and using
     }
   `;
 
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Query: {
-        fields: {
-          friendList: {
-            merge: (_, incoming) => incoming,
-          },
-        },
-      },
-    },
-  });
+  const cache = new InMemoryCache();
 
   // We are intentionally writing partial data to the cache. Supress console
   // warnings to avoid unnecessary noise in the test.
@@ -513,17 +503,7 @@ test('does not suspend streamed queries with data in the cache and using a "cach
   `;
 
   const client = new ApolloClient({
-    cache: new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            friendList: {
-              merge: (_, incoming) => incoming,
-            },
-          },
-        },
-      },
-    }),
+    cache: new InMemoryCache(),
     link: createLink({ friendList: () => stream }),
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
@@ -571,7 +551,11 @@ test('does not suspend streamed queries with data in the cache and using a "cach
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -694,7 +678,11 @@ test("incrementally rerenders data returned by a `refetch` for a streamed query"
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [{ __typename: "Friend", id: "1", name: "Luke (refetch)" }],
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke (refetch)" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -1474,7 +1462,11 @@ test("can refetch and respond to cache updates after encountering an error in an
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
       data: markAsStreaming({
-        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          null,
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
       }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
@@ -1493,6 +1485,7 @@ test("can refetch and respond to cache updates after encountering an error in an
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
         ],
       }),
       dataState: "streaming",
@@ -1559,3 +1552,156 @@ test("can refetch and respond to cache updates after encountering an error in an
 
   await expect(takeRender).not.toRerender();
 });
+
+// caused by https://github.com/apollographql/apollo-client/blob/566e24960e7ca46809c5247eccd9be1b756a97da/src/core/QueryInfo.ts#L327
+// changing this now might be considered breaking and needs further evaulation
+test.failing(
+  "reports data as partial if a cache merge function returns partial data",
+  async () => {
+    using _TODO_REMOVE_ME_AFTER_DECIDING_COMMENT = spyOnConsole("error");
+    const { subject, stream } = asyncIterableSubject();
+
+    const query = gql`
+      query {
+        friendList @stream(initialCount: 1) {
+          id
+          name
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            friendList: {
+              merge: (existing = [], incoming, { cache }) => {
+                const max = Math.max(existing.length, incoming.length);
+                const results = [];
+
+                for (let i = 0; i < max; i++) {
+                  results[i] = incoming[i] ? incoming[i] : existing[i];
+                }
+
+                return results;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // We are intentionally writing partial data to the cache. Supress console
+    // warnings to avoid unnecessary noise in the test.
+    {
+      using _consoleSpy = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          friendList: friends.map((friend) => ({
+            __typename: "Friend",
+            id: String(friend.id),
+          })),
+        },
+      });
+    }
+
+    const client = new ApolloClient({
+      cache,
+      link: createLink({ friendList: () => stream }),
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeRender } = await renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          fetchPolicy: "cache-first",
+          returnPartialData: true,
+        }),
+      {
+        wrapper: createClientWrapper(client),
+      }
+    );
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
+        data: {
+          friendList: friends.map((friend) => ({
+            __typename: "Friend",
+            id: String(friend.id),
+          })),
+        },
+        dataState: "partial",
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      });
+    }
+
+    subject.next(friends[0]);
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
+        data: markAsStreaming({
+          friendList: [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            { __typename: "Friend", id: "2" },
+            { __typename: "Friend", id: "3" },
+          ],
+        }),
+        dataState: "streaming",
+        networkStatus: NetworkStatus.streaming,
+        error: undefined,
+      });
+    }
+
+    subject.next(friends[1]);
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
+        data: markAsStreaming({
+          friendList: [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            { __typename: "Friend", id: "2", name: "Han" },
+            { __typename: "Friend", id: "3" },
+          ],
+        }),
+        dataState: "streaming",
+        networkStatus: NetworkStatus.streaming,
+        error: undefined,
+      });
+    }
+
+    subject.next(friends[2]);
+    subject.complete();
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
+        data: markAsStreaming({
+          friendList: [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            { __typename: "Friend", id: "2", name: "Han" },
+            { __typename: "Friend", id: "3", name: "Leia" },
+          ],
+        }),
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
+  }
+);

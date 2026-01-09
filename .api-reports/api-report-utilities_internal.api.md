@@ -16,6 +16,7 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
@@ -31,6 +32,7 @@ import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
+import type { Trie } from '@wry/trie';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
@@ -202,6 +204,14 @@ export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Par
 
 // @internal @deprecated
 export const extensionsSymbol: unique symbol;
+
+// @public
+export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
+    // (undocumented)
+    [streamInfoSymbol]?: {
+        deref(): StreamInfoTrie | undefined;
+    };
+}
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
@@ -462,6 +472,19 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
+// @public
+export const streamInfoSymbol: unique symbol;
+
+// @internal @deprecated (undocumented)
+export type StreamInfoTrie = Trie<{
+    current: Incremental.StreamFieldInfo;
+    previous?: {
+        incoming: unknown;
+        streamFieldInfo: Incremental.StreamFieldInfo;
+        result: unknown;
+    };
+}>;
+
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
 
@@ -484,6 +507,7 @@ export const variablesUnknownSymbol: unique symbol;
 // Warnings were encountered during analysis:
 //
 // src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
 
 // (No @packageDocumentation comment for this package)
 

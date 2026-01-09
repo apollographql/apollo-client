@@ -1,3 +1,4 @@
+import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FormattedExecutionResult,
@@ -6,7 +7,14 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
-import { DeepMerger } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
+import {
+  DeepMerger,
+  streamInfoSymbol,
+} from "@apollo/client/utilities/internal";
 import {
   hasDirectives,
   isNonEmptyArray,
@@ -86,6 +94,9 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
+  private streamInfo: StreamInfoTrie = new Trie(false, () => ({
+    current: { isFirstChunk: true, isLastChunk: false },
+  }));
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -114,6 +125,10 @@ class IncrementalRequest<TData>
 
           if (Array.isArray(dataAtPath)) {
             this.streamPositions[pending.id] = dataAtPath.length;
+            this.streamInfo.lookupArray(pending.path as any[]).current = {
+              isFirstChunk: true,
+              isLastChunk: false,
+            };
           }
         }
       }
@@ -143,6 +158,10 @@ class IncrementalRequest<TData>
           }
 
           this.streamPositions[pending.id] += items.length;
+          this.streamInfo.lookupArray(path).current = {
+            isFirstChunk: false,
+            isLastChunk: false,
+          };
           data = parent;
         } else {
           data = incremental.data;
@@ -186,6 +205,28 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
+        const { path } = this.pending.get(completed.id)!;
+        const streamPosition = this.streamPositions[completed.id];
+
+        // Truncate any stream arrays in case the chunk only contains `hasNext`
+        // and `completed`.
+        if (streamPosition !== undefined) {
+          const dataAtPath = path.reduce(
+            (data, key) => (data as any)?.[key],
+            this.data
+          );
+
+          this.merge({ data: dataAtPath.slice(0, streamPosition) }, path);
+        }
+
+        // peek instead of lookup to avoid creating an entry for non-array values
+        const details = this.streamInfo.peekArray(path as any[]);
+        if (details) {
+          details.current = {
+            isFirstChunk: false,
+            isLastChunk: true,
+          };
+        }
         this.pending.delete(completed.id);
 
         if (completed.errors) {
@@ -202,6 +243,18 @@ class IncrementalRequest<TData>
 
     if (Object.keys(this.extensions).length > 0) {
       result.extensions = this.extensions;
+    }
+
+    if (this.streamInfo["strong"]) {
+      result.extensions = {
+        ...result.extensions,
+        // Create a new object so we can check for === in QueryInfo to trigger a
+        // final cache write when emitting a `hasNext: false` by itself.
+        // We create a `WeakRef`, not a plain object to avoid retaining memory
+        // in case the `result` or `extensions` stays around longer than the handler
+        // itself.
+        [streamInfoSymbol]: new WeakRef(this.streamInfo),
+      } satisfies ExtensionsWithStreamInfo;
     }
 
     return result;

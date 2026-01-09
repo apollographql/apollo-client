@@ -51,6 +51,7 @@ export interface NextFetchPolicyContext<
   observable: ObservableQuery<TData, TVariables>;
   options: ApolloClient.WatchQueryOptions<TData, TVariables>;
   initialFetchPolicy: WatchQueryFetchPolicy;
+  source: ObservableQuery.Source;
 }
 
 export type UpdateQueryOptions<TData, TVariables extends OperationVariables> = {

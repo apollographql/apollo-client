@@ -422,6 +422,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     previous?: InternalState<TData, TVariables>
   ): InternalState<TData, TVariables> {
     const observable = client.watchQuery(watchQueryOptions);
+    observable.source = "useQuery";
 
     return {
       client,

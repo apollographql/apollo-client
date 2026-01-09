@@ -191,6 +191,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
         ...options,
         query,
         notifyOnNetworkStatusChange: false,
+        nextFetchPolicy: undefined,
       } as ApolloClient.WatchQueryOptions<any, any>),
       {
         autoDisposeTimeoutMs:

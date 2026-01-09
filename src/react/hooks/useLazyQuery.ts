@@ -342,13 +342,16 @@ export function useLazyQuery<
   const calledDuringRender = useRenderGuard();
 
   function createObservable() {
-    return client.watchQuery({
-      ...options,
-      query,
-      initialFetchPolicy: options?.fetchPolicy,
-      fetchPolicy: "standby",
-      [variablesUnknownSymbol]: true,
-    } as ApolloClient.WatchQueryOptions<TData, TVariables>);
+    return Object.assign(
+      client.watchQuery({
+        ...options,
+        query,
+        initialFetchPolicy: options?.fetchPolicy,
+        fetchPolicy: "standby",
+        [variablesUnknownSymbol]: true,
+      } as ApolloClient.WatchQueryOptions<TData, TVariables>),
+      { source: "useLazyQuery" }
+    );
   }
 
   const [currentClient, setCurrentClient] = React.useState(client);

@@ -2805,8 +2805,14 @@ describe("useLazyQuery Hook", () => {
               trackClosureValue("skipPollAttempt", count);
               return false;
             },
-            nextFetchPolicy: (currentFetchPolicy) => {
+            nextFetchPolicy: (currentFetchPolicy, context) => {
               trackClosureValue("nextFetchPolicy", count);
+              expect(context).toStrictEqualTyped({
+                initialFetchPolicy: "cache-first",
+                reason: expect.any(String),
+                options: expect.any(Object),
+                source: "useLazyQuery",
+              });
               return currentFetchPolicy;
             },
           });

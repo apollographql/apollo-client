@@ -8719,7 +8719,12 @@ describe("useQuery Hook", () => {
         },
         nextFetchPolicy(currentFetchPolicy, context) {
           expect(currentFetchPolicy).toBe("cache-and-network");
-          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          expect(context).toStrictEqualTyped({
+            initialFetchPolicy: "cache-and-network",
+            reason: expect.any(String),
+            options: expect.any(Object),
+            source: "useQuery",
+          });
           reasons.push(context.reason);
           return currentFetchPolicy;
         },
@@ -8830,7 +8835,12 @@ describe("useQuery Hook", () => {
         },
         nextFetchPolicy(currentFetchPolicy, context) {
           expect(currentFetchPolicy).toBe("cache-and-network");
-          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          expect(context).toStrictEqualTyped({
+            initialFetchPolicy: "cache-and-network",
+            reason: expect.any(String),
+            options: expect.any(Object),
+            source: "useQuery",
+          });
           reasons.push(context.reason);
           return currentFetchPolicy;
         },
@@ -8949,7 +8959,7 @@ describe("useQuery Hook", () => {
       expect(nextFetchPolicy).toHaveBeenNthCalledWith(
         1,
         "network-only",
-        expect.objectContaining({ reason: "after-fetch" })
+        expect.objectContaining({ reason: "after-fetch", source: "useQuery" })
       );
       // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
       // cache-only
@@ -8968,6 +8978,7 @@ describe("useQuery Hook", () => {
         "network-only",
         expect.objectContaining({
           reason: "variables-changed",
+          source: "useQuery",
         })
       );
 
@@ -8998,6 +9009,7 @@ describe("useQuery Hook", () => {
         "cache-and-network",
         expect.objectContaining({
           reason: "after-fetch",
+          source: "useQuery",
         })
       );
       // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to

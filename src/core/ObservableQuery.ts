@@ -262,6 +262,13 @@ export declare namespace ObservableQuery {
     retain(): this;
   }
 
+  export type Source =
+    | "unknown"
+    | "ApolloClient.watchQuery"
+    | "ApolloClient.getObservableQueries"
+    | "useQuery"
+    | "useLazyQuery";
+
   export namespace DocumentationTypes {
     type OperatorFunctionChain<From, To> = [];
     interface ObservableMethods<TData, OperatorResult> {
@@ -363,17 +370,22 @@ export class ObservableQuery<
     return this.queryManager.cache;
   }
 
+  public source: ObservableQuery.Source;
+
   constructor({
     queryManager,
     options,
     transformedQuery = queryManager.transform(options.query),
+    source = "unknown",
   }: {
     queryManager: QueryManager;
     options: ApolloClient.WatchQueryOptions<TData, TVariables>;
     transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
     queryId?: string;
+    source: ObservableQuery.Source;
   }) {
     this.queryManager = queryManager;
+    this.source = source;
 
     // active state
     this.waitForNetworkResult = options.fetchPolicy === "network-only";
@@ -1277,7 +1289,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         options.fetchPolicy = options.nextFetchPolicy.call(
           options as any,
           fetchPolicy,
-          { reason, options, observable: this, initialFetchPolicy }
+          {
+            reason,
+            options,
+            observable: this,
+            initialFetchPolicy,
+            source: this.source,
+          }
         );
       } else if (reason === "variables-changed") {
         options.fetchPolicy = initialFetchPolicy;

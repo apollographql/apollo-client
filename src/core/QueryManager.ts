@@ -591,6 +591,7 @@ export class QueryManager {
       queryManager: this,
       options,
       transformedQuery: query,
+      source: "ApolloClient.watchQuery",
     });
 
     return observable;
@@ -710,6 +711,7 @@ export class QueryManager {
             ...options,
             fetchPolicy: "network-only",
           },
+          source: "ApolloClient.getObservableQueries",
         });
         queries.add(oq);
       });

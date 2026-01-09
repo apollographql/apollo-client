@@ -69,6 +69,7 @@ export const useSSRQuery = function (
           "cache-first"
         : options.fetchPolicy,
     });
+    observable.source = "useQuery";
     this.onCreatedObservableQuery(observable, query, options.variables);
   }
   return {

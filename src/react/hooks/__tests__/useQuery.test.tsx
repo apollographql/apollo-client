@@ -51,6 +51,7 @@ import type {
   VariablesCaseVariables,
 } from "@apollo/client/testing/internal";
 import {
+  createClientWrapper,
   enableFakeTimers,
   ObservableStream,
   setupPaginatedCase,
@@ -12774,6 +12775,140 @@ test("rerenders if changing variables returns same result for different variable
 
   await expect(renderStream).not.toRerender();
 });
+
+{
+  interface Query {
+    id?: number;
+    name?: string;
+  }
+  interface QueryVariables {
+    shouldSkip: boolean;
+    shouldInclude: boolean;
+  }
+  type Result = Pick<
+    ReturnType<typeof useQuery<Query, QueryVariables>>,
+    | "data"
+    | "dataState"
+    | "loading"
+    | "networkStatus"
+    | "previousData"
+    | "variables"
+  >;
+  test.each<[WatchQueryFetchPolicy, ...Array<Result>]>([
+    [
+      "cache-and-network",
+      {
+        data: {},
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+      {
+        data: {},
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+    ],
+    [
+      "cache-first",
+      {
+        data: {},
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+    ],
+    [
+      "network-only",
+      {
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+      {
+        data: {},
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+    ],
+    [
+      "no-cache",
+      {
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+      {
+        data: {},
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { shouldSkip: true, shouldInclude: false },
+      },
+    ],
+  ])(
+    "returns `data: {}` and `dataState: 'complete'` when all fields are skipped (using fetchPolicy: %s)",
+    async (fetchPolicy, ...expectedResults) => {
+      const query: TypedDocumentNode<Query, QueryVariables> = gql`
+        query TestQuery($shouldSkip: Boolean!, $shouldInclude: Boolean!) {
+          id @skip(if: $shouldSkip)
+          name @include(if: $shouldInclude)
+        }
+      `;
+
+      const link = new MockLink([
+        {
+          request: {
+            query,
+            variables: { shouldSkip: true, shouldInclude: false },
+          },
+          result: { data: {} },
+          delay: 20,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            variables: { shouldSkip: true, shouldInclude: false },
+            fetchPolicy,
+          }) satisfies Result as Result,
+        { wrapper: createClientWrapper(client) }
+      );
+
+      for (const expectedResult of expectedResults) {
+        await expect(takeSnapshot()).resolves.toStrictEqualTyped(
+          expectedResult
+        );
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    }
+  );
+}
 
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {

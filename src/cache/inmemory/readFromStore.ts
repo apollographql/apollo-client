@@ -239,7 +239,8 @@ export class StoreReader {
 
     return {
       result:
-        complete || returnPartialData ?
+        complete ? result
+        : returnPartialData ?
           Object.keys(result).length === 0 ?
             null
           : result

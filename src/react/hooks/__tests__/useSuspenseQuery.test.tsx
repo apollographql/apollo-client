@@ -9425,6 +9425,126 @@ describe("useSuspenseQuery", () => {
     }
   });
 
+  {
+    interface Query {
+      hello?: string | null;
+    }
+    interface QueryVariables {
+      skipHello: boolean;
+    }
+    type Result = Pick<
+      useSuspenseQuery.Result<Query, QueryVariables>,
+      "data" | "dataState" | "networkStatus" | "error"
+    >;
+    it.each<[useSuspenseQuery.Options["fetchPolicy"], ...Array<Result | null>]>(
+      [
+        [
+          "cache-and-network",
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.loading,
+            error: undefined,
+          },
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "cache-first",
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "network-only",
+          null,
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "no-cache",
+          null,
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+      ]
+    )(
+      "unsuspends with `data: {}` and `dataState: 'complete'` when all fields are skipped (using fetchPolicy: %s)",
+      async (fetchPolicy, ...expectedResults) => {
+        const query: TypedDocumentNode<Query, QueryVariables> = gql`
+          query SkipQuery($skipHello: Boolean!) {
+            hello @skip(if: $skipHello)
+          }
+        `;
+
+        const link = new MockLink([
+          {
+            request: { query, variables: { skipHello: true } },
+            result: { data: {} },
+            delay: 20,
+          },
+        ]);
+
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link,
+        });
+
+        const renderStream = createRenderStream({
+          initialSnapshot: {
+            result: null as Result | null,
+          },
+        });
+
+        function App() {
+          const result = useSuspenseQuery(query, {
+            variables: { skipHello: true },
+            fetchPolicy,
+          });
+
+          renderStream.replaceSnapshot({ result });
+
+          return null;
+        }
+
+        using _disabledAct = disableActEnvironment();
+        await renderStream.render(
+          <Suspense fallback="Loading">
+            <App />
+          </Suspense>,
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+        for (const expectedResult of expectedResults) {
+          const { snapshot } = await renderStream.takeRender();
+          const { result } = snapshot;
+          expect(result).toStrictEqualTyped(expectedResult);
+        }
+
+        await expect(renderStream).not.toRerender();
+      }
+    );
+  }
+
   describe.skip("type tests", () => {
     it("returns unknown when TData cannot be inferred", () => {
       const query = gql`

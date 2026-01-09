@@ -36,7 +36,10 @@ import {
 } from "@apollo/client";
 import type { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider, useFragment, useQuery } from "@apollo/client/react";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import {
+  createClientWrapper,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
@@ -2607,6 +2610,115 @@ test("runs custom document transforms", async () => {
   });
 
   await expect(takeSnapshot).not.toRerender();
+});
+
+describe("works with skip/non-include of all fields, even if the cache doesn't add a `__typename` field", () => {
+  const fragment: TypedDocumentNode<
+    { __typename?: string; id?: number; name?: string },
+    { shouldSkip: boolean; shouldInclude: boolean }
+  > = gql`
+    fragment TestFragment on Dog {
+      id @skip(if: $shouldSkip)
+      name @include(if: $shouldInclude)
+    }
+  `;
+
+  const cache = new InMemoryCache({});
+  const client = new ApolloClient({
+    link: ApolloLink.empty(),
+    cache,
+  });
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Dog",
+      id: 1,
+      name: "Buddy",
+    },
+    id: "Dog:1",
+    variables: { shouldSkip: true, shouldInclude: false },
+  });
+  // we have no good way to prevent `InMemoryCache` from adding __typename
+  // but we want to simulate a 3rd party cache that doesn't add `__typename`
+  // without building an entire mock cache in this test. Instead we
+  // override the diff method to strip it out again
+  cache.diff = (options) => {
+    const diff = (InMemoryCache.prototype.diff<any>).call(cache, options);
+    if (diff.result) {
+      const { __typename: _, ...rest } = diff.result;
+      diff.result = rest;
+    }
+    return diff;
+  };
+
+  test("single from", async () => {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useFragment({
+          fragment,
+          from: { __typename: "Dog", id: 1 },
+          variables: { shouldSkip: true, shouldInclude: false },
+        }),
+      { wrapper: createClientWrapper(client) }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: {},
+      dataState: "complete",
+      complete: true,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("single from in array", async () => {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useFragment({
+          fragment,
+          from: [{ __typename: "Dog", id: 1 }],
+          variables: { shouldSkip: true, shouldInclude: false },
+        }),
+      { wrapper: createClientWrapper(client) }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: [{}],
+      dataState: "complete",
+      complete: true,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("multiple from, mixed presence", async () => {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useFragment({
+          fragment,
+          from: [
+            { __typename: "Dog", id: 1 },
+            { __typename: "Dog", id: 2 },
+          ],
+          variables: { shouldSkip: true, shouldInclude: false },
+        }),
+      { wrapper: createClientWrapper(client) }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: [{}, null],
+      dataState: "partial",
+      complete: false,
+      missing: {
+        1: "Dangling reference to missing Dog:2 object",
+      },
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
 });
 
 describe.skip("Type Tests", () => {

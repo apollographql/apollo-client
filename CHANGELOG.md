@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.1.0-rc.1
+
+### Patch Changes
+
+- [#13086](https://github.com/apollographql/apollo-client/pull/13086) [`1a1d408`](https://github.com/apollographql/apollo-client/commit/1a1d4088f549088d4af3ff1f2d08d1c8e9af2a4d) Thanks [@phryneas](https://github.com/phryneas)! - Change the returned value from `null` to `{}` when all fields in a query were skipped.
+
+  This also fixes a bug where `useSuspenseQuery` would suspend indefinitely when all fields were skipped.
+
+- [#13071](https://github.com/apollographql/apollo-client/pull/13071) [`99ffe9a`](https://github.com/apollographql/apollo-client/commit/99ffe9a8ede1683d902101c5371807a8442fcdcb) Thanks [@phryneas](https://github.com/phryneas)! - `prerenderStatic`: Expose return value of `renderFunction` to userland, fix `aborted` property.
+
+  This enables usage of `resumeAndPrerender` with React 19.2.
+
 ## 4.1.0-rc.0
 
 ### Minor Changes

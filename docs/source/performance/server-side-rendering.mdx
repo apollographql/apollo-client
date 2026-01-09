@@ -346,6 +346,90 @@ const client = new ApolloClient({
 
 Now when the client-side version of the app runs its initial queries, the data is returned instantly because it's already in the cache!
 
+##### Partial Pre-rendering with `prerender` and `resumeAndPrerender`
+
+<Tip>
+
+If you work with node streams, use `prerenderToNodeStream` and `resumeAndPrerenderToNodeStream` instead of `prerender` and `resumeAndPrerender`.
+
+</Tip>
+
+<Note>
+
+The APIs in this section require React 19.2.0 or later.
+
+</Note>
+
+Using the [`resume`](https://react.dev/reference/react-dom/server/resume) function from `react-dom/server`, you can prerender some parts of your application (e.g., data common to all users) and then resume SSR for the remaining parts (e.g., user-specific data) later.
+
+Start by using `prerender` to render the initial HTML and execute initial queries:
+
+```js
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
+});
+const controller = new AbortController();
+const promise = prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: (tree) =>
+    renderFunction(tree, {
+      signal: controller.signal,
+    }),
+  signal: controller.signal,
+});
+```
+
+When all fetchable data is ready, call `controller.abort()` to stop the initial render and save the result:
+
+```js
+controller.abort();
+const { result, renderFnResult, aborted } = await promise;
+```
+
+If `aborted` is `false`, the render completed and you can send the result. If `aborted` is `true`, save the current render result, postponed work, and cache state to resume later:
+
+```js
+const initialResponse = result; // HTML up to this point
+const postponed = renderFnResult.postponed; // Postponed render work
+const cacheState = client.extract(); // Cache state after initial render
+```
+
+To resume rendering (e.g., in a subsequent request with user-specific data):
+
+```js
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
+});
+// Restore the cache state from the first render
+client.cache.restore(cacheState);
+
+const controller = new AbortController();
+const promise = prerenderStatic({
+  tree: App,
+  context: { client },
+  renderFunction: (tree) =>
+    resumeAndPrerender(tree, postponed, {
+      signal: controller.signal,
+    }),
+  signal: controller.signal,
+});
+```
+
+You can either let the render complete or abort it again for another partial result:
+
+```js
+controller.abort(); // or let it complete
+const { result, renderFnResult, aborted } = await promise;
+```
+
+If `aborted` is `false`, the render completed and you can send the result. If `aborted` is `true`, save the current render result and postponed work, then repeat the resume step as needed.
+
+> [!NOTE]
+> The `result` from `resumeAndPrerender` does not include HTML from previous renders. You must concatenate the HTML strings from all partial renders to get the complete output.
+
 #### Overriding fetch policies during initialization
 
 If some of your initial queries use the `network-only` or `cache-and-network` [fetch policy](../data/queries/#setting-a-fetch-policy), you can provide the `ssrForceFetchDelay` option to Apollo Client to skip force-fetching those queries during initialization. This way, even those queries initially run using only the cache:

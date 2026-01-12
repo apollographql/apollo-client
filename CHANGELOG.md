@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.12
+
+### Patch Changes
+
+- [#13077](https://github.com/apollographql/apollo-client/pull/13077) [`f322460`](https://github.com/apollographql/apollo-client/commit/f322460fe9baae82c0980dd082c1b6b4956a4951) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak where Trie nodes would remain in memory too long.
+
 ## 4.0.11
 
 ### Patch Changes

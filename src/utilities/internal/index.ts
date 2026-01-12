@@ -63,6 +63,7 @@ export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";
 export { variablesUnknownSymbol } from "./constants.js";
+export { bindCacheKey } from "./bindCacheKey.js";
 
 export {
   getApolloCacheMemoryInternals,

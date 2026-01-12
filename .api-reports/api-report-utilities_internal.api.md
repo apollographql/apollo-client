@@ -61,6 +61,9 @@ export const AutoCleanedWeakCache: typeof WeakCache;
 export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 
 // @public
+export function bindCacheKey(...prebound: object[]): (...args: any) => object;
+
+// @public
 export const canonicalStringify: ((value: any) => string) & {
     reset(): void;
 };

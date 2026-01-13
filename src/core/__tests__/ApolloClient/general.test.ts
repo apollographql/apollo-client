@@ -8511,6 +8511,24 @@ describe("ApolloClient", () => {
       );
     });
   });
+
+  test("`client.watchQuery` should forward symbol keys on `options` even with `defaultOptions` present on `ApolloClient`", () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      defaultOptions: {
+        watchQuery: {},
+      },
+    });
+
+    const obsQuery = client.watchQuery({
+      query: gql`query Test { hello }`,
+      [variablesUnknownSymbol]: true,
+      fetchPolicy: "standby",
+    });
+
+    expect(obsQuery["variablesUnknown"]).toBe(true);
+  });
 });
 
 describe.skip("type tests", () => {

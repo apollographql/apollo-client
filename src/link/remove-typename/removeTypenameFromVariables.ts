@@ -7,7 +7,7 @@ import type { OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { cacheSizes, stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { isPlainObject } from "@apollo/client/utilities/internal";
+import { bindCacheKey, isPlainObject } from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
@@ -159,7 +159,7 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
       if (variables) {
         operation.variables =
           except ?
-            maybeStripTypenameUsingConfig(query, variables, except)
+            this.maybeStripTypenameUsingConfig(query, variables, except)
           : stripTypename(variables);
       }
 
@@ -169,10 +169,10 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
       this,
       __DEV__ ?
         {
-          getMemoryInternals() {
+          getMemoryInternals(this: RemoveTypenameFromVariablesLink) {
             return {
               removeTypenameFromVariables: {
-                getVariableDefinitions: getVariableDefinitions?.size ?? 0,
+                getVariableDefinitions: this.getVariableDefinitions?.size ?? 0,
               },
             };
           },
@@ -180,89 +180,90 @@ export class RemoveTypenameFromVariablesLink extends ApolloLink {
       : {}
     );
   }
-}
 
-function maybeStripTypenameUsingConfig(
-  query: DocumentNode,
-  variables: OperationVariables,
-  config: RemoveTypenameFromVariablesLink.KeepTypenameConfig
-) {
-  const variableDefinitions = getVariableDefinitions(query);
+  private maybeStripTypenameUsingConfig(
+    query: DocumentNode,
+    variables: OperationVariables,
+    config: RemoveTypenameFromVariablesLink.KeepTypenameConfig
+  ) {
+    const variableDefinitions = this.getVariableDefinitions(query);
 
-  return Object.fromEntries(
-    Object.entries(variables).map((keyVal) => {
-      const [key, value] = keyVal;
-      const typename = variableDefinitions[key];
-      const typenameConfig = config[typename];
+    return Object.fromEntries(
+      Object.entries(variables).map((keyVal) => {
+        const [key, value] = keyVal;
+        const typename = variableDefinitions[key];
+        const typenameConfig = config[typename];
 
-      keyVal[1] =
-        typenameConfig ?
-          maybeStripTypename(value, typenameConfig)
-        : stripTypename(value);
+        keyVal[1] =
+          typenameConfig ?
+            this.maybeStripTypename(value, typenameConfig)
+          : stripTypename(value);
 
-      return keyVal;
-    })
+        return keyVal;
+      })
+    );
+  }
+
+  private maybeStripTypename(
+    value: JSONValue,
+    config: RemoveTypenameFromVariablesLink.KeepTypenameConfig[string]
+  ): JSONValue {
+    if (config === KEEP) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.maybeStripTypename(item, config));
+    }
+
+    if (isPlainObject(value)) {
+      const modified: Record<string, any> = {};
+
+      Object.keys(value).forEach((key) => {
+        const child = value[key];
+
+        if (key === "__typename") {
+          return;
+        }
+
+        const fieldConfig = config[key];
+
+        modified[key] =
+          fieldConfig ?
+            this.maybeStripTypename(child, fieldConfig)
+          : stripTypename(child);
+      });
+
+      return modified;
+    }
+
+    return value;
+  }
+
+  private getVariableDefinitions = wrap(
+    (document: DocumentNode) => {
+      const definitions: Record<string, string> = {};
+
+      visit(document, {
+        VariableDefinition(node) {
+          definitions[node.variable.name.value] = unwrapType(node.type);
+        },
+      });
+
+      return definitions;
+    },
+    {
+      max:
+        cacheSizes["removeTypenameFromVariables.getVariableDefinitions"] ||
+        defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
+      cache: WeakCache,
+      makeCacheKey: bindCacheKey(this),
+    }
   );
 }
 
 type JSONPrimitive = string | number | null | boolean;
 type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
-
-function maybeStripTypename(
-  value: JSONValue,
-  config: RemoveTypenameFromVariablesLink.KeepTypenameConfig[string]
-): JSONValue {
-  if (config === KEEP) {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => maybeStripTypename(item, config));
-  }
-
-  if (isPlainObject(value)) {
-    const modified: Record<string, any> = {};
-
-    Object.keys(value).forEach((key) => {
-      const child = value[key];
-
-      if (key === "__typename") {
-        return;
-      }
-
-      const fieldConfig = config[key];
-
-      modified[key] =
-        fieldConfig ?
-          maybeStripTypename(child, fieldConfig)
-        : stripTypename(child);
-    });
-
-    return modified;
-  }
-
-  return value;
-}
-
-const getVariableDefinitions = wrap(
-  (document: DocumentNode) => {
-    const definitions: Record<string, string> = {};
-
-    visit(document, {
-      VariableDefinition(node) {
-        definitions[node.variable.name.value] = unwrapType(node.type);
-      },
-    });
-
-    return definitions;
-  },
-  {
-    max:
-      cacheSizes["removeTypenameFromVariables.getVariableDefinitions"] ||
-      defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
-    cache: WeakCache,
-  }
-);
 
 function unwrapType(node: TypeNode): string {
   switch (node.kind) {

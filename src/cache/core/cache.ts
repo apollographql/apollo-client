@@ -34,6 +34,7 @@ import type {
   Prettify,
 } from "@apollo/client/utilities/internal";
 import {
+  bindCacheKey,
   combineLatestBatched,
   equalByQuery,
   getApolloCacheMemoryInternals,
@@ -727,6 +728,7 @@ export abstract class ApolloCache {
       cacheSizes["cache.fragmentQueryDocuments"] ||
       defaultCacheSizes["cache.fragmentQueryDocuments"],
     cache: WeakCache,
+    makeCacheKey: bindCacheKey(this),
   });
 
   /**

@@ -71,6 +71,7 @@ export {
   streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";
+export { bindCacheKey } from "./bindCacheKey.js";
 
 export {
   getApolloCacheMemoryInternals,

@@ -8366,7 +8366,11 @@ describe("ApolloClient", () => {
     });
 
     const obsQuery = client.watchQuery({
-      query: gql`query Test { hello }`,
+      query: gql`
+        query Test {
+          hello
+        }
+      `,
       [variablesUnknownSymbol]: true,
       fetchPolicy: "standby",
     });

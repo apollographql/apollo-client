@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 4.0.13
+
+### Patch Changes
+
+- [#13094](https://github.com/apollographql/apollo-client/pull/13094) [`9cbe2c2`](https://github.com/apollographql/apollo-client/commit/9cbe2c2dd2282ac861327d3c394578db7706df05) Thanks [@phryneas](https://github.com/phryneas)! - Ensure that `compact` and `mergeOptions` preserve symbol keys.
+
+  This fixes an issue where the change introduced in 4.0.11 via #13049 would not
+  be applied if `defaultOptions` for `watchQuery` were declared.
+
+  Please note that `compact` and `mergeOptions` are considered internal utilities
+  and they might have similar behavior changes in future releases.
+  Do not use them in your application code - a change like this is not considered
+  breaking and will not be announced as such.
+
 ## 4.0.12
 
 ### Patch Changes

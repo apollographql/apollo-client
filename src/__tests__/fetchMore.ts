@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { Observable } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import {
@@ -22,6 +22,7 @@ import {
   mockDeferStream,
   ObservableStream,
   setupPaginatedCase,
+  withCacheSizes,
 } from "@apollo/client/testing/internal";
 import {
   concatPagination,
@@ -2682,6 +2683,166 @@ test("does not allow fetchMore on a cache-only query", async () => {
       "Cannot execute `fetchMore` for 'cache-only' query 'Comment'. Please use a different fetch policy."
     )
   );
+
+  await expect(stream).not.toEmitAnything();
+});
+
+// https://github.com/apollographql/apollo-client/issues/12932
+test("emits final result from fetchMore when executeSubSelectedArray cache is full", async () => {
+  using _ = withCacheSizes({ "inMemoryCache.executeSubSelectedArray": 10 });
+
+  const itemData = Array(20)
+    .fill(undefined)
+    .map((_, index) => ({
+      __typename: "Item" as const,
+      id: index.toString(),
+      attributes: ["data"],
+    }));
+  type GetCommentsData = {
+    items: Array<{
+      __typename: "Item";
+      id: string;
+      attributes: string[];
+    }>;
+  };
+
+  type GetCommentsVariables = {
+    offset: number;
+    limit: number;
+  };
+
+  const query: TypedDocumentNode<GetCommentsData, GetCommentsVariables> = gql`
+    query GetComments($offset: Int!, $limit: Int!) {
+      items(offset: $offset, limit: $limit) {
+        id
+        attributes
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            items: offsetLimitPagination(),
+          },
+        },
+      },
+    }),
+    link: new ApolloLink((operation) => {
+      const { offset, limit } = operation.variables;
+
+      return of({
+        data: {
+          items: itemData.slice(offset, offset + limit),
+        },
+      }).pipe(delay(10));
+    }),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { offset: 0, limit: 10 },
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 10) },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.fetchMore({
+      variables: {
+        offset: stream.getCurrent()?.data?.items?.length ?? 0,
+        limit: 5,
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { items: itemData.slice(10, 15) },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 10) },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 15) },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.fetchMore({
+      variables: {
+        offset: stream.getCurrent()?.data?.items?.length ?? 0,
+        limit: 5,
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { items: itemData.slice(15, 20) },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 15) },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 20) },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.fetchMore({
+      variables: {
+        offset: stream.getCurrent()?.data?.items?.length ?? 0,
+        limit: 5,
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { items: [] },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 20) },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { items: itemData.slice(0, 20) },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
 
   await expect(stream).not.toEmitAnything();
 });

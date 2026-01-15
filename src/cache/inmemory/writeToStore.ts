@@ -30,12 +30,14 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
+  hasDirectives,
   isArray,
   isField,
   isNonEmptyArray,
   makeReference,
   resultKeyNameFromField,
   shouldInclude,
+  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import {
   invariant,
@@ -52,7 +54,10 @@ import {
   storeValueIsStoreObject,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import { normalizeReadFieldOptions } from "./policies.js";
+import {
+  defaultStreamFieldMergeFn,
+  normalizeReadFieldOptions,
+} from "./policies.js";
 import type { StoreReader } from "./readFromStore.js";
 import type {
   InMemoryCacheConfig,
@@ -126,6 +131,7 @@ interface ProcessSelectionSetOptions {
   selectionSet: SelectionSetNode;
   context: WriteContext;
   mergeTree: MergeTree;
+  path: Array<string | number>;
 }
 
 export class StoreWriter {
@@ -146,6 +152,7 @@ export class StoreWriter {
       dataId,
       variables,
       overwrite,
+      extensions,
     }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -170,6 +177,7 @@ export class StoreWriter {
       clientOnly: false,
       deferred: false,
       flavors: new Map(),
+      extensions,
     };
 
     const ref = this.processSelectionSet({
@@ -178,6 +186,7 @@ export class StoreWriter {
       selectionSet: operationDefinition.selectionSet,
       mergeTree: { map: new Map() },
       context,
+      path: [],
     });
 
     if (!isReference(ref)) {
@@ -266,6 +275,7 @@ export class StoreWriter {
     // This object allows processSelectionSet to report useful information
     // to its callers without explicitly returning that information.
     mergeTree,
+    path: currentPath,
   }: ProcessSelectionSetOptions): StoreObject | Reference {
     const { policies } = this.cache;
 
@@ -333,6 +343,7 @@ export class StoreWriter {
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
+      const path = [...currentPath, field.name.value];
 
       fieldNodeSet.add(field);
 
@@ -354,7 +365,8 @@ export class StoreWriter {
           field.selectionSet ?
             getContextFlavor(context, false, false)
           : context,
-          childTree
+          childTree,
+          path
         );
 
         // To determine if this field holds a child object with a merge function
@@ -383,6 +395,18 @@ export class StoreWriter {
             field,
             typename,
             merge,
+            path,
+          };
+        } else if (
+          hasDirectives(["stream"], field) &&
+          Array.isArray(incomingValue) &&
+          context.extensions?.[streamInfoSymbol]
+        ) {
+          childTree.info = {
+            field,
+            typename,
+            merge: defaultStreamFieldMergeFn,
+            path,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
@@ -485,7 +509,8 @@ export class StoreWriter {
     value: any,
     field: FieldNode,
     context: WriteContext,
-    mergeTree: MergeTree
+    mergeTree: MergeTree,
+    path: Array<string | number>
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -500,7 +525,8 @@ export class StoreWriter {
           item,
           field,
           context,
-          getChildMergeTree(mergeTree, i)
+          getChildMergeTree(mergeTree, i),
+          [...path, i]
         );
         maybeRecycleChildMergeTree(mergeTree, i);
         return value;
@@ -512,6 +538,7 @@ export class StoreWriter {
       selectionSet: field.selectionSet,
       context,
       mergeTree,
+      path,
     });
   }
 
@@ -894,8 +921,8 @@ For more information about these options, please refer to the documentation:
         " have an ID or a custom merge function, or "
     : "",
     typeDotName,
-    { ...existing },
-    { ...incoming }
+    Array.isArray(existing) ? [...existing] : { ...existing },
+    Array.isArray(incoming) ? [...incoming] : { ...incoming }
   );
 }
 

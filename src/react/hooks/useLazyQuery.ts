@@ -496,9 +496,11 @@ export function useLazyQuery<
       ...eagerMethods,
       ...result,
       client,
+      // eslint-disable-next-line react-hooks/refs
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
+      // eslint-disable-next-line react-hooks/refs
       called: !!resultRef.current,
     };
   }, [client, observableResult, eagerMethods, observable]);

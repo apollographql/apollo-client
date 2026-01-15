@@ -19,7 +19,7 @@ export namespace ClientAwarenessLink {
     }
     // (undocumented)
     export interface EnhancedClientAwarenessOptions {
-        transport?: "extensions" | false;
+        transport?: "headers" | "extensions" | false;
     }
     // (undocumented)
     export interface Options {

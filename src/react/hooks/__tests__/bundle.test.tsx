@@ -11,7 +11,7 @@ test("test is running against source or ESM (in CI) build", () => {
 
 test("test is running against uncompiled or compiled (in CI)", () => {
   if (isCI) {
-    expect(reactCompilerVersion).toMatchInlineSnapshot(`"19.1.0-rc.2"`);
+    expect(reactCompilerVersion).toMatchInlineSnapshot(`"1.0.0"`);
   } else {
     expect(reactCompilerVersion).toBe("uncompiled");
   }

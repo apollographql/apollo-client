@@ -518,7 +518,7 @@ function List() {
 }
 ```
 
-<Note>
+<Tip>
   Instead of interpolating fragments within each query document, you can use
   Apollo Client's `createFragmentRegistry` method to pre-register named
   fragments with `InMemoryCache`. This allows Apollo Client to include the
@@ -526,7 +526,7 @@ function List() {
   before the request is sent. For more information, see [Registering named
   fragments using
   `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
-</Note>
+</Tip>
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 
@@ -564,10 +564,10 @@ function Item(props) {
 
 </MultiCodeBlock>
 
-<Note>
+<Tip>
   You may omit the `fragmentName` option when your fragment definition only
   includes a single fragment.
-</Note>
+</Tip>
 
 You may instead prefer to pass the whole `item` as a prop to the `Item` component. This makes the `from` option more concise.
 
@@ -576,7 +576,7 @@ You may instead prefer to pass the whole `item` as a prop to the `Item` componen
 ```tsx
 function Item(props: { item: { __typename: "Item"; id: number } }) {
   const { complete, data } = useFragment({
-    fragment: ItemFragment,
+    fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
     from: props.item,
   });
@@ -607,6 +607,114 @@ function Item(props) {
 </Note>
 
 See the [API reference](../api/react/useFragment) for more details on the supported options.
+
+<MinVersion version="4.1">
+
+### Working with arrays
+
+</MinVersion>
+
+Sometimes your component might use a fragment to select fields for an array of items that are received from props. You can use the `useFragment` hook to watch for changes on each array item by providing the array to the `from` option.
+
+When you provide an array to the `from` option, the `data` property returned from `useFragment` is an array where each item corresponds to an item with the same index in the `from` option. If all of the items returned in `data` are complete, the `complete` property is set to `true` and the `dataState` property is set to `"complete"`. If at least one item in the array is incomplete, the `complete` property is set to `false` and the `dataState` property is set to `"partial"`.
+
+<MultiCodeBlock>
+
+```tsx
+function Items(props: { items: Array<{ __typename: "Item"; id: number }> }) {
+  const { data, complete } = useFragment({
+    fragment: ITEM_FRAGMENT,
+    fragmentName: "ItemFragment",
+    from: props.items,
+  });
+
+  if (!complete) {
+    return null;
+  }
+
+  return (
+    <ul>
+      {data.map((item) => (
+        <li key={item.id}>{item.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```js
+function Items(props) {
+  const { data, complete } = useFragment({
+    fragment: ITEM_FRAGMENT,
+    fragmentName: "ItemFragment",
+    from: props.items,
+  });
+
+  if (!complete) {
+    return null;
+  }
+
+  return (
+    <ul>
+      {data.map((item) => (
+        <li key={item.id}>{item.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+</MultiCodeBlock>
+
+<Note>
+
+If the array provided to the `from` option is an empty array, the returned `data` is an empty array with the `complete` property set to `true` and `dataState` property set to `"complete"`.
+
+</Note>
+
+#### Handling `null` values
+
+Depending on the GraphQL schema, it's possible the array might contain `null` values. When `useFragment` is provided an array that contains `null` values to the `from` property, `useFragment` returns those items as `null` in the `data` property and treats these items as complete. This means if all non-`null` items in the array are also complete, the whole result is complete.
+
+```ts
+const { data, dataState, complete } = useFragment({
+  fragment: ITEM_FRAGMENT,
+  fragmentName: "ItemFragment",
+  from: [{ __typename: "Item", id: 1 }, { __typename: "Item", id: 2 }, null],
+});
+
+console.log({ data, dataState, complete });
+// {
+//   data: [
+//     { __typename: "Item", id: 1, text: "..." },
+//     { __typename: "Item", id: 2, text: "..." },
+//     null
+//   ],
+//   dataState: "complete",
+//   complete: true
+// }
+```
+
+<Note>
+
+If the `from` array contains `null` values for every item, the result returned from `useFragment` contains all `null` values, the `complete` property is set to `true`, and the `dataState` property is set to `"complete"`.
+
+```ts
+const { data, dataState, complete } = useFragment({
+  fragment: ITEM_FRAGMENT,
+  fragmentName: "ItemFragment",
+  from: [null, null, null],
+});
+
+console.log({ data, dataState, complete });
+// {
+//   data: [null, null, null],
+//   dataState: "complete",
+//   complete: true
+// }
+```
+
+</Note>
 
 ## `useSuspenseFragment`
 

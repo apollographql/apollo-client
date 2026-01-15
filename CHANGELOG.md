@@ -1,5 +1,235 @@
 # @apollo/client
 
+## 4.1.0-rc.1
+
+### Patch Changes
+
+- [#13086](https://github.com/apollographql/apollo-client/pull/13086) [`1a1d408`](https://github.com/apollographql/apollo-client/commit/1a1d4088f549088d4af3ff1f2d08d1c8e9af2a4d) Thanks [@phryneas](https://github.com/phryneas)! - Change the returned value from `null` to `{}` when all fields in a query were skipped.
+
+  This also fixes a bug where `useSuspenseQuery` would suspend indefinitely when all fields were skipped.
+
+- [#13071](https://github.com/apollographql/apollo-client/pull/13071) [`99ffe9a`](https://github.com/apollographql/apollo-client/commit/99ffe9a8ede1683d902101c5371807a8442fcdcb) Thanks [@phryneas](https://github.com/phryneas)! - `prerenderStatic`: Expose return value of `renderFunction` to userland, fix `aborted` property.
+
+  This enables usage of `resumeAndPrerender` with React 19.2.
+
+## 4.1.0-rc.0
+
+### Minor Changes
+
+- [#13078](https://github.com/apollographql/apollo-client/pull/13078) [`bf1e0dc`](https://github.com/apollographql/apollo-client/commit/bf1e0dcb2f6c9b94576dc6d049745f1869cd0043) Thanks [@phryneas](https://github.com/phryneas)! - Use the default stream merge function for `@stream` fields only if stream info is present. This change means that using the older `Defer20220824Handler` will not use the default stream merge function and will instead truncate the streamed array on the first chunk.
+
+### Patch Changes
+
+- [#13083](https://github.com/apollographql/apollo-client/pull/13083) [`f3c2be1`](https://github.com/apollographql/apollo-client/commit/f3c2be1665d8e2e260a4f55ec803d6e609748390) Thanks [@phryneas](https://github.com/phryneas)! - Expose the `ExtensionsWithStreamInfo` type for `extensions` in `Cache.writeQuery`, `Cache.write` and `Cache.update` so other cache implementations also can correctly access them.
+
+- [#13082](https://github.com/apollographql/apollo-client/pull/13082) [`c257418`](https://github.com/apollographql/apollo-client/commit/c2574181f6b0d9ae059dfa3822a7842ec5f8ff1f) Thanks [@phryneas](https://github.com/phryneas)! - Pass `streamInfo` through result extensions as a `WeakRef`.
+
+- [#13081](https://github.com/apollographql/apollo-client/pull/13081) [`1e06ad7`](https://github.com/apollographql/apollo-client/commit/1e06ad7399716139fcfbec7423697eafc5750f5e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Avoid calling `merge` functions more than once for the same incremental chunk.
+
+## 4.0.12-beta.0
+
+### Patch Changes
+
+- [#12884](https://github.com/apollographql/apollo-client/pull/12884) [`d329790`](https://github.com/apollographql/apollo-client/commit/d32979070381f1897c90fb276e25a0c8375cc29a) Thanks [@phryneas](https://github.com/phryneas)! - Ensure that `PreloadedQueryRef` instances are unsubscribed when garbage collected
+
+- [#13069](https://github.com/apollographql/apollo-client/pull/13069) [`9cad04a`](https://github.com/apollographql/apollo-client/commit/9cad04a4228a5059ea330ac9d284407a363fc10d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Truncate @stream arrays only on last chunk by default
+
+## 4.1.0-alpha.9
+
+### Minor Changes
+
+- [#13056](https://github.com/apollographql/apollo-client/pull/13056) [`b224efc`](https://github.com/apollographql/apollo-client/commit/b224efc25515370c68b514405762e68a443e4a4a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `InMemoryCache` no longer filters out explicitly returned `undefined` items from `read` functions for array fields. This now makes it possible to create `read` functions on array fields that return partial data and trigger a fetch for the full list.
+
+- [#13058](https://github.com/apollographql/apollo-client/pull/13058) [`121a2cb`](https://github.com/apollographql/apollo-client/commit/121a2cb68820727186ecd74ce1041ef95284682e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an `extensions` option to `cache.write`, `cache.writeQuery`, and `client.writeQuery`. This makes `extensions` available in cache `merge` functions which can be accessed with the other merge function options.
+
+  As a result of this change, any `extensions` returned in GraphQL operations are now available in `merge` in the cache writes for these operations.
+
+### Patch Changes
+
+- [#13053](https://github.com/apollographql/apollo-client/pull/13053) [`23ca0ba`](https://github.com/apollographql/apollo-client/commit/23ca0ba895473b397805e6bcc70e0fcf987547c5) Thanks [@phryneas](https://github.com/phryneas)! - Use memoized observable mapping when using `watchFragment`, `useFragment` or `useSuspenseFragment`.
+
+## 4.1.0-alpha.10
+
+### Patch Changes
+
+- [#13053](https://github.com/apollographql/apollo-client/pull/13053) [`23ca0ba`](https://github.com/apollographql/apollo-client/commit/23ca0ba895473b397805e6bcc70e0fcf987547c5) Thanks [@phryneas](https://github.com/phryneas)! - Use memoized observable mapping when using `watchFragment`, `useFragment` or `useSuspenseFragment`.
+
+## 4.1.0-alpha.9
+
+### Minor Changes
+
+- [#13056](https://github.com/apollographql/apollo-client/pull/13056) [`b224efc`](https://github.com/apollographql/apollo-client/commit/b224efc25515370c68b514405762e68a443e4a4a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `InMemoryCache` no longer filters out explicitly returned `undefined` items from `read` functions for array fields. This now makes it possible to create `read` functions on array fields that return partial data and trigger a fetch for the full list.
+
+## 4.1.0-alpha.8
+
+### Minor Changes
+
+- [#13043](https://github.com/apollographql/apollo-client/pull/13043) [`65e66ca`](https://github.com/apollographql/apollo-client/commit/65e66cafb6828b63d14b64877bbad47af95f66e4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support `headers` transport for enhanced client awareness.
+
+## 4.1.0-alpha.7
+
+### Minor Changes
+
+- [#13038](https://github.com/apollographql/apollo-client/pull/13038) [`109efe7`](https://github.com/apollographql/apollo-client/commit/109efe7e4380b579c6a577982bd9a6e8c6a53892) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the `from` option to `readFragment`, `watchFragment`, and `updateFragment`.
+
+## 4.1.0-alpha.6
+
+### Patch Changes
+
+- [#13026](https://github.com/apollographql/apollo-client/pull/13026) [`05eee67`](https://github.com/apollographql/apollo-client/commit/05eee67e91b480252923879987534e81d2866aba) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reduce the number of observables created by `watchFragment` by reusing existing observables as much as possible. This should improve performance when watching the same item in the cache multiple times after a cache update occurs.
+
+## 4.1.0-alpha.5
+
+### Patch Changes
+
+- [#13010](https://github.com/apollographql/apollo-client/pull/13010) [`7627000`](https://github.com/apollographql/apollo-client/commit/76270002254b0c6acb18872a39ab180f9f1e4067) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where errors parsed from incremental chunks in `ErrorLink` might throw when using the `GraphQL17Alpha9Handler`.
+
+- [#13010](https://github.com/apollographql/apollo-client/pull/13010) [`7627000`](https://github.com/apollographql/apollo-client/commit/76270002254b0c6acb18872a39ab180f9f1e4067) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Handle `@stream` payloads that send multiple items in the same chunk when using the `Defer20220824Handler`.
+
+- [#13010](https://github.com/apollographql/apollo-client/pull/13010) [`7627000`](https://github.com/apollographql/apollo-client/commit/76270002254b0c6acb18872a39ab180f9f1e4067) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Handle an edge case with the `Defer20220824Handler` where an error for a `@stream` item that bubbles to the `@stream` boundary (such as an item returning `null` for a non-null array item) would write items from future chunks to the wrong array index. In these cases, the `@stream` field is no longer processed and future updates to the field are ignored. This prevents runtime errors that TypeScript would otherwise not be able to catch.
+
+## 4.1.0-alpha.4
+
+### Patch Changes
+
+- [#13009](https://github.com/apollographql/apollo-client/pull/13009) [`259ae9b`](https://github.com/apollographql/apollo-client/commit/259ae9bafaa8122996b0a52dd99828b2261087e5) Thanks [@phryneas](https://github.com/phryneas)! - Allow `FragmentType` not only to be called as `FragmentType<TData>`, but also as `FragmentType<TypedDocumentNode>`.
+
+- [#13012](https://github.com/apollographql/apollo-client/pull/13012) [`44706a2`](https://github.com/apollographql/apollo-client/commit/44706a2e7ae2c977fa917214a1ff5e5fe4a9b3a7) Thanks [@phryneas](https://github.com/phryneas)! - Add helper type `QueryRef.ForQuery<TypedDocumentNode>`
+
+## 4.1.0-alpha.3
+
+### Minor Changes
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `from: null` in `client.watchFragment` and `cache.watchFragment`. When `from` is `null`, the emitted result is:
+
+  ```ts
+  {
+    data: null,
+    dataState: "complete",
+    complete: true,
+  }
+  ```
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for arrays with `useFragment`, `useSuspenseFragment`, and `client.watchFragment`. This allows the ability to use a fragment to watch multiple entities in the cache. Passing an array to `from` will return `data` as an array where each array index corresponds to the index in the `from` array.
+
+  ```ts
+  function MyComponent() {
+    const result = useFragment({
+      fragment,
+      from: [item1, item2, item3],
+    });
+
+    // `data` is an array with 3 items
+    console.log(result); // { data: [{...}, {...}, {...}], dataState: "complete", complete: true }
+  }
+  ```
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a `getCurrentResult` function to the observable returned by `client.watchFragment` and `cache.watchFragment` that returns the current value for the watched fragment.
+
+  ```ts
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "Item", id: 1 },
+  });
+
+  console.log(observable.getCurrentResult());
+  // {
+  //   data: {...},
+  //   dataState: "complete",
+  //   complete: true,
+  // }
+  ```
+
+### Patch Changes
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deduplicate watches created by `useFragment`, `client.watchFragment`, and `cache.watchFragment` that contain the same fragment, variables, and identifier. This should improve performance in situations where a `useFragment` or a `client.watchFragment` is used to watch the same object in multiple places of an application.
+
+- [#12982](https://github.com/apollographql/apollo-client/pull/12982) [`5c56b32`](https://github.com/apollographql/apollo-client/commit/5c56b3210a2c03e247ec9e600f1e27eb71df5e96) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ignore top-level `data` values on subsequent chunks in incremental responses.
+
+- [#12982](https://github.com/apollographql/apollo-client/pull/12982) [`5c56b32`](https://github.com/apollographql/apollo-client/commit/5c56b3210a2c03e247ec9e600f1e27eb71df5e96) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the `Defer20220824Handler.SubsequentResult` type to match the `FormattedSubsequentIncrementalExecutionResult` type in `graphql@17.0.0-alpha.2`.
+
+- [#12973](https://github.com/apollographql/apollo-client/pull/12973) [`072da24`](https://github.com/apollographql/apollo-client/commit/072da24a8daec3a646ef0cce30de32f95ea0bb23) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the `accept` header used with the `GraphQL17Alpha9Handler` to `multipart/mixed;incrementalSpec=v0.2` to ensure the newest incremental delivery format is requested.
+
+- [#12971](https://github.com/apollographql/apollo-client/pull/12971) [`d11eb40`](https://github.com/apollographql/apollo-client/commit/d11eb40aa41d90ac664705bac01158d58bf55e9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `DeepPartial<Array<TData>>` now returns `Array<DeepPartial<TData>>` instead of `Array<DeepPartial<TData | undefined>>`.
+
+## 4.1.0-alpha.2
+
+### Minor Changes
+
+- [#12959](https://github.com/apollographql/apollo-client/pull/12959) [`556e837`](https://github.com/apollographql/apollo-client/commit/556e83781069d925a7e8f99e49023f6f858c6438) Thanks [@jerelmiller](https://github.com/jerelmiller)! - You can now provide a callback function as the `context` option on the `mutate` function returned by `useMutation`. The callback function is called with the value of the `context` option provided to the `useMutation` hook. This is useful if you'd like to merge the context object provided to the `useMutation` hook with a value provided to the `mutate` function.
+
+  ```ts
+  function MyComponent() {
+    const [mutate, result] = useMutation(MUTATION, {
+      context: { foo: true },
+    });
+
+    async function runMutation() {
+      await mutate({
+        // sends context as { foo: true, bar: true }
+        context: (hookContext) => ({ ...hookContext, bar: true }),
+      });
+    }
+
+    // ...
+  }
+  ```
+
+### Patch Changes
+
+- [#12954](https://github.com/apollographql/apollo-client/pull/12954) [`1c82eaf`](https://github.com/apollographql/apollo-client/commit/1c82eafe4921a9e30128202623be6c5a3d4df803) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure an error is thrown when `@stream` is detected and an `incrementalDelivery` handler is not configured.
+
+## 4.1.0-alpha.1
+
+### Minor Changes
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't set the fallback value of a `@client` field to `null` when a `read` function is defined. Instead the `read` function will be called with an `existing` value of `undefined` to allow default arguments to be used to set the returned value.
+
+  When a `read` function is not defined nor is there a defined resolver for the field, warn and set the value to `null` only in that instance.
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an abstract `resolvesClientField` function to `ApolloCache` that can be used by caches to tell `LocalState` if it can resolve a `@client` field when a local resolver is not defined.
+
+  `LocalState` will emit a warning and set a fallback value of `null` when no local resolver is defined and `resolvesClientField` returns `false`, or isn't defined. Returning `true` from `resolvesClientField` signals that a mechanism in the cache will set the field value. In this case, `LocalState` won't set the field value.
+
+### Patch Changes
+
+- [#12915](https://github.com/apollographql/apollo-client/pull/12915) [`c97b145`](https://github.com/apollographql/apollo-client/commit/c97b145188d39d754ff098ff399a80cae5b10cc0) Thanks [@phryneas](https://github.com/phryneas)! - Create mechanism to add experimental features to Apollo Client
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `LocalState` doesn't try to read from the cache when using a `no-cache` fetch policy.
+
+- [#12934](https://github.com/apollographql/apollo-client/pull/12934) [`54ab6d9`](https://github.com/apollographql/apollo-client/commit/54ab6d994692dad9f06d3d0b84c84d021d126577) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using a `no-cache` fetch policy without a local resolver defined. `no-cache` queries do not read or write to the cache which meant `no-cache` queries are silently incomplete when the `@client` field value was handled by a cache `read` function.
+
+## 4.1.0-alpha.0
+
+### Minor Changes
+
+- [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`2aa31c7`](https://github.com/apollographql/apollo-client/commit/2aa31c718155e88814551afb14fd7a0035acc57d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where deferred payloads that reteurned arrays with fewer items than the original cached array would retain items from the cached array. This change includes `@stream` arrays where stream arrays replace the cached arrays.
+
+- [#12926](https://github.com/apollographql/apollo-client/pull/12926) [`c7fba99`](https://github.com/apollographql/apollo-client/commit/c7fba99e16da522fdbc35b9c16cdb8df0dda4c2c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Support the newer incremental delivery format for the `@defer` directive implemented in `graphql@17.0.0-alpha.9`. Import the `GraphQL17Alpha9Handler` to use the newer incremental delivery format with `@defer`.
+
+  ```ts
+  import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
+
+  const client = new ApolloClient({
+    // ...
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  ```
+
+  > [!NOTE]
+  > In order to use the `GraphQL17Alpha9Handler`, the GraphQL server MUST implement the newer incremental delivery format. You may see errors or unusual behavior if you use the wrong handler. If you are using Apollo Router, continue to use the `Defer20220824Handler` because Apollo Router does not yet support the newer incremental delivery format.
+
+- [#12918](https://github.com/apollographql/apollo-client/pull/12918) [`562e219`](https://github.com/apollographql/apollo-client/commit/562e2191a4b38e05edb3da9074e2958db3c7b6b9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for the `@stream` directive on both the `Defer20220824Handler` and the `GraphQL17Alpha2Handler`.
+
+  > [!NOTE]
+  > The implementations of `@stream` differ in the delivery of incremental results between the different GraphQL spec versions. If you upgrading from the older format to the newer format, expect the timing of some incremental results to change.
+
+### Patch Changes
+
+- [#12925](https://github.com/apollographql/apollo-client/pull/12925) [`f538a83`](https://github.com/apollographql/apollo-client/commit/f538a83621e1d110286c056dd8e91611dfd9a1d3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where calling `fetchMore` with `@defer` or `@stream` would not rerender incremental results as they were streamed.
+
+- [#12923](https://github.com/apollographql/apollo-client/pull/12923) [`01cace0`](https://github.com/apollographql/apollo-client/commit/01cace0a6d4faf79e8a4188b93c7d13c4b26d6d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the cache data loss warning message when `existing` or `incoming` is an array.
+
 ## 4.0.13
 
 ### Patch Changes

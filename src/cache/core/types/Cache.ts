@@ -5,6 +5,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { ApolloCache } from "../cache.js";
 
@@ -77,6 +78,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: ExtensionsWithStreamInfo;
   }
 
   export interface DiffOptions<
@@ -202,17 +209,10 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface ReadFragmentOptions<
+  export type ReadFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by the `cache.identify` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
+  > = {
     /**
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
@@ -246,7 +246,7 @@ export declare namespace Cache {
      * @defaultValue false
      */
     optimistic?: boolean;
-  }
+  } & Cache.CacheIdentifierOption<TData>;
 
   export interface WriteQueryOptions<
     TData,
@@ -286,19 +286,18 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: ExtensionsWithStreamInfo;
   }
 
-  export interface WriteFragmentOptions<
+  export type WriteFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by the `cache.identify` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
+  > = {
     /**
      * A GraphQL document created using the `gql` template string
      * with one or more fragments which will be used to determine
@@ -334,7 +333,7 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
-  }
+  } & Cache.CacheIdentifierOption<TData>;
 
   export interface UpdateQueryOptions<
     TData,
@@ -345,14 +344,15 @@ export declare namespace Cache {
       "data"
     > {}
 
-  export interface UpdateFragmentOptions<
+  export type UpdateFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > extends Omit<
-      ReadFragmentOptions<TData, TVariables> &
-        WriteFragmentOptions<TData, TVariables>,
-      "data"
-    > {}
+  > = Omit<
+    ReadFragmentOptions<TData, TVariables> &
+      WriteFragmentOptions<TData, TVariables>,
+    "data" | "id" | "from"
+  > &
+    Cache.CacheIdentifierOption<TData>;
 
   export type DiffResult<TData> =
     | {
@@ -366,5 +366,45 @@ export declare namespace Cache {
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
+      };
+
+  export type CacheIdentifierOption<TData> =
+    | {
+        /**
+         * The root id to be used. This id should take the same form as the
+         * value returned by the `cache.identify` function. If a value with your
+         * id does not exist in the store, `null` will be returned.
+         */
+        id?: string;
+
+        /**
+         * An object containing a `__typename` and primary key fields
+         * (such as `id`) identifying the entity object from which the fragment will
+         * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+         * (uncommon).
+         *
+         * @remarks
+         * `from` is given precedence over `id` when both are provided.
+         */
+        from?: never;
+      }
+    | {
+        /**
+         * The root id to be used. This id should take the same form as the
+         * value returned by the `cache.identify` function. If a value with your
+         * id does not exist in the store, `null` will be returned.
+         */
+        id?: never;
+
+        /**
+         * An object containing a `__typename` and primary key fields
+         * (such as `id`) identifying the entity object from which the fragment will
+         * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+         * (uncommon).
+         *
+         * @remarks
+         * `from` is given precedence over `id` when both are provided.
+         */
+        from?: ApolloCache.FromOptionValue<TData>;
       };
 }

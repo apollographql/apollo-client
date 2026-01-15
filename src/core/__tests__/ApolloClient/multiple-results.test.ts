@@ -13,7 +13,7 @@ describe("multiple results", () => {
       query LazyLoadLuke {
         people_one(id: 1) {
           name
-          friends @defer {
+          friends {
             name
           }
         }
@@ -29,7 +29,6 @@ describe("multiple results", () => {
 
     const laterData = {
       people_one: {
-        // XXX true defer's wouldn't send this
         name: "Luke Skywalker",
         friends: [{ name: "Leia Skywalker" }],
       },
@@ -82,7 +81,7 @@ describe("multiple results", () => {
       query LazyLoadLuke {
         people_one(id: 1) {
           name
-          friends @defer {
+          friends {
             name
           }
         }
@@ -98,7 +97,6 @@ describe("multiple results", () => {
 
     const laterData = {
       people_one: {
-        // XXX true defer's wouldn't send this
         name: "Luke Skywalker",
         friends: [{ name: "Leia Skywalker" }],
       },
@@ -165,7 +163,7 @@ describe("multiple results", () => {
       query LazyLoadLuke {
         people_one(id: 1) {
           name
-          friends @defer {
+          friends {
             name
           }
         }
@@ -181,7 +179,6 @@ describe("multiple results", () => {
 
     const laterData = {
       people_one: {
-        // XXX true defer's wouldn't send this
         name: "Luke Skywalker",
         friends: [{ name: "Leia Skywalker" }],
       },
@@ -241,7 +238,7 @@ describe("multiple results", () => {
       query LazyLoadLuke {
         people_one(id: 1) {
           name
-          friends @defer {
+          friends {
             name
           }
         }
@@ -257,7 +254,6 @@ describe("multiple results", () => {
 
     const laterData = {
       people_one: {
-        // XXX true defer's wouldn't send this
         name: "Luke Skywalker",
         friends: [{ name: "Leia Skywalker" }],
       },
@@ -317,7 +313,7 @@ describe("multiple results", () => {
       query LazyLoadLuke {
         people_one(id: 1) {
           name
-          friends @defer {
+          friends {
             name
           }
         }

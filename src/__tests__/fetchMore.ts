@@ -19,7 +19,7 @@ import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   markAsStreaming,
-  mockDeferStream,
+  mockDefer20220824,
   ObservableStream,
   setupPaginatedCase,
 } from "@apollo/client/testing/internal";
@@ -2478,7 +2478,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
 });
 
 test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring yet will not put it into completed state", async () => {
-  const defer = mockDeferStream();
+  const defer = mockDefer20220824();
   const baseLink = new MockSubscriptionLink();
 
   const client = new ApolloClient({
@@ -2684,6 +2684,125 @@ test("does not allow fetchMore on a cache-only query", async () => {
   );
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("provides extensions in merge functions", async () => {
+  const query = gql`
+    query Comment($repoName: String!, $start: Int!, $limit: Int!) {
+      entry(repoFullName: $repoName) {
+        comments(start: $start, limit: $limit) {
+          text
+        }
+      }
+    }
+  `;
+
+  const merge = jest.fn((existing = [], incoming) => existing.concat(incoming));
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Entry: {
+          fields: {
+            comments: {
+              keyArgs: false,
+              merge,
+            },
+          },
+        },
+      },
+    }),
+    link: new MockLink([
+      {
+        request: {
+          query,
+          variables: { repoName: "apollo-client", start: 1, limit: 10 },
+        },
+        result: {
+          data: {
+            entry: { __typename: "Entry", comments: commentsInRange(1, 10) },
+          },
+          extensions: { pagination: { isComplete: false } },
+        },
+      },
+      {
+        request: {
+          query,
+          variables: { repoName: "apollo-client", start: 11, limit: 10 },
+        },
+        result: {
+          data: {
+            entry: { __typename: "Entry", comments: commentsInRange(11, 20) },
+          },
+          extensions: { pagination: { isComplete: true } },
+        },
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { repoName: "apollo-client", start: 1, limit: 10 },
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { entry: { __typename: "Entry", comments: commentsInRange(1, 10) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(merge).toHaveBeenCalledTimes(1);
+  expect(merge).toHaveBeenCalledWith(
+    undefined,
+    commentsInRange(1, 10),
+    expect.objectContaining({
+      extensions: { pagination: { isComplete: false } },
+    })
+  );
+
+  merge.mockClear();
+
+  await expect(
+    observable.fetchMore({ variables: { start: 11, limit: 10 } })
+  ).resolves.toStrictEqualTyped({
+    data: { entry: { __typename: "Entry", comments: commentsInRange(11, 20) } },
+  });
+
+  await expect(stream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+    }),
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { entry: { __typename: "Entry", comments: commentsInRange(1, 20) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(merge).toHaveBeenCalledTimes(1);
+  expect(merge).toHaveBeenCalledWith(
+    commentsInRange(1, 10),
+    commentsInRange(11, 20),
+    expect.objectContaining({
+      extensions: { pagination: { isComplete: true } },
+    })
+  );
 });
 
 function commentsInRange(

@@ -22,6 +22,7 @@ import type {
   ErrorLike,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalStateError, toErrorLike } from "@apollo/client/errors";
@@ -63,6 +64,7 @@ interface ExecContext {
   exportedVariableDefs: Record<string, ExportedVariable>;
   diff: Cache.DiffResult<any>;
   returnPartialData: boolean;
+  fetchPolicy?: WatchQueryFetchPolicy;
 }
 
 /**
@@ -336,6 +338,7 @@ export class LocalState<
     variables = {} as TVariables,
     onlyRunForcedResolvers = false,
     returnPartialData = false,
+    fetchPolicy,
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
@@ -345,6 +348,7 @@ export class LocalState<
     variables: TVariables | undefined;
     onlyRunForcedResolvers?: boolean;
     returnPartialData?: boolean;
+    fetchPolicy: WatchQueryFetchPolicy;
   }): Promise<FormattedExecutionResult<TData>> {
     if (__DEV__) {
       invariant(
@@ -372,12 +376,15 @@ export class LocalState<
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
-    const diff = client.cache.diff<Record<string, any>>({
-      query: toQueryOperation(document),
-      variables,
-      returnPartialData: true,
-      optimistic: false,
-    });
+    const diff: Cache.DiffResult<Record<string, any>> =
+      fetchPolicy === "no-cache" ?
+        { result: null, complete: false }
+      : client.cache.diff<Record<string, any>>({
+          query: toQueryOperation(document),
+          variables,
+          returnPartialData: true,
+          optimistic: false,
+        });
 
     const requestContext = { ...client.defaultContext, ...context };
     const execContext: ExecContext = {
@@ -401,6 +408,7 @@ export class LocalState<
       exportedVariableDefs,
       diff,
       returnPartialData,
+      fetchPolicy,
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -676,9 +684,10 @@ export class LocalState<
       variables,
       operationDefinition,
       phase,
-      returnPartialData,
       onlyRunForcedResolvers,
+      fetchPolicy,
     } = execContext;
+    let { returnPartialData } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
     const typename =
@@ -709,7 +718,25 @@ export class LocalState<
             return fieldFromCache;
           }
 
+          if (client.cache.resolvesClientField?.(typename, fieldName)) {
+            if (fetchPolicy === "no-cache") {
+              invariant.warn(
+                "The '%s' field resolves the value from the cache, for example from a 'read' function, but a 'no-cache' fetch policy was used. The field value has been set to `null`. Either define a local resolver or use a fetch policy that uses the cache to ensure the field is resolved correctly.",
+                resolverName
+              );
+              return null;
+            }
+
+            // assume the cache will handle returning the correct value
+            returnPartialData = true;
+            return;
+          }
+
           if (!returnPartialData) {
+            invariant.warn(
+              "Could not find a resolver for the '%s' field nor does the cache resolve the field. The field value has been set to `null`. Either define a resolver for the field or ensure the cache can resolve the value, for example, by adding a 'read' function to a field policy in 'InMemoryCache'.",
+              resolverName
+            );
             return null;
           }
         }

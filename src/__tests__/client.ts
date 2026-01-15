@@ -20,6 +20,7 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import type {
   NormalizedCacheObject,
   PossibleTypesMap,
+  Reference,
 } from "@apollo/client/cache";
 import {
   createFragmentRegistry,
@@ -3200,6 +3201,143 @@ describe("client", () => {
     const actualResult = await client.query({ query });
 
     expect(actualResult.data).toEqual(result);
+  });
+
+  it("handles read functions on arrays that return undefined items", async () => {
+    const query: TypedDocumentNode<{
+      books: Array<{ __typename: "Book"; id: number; name: string }>;
+    }> = gql`
+      query {
+        books {
+          id
+          name
+        }
+      }
+    `;
+
+    const link = new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            books: [
+              { __typename: "Book", id: 1, name: "Book 1 (fetch)" },
+              { __typename: "Book", id: 2, name: "Book 2 (fetch)" },
+              { __typename: "Book", id: 3, name: "Book 3 (fetch)" },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            books: (existing: Reference[] = [], { canRead }) => {
+              return existing.map((book) => (canRead(book) ? book : undefined));
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({ link, cache });
+
+    client.writeQuery({
+      query,
+      data: {
+        books: [
+          { __typename: "Book", id: 1, name: "Book 1 (cache)" },
+          { __typename: "Book", id: 2, name: "Book 2 (cache)" },
+        ],
+      },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+    const partialStream = new ObservableStream(
+      client.watchQuery({
+        query,
+        returnPartialData: true,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        books: [
+          { __typename: "Book", id: 1, name: "Book 1 (cache)" },
+          { __typename: "Book", id: 2, name: "Book 2 (cache)" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(partialStream).toEmitTypedValue({
+      data: {
+        books: [
+          { __typename: "Book", id: 1, name: "Book 1 (cache)" },
+          { __typename: "Book", id: 2, name: "Book 2 (cache)" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    cache.evict({ id: cache.identify({ __typename: "Book", id: 2 }) });
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+    await expect(partialStream).toEmitTypedValue({
+      data: {
+        books: [{ __typename: "Book", id: 1, name: "Book 1 (cache)" }, {}],
+      },
+      dataState: "partial",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        data: {
+          books: [
+            { __typename: "Book", id: 1, name: "Book 1 (fetch)" },
+            { __typename: "Book", id: 2, name: "Book 2 (fetch)" },
+            { __typename: "Book", id: 3, name: "Book 3 (fetch)" },
+          ],
+        },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      }),
+    });
+    await expect(partialStream).toEmitTypedValue({
+      data: {
+        books: [
+          { __typename: "Book", id: 1, name: "Book 1 (fetch)" },
+          { __typename: "Book", id: 2, name: "Book 2 (fetch)" },
+          { __typename: "Book", id: 3, name: "Book 3 (fetch)" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+    await expect(partialStream).not.toEmitAnything();
   });
 });
 

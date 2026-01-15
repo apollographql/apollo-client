@@ -1,16 +1,18 @@
 import { DeepMerger } from "@apollo/client/utilities/internal";
 
 test("supports custom reconciler functions", function () {
-  const merger = new DeepMerger(function (target, source, key) {
-    const targetValue = target[key];
-    const sourceValue = source[key];
-    if (Array.isArray(sourceValue)) {
-      if (!Array.isArray(targetValue)) {
-        return sourceValue;
+  const merger = new DeepMerger({
+    reconciler(target, source, key) {
+      const targetValue = target[key];
+      const sourceValue = source[key];
+      if (Array.isArray(sourceValue)) {
+        if (!Array.isArray(targetValue)) {
+          return sourceValue;
+        }
+        return [...targetValue, ...sourceValue];
       }
-      return [...targetValue, ...sourceValue];
-    }
-    return this.merge(targetValue, sourceValue);
+      return this.merge(targetValue, sourceValue);
+    },
   });
 
   expect(
@@ -30,67 +32,33 @@ test("supports custom reconciler functions", function () {
   });
 });
 
-test("provides optional context to reconciler function", function () {
-  const contextObject = {
-    contextWithSpaces: "c o n t e x t",
-  };
+test("deep merges each array item keeping length by default", () => {
+  const target = [{ a: 1, b: { c: 2 } }, { e: 5 }];
+  const source = [{ a: 2, b: { c: 2, d: 3 } }];
 
-  const shallowContextValues: any[] = [];
-  const shallowMerger = new DeepMerger<(typeof contextObject)[]>(function (
-    target,
-    source,
-    property,
-    context: typeof contextObject
-  ) {
-    shallowContextValues.push(context);
-    // Deliberately not passing context down to nested levels.
-    return this.merge(target[property], source[property]);
-  });
+  const result = new DeepMerger().merge(target, source);
 
-  const typicalContextValues: any[] = [];
-  const typicalMerger = new DeepMerger<(typeof contextObject)[]>(function (
-    target,
-    source,
-    property,
-    context
-  ) {
-    typicalContextValues.push(context);
-    // Passing context down this time.
-    return this.merge(target[property], source[property], context);
-  });
+  expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }, { e: 5 }]);
+});
 
-  const left = {
-    a: 1,
-    b: {
-      c: 2,
-      d: [3, 4],
-    },
-    e: 5,
-  };
+test("deep merges each array item and truncates source to target length when using truncate arrayMerge", () => {
+  const target = [{ a: 1, b: { c: 2 } }, { e: 5 }];
+  const source = [{ a: 2, b: { c: 2, d: 3 } }];
 
-  const right = {
-    b: {
-      d: [3, 4, 5],
-    },
-  };
+  const result = new DeepMerger({
+    arrayMerge: "truncate",
+  }).merge(target, source);
 
-  const expected = {
-    a: 1,
-    b: {
-      c: 2,
-      d: [3, 4, 5],
-    },
-    e: 5,
-  };
+  expect(result).toEqual([{ a: 2, b: { c: 2, d: 3 } }]);
+});
 
-  expect(shallowMerger.merge(left, right, contextObject)).toEqual(expected);
-  expect(typicalMerger.merge(left, right, contextObject)).toEqual(expected);
+test("maintains source length when using truncate arrayMerge when source is longer than target length", () => {
+  const target = [{ a: 1, b: { c: 2 } }];
+  const source = [{ a: 2 }, { e: 2 }];
 
-  expect(shallowContextValues.length).toBe(2);
-  expect(shallowContextValues[0]).toBe(contextObject);
-  expect(shallowContextValues[1]).toBeUndefined();
+  const result = new DeepMerger({
+    arrayMerge: "truncate",
+  }).merge(target, source);
 
-  expect(typicalContextValues.length).toBe(2);
-  expect(typicalContextValues[0]).toBe(contextObject);
-  expect(typicalContextValues[1]).toBe(contextObject);
+  expect(result).toEqual([{ a: 2, b: { c: 2 } }, { e: 2 }]);
 });

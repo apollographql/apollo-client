@@ -425,7 +425,6 @@ export function useBackgroundQuery<
   "use no memo";
   return wrapHook(
     "useBackgroundQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useBackgroundQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options ?? ({} as any));

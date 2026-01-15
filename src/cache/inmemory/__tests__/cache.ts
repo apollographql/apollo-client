@@ -494,6 +494,114 @@ describe("Cache", () => {
     );
 
     itWithInitialData(
+      "will read some data from the store with `from`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+      }
+    );
+
+    itWithInitialData(
+      "prefers `from` over `id`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+      }
+    );
+
+    itWithInitialData(
       "will read some data from the store with variables",
       [
         {
@@ -1042,6 +1150,49 @@ describe("Cache", () => {
         });
       }
     );
+
+    it("does not write @stream directive as part of the cache key", () => {
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        data: {
+          list: [{ __typename: "Item", id: "1", value: 1 }],
+        },
+        query: gql`
+          query {
+            list @stream(initialCount: 1) {
+              id
+              value
+            }
+          }
+        `,
+      });
+
+      expect(cache.extract()).toStrictEqualTyped({
+        ROOT_QUERY: {
+          __typename: "Query",
+          list: [{ __ref: "Item:1" }],
+        },
+        "Item:1": { __typename: "Item", id: "1", value: 1 },
+      });
+
+      // We should be able to read the list without the `@stream` directive and
+      // get back results
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              list {
+                id
+                value
+              }
+            }
+          `,
+        })
+      ).toStrictEqualTyped({
+        list: [{ __typename: "Item", id: "1", value: 1 }],
+      });
+    });
   });
 
   describe("writeFragment", () => {
@@ -1307,6 +1458,97 @@ describe("Cache", () => {
         });
       }
     );
+
+    itWithCacheConfig("can use the `from` option", {}, (proxy) => {
+      proxy.writeFragment({
+        data: {
+          id: 1,
+          a: 1,
+          b: 2,
+          __typename: "Foo",
+        },
+        from: { __typename: "Foo", id: 1 },
+        fragment: gql`
+          fragment foo on Foo {
+            id
+            a
+            b
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          c: 3,
+          d: 4,
+          __typename: "Foo",
+        },
+        from: { __ref: "Foo:1" },
+        fragment: gql`
+          fragment foo on Foo {
+            c
+            d
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          e: 5,
+          f: 6,
+          __typename: "Foo",
+        },
+        from: "Foo:1",
+        fragment: gql`
+          fragment foo on Foo {
+            e
+            f
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+          e: 5,
+          f: 6,
+        },
+      });
+    });
   });
 
   describe("cache.updateQuery and cache.updateFragment", () => {
@@ -1477,6 +1719,41 @@ describe("Cache", () => {
       });
 
       cancel();
+    });
+
+    it("can use `from` with `updateFragment`", async () => {
+      type Data = { a: number; b: number; __typename: "Foo" };
+
+      const cache = new InMemoryCache();
+      const fragment: TypedDocumentNode<Data, Record<string, never>> = gql`
+        fragment foo on Foo {
+          a
+          b
+        }
+      `;
+
+      function update(data: Data | null): Data {
+        if (!data) {
+          return { a: 1, b: 2, __typename: "Foo" };
+        }
+
+        return { a: data.a + 1, b: data.b + 1, __typename: "Foo" };
+      }
+
+      expect(
+        cache.updateFragment(
+          { fragment, from: { __typename: "Foo", id: 1 } },
+          update
+        )
+      ).toStrictEqualTyped({ __typename: "Foo", a: 1, b: 2 });
+
+      expect(
+        cache.updateFragment({ fragment, from: { __ref: "Foo:1" } }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 2, b: 3 });
+
+      expect(
+        cache.updateFragment({ fragment, from: "Foo:1" }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 3, b: 4 });
     });
   });
 

@@ -11,6 +11,7 @@ import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
+import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
@@ -19,11 +20,14 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
+import type { IsAny } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
+import type { Prettify } from '@apollo/client/utilities/internal';
 import { Reference } from '@apollo/client/utilities';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
@@ -39,20 +43,36 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
+    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    // (undocumented)
+    export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
+        getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
+    }
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
-        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+        from: ApolloCache.FromOptionValue<TData> | Array<ApolloCache.FromOptionValue<TData> | null> | null;
         optimistic?: boolean;
         variables?: TVariables;
     }
-    export type WatchFragmentResult<TData = unknown> = ({
+    export type WatchFragmentResult<TData = unknown> = true extends IsAny<TData> ? ({
         complete: true;
         missing?: never;
-    } & GetDataState<TData, "complete">) | ({
+    } & GetDataState<any, "complete">) | ({
         complete: false;
-        missing: MissingTree;
-    } & GetDataState<TData, "partial">);
+        missing?: MissingTree;
+    } & GetDataState<any, "partial">) : TData extends null | null[] ? Prettify<{
+        complete: true;
+        missing?: never;
+    } & GetDataState<TData, "complete">> : Prettify<{
+        complete: true;
+        missing?: never;
+    } & GetDataState<TData, "complete">> | {
+        complete: false;
+        missing?: MissingTree;
+        data: TData extends Array<infer TItem> ? Array<DataValue.Partial<TItem> | null> : DataValue.Partial<TData>;
+        dataState: "partial";
+    };
 }
 
 // @public (undocumented)
@@ -76,11 +96,12 @@ export abstract class ApolloCache {
     lookupFragment(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
+    protected onAfterBroadcast: (cb: () => void) => void;
     // (undocumented)
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
     abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, from, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
@@ -93,6 +114,7 @@ export abstract class ApolloCache {
     abstract removeOptimistic(id: string): void;
     // (undocumented)
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
+    resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -104,10 +126,31 @@ export abstract class ApolloCache {
     updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
     abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
-    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): Observable<ApolloCache.WatchFragmentResult<Unmasked<TData>>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<ApolloCache.FromOptionValue<TData>>;
+    }): ApolloCache.ObservableFragment<Array<Unmasked<TData>>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<null>;
+    }): ApolloCache.ObservableFragment<Array<null>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: Array<ApolloCache.FromOptionValue<TData> | null>;
+    }): ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: null;
+    }): ApolloCache.ObservableFragment<null>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        from: ApolloCache.FromOptionValue<TData>;
+    }): ApolloCache.ObservableFragment<Unmasked<TData>>;
+    // (undocumented)
+    watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, from, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
@@ -128,6 +171,14 @@ namespace Cache_2 {
         removeOptimistic?: string;
         update(cache: TCache): TUpdateResult;
     }
+    // (undocumented)
+    type CacheIdentifierOption<TData> = {
+        id?: string;
+        from?: never;
+    } | {
+        id?: never;
+        from?: ApolloCache.FromOptionValue<TData>;
+    };
     // (undocumented)
     interface DiffOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<ReadOptions<TData, TVariables>, "rootId"> {
     }
@@ -168,14 +219,13 @@ namespace Cache_2 {
         optimistic?: boolean;
     }
     // (undocumented)
-    interface ReadFragmentOptions<TData, TVariables extends OperationVariables> {
+    type ReadFragmentOptions<TData, TVariables extends OperationVariables> = {
         fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
-        id?: string;
-        optimistic?: boolean;
-        returnPartialData?: boolean;
         variables?: TVariables;
-    }
+        returnPartialData?: boolean;
+        optimistic?: boolean;
+    } & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     interface ReadOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         id?: string;
@@ -204,8 +254,7 @@ namespace Cache_2 {
         discardWatches?: boolean;
     }
     // (undocumented)
-    interface UpdateFragmentOptions<TData, TVariables extends OperationVariables> extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data"> {
-    }
+    type UpdateFragmentOptions<TData, TVariables extends OperationVariables> = Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, "data" | "id" | "from"> & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     interface UpdateQueryOptions<TData, TVariables extends OperationVariables> extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, "data"> {
     }
@@ -223,20 +272,20 @@ namespace Cache_2 {
         watcher?: object;
     }
     // (undocumented)
-    interface WriteFragmentOptions<TData, TVariables extends OperationVariables> {
-        broadcast?: boolean;
-        data: Unmasked<TData>;
+    type WriteFragmentOptions<TData, TVariables extends OperationVariables> = {
         fragment: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         fragmentName?: string;
-        id?: string;
-        overwrite?: boolean;
         variables?: TVariables;
-    }
+        data: Unmasked<TData>;
+        broadcast?: boolean;
+        overwrite?: boolean;
+    } & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     interface WriteOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         broadcast?: boolean;
         // (undocumented)
         dataId?: string;
+        extensions?: ExtensionsWithStreamInfo;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
@@ -247,6 +296,7 @@ namespace Cache_2 {
     interface WriteQueryOptions<TData, TVariables extends OperationVariables> {
         broadcast?: boolean;
         data: Unmasked<TData>;
+        extensions?: ExtensionsWithStreamInfo;
         id?: string;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -416,20 +466,31 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVariables ex
 }
 
 // @public (undocumented)
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+export type FieldMergeFunction<TExisting = any, TIncoming = TExisting, TOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, incoming: SafeReadonly<TIncoming>, options: TOptions) => SafeReadonly<TExisting>;
+
+// @public (undocumented)
+export interface FieldMergeFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+    existingData: unknown;
+    extensions: Record<string, unknown> | undefined;
+    streamFieldInfo?: Incremental.StreamFieldInfo;
+}
 
 // @public (undocumented)
 export function fieldNameFromStoreName(storeFieldName: string): string;
 
 // @public (undocumented)
-export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = {
+export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TIncoming, TReadOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions, TMergeOptions extends FieldMergeFunctionOptions = FieldMergeFunctionOptions> = {
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
-    read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
-    merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
+    read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
+    merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
 };
 
 // @public (undocumented)
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldFunctionOptions = FieldFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+export type FieldReadFunction<TExisting = any, TReadResult = TExisting, TOptions extends FieldReadFunctionOptions = FieldReadFunctionOptions> = (existing: SafeReadonly<TExisting> | undefined, options: TOptions) => TReadResult | undefined;
+
+// @public (undocumented)
+export interface FieldReadFunctionOptions<TArgs = Record<string, any>, TVariables extends OperationVariables = Record<string, any>> extends FieldFunctionOptions<TArgs, TVariables> {
+}
 
 // @public (undocumented)
 interface FieldSpecifier {
@@ -538,6 +599,8 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     reset(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
+    resolvesClientField(typename: string, fieldName: string): boolean;
+    // (undocumented)
     restore(data: NormalizedCacheObject): this;
     // (undocumented)
     retain(rootId: string, optimistic?: boolean): number;
@@ -628,6 +691,8 @@ export interface MergeInfo {
     field: FieldNode;
     // (undocumented)
     merge: FieldMergeFunction;
+    // (undocumented)
+    path: Array<string | number>;
     // (undocumented)
     typename: string | undefined;
 }
@@ -772,7 +837,7 @@ export class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -815,6 +880,8 @@ export interface ReadFieldOptions extends FieldSpecifier {
 
 // @public (undocumented)
 export interface ReadMergeModifyContext {
+    // (undocumented)
+    extensions?: ExtensionsWithStreamInfo;
     // (undocumented)
     store: NormalizedCache;
     // (undocumented)
@@ -941,9 +1008,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

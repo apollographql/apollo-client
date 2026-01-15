@@ -42,6 +42,7 @@ import * as utilities from "@apollo/client/utilities";
 import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
 import * as utilitiesInternal from "@apollo/client/utilities/internal";
 import * as utilitiesInternalGlobals from "@apollo/client/utilities/internal/globals";
+import * as utilitiesInternalPonyfills from "@apollo/client/utilities/internal/ponyfills";
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 import * as v4_migration from "@apollo/client/v4-migration";
 
@@ -104,6 +105,10 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/internal", utilitiesInternal);
   check("@apollo/client/utilities/internal/globals", utilitiesInternalGlobals);
+  check(
+    "@apollo/client/utilities/internal/ponyfills",
+    utilitiesInternalPonyfills
+  );
   check("@apollo/client/utilities/invariant", utilitiesInvariant);
   check("@apollo/client/utilities/environment", utilitiesEnvironment);
   check("@apollo/client/v4-migration", v4_migration);

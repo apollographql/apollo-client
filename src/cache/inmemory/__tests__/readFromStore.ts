@@ -1516,6 +1516,117 @@ describe("reading from the store", () => {
     });
   });
 
+  it("does not filter explicit undefined items in array returned from read function", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            ducks(existing: Reference[] = [], { canRead }) {
+              return existing.map((duck) => (canRead(duck) ? duck : undefined));
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          ducks {
+            quacking
+          }
+        }
+      `,
+      data: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      "Duck:1": {
+        __typename: "Duck",
+        id: 1,
+        quacking: true,
+      },
+      "Duck:2": {
+        __typename: "Duck",
+        id: 2,
+        quacking: false,
+      },
+      "Duck:3": {
+        __typename: "Duck",
+        id: 3,
+        quacking: false,
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        ducks: [{ __ref: "Duck:1" }, { __ref: "Duck:2" }, { __ref: "Duck:3" }],
+      },
+    });
+
+    function diffDucks() {
+      return cache.diff({
+        query: gql`
+          query {
+            ducks {
+              id
+              quacking
+            }
+          }
+        `,
+        optimistic: true,
+      });
+    }
+
+    expect(diffDucks()).toEqual({
+      complete: true,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          { __typename: "Duck", id: 3, quacking: false },
+        ],
+      },
+    });
+
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Duck",
+          id: 3,
+        }),
+      })
+    ).toBe(true);
+
+    expect(diffDucks()).toEqual({
+      complete: false,
+      result: {
+        ducks: [
+          { __typename: "Duck", id: 1, quacking: true },
+          { __typename: "Duck", id: 2, quacking: false },
+          {},
+        ],
+      },
+      missing: new MissingFieldError(
+        "Can't find field 'id' on object undefined",
+        {
+          ducks: {
+            2: {
+              id: "Can't find field 'id' on object undefined",
+              quacking: "Can't find field 'quacking' on object undefined",
+            },
+          },
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
+    });
+  });
+
   it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
       typePolicies: {

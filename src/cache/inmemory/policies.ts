@@ -889,7 +889,7 @@ export class Policies {
 
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
-    context: ReadMergeModifyContext
+    context: (ReadMergeModifyContext & { incomingById?: never }) | WriteContext
   ): SafeReadonly<V> | undefined {
     const objectOrReference = options.from;
     if (!objectOrReference) return;
@@ -897,20 +897,27 @@ export class Policies {
     const nameOrField = options.field || options.fieldName;
     if (!nameOrField) return;
 
+    const incomingObject =
+      isReference(objectOrReference) ?
+        context.incomingById?.get(objectOrReference.__ref)?.storeObject
+      : undefined;
+
     if (options.typename === void 0) {
-      const typename = context.store.getFieldValue<string>(
-        objectOrReference,
-        "__typename"
-      );
+      const typename =
+        context.store.getFieldValue<string>(objectOrReference, "__typename") ??
+        incomingObject?.["__typename"];
       if (typename) options.typename = typename;
     }
 
     const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = context.store.getFieldValue<V>(
+    let existing = context.store.getFieldValue<V>(
       objectOrReference,
       storeFieldName
     );
+    if (existing === undefined) {
+      existing = incomingObject?.[storeFieldName] as typeof existing;
+    }
     const policy = this.getFieldPolicy(options.typename, fieldName);
     const read = policy && policy.read;
 

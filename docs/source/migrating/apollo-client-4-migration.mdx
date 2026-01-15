@@ -1396,6 +1396,12 @@ function onUserInteraction(){
 
 If you need to change the value of an option, rerender the component with the new option value before calling the `execute` function again.
 
+<Note>
+
+When calling the `execute` function multiple times, the `fetchPolicy` is not reset to `initialFetchPolicy` between executions. This means that subsequent calls to `execute` continue using the fetch policy from the previous execution. This primarily affects you if you're using `nextFetchPolicy` to change the `fetchPolicy` after the initial fetch.
+
+</Note>
+
 #### Executing the query during render
 
 Calling the `execute` function of `useLazyQuery` during render is no longer allowed and will now throw an error.

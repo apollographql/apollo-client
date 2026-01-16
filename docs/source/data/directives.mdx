@@ -102,7 +102,7 @@ To use the `@stream` directive, you need to configure an incremental delivery fo
 
 </Note>
 
-To use the `@stream` directive, apply it to a list field with an `initialCount` argument that specifies how many items to include in the initial response:
+Apply the `@stream` directive to a list field. Use the `initialCount` argument to specify the number of items to include in the initial response:
 
 ```graphql
 query FeedQuery {
@@ -113,7 +113,7 @@ query FeedQuery {
 }
 ```
 
-With this query, the server returns the first 5 items as soon as they're ready, then delivers the remaining items one at a time as they become available. This allows your UI to render part of the list while waiting for the remaining items.
+The server returns the first five items immediately, then delivers remaining items as they become available. Your UI can render the initial items while waiting for the rest.
 
 <Note>
 

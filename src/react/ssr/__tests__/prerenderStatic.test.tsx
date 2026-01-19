@@ -32,6 +32,7 @@ import {
   ApolloProvider,
   getApolloContext,
   skipToken,
+  type SkipToken,
   useQuery,
   useSuspenseQuery,
 } from "@apollo/client/react";
@@ -870,213 +871,179 @@ it.skip("type tests", async () => {
   }
 });
 
-describe("useQuery with prerenderStatic", () => {
-  test("skipToken does not fetch during SSR", async () => {
-    const query: TypedDocumentNode<{ hello: string }> = gql`
-      query {
-        hello
-      }
-    `;
-
-    const mockLink = new MockLink([
-      {
-        request: { query },
-        result: { data: { hello: "world" } },
-      },
-    ]);
-    const linkSpy = jest.spyOn(mockLink, "request");
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: mockLink,
-    });
-
-    function Component({ skip }: { skip: boolean }) {
-      const result = useQuery(query, skip ? skipToken : {});
-      return (
-        <div>
-          {JSON.stringify({
-            data: result.data || null,
-            loading: result.loading,
-            dataState: result.dataState,
-            networkStatus: result.networkStatus,
-          })}
-        </div>
-      );
-    }
-
-    const { result: result1 } = await prerenderStatic({
-      tree: <Component skip={true} />,
-      context: { client },
-      renderFunction: prerender,
-    });
-
-    expect(decode(result1)).toContain(
-      `${JSON.stringify({
+describe("cases that should skip SSR", () => {
+  test.each<{
+    options: useQuery.Options<{ hello: string }, any> | SkipToken;
+    populateCache: boolean;
+    expectedResult: {
+      data: unknown;
+      loading: boolean;
+      dataState: "empty";
+      networkStatus: NetworkStatus;
+    };
+  }>([
+    // skipToken
+    {
+      options: skipToken,
+      populateCache: false,
+      expectedResult: {
         data: null,
         loading: false,
         dataState: "empty",
         networkStatus: NetworkStatus.ready,
-      })}`
-    );
-    expect(linkSpy).toHaveBeenCalledTimes(0);
-  });
-
-  test("fetchPolicy: 'no-cache' does not fetch during SSR", async () => {
-    const query: TypedDocumentNode<{ hello: string }> = gql`
-      query {
-        hello
-      }
-    `;
-
-    const mockLink = new MockLink([
-      {
-        request: { query },
-        result: { data: { hello: "world" } },
       },
-    ]);
-    const linkSpy = jest.spyOn(mockLink, "request");
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: mockLink,
-    });
-
-    function Component() {
-      const result = useQuery(query, { fetchPolicy: "no-cache" });
-      return (
-        <div>
-          {JSON.stringify({
-            data: result.data || null,
-            loading: result.loading,
-            dataState: result.dataState,
-            networkStatus: result.networkStatus,
-          })}
-        </div>
-      );
-    }
-
-    const { result } = await prerenderStatic({
-      tree: <Component />,
-      context: { client },
-      renderFunction: prerender,
-    });
-
-    expect(decode(result)).toContain(
-      `${JSON.stringify({
-        data: null,
-        loading: true,
-        dataState: "empty",
-        networkStatus: NetworkStatus.loading,
-      })}`
-    );
-    expect(linkSpy).toHaveBeenCalledTimes(0);
-  });
-
-  test("fetchPolicy: 'standby' does not fetch during SSR", async () => {
-    const query: TypedDocumentNode<{ hello: string }> = gql`
-      query {
-        hello
-      }
-    `;
-
-    const mockLink = new MockLink([
-      {
-        request: { query },
-        result: { data: { hello: "world" } },
-      },
-    ]);
-    const linkSpy = jest.spyOn(mockLink, "request");
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: mockLink,
-    });
-
-    function Component() {
-      const result = useQuery(query, { fetchPolicy: "standby" });
-      return (
-        <div>
-          {JSON.stringify({
-            data: result.data || null,
-            loading: result.loading,
-            dataState: result.dataState,
-            networkStatus: result.networkStatus,
-          })}
-        </div>
-      );
-    }
-
-    const { result } = await prerenderStatic({
-      tree: <Component />,
-      context: { client },
-      renderFunction: prerender,
-    });
-
-    expect(decode(result)).toContain(
-      `${JSON.stringify({
+    },
+    {
+      options: skipToken,
+      populateCache: true,
+      expectedResult: {
         data: null,
         loading: false,
         dataState: "empty",
         networkStatus: NetworkStatus.ready,
-      })}`
-    );
-    expect(linkSpy).toHaveBeenCalledTimes(0);
-  });
-
-  test("ssr: false does not fetch during SSR", async () => {
-    const query: TypedDocumentNode<{ hello: string }> = gql`
-      query {
-        hello
-      }
-    `;
-
-    const mockLink = new MockLink([
-      {
-        request: { query },
-        result: { data: { hello: "world" } },
       },
-    ]);
-    const linkSpy = jest.spyOn(mockLink, "request");
+    },
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: mockLink,
-    });
+    // skip: true
+    {
+      options: { skip: true },
+      populateCache: false,
+      expectedResult: {
+        data: null,
+        loading: false,
+        dataState: "empty",
+        networkStatus: NetworkStatus.ready,
+      },
+    },
+    {
+      options: { skip: true },
+      populateCache: true,
+      expectedResult: {
+        data: null,
+        loading: false,
+        dataState: "empty",
+        networkStatus: NetworkStatus.ready,
+      },
+    },
 
-    function Component() {
-      const result = useQuery(query, { ssr: false });
-      return (
-        <div>
-          {JSON.stringify({
-            data: result.data || null,
-            loading: result.loading,
-            dataState: result.dataState,
-            networkStatus: result.networkStatus,
-          })}
-        </div>
-      );
-    }
-
-    const { result } = await prerenderStatic({
-      tree: <Component />,
-      context: { client },
-      renderFunction: prerender,
-    });
-
-    // With ssr: false, should not fetch during SSR
-    expect(decode(result)).toContain(
-      `${JSON.stringify({
+    // no-cache
+    {
+      options: { fetchPolicy: "no-cache" },
+      populateCache: false,
+      expectedResult: {
         data: null,
         loading: true,
         dataState: "empty",
         networkStatus: NetworkStatus.loading,
-      })}`
-    );
-    expect(linkSpy).toHaveBeenCalledTimes(0);
-  });
+      },
+    },
+    {
+      options: { fetchPolicy: "no-cache" },
+      populateCache: true,
+      expectedResult: {
+        data: null,
+        loading: true,
+        dataState: "empty",
+        networkStatus: NetworkStatus.loading,
+      },
+    },
+
+    // standby
+    {
+      options: { fetchPolicy: "standby" },
+      populateCache: false,
+      expectedResult: {
+        data: null,
+        loading: false,
+        dataState: "empty",
+        networkStatus: NetworkStatus.ready,
+      },
+    },
+    {
+      options: { fetchPolicy: "standby" },
+      populateCache: true,
+      expectedResult: {
+        data: null,
+        loading: false,
+        dataState: "empty",
+        networkStatus: NetworkStatus.ready,
+      },
+    },
+
+    // ssr: false
+    {
+      options: { ssr: false },
+      populateCache: false,
+      expectedResult: {
+        data: null,
+        loading: true,
+        dataState: "empty",
+        networkStatus: NetworkStatus.loading,
+      },
+    },
+    {
+      options: { ssr: false },
+      populateCache: true,
+      expectedResult: {
+        data: null,
+        loading: true,
+        dataState: "empty",
+        networkStatus: NetworkStatus.loading,
+      },
+    },
+  ])(
+    "options: $options (cache populated: $populateCache)",
+    async ({ options, populateCache, expectedResult }) => {
+      const query: TypedDocumentNode<{ hello: string }> = gql`
+        {
+          hello
+        }
+      `;
+
+      const mockLink = new MockLink([
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ]);
+      const linkSpy = jest.spyOn(mockLink, "request");
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: mockLink,
+      });
+
+      if (populateCache) {
+        client.writeQuery({
+          query,
+          data: { hello: "cached" },
+        });
+      }
+
+      function Component() {
+        const result = useQuery(query, options);
+        return (
+          <div>
+            {JSON.stringify({
+              data: result.data || null,
+              loading: result.loading,
+              dataState: result.dataState,
+              networkStatus: result.networkStatus,
+            })}
+          </div>
+        );
+      }
+
+      const { result } = await prerenderStatic({
+        tree: <Component />,
+        context: { client },
+        renderFunction: prerender,
+      });
+
+      expect(result.replaceAll("&quot;", '"')).toContain(
+        `${JSON.stringify(expectedResult)}`
+      );
+      expect(linkSpy).toHaveBeenCalledTimes(0);
+    }
+  );
 });
-
-function decode(input: string): string {
-  return input.replaceAll("&quot;", '"');
-}

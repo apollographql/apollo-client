@@ -60,7 +60,7 @@ export const useSSRQuery = function (
       ...skipStandbyResult,
     });
   }
-  if (options.ssr === false) {
+  if (options.ssr === false || options.fetchPolicy === "no-cache") {
     return withoutObservableAccess({
       ...baseResult,
       ...useQuery.ssrDisabledResult,

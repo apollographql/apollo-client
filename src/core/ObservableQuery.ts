@@ -585,10 +585,10 @@ export class ObservableQuery<
   private getInitialResult(
     initialFetchPolicy?: WatchQueryFetchPolicy
   ): ObservableQuery.Result<MaybeMasked<TData>> {
-    const fetchPolicy =
-      this.queryManager.prioritizeCacheValues ?
-        "cache-first"
-      : initialFetchPolicy || this.options.fetchPolicy;
+    let fetchPolicy = initialFetchPolicy || this.options.fetchPolicy;
+    if (this.queryManager.prioritizeCacheValues && fetchPolicy !== "standby") {
+      fetchPolicy = "cache-first";
+    }
 
     const cacheResult = (): ObservableQuery.Result<TData> => {
       const diff = this.getCacheDiff();

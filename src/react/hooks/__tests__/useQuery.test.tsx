@@ -10295,7 +10295,11 @@ describe("useQuery Hook", () => {
       populateCache: boolean;
       expectedSnapshots: Array<
         Pick<
-          useQuery.Result<TestQueryValue>,
+          useQuery.Result<
+            TestQueryValue,
+            OperationVariables,
+            "empty" | "complete" | "streaming"
+          >,
           | "loading"
           | "data"
           | "networkStatus"

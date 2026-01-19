@@ -31,8 +31,8 @@ import {
 import {
   ApolloProvider,
   getApolloContext,
-  skipToken,
   type SkipToken,
+  skipToken,
   useQuery,
   useSuspenseQuery,
 } from "@apollo/client/react";

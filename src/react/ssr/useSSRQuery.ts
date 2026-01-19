@@ -2,12 +2,8 @@ import type { DocumentNode } from "graphql";
 
 import type { ObservableQuery } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import {
-  SkipToken,
-  skipToken,
-  useApolloClient,
-  useQuery,
-} from "@apollo/client/react";
+import type { SkipToken } from "@apollo/client/react";
+import { skipToken, useApolloClient, useQuery } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 
 import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";

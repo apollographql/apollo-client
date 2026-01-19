@@ -588,9 +588,7 @@ export class ObservableQuery<
     let fetchPolicy = initialFetchPolicy || this.options.fetchPolicy;
     if (
       this.queryManager.prioritizeCacheValues &&
-      fetchPolicy !== "standby" &&
-      fetchPolicy !== "no-cache" &&
-      fetchPolicy !== "cache-only"
+      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
     ) {
       fetchPolicy = "cache-first";
     }

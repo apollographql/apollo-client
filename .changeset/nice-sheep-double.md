@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-`prioritizeCacheValues` should not cause `getInitialResult` to return a loading state for `cache-only`.
+`ssrMode`, `ssrForceFetchDelay` or `prioritizeCacheValues` should not override `fetchPolicy: 'cache-only'`

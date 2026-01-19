@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-fix `skipToken` in `useQuery` with `prerenderStatic` and related SSR functions
+Fix `skipToken` in `useQuery` with `prerenderStatic` and related SSR functions.

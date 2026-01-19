@@ -589,7 +589,8 @@ export class ObservableQuery<
     if (
       this.queryManager.prioritizeCacheValues &&
       fetchPolicy !== "standby" &&
-      fetchPolicy !== "no-cache"
+      fetchPolicy !== "no-cache" &&
+      fetchPolicy !== "cache-only"
     ) {
       fetchPolicy = "cache-first";
     }

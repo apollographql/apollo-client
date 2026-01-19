@@ -10582,7 +10582,13 @@ describe("useQuery Hook", () => {
         );
 
         for (const expected of expectedSnapshots) {
-          await expect(takeSnapshot()).resolves.toStrictEqualTyped(expected);
+          await expect(takeSnapshot()).resolves.toStrictEqualTyped(
+            expected as useQuery.Result<
+              TestQueryValue,
+              OperationVariables,
+              "empty" | "complete" | "streaming"
+            >
+          );
         }
 
         await expect(takeSnapshot).not.toRerender();

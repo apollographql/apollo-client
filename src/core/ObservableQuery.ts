@@ -586,7 +586,11 @@ export class ObservableQuery<
     initialFetchPolicy?: WatchQueryFetchPolicy
   ): ObservableQuery.Result<MaybeMasked<TData>> {
     let fetchPolicy = initialFetchPolicy || this.options.fetchPolicy;
-    if (this.queryManager.prioritizeCacheValues && fetchPolicy !== "standby") {
+    if (
+      this.queryManager.prioritizeCacheValues &&
+      fetchPolicy !== "standby" &&
+      fetchPolicy !== "no-cache"
+    ) {
       fetchPolicy = "cache-first";
     }
 

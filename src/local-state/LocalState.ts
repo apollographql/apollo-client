@@ -628,7 +628,7 @@ export class LocalState<
     execContext: ExecContext,
     path: LocalState.Path
   ) {
-    const result = rootValue?.[field.name.value];
+    const result = rootValue?.[resultKeyNameFromField(field)];
 
     if (!field.selectionSet) {
       return result;

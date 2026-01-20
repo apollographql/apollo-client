@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.1
+
+### Patch Changes
+
+- [#13103](https://github.com/apollographql/apollo-client/pull/13103) [`dee7dcf`](https://github.com/apollographql/apollo-client/commit/dee7dcff4d4baa26d623d1ecace60be88c684c1a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `@client` fields that are children of aliased server fields are resolved correctly.
+
 ## 4.1.0
 
 ### Minor Changes

@@ -282,3 +282,48 @@ test("does not confuse fields aliased to each other with boolean values", async 
     },
   });
 });
+
+test("resolves client fields that are child fields of aliased server fields", async () => {
+  const document = gql`
+    query Test {
+      fie: foo {
+        bar
+        baz @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const remoteResult = {
+    data: {
+      fie: { bar: true, __typename: "Foo" },
+    },
+  };
+
+  const localState = new LocalState({
+    resolvers: {
+      Foo: {
+        baz: () => true,
+      },
+    },
+  });
+
+  await expect(
+    localState.execute({
+      client,
+      document,
+      context: {},
+      variables: {},
+      remoteResult,
+      fetchPolicy: "cache-first",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      fie: { bar: true, baz: true, __typename: "Foo" },
+    },
+  });
+});

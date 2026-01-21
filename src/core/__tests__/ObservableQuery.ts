@@ -5431,6 +5431,340 @@ describe("ObservableQuery", () => {
     });
   });
 
+  describe("prioritizeCacheValues interaction with fetchPolicy", () => {
+    it.each([
+      // `standby` should never show a loading state or cause network requests
+      {
+        fetchPolicy: "standby" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        },
+        expectedEmits: [],
+        expectedFetchCount: 0,
+      },
+      {
+        fetchPolicy: "standby" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        },
+        expectedEmits: [],
+        expectedFetchCount: 0,
+      },
+      // `network-only` should return a loading result and make a network request
+      // if values are missing from cache, but if cache values are present,
+      // during `prioritizeCacheValues` it is actually allowed to immediately
+      // read from the cache and avoid a network request
+      {
+        fetchPolicy: "network-only" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
+            data: { field: "network" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "network-only" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: { field: "cached" },
+          dataState: "complete" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        },
+        expectedEmits: [
+          {
+            data: { field: "cached" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // cache-only should never cause network requests
+      {
+        fetchPolicy: "cache-only" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: true,
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      {
+        fetchPolicy: "cache-only" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: { field: "cached" },
+          dataState: "complete" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        },
+        expectedEmits: [
+          {
+            data: { field: "cached" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // cache-first is the default behavior with `prioritizeCacheValues`
+      {
+        fetchPolicy: "cache-first" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
+            data: { field: "network" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "cache-first" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: { field: "cached" },
+          dataState: "complete" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        },
+        expectedEmits: [
+          {
+            data: { field: "cached" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // no-cache should always fetch and never read from the cache
+      {
+        fetchPolicy: "no-cache" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
+            data: { field: "network" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "no-cache" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
+            data: { field: "network" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      // cache-and-network should avoid fetching if cache is populated
+      {
+        fetchPolicy: "cache-and-network" as const,
+        populateCache: false,
+        expectedInitialCurrentResult: {
+          data: undefined,
+          dataState: "empty" as const,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        },
+        expectedEmits: [
+          {
+            data: undefined,
+            dataState: "empty" as const,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
+            data: { field: "network" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "cache-and-network" as const,
+        populateCache: true,
+        expectedInitialCurrentResult: {
+          data: { field: "cached" },
+          dataState: "complete" as const,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        },
+        expectedEmits: [
+          {
+            data: { field: "cached" },
+            dataState: "complete" as const,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+    ])(
+      "fetchPolicy: '$fetchPolicy' with prioritizeCacheValues (cache populated: $populateCache)",
+      async ({
+        populateCache,
+        fetchPolicy,
+        expectedInitialCurrentResult,
+        expectedEmits,
+        expectedFetchCount,
+      }) => {
+        const query = gql`
+          {
+            field
+          }
+        `;
+        const link = new MockLink([
+          { request: { query }, result: { data: { field: "network" } } },
+        ]);
+        const linkSpy = jest.spyOn(link, "request");
+
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link,
+        });
+
+        if (populateCache) {
+          client.writeQuery({ query, data: { field: "cached" } });
+        }
+
+        client.prioritizeCacheValues = true;
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy,
+        });
+
+        const result = observable.getCurrentResult();
+        expect(result).toStrictEqualTyped(expectedInitialCurrentResult);
+
+        const stream = new ObservableStream(observable);
+
+        for (const expectedEmit of expectedEmits) {
+          await expect(stream).toEmitTypedValue(expectedEmit);
+        }
+
+        await expect(stream).not.toEmitAnything();
+
+        // Check whether network request was made based on expected behavior
+        expect(linkSpy).toHaveBeenCalledTimes(expectedFetchCount);
+      }
+    );
+  });
+
   describe("assumeImmutableResults", () => {
     // Need to handle loading state or notifyOnNetworkStatusChange: false
     // properly

@@ -10287,61 +10287,293 @@ describe("useQuery Hook", () => {
 
   describe("interaction with `prioritizeCacheValues`", () => {
     const cacheData = { something: "foo" };
-    const emptyData = undefined;
+    const networkData = { something: "bar" };
     type TestQueryValue = typeof cacheData;
 
-    test.each<
-      [
-        fetchPolicy: WatchQueryFetchPolicy,
-        initialQueryValue: TestQueryValue | undefined,
-        shouldFetchOnFirstRender: boolean,
-        shouldFetchOnSecondRender: boolean,
-      ]
-    >([
-      [`cache-first`, emptyData, true, false],
-      [`cache-first`, cacheData, false, false],
-      [`cache-only`, emptyData, false, false],
-      [`cache-only`, cacheData, false, false],
-      [`cache-and-network`, emptyData, true, false],
-      [`cache-and-network`, cacheData, false, false],
-      [`network-only`, emptyData, true, false],
-      [`network-only`, cacheData, false, false],
-      [`no-cache`, emptyData, true, false],
-      [`no-cache`, cacheData, true, false],
-      [`standby`, emptyData, false, false],
-      [`standby`, cacheData, false, false],
+    test.each<{
+      fetchPolicy: WatchQueryFetchPolicy;
+      populateCache: boolean;
+      expectedSnapshots: Array<
+        Pick<
+          useQuery.Result<
+            TestQueryValue,
+            OperationVariables,
+            "empty" | "complete" | "streaming"
+          >,
+          | "loading"
+          | "data"
+          | "networkStatus"
+          | "dataState"
+          | "error"
+          | "previousData"
+          | "variables"
+        >
+      >;
+      expectedFetchCount: number;
+    }>([
+      // cache-first is the default behavior with `prioritizeCacheValues`
+      {
+        fetchPolicy: "cache-first",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: true,
+            data: undefined,
+            networkStatus: NetworkStatus.loading,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+          {
+            loading: false,
+            data: networkData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "cache-first",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: cacheData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // cache-only should never cause network requests
+      {
+        fetchPolicy: "cache-only",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: undefined,
+            networkStatus: NetworkStatus.ready,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      {
+        fetchPolicy: "cache-only",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: cacheData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // cache-and-network should avoid fetching if cache is populated
+      {
+        fetchPolicy: "cache-and-network",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: true,
+            data: undefined,
+            networkStatus: NetworkStatus.loading,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+          {
+            loading: false,
+            data: networkData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "cache-and-network",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: cacheData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // `network-only` should return a loading result and make a network request
+      // if values are missing from cache, but if cache values are present,
+      // during `prioritizeCacheValues` it is actually allowed to immediately
+      // read from the cache and avoid a network request
+      {
+        fetchPolicy: "network-only",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: true,
+            data: undefined,
+            networkStatus: NetworkStatus.loading,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+          {
+            loading: false,
+            data: networkData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "network-only",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: cacheData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      // no-cache should always fetch and never read from the cache
+      {
+        fetchPolicy: "no-cache",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: true,
+            data: undefined,
+            networkStatus: NetworkStatus.loading,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+          {
+            loading: false,
+            data: networkData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      {
+        fetchPolicy: "no-cache",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: true,
+            data: undefined,
+            networkStatus: NetworkStatus.loading,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+          {
+            loading: false,
+            data: networkData,
+            networkStatus: NetworkStatus.ready,
+            dataState: "complete" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 1,
+      },
+      // `standby` should never show a loading state or cause network requests
+      {
+        fetchPolicy: "standby",
+        populateCache: false,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: undefined,
+            networkStatus: NetworkStatus.ready,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
+      {
+        fetchPolicy: "standby",
+        populateCache: true,
+        expectedSnapshots: [
+          {
+            loading: false,
+            data: undefined,
+            networkStatus: NetworkStatus.ready,
+            dataState: "empty" as const,
+            previousData: undefined,
+            variables: {},
+          },
+        ],
+        expectedFetchCount: 0,
+      },
     ])(
-      "fetchPolicy %s, cache: %p should fetch during `prioritizeCacheValues`: %p and after `prioritizeCacheValues` has been disabled: %p",
-      async (
-        policy,
-        initialQueryValue,
-        shouldFetchOnFirstRender,
-        shouldFetchOnSecondRender
-      ) => {
+      "fetchPolicy: '$fetchPolicy' with prioritizeCacheValues (cache populated: $populateCache)",
+      async ({
+        fetchPolicy,
+        populateCache,
+        expectedSnapshots,
+        expectedFetchCount,
+      }) => {
+        using _disabledAct = disableActEnvironment();
+
         const query: TypedDocumentNode<TestQueryValue> = gql`
-          query CallMe {
+          query {
             something
           }
         `;
 
         const link = new MockLink([
-          { request: { query }, result: { data: { something: "bar" } } },
-          { request: { query }, result: { data: { something: "baz" } } },
+          { request: { query }, result: { data: networkData } },
         ]);
-        const requestSpy = jest.spyOn(link, "request");
+        const linkSpy = jest.spyOn(link, "request");
 
         const client = new ApolloClient({
           cache: new InMemoryCache(),
           link,
         });
-        if (initialQueryValue) {
-          client.writeQuery({ query, data: initialQueryValue });
+
+        if (populateCache) {
+          client.writeQuery({ query, data: cacheData });
         }
+
         client.prioritizeCacheValues = true;
 
-        const { rerender } = renderHook(
-          () =>
-            useQuery(query, { fetchPolicy: policy, nextFetchPolicy: policy }),
+        const { takeSnapshot } = await renderHookToSnapshotStream(
+          () => useQuery(query, { fetchPolicy }),
           {
             wrapper: ({ children }) => (
               <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -10349,22 +10581,18 @@ describe("useQuery Hook", () => {
           }
         );
 
-        expect(requestSpy).toHaveBeenCalledTimes(
-          shouldFetchOnFirstRender ? 1 : 0
-        );
+        for (const expected of expectedSnapshots) {
+          await expect(takeSnapshot()).resolves.toStrictEqualTyped(
+            expected as useQuery.Result<
+              TestQueryValue,
+              OperationVariables,
+              "empty" | "complete" | "streaming"
+            >
+          );
+        }
 
-        // We need to wait a moment before the rerender for everything to settle down.
-        // This part is unfortunately bound to be flaky - but in some cases there is
-        // just nothing to "wait for", except "a moment".
-        await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
-
-        requestSpy.mockClear();
-        client.prioritizeCacheValues = false;
-
-        rerender();
-        expect(requestSpy).toHaveBeenCalledTimes(
-          shouldFetchOnSecondRender ? 1 : 0
-        );
+        await expect(takeSnapshot).not.toRerender();
+        expect(linkSpy).toHaveBeenCalledTimes(expectedFetchCount);
       }
     );
   });

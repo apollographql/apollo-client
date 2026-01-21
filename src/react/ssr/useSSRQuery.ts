@@ -2,7 +2,8 @@ import type { DocumentNode } from "graphql";
 
 import type { ObservableQuery } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import { useApolloClient, useQuery } from "@apollo/client/react";
+import type { SkipToken } from "@apollo/client/react";
+import { skipToken, useApolloClient, useQuery } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 
 import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";
@@ -20,13 +21,15 @@ export const useSSRQuery = function (
   // eslint-disable-next-line react-hooks/unsupported-syntax
   this: PrerenderStaticInternalContext,
   query: DocumentNode,
-  options: useQuery.Options<any, any> = {}
+  options: useQuery.Options<any, any> | SkipToken = {}
 ): useQuery.Result<any, any> {
   "use no memo";
   function notAllowed(): never {
     throw new Error("This method cannot be called during SSR.");
   }
-  const client = useApolloClient(options.client);
+  const client = useApolloClient(
+    typeof options === "object" ? options.client : undefined
+  );
 
   const baseResult: Omit<
     useQuery.Result,
@@ -39,17 +42,21 @@ export const useSSRQuery = function (
     updateQuery: notAllowed,
     startPolling: notAllowed,
     stopPolling: notAllowed,
-    variables: options?.variables,
+    variables: typeof options === "object" ? options?.variables : undefined,
     previousData: undefined,
   };
 
-  if (options.skip || options.fetchPolicy === "standby") {
+  if (
+    options === skipToken ||
+    options.skip ||
+    options.fetchPolicy === "standby"
+  ) {
     return withoutObservableAccess({
       ...baseResult,
       ...skipStandbyResult,
     });
   }
-  if (options.ssr === false) {
+  if (options.ssr === false || options.fetchPolicy === "no-cache") {
     return withoutObservableAccess({
       ...baseResult,
       ...useQuery.ssrDisabledResult,

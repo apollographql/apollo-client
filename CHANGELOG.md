@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 4.1.2
+
+### Patch Changes
+
+- [#13105](https://github.com/apollographql/apollo-client/pull/13105) [`8b62263`](https://github.com/apollographql/apollo-client/commit/8b62263e19b3442e20fea822de62074cf4f5cb22) Thanks [@phryneas](https://github.com/phryneas)! - `ssrMode`, `ssrForceFetchDelay` or `prioritizeCacheValues` should not override `fetchPolicy: 'cache-only'`, `fetchPolicy: 'no-cache'`, `fetchPolicy: 'standby'`, `skip: true`, or `skipToken` when reading the initial value of an `ObservableQuery`.
+
+- [#13105](https://github.com/apollographql/apollo-client/pull/13105) [`8b62263`](https://github.com/apollographql/apollo-client/commit/8b62263e19b3442e20fea822de62074cf4f5cb22) Thanks [@phryneas](https://github.com/phryneas)! - Fix `skipToken` in `useQuery` with `prerenderStatic` and related SSR functions.
+
+- [#13105](https://github.com/apollographql/apollo-client/pull/13105) [`8b62263`](https://github.com/apollographql/apollo-client/commit/8b62263e19b3442e20fea822de62074cf4f5cb22) Thanks [@phryneas](https://github.com/phryneas)! - Avoid fetches with `fetchPolicy: no-cache` in `useQuery` with `prerenderStatic` and related SSR functions.
+
 ## 4.1.1
 
 ### Patch Changes

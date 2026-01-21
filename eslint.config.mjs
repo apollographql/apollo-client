@@ -144,7 +144,7 @@ export default [
     },
   },
   {
-    ...reactHooks.configs.flat.recommended,
+    ...reactHooks.configs.flat["recommended-latest"],
     files: ["src/react/**/*.ts", "src/react/**/*.tsx"],
     ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
   },

@@ -5437,7 +5437,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "standby" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: false,
@@ -5450,7 +5450,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "standby" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: false,
@@ -5467,7 +5467,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "network-only" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: true,
@@ -5495,7 +5495,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "network-only" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: { field: "cached" },
           dataState: "complete" as const,
           loading: false,
@@ -5517,7 +5517,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-only" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: false,
@@ -5538,7 +5538,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-only" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: { field: "cached" },
           dataState: "complete" as const,
           loading: false,
@@ -5560,7 +5560,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-first" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: true,
@@ -5588,7 +5588,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-first" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: { field: "cached" },
           dataState: "complete" as const,
           loading: false,
@@ -5610,7 +5610,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "no-cache" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: true,
@@ -5638,7 +5638,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "no-cache" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: true,
@@ -5667,7 +5667,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-and-network" as const,
         populateCache: false,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: undefined,
           dataState: "empty" as const,
           loading: true,
@@ -5695,7 +5695,7 @@ describe("ObservableQuery", () => {
       {
         fetchPolicy: "cache-and-network" as const,
         populateCache: true,
-        expectedResult: {
+        expectedInitialCurrentResult: {
           data: { field: "cached" },
           dataState: "complete" as const,
           loading: false,
@@ -5718,7 +5718,7 @@ describe("ObservableQuery", () => {
       async ({
         populateCache,
         fetchPolicy,
-        expectedResult,
+        expectedInitialCurrentResult,
         expectedEmits,
         expectedFetchCount,
       }) => {
@@ -5749,7 +5749,7 @@ describe("ObservableQuery", () => {
         });
 
         const result = observable.getCurrentResult();
-        expect(result).toStrictEqualTyped(expectedResult);
+        expect(result).toStrictEqualTyped(expectedInitialCurrentResult);
 
         const stream = new ObservableStream(observable);
 

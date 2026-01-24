@@ -275,7 +275,7 @@
   "overrides": {
     "pretty-format": "^29.7.0",
     "@testing-library/dom": "$@testing-library/dom",
-    "jsdom": "26.1.0"
+    "jsdom": "27.4.0"
   },
   "workspaces": [
     ".",

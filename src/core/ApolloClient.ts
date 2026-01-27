@@ -738,8 +738,8 @@ export class ApolloClient {
    * import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
    *
    * const cache = new InMemoryCache();
-   *
    * const link = new HttpLink({ uri: "http://localhost:4000/" });
+   *
    * const client = new ApolloClient({
    *   // Provide required constructor fields
    *   cache: cache,
@@ -747,7 +747,10 @@ export class ApolloClient {
    *
    *   // Provide some optional constructor fields
    *   name: "react-web-client",
-   *   version: "1.3",
+  *   clientAwareness: {
+  *     name: "react-web-client",
+  *     version: "1.3",
+  *   },
    *   queryDeduplication: false,
    *   defaultOptions: {
    *     watchQuery: {

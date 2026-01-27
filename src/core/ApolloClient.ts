@@ -746,7 +746,6 @@ export class ApolloClient {
    *   link: link,
    *
    *   // Provide some optional constructor fields
-   *   name: "react-web-client",
    *   clientAwareness: {
    *     name: "react-web-client",
    *     version: "1.3",

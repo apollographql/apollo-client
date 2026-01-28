@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.1.3
+
+### Patch Changes
+
+- [#13111](https://github.com/apollographql/apollo-client/pull/13111) [`bf46fe0`](https://github.com/apollographql/apollo-client/commit/bf46fe019b316ea8a87a05981a89fac5411260b4) Thanks [@RogerHYang](https://github.com/RogerHYang)! - Fix `createFetchMultipartSubscription` to support cancellation via `AbortController`
+
+  Previously, calling `dispose()` or `unsubscribe()` on a subscription created by `createFetchMultipartSubscription` had no effect - the underlying fetch request would continue running until completion. This was because no `AbortController` was created or passed to `fetch()`, and no cleanup function was returned from the Observable.
+
 ## 4.1.2
 
 ### Patch Changes

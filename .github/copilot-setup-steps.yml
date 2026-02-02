@@ -1,0 +1,17 @@
+name: Apollo Client Agent Setup
+description: Setup steps for GitHub Copilot agent to install Apollo Client skill and documentation instructions
+
+steps:
+  - name: Install Apollo Client Skill
+    description: Install the Apollo Client skill from the apollographql/skills repository
+    skill:
+      repository: apollographql/skills
+      path: skills/apollo-client
+    
+  - name: Copy Documentation Instructions
+    description: Copy documentation style guide instructions from apollographql/skills
+    copy:
+      from:
+        repository: apollographql/skills
+        path: .github/instructions/docs.instructions.md
+      to: .github/instructions/docs.instructions.md

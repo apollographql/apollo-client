@@ -39,19 +39,9 @@ jobs:
 
       - name: Install Apollo Client Skill
         run: |
-          echo "Installing Apollo Client skill from apollographql/skills/skills/apollo-client"
-          mkdir -p .github/copilot/skills/apollo-client
-          # Download the main skill file
-          curl -fsSL https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/SKILL.md \
-            -o .github/copilot/skills/apollo-client/SKILL.md
-          # Download all reference files
-          mkdir -p .github/copilot/skills/apollo-client/references
-          for file in caching error-handling fragments integration-client integration-nextjs integration-react-router integration-tanstack-start mutations queries state-management suspense-hooks troubleshooting typescript-codegen; do
-            echo "Downloading ${file}.md..."
-            curl -fsSL "https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/references/${file}.md" \
-              -o ".github/copilot/skills/apollo-client/references/${file}.md" || echo "Warning: Failed to download ${file}.md"
-          done
-          echo "Apollo Client skill installed to .github/copilot/skills/apollo-client/"
+          echo "Installing Apollo Client skill using npx skills CLI"
+          npx --yes skills add apollographql/skills --skill apollo-client --agent github-copilot --scope project --method copy --yes
+          echo "Apollo Client skill installed successfully"
 
       - name: Copy Documentation Instructions
         run: |

@@ -28,22 +28,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "24.x"
-          cache: "npm"
 
-      - name: Install JavaScript dependencies
-        run: npm ci
+      - name: Get upstream skills repository HEAD
+        id: skills-head
+        run: |
+          SKILLS_SHA=$(git ls-remote https://github.com/apollographql/skills.git HEAD | cut -f1)
+          echo "sha=${SKILLS_SHA}" >> $GITHUB_OUTPUT
+          echo "Upstream skills repository HEAD: ${SKILLS_SHA}"
+
+      - name: Cache downloaded skills and instructions
+        id: cache-skills
+        uses: actions/cache@v4
+        with:
+          path: |
+            .agents/skills/apollo-client/
+            .github/skills/apollo-client/
+            .github/instructions/docs.instructions.md
+          key: skills-${{ steps.skills-head.outputs.sha }}
+          restore-keys: |
+            skills-
+
+      - name: Install JavaScript dependencies (with cache)
+        uses: bahmutov/npm-install@v1
 
       - name: Install Apollo Client Skill
+        if: steps.cache-skills.outputs.cache-hit != 'true'
         run: |
           echo "Installing Apollo Client skill using npx skills CLI"
           npx --yes skills add apollographql/skills --skill apollo-client --agent github-copilot --scope project --method copy --yes
           echo "Apollo Client skill installed successfully"
 
       - name: Copy Documentation Instructions
+        if: steps.cache-skills.outputs.cache-hit != 'true'
         run: |
           echo "Copying documentation instructions from apollographql/skills"
           mkdir -p .github/instructions

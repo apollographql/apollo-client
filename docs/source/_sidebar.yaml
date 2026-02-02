@@ -109,8 +109,6 @@ items:
     children:
       - label: Using Apollo Client with your view layer
         href: ./integrations/integrations
-      - label: Client-side apps
-        href: ./integrations/client-side-apps
       - label: Next.js App Router
         href: ./integrations/nextjs
       - label: React Router framework mode

@@ -160,7 +160,10 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { GetUserDocument } from "./queries.generated";
 
-// Define your query with the if (false) pattern for code generation
+// Define your query with the if (false) pattern for code generation.
+// This allows GraphQL Code Generator to discover and generate types for this query,
+// while ensuring the query definition is removed during compilation.
+// See https://the-guild.dev/graphql/codegen/docs/guides/react-apollo for details.
 if (false) {
   gql`
     query GetUser($id: ID!) {
@@ -311,8 +314,9 @@ const client = new ApolloClient({
   // Network layer
   link: new HttpLink({ uri: "/graphql" }),
 
-  // Avoid defaultOptions if possible as they break TypeScript expectations.
-  // Configure options per-query/mutation instead for better type safety.
+  // Avoid defaultOptions if possible. When set, TypeScript cannot properly narrow
+  // types based on options passed to individual queries, potentially allowing
+  // incompatible option combinations. Configure options per-query/mutation instead.
   // defaultOptions: {
   //   watchQuery: { fetchPolicy: 'cache-and-network' },
   // },

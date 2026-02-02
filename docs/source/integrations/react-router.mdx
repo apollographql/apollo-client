@@ -24,7 +24,10 @@ Create an `app/apollo.ts` file that exports a `makeClient` function and an `apol
 
 ```typescript
 import { HttpLink, InMemoryCache } from "@apollo/client";
-import { createApolloLoaderHandler, ApolloClient } from "@apollo/client-integration-react-router";
+import {
+  createApolloLoaderHandler,
+  ApolloClient,
+} from "@apollo/client-integration-react-router";
 
 // `request` will be available on the server during SSR or in loaders, but not in the browser
 export const makeClient = (request?: Request) => {

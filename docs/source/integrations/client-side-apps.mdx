@@ -245,7 +245,10 @@ interface CreateUserMutationVariables {
   };
 }
 
-const CREATE_USER: TypedDocumentNode<CreateUserMutation, CreateUserMutationVariables> = gql`
+const CREATE_USER: TypedDocumentNode<
+  CreateUserMutation,
+  CreateUserMutationVariables
+> = gql`
   mutation CreateUser($input: CreateUserInput!) {
     createUser(input: $input) {
       id

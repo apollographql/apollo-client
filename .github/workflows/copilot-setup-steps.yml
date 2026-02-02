@@ -42,13 +42,14 @@ jobs:
           echo "Installing Apollo Client skill from apollographql/skills/skills/apollo-client"
           mkdir -p .github/copilot/skills/apollo-client
           # Download the main skill file
-          curl -sL https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/SKILL.md \
+          curl -fsSL https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/SKILL.md \
             -o .github/copilot/skills/apollo-client/SKILL.md
           # Download all reference files
           mkdir -p .github/copilot/skills/apollo-client/references
           for file in caching error-handling fragments integration-client integration-nextjs integration-react-router integration-tanstack-start mutations queries state-management suspense-hooks troubleshooting typescript-codegen; do
-            curl -sL "https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/references/${file}.md" \
-              -o ".github/copilot/skills/apollo-client/references/${file}.md"
+            echo "Downloading ${file}.md..."
+            curl -fsSL "https://raw.githubusercontent.com/apollographql/skills/main/skills/apollo-client/references/${file}.md" \
+              -o ".github/copilot/skills/apollo-client/references/${file}.md" || echo "Warning: Failed to download ${file}.md"
           done
           echo "Apollo Client skill installed to .github/copilot/skills/apollo-client/"
 
@@ -57,6 +58,6 @@ jobs:
           echo "Copying documentation instructions from apollographql/skills"
           mkdir -p .github/instructions
           # Download the docs instructions from the skills repository
-          curl -s https://raw.githubusercontent.com/apollographql/skills/main/.github/instructions/docs.instructions.md \
+          curl -fsSL https://raw.githubusercontent.com/apollographql/skills/main/.github/instructions/docs.instructions.md \
             -o .github/instructions/docs.instructions.md
           echo "Documentation instructions copied to .github/instructions/docs.instructions.md"

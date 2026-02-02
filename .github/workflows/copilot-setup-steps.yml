@@ -48,6 +48,7 @@ jobs:
             .agents/skills/apollo-client/
             .github/skills/apollo-client/
             .github/instructions/docs.instructions.md
+            .github/instructions/apollo-client.instructions.md
           key: skills-${{ steps.skills-head.outputs.sha }}
           restore-keys: |
             skills-
@@ -62,18 +63,12 @@ jobs:
           npx --yes skills add apollographql/skills --skill apollo-client --agent github-copilot --scope project --method copy --yes
           echo "Apollo Client skill installed successfully"
 
-      - name: Copy Documentation Instructions
+      - name: Copy Apollo Client Instructions
         if: steps.cache-skills.outputs.cache-hit != 'true'
         run: |
-          echo "Copying documentation instructions from apollographql/skills"
+          echo "Copying Apollo Client instructions from apollographql/skills"
           mkdir -p .github/instructions
-          # Download the docs instructions from the skills repository
-          curl -fsSL https://raw.githubusercontent.com/apollographql/skills/main/.github/instructions/docs.instructions.md \
-            -o .github/instructions/docs.instructions.md
-          echo "Documentation instructions copied to .github/instructions/docs.instructions.md"
-
-      - name: Exclude downloaded skills and instructions from git
-        run: |
-          echo ".agents/skills/apollo-client/" >> .git/info/exclude
-          echo ".github/skills/apollo-client" >> .git/info/exclude
-          echo ".github/instructions/docs.instructions.md" >> .git/info/exclude
+          # Download the apollo-client instructions from the skills repository
+          curl -fsSL https://raw.githubusercontent.com/apollographql/skills/main/.github/instructions/apollo-client.instructions.md \
+            -o .github/instructions/apollo-client.instructions.md
+          echo "Apollo Client instructions copied to .github/instructions/apollo-client.instructions.md"

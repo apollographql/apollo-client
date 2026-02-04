@@ -1269,7 +1269,7 @@ console.log(error); // => undefined
 
 </Note>
 
-### Errors never terminate observables
+### Errors never terminate `ObservableQuery` or subscription Observables
 
 In Apollo Client 3, network errors emitted an `error` notification on the `ObservableQuery` instance. Because error notifications terminate observables, this meant you needed special handling to restart the `ObservableQuery` instance so that it listened for new results. Network errors were emitted to the `error` callback.
 

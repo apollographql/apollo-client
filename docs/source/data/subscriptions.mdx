@@ -332,8 +332,6 @@ function LatestComment({ postID }) {
 
 ## Handling errors in subscriptions
 
-In Apollo Client 4, error handling for subscriptions works differently than you might expect. GraphQL errors are **always delivered via the `next` callback** in the subscription result, never via the `error` callback.
-
 ### Error handling with `useSubscription`
 
 When using the `useSubscription` hook, errors are returned in the `error` property of the result object:
@@ -372,14 +370,14 @@ function LatestComment({ postID }) {
 
 ### Error handling with `client.subscribe()`
 
-When using `client.subscribe()` directly, GraphQL errors are delivered via the `next` callback in `result.error`, not via the `error` callback:
+When using `client.subscribe()` directly, all errors are delivered via the `next` callback in `result.error`, never via the `error` callback:
 
 ```ts
 client.subscribe({ query: COMMENTS_SUBSCRIPTION }).subscribe({
   next: (result) => {
     if (result.error) {
-      // GraphQL errors are delivered here
-      console.log("GraphQL error:", result.error.message);
+      // All errors are delivered here
+      console.log("Error:", result.error.message);
     }
     // result.data may be undefined (with errorPolicy: 'none')
     // or may contain partial data (with errorPolicy: 'all')

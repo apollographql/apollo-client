@@ -315,7 +315,7 @@ observable.subscribe({
 
 <Note>
 
-This same error handling behavior applies to **subscriptions** when using `client.subscribe()`. GraphQL errors are always delivered via the `next` callback in `result.error`, never via the `error` callback. The subscription only terminates for non-recoverable errors like network failures. See the [subscriptions documentation](./subscriptions/#handling-errors-in-subscriptions) for more details.
+This same error handling behavior applies to **subscriptions** when using `client.subscribe()`. All errors are delivered via the `next` callback in `result.error`, never via the `error` callback. The subscription only terminates (successfully) after emitting non-recoverable errors like network failures via `next`. See the [subscriptions documentation](./subscriptions/#handling-errors-in-subscriptions) for more details.
 
 </Note>
 

@@ -8,8 +8,8 @@ describe.skip("type tests", () => {
     interface Query {
       greeting: string;
     }
-    type Variables = Record<string, never>;
-    const query: TypedDocumentNode<Query, Variables> = gql`
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query {
         greeting
       }
@@ -27,8 +27,8 @@ describe.skip("type tests", () => {
     interface Query {
       greeting: string;
     }
-    type Variables = Record<string, never>;
-    const query: TypedDocumentNode<Query, Variables> = gql`
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query {
         greeting
       }
@@ -45,8 +45,8 @@ describe.skip("type tests", () => {
     interface Query {
       greeting: string;
     }
-    type Variables = Record<string, never>;
-    const query: TypedDocumentNode<Query, Variables> = gql`
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query {
         greeting
       }
@@ -63,8 +63,8 @@ describe.skip("type tests", () => {
     interface Query {
       greeting: string;
     }
-    type Variables = Record<string, never>;
-    const query: TypedDocumentNode<Query, Variables> = gql`
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query {
         greeting
       }

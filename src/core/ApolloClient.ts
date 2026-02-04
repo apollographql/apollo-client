@@ -1033,7 +1033,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.QueryOptions<TData, TVariables>
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
 
   public query<
     TData = unknown,

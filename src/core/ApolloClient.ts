@@ -245,7 +245,7 @@ export declare namespace ApolloClient {
 
   export type QueryResult<
     TData = unknown,
-    TErrorPolicy extends ErrorPolicy = "none",
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = TErrorPolicy extends "none" ?
     {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
@@ -270,7 +270,16 @@ export declare namespace ApolloClient {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: never;
     }
-  : never;
+  : // Fallback case via `undefined` for backwards compatibility. Helps with
+    // other APIs such as `ObservableQuery.refetch()` which we don't know the
+    // errorPolicy
+    {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
 
   /**
    * Options object for the `client.refetchQueries` method.

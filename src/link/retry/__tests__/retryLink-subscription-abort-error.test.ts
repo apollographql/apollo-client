@@ -1,9 +1,9 @@
 /**
  * Reproduction test for https://github.com/apollographql/apollo-client/issues/13125#issuecomment-3847762859
- * 
+ *
  * This file demonstrates the AbortError issue when using RetryLink with subscriptions
  * that utilize AbortController (such as multipart HTTP subscriptions).
- * 
+ *
  * Issue Summary:
  * When a subscription with retryLink encounters an error and triggers a retry,
  * the AbortController from the first attempt gets aborted. This abort causes an

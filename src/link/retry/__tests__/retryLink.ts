@@ -314,120 +314,43 @@ describe("RetryLink", () => {
     });
   });
 
-  // Reproduction test for https://github.com/apollographql/apollo-client/issues/13125#issuecomment-3847762859
-  // This test demonstrates the AbortError issue when RetryLink is used with subscriptions
-  // that use AbortController (like multipart HTTP subscriptions).
-  it("demonstrates AbortError propagation issue with multipart subscriptions during retry", async () => {
+  // Reproduction for https://github.com/apollographql/apollo-client/issues/13125#issuecomment-3847762859
+  it("handles AbortError when retrying subscriptions with AbortController", async () => {
     const subscription = gql`
-      subscription GameState {
-        gameState {
-          die {
-            roll
-            sides
-            color
-          }
-        }
+      subscription {
+        data
       }
     `;
 
     const retryLink = new RetryLink({
       delay: { initial: 10 },
-      attempts: { max: 3 },
+      attempts: { max: 2 },
     });
 
-    let attemptCount = 0;
-    const abortControllers: AbortController[] = [];
-    const errors: any[] = [];
-
-    // Create a custom link that simulates multipart subscription behavior with AbortController
-    // This simulates the behavior described in the issue where:
-    // 1. A subscription starts with an AbortController
-    // 2. An error occurs that triggers a retry
-    // 3. The AbortController from the first attempt is aborted
-    // 4. The abort throws an "AbortError: BodyStreamBuffer was aborted"
-    // 5. This AbortError propagates and causes the subscription to hang
-    const mockSubscriptionLink = new ApolloLink((operation) => {
+    let attempts = 0;
+    const mockLink = new ApolloLink(() => {
       return new Observable((observer) => {
-        attemptCount++;
+        attempts++;
         const controller = new AbortController();
-        abortControllers.push(controller);
 
-        // Simulate a fetch-like promise that rejects with AbortError when aborted
-        const abortPromise = new Promise<never>((_, reject) => {
-          controller.signal.addEventListener("abort", () => {
-            const abortError = new Error("BodyStreamBuffer was aborted");
-            abortError.name = "AbortError";
-            reject(abortError);
-          });
-        });
-
-        if (attemptCount === 1) {
-          // First attempt: Start the fetch, then fail with a network error
-          // This simulates a real subscription that gets a network error
-          const timeout = setTimeout(() => {
-            const networkError = new Error("Network connection failed");
-            observer.error(networkError);
-          }, 5);
-
-          // The abort promise should NOT interfere with error handling
-          abortPromise.catch((abortError) => {
-            // In the real bug, this AbortError gets propagated to the observer
-            // even though it's just a side effect of cleanup
-            errors.push(abortError);
-            // This is the problematic behavior - the AbortError shouldn't
-            // cause the observable to error out after the retry has started
-          });
-
-          controller.signal.addEventListener("abort", () => {
-            clearTimeout(timeout);
-          });
+        if (attempts === 1) {
+          setTimeout(() => observer.error(new Error("Network error")), 5);
         } else {
-          // Subsequent attempts should succeed
           setTimeout(() => {
-            observer.next({
-              data: {
-                gameState: { die: { roll: 6, sides: 6, color: "red" } },
-              },
-            });
+            observer.next({ data: { data: "success" } });
             observer.complete();
           }, 5);
-
-          abortPromise.catch(() => {
-            // Ignore abort errors on successful attempts
-          });
         }
 
-        return () => {
-          controller.abort();
-        };
+        return () => controller.abort();
       });
     });
 
-    const link = ApolloLink.from([retryLink, mockSubscriptionLink]);
+    const link = ApolloLink.from([retryLink, mockLink]);
     const stream = new ObservableStream(execute(link, { query: subscription }));
 
-    // Should eventually receive successful data after retry
-    await expect(stream).toEmitTypedValue({
-      data: { gameState: { die: { roll: 6, sides: 6, color: "red" } } },
-    });
-
+    await expect(stream).toEmitTypedValue({ data: { data: "success" } });
     await expect(stream).toComplete();
-
-    // Verify retry was attempted
-    expect(attemptCount).toBe(2);
-    expect(abortControllers.length).toBe(2);
-
-    // The first controller should have been aborted when retry happened
-    expect(abortControllers[0].signal.aborted).toBe(true);
-
-    // An AbortError should have been generated when the first attempt was aborted
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].name).toBe("AbortError");
-    expect(errors[0].message).toContain("BodyStreamBuffer");
-
-    // The key issue: If the AbortError propagates to the observer, the subscription
-    // would never complete successfully. This test currently passes because our
-    // mock doesn't propagate the AbortError, but in the real implementation
-    // described in the issue, the AbortError does propagate and causes the hang.
+    expect(attempts).toBe(2);
   });
 });

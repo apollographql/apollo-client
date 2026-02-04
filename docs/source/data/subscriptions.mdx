@@ -375,7 +375,7 @@ function LatestComment({ postID }) {
 When using `client.subscribe()` directly, GraphQL errors are delivered via the `next` callback in `result.error`, not via the `error` callback:
 
 ```ts
-client.subscribe({ query: MY_SUBSCRIPTION }).subscribe({
+client.subscribe({ query: COMMENTS_SUBSCRIPTION }).subscribe({
   next: (result) => {
     if (result.error) {
       // GraphQL errors are delivered here
@@ -403,7 +403,7 @@ You can control how Apollo Client handles partial data when GraphQL errors occur
 - **`errorPolicy: 'ignore'`** - Errors are ignored, and `result.error` is `undefined`.
 
 ```ts
-useSubscription(MY_SUBSCRIPTION, {
+useSubscription(COMMENTS_SUBSCRIPTION, {
   errorPolicy: "all", // Receive both partial data and errors
 });
 ```

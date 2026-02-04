@@ -410,7 +410,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(
     typeof options === "object" ? options.client : undefined
   );
-  const { ssr } = typeof options === "object" ? options : {};
+  const { ssr, skip } = typeof options === "object" ? options : {};
+  const isSkipped = options === skipToken || skip;
 
   const watchQueryOptions = useOptions(
     query,
@@ -462,7 +463,12 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useResult<TData, TVariables>(observable, resultData, ssr);
+  const result = useResult<TData, TVariables>(
+    observable,
+    resultData,
+    ssr,
+    isSkipped
+  );
 
   const obsQueryFields = React.useMemo(
     () => ({
@@ -541,7 +547,8 @@ function useInitialFetchPolicyIfNecessary<
 function useResult<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
   resultData: InternalResult<TData>,
-  ssr: boolean | undefined
+  ssr: boolean | undefined,
+  isSkipped: boolean | undefined
 ) {
   "use no memo";
   return useSyncExternalStore(
@@ -591,7 +598,12 @@ function useResult<TData, TVariables extends OperationVariables>(
       [observable, resultData]
     ),
     () => resultData.current,
-    () => (ssr === false ? useQuery.ssrDisabledResult : resultData.current)
+    // Check isSkipped first to match useSSRQuery behavior, preventing hydration
+    // mismatches when both skip: true and ssr: false are used together.
+    () =>
+      isSkipped ? resultData.current
+      : ssr === false ? useQuery.ssrDisabledResult
+      : resultData.current
   );
 }
 

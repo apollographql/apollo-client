@@ -1120,6 +1120,95 @@ describe("useQuery Hook", () => {
       }
     });
 
+    it("should return loading: false when both ssr: false and skip: true are set", async () => {
+      // This test verifies the fix for a hydration mismatch that occurred when
+      // both ssr: false and skip: true were used together. On the server,
+      // useSSRQuery checks skip first and returns loading: false. On the client,
+      // getServerSnapshot must match this behavior to prevent hydration errors.
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { ssr: false, skip: true }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        // When skip is true, loading should always be false, regardless of ssr setting.
+        // This matches the behavior in useSSRQuery which checks skip before ssr.
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
+
+    it("should return loading: false when skipToken is used with ssr: false in defaultOptions", async () => {
+      // This test verifies that skipToken behaves the same as skip: true
+      // when combined with ssr: false in default options
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+        ssrMode: false,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, skipToken),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        // When skipToken is used, loading should be false regardless of ssr setting
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
+
     it("should keep `no-cache` results when the tree is re-rendered", async () => {
       const query1 = gql`
         query people {

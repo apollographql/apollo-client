@@ -270,10 +270,19 @@ export namespace ApolloClient {
         fetchPolicy?: FetchPolicy;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
-    export interface QueryResult<TData = unknown> {
+    export type QueryResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = TErrorPolicy extends "none" ? {
+        data: TData;
+        error?: never;
+    } : TErrorPolicy extends "all" ? {
         data: TData | undefined;
         error?: ErrorLike;
-    }
+    } : TErrorPolicy extends "ignore" ? {
+        data: TData | undefined;
+        error?: never;
+    } : {
+        data: TData | undefined;
+        error?: ErrorLike;
+    };
     // (undocumented)
     export type ReadFragmentOptions<TData, TVariables extends OperationVariables> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
@@ -363,7 +372,14 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+        errorPolicy: "all";
+    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    // (undocumented)
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+        errorPolicy: "ignore";
+    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
     // (undocumented)
     queryDeduplication: boolean;
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
@@ -1182,7 +1198,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:375:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

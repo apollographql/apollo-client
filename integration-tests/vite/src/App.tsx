@@ -28,11 +28,6 @@ const httpLink = new HttpLink({
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: ApolloLink.from([delayLink, httpLink]),
-  defaultOptions: {
-    query: {
-      errorPolicy: "none",
-    },
-  },
 });
 
 const QUERY: TypedDocumentNode<{

@@ -111,6 +111,7 @@ export { ApolloCache }
 
 // @public (undocumented)
 export namespace ApolloClient {
+    export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -153,15 +154,6 @@ export namespace ApolloClient {
             fragmentName?: string;
             overwrite?: boolean;
         }
-    }
-    // (undocumented)
-    export interface DefaultOptions {
-        // (undocumented)
-        mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-        // (undocumented)
-        query?: Partial<ApolloClient.QueryOptions<any, any>>;
-        // (undocumented)
-        watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
     }
     // (undocumented)
     export interface DevtoolsOptions {
@@ -584,6 +576,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
     export type { NextFetchPolicyContext, QueryManager };
+    export type { PossibleDefaultOptions };
 }
 
 export { isNetworkRequestSettled }
@@ -1197,7 +1190,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:411:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

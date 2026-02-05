@@ -18,10 +18,15 @@
     "experimentalDecorators": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["DOM", "dom.asyncIterable", "ES2023"],
+    "lib": [
+      "DOM",
+      "dom.asyncIterable",
+      "ES2023"
+    ],
     "types": [
       "jest",
       "node",
+      "./src/declarations.d.ts",
       "./src/testing/matchers/index.d.ts",
       "./src/testing/internal/declarations.d.ts",
       "@testing-library/react-render-stream/expect"
@@ -30,10 +35,15 @@
     "strict": true,
     "paths": {
       // This entry point is not part of our public API, so we point it directly to the source.
-      "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
+      "@apollo/client/testing/internal": [
+        "./src/testing/internal/index.ts"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
   "references": [
     {
       "path": "./config/tsconfig.json"

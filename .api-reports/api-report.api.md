@@ -156,6 +156,7 @@ export abstract class ApolloCache {
 
 // @public (undocumented)
 export namespace ApolloClient {
+    export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -198,15 +199,6 @@ export namespace ApolloClient {
             fragmentName?: string;
             overwrite?: boolean;
         }
-    }
-    // (undocumented)
-    export interface DefaultOptions {
-        // (undocumented)
-        mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-        // (undocumented)
-        query?: Partial<ApolloClient.QueryOptions<any, any>>;
-        // (undocumented)
-        watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
     }
     // (undocumented)
     export interface DevtoolsOptions {
@@ -1555,6 +1547,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
     export type { NextFetchPolicyContext, QueryManager };
+    export type { PossibleDefaultOptions };
 }
 
 // @public (undocumented)
@@ -2876,8 +2869,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:179:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:411:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

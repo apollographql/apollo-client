@@ -34,6 +34,10 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
+import type {
+  DeclareDefaultOptions,
+  DefaultOptions,
+} from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
@@ -62,14 +66,16 @@ import type {
 
 let hasSuggestedDevtools = false;
 
-export declare namespace ApolloClient {
-  export interface DefaultOptions {
-    watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
-    query?: Partial<ApolloClient.QueryOptions<any, any>>;
-    mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-  }
+/** @knipignore */
+export interface ReferenceToAvoidDroppingImportOnBuild {
+  _1: DeclareDefaultOptions.Mutate;
+  _2: DefaultOptions;
+}
 
-  export interface Options {
+export declare namespace ApolloClient {
+  export type { DeclareDefaultOptions, DefaultOptions };
+
+  export interface Options extends DefaultOptions.ParentObject {
     /**
      * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
      */
@@ -98,12 +104,7 @@ export declare namespace ApolloClient {
      * @defaultValue `true`
      */
     queryDeduplication?: boolean;
-    /**
-     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-     *
-     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-     */
-    defaultOptions?: ApolloClient.DefaultOptions;
+
     defaultContext?: Partial<DefaultContext>;
     /**
      * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
@@ -148,7 +149,7 @@ export declare namespace ApolloClient {
     experiments?: ApolloClient.Experiment[];
   }
 
-  interface DevtoolsOptions {
+  export interface DevtoolsOptions {
     /**
      * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
      *
@@ -821,7 +822,7 @@ export class ApolloClient {
     this.link = link;
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || ({} as DefaultOptions);
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? __DEV__,

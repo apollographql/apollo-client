@@ -47,8 +47,14 @@ export declare namespace DefaultOptions {
       PossibleDefaultOptions.WatchQuery,
       DeclareDefaultOptions.WatchQuery,
       "watchQuery",
-      "errorPolicy"
+      "errorPolicy" | "returnPartialData"
     > {}
+  export namespace WatchQuery {
+    export type OptionalIfDefault<
+      Actual extends Partial<PossibleDefaultOptions.WatchQuery>,
+    > = OptionalIfDefault_HigherOrder<DeclareDefaultOptions.WatchQuery, Actual>;
+  }
+
   export interface Query
     extends RequireDefaultOptionDeclarations<
       PossibleDefaultOptions.Query,
@@ -56,6 +62,12 @@ export declare namespace DefaultOptions {
       "query",
       "errorPolicy"
     > {}
+  export namespace Query {
+    export type OptionalIfDefault<
+      Actual extends Partial<PossibleDefaultOptions.Query>,
+    > = OptionalIfDefault_HigherOrder<DeclareDefaultOptions.Query, Actual>;
+  }
+
   export interface Mutate
     extends RequireDefaultOptionDeclarations<
       PossibleDefaultOptions.Mutate,
@@ -63,7 +75,23 @@ export declare namespace DefaultOptions {
       "mutate",
       "errorPolicy"
     > {}
+  export namespace Mutate {
+    export type OptionalIfDefault<
+      Actual extends Partial<PossibleDefaultOptions.Mutate>,
+    > = OptionalIfDefault_HigherOrder<DeclareDefaultOptions.Mutate, Actual>;
+  }
 }
+
+type OptionalIfDefault_HigherOrder<Defaults, Actual> = Prettify<
+  Omit<
+    Actual,
+    keyof {
+      [K in keyof Defaults & keyof Actual as Defaults[K] extends Actual[K] ? K
+      : never]: true;
+    }
+  > &
+    Partial<Actual>
+>;
 
 /**
  * @internal

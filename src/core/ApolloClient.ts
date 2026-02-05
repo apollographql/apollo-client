@@ -1015,9 +1015,10 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "all";
-    }
+    options: ApolloClient.QueryOptions<TData, TVariables> &
+      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
+        errorPolicy: "all";
+      }>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
@@ -1025,9 +1026,10 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "ignore";
-    }
+    options: ApolloClient.QueryOptions<TData, TVariables> &
+      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
+        errorPolicy: "ignore";
+      }>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */

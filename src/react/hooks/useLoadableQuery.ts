@@ -162,10 +162,11 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    returnPartialData: true;
-    errorPolicy: "ignore" | "all";
-  }
+  options: useLoadableQuery.Options &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+      errorPolicy: "ignore" | "all";
+    }>
 ): useLoadableQuery.Result<
   TData,
   TVariables,
@@ -178,9 +179,10 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    errorPolicy: "ignore" | "all";
-  }
+  options: useLoadableQuery.Options &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      errorPolicy: "ignore" | "all";
+    }>
 ): useLoadableQuery.Result<
   TData,
   TVariables,
@@ -193,9 +195,10 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    returnPartialData: true;
-  }
+  options: useLoadableQuery.Options &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+    }>
 ): useLoadableQuery.Result<
   TData,
   TVariables,

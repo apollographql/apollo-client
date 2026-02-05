@@ -5,19 +5,14 @@ declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
       interface WatchQuery {
-        errorPolicy?: NonNullable<
-          InternalTypes.PossibleDefaultOptions.WatchQuery["errorPolicy"]
-        >;
+        errorPolicy?: InternalTypes.PossibleDefaultOptions.WatchQuery["errorPolicy"];
+        returnPartialData?: InternalTypes.PossibleDefaultOptions.WatchQuery["returnPartialData"];
       }
       interface Query {
-        errorPolicy?: NonNullable<
-          InternalTypes.PossibleDefaultOptions.Query["errorPolicy"]
-        >;
+        errorPolicy?: InternalTypes.PossibleDefaultOptions.Query["errorPolicy"];
       }
       interface Mutate {
-        errorPolicy?: NonNullable<
-          InternalTypes.PossibleDefaultOptions.Mutate["errorPolicy"]
-        >;
+        errorPolicy?: InternalTypes.PossibleDefaultOptions.Mutate["errorPolicy"];
       }
     }
   }

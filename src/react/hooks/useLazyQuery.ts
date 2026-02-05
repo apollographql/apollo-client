@@ -290,9 +290,10 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+    }>
 ): useLazyQuery.ResultTuple<
   TData,
   TVariables,
@@ -305,9 +306,10 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: boolean;
+    }>
 ): useLazyQuery.ResultTuple<
   TData,
   TVariables,

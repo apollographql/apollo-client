@@ -277,9 +277,10 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+    }>
 ): useQuery.Result<
   TData,
   TVariables,
@@ -303,9 +304,10 @@ export function useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-        returnPartialData: true;
-      })
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: true;
+        }>)
 ): useQuery.Result<
   TData,
   TVariables,
@@ -319,9 +321,10 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: boolean;
+    }>
 ): useQuery.Result<
   TData,
   TVariables,
@@ -336,9 +339,10 @@ export function useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-        returnPartialData: boolean;
-      })
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: boolean;
+        }>)
 ): useQuery.Result<
   TData,
   TVariables,

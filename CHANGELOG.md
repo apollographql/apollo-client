@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.4
+
+### Patch Changes
+
+- [#13124](https://github.com/apollographql/apollo-client/pull/13124) [`578081f`](https://github.com/apollographql/apollo-client/commit/578081f2da7f2f54c0dd2711ee4a97530a5c38fc) Thanks [@Re-cool](https://github.com/Re-cool)! - Ensure `PersistedQueryLink` merges `http` and `fetchOptions` context values instead of overwriting them.
+
 ## 4.1.3
 
 ### Patch Changes

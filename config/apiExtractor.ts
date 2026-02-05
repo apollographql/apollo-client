@@ -12,8 +12,6 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-import pkg from "../dist/package.json" with { type: "json" };
-
 import type { ExportsCondition } from "./entryPoints.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
 import {
@@ -58,6 +56,11 @@ const packageJsonFullPath = path.resolve(
 const reportFolder = baseConfig.apiReport.reportFolder!.replace(
   "<projectFolder>",
   join(import.meta.dirname, "..")
+);
+
+// Load the dist package.json dynamically at runtime (after build has completed)
+const pkg = JSON.parse(
+  await readFile(path.resolve(import.meta.dirname, "../dist/package.json"), "utf-8")
 );
 
 const entryPoints = Object.entries(pkg.exports as ExportsCondition)

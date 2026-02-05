@@ -62,6 +62,7 @@ import {
   isDocumentNode,
   isNonNullObject,
   makeUniqueId,
+  mergeOptions,
   removeDirectivesFromDocument,
   streamInfoSymbol,
   toQueryResult,
@@ -707,7 +708,7 @@ export class QueryManager {
         const oq = new ObservableQuery({
           queryManager: this,
           options: {
-            ...options,
+            ...mergeOptions(this.defaultOptions.watchQuery, options),
             fetchPolicy: "network-only",
           },
         });

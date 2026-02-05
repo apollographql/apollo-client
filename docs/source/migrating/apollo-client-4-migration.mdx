@@ -1269,11 +1269,11 @@ console.log(error); // => undefined
 
 </Note>
 
-### Errors never terminate `ObservableQuery` or subscription Observables
+### Network errors never terminate `ObservableQuery`
 
 In Apollo Client 3, network errors emitted an `error` notification on the `ObservableQuery` instance. Because error notifications terminate observables, this meant you needed special handling to restart the `ObservableQuery` instance so that it listened for new results. Network errors were emitted to the `error` callback.
 
-Apollo Client 4 changes this and no longer emits an `error` notification. This ensures observables don't terminate on errors and can continue listening for new results, such as calling `refetch` after an error.
+Apollo Client 4 changes this and no longer emits an `error` notification. This ensures `ObservableQuery` doesn't terminate on errors and can continue listening for new results, such as calling `refetch` after an error.
 
 Access the error on the `error` property emitted in the `next` callback. It is safe to remove the `error` callback entirely as it is no longer used.
 

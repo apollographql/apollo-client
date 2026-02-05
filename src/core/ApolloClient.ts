@@ -37,6 +37,7 @@ import { version } from "../version.js";
 import type {
   DeclareDefaultOptions,
   DefaultOptions,
+  ParentObject as DefaultOptionsParentObject,
 } from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
@@ -75,7 +76,7 @@ export interface ReferenceToAvoidDroppingImportOnBuild {
 export declare namespace ApolloClient {
   export type { DeclareDefaultOptions, DefaultOptions };
 
-  export interface Options extends DefaultOptions.ParentObject {
+  export interface Options extends DefaultOptionsParentObject {
     /**
      * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
      */

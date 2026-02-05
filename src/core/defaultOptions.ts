@@ -20,6 +20,16 @@ type PropertiesWithRequiredKeys<T extends Record<string, unknown>> =
 type RequirePropertiesWithRequiredKeys<T extends Record<string, unknown>> =
   Prettify<T & Pick<Required<T>, PropertiesWithRequiredKeys<T>>>;
 
+export interface ParentObject
+  extends RequirePropertiesWithRequiredKeys<{
+    /**
+     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+     *
+     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
+     */
+    defaultOptions?: ApolloClient.DefaultOptions;
+  }> {}
+
 /**
  * Possible default options for ApolloClient instances.
  */
@@ -30,17 +40,8 @@ export interface DefaultOptions
     query?: DefaultOptions.Query;
     mutate?: DefaultOptions.Mutate;
   }> {}
-export declare namespace DefaultOptions {
-  export interface ParentObject
-    extends RequirePropertiesWithRequiredKeys<{
-      /**
-       * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-       *
-       * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-       */
-      defaultOptions?: DefaultOptions;
-    }> {}
 
+export declare namespace DefaultOptions {
   export interface WatchQuery
     extends RequireDefaultOptionDeclarations<
       PossibleDefaultOptions.WatchQuery,

@@ -32,7 +32,7 @@ declare module "@apollo/client" {
   new ApolloClient({
     link: ApolloLink.empty(),
     cache: new InMemoryCache(),
-    // @ts-expect-error: Property 'query' is missing in type '{}' but required in type 'DefaultOptions'.
+    // @ts-expect-error: Property 'watchQuery' is missing in type '{}' but required in type 'DefaultOptions'.
     defaultOptions: {},
   });
 
@@ -40,7 +40,7 @@ declare module "@apollo/client" {
     link: ApolloLink.empty(),
     cache: new InMemoryCache(),
     defaultOptions: {
-      // @ts-expect-error: Property 'errorPolicy' is missing in type '{}' but required in type ...
+      // @ts-expect-error: Property 'returnPartialData' is missing in type '{}' but required in type ...
       watchQuery: {},
     },
   });

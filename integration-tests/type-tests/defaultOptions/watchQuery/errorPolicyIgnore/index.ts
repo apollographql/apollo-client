@@ -13,7 +13,7 @@ declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
       interface WatchQuery {
-        errorPolicy: "all";
+        errorPolicy: "ignore";
       }
       interface Query {}
       interface Mutate {}
@@ -49,7 +49,7 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
-        // @ts-expect-error: Type '"none"' is not assignable to type '"all"'.
+        // @ts-expect-error: Type '"none"' is not assignable to type '"ignore"'.
         errorPolicy: "none",
       },
     },
@@ -59,7 +59,7 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
-        errorPolicy: "all",
+        errorPolicy: "ignore",
       },
       query: {
         // @ts-expect-error: Type '"all"' is not assignable to type '"A default option for query.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See <TODO documentation link>."'.
@@ -77,7 +77,7 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
-        errorPolicy: "all",
+        errorPolicy: "ignore",
       },
       query: {
         context: {

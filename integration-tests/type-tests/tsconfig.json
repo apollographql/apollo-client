@@ -4,10 +4,22 @@
       "path": "./defaultOptions/defaults/tsconfig.json"
     },
     {
+      "path": "./defaultOptions/watchQuery/errorPolicyNone/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/watchQuery/errorPolicyAll/tsconfig.json"
     },
     {
+      "path": "./defaultOptions/watchQuery/errorPolicyIgnore/tsconfig.json"
+    },
+    {
+      "path": "./defaultOptions/query/errorPolicyNone/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/query/errorPolicyAll/tsconfig.json"
+    },
+    {
+      "path": "./defaultOptions/query/errorPolicyIgnore/tsconfig.json"
     }
   ]
 }

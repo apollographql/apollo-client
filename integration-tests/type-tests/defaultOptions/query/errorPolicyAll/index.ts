@@ -106,14 +106,6 @@ const bool = true as any as boolean;
 
 // client.query
 {
-  type T = Pick<
-    ApolloClient.QueryOptions<Data, Variables> &
-      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
-        errorPolicy: "all";
-      }>,
-    "errorPolicy"
-  >;
-
   expectTypeOf(client.query({ query: QUERY })).toEqualTypeOf<
     Promise<ApolloClient.QueryResult<Data, "all">>
   >();

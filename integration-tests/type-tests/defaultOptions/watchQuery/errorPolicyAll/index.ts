@@ -12,10 +12,10 @@ import { expectTypeOf } from "expect-type";
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
-      interface WatchQuery {}
-      interface Query {
+      interface WatchQuery {
         errorPolicy: "all";
       }
+      interface Query {}
       interface Mutate {}
     }
   }
@@ -32,7 +32,7 @@ declare module "@apollo/client" {
   new ApolloClient({
     link: ApolloLink.empty(),
     cache: new InMemoryCache(),
-    // @ts-expect-error: Property 'query' is missing in type '{}' but required in type 'DefaultOptions'.
+    // @ts-expect-error: Property 'watchQuery' is missing in type '{}' but required in type 'DefaultOptions'.
     defaultOptions: {},
   });
 
@@ -41,14 +41,14 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       // @ts-expect-error: Property 'errorPolicy' is missing in type '{}' but required in type ...
-      query: {},
+      watchQuery: {},
     },
   });
   new ApolloClient({
     link: ApolloLink.empty(),
     cache: new InMemoryCache(),
     defaultOptions: {
-      query: {
+      watchQuery: {
         // @ts-expect-error: Type '"none"' is not assignable to type '"all"'.
         errorPolicy: "none",
       },
@@ -59,10 +59,10 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
-        // @ts-expect-error: Type '"all"' is not assignable to type '"A default option for watchQuery.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See <TODO documentation link>."'.
         errorPolicy: "all",
       },
       query: {
+        // @ts-expect-error: Type '"all"' is not assignable to type '"A default option for query.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See <TODO documentation link>."'.
         errorPolicy: "all",
       },
       mutate: {
@@ -77,14 +77,14 @@ declare module "@apollo/client" {
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
+        errorPolicy: "all",
+      },
+      query: {
         context: {
           headers: {
             "x-custom-header": "custom-value",
           },
         },
-      },
-      query: {
-        errorPolicy: "all",
       },
       mutate: {
         awaitRefetchQueries: true,
@@ -115,7 +115,7 @@ const bool = true as any as boolean;
   >;
 
   expectTypeOf(client.query({ query: QUERY })).toEqualTypeOf<
-    Promise<ApolloClient.QueryResult<Data, "all">>
+    Promise<ApolloClient.QueryResult<Data, "none">>
   >();
 
   expectTypeOf(
@@ -153,7 +153,8 @@ const bool = true as any as boolean;
 // useSuspenseQuery
 {
   expectTypeOf(useSuspenseQuery(QUERY)).toEqualTypeOf<
-    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming">
+    // @ts-ignore TODO
+    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
   expectTypeOf(useSuspenseQuery(QUERY, { errorPolicy: "all" })).toEqualTypeOf<
@@ -172,7 +173,7 @@ const bool = true as any as boolean;
     useSuspenseQuery.Result<
       Data,
       Variables,
-      "complete" | "streaming" | "partial"
+      "complete" | "streaming" | "partial" | "empty"
     >
   >();
 
@@ -180,7 +181,7 @@ const bool = true as any as boolean;
     useSuspenseQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
     // TODO is this quite right?
-    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming"> //  | "partial"
+    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming" | "empty"> //  | "partial"
   >();
 
   expectTypeOf(
@@ -207,7 +208,8 @@ const bool = true as any as boolean;
 // useBackgroundQuery
 {
   expectTypeOf(useBackgroundQuery(QUERY)[0]).toEqualTypeOf<
-    QueryRef<Data, Variables, "complete" | "streaming">
+    // @ts-ignore TODO
+    QueryRef<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
   expectTypeOf(
@@ -225,13 +227,13 @@ const bool = true as any as boolean;
   expectTypeOf(
     useBackgroundQuery(QUERY, { returnPartialData: true })[0]
   ).toEqualTypeOf<
-    QueryRef<Data, Variables, "complete" | "streaming" | "partial">
+    QueryRef<Data, Variables, "complete" | "streaming" | "partial" | "empty">
   >();
 
   expectTypeOf(
     useBackgroundQuery(QUERY, { returnPartialData: bool })[0]
   ).toEqualTypeOf<
-    QueryRef<Data, Variables, "complete" | "streaming" | "partial">
+    QueryRef<Data, Variables, "complete" | "streaming" | "partial" | "empty">
   >();
 
   expectTypeOf(
@@ -256,7 +258,8 @@ const bool = true as any as boolean;
 // useLoadableQuery
 {
   expectTypeOf(useLoadableQuery(QUERY)).toEqualTypeOf<
-    useLoadableQuery.Result<Data, Variables, "complete" | "streaming">
+    // @ts-ignore TODO
+    useLoadableQuery.Result<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
   expectTypeOf(useLoadableQuery(QUERY, { errorPolicy: "all" })).toEqualTypeOf<
@@ -275,7 +278,7 @@ const bool = true as any as boolean;
     useLoadableQuery.Result<
       Data,
       Variables,
-      "complete" | "streaming" | "partial"
+      "complete" | "streaming" | "partial" | "empty"
     >
   >();
 
@@ -283,7 +286,7 @@ const bool = true as any as boolean;
     useLoadableQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
     // TODO is this quite right?
-    useLoadableQuery.Result<Data, Variables, "complete" | "streaming"> //  | "partial"
+    useLoadableQuery.Result<Data, Variables, "complete" | "streaming" | "empty"> //  | "partial"
   >();
 
   expectTypeOf(

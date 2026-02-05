@@ -1,11 +1,10 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-  },
   "references": [
     {
       "path": "./defaultOptions/defaults/tsconfig.json"
+    },
+    {
+      "path": "./defaultOptions/watchQuery/errorPolicyAll/tsconfig.json"
     },
     {
       "path": "./defaultOptions/query/errorPolicyAll/tsconfig.json"

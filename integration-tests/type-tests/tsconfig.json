@@ -4,6 +4,9 @@
       "path": "./defaultOptions/defaults/tsconfig.json"
     },
     {
+      "path": "./defaultOptions/watchQuery/returnPartialDataTrue/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/watchQuery/errorPolicyNone/tsconfig.json"
     },
     {

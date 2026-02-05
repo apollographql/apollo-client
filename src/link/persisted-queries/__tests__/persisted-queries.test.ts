@@ -358,8 +358,9 @@ describe("happy path", () => {
 
     const contextLink = new ApolloLink((operation, forward) => {
       operation.setContext({
+        headers: { "X-Custom-Header": "true" },
         http: {
-          headers: { accept: "multipart/mixed" },
+          preserveHeaderCase: true,
         },
       });
       return forward(operation);
@@ -374,10 +375,11 @@ describe("happy path", () => {
     await expect(stream).toEmitTypedValue({ data });
 
     const [, request] = fetchMock.lastCall()!;
-    const body = JSON.parse(request!.body!.toString());
+    const headers = request!.headers;
 
-    expect(body.query).not.toBeDefined();
-    expect(body.extensions.persistedQuery).toBeDefined();
+    // This would fail if preserveHeaderCase was overwritten,
+    // since headers are lowercased by HttpLink by default
+    expect(headers).toHaveProperty("X-Custom-Header");
   });
 });
 
@@ -870,12 +872,12 @@ describe("failure path", () => {
       { repeat: 1 }
     );
 
-    let httpContextOnRetry: any;
+    let httpContextOnRetry: HttpLink.ContextOptions["http"];
 
     const contextLink = new ApolloLink((operation, forward) => {
       operation.setContext({
         http: {
-          headers: { accept: "multipart/mixed" },
+          preserveHeaderCase: true,
         },
       });
       return forward(operation);
@@ -895,13 +897,11 @@ describe("failure path", () => {
 
     await expect(stream).toEmitTypedValue({ data });
 
-    expect(httpContextOnRetry).toEqual(
-      expect.objectContaining({
-        headers: { accept: "multipart/mixed" },
-        includeQuery: true,
-        includeExtensions: true,
-      })
-    );
+    expect(httpContextOnRetry).toStrictEqualTyped({
+      preserveHeaderCase: true,
+      includeQuery: true,
+      includeExtensions: true,
+    });
   });
 
   it("preserves existing fetchOptions context on retry", async () => {
@@ -916,7 +916,7 @@ describe("failure path", () => {
       { repeat: 1 }
     );
 
-    let fetchOptionsOnRetry: any;
+    let fetchOptionsOnRetry: HttpLink.ContextOptions["fetchOptions"];
 
     const contextLink = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -941,12 +941,10 @@ describe("failure path", () => {
 
     await expect(stream).toEmitTypedValue({ data });
 
-    expect(fetchOptionsOnRetry).toEqual(
-      expect.objectContaining({
-        credentials: "include",
-        method: "POST",
-      })
-    );
+    expect(fetchOptionsOnRetry).toStrictEqualTyped({
+      credentials: "include",
+      method: "POST",
+    });
   });
 });
 

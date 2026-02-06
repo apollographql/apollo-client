@@ -1,4 +1,8 @@
-import { InMemoryCache, type TypedDocumentNode } from "@apollo/client";
+import {
+  InMemoryCache,
+  InternalTypes,
+  type TypedDocumentNode,
+} from "@apollo/client";
 import { ApolloClient, ApolloLink } from "@apollo/client";
 import {
   useQuery,
@@ -171,7 +175,6 @@ const bool = true as any as boolean;
   expectTypeOf(
     useSuspenseQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // @ts-expect-error TODO in a follow-up PR
     useSuspenseQuery.Result<
       Data,
       Variables,

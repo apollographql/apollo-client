@@ -95,7 +95,6 @@ const bool = true as any as boolean;
   expectTypeOf(
     useSuspenseQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // @ts-expect-error TODO in a follow-up PR
     useSuspenseQuery.Result<
       Data,
       Variables,
@@ -121,6 +120,22 @@ const bool = true as any as boolean;
       Variables,
       "complete" | "streaming" | "partial" | "empty"
     >
+  >();
+
+  expectTypeOf(
+    useSuspenseQuery(QUERY, { errorPolicy: "all", returnPartialData: bool })
+  ).toEqualTypeOf<
+    useSuspenseQuery.Result<
+      Data,
+      Variables,
+      "complete" | "streaming" | "partial" | "empty"
+    >
+  >();
+
+  expectTypeOf(
+    useSuspenseQuery(QUERY, { errorPolicy: "all", returnPartialData: false })
+  ).toEqualTypeOf<
+    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming" | "empty">
   >();
 }
 

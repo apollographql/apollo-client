@@ -60,7 +60,7 @@ new ApolloClient({
   defaultOptions: {
     watchQuery: {
       // results in a type error:
-      // Type '"all"' is not assignable to type '"A default option for watchQuery.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See (link to documentation)."'.
+      // Type '"all"' is not assignable to type '"A default option for watchQuery.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
       errorPolicy: "all",
     },
   },

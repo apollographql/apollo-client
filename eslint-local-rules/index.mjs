@@ -17,7 +17,7 @@ import {
   TDataTVariablesOrder,
 } from "./generics.ts";
 
-/** @type {Record<string, import("@eslint/core").RuleDefinition> } */
+/** @type {import("eslint").ESLint.Plugin['rules']} */
 // @ts-ignore - mismatch between different plugin types, but works
 export default {
   "require-using-disposable": requireUsingDisposable,

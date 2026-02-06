@@ -698,7 +698,7 @@ Options that can be declared:
 - **`Mutate`**: `errorPolicy`
 
 Declaring these options will enforce that you provide values for them in your `defaultOptions`.
-If you do not declare these options, you cannot provide them to the `ApolloClient` constructor.
+If you do not declare these options, TypeScript will prevent you from using these specific fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`, but you can still provide other default options.
 
 If you cannot declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring the options as `unknown`:
 

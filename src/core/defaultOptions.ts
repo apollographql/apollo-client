@@ -119,6 +119,6 @@ type RequireDefaultOptionDeclarations<
         RequiredDeclarations,
         keyof DeclarationInterface
       >]?: `A default option for ${TargetName}.${string &
-        K} must be declared in ApolloClient.DeclareDefaultOptions before usage. See <TODO documentation link>.`;
+        K} must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety.`;
     }
 >;

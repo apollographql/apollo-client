@@ -76,6 +76,7 @@ import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { PossibleTypesMap } from '@apollo/client/cache';
+import type { Prettify } from '@apollo/client/utilities/internal';
 import { ReactiveVar } from '@apollo/client/cache';
 import { ReadMergeModifyContext } from '@apollo/client/cache';
 import { ReadQueryOptions } from '@apollo/client/cache';
@@ -231,8 +232,10 @@ export namespace ApolloClient {
     export interface ObservableFragment<TData = unknown> extends Observable_2<ApolloClient.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
+    // Warning: (ae-forgotten-export) The symbol "ParentObject" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    export interface Options {
+    export interface Options extends ParentObject {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
         // (undocumented)
@@ -240,7 +243,6 @@ export namespace ApolloClient {
         dataMasking?: boolean;
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
-        defaultOptions?: ApolloClient.DefaultOptions;
         devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
@@ -364,12 +366,12 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "all";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "ignore";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -868,9 +870,20 @@ namespace OverridableTypes {
     }
 }
 
+// Warning: (ae-forgotten-export) The symbol "RequirePropertiesWithRequiredKeys" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+interface ParentObject extends RequirePropertiesWithRequiredKeys<{
+    defaultOptions?: ApolloClient.DefaultOptions;
+}> {
+}
+
 export { parseAndCheckHttpResponse }
 
 export { PossibleTypesMap }
+
+// @public (undocumented)
+type PropertiesWithRequiredKeys<T extends Record<string, unknown>> = keyof T extends infer K ? K extends keyof T ? {} extends T[K] ? never : K : never : never;
 
 // @public (undocumented)
 namespace QueryManager {
@@ -1066,6 +1079,11 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 
 export { RequestHandler }
 
+// Warning: (ae-forgotten-export) The symbol "PropertiesWithRequiredKeys" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type RequirePropertiesWithRequiredKeys<T extends Record<string, unknown>> = Prettify<T & Pick<Required<T>, PropertiesWithRequiredKeys<T>>>;
+
 export { resetCaches }
 
 export { rewriteURIForGET }
@@ -1190,7 +1208,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:411:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:407:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

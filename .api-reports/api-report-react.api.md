@@ -206,70 +206,70 @@ export type SuspenseQueryHookOptions<TData = unknown, TVariables extends Operati
 export function useApolloClient(override?: ApolloClient): ApolloClient;
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
     fetchPolicy: "no-cache";
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: false;
     errorPolicy: "ignore" | "all";
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
     errorPolicy: "ignore" | "all";
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     errorPolicy: "ignore" | "all";
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     skip: boolean;
     returnPartialData: false;
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     skip: boolean;
     returnPartialData: boolean;
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: false;
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
-}): [
+}>): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">,
 useBackgroundQuery.Result<TData, TVariables>
 ];
@@ -286,17 +286,17 @@ useBackgroundQuery.Result<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): [undefined, useBackgroundQuery.Result<TData, TVariables>];
 
 // @public
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: false;
-})): [
+}>)): [
 QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
-})): [
+}>)): [
 QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
 useBackgroundQuery.Result<TData, TVariables>
 ];
@@ -458,14 +458,14 @@ export type UseFragmentOptions<TData, TVariables extends OperationVariables> = u
 export type UseFragmentResult<TData> = useFragment.Result<TData>;
 
 // @public
-export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
-}): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+}>): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
-export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
-}): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+}>): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
 export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming">;
@@ -569,20 +569,20 @@ export namespace useLazyQuery {
 }
 
 // @public
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
-}): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
+}>): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
 
 // @public
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     errorPolicy: "ignore" | "all";
-}): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
+}>): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
 
 // @public
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useLoadableQuery.Options & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
-}): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "partial">;
+}>): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming" | "partial">;
 
 // @public
 export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options?: useLoadableQuery.Options): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
@@ -690,27 +690,27 @@ export namespace useMutation {
 }
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
-}): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+}>): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
 export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
-})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+}>)): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
-}): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+}>): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: boolean;
-})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+}>)): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
 
 // @public
 export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
@@ -1009,36 +1009,36 @@ export type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariab
 export type UseSuspenseFragmentResult<TData> = useSuspenseFragment.Result<TData>;
 
 // @public
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
-}): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
+}>): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
 
 // @public
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     errorPolicy: "ignore" | "all";
-}): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
+}>): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
+
+// @public
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+    skip: boolean;
+    returnPartialData: true;
+}>): useSuspenseQuery.Result<TData, TVariables, "complete" | "empty" | "streaming" | "partial">;
+
+// @public
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+    returnPartialData: true;
+}>): useSuspenseQuery.Result<TData, TVariables, "partial" | "streaming" | "complete">;
 
 // @public
 export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
     skip: boolean;
-    returnPartialData: true;
-}): useSuspenseQuery.Result<TData, TVariables, "complete" | "empty" | "streaming" | "partial">;
-
-// @public
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-}): useSuspenseQuery.Result<TData, TVariables, "partial" | "streaming" | "complete">;
-
-// @public
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
-    skip: boolean;
 }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
 
 // @public
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
     returnPartialData: true;
-})): useSuspenseQuery.Result<TData, TVariables, "empty" | "streaming" | "complete" | "partial">;
+}>)): useSuspenseQuery.Result<TData, TVariables, "empty" | "streaming" | "complete" | "partial">;
 
 // @public
 export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [

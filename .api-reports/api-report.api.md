@@ -278,8 +278,10 @@ export namespace ApolloClient {
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloClient.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
+    // Warning: (ae-forgotten-export) The symbol "ParentObject" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    export interface Options {
+    export interface Options extends ParentObject {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
         // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
@@ -289,7 +291,6 @@ export namespace ApolloClient {
         dataMasking?: boolean;
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
-        defaultOptions?: ApolloClient.DefaultOptions;
         devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
@@ -417,12 +418,12 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "all";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "ignore";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -2170,6 +2171,14 @@ namespace OverridableTypes {
     }
 }
 
+// Warning: (ae-forgotten-export) The symbol "RequirePropertiesWithRequiredKeys" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+interface ParentObject extends RequirePropertiesWithRequiredKeys<{
+    defaultOptions?: ApolloClient.DefaultOptions;
+}> {
+}
+
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: ApolloLink.Operation | ApolloLink.Operation[]): (response: Response) => Promise<any>;
 
@@ -2272,6 +2281,9 @@ type Prettify<T> = {
 
 // @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+
+// @public (undocumented)
+type PropertiesWithRequiredKeys<T extends Record<string, unknown>> = keyof T extends infer K ? K extends keyof T ? {} extends T[K] ? never : K : never : never;
 
 // @public (undocumented)
 namespace QueryManager {
@@ -2523,6 +2535,11 @@ type RemoveIndexSignature<T> = {
 
 // @public @deprecated (undocumented)
 export type RequestHandler = ApolloLink.RequestHandler;
+
+// Warning: (ae-forgotten-export) The symbol "PropertiesWithRequiredKeys" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type RequirePropertiesWithRequiredKeys<T extends Record<string, unknown>> = Prettify<T & Pick<Required<T>, PropertiesWithRequiredKeys<T>>>;
 
 export { resetCaches }
 
@@ -2869,8 +2886,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:179:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:411:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:175:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:407:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

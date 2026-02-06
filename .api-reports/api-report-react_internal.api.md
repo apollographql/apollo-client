@@ -9,6 +9,7 @@ import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+import { ErrorLike } from '@apollo/client';
 import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
@@ -109,7 +110,10 @@ export class InternalQueryReference<TData = unknown, TStates extends DataState<T
     // (undocumented)
     get disposed(): boolean;
     // (undocumented)
-    fetchMore(options: ObservableQuery.FetchMoreOptions<TData, any, any, any>): Promise<ApolloClient.QueryResult<TData>>;
+    fetchMore(options: ObservableQuery.FetchMoreOptions<TData, any, any, any>): Promise<{
+        data: TData | undefined;
+        error?: ErrorLike;
+    }>;
     // (undocumented)
     readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
@@ -121,7 +125,10 @@ export class InternalQueryReference<TData = unknown, TStates extends DataState<T
     // (undocumented)
     promise: QueryRefPromise<TData, TStates>;
     // (undocumented)
-    refetch(variables: OperationVariables | undefined): Promise<ApolloClient.QueryResult<TData>>;
+    refetch(variables: OperationVariables | undefined): Promise<{
+        data: TData | undefined;
+        error?: ErrorLike;
+    }>;
     // (undocumented)
     reinitialize(): void;
     // (undocumented)

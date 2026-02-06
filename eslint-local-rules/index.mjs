@@ -17,6 +17,8 @@ import {
   TDataTVariablesOrder,
 } from "./generics.ts";
 
+/** @type {Record<string, import("@eslint/core").RuleDefinition> } */
+// @ts-ignore - mismatch between different plugin types, but works
 export default {
   "require-using-disposable": requireUsingDisposable,
   "require-disable-act-environment": requireDisableActEnvironment,

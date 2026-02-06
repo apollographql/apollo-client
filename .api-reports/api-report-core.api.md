@@ -375,7 +375,6 @@ export class ApolloClient {
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
         errorPolicy: "all";
     }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    // (undocumented)
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
         errorPolicy: "ignore";
     }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;

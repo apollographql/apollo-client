@@ -20,7 +20,7 @@ type PropertiesWithRequiredKeys<T extends Record<string, unknown>> =
 type RequirePropertiesWithRequiredKeys<T extends Record<string, unknown>> =
   Prettify<T & Pick<Required<T>, PropertiesWithRequiredKeys<T>>>;
 
-export interface ParentObject
+export interface DefaultOptionsParentObject
   extends RequirePropertiesWithRequiredKeys<{
     /**
      * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.

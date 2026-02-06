@@ -186,11 +186,18 @@ export {
 export { build, version } from "../version.js";
 
 // internal types
-import type { PossibleDefaultOptions } from "./defaultOptions.js";
+import type {
+  DefaultOptionsParentObject,
+  PossibleDefaultOptions,
+} from "./defaultOptions.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
 /** @internal */
 export declare namespace InternalTypes {
-  export type { NextFetchPolicyContext, QueryManager };
-  export type { PossibleDefaultOptions };
+  export type {
+    DefaultOptionsParentObject,
+    NextFetchPolicyContext,
+    PossibleDefaultOptions,
+    QueryManager,
+  };
 }

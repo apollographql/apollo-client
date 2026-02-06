@@ -179,8 +179,12 @@ const bool = true as any as boolean;
   expectTypeOf(
     useSuspenseQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // TODO is this quite right?
-    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming"> //  | "partial"
+    // @ts-expect-error TODO in a follow-up PR
+    useSuspenseQuery.Result<
+      Data,
+      Variables,
+      "complete" | "streaming" | "partial"
+    >
   >();
 
   expectTypeOf(
@@ -290,8 +294,12 @@ const bool = true as any as boolean;
   expectTypeOf(
     useLoadableQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // TODO is this quite right?
-    useLoadableQuery.Result<Data, Variables, "complete" | "streaming"> //  | "partial"
+    // @ts-expect-error TODO in a follow-up PR
+    useLoadableQuery.Result<
+      Data,
+      Variables,
+      "complete" | "streaming" | "partial"
+    >
   >();
 
   expectTypeOf(

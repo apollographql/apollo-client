@@ -145,7 +145,7 @@ const bool = true as any as boolean;
 // useSuspenseQuery
 {
   expectTypeOf(useSuspenseQuery(QUERY)).toEqualTypeOf<
-    // @ts-ignore TODO
+    // @ts-expect-error TODO in a follow-up PR
     useSuspenseQuery.Result<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
@@ -172,8 +172,12 @@ const bool = true as any as boolean;
   expectTypeOf(
     useSuspenseQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // TODO is this quite right?
-    useSuspenseQuery.Result<Data, Variables, "complete" | "streaming" | "empty"> //  | "partial"
+    // @ts-expect-error TODO in a follow-up PR
+    useSuspenseQuery.Result<
+      Data,
+      Variables,
+      "complete" | "streaming" | "empty" | "partial"
+    >
   >();
 
   expectTypeOf(
@@ -200,7 +204,7 @@ const bool = true as any as boolean;
 // useBackgroundQuery
 {
   expectTypeOf(useBackgroundQuery(QUERY)[0]).toEqualTypeOf<
-    // @ts-ignore TODO
+    // @ts-expect-error TODO in a follow-up PR
     QueryRef<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
@@ -250,7 +254,7 @@ const bool = true as any as boolean;
 // useLoadableQuery
 {
   expectTypeOf(useLoadableQuery(QUERY)).toEqualTypeOf<
-    // @ts-ignore TODO
+    // @ts-expect-error TODO in a follow-up PR
     useLoadableQuery.Result<Data, Variables, "complete" | "streaming" | "empty">
   >();
 
@@ -277,8 +281,12 @@ const bool = true as any as boolean;
   expectTypeOf(
     useLoadableQuery(QUERY, { returnPartialData: bool })
   ).toEqualTypeOf<
-    // TODO is this quite right?
-    useLoadableQuery.Result<Data, Variables, "complete" | "streaming" | "empty"> //  | "partial"
+    // @ts-expect-error TODO in a follow-up PR
+    useLoadableQuery.Result<
+      Data,
+      Variables,
+      "complete" | "streaming" | "empty" | "partial"
+    >
   >();
 
   expectTypeOf(

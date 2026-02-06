@@ -8,11 +8,11 @@ Prior to this change, the following code snippet would always apply:
 
 ```ts
 declare const MY_QUERY: TypedDocumentNode<TData, TVariables>;
-const result = useSuspenseQuery(MY_QUERY);
-result.data;
+const result1 = useSuspenseQuery(MY_QUERY);
+result1.data;
 //      ^? TData
-const result = useSuspenseQuery(MY_QUERY, { errorPolicy: "all" });
-result.data;
+const result2 = useSuspenseQuery(MY_QUERY, { errorPolicy: "all" });
+result2.data;
 //      ^? TData | undefined
 ```
 

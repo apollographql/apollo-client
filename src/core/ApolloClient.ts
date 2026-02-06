@@ -67,7 +67,12 @@ import type {
 
 let hasSuggestedDevtools = false;
 
-/** @knipignore */
+/**
+ * @knipignore
+ * @internal
+ * For some reason, without this export the build stop drops references to `DefaultOptions` and `DeclareDefaultOptions`, resulting in a broken build.
+ * Adding this fixes that, although it's not particularly elegant.
+ */
 export interface ReferenceToAvoidDroppingImportOnBuild {
   _1: DeclareDefaultOptions.Mutate;
   _2: DefaultOptions;

@@ -1018,6 +1018,7 @@ export class ApolloClient {
     }
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
 
+  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

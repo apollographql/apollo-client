@@ -17,7 +17,8 @@
     "vite-swc",
     "node",
     "wrapping-library",
-    "shared"
+    "shared",
+    "type-tests"
   ],
   "devDependencies": {
     "@types/lodash": "^4.14.195",

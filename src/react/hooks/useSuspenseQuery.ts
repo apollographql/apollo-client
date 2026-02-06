@@ -212,10 +212,11 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: true;
-    errorPolicy: "ignore" | "all";
-  }
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+      errorPolicy: "ignore" | "all";
+    }>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
@@ -228,9 +229,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    errorPolicy: "ignore" | "all";
-  }
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      errorPolicy: "ignore" | "all";
+    }>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
@@ -243,10 +245,11 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    skip: boolean;
-    returnPartialData: true;
-  }
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      skip: boolean;
+      returnPartialData: true;
+    }>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
@@ -259,9 +262,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+    }>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
@@ -291,9 +295,10 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
-        returnPartialData: true;
-      })
+    | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: true;
+        }>)
 ): useSuspenseQuery.Result<
   TData,
   TVariables,

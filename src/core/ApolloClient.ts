@@ -3,6 +3,7 @@ import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
+import type { InternalTypes } from "@apollo/client";
 import type {
   ApolloCache,
   Cache,
@@ -34,6 +35,10 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
+import type {
+  DeclareDefaultOptions,
+  DefaultOptions,
+} from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
@@ -62,14 +67,21 @@ import type {
 
 let hasSuggestedDevtools = false;
 
-export declare namespace ApolloClient {
-  export interface DefaultOptions {
-    watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
-    query?: Partial<ApolloClient.QueryOptions<any, any>>;
-    mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-  }
+/**
+ * @knipignore
+ * @internal
+ * For some reason, without this export the build stop drops references to `DefaultOptions` and `DeclareDefaultOptions`, resulting in a broken build.
+ * Adding this fixes that, although it's not particularly elegant.
+ */
+export interface ReferenceToAvoidDroppingImportOnBuild {
+  _1: DeclareDefaultOptions.Mutate;
+  _2: DefaultOptions;
+}
 
-  export interface Options {
+export declare namespace ApolloClient {
+  export type { DeclareDefaultOptions, DefaultOptions };
+
+  export interface Options extends InternalTypes.DefaultOptionsParentObject {
     /**
      * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
      */
@@ -98,12 +110,7 @@ export declare namespace ApolloClient {
      * @defaultValue `true`
      */
     queryDeduplication?: boolean;
-    /**
-     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-     *
-     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-     */
-    defaultOptions?: ApolloClient.DefaultOptions;
+
     defaultContext?: Partial<DefaultContext>;
     /**
      * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
@@ -148,7 +155,7 @@ export declare namespace ApolloClient {
     experiments?: ApolloClient.Experiment[];
   }
 
-  interface DevtoolsOptions {
+  export interface DevtoolsOptions {
     /**
      * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
      *
@@ -821,7 +828,7 @@ export class ApolloClient {
     this.link = link;
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || ({} as DefaultOptions);
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? __DEV__,
@@ -1013,9 +1020,10 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "all";
-    }
+    options: ApolloClient.QueryOptions<TData, TVariables> &
+      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
+        errorPolicy: "all";
+      }>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
@@ -1023,9 +1031,10 @@ export class ApolloClient {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "ignore";
-    }
+    options: ApolloClient.QueryOptions<TData, TVariables> &
+      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
+        errorPolicy: "ignore";
+      }>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
 
   /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */

@@ -209,11 +209,12 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    /** @deprecated `returnPartialData` has no effect on `no-cache` queries */
-    returnPartialData: boolean;
-    fetchPolicy: "no-cache";
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      /** @deprecated `returnPartialData` has no effect on `no-cache` queries */
+      returnPartialData: boolean;
+      fetchPolicy: "no-cache";
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -225,10 +226,11 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: false;
-    errorPolicy: "ignore" | "all";
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: false;
+      errorPolicy: "ignore" | "all";
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -240,10 +242,11 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-    errorPolicy: "ignore" | "all";
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: boolean;
+      errorPolicy: "ignore" | "all";
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial" | "empty">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -255,9 +258,10 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    errorPolicy: "ignore" | "all";
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      errorPolicy: "ignore" | "all";
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -269,10 +273,11 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    skip: boolean;
-    returnPartialData: false;
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      skip: boolean;
+      returnPartialData: false;
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -284,10 +289,11 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    skip: boolean;
-    returnPartialData: boolean;
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      skip: boolean;
+      returnPartialData: boolean;
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -299,9 +305,10 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: false;
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: false;
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -313,9 +320,10 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: boolean;
+    }>
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial">,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -352,9 +360,10 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
-        returnPartialData: false;
-      })
+    | (useBackgroundQuery.Options<NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: false;
+        }>)
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,
@@ -367,9 +376,10 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
-        returnPartialData: boolean;
-      })
+    | (useBackgroundQuery.Options<NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: boolean;
+        }>)
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,

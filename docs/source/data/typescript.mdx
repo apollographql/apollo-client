@@ -631,12 +631,12 @@ const customLink = new ApolloLink((operation, forward) => {
 
 ## Declaring default options for type safety
 
-Certain default options may affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`.
-When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, you need to declare them at the type level so that TypeScript can accurately type your results.
+Certain default options can affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`.
+When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.
 
-### Why declare default options?
+### Why to declare default options
 
-Consider this example:
+The following example demonstrates this behavior:
 
 ```tsx
 const client = new ApolloClient({
@@ -697,10 +697,10 @@ Options that can be declared:
 - **`Query`**: `errorPolicy`
 - **`Mutate`**: `errorPolicy`
 
-Declaring these options will enforce that you provide values for them in your `defaultOptions`.
-If you do not declare these options, TypeScript will prevent you from using these specific fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`, but you can still provide other default options.
+Declaring these options ensures you provide values for them in your `defaultOptions`.
+If you don't declare these options, TypeScript prevents you from using these specific fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`, but you can still provide other default options.
 
-If you cannot declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring the options as `unknown`:
+If you can't declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring the options as `unknown`:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";

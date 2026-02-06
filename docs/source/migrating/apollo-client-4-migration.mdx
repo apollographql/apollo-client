@@ -1798,7 +1798,7 @@ Options that can be declared:
 - **`Mutate`**: `errorPolicy`
 
 Declaring these options will enforce that you provide values for them in your `defaultOptions`.
-If you do not declare these options, you cannot provide them to the `ApolloClient` constructor.
+If you do not declare these options, you cannot use these properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
 
 #### Opting out
 

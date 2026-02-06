@@ -16,7 +16,7 @@ result.data;
 //      ^? TData | undefined
 ```
 
-While this was generally correct, if you were to register `errorPolicy: 'all'` as a default option for `MY_QUERY`, the type of `result.data` in the first case would still be `TData`, which is not correct - in reality if could also be `undefined`.
+While this was generally correct, if you were to register `errorPolicy: 'all'` as a default option for `MY_QUERY`, the type of `result.data` in the first case would still be `TData`, which is not correct - in reality it could also be `undefined`.
 
 Now, with this change, we are now enforcing that certain `defaultOptions` need to be registered globally on a type level.
 This means that if you want to use `errorPolicy: 'all'` as a default option for a query, you will need to register it globally like this:
@@ -46,7 +46,7 @@ declare module "@apollo/client" {
 }
 ```
 
-Once this in in place, the type of `result.data` in the first case will correctly be `TData | undefined`, reflecting the fact that if an error occurs, `data` will be `undefined`.
+Once this is in place, the type of `result.data` in the first case will correctly be `TData | undefined`, reflecting the fact that if an error occurs, `data` will be `undefined`.
 If you were to manually call `useSuspenseQuery(MY_QUERY, { errorPolicy: 'none' });`, it would become `TData` again.
 
 This change means that you are now forced to register these default options globally, or TypeScript will error out.

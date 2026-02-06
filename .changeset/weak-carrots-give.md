@@ -7,8 +7,7 @@ Synchronize method and hook return types with `defaultOptions`.
 Prior to this change, the following code snippet would always apply:
 
 ```ts
-declare;
-MY_QUERY: TypedDocumentNode<TData, TVariables>;
+declare const MY_QUERY: TypedDocumentNode<TData, TVariables>;
 const result = useSuspenseQuery(MY_QUERY);
 result.data;
 //      ^? TData

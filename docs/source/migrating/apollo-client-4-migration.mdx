@@ -1725,11 +1725,11 @@ const cache: ApolloCache = ... // [!code ++]
 
 ### Typed default options
 
-Certain default options may affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`. When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, you need to declare them at the type level so that TypeScript can accurately type your results.
+Certain default options might affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`. When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, define them at the type level so TypeScript can accurately type your results.
 
 #### What changed
 
-When you set certain default options in Apollo Client 3, the TypeScript types for query results did not reflect those defaults. For example:
+When you set certain default options in Apollo Client 3, the TypeScript types for query results didn't reflect those defaults. For example:
 
 ```ts
 // Apollo Client 3 behavior
@@ -1752,7 +1752,7 @@ In reality, with `errorPolicy: "all"`, `data` can be `undefined` when an error o
 
 #### How to migrate
 
-If you use `errorPolicy` or `returnPartialData` in your `defaultOptions`, you need to declare them globally in a TypeScript declaration file:
+If you use `errorPolicy` or `returnPartialData` in your `defaultOptions`, declare them globally in a TypeScript declaration file:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";
@@ -1797,12 +1797,12 @@ Options that can be declared:
 - **`Query`**: `errorPolicy`
 - **`Mutate`**: `errorPolicy`
 
-Declaring these options will enforce that you provide values for them in your `defaultOptions`.
-If you do not declare these options, you cannot use these properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
+Defining these options ensures you provide values for them in your `defaultOptions`.
+If you don't declare these options, you can't use these properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
 
 #### Opting out
 
-If you create multiple Apollo Client instances with conflicting default options and cannot declare a single global default, you can opt out by declaring the options as `unknown`:
+If you create multiple Apollo Client instances with conflicting default options and can't define a single global default, you can opt out by defining the options as `unknown`:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";

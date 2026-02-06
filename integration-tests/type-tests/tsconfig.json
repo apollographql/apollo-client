@@ -1,6 +1,9 @@
 {
   "references": [
     {
+      "path": "./defaultOptions/reset/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/defaults/tsconfig.json"
     },
     {

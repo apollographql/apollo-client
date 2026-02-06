@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "update-references": "cp tsconfig.json tsconfig.bak; find . -mindepth 2 -name tsconfig.json | jq --raw-input --slurp --slurpfile tsconfig tsconfig.bak 'split(\"\n\")|.[:-1]|map({path:.}) as $references | .=$tsconfig[0] | .references=$references | .' > tsconfig.json; rm tsconfig.bak",
-    "test": "yarn tsc --build"
+    "test": "tsc --build"
   },
   "dependencies": {
     "@apollo/client": "4.1.3",

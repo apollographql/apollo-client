@@ -45,7 +45,7 @@ const tsPlugins = {
 };
 
 export default defineConfig([
-  globalIgnores(["integration-tests/"]),
+  globalIgnores(["integration-tests/", "type-tests/"]),
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: tsPlugins,

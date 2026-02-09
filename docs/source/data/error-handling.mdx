@@ -315,7 +315,7 @@ observable.subscribe({
 
 <Note>
 
-This same error handling behavior applies to subscriptions when using `client.subscribe()`. All errors are delivered via the `next` callback in `result.error`, never via the `error` callback. When an error causes the connection to terminate, the error is emitted via `next`, followed by a `complete` notification. See the [subscriptions documentation](./subscriptions/#handling-errors-in-subscriptions) for more details.
+The same error handling behavior applies to subscriptions when using `client.subscribe()`. All errors are delivered through the `next` callback in `result.error`, never through the `error` callback. When an error causes the connection to terminate, the error is emitted through `next`, followed by a `complete` notification. See the [subscriptions documentation](./subscriptions/#handling-errors-in-subscriptions) for more details.
 
 </Note>
 

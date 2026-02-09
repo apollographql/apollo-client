@@ -370,7 +370,7 @@ function LatestComment({ postID }) {
 
 ### Error handling with `client.subscribe()`
 
-When using `client.subscribe()` directly, all errors are delivered via the `next` callback in `result.error`. The `error` callback is never called:
+When using `client.subscribe()` directly, all errors are delivered through the `next` callback in `result.error`. The `error` callback is never called:
 
 ```ts
 client.subscribe({ query: COMMENTS_SUBSCRIPTION }).subscribe({

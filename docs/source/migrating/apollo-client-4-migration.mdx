@@ -1295,7 +1295,7 @@ observable.subscribe({
 
 <Note>
 
-This change applies to **all** Apollo Client observables, including subscriptions created with `client.subscribe()`. GraphQL errors in subscriptions are always delivered via the `next` callback in `result.error`, never via the `error` callback. The subscription only terminates for non-recoverable errors like network failures.
+The change applies to all Apollo Client observables, including subscriptions created with `client.subscribe()`. GraphQL errors in subscriptions are always delivered through the `next` callback in `result.error`, never through the `error` callback. The subscription only terminates for non-recoverable errors like network failures.
 
 </Note>
 

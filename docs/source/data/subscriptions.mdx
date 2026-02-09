@@ -330,6 +330,83 @@ function LatestComment({ postID }) {
 
 </MultiCodeBlock>
 
+## Handling errors in subscriptions
+
+### Error handling with `useSubscription`
+
+When using the `useSubscription` hook, errors are returned in the `error` property of the result object:
+
+<MultiCodeBlock>
+
+```tsx
+function LatestComment({ postID }: LatestCommentProps) {
+  const { data, loading, error } = useSubscription(COMMENTS_SUBSCRIPTION, {
+    variables: { postID },
+  });
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return <h4>New comment: {!loading && data?.commentAdded.content}</h4>;
+}
+```
+
+```jsx
+function LatestComment({ postID }) {
+  const { data, loading, error } = useSubscription(COMMENTS_SUBSCRIPTION, {
+    variables: { postID },
+  });
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return <h4>New comment: {!loading && data?.commentAdded.content}</h4>;
+}
+```
+
+</MultiCodeBlock>
+
+### Error handling with `client.subscribe()`
+
+When using `client.subscribe()` directly, all errors are delivered through the `next` callback in `result.error`. The `error` callback is never called:
+
+```ts
+client.subscribe({ query: COMMENTS_SUBSCRIPTION }).subscribe({
+  next: (result) => {
+    if (result.error) {
+      // All errors are delivered here
+      console.log("Error:", result.error.message);
+    }
+    // result.data may be undefined (with errorPolicy: 'none')
+    // or may contain partial data (with errorPolicy: 'all')
+  },
+  complete: () => {
+    // Called when the subscription terminates
+    console.log("Subscription completed");
+  },
+});
+```
+
+This behavior ensures that subscriptions can continue running even after encountering errors, allowing your server to send valid data after an error occurs. If an error causes the connection to terminate, the error is emitted through `next`, followed by a `complete` notification.
+
+### Error policies with subscriptions
+
+You can control how Apollo Client handles partial data when GraphQL errors occur by setting an [`errorPolicy`](./error-handling/#graphql-error-policies):
+
+- **`errorPolicy: 'none'`** (default) - `result.data` is `undefined` when errors occur, and `result.error` contains the error.
+- **`errorPolicy: 'all'`** - Both `result.data` (with partial data) and `result.error` are populated.
+- **`errorPolicy: 'ignore'`** - Errors are ignored, and `result.error` is `undefined`.
+
+```ts
+useSubscription(COMMENTS_SUBSCRIPTION, {
+  errorPolicy: "all", // Receive both partial data and errors
+});
+```
+
+Learn more about error handling in the [Error handling documentation](./error-handling/).
+
 ## Subscribing to updates for a query
 
 Whenever a query returns a result in Apollo Client, that result includes a `subscribeToMore` function. You can use this function to execute a followup subscription that pushes updates to the query's original result.

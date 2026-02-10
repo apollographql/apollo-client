@@ -3,8 +3,12 @@
   "compilerOptions": {
     "composite": true
   },
-  "include": [
-    "./*.ts",
-    "../../shared/*.ts"
+  "references": [
+    {
+      "path": "../../../tsconfig.src.json"
+    },
+    {
+      "path": "../../shared/tsconfig.json"
+    }
   ]
 }

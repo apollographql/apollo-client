@@ -2,8 +2,9 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
+    "rootDir": "${configDir}",
+    "outDir": "${configDir}/dist",
+    "emitDeclarationOnly": true,
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
@@ -36,5 +37,8 @@
     "moduleDetection": "force",
     "moduleResolution": "nodenext",
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "${configDir}/*.ts",
+  ],
 }

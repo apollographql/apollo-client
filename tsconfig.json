@@ -41,33 +41,6 @@
     },
     {
       "path": "./docs/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/reset/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/defaults/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/watchQuery/returnPartialDataTrue/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/watchQuery/errorPolicyNone/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/watchQuery/errorPolicyAll/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/watchQuery/errorPolicyIgnore/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/query/errorPolicyNone/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/query/errorPolicyAll/tsconfig.json"
-    },
-    {
-      "path": "./type-tests/defaultOptions/query/errorPolicyIgnore/tsconfig.json"
     }
   ],
   "mdx": {

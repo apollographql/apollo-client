@@ -435,6 +435,126 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: never;
+            }>),
+    ]
+  : [
+      options:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: never;
+            }>),
+    ]
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  // still needs variations that take `returnPartialData` into account
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: true;
+            }>),
+    ]
+  : [
+      options:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: true;
+            }>),
+    ]
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  // still needs variations that take `returnPartialData` into account
+  "complete" | "streaming" | "empty" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: false;
+            }>),
+    ]
+  : [
+      options:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: false;
+            }>),
+    ]
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  // still needs variations that take `returnPartialData` into account
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: boolean;
+            }>),
+    ]
+  : [
+      options:
+        | SkipToken
+        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+              returnPartialData: boolean;
+            }>),
+    ]
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  // still needs variations that take `returnPartialData` into account
+  "complete" | "streaming" | "empty" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<

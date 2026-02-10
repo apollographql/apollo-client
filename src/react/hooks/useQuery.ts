@@ -323,6 +323,37 @@ export function useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
     ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: false;
+    }>
+): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: false;
+        }>)
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming",
+  Partial<TVariables>
+>;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
       returnPartialData: boolean;
     }>
 ): useQuery.Result<

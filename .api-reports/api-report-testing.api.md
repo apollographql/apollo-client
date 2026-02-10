@@ -1203,7 +1203,7 @@ export interface MockedResponse<out TData = Record<string, any>, out TVariables 
     result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
     // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
     //
-    // (undocumented)
+    // @deprecated (undocumented)
     variableMatcher?: VariableMatcher<TVariables>;
 }
 

@@ -50,8 +50,17 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   /**
-   * @deprecated `variableMatcher` will be removed in Apollo Client 4.0. Please use the
-   * `request.variables` option with a callback function instead to get the same behavior.
+   * @deprecated `variableMatcher` has been moved in Apollo Client 4.0. This
+   * option is safe to use in Apollo Client 3.x.
+   *
+   * **Recommended now**
+   *
+   * No action needed
+   *
+   * **When upgrading**
+   *
+   * Provide a callback function to `request.variables` to get the same
+   * behavior.
    */
   variableMatcher?: VariableMatcher<TVariables>;
   /**

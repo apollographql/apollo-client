@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.14.1
+
+### Patch Changes
+
+- [#12970](https://github.com/apollographql/apollo-client/pull/12970) [`f91fab5`](https://github.com/apollographql/apollo-client/commit/f91fab505d8c08ce2bd793e8e73e354f8b8e2534) Thanks [@acemir](https://github.com/acemir)! - Add a deprecation message for the `variableMatcher` option in `MockLink`.
+
 ## 3.14.0
 
 ### Minor Changes

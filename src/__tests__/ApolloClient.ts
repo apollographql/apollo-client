@@ -2884,6 +2884,7 @@ describe("ApolloClient", () => {
           query: {
             query: { kind: Kind.DOCUMENT, definitions: [] },
             variables: { foo: "bar" },
+            // @ts-expect-error
             errorPolicy: "none",
             context: undefined,
             fetchPolicy: "cache-first",

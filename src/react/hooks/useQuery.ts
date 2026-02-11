@@ -450,6 +450,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const watchQueryOptions = useOptions(
     query,
     options,
+    // @ts-expect-error
     client.defaultOptions.watchQuery
   );
 

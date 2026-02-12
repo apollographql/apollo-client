@@ -27,6 +27,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
+  RemoveIndexSignature,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
@@ -145,28 +146,41 @@ export declare namespace useSuspenseQuery {
   > = Base.Result<TData, TVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
+  export type OptionsWithDefaults<
+    TVariables extends OperationVariables,
+    TOptions extends
+      | Record<string, unknown>
+      | useSuspenseQuery.Options<TVariables & Record<string, never>>
+      | SkipToken,
+  > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
+    Omit<
+      ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
+      keyof Options
+    > &
+      Options
+  : never;
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends useSuspenseQuery.Options<
-      TVariables & Record<string, never>
-    >,
-  > = Omit<
-    ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
-    keyof TOptions
-  > &
-    TOptions extends infer OptionsWithDefaults ?
-    useSuspenseQuery.Result<
-      TData,
-      TVariables,
-      | "complete"
-      | "streaming"
-      | (OptionsWithDefaults extends { errorPolicy: "none" } ? never : "empty")
-      | (OptionsWithDefaults extends { skip: false } ? never : "empty")
-      | (OptionsWithDefaults extends { returnPartialData: false } ? never
-        : "partial")
-    >
-  : never;
+    TOptions extends
+      | Record<string, never> // no options
+      | useSuspenseQuery.Options<TVariables & Record<string, never>>
+      | SkipToken,
+  > = useSuspenseQuery.Result<
+    TData,
+    TVariables,
+    | "complete"
+    | "streaming"
+    | (TOptions extends any ?
+        TOptions extends SkipToken ? "empty"
+        : OptionsWithDefaults<TVariables, TOptions> extends infer Options ?
+          | (Options extends { errorPolicy: "none" } ? never : "empty")
+          | (Options extends { skip: false } ? never : "empty")
+          | (Options extends { returnPartialData: false } ? never : "partial")
+        : never
+      : never)
+  >;
 
   export namespace DocumentationTypes {
     namespace useSuspenseQuery {
@@ -247,12 +261,27 @@ export declare namespace useSuspenseQuery {
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends useSuspenseQuery.Options<
-    NoInfer<TVariables> & Record<string, never>
-  >,
+  // this overload should never be manually defined, it should always be inferred
+  Options extends never,
+>(
+  query: {} extends TVariables ?
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  : // this overload should only be accessible if all `TVariables` are optional, otherwise the type of `query` would be the same as the next overload and cause an error about duplicate function implementations
+    never
+): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends
+    | useSuspenseQuery.Options<NoInfer<TVariables> & Record<string, never>>
+    | SkipToken,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: TOptions
+  ...[options]: {} extends TVariables ? [options?: TOptions]
+  : [options: TOptions]
 ): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
 
 /** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */

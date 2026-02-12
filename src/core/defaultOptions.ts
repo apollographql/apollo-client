@@ -58,10 +58,6 @@ export declare namespace DefaultOptions {
           returnPartialData: false;
         }
       > {}
-
-    export type OptionalIfDefault<
-      Actual extends Partial<PossibleDefaultOptions.WatchQuery>,
-    > = OptionalIfDefault_HigherOrder<Calculated, Actual>;
   }
 
   export interface Query
@@ -79,10 +75,6 @@ export declare namespace DefaultOptions {
           errorPolicy: "none";
         }
       > {}
-
-    export type OptionalIfDefault<
-      Actual extends Partial<PossibleDefaultOptions.WatchQuery>,
-    > = OptionalIfDefault_HigherOrder<Calculated, Actual>;
   }
 
   export interface Mutate
@@ -100,29 +92,13 @@ export declare namespace DefaultOptions {
           errorPolicy: "none";
         }
       > {}
-
-    export type OptionalIfDefault<
-      Actual extends Partial<PossibleDefaultOptions.WatchQuery>,
-    > = OptionalIfDefault_HigherOrder<Calculated, Actual>;
   }
 }
-
-type MakeOptional<T, K extends keyof T> = Prettify<
-  Omit<T, K> & Partial<Pick<T, K>>
->;
 
 type Calculate<UserDefaults, BaseDefaults> = {
   [K in keyof BaseDefaults]: K extends keyof UserDefaults ? UserDefaults[K]
   : BaseDefaults[K];
 };
-
-export type OptionalIfDefault_HigherOrder<Defaults, Actual> = MakeOptional<
-  Actual,
-  keyof {
-    [K in keyof Defaults & keyof Actual as Defaults[K] extends Actual[K] ? K
-    : never]: true;
-  }
->;
 
 /**
  * @internal

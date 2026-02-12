@@ -38,7 +38,5 @@
     "moduleResolution": "nodenext",
     "skipLibCheck": true
   },
-  "include": [
-    "${configDir}/*.ts",
-  ],
+  "include": ["${configDir}/*.ts"]
 }

@@ -247,9 +247,11 @@ export declare namespace useLazyQuery {
     | "complete"
     | "streaming"
     | "empty"
-    | (OptionsWithDefaults<TData, TVariables, TOptions> extends {
-        returnPartialData: false;
-      } ?
+    | (OptionsWithDefaults<TData, TVariables, TOptions> extends (
+        {
+          returnPartialData: false;
+        }
+      ) ?
         never
       : "partial")
   >;
@@ -346,7 +348,8 @@ export function useLazyQuery<
   TOptions extends useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ? [options?: TOptions] : [options: TOptions]
+  ...[options]: {} extends TVariables ? [options?: TOptions]
+  : [options: TOptions]
 ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
 
 /** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */

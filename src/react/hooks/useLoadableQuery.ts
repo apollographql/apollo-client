@@ -103,9 +103,10 @@ export declare namespace useLoadableQuery {
 
   export type OptionsWithDefaults<
     TOptions extends Record<string, unknown> | Options,
-  > = RemoveIndexSignature<TOptions> extends infer Opts ?
-    Omit<ApolloClient.DefaultOptions.WatchQuery.Calculated, keyof Opts> & Opts
-  : never;
+  > =
+    RemoveIndexSignature<TOptions> extends infer Opts ?
+      Omit<ApolloClient.DefaultOptions.WatchQuery.Calculated, keyof Opts> & Opts
+    : never;
 
   export type ResultForOptions<
     TData,

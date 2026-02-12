@@ -6,6 +6,6 @@
   "references": [
     {
       "path": "../../tsconfig.src.json"
-    },
+    }
   ]
 }

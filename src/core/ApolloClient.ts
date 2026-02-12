@@ -20,6 +20,7 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  RemoveIndexSignature,
   VariablesOption,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -287,6 +288,26 @@ export declare namespace ApolloClient {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: ErrorLike;
     };
+
+  export type QueryOptionsWithDefaults<
+    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
+  > =
+    RemoveIndexSignature<TOptions> extends infer Options ?
+      Omit<ApolloClient.DefaultOptions.Query.Calculated, keyof Options> &
+        Options
+    : never;
+
+  export type QueryResultForOptions<
+    TData,
+    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
+  > = QueryResult<
+    MaybeMasked<TData>,
+    QueryOptionsWithDefaults<TOptions> extends { errorPolicy: infer E } ?
+      E extends ErrorPolicy ?
+        E
+      : undefined
+    : undefined
+  >;
 
   /**
    * Options object for the `client.refetchQueries` method.
@@ -1017,27 +1038,53 @@ export class ApolloClient {
    * server at all or just resolve from the cache, etc.
    */
   public query<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
+    TData,
+    TVariables extends OperationVariables,
+    // this overload should never be manually defined, it should always be inferred
+    TOptions extends ApolloClient.QueryOptions<
+      NoInfer<TData>,
+      NoInfer<TVariables>
+    >,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> &
-      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
-        errorPolicy: "all";
-      }>
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
+  ): Promise<ApolloClient.QueryResultForOptions<TData, TOptions>>;
 
-  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: ApolloClient.QueryOptions<TData, TVariables> &
-      ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
-        errorPolicy: "ignore";
-      }>
+    options: ApolloClient.QueryOptions<TData, TVariables> & {
+      errorPolicy: "all";
+    }
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables> & {
+      errorPolicy: "ignore";
+    }
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
 
-  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

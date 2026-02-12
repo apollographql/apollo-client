@@ -263,30 +263,42 @@ declare module "@apollo/client" {
   useBackgroundQuery.skipToken.result
     .toEqualTypeOf<useBackgroundQuery.UndefinedResult>;
 
-  useBackgroundQuery.skipToken.returnPartialData._true.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+  useBackgroundQuery.skipToken.returnPartialData._true.branded.toEqualTypeOf<
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skipToken.returnPartialData._false.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skipToken.returnPartialData._bool.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
 
   useBackgroundQuery.skip._true.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skip._bool.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skip._bool.returnPartialData._true.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skip._bool.returnPartialData._false.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skip._bool.returnPartialData._bool.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
 }
 

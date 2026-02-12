@@ -178,7 +178,17 @@ export declare namespace useSuspenseQuery {
           | (Options extends { errorPolicy: "none" } ? never : "empty")
           | (Options extends { skip: false } ? never : "empty")
           | (Options extends { returnPartialData: false } ? never : "partial")
-        : never
+        : "never"
+      : never)
+    // special case, if only `SkipToken` is passed in (no union type),
+    // then we want to still keep "partial" if `returnPartialData` is globally
+    // set to `true` or `boolean` via defaultOptions
+    | ([TOptions] extends [SkipToken] ?
+        ApolloClient.DefaultOptions.WatchQuery.Calculated extends (
+          { returnPartialData: false }
+        ) ?
+          never
+        : "partial"
       : never)
   >;
 

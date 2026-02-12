@@ -193,7 +193,7 @@ declare module "@apollo/client" {
     useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useSuspenseQuery.skip._bool.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useSuspenseQuery.skip._bool.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">

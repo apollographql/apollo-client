@@ -11,14 +11,16 @@ declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
       interface WatchQuery {
-        errorPolicy?: unknown;
-        returnPartialData?: unknown;
+        // TODO: undefined here should map to "none"
+        errorPolicy?: "none" | "ignore" | "all";
+        // similarly
+        returnPartialData?: boolean;
       }
       interface Query {
-        errorPolicy?: unknown;
+        errorPolicy?: "none" | "ignore" | "all";
       }
       interface Mutate {
-        errorPolicy?: unknown;
+        errorPolicy?: "none" | "ignore" | "all";
       }
     }
   }
@@ -122,7 +124,11 @@ const bool = {} as any as boolean;
 // client.query
 {
   clientQuery.errorPolicy.defaults.toEqualTypeOf<
-    Promise<clientQuery.QueryResultNone>
+    Promise<
+      | clientQuery.QueryResultNone
+      | clientQuery.QueryResultAll
+      | clientQuery.QueryResultIgnore
+    >
   >;
   clientQuery.errorPolicy.all.toEqualTypeOf<
     Promise<clientQuery.QueryResultAll>
@@ -137,7 +143,7 @@ const bool = {} as any as boolean;
 // useQuery
 {
   useQuery.returnPartialData.defaults.toEqualTypeOf<
-    useQuery.Result<"empty" | "complete" | "streaming">
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useQuery.returnPartialData._true.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
@@ -152,7 +158,7 @@ const bool = {} as any as boolean;
 // useLazyQuery
 {
   useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useLazyQuery.returnPartialData._true.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
@@ -167,20 +173,20 @@ const bool = {} as any as boolean;
 // useSuspenseQuery
 {
   useSuspenseQuery.errorPolicy.defaults.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming">
+    useSuspenseQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useSuspenseQuery.errorPolicy.defaults.returnPartialData._true.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "partial">
+    useSuspenseQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useSuspenseQuery.errorPolicy.defaults.returnPartialData._false.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming">
+    useSuspenseQuery.Result<"empty" | "complete" | "streaming">
   >;
   useSuspenseQuery.errorPolicy.defaults.returnPartialData._bool.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "partial">
+    useSuspenseQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
 
   useSuspenseQuery.errorPolicy.none.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming">
+    useSuspenseQuery.Result<"complete" | "streaming" | "partial">
   >;
   useSuspenseQuery.errorPolicy.none.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "partial">
@@ -193,7 +199,7 @@ const bool = {} as any as boolean;
   >;
 
   useSuspenseQuery.errorPolicy.all.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useSuspenseQuery.errorPolicy.all.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "partial" | "empty">
@@ -206,7 +212,7 @@ const bool = {} as any as boolean;
   >;
 
   useSuspenseQuery.errorPolicy.ignore.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useSuspenseQuery.errorPolicy.ignore.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "partial" | "empty">
@@ -219,7 +225,7 @@ const bool = {} as any as boolean;
   >;
 
   useSuspenseQuery.skipToken.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useSuspenseQuery.skipToken.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
@@ -232,10 +238,10 @@ const bool = {} as any as boolean;
   >;
 
   useSuspenseQuery.skip._true.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useSuspenseQuery.skip._bool.result.toEqualTypeOf<
-    useSuspenseQuery.Result<"complete" | "streaming" | "empty">
+    useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useSuspenseQuery.skip._bool.returnPartialData._true.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "empty" | "partial">
@@ -250,19 +256,21 @@ const bool = {} as any as boolean;
 // useBackgroundQuery
 {
   useBackgroundQuery.errorPolicy.defaults.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming">
+    useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useBackgroundQuery.errorPolicy.defaults.returnPartialData._true.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial">
+    useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useBackgroundQuery.errorPolicy.defaults.returnPartialData._false
-    .toEqualTypeOf<useBackgroundQuery.Result<"complete" | "streaming">>;
+    .toEqualTypeOf<
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty">
+  >;
   useBackgroundQuery.errorPolicy.defaults.returnPartialData._bool.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial">
+    useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
 
   useBackgroundQuery.errorPolicy.none.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming">
+    useBackgroundQuery.Result<"complete" | "streaming" | "partial">
   >;
   useBackgroundQuery.errorPolicy.none.returnPartialData._true.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial">
@@ -275,7 +283,7 @@ const bool = {} as any as boolean;
   >;
 
   useBackgroundQuery.errorPolicy.all.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "empty">
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useBackgroundQuery.errorPolicy.all.returnPartialData._true.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
@@ -288,7 +296,7 @@ const bool = {} as any as boolean;
   >;
 
   useBackgroundQuery.errorPolicy.ignore.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "empty">
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useBackgroundQuery.errorPolicy.ignore.returnPartialData._true.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
@@ -304,49 +312,67 @@ const bool = {} as any as boolean;
     .toEqualTypeOf<useBackgroundQuery.UndefinedResult>;
 
   useBackgroundQuery.skipToken.returnPartialData._true.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skipToken.returnPartialData._false.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skipToken.returnPartialData._bool.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
 
   useBackgroundQuery.skip._true.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skip._bool.result.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skip._bool.returnPartialData._true.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
   useBackgroundQuery.skip._bool.returnPartialData._false.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming", undefined>
+    useBackgroundQuery.Result<"complete" | "streaming" | "empty", undefined>
   >;
   useBackgroundQuery.skip._bool.returnPartialData._bool.toEqualTypeOf<
-    useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+    useBackgroundQuery.Result<
+      "complete" | "streaming" | "partial" | "empty",
+      undefined
+    >
   >;
 }
 
 // useLoadableQuery
 {
   useLoadableQuery.errorPolicy.defaults.result.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming">
+    useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useLoadableQuery.errorPolicy.defaults.returnPartialData._true.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming" | "partial">
+    useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
   useLoadableQuery.errorPolicy.defaults.returnPartialData._false.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming">
+    useLoadableQuery.Result<"complete" | "streaming" | "empty">
   >;
   useLoadableQuery.errorPolicy.defaults.returnPartialData._bool.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming" | "partial">
+    useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
 
   useLoadableQuery.errorPolicy.none.result.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming">
+    useLoadableQuery.Result<"complete" | "streaming" | "partial">
   >;
   useLoadableQuery.errorPolicy.none.returnPartialData._true.toEqualTypeOf<
     useLoadableQuery.Result<"complete" | "streaming" | "partial">
@@ -359,7 +385,7 @@ const bool = {} as any as boolean;
   >;
 
   useLoadableQuery.errorPolicy.all.result.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming" | "empty">
+    useLoadableQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useLoadableQuery.errorPolicy.all.returnPartialData._true.toEqualTypeOf<
     useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">
@@ -372,7 +398,7 @@ const bool = {} as any as boolean;
   >;
 
   useLoadableQuery.errorPolicy.ignore.result.toEqualTypeOf<
-    useLoadableQuery.Result<"complete" | "streaming" | "empty">
+    useLoadableQuery.Result<"complete" | "streaming" | "empty" | "partial">
   >;
   useLoadableQuery.errorPolicy.ignore.returnPartialData._true.toEqualTypeOf<
     useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">

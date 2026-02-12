@@ -7,7 +7,7 @@
       "path": "./defaultOptions/shared/tsconfig.json"
     },
     {
-      "path": "./defaultOptions/reset/tsconfig.json"
+      "path": "./defaultOptions/unions/tsconfig.json"
     },
     {
       "path": "./defaultOptions/defaults/tsconfig.json"

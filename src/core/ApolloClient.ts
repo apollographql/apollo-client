@@ -1052,7 +1052,11 @@ export class ApolloClient {
     options: ApolloClient.QueryOptions<TData, TVariables>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
-      options = mergeOptions(this.defaultOptions.query, options);
+      options = mergeOptions(
+        // @ts-expect-error
+        this.defaultOptions.query,
+        options
+      );
     }
 
     if (__DEV__) {
@@ -1124,6 +1128,7 @@ export class ApolloClient {
         },
         this.defaultOptions.mutate
       ),
+      // @ts-expect-error
       options
     ) as ApolloClient.MutateOptions<TData, TVariables, TCache> & {
       fetchPolicy: MutationFetchPolicy;

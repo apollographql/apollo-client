@@ -1,3 +1,5 @@
+*.tsbuildinfo
+
 # Installed via Github Copilot Setup Steps, should not be committed
 .agents/skills/apollo-client
 .github/instructions/docs.instructions.md

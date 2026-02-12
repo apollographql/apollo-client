@@ -7,8 +7,5 @@
     {
       "path": "../../tsconfig.src.json"
     },
-    {
-      "path": "../shared/tsconfig.json"
-    }
   ]
 }

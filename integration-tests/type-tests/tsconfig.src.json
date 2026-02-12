@@ -1,0 +1,29 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    // File Layout
+    "rootDir": "../../src",
+    "outDir": "./dist",
+    "declarationDir": "./dist",
+    "emitDeclarationOnly": true,
+    // Environment Settings
+    // See also https://aka.ms/tsconfig/module
+    "module": "nodenext",
+    "target": "esnext",
+    "types": [],
+    "declaration": true,
+    "declarationMap": false,
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "nodenext",
+    "skipLibCheck": true,
+    "noCheck": true,
+    "composite": true
+  },
+  "include": [
+    "../../src"
+  ],
+  "exclude": [
+    "../../src/**/__tests__"
+  ]
+}

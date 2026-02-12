@@ -1,6 +1,12 @@
 {
   "references": [
     {
+      "path": "./tsconfig.src.json"
+    },
+    {
+      "path": "./defaultOptions/shared/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/reset/tsconfig.json"
     },
     {
@@ -27,5 +33,8 @@
     {
       "path": "./defaultOptions/query/errorPolicyIgnore/tsconfig.json"
     }
-  ]
+  ],
+  "include": [],
+  "exclude": [],
+  "files": []
 }

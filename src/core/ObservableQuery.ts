@@ -1423,7 +1423,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options: { fetchPolicy, pollInterval },
     } = this;
 
-    if (!pollInterval || !this.hasObservers() || fetchPolicy === "cache-only") {
+    if (
+      !pollInterval ||
+      !this.hasObservers() ||
+      fetchPolicy === "cache-only" ||
+      fetchPolicy === "standby"
+    ) {
       if (__DEV__) {
         if (
           !this.didWarnCacheOnlyPolling &&

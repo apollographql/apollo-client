@@ -290,10 +290,9 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: true;
-    }>
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
 ): useLazyQuery.ResultTuple<
   TData,
   TVariables,
@@ -306,26 +305,9 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: false;
-    }>
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming"
->;
-
-/** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: boolean;
-    }>
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: boolean;
+  }
 ): useLazyQuery.ResultTuple<
   TData,
   TVariables,

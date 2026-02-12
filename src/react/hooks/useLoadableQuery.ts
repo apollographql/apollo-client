@@ -162,11 +162,10 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: true;
-      errorPolicy: "ignore" | "all";
-    }>
+  options: useLoadableQuery.Options & {
+    returnPartialData: true;
+    errorPolicy: "ignore" | "all";
+  }
 ): useLoadableQuery.Result<
   TData,
   TVariables,
@@ -179,11 +178,9 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: false;
-      errorPolicy: "ignore" | "all";
-    }>
+  options: useLoadableQuery.Options & {
+    errorPolicy: "ignore" | "all";
+  }
 ): useLoadableQuery.Result<
   TData,
   TVariables,
@@ -196,71 +193,9 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: boolean;
-      errorPolicy: "ignore" | "all";
-    }>
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial" | "empty"
->;
-
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "ignore" | "all";
-    }>
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: true;
-    }>
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: false;
-    }>
-): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
-
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: boolean;
-    }>
+  options: useLoadableQuery.Options & {
+    returnPartialData: true;
+  }
 ): useLoadableQuery.Result<
   TData,
   TVariables,

@@ -150,7 +150,7 @@ export declare namespace useSuspenseQuery {
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, unknown>
-      | useSuspenseQuery.Options<TVariables & Record<string, never>>
+      | Options<TVariables & Record<string, never>>
       | SkipToken,
   > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
     Omit<
@@ -165,9 +165,9 @@ export declare namespace useSuspenseQuery {
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | useSuspenseQuery.Options<TVariables & Record<string, never>>
+      | Options<TVariables & Record<string, never>>
       | SkipToken,
-  > = useSuspenseQuery.Result<
+  > = Result<
     TData,
     TVariables,
     | "complete"
@@ -266,7 +266,7 @@ export function useSuspenseQuery<
 >(
   query: {} extends TVariables ?
     DocumentNode | TypedDocumentNode<TData, TVariables>
-  : // this overload should only be accessible if all `TVariables` are optional, otherwise the type of `query` would be the same as the next overload and cause an error about duplicate function implementations
+  : // this overload should only be accessible if all `TVariables` are optional
     never
 ): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
 

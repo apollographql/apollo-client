@@ -145,6 +145,29 @@ export declare namespace useSuspenseQuery {
   > = Base.Result<TData, TVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends useSuspenseQuery.Options<
+      TVariables & Record<string, never>
+    >,
+  > = Omit<
+    ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
+    keyof TOptions
+  > &
+    TOptions extends infer OptionsWithDefaults ?
+    useSuspenseQuery.Result<
+      TData,
+      TVariables,
+      | "complete"
+      | "streaming"
+      | (OptionsWithDefaults extends { errorPolicy: "none" } ? never : "empty")
+      | (OptionsWithDefaults extends { skip: false } ? never : "empty")
+      | (OptionsWithDefaults extends { returnPartialData: false } ? never
+        : "partial")
+    >
+  : never;
+
   export namespace DocumentationTypes {
     namespace useSuspenseQuery {
       export interface Result<
@@ -203,352 +226,146 @@ export declare namespace useSuspenseQuery {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>,
       options?: useSuspenseQuery.Options<TVariables>
     ): useSuspenseQuery.Result<TData, TVariables>;
+
+    /**
+     * @deprecated Avoid manually specifying generics on `useSuspenseQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)}
+     */
+    export function useSuspenseQuery_Deprecated<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useSuspenseQuery.Options<TVariables>
+    ): useSuspenseQuery.Result<TData, TVariables>;
   }
 }
 
 /** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  TOptions extends useSuspenseQuery.Options<
+    NoInfer<TVariables> & Record<string, never>
+  >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: TOptions
+): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSuspenseQuery.Options<NoInfer<TVariables>> &
     ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "none";
-      returnPartialData: false;
-    }> & { skip?: false }
+      returnPartialData: true;
+      errorPolicy: "ignore" | "all";
+    }>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      errorPolicy: "ignore" | "all";
+    }>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      skip: boolean;
+      returnPartialData: true;
+    }>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "empty" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
+    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+      returnPartialData: true;
+    }>
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "partial" | "streaming" | "complete"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    skip: boolean;
+  }
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useSuspenseQuery.Options<NoInfer<TVariables>> &
+        ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
+          returnPartialData: true;
+        }>)
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "streaming" | "complete" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
 
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "ignore" | "all";
-      returnPartialData: false;
-    }> & { skip?: false }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: false;
-    }> & { skip?: false; errorPolicy: ErrorPolicy }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "none";
-      returnPartialData: true;
-    }> & { skip?: false }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "ignore" | "all";
-      returnPartialData: true;
-    }> & { skip?: false }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: true;
-    }> & { skip?: false; errorPolicy: ErrorPolicy }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "none";
-    }> & { skip?: false; returnPartialData: boolean }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      errorPolicy: "ignore" | "all";
-    }> & { skip?: false; returnPartialData: boolean }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    skip?: false;
-    errorPolicy: ErrorPolicy;
-    returnPartialData: boolean;
-  }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-// ---
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: false;
-    }> & { skip?: boolean }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> &
-    ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-      returnPartialData: true;
-    }> & { skip?: boolean }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
-    skip?: boolean;
-    returnPartialData?: boolean;
-  }
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-// ---
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  ...[query]: {} extends TVariables ?
-    [query: DocumentNode | TypedDocumentNode<TData, TVariables>]
-  : [_skipOverload: never]
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  | "complete"
-  | "streaming"
-  | (ApolloClient.DefaultOptions.WatchQuery.Calculated["errorPolicy"] extends (
-      "ignore" | "all"
-    ) ?
-      "empty"
-    : never)
-  | (ApolloClient.DefaultOptions.WatchQuery.Calculated["returnPartialData"] extends (
-      true
-    ) ?
-      "partial"
-    : never)
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [
-      options?:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: never;
-            }>),
-    ]
-  : [
-      options:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: never;
-            }>),
-    ]
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  // still needs variations that take `returnPartialData` into account
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [
-      options?:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: true;
-            }>),
-    ]
-  : [
-      options:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: true;
-            }>),
-    ]
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  // still needs variations that take `returnPartialData` into account
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [
-      options?:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: false;
-            }>),
-    ]
-  : [
-      options:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: false;
-            }>),
-    ]
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  // still needs variations that take `returnPartialData` into account
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [
-      options?:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: boolean;
-            }>),
-    ]
-  : [
-      options:
-        | SkipToken
-        | (useSuspenseQuery.Options<NoInfer<TVariables>> &
-            ApolloClient.DefaultOptions.WatchQuery.OptionalIfDefault<{
-              returnPartialData: boolean;
-            }>),
-    ]
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  // still needs variations that take `returnPartialData` into account
-  "complete" | "streaming" | "empty" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -560,11 +377,10 @@ export function useSuspenseQuery<
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
-  // still needs variations that take `returnPartialData` into account
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

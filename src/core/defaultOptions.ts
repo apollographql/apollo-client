@@ -1,6 +1,6 @@
+import type { ApolloClient } from "@apollo/client";
 import type { Prettify } from "@apollo/client/utilities/internal";
 
-import type { ApolloClient } from "@apollo/client";
 
 export declare namespace DeclareDefaultOptions {
   export interface WatchQuery {}

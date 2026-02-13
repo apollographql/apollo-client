@@ -343,8 +343,12 @@ export function useQuery<
     | SkipToken,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ? [options?: TOptions]
-  : [options: TOptions]
+  ...[options]: // we generally do not allow for a `TVariables` of `never`
+  [never] extends [TVariables] ? [options: never]
+  : // variables optional
+  {} extends TVariables ? [options?: TOptions]
+  : // variables required
+    [options: TOptions]
 ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
 
 /** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery_Deprecated:function(1)} */

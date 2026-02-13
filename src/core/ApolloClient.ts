@@ -1043,7 +1043,7 @@ export class ApolloClient {
     // this overload should never be manually defined, it should always be inferred
     TOptions extends ApolloClient.QueryOptions<
       NoInfer<TData>,
-      NoInfer<TVariables>
+      NoInfer<TVariables & Record<string, never>>
     >,
   >(
     options: TOptions & { query: TypedDocumentNode<TData, TVariables> }

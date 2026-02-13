@@ -1,6 +1,6 @@
 import type { Prettify } from "@apollo/client/utilities/internal";
 
-import type { ApolloClient } from "./ApolloClient.js";
+import type { ApolloClient } from "@apollo/client";
 
 export declare namespace DeclareDefaultOptions {
   export interface WatchQuery {}
@@ -50,14 +50,13 @@ export declare namespace DefaultOptions {
       "errorPolicy" | "returnPartialData"
     > {}
   export namespace WatchQuery {
-    export interface Calculated
-      extends Calculate<
-        DeclareDefaultOptions.WatchQuery,
-        {
-          errorPolicy: "none";
-          returnPartialData: false;
-        }
-      > {}
+    export type Calculated = Calculate<
+      ApolloClient.DeclareDefaultOptions.WatchQuery,
+      {
+        errorPolicy: "none";
+        returnPartialData: false;
+      }
+    >;
   }
 
   export interface Query
@@ -68,13 +67,12 @@ export declare namespace DefaultOptions {
       "errorPolicy"
     > {}
   export namespace Query {
-    export interface Calculated
-      extends Calculate<
-        DeclareDefaultOptions.Query,
-        {
-          errorPolicy: "none";
-        }
-      > {}
+    export type Calculated = Calculate<
+      ApolloClient.DeclareDefaultOptions.Query,
+      {
+        errorPolicy: "none";
+      }
+    >;
   }
 
   export interface Mutate
@@ -85,13 +83,12 @@ export declare namespace DefaultOptions {
       "errorPolicy"
     > {}
   export namespace Mutate {
-    export interface Calculated
-      extends Calculate<
-        DeclareDefaultOptions.Mutate,
-        {
-          errorPolicy: "none";
-        }
-      > {}
+    export type Calculated = Calculate<
+      ApolloClient.DeclareDefaultOptions.Mutate,
+      {
+        errorPolicy: "none";
+      }
+    >;
   }
 }
 

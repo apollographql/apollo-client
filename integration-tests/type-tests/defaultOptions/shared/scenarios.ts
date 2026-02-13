@@ -31,19 +31,6 @@ namespace clientQueryCase {
   export type QueryResultNone = ApolloClient.QueryResult<Data, "none">;
   export type QueryResultAll = ApolloClient.QueryResult<Data, "all">;
   export type QueryResultIgnore = ApolloClient.QueryResult<Data, "ignore">;
-
-  export namespace errorPolicy {
-    export const defaults = expectTypeOf(client.query({ query: QUERY }));
-    export const all = expectTypeOf(
-      client.query({ query: QUERY, errorPolicy: "all" })
-    );
-    export const ignore = expectTypeOf(
-      client.query({ query: QUERY, errorPolicy: "ignore" })
-    );
-    export const none = expectTypeOf(
-      client.query({ query: QUERY, errorPolicy: "none" })
-    );
-  }
 }
 
 namespace useQueryCase {
@@ -467,7 +454,7 @@ namespace useLoadableQueryCase {
 }
 
 export {
-  clientQueryCase as clientQuery,
+  type clientQueryCase as clientQuery,
   useQueryCase as useQuery,
   useSuspenseQueryCase as useSuspenseQuery,
   useBackgroundQueryCase as useBackgroundQuery,

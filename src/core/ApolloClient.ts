@@ -254,41 +254,39 @@ export declare namespace ApolloClient {
   export type QueryResult<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = TErrorPolicy extends "none" ?
-    {
+  > = {
+    none: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: TData;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: never;
-    }
-  : TErrorPolicy extends "all" ?
-    {
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-      data: TData | undefined;
-
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-      error?: ErrorLike;
-    }
-  : TErrorPolicy extends "ignore" ?
-    {
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-      data: TData | undefined;
-
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-      error?: never;
-    }
-  : // Fallback case via `undefined` for backwards compatibility. Helps with
-    // other APIs such as `ObservableQuery.refetch()` which we don't know the
-    // errorPolicy
-    {
+    };
+    all: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: TData | undefined;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: ErrorLike;
     };
+    ignore: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
 
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: never;
+    };
+    // Fallback case via `undefined` for backwards compatibility. Helps with
+    // other APIs such as `ObservableQuery.refetch()` which we don't know the
+    // errorPolicy
+    undefined: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
+  }[`${TErrorPolicy}`];
   export type QueryOptionsWithDefaults<
     TOptions extends Record<string, unknown> | QueryOptions<any, any>,
   > =
@@ -302,10 +300,11 @@ export declare namespace ApolloClient {
     TOptions extends Record<string, unknown> | QueryOptions<any, any>,
   > = QueryResult<
     MaybeMasked<TData>,
-    QueryOptionsWithDefaults<TOptions> extends { errorPolicy: infer E } ?
-      E extends ErrorPolicy ?
-        E
-      : undefined
+    QueryOptionsWithDefaults<TOptions> extends (
+      { errorPolicy?: infer E extends ErrorPolicy | undefined }
+    ) ?
+      // TODO should be changed from `undefined` to `None` if `undefined`.
+      E
     : undefined
   >;
 

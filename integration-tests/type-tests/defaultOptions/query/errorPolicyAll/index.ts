@@ -1,6 +1,8 @@
 import { InMemoryCache } from "@apollo/client";
 import { ApolloClient, ApolloLink } from "@apollo/client";
-import { clientQuery } from "../../shared/scenarios.js";
+import { type clientQuery } from "../../shared/scenarios.js";
+import * as scenario from "../../shared/scenarios.js";
+import { expectTypeOf } from "expect-type";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -88,16 +90,16 @@ declare module "@apollo/client" {
 
 // client.query
 {
-  clientQuery.errorPolicy.defaults.toEqualTypeOf<
+  expectTypeOf(scenario.client.query({ query: scenario.QUERY })).toEqualTypeOf<
     Promise<clientQuery.QueryResultAll>
   >;
-  clientQuery.errorPolicy.all.toEqualTypeOf<
-    Promise<clientQuery.QueryResultAll>
-  >;
-  clientQuery.errorPolicy.ignore.toEqualTypeOf<
-    Promise<clientQuery.QueryResultIgnore>
-  >;
-  clientQuery.errorPolicy.none.toEqualTypeOf<
-    Promise<clientQuery.QueryResultNone>
-  >;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "all" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultAll>>;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "ignore" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultIgnore>>;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "none" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultNone>>;
 }

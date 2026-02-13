@@ -1,12 +1,13 @@
+import { expectTypeOf } from "expect-type";
 import {
-  clientQuery,
+  type clientQuery,
   useQuery,
   useLazyQuery,
   useSuspenseQuery,
   useBackgroundQuery,
   useLoadableQuery,
 } from "../shared/scenarios.js";
-
+import * as scenario from "../shared/scenarios.js";
 declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
@@ -123,23 +124,24 @@ const bool = {} as any as boolean;
 
 // client.query
 {
-  clientQuery.errorPolicy.defaults.toEqualTypeOf<
+  expectTypeOf(scenario.client.query({ query: scenario.QUERY })).toEqualTypeOf<
     Promise<
       | clientQuery.QueryResultNone
       | clientQuery.QueryResultAll
       | clientQuery.QueryResultIgnore
     >
   >;
-  clientQuery.errorPolicy.all.toEqualTypeOf<
-    Promise<clientQuery.QueryResultAll>
-  >;
-  clientQuery.errorPolicy.ignore.toEqualTypeOf<
-    Promise<clientQuery.QueryResultIgnore>
-  >;
-  clientQuery.errorPolicy.none.toEqualTypeOf<
-    Promise<clientQuery.QueryResultNone>
-  >;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "all" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultAll>>;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "ignore" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultIgnore>>;
+  expectTypeOf(
+    scenario.client.query({ query: scenario.QUERY, errorPolicy: "none" })
+  ).toEqualTypeOf<Promise<clientQuery.QueryResultNone>>;
 }
+
 // useQuery
 {
   useQuery.returnPartialData.defaults.toEqualTypeOf<

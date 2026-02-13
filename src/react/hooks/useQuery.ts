@@ -345,7 +345,7 @@ export function useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[options]: // we generally do not allow for a `TVariables` of `never`
   // TODO: check if we need a similar check in other hooks
-  [never] extends [TVariables] ? [options: never]
+  [TVariables] extends [never] ? [options: never]
   : // variables optional
   {} extends TVariables ? [options?: TOptions]
   : // variables required

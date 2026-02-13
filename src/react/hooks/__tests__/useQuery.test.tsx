@@ -4143,9 +4143,16 @@ describe("useQuery Hook", () => {
       const Dogs: React.FC<{
         onDogSelected: (event: React.ChangeEvent<HTMLSelectElement>) => void;
       }> = ({ onDogSelected }) => {
+        // @ts-ignore
         const { loading, error, data } = useQuery<{
           dogs: { id: string; breed: string }[];
-        }>(query);
+        }>(query) as useQuery.Result<
+          {
+            dogs: { id: string; breed: string }[];
+          },
+          {},
+          "complete"
+        >;
 
         if (loading) return <>Loading...</>;
         if (error) return <>{`Error! ${error.message}`}</>;
@@ -4903,7 +4910,11 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-          () => useQuery<any>(query, { variables: { limit: 2 } }),
+          () =>
+            // @ts-ignore
+            useQuery<any>(query, {
+              variables: { limit: 2 },
+            }) as useQuery.Result<any>,
           { wrapper }
         );
 
@@ -4982,10 +4993,11 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
+            // @ts-ignore
             useQuery<any>(query, {
               variables: { limit: 2 },
               notifyOnNetworkStatusChange: true,
-            }),
+            }) as useQuery.Result<any>,
           { wrapper }
         );
 
@@ -13315,19 +13327,25 @@ describe.skip("Type Tests", () => {
     useQuery(query, {});
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { limit: 10 } });
-    useQuery(query, {
-      variables: {
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-    useQuery(query, {
-      variables: {
-        limit: 10,
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
+    expectTypeOf(
+      useQuery(query, {
+        variables: {
+          foo: "bar",
+        },
+      })
+    ).toEqualTypeOf<{
+      error: "`foo` is not a valid variable name for this query.";
+    }>();
+    expectTypeOf(
+      useQuery(query, {
+        variables: {
+          limit: 10,
+          foo: "bar",
+        },
+      })
+    ).toEqualTypeOf<{
+      error: "`foo` is not a valid variable name for this query.";
+    }>();
 
     let skip!: boolean;
     useQuery(query, skip ? skipToken : undefined);
@@ -13435,7 +13453,7 @@ describe.skip("Type Tests", () => {
     useQuery(query, {});
     // @ts-expect-error empty variables
     useQuery(query, { variables: {} });
-    useQuery(query, { variables: { id: "1" } });
+    let x = useQuery(query, { variables: { id: "1" } });
     useQuery(query, {
       // @ts-expect-error missing required variables
       variables: { language: "en" },

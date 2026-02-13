@@ -189,10 +189,7 @@ export declare namespace useQuery {
 
   export type OptionsWithDefaults<
     TVariables extends OperationVariables,
-    TOptions extends
-      | Record<string, unknown>
-      | Options<TVariables & Record<string, never>>
-      | SkipToken,
+    TOptions extends Record<string, unknown> | Options<TVariables> | SkipToken,
   > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
     Omit<
       ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
@@ -201,25 +198,42 @@ export declare namespace useQuery {
       Options
   : never;
 
+  type ExcessiveKeys<
+    TVariables extends OperationVariables,
+    TOptions extends
+      | Record<string, never> // no options
+      | Options<TVariables>
+      | SkipToken,
+  > = TOptions extends { variables: infer V extends {} } ?
+    Exclude<keyof V, keyof TVariables> & string
+  : never;
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | Options<TVariables & Record<string, never>>
+      | Options<TVariables>
       | SkipToken,
-  > = Result<
-    TData,
-    TVariables,
-    | "complete"
-    | "streaming"
-    | "empty"
-    | (OptionsWithDefaults<TVariables, TOptions> extends (
-        { returnPartialData: false }
-      ) ?
-        never
-      : "partial")
-  >;
+  > = ExcessiveKeys<TVariables, TOptions> extends infer ExcessiveKeys ?
+    [ExcessiveKeys] extends [never] ?
+      Result<
+        TData,
+        TVariables,
+        | "complete"
+        | "streaming"
+        | "empty"
+        | (OptionsWithDefaults<TVariables, TOptions> extends (
+            { returnPartialData: false }
+          ) ?
+            never
+          : "partial")
+      >
+    : {
+        error: `\`${ExcessiveKeys &
+          string}\` is not a valid variable name for this query.`;
+      }
+  : never;
 
   export namespace DocumentationTypes {
     namespace useQuery {
@@ -338,9 +352,7 @@ export function useQuery<
   TData,
   TVariables extends OperationVariables,
   // this overload should never be manually defined, it should always be inferred
-  TOptions extends
-    // TODO: check if we need the `Record<string, never>` intersection in other hooks as well
-    useQuery.Options<NoInfer<TVariables> & Record<string, never>> | SkipToken,
+  TOptions extends useQuery.Options<NoInfer<TVariables>> | SkipToken,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[options]: // we generally do not allow for a `TVariables` of `never`
@@ -351,8 +363,9 @@ export function useQuery<
   : // variables required
     [options: TOptions]
 ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
+/*
 
-/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery_Deprecated:function(1)} */
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery_Deprecated:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -367,7 +380,7 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -376,7 +389,7 @@ export function useQuery<
   options: SkipToken
 ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -394,7 +407,7 @@ export function useQuery<
   Partial<TVariables>
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -409,7 +422,7 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -427,7 +440,7 @@ export function useQuery<
   Partial<TVariables>
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -437,6 +450,8 @@ export function useQuery<
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+*/
+
 
 /** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
@@ -457,7 +472,7 @@ export function useQuery<
   "empty" | "complete" | "streaming",
   Partial<TVariables>
 >;
-
+*/
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

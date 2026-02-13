@@ -339,11 +339,12 @@ export function useQuery<
   TVariables extends OperationVariables,
   // this overload should never be manually defined, it should always be inferred
   TOptions extends
-    | useQuery.Options<NoInfer<TVariables> & Record<string, never>>
-    | SkipToken,
+    // TODO: check if we need the `Record<string, never>` intersection in other hooks as well
+    useQuery.Options<NoInfer<TVariables> & Record<string, never>> | SkipToken,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[options]: // we generally do not allow for a `TVariables` of `never`
+  // TODO: check if we need a similar check in other hooks
   [never] extends [TVariables] ? [options: never]
   : // variables optional
   {} extends TVariables ? [options?: TOptions]

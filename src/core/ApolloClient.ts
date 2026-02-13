@@ -243,13 +243,43 @@ export declare namespace ApolloClient {
     fetchPolicy?: FetchPolicy;
   } & VariablesOption<NoInfer<TVariables>>;
 
-  export interface QueryResult<TData = unknown> {
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-    data: TData | undefined;
+  export type QueryResult<
+    TData = unknown,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = TErrorPolicy extends "none" ?
+    {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-    error?: ErrorLike;
-  }
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: never;
+    }
+  : TErrorPolicy extends "all" ?
+    {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+    }
+  : TErrorPolicy extends "ignore" ?
+    {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: never;
+    }
+  : // Fallback case via `undefined` for backwards compatibility. Helps with
+    // other APIs such as `ObservableQuery.refetch()` which we don't know the
+    // errorPolicy
+    {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
 
   /**
    * Options object for the `client.refetchQueries` method.
@@ -979,6 +1009,33 @@ export class ApolloClient {
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables> & {
+      errorPolicy: "all";
+    }
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables> & {
+      errorPolicy: "ignore";
+    }
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.QueryOptions<TData, TVariables>
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
+
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

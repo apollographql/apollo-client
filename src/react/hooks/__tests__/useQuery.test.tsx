@@ -13199,16 +13199,14 @@ describe.skip("Type Tests", () => {
 
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
+    // @ts-expect-error
     const { variables } = useQuery(typedNode, {
       variables: {
         bar: 4,
-        // @ts-expect-error
         nonExistingVariable: "string",
       },
     });
-    variables?.bar;
-    // @ts-expect-error
-    variables?.nonExistingVariable;
+    expectTypeOf(variables?.nonExistingVariable).toEqualTypeOf<never>();
   });
 
   test("variables are optional and can be anything with an DocumentNode", () => {
@@ -13254,9 +13252,9 @@ describe.skip("Type Tests", () => {
     useQuery(query);
     useQuery(query, {});
     useQuery(query, { variables: {} });
+    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
-        // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
@@ -13327,25 +13325,21 @@ describe.skip("Type Tests", () => {
     useQuery(query, {});
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { limit: 10 } });
-    expectTypeOf(
-      useQuery(query, {
-        variables: {
-          foo: "bar",
-        },
-      })
-    ).toEqualTypeOf<{
-      error: "`foo` is not a valid variable name for this query.";
-    }>();
-    expectTypeOf(
-      useQuery(query, {
-        variables: {
-          limit: 10,
-          foo: "bar",
-        },
-      })
-    ).toEqualTypeOf<{
-      error: "`foo` is not a valid variable name for this query.";
-    }>();
+
+    // @ts-expect-error unknown variables
+    useQuery(query, {
+      variables: {
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error unknown variables
+    useQuery(query, {
+      variables: {
+        limit: 10,
+        foo: "bar",
+      },
+    });
 
     let skip!: boolean;
     useQuery(query, skip ? skipToken : undefined);
@@ -13354,10 +13348,10 @@ describe.skip("Type Tests", () => {
     useQuery(query, skip ? skipToken : { variables: { limit: 10 } });
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -13365,11 +13359,11 @@ describe.skip("Type Tests", () => {
     );
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             limit: 10,
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -13384,20 +13378,21 @@ describe.skip("Type Tests", () => {
     // @ts-expect-error empty variables
     useQuery(query);
     // @ts-expect-error empty variables
-    useQuery(query, {});
+    const ret = useQuery(query, {});
     // @ts-expect-error empty variables
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { id: "1" } });
+    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
-        // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
+
+    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
-        // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
@@ -13418,10 +13413,10 @@ describe.skip("Type Tests", () => {
     useQuery(query, skip ? skipToken : { variables: { id: "1" } });
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -13429,11 +13424,11 @@ describe.skip("Type Tests", () => {
     );
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -13453,24 +13448,25 @@ describe.skip("Type Tests", () => {
     useQuery(query, {});
     // @ts-expect-error empty variables
     useQuery(query, { variables: {} });
-    let x = useQuery(query, { variables: { id: "1" } });
+    useQuery(query, { variables: { id: "1" } });
+    // @ts-expect-error missing required variables
     useQuery(query, {
-      // @ts-expect-error missing required variables
       variables: { language: "en" },
     });
     useQuery(query, { variables: { id: "1", language: "en" } });
+    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
-        // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
+
+    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
         language: "en",
-        // @ts-expect-error unknown variables
         foo: "bar",
       },
     });
@@ -13495,11 +13491,11 @@ describe.skip("Type Tests", () => {
     );
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -13507,12 +13503,12 @@ describe.skip("Type Tests", () => {
     );
     useQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
             language: "en",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }

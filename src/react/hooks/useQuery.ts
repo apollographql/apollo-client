@@ -334,6 +334,8 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   resultData: InternalResult<TData>;
 }
 
+type LegacyHook = never;
+
 /** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
 export function useQuery<
   TData,
@@ -352,7 +354,23 @@ export function useQuery<
   TData,
   TVariables extends OperationVariables,
   // this overload should never be manually defined, it should always be inferred
-  TOptions extends useQuery.Options<NoInfer<TVariables>> | SkipToken,
+  TOptions extends SkipToken,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken
+): useQuery.Result<TData, Record<string, never>, "empty">;
+
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[options]: // we generally do not allow for a `TVariables` of `never`
@@ -363,14 +381,34 @@ export function useQuery<
   : // variables required
     [options: TOptions]
 ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
-/*
 
-/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery_Deprecated:function(1)} *
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: // we generally do not allow for a `TVariables` of `never`
+  // TODO: check if we need a similar check in other hooks
+  [TVariables] extends [never] ? [options: never]
+  : // variables optional
+  {} extends TVariables ? [options?: TOptions | SkipToken]
+  : // variables required
+    [options: TOptions | SkipToken]
+): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
+
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
@@ -380,21 +418,21 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   options: SkipToken
 ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -407,12 +445,12 @@ export function useQuery<
   Partial<TVariables>
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: boolean;
   }
@@ -422,12 +460,12 @@ export function useQuery<
   "empty" | "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -440,25 +478,23 @@ export function useQuery<
   Partial<TVariables>
 >;
 
-/** {@inheritDoc @apollo/client/react!useQuery:function(1)} *
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   ...[options]: {} extends TVariables ?
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
-*/
-
 
 /** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: (LegacyHook & DocumentNode) | TypedDocumentNode<TData, TVariables>,
   ...[options]: {} extends TVariables ?
     [
       options?:
@@ -472,7 +508,7 @@ export function useQuery<
   "empty" | "complete" | "streaming",
   Partial<TVariables>
 >;
-*/
+
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

@@ -8057,6 +8057,7 @@ describe("useSuspenseQuery", () => {
       }),
       defaultOptions: {
         watchQuery: {
+          // @ts-expect-error
           errorPolicy: "all",
         },
       },

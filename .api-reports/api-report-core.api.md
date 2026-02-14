@@ -52,6 +52,7 @@ import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
+import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import { isNetworkRequestSettled } from '@apollo/client/utilities';
@@ -111,6 +112,7 @@ export { ApolloCache }
 
 // @public (undocumented)
 export namespace ApolloClient {
+    export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -153,15 +155,6 @@ export namespace ApolloClient {
             fragmentName?: string;
             overwrite?: boolean;
         }
-    }
-    // (undocumented)
-    export interface DefaultOptions {
-        // (undocumented)
-        mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-        // (undocumented)
-        query?: Partial<ApolloClient.QueryOptions<any, any>>;
-        // (undocumented)
-        watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
     }
     // (undocumented)
     export interface DevtoolsOptions {
@@ -240,7 +233,7 @@ export namespace ApolloClient {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
     // (undocumented)
-    export interface Options {
+    export interface Options extends InternalTypes_2.DefaultOptionsParentObject {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
         // (undocumented)
@@ -248,7 +241,6 @@ export namespace ApolloClient {
         dataMasking?: boolean;
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
-        defaultOptions?: ApolloClient.DefaultOptions;
         devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
@@ -372,12 +364,12 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "all";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "ignore";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -583,7 +575,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { NextFetchPolicyContext, QueryManager };
+    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
 }
 
 export { isNetworkRequestSettled }
@@ -1197,7 +1189,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:412:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

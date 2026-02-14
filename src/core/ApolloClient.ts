@@ -3,6 +3,7 @@ import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
+import type { InternalTypes } from "@apollo/client";
 import type {
   ApolloCache,
   Cache,
@@ -19,6 +20,7 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  RemoveIndexSignature,
   VariablesOption,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -34,6 +36,10 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
+import type {
+  DeclareDefaultOptions,
+  DefaultOptions,
+} from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
@@ -62,14 +68,21 @@ import type {
 
 let hasSuggestedDevtools = false;
 
-export declare namespace ApolloClient {
-  export interface DefaultOptions {
-    watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
-    query?: Partial<ApolloClient.QueryOptions<any, any>>;
-    mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-  }
+/**
+ * @knipignore
+ * @internal
+ * For some reason, without this export the build stop drops references to `DefaultOptions` and `DeclareDefaultOptions`, resulting in a broken build.
+ * Adding this fixes that, although it's not particularly elegant.
+ */
+export interface ReferenceToAvoidDroppingImportOnBuild {
+  _1: DeclareDefaultOptions.Mutate;
+  _2: DefaultOptions;
+}
 
-  export interface Options {
+export declare namespace ApolloClient {
+  export type { DeclareDefaultOptions, DefaultOptions };
+
+  export interface Options extends InternalTypes.DefaultOptionsParentObject {
     /**
      * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
      */
@@ -98,12 +111,7 @@ export declare namespace ApolloClient {
      * @defaultValue `true`
      */
     queryDeduplication?: boolean;
-    /**
-     * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-     *
-     * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
-     */
-    defaultOptions?: ApolloClient.DefaultOptions;
+
     defaultContext?: Partial<DefaultContext>;
     /**
      * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
@@ -148,7 +156,7 @@ export declare namespace ApolloClient {
     experiments?: ApolloClient.Experiment[];
   }
 
-  interface DevtoolsOptions {
+  export interface DevtoolsOptions {
     /**
      * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
      *
@@ -246,40 +254,59 @@ export declare namespace ApolloClient {
   export type QueryResult<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = TErrorPolicy extends "none" ?
-    {
+  > = {
+    none: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: TData;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: never;
-    }
-  : TErrorPolicy extends "all" ?
-    {
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-      data: TData | undefined;
-
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-      error?: ErrorLike;
-    }
-  : TErrorPolicy extends "ignore" ?
-    {
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-      data: TData | undefined;
-
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-      error?: never;
-    }
-  : // Fallback case via `undefined` for backwards compatibility. Helps with
-    // other APIs such as `ObservableQuery.refetch()` which we don't know the
-    // errorPolicy
-    {
+    };
+    all: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: TData | undefined;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: ErrorLike;
     };
+    ignore: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: never;
+    };
+    // Fallback case via `undefined` for backwards compatibility. Helps with
+    // other APIs such as `ObservableQuery.refetch()` which we don't know the
+    // errorPolicy
+    undefined: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
+  }[`${TErrorPolicy}`];
+  export type QueryOptionsWithDefaults<
+    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
+  > =
+    RemoveIndexSignature<TOptions> extends infer Options ?
+      Omit<ApolloClient.DefaultOptions.Query.Calculated, keyof Options> &
+        Options
+    : never;
+
+  export type QueryResultForOptions<
+    TData,
+    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
+  > = QueryResult<
+    MaybeMasked<TData>,
+    QueryOptionsWithDefaults<TOptions> extends (
+      { errorPolicy?: infer E extends ErrorPolicy | undefined }
+    ) ?
+      // TODO should be changed from `undefined` to `None` if `undefined`.
+      E
+    : undefined
+  >;
 
   /**
    * Options object for the `client.refetchQueries` method.
@@ -821,7 +848,7 @@ export class ApolloClient {
     this.link = link;
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || ({} as DefaultOptions);
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? __DEV__,
@@ -1010,6 +1037,24 @@ export class ApolloClient {
    * server at all or just resolve from the cache, etc.
    */
   public query<
+    TData,
+    TVariables extends OperationVariables,
+    // this overload should never be manually defined, it should always be inferred
+    TOptions extends ApolloClient.QueryOptions<
+      NoInfer<TData>,
+      NoInfer<TVariables & Record<string, never>>
+    >,
+  >(
+    options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
+  ): Promise<ApolloClient.QueryResultForOptions<TData, TOptions>>;
+
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
+  public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -1018,7 +1063,12 @@ export class ApolloClient {
     }
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
 
-  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -1028,7 +1078,12 @@ export class ApolloClient {
     }
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
 
-  /** {@inheritDoc @apollo/client!ApolloClient#query:member(1)} */
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
+   */
   public query<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -1043,7 +1098,11 @@ export class ApolloClient {
     options: ApolloClient.QueryOptions<TData, TVariables>
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
-      options = mergeOptions(this.defaultOptions.query, options);
+      options = mergeOptions(
+        // @ts-expect-error
+        this.defaultOptions.query,
+        options
+      );
     }
 
     if (__DEV__) {
@@ -1115,6 +1174,7 @@ export class ApolloClient {
         },
         this.defaultOptions.mutate
       ),
+      // @ts-expect-error
       options
     ) as ApolloClient.MutateOptions<TData, TVariables, TCache> & {
       fetchPolicy: MutationFetchPolicy;

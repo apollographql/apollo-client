@@ -1723,6 +1723,111 @@ const cache: ApolloCache<any> = ... // [!code --]
 const cache: ApolloCache = ... // [!code ++]
 ```
 
+### Typed default options
+
+Certain default options might affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`. When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.
+
+#### What changed
+
+When you set certain default options in Apollo Client 3, the TypeScript types for query results didn't reflect those defaults. For example:
+
+```ts
+// Apollo Client 3 behavior
+const client = new ApolloClient({
+  // ...
+  defaultOptions: {
+    query: {
+      errorPolicy: "all",
+    },
+  },
+});
+
+// Even though errorPolicy is "all" by default,
+// result.data is typed as TData (not TData | undefined)
+const result = await client.query({ query: MY_QUERY });
+result.data; // Type: TData
+```
+
+In reality, with `errorPolicy: "all"`, `data` can be `undefined` when an error occurs. Apollo Client 4 fixes this by requiring you to declare these default options at the type level.
+
+#### How to migrate
+
+If you use `errorPolicy` or `returnPartialData` in your `defaultOptions`, declare them globally in a TypeScript declaration file:
+
+```ts title="apollo.d.ts"
+import type {} from "@apollo/client";
+
+declare module "@apollo/client" {
+  namespace ApolloClient {
+    namespace DeclareDefaultOptions {
+      interface WatchQuery {
+        // Declare your default errorPolicy for watchQuery operations
+        errorPolicy: "all";
+        // Or declare returnPartialData if you use it
+        // returnPartialData: true;
+      }
+      interface Query {
+        // Declare your default errorPolicy for query operations
+        errorPolicy: "all";
+      }
+      interface Mutate {
+        // Declare your default errorPolicy for mutation operations
+        errorPolicy: "all";
+      }
+    }
+  }
+}
+```
+
+Once declared, results will be typed correctly based on your defaults:
+
+```ts
+// Now result.data is correctly typed as TData | undefined
+const result = await client.query({ query: MY_QUERY });
+result.data; // Type: TData | undefined
+
+// If you override the default, the type updates accordingly
+const result2 = await client.query({ query: MY_QUERY, errorPolicy: "none" });
+result2.data; // Type: TData
+```
+
+Options that can be declared:
+
+- **`WatchQuery`**: `errorPolicy`, `returnPartialData`
+- **`Query`**: `errorPolicy`
+- **`Mutate`**: `errorPolicy`
+
+Declaring these options ensures you provide values for them in your `defaultOptions`.
+If you don't declare these options, you can't use these properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
+
+#### Opting out
+
+If you create multiple Apollo Client instances with conflicting default options and can't declare a single global default, you can opt out by declaring the options as `unknown`:
+
+```ts title="apollo.d.ts"
+import type {} from "@apollo/client";
+
+declare module "@apollo/client" {
+  namespace ApolloClient {
+    namespace DeclareDefaultOptions {
+      interface WatchQuery {
+        errorPolicy?: unknown;
+        returnPartialData?: unknown;
+      }
+      interface Query {
+        errorPolicy?: unknown;
+      }
+      interface Mutate {
+        errorPolicy?: unknown;
+      }
+    }
+  }
+}
+```
+
+This will allow you to call the `ApolloClient` constructor with any arbitrary `defaultOptions`.
+In that case, all methods and hooks will assume that these `defaultOptions` are set to the defaults, so you might get incorrect return values.
+
 ## Apollo Link changes
 
 ### New class-based links

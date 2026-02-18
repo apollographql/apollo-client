@@ -1455,6 +1455,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     info.interval = pollInterval;
 
     const maybeFetch = () => {
+      if (this.options.fetchPolicy === "standby") {
+        return this.cancelPolling();
+      }
+
       if (this.pollingInfo) {
         if (
           !isNetworkRequestInFlight(this.networkStatus) &&

@@ -22,7 +22,7 @@ const scriptEntries = Array.from(
 /** @type{import('knip').KnipConfig}*/
 const config = {
   exclude: ["optionalPeerDependencies", "unresolved"],
-  entry: []
+  entry: /**@type {string[]}*/ ([])
     .concat(packageEntries)
     .concat(scriptEntries)
     .concat([

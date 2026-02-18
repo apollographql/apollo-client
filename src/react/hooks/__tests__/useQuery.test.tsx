@@ -1120,11 +1120,7 @@ describe("useQuery Hook", () => {
       }
     });
 
-    it("should return loading: false when both ssr: false and skip: true are set", async () => {
-      // This test verifies the fix for a hydration mismatch that occurred when
-      // both ssr: false and skip: true were used together. On the server,
-      // useSSRQuery checks skip first and returns loading: false. On the client,
-      // getServerSnapshot must match this behavior to prevent hydration errors.
+    it("should return loading: false on the client when both ssr: false and skip: true are set", async () => {
       const query = gql`
         {
           hello
@@ -1150,8 +1146,6 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        // When skip is true, loading should always be false, regardless of ssr setting.
-        // This matches the behavior in useSSRQuery which checks skip before ssr.
         expect(result).toStrictEqualTyped({
           data: undefined,
           dataState: "empty",
@@ -1163,9 +1157,7 @@ describe("useQuery Hook", () => {
       }
     });
 
-    it("should return loading: false when skipToken is used with ssr: false in defaultOptions", async () => {
-      // This test verifies that skipToken behaves the same as skip: true
-      // when combined with ssr: false in default options
+    it("should return loading: false on the client when skipToken is used with ssr: false in defaultOptions", async () => {
       const query = gql`
         {
           hello
@@ -1197,7 +1189,6 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        // When skipToken is used, loading should be false regardless of ssr setting
         expect(result).toStrictEqualTyped({
           data: undefined,
           dataState: "empty",
@@ -1207,6 +1198,74 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
+    });
+
+    // hydrateRoot is not available in React 17
+    (IS_REACT_17 ? it.skip : it)("should not cause a hydration mismatch when both ssr: false and skip: true are set", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const Component = () => {
+        const { loading, data } = useQuery(query, {
+          ssr: false,
+          skip: true,
+        });
+        return (
+          <div id="target">
+            {String(loading)}-{String(data)}
+          </div>
+        );
+      };
+
+      const { renderToStringWithData } = await import(
+        "@apollo/client/react/ssr"
+      );
+      const { resetApolloContext } = await import(
+        "@apollo/client/testing/internal"
+      );
+
+      const serverHtml = await renderToStringWithData(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      // Reset context between SSR and hydration to avoid
+      // "multiple renderers" warnings
+      resetApolloContext();
+
+      const container = document.createElement("div");
+      container.innerHTML = serverHtml;
+      document.body.appendChild(container);
+
+      const hydrationErrors: unknown[] = [];
+      const reactClient = await import("react-dom/client");
+      const root = reactClient.hydrateRoot(
+        container,
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>,
+        {
+          onRecoverableError: (err) => hydrationErrors.push(err),
+        }
+      );
+
+      // Wait for hydration to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      expect(hydrationErrors).toHaveLength(0);
+
+      root.unmount();
+      document.body.removeChild(container);
     });
 
     it("should keep `no-cache` results when the tree is re-rendered", async () => {

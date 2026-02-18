@@ -10,7 +10,7 @@ import type { ASTNode } from 'graphql';
 import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ErrorLike } from '@apollo/client';
+import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
@@ -492,7 +492,10 @@ export type StreamInfoTrie = Trie<{
 export function stringifyForDisplay(value: any, space?: number): string;
 
 // @internal @deprecated (undocumented)
-export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): ApolloClient.QueryResult<TData>;
+export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): {
+    data: TData | undefined;
+    error?: ErrorLike;
+};
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;

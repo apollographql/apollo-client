@@ -29,6 +29,14 @@
 npm install @apollo/client graphql
 ```
 
+## Apollo Client Skill
+
+Give your AI agent specialized Apollo Client knowledge and setup guidance:
+
+```sh
+npx skills add apollographql/skills --skill apollo-client
+```
+
 ## 💡 Resources
 
 | Resource                  | Description                       | Link                                                                                                                                                                                             |

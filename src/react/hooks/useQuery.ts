@@ -462,11 +462,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useResult<TData, TVariables>(
-    observable,
-    resultData,
-    ssr
-  );
+  const result = useResult<TData, TVariables>(observable, resultData, ssr);
 
   const obsQueryFields = React.useMemo(
     () => ({
@@ -597,9 +593,9 @@ function useResult<TData, TVariables extends OperationVariables>(
     () => resultData.current,
     () => {
       if (ssr === false || observable.options.fetchPolicy === "no-cache") {
-        return useQuery.ssrDisabledResult
+        return useQuery.ssrDisabledResult;
       }
-      return resultData.current
+      return resultData.current;
     }
   );
 }

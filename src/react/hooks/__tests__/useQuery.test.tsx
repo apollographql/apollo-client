@@ -1201,72 +1201,75 @@ describe("useQuery Hook", () => {
     });
 
     // hydrateRoot is not available in React 17
-    (IS_REACT_17 ? it.skip : it)("should not cause a hydration mismatch when both ssr: false and skip: true are set", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
+    (IS_REACT_17 ? it.skip : it)(
+      "should not cause a hydration mismatch when both ssr: false and skip: true are set",
+      async () => {
+        const query = gql`
+          {
+            hello
+          }
+        `;
+        const mocks = [
+          {
+            request: { query },
+            result: { data: { hello: "world" } },
+          },
+        ];
 
-      const Component = () => {
-        const { loading, data } = useQuery(query, {
-          ssr: false,
-          skip: true,
-        });
-        return (
-          <div id="target">
-            {String(loading)}-{String(data)}
-          </div>
+        const Component = () => {
+          const { loading, data } = useQuery(query, {
+            ssr: false,
+            skip: true,
+          });
+          return (
+            <div id="target">
+              {String(loading)}-{String(data)}
+            </div>
+          );
+        };
+
+        const { renderToStringWithData } = await import(
+          "@apollo/client/react/ssr"
         );
-      };
+        const { resetApolloContext } = await import(
+          "@apollo/client/testing/internal"
+        );
 
-      const { renderToStringWithData } = await import(
-        "@apollo/client/react/ssr"
-      );
-      const { resetApolloContext } = await import(
-        "@apollo/client/testing/internal"
-      );
+        const view = await renderToStringWithData(
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>
+        );
 
-      const serverHtml = await renderToStringWithData(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
-      );
+        // Reset context between SSR and hydration to avoid
+        // "multiple renderers" warnings
+        resetApolloContext();
 
-      // Reset context between SSR and hydration to avoid
-      // "multiple renderers" warnings
-      resetApolloContext();
+        const container = document.createElement("div");
+        container.innerHTML = view;
+        document.body.appendChild(container);
 
-      const container = document.createElement("div");
-      container.innerHTML = serverHtml;
-      document.body.appendChild(container);
+        const hydrationErrors: unknown[] = [];
+        const reactClient = await import("react-dom/client");
+        const root = reactClient.hydrateRoot(
+          container,
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>,
+          {
+            onRecoverableError: (err) => hydrationErrors.push(err),
+          }
+        );
 
-      const hydrationErrors: unknown[] = [];
-      const reactClient = await import("react-dom/client");
-      const root = reactClient.hydrateRoot(
-        container,
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>,
-        {
-          onRecoverableError: (err) => hydrationErrors.push(err),
-        }
-      );
+        // Wait for hydration to complete
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Wait for hydration to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+        expect(hydrationErrors).toHaveLength(0);
 
-      expect(hydrationErrors).toHaveLength(0);
-
-      root.unmount();
-      document.body.removeChild(container);
-    });
+        root.unmount();
+        document.body.removeChild(container);
+      }
+    );
 
     it("should keep `no-cache` results when the tree is re-rendered", async () => {
       const query1 = gql`

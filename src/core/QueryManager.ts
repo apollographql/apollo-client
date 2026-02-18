@@ -62,6 +62,7 @@ import {
   isDocumentNode,
   isNonNullObject,
   makeUniqueId,
+  mergeOptions,
   removeDirectivesFromDocument,
   streamInfoSymbol,
   toQueryResult,
@@ -707,7 +708,7 @@ export class QueryManager {
         const oq = new ObservableQuery({
           queryManager: this,
           options: {
-            ...options,
+            ...mergeOptions(this.defaultOptions.watchQuery, options),
             fetchPolicy: "network-only",
           },
         });
@@ -1185,10 +1186,9 @@ export class QueryManager {
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVariables;
 
-    const defaults = this.defaultOptions.watchQuery;
     let {
-      fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",
-      errorPolicy = (defaults && defaults.errorPolicy) || "none",
+      fetchPolicy = "cache-first",
+      errorPolicy = "none",
       returnPartialData = false,
       notifyOnNetworkStatusChange = true,
       context = {},

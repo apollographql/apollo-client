@@ -47,6 +47,16 @@ export const useSSRQuery = function (
   };
 
   if (
+    typeof options === "object" &&
+    (options.ssr === false || options.fetchPolicy === "no-cache")
+  ) {
+    return withoutObservableAccess({
+      ...baseResult,
+      ...useQuery.ssrDisabledResult,
+    });
+  }
+
+  if (
     options === skipToken ||
     options.skip ||
     options.fetchPolicy === "standby"
@@ -54,12 +64,6 @@ export const useSSRQuery = function (
     return withoutObservableAccess({
       ...baseResult,
       ...skipStandbyResult,
-    });
-  }
-  if (options.ssr === false || options.fetchPolicy === "no-cache") {
-    return withoutObservableAccess({
-      ...baseResult,
-      ...useQuery.ssrDisabledResult,
     });
   }
 

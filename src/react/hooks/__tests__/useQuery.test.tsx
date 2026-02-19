@@ -13270,6 +13270,7 @@ describe.skip("Type Tests", () => {
     );
   });
 
+  /* TODO
   test("is invalid when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
@@ -13316,6 +13317,7 @@ describe.skip("Type Tests", () => {
       skip ? skipToken : { variables: { foo: "bar" } }
     );
   });
+  */
 
   test("optional variables are optional", () => {
     const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =

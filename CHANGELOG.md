@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.1.5
+
+### Patch Changes
+
+- [#13155](https://github.com/apollographql/apollo-client/pull/13155) [`3ba1583`](https://github.com/apollographql/apollo-client/commit/3ba1583f93c40343501acd9d598ce506537d1c9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `useQuery` would poll with `pollInterval` when `skip` was initialized to `true`.
+
+- [#13135](https://github.com/apollographql/apollo-client/pull/13135) [`fd42142`](https://github.com/apollographql/apollo-client/commit/fd42142495d24859a9bc7145a85bc8f8d857ec88) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where `client.query` would apply options from `defaultOptions.watchQuery`.
+
 ## 4.1.4
 
 ### Patch Changes

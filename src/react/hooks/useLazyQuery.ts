@@ -21,6 +21,7 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
+  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   RemoveIndexSignature,
@@ -327,6 +328,52 @@ const EAGER_METHODS = [
   "subscribeToMore",
 ] as const;
 
+/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: boolean;
+  }
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
+export function useLazyQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+): useLazyQuery.ResultTuple<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming"
+>;
+
 /** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery:function(1)} */
 export function useLazyQuery<
   TData,
@@ -351,49 +398,6 @@ export function useLazyQuery<
   ...[options]: {} extends TVariables ? [options?: TOptions]
   : [options: TOptions]
 ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming"
->;
 
 export function useLazyQuery<
   TData = unknown,

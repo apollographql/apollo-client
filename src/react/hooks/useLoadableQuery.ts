@@ -28,7 +28,10 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { RemoveIndexSignature } from "@apollo/client/utilities/internal";
+import type {
+  ClassicSignature,
+  RemoveIndexSignature,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { __use, useDeepMemo, useRenderGuard } from "./internal/index.js";
@@ -193,6 +196,65 @@ export declare namespace useLoadableQuery {
   }
 }
 
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
+export function useLoadableQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options: useLoadableQuery.Options & {
+    returnPartialData: true;
+    errorPolicy: "ignore" | "all";
+  }
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
+export function useLoadableQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options: useLoadableQuery.Options & {
+    errorPolicy: "ignore" | "all";
+  }
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
+
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
+export function useLoadableQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options: useLoadableQuery.Options & {
+    returnPartialData: true;
+  }
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial"
+>;
+
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
+export function useLoadableQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
+  options?: useLoadableQuery.Options
+): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
+
 /** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery:function(1)} */
 export function useLoadableQuery<
   TData,
@@ -213,61 +275,6 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: TOptions
 ): useLoadableQuery.ResultForOptions<TData, TVariables, TOptions>;
-
-/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    returnPartialData: true;
-    errorPolicy: "ignore" | "all";
-  }
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    errorPolicy: "ignore" | "all";
-  }
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "empty"
->;
-
-/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options & {
-    returnPartialData: true;
-  }
-): useLoadableQuery.Result<
-  TData,
-  TVariables,
-  "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
-export function useLoadableQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLoadableQuery.Options
-): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
 
 export function useLoadableQuery<
   TData = unknown,

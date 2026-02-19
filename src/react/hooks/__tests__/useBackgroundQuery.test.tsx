@@ -9648,10 +9648,10 @@ describe.skip("type tests", () => {
     useBackgroundQuery(query, skip ? skipToken : { variables: { limit: 10 } });
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -9659,11 +9659,11 @@ describe.skip("type tests", () => {
     );
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             limit: 10,
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -9712,10 +9712,10 @@ describe.skip("type tests", () => {
     useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -9723,11 +9723,11 @@ describe.skip("type tests", () => {
     );
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -9789,11 +9789,11 @@ describe.skip("type tests", () => {
     );
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }
@@ -9801,12 +9801,12 @@ describe.skip("type tests", () => {
     );
     useBackgroundQuery(
       query,
+      // @ts-expect-error unknown variables
       skip ? skipToken : (
         {
           variables: {
             id: "1",
             language: "en",
-            // @ts-expect-error unknown variables
             foo: "bar",
           },
         }

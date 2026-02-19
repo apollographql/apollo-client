@@ -1424,15 +1424,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     } = this;
 
     const shouldCancelPolling = () => {
-      const {
-        options: { fetchPolicy, pollInterval },
-      } = this;
+      const { options } = this;
 
       return (
-        !pollInterval ||
+        !options.pollInterval ||
         !this.hasObservers() ||
-        fetchPolicy === "cache-only" ||
-        fetchPolicy === "standby"
+        options.fetchPolicy === "cache-only" ||
+        options.fetchPolicy === "standby"
       );
     };
 

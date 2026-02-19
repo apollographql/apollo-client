@@ -36,6 +36,7 @@ import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
+  LazyType,
   NoInfer,
   RemoveIndexSignature,
   VariablesOption,
@@ -215,25 +216,27 @@ export declare namespace useQuery {
       | Record<string, never> // no options
       | Options<TVariables>
       | SkipToken,
-  > = ExcessiveKeys<TVariables, TOptions> extends infer ExcessiveKeys ?
-    [ExcessiveKeys] extends [never] ?
-      Result<
-        TData,
-        TVariables,
-        | "complete"
-        | "streaming"
-        | "empty"
-        | (OptionsWithDefaults<TVariables, TOptions> extends (
-            { returnPartialData: false }
-          ) ?
-            never
-          : "partial")
-      >
-    : {
-        error: `\`${ExcessiveKeys &
-          string}\` is not a valid variable name for this query.`;
-      }
-  : never;
+  > = LazyType<
+    ExcessiveKeys<TVariables, TOptions> extends infer ExcessiveKeys ?
+      [ExcessiveKeys] extends [never] ?
+        Result<
+          TData,
+          TVariables,
+          | "complete"
+          | "streaming"
+          | "empty"
+          | (OptionsWithDefaults<TVariables, TOptions> extends (
+              { returnPartialData: false }
+            ) ?
+              never
+            : "partial")
+        >
+      : {
+          error: `\`${ExcessiveKeys &
+            string}\` is not a valid variable name for this query.`;
+        }
+    : never
+  >;
 
   export namespace DocumentationTypes {
     namespace useQuery {

@@ -94,16 +94,16 @@ declare module "@apollo/client" {
 
 // useQuery
 {
-  useQuery.returnPartialData.defaults.toEqualTypeOf<
+  useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming">
   >;
-  useQuery.returnPartialData._true.toEqualTypeOf<
+  useQuery.returnPartialData._true.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
-  useQuery.returnPartialData._false.toEqualTypeOf<
+  useQuery.returnPartialData._false.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming">
   >;
-  useQuery.returnPartialData._bool.toEqualTypeOf<
+  useQuery.returnPartialData._bool.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
 }

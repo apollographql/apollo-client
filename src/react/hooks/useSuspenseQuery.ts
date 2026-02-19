@@ -25,6 +25,7 @@ import type {
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   RemoveIndexSignature,
@@ -165,7 +166,7 @@ export declare namespace useSuspenseQuery {
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | Options<TVariables & Record<string, never>>
+      | Options<TVariables>
       | SkipToken,
   > = Result<
     TData,
@@ -269,37 +270,11 @@ export declare namespace useSuspenseQuery {
 
 /** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
-  TData,
-  TVariables extends OperationVariables,
-  // this overload should never be manually defined, it should always be inferred
-  Options extends never,
->(
-  query: {} extends TVariables ?
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  : // this overload should only be accessible if all `TVariables` are optional
-    never
-): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
-  TData,
-  TVariables extends OperationVariables,
-  // this overload should never be manually defined, it should always be inferred
-  TOptions extends
-    | useSuspenseQuery.Options<NoInfer<TVariables> & Record<string, never>>
-    | SkipToken,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ? [options?: TOptions]
-  : [options: TOptions]
-): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
-
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
-export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
@@ -315,7 +290,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
@@ -330,7 +306,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
@@ -346,7 +323,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
   }
@@ -361,7 +339,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
   }
@@ -376,7 +355,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options:
     | SkipToken
     | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -393,7 +373,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
@@ -404,7 +385,8 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
@@ -419,13 +401,72 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
   "complete" | "streaming" | "empty"
 >;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  Options extends never,
+>(
+  query: {} extends TVariables ?
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  : // this overload should only be accessible if all `TVariables` are optional
+    never
+): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends never,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  skipToken: SkipToken
+): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ? [options?: TOptions]
+  : [options: TOptions]
+): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
+  : [options: TOptions | SkipToken]
+): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
 
 export function useSuspenseQuery<
   TData = unknown,

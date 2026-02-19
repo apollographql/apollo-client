@@ -20,6 +20,7 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  LazyType,
   RemoveIndexSignature,
   VariablesOption,
   variablesUnknownSymbol,
@@ -65,6 +66,7 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { Query } from "@testing-library/dom";
 
 let hasSuggestedDevtools = false;
 
@@ -251,7 +253,7 @@ export declare namespace ApolloClient {
     fetchPolicy?: FetchPolicy;
   } & VariablesOption<NoInfer<TVariables>>;
 
-  export type QueryResult<
+  export type QueryResultMap<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = {
@@ -286,26 +288,35 @@ export declare namespace ApolloClient {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: ErrorLike;
     };
-  }[`${TErrorPolicy}`];
+  };
+
+  export type QueryResult<
+    TData = unknown,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
+
   export type QueryOptionsWithDefaults<
-    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
-  > =
-    RemoveIndexSignature<TOptions> extends infer Options ?
-      Omit<ApolloClient.DefaultOptions.Query.Calculated, keyof Options> &
-        Options
-    : never;
+    TVariables extends OperationVariables,
+    TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>,
+  > = RemoveIndexSignature<TOptions> extends infer Options ?
+    Omit<ApolloClient.DefaultOptions.Query.Calculated & {}, keyof Options> &
+      Options
+  : never;
 
   export type QueryResultForOptions<
     TData,
+    TVariables extends OperationVariables,
     TOptions extends Record<string, unknown> | QueryOptions<any, any>,
-  > = QueryResult<
-    MaybeMasked<TData>,
-    QueryOptionsWithDefaults<TOptions> extends (
-      { errorPolicy?: infer E extends ErrorPolicy | undefined }
-    ) ?
-      // TODO should be changed from `undefined` to `None` if `undefined`.
-      E
-    : undefined
+  > = LazyType<
+    QueryResult<
+      MaybeMasked<TData>,
+      QueryOptionsWithDefaults<TVariables, TOptions> extends (
+        { errorPolicy?: infer E extends ErrorPolicy | undefined }
+      ) ?
+        // TODO should be changed from `undefined` to `None` if `undefined`.
+        E
+      : undefined
+    >
   >;
 
   /**
@@ -1046,7 +1057,7 @@ export class ApolloClient {
     >,
   >(
     options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
-  ): Promise<ApolloClient.QueryResultForOptions<TData, TOptions>>;
+  ): Promise<ApolloClient.QueryResultForOptions<TData, TVariables, TOptions>>;
 
   /**
    * @deprecated Avoid manually specifying generics on `client.query`.

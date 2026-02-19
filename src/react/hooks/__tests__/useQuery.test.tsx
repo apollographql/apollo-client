@@ -13199,10 +13199,10 @@ describe.skip("Type Tests", () => {
 
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
-    // @ts-expect-error
     const { variables } = useQuery(typedNode, {
       variables: {
         bar: 4,
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
         nonExistingVariable: "string",
       },
     });
@@ -13252,9 +13252,9 @@ describe.skip("Type Tests", () => {
     useQuery(query);
     useQuery(query, {});
     useQuery(query, { variables: {} });
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
         foo: "bar",
       },
     });
@@ -13326,17 +13326,17 @@ describe.skip("Type Tests", () => {
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { limit: 10 } });
 
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'
         foo: "bar",
       },
     });
 
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         limit: 10,
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'
         foo: "bar",
       },
     });
@@ -13382,17 +13382,17 @@ describe.skip("Type Tests", () => {
     // @ts-expect-error empty variables
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { id: "1" } });
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'
         foo: "bar",
       },
     });
 
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'
         foo: "bar",
       },
     });
@@ -13449,24 +13449,24 @@ describe.skip("Type Tests", () => {
     // @ts-expect-error empty variables
     useQuery(query, { variables: {} });
     useQuery(query, { variables: { id: "1" } });
-    // @ts-expect-error missing required variables
     useQuery(query, {
+      // @ts-expect-error Property 'id' is missing in type '{ language: string; }' but required in type '{ id: string; language?: string | undefined; }'.ts(2769)
       variables: { language: "en" },
     });
     useQuery(query, { variables: { id: "1", language: "en" } });
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
         foo: "bar",
       },
     });
 
-    // @ts-expect-error unknown variables
     useQuery(query, {
       variables: {
         id: "1",
         language: "en",
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
         foo: "bar",
       },
     });

@@ -20,6 +20,7 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  ClassicSignature,
   LazyType,
   RemoveIndexSignature,
   VariablesOption,
@@ -756,6 +757,24 @@ export declare namespace ApolloClient {
     (this: ApolloClient, options: ApolloClient.Options): void;
     v: 1;
   }
+
+  export namespace DocumentationTypes {
+    /**
+     * This resolves a single query according to the options specified and
+     * returns a `Promise` which is either resolved with the resulting data
+     * or rejected with an error.
+     *
+     * @param options - An object of type `QueryOptions` that allows us to
+     * describe how this query should be treated e.g. whether it should hit the
+     * server at all or just resolve from the cache, etc.
+     */
+    function query<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      options: ApolloClient.QueryOptions<TData, TVariables>
+    ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+  }
 }
 
 /**
@@ -1038,14 +1057,51 @@ export class ApolloClient {
   }
 
   /**
-   * This resolves a single query according to the options specified and
-   * returns a `Promise` which is either resolved with the resulting data
-   * or rejected with an error.
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
    *
-   * @param options - An object of type `QueryOptions` that allows us to
-   * describe how this query should be treated e.g. whether it should hit the
-   * server at all or just resolve from the cache, etc.
+   * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
    */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ClassicSignature &
+      ApolloClient.QueryOptions<TData, TVariables> & {
+        errorPolicy: "all";
+      }
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
+   */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ClassicSignature &
+      ApolloClient.QueryOptions<TData, TVariables> & {
+        errorPolicy: "ignore";
+      }
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+
+  /**
+   * @deprecated Avoid manually specifying generics on `client.query`.
+   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+   *
+   * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
+   */
+  public query<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ClassicSignature & ApolloClient.QueryOptions<TData, TVariables>
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */
   public query<
     TData,
     TVariables extends OperationVariables,
@@ -1057,49 +1113,6 @@ export class ApolloClient {
   >(
     options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
   ): Promise<ApolloClient.QueryResultForOptions<TData, TVariables, TOptions>>;
-
-  /**
-   * @deprecated Avoid manually specifying generics on `client.query`.
-   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-   *
-   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
-   */
-  public query<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "all";
-    }
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-
-  /**
-   * @deprecated Avoid manually specifying generics on `client.query`.
-   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-   *
-   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
-   */
-  public query<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
-    options: ApolloClient.QueryOptions<TData, TVariables> & {
-      errorPolicy: "ignore";
-    }
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
-
-  /**
-   * @deprecated Avoid manually specifying generics on `client.query`.
-   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-   *
-   * {@inheritDoc @apollo/client!ApolloClient#query:member(1)}
-   */
-  public query<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
-    options: ApolloClient.QueryOptions<TData, TVariables>
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
 
   public query<
     TData = unknown,

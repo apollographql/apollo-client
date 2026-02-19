@@ -13206,7 +13206,9 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string",
       },
     });
-    expectTypeOf(variables?.nonExistingVariable).toEqualTypeOf<never>();
+    variables?.bar;
+    // @ts-expect-error
+    variables?.nonExistingVariable;
   });
 
   test("variables are optional and can be anything with an DocumentNode", () => {

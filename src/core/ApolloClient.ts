@@ -66,7 +66,6 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { Query } from "@testing-library/dom";
 
 let hasSuggestedDevtools = false;
 

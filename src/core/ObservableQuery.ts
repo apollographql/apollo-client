@@ -1463,6 +1463,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     info.interval = pollInterval;
 
     const maybeFetch = () => {
+      // defense against options changing after the setTimeout changes in case
+      // the call site forgets to call cancelPolling
       if (shouldCancelPolling()) {
         return this.cancelPolling();
       }

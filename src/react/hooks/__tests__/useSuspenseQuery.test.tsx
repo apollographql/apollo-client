@@ -8057,6 +8057,7 @@ describe("useSuspenseQuery", () => {
       }),
       defaultOptions: {
         watchQuery: {
+          // @ts-expect-error
           errorPolicy: "all",
         },
       },
@@ -11939,10 +11940,10 @@ describe("useSuspenseQuery", () => {
       useSuspenseQuery(query, skip ? skipToken : { variables: { limit: 10 } });
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }
@@ -11950,11 +11951,11 @@ describe("useSuspenseQuery", () => {
       );
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {
               limit: 10,
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }
@@ -12003,10 +12004,10 @@ describe("useSuspenseQuery", () => {
       useSuspenseQuery(query, skip ? skipToken : { variables: { id: "1" } });
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }
@@ -12014,11 +12015,11 @@ describe("useSuspenseQuery", () => {
       );
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {
               id: "1",
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }
@@ -12080,11 +12081,11 @@ describe("useSuspenseQuery", () => {
       );
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variabless
         skip ? skipToken : (
           {
             variables: {
               id: "1",
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }
@@ -12092,12 +12093,12 @@ describe("useSuspenseQuery", () => {
       );
       useSuspenseQuery(
         query,
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {
               id: "1",
               language: "en",
-              // @ts-expect-error unknown variables
               foo: "bar",
             },
           }

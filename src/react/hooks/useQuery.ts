@@ -35,8 +35,11 @@ import type { ApolloClient } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
+  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
+  LazyType,
   NoInfer,
+  RemoveIndexSignature,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import {
@@ -186,6 +189,39 @@ export declare namespace useQuery {
   > = Base.Result<TData, TVariables, TReturnVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
+  export type OptionsWithDefaults<
+    TVariables extends OperationVariables,
+    TOptions extends Record<string, unknown> | Options<TVariables> | SkipToken,
+  > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
+    Omit<
+      ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
+      keyof Options
+    > &
+      Options
+  : never;
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends
+      | Record<string, never> // no options
+      | Options<TVariables>
+      | SkipToken,
+  > = LazyType<
+    Result<
+      TData,
+      TVariables,
+      | "complete"
+      | "streaming"
+      | "empty"
+      | (OptionsWithDefaults<TVariables, TOptions> extends (
+          { returnPartialData: false }
+        ) ?
+          never
+        : "partial")
+    >
+  >;
+
   export namespace DocumentationTypes {
     namespace useQuery {
       export interface Result<
@@ -197,8 +233,57 @@ export declare namespace useQuery {
   }
 
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+    /**
+     * A hook for executing queries in an Apollo application.
+     *
+     * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
+     *
+     * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState`, and `data` properties you can use to render your UI.
+     *
+     * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
+     *
+     * @example
+     *
+     * ```jsx
+     * import { gql } from "@apollo/client";
+     * import { useQuery } from "@apollo/client/react";
+     *
+     * const GET_GREETING = gql`
+     *   query GetGreeting($language: String!) {
+     *     greeting(language: $language) {
+     *       message
+     *     }
+     *   }
+     * `;
+     *
+     * function Hello() {
+     *   const { loading, error, data } = useQuery(GET_GREETING, {
+     *     variables: { language: "english" },
+     *   });
+     *   if (loading) return <p>Loading ...</p>;
+     *   return <h1>Hello {data.greeting.message}!</h1>;
+     * }
+     * ```
+     *
+     * @param query - A GraphQL query document parsed into an AST by `gql`.
+     * @param options - Options to control how the query is executed.
+     * @returns Query result object
+     */
     export function useQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options: useQuery.Options<TData, TVariables>
+    ): useQuery.Result<TData, TVariables>;
+
+    /**
+     * @deprecated Avoid manually specifying generics on `useQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)}
+     */
+    export function useQuery_Deprecated<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
     >(
@@ -236,47 +321,12 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   resultData: InternalResult<TData>;
 }
 
-/**
- * A hook for executing queries in an Apollo application.
- *
- * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
- *
- * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState`, and `data` properties you can use to render your UI.
- *
- * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
- *
- * @example
- *
- * ```jsx
- * import { gql } from "@apollo/client";
- * import { useQuery } from "@apollo/client/react";
- *
- * const GET_GREETING = gql`
- *   query GetGreeting($language: String!) {
- *     greeting(language: $language) {
- *       message
- *     }
- *   }
- * `;
- *
- * function Hello() {
- *   const { loading, error, data } = useQuery(GET_GREETING, {
- *     variables: { language: "english" },
- *   });
- *   if (loading) return <p>Loading ...</p>;
- *   return <h1>Hello {data.greeting.message}!</h1>;
- * }
- * ```
- *
- * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options - Options to control how the query is executed.
- * @returns Query result object
- */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
@@ -291,7 +341,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: SkipToken
 ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
@@ -300,7 +351,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options:
     | SkipToken
     | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -318,7 +370,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: boolean;
   }
@@ -333,7 +386,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options:
     | SkipToken
     | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -351,7 +405,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
@@ -362,7 +417,8 @@ export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [
       options?:
@@ -376,6 +432,74 @@ export function useQuery<
   "empty" | "complete" | "streaming",
   Partial<TVariables>
 >;
+
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  Options extends never,
+>(
+  query: {} extends TVariables ?
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  : // this overload should only be accessible if all `TVariables` are optional
+    never
+): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends SkipToken,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken
+): useQuery.Result<TData, Record<string, never>, "empty">;
+
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: // we generally do not allow for a `TVariables` of `never`
+  // TODO: check if we need a similar check in other hooks
+  [TVariables] extends [never] ? [options: never]
+  : // variables optional
+  {} extends TVariables ? [options?: TOptions]
+  : // variables required
+    [options: TOptions]
+): useQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+/** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
+export function useQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: // we generally do not allow for a `TVariables` of `never`
+  // TODO: check if we need a similar check in other hooks
+  [TVariables] extends [never] ? [options: never]
+  : // variables optional
+  {} extends TVariables ? [options?: TOptions | SkipToken]
+  : // variables required
+    [options: TOptions | SkipToken]
+): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
 
 export function useQuery<
   TData = unknown,
@@ -415,6 +539,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const watchQueryOptions = useOptions(
     query,
     options,
+    // @ts-expect-error
     client.defaultOptions.watchQuery
   );
 

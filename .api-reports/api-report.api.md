@@ -156,6 +156,7 @@ export abstract class ApolloCache {
 
 // @public (undocumented)
 export namespace ApolloClient {
+    export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -198,15 +199,6 @@ export namespace ApolloClient {
             fragmentName?: string;
             overwrite?: boolean;
         }
-    }
-    // (undocumented)
-    export interface DefaultOptions {
-        // (undocumented)
-        mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-        // (undocumented)
-        query?: Partial<ApolloClient.QueryOptions<any, any>>;
-        // (undocumented)
-        watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
     }
     // (undocumented)
     export interface DevtoolsOptions {
@@ -286,8 +278,10 @@ export namespace ApolloClient {
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloClient.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
+    // Warning: (ae-incompatible-release-tags) The symbol "Options" is marked as @public, but its signature references "InternalTypes" which is marked as @internal
+    //
     // (undocumented)
-    export interface Options {
+    export interface Options extends InternalTypes.DefaultOptionsParentObject {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
         // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
@@ -297,7 +291,6 @@ export namespace ApolloClient {
         dataMasking?: boolean;
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
-        defaultOptions?: ApolloClient.DefaultOptions;
         devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
@@ -425,12 +418,12 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "all";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & ApolloClient.DefaultOptions.Query.OptionalIfDefault<{
         errorPolicy: "ignore";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
+    }>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
     query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -1554,7 +1547,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { NextFetchPolicyContext, QueryManager };
+    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
 }
 
 // @public (undocumented)
@@ -2876,8 +2869,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:173:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:180:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:412:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

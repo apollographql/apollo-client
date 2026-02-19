@@ -1,0 +1,17 @@
+{
+  "name": "type-tests",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "update-references": "cp tsconfig.json tsconfig.bak; find . -mindepth 2 -name tsconfig.json | jq --raw-input --slurp --slurpfile tsconfig tsconfig.bak 'split(\"\n\")|.[:-1]|map({path:.}) as $references | .=$tsconfig[0] | .references=$references | .' > tsconfig.json; rm tsconfig.bak",
+    "test": "tsc --build"
+  },
+  "dependencies": {
+    "@apollo/client": "4.1.3",
+    "expect-type": "^1.2.1",
+    "graphql": "^16.8.1",
+    "rxjs": "^7.8.2",
+    "typescript": "^5.9.3"
+  }
+}

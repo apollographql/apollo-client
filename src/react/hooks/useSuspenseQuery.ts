@@ -25,8 +25,10 @@ import type {
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
+  RemoveIndexSignature,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
@@ -145,6 +147,52 @@ export declare namespace useSuspenseQuery {
   > = Base.Result<TData, TVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
+  export type OptionsWithDefaults<
+    TVariables extends OperationVariables,
+    TOptions extends
+      | Record<string, unknown>
+      | Options<TVariables & Record<string, never>>
+      | SkipToken,
+  > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
+    Omit<
+      ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
+      keyof Options
+    > &
+      Options
+  : never;
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends
+      | Record<string, never> // no options
+      | Options<TVariables>
+      | SkipToken,
+  > = Result<
+    TData,
+    TVariables,
+    | "complete"
+    | "streaming"
+    | (TOptions extends any ?
+        TOptions extends SkipToken ? "empty"
+        : OptionsWithDefaults<TVariables, TOptions> extends infer Options ?
+          | (Options extends { errorPolicy: "none" } ? never : "empty")
+          | (Options extends { skip: false } ? never : "empty")
+          | (Options extends { returnPartialData: false } ? never : "partial")
+        : "never"
+      : never)
+    // special case, if only `SkipToken` is passed in (no union type),
+    // then we want to still keep "partial" if `returnPartialData` is globally
+    // set to `true` or `boolean` via defaultOptions
+    | ([TOptions] extends [SkipToken] ?
+        ApolloClient.DefaultOptions.WatchQuery.Calculated extends (
+          { returnPartialData: false }
+        ) ?
+          never
+        : "partial"
+      : never)
+  >;
+
   export namespace DocumentationTypes {
     namespace useSuspenseQuery {
       export interface Result<
@@ -155,8 +203,62 @@ export declare namespace useSuspenseQuery {
     }
   }
   export namespace DocumentationTypes {
-    /** Test {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+    /**
+     * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+     *
+     * @example
+     *
+     * ```jsx
+     * import { Suspense } from "react";
+     * import { useSuspenseQuery } from "@apollo/client";
+     *
+     * const listQuery = gql`
+     *   query {
+     *     list {
+     *       id
+     *     }
+     *   }
+     * `;
+     *
+     * function App() {
+     *   return (
+     *     <Suspense fallback={<Spinner />}>
+     *       <List />
+     *     </Suspense>
+     *   );
+     * }
+     *
+     * function List() {
+     *   const { data } = useSuspenseQuery(listQuery);
+     *
+     *   return (
+     *     <ol>
+     *       {data.list.map((item) => (
+     *         <Item key={item.id} id={item.id} />
+     *       ))}
+     *     </ol>
+     *   );
+     * }
+     * ```
+     *
+     * @param query - A GraphQL query document parsed into an AST by `gql`.
+     * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
+     */
     export function useSuspenseQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options?: useSuspenseQuery.Options<TVariables>
+    ): useSuspenseQuery.Result<TData, TVariables>;
+
+    /**
+     * @deprecated Avoid manually specifying generics on `useSuspenseQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)}
+     */
+    export function useSuspenseQuery_Deprecated<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
     >(
@@ -166,52 +268,13 @@ export declare namespace useSuspenseQuery {
   }
 }
 
-/**
- * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
- *
- * @example
- *
- * ```jsx
- * import { Suspense } from "react";
- * import { useSuspenseQuery } from "@apollo/client";
- *
- * const listQuery = gql`
- *   query {
- *     list {
- *       id
- *     }
- *   }
- * `;
- *
- * function App() {
- *   return (
- *     <Suspense fallback={<Spinner />}>
- *       <List />
- *     </Suspense>
- *   );
- * }
- *
- * function List() {
- *   const { data } = useSuspenseQuery(listQuery);
- *
- *   return (
- *     <ol>
- *       {data.list.map((item) => (
- *         <Item key={item.id} id={item.id} />
- *       ))}
- *     </ol>
- *   );
- * }
- * ```
- *
- * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
- */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
@@ -222,12 +285,13 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "partial" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
@@ -237,12 +301,13 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
@@ -253,12 +318,13 @@ export function useSuspenseQuery<
   "complete" | "empty" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
   }
@@ -268,12 +334,13 @@ export function useSuspenseQuery<
   "partial" | "streaming" | "complete"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
   }
@@ -283,12 +350,13 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options:
     | SkipToken
     | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -300,23 +368,25 @@ export function useSuspenseQuery<
   "empty" | "streaming" | "complete" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
@@ -326,18 +396,77 @@ export function useSuspenseQuery<
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
 ): useSuspenseQuery.Result<
   TData,
   TVariables,
   "complete" | "streaming" | "empty"
 >;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  Options extends never,
+>(
+  query: {} extends TVariables ?
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  : // this overload should only be accessible if all `TVariables` are optional
+    never
+): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends never,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  skipToken: SkipToken
+): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ? [options?: TOptions]
+  : [options: TOptions]
+): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
+    VariablesOption<
+      TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+      }
+    >,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
+  : [options: TOptions | SkipToken]
+): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
 
 export function useSuspenseQuery<
   TData = unknown,

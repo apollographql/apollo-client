@@ -123,7 +123,7 @@ For more information on the `defaultOptions` object, see the [Default Options](#
 />
 
 <InterfaceDetails
-  canonicalReference="@apollo/client!ApolloClient.DefaultOptions:interface"
+  canonicalReference="@apollo/client!~ApolloClient.DefaultOptions:interface"
   headingLevel={3}
   displayName="ApolloClient.DefaultOptions"
 />
@@ -150,6 +150,10 @@ You can override any default option you specify in this object by providing a
 different value for the same option in individual function calls.
 
 > **Note:** The `useQuery` hook uses Apollo Client's `watchQuery` function. To set `defaultOptions` when using the `useQuery` hook, make sure to set them under the `defaultOptions.watchQuery` property.
+
+#### Typed default options
+
+Learn how to [type the `defaultOptions` object](../../data/typescript#declaring-default-options-for-type-safety).
 
 <InterfaceDetails
   canonicalReference="@apollo/client!ApolloClient.DevtoolsOptions:interface"

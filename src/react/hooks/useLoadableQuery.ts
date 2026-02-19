@@ -28,6 +28,10 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  ClassicSignature,
+  RemoveIndexSignature,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { __use, useDeepMemo, useRenderGuard } from "./internal/index.js";
@@ -100,9 +104,89 @@ export declare namespace useLoadableQuery {
     returnPartialData?: boolean;
   }
 
+  export type OptionsWithDefaults<
+    TOptions extends Record<string, unknown> | Options,
+  > =
+    RemoveIndexSignature<TOptions> extends infer Opts ?
+      Omit<ApolloClient.DefaultOptions.WatchQuery.Calculated, keyof Opts> & Opts
+    : never;
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends Record<string, never> | Options,
+  > = Result<
+    TData,
+    TVariables,
+    | "complete"
+    | "streaming"
+    | (OptionsWithDefaults<TOptions> extends infer Opts ?
+        | (Opts extends { errorPolicy: "none" } ? never : "empty")
+        | (Opts extends { returnPartialData: false } ? never : "partial")
+      : never)
+  >;
+
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
+    /**
+     * A hook for imperatively loading a query, such as responding to a user
+     * interaction.
+     *
+     * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
+     *
+     * @example
+     *
+     * ```jsx
+     * import { gql, useLoadableQuery } from "@apollo/client";
+     *
+     * const GET_GREETING = gql`
+     *   query GetGreeting($language: String!) {
+     *     greeting(language: $language) {
+     *       message
+     *     }
+     *   }
+     * `;
+     *
+     * function App() {
+     *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
+     *
+     *   return (
+     *     <>
+     *       <button onClick={() => loadGreeting({ language: "english" })}>
+     *         Load greeting
+     *       </button>
+     *       <Suspense fallback={<div>Loading...</div>}>
+     *         {queryRef && <Hello queryRef={queryRef} />}
+     *       </Suspense>
+     *     </>
+     *   );
+     * }
+     *
+     * function Hello({ queryRef }) {
+     *   const { data } = useReadQuery(queryRef);
+     *
+     *   return <div>{data.greeting.message}</div>;
+     * }
+     * ```
+     *
+     * @param query - A GraphQL query document parsed into an AST by `gql`.
+     * @param options - Options to control how the query is executed.
+     * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
+     */
     export function useLoadableQuery<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+    >(
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+      options: useLoadableQuery.Options
+    ): useLoadableQuery.Result<TData, TVariables>;
+
+    /**
+     * @deprecated Avoid manually specifying generics on `useLoadableQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery:function(1)}
+     */
+    export function useLoadableQuery_Deprecated<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
     >(
@@ -112,56 +196,13 @@ export declare namespace useLoadableQuery {
   }
 }
 
-/**
- * A hook for imperatively loading a query, such as responding to a user
- * interaction.
- *
- * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
- *
- * @example
- *
- * ```jsx
- * import { gql, useLoadableQuery } from "@apollo/client";
- *
- * const GET_GREETING = gql`
- *   query GetGreeting($language: String!) {
- *     greeting(language: $language) {
- *       message
- *     }
- *   }
- * `;
- *
- * function App() {
- *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
- *
- *   return (
- *     <>
- *       <button onClick={() => loadGreeting({ language: "english" })}>
- *         Load greeting
- *       </button>
- *       <Suspense fallback={<div>Loading...</div>}>
- *         {queryRef && <Hello queryRef={queryRef} />}
- *       </Suspense>
- *     </>
- *   );
- * }
- *
- * function Hello({ queryRef }) {
- *   const { data } = useReadQuery(queryRef);
- *
- *   return <div>{data.greeting.message}</div>;
- * }
- * ```
- *
- * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options - Options to control how the query is executed.
- * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
- */
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useLoadableQuery.Options & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
@@ -172,12 +213,13 @@ export function useLoadableQuery<
   "complete" | "streaming" | "partial" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useLoadableQuery.Options & {
     errorPolicy: "ignore" | "all";
   }
@@ -187,12 +229,13 @@ export function useLoadableQuery<
   "complete" | "streaming" | "empty"
 >;
 
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options: useLoadableQuery.Options & {
     returnPartialData: true;
   }
@@ -202,14 +245,36 @@ export function useLoadableQuery<
   "complete" | "streaming" | "partial"
 >;
 
-/** {@inheritDoc @apollo/client/react!useLoadableQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery_Deprecated:function(1)} */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: ClassicSignature &
+    (DocumentNode | TypedDocumentNode<TData, TVariables>),
   options?: useLoadableQuery.Options
 ): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
+
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery:function(1)} */
+export function useLoadableQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends never,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>
+): useLoadableQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+
+/** {@inheritDoc @apollo/client!~useLoadableQuery~DocumentationTypes~useLoadableQuery:function(1)} */
+export function useLoadableQuery<
+  TData,
+  TVariables extends OperationVariables,
+  // this overload should never be manually defined, it should always be inferred
+  TOptions extends useLoadableQuery.Options,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: TOptions
+): useLoadableQuery.ResultForOptions<TData, TVariables, TOptions>;
 
 export function useLoadableQuery<
   TData = unknown,

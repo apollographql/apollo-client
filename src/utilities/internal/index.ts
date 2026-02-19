@@ -14,6 +14,11 @@ export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { StreamInfoTrie } from "./types/StreamInfoTrie.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 export type { DocumentationTypes } from "./types/DocumentationTypes.js";
+export type { LazyType } from "./LazyType.js";
+export type {
+  ClassicSignature,
+  SignatureStyle,
+} from "./types/SignatureStyle.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";

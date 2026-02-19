@@ -22,6 +22,7 @@
     "types": [
       "jest",
       "node",
+      "./src/declarations.d.ts",
       "./src/testing/matchers/index.d.ts",
       "./src/testing/internal/declarations.d.ts",
       "@testing-library/react-render-stream/expect"

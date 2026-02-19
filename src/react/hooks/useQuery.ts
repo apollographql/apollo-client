@@ -200,16 +200,6 @@ export declare namespace useQuery {
       Options
   : never;
 
-  type ExcessiveKeys<
-    TVariables extends OperationVariables,
-    TOptions extends
-      | Record<string, never> // no options
-      | Options<TVariables>
-      | SkipToken,
-  > = TOptions extends { variables: infer V extends {} } ?
-    Exclude<keyof V, keyof TVariables> & string
-  : never;
-
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
@@ -218,25 +208,18 @@ export declare namespace useQuery {
       | Options<TVariables>
       | SkipToken,
   > = LazyType<
-    ExcessiveKeys<TVariables, TOptions> extends infer ExcessiveKeys ?
-      [ExcessiveKeys] extends [never] ?
-        Result<
-          TData,
-          TVariables,
-          | "complete"
-          | "streaming"
-          | "empty"
-          | (OptionsWithDefaults<TVariables, TOptions> extends (
-              { returnPartialData: false }
-            ) ?
-              never
-            : "partial")
-        >
-      : {
-          error: `\`${ExcessiveKeys &
-            string}\` is not a valid variable name for this query.`;
-        }
-    : never
+    Result<
+      TData,
+      TVariables,
+      | "complete"
+      | "streaming"
+      | "empty"
+      | (OptionsWithDefaults<TVariables, TOptions> extends (
+          { returnPartialData: false }
+        ) ?
+          never
+        : "partial")
+    >
   >;
 
   export namespace DocumentationTypes {

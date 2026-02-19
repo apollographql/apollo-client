@@ -22,6 +22,15 @@ export interface Variables {
   bar?: number;
 }
 
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    // All of these tests are for the modern signatures.
+    // This is a build-time decision that we do not want to make lazyily, so it's
+    // okay to declare that here.
+    signatureStyle: "modern";
+  }
+}
+
 export declare const client: ApolloClient;
 export declare const QUERY: TypedDocumentNode<Data, Variables>;
 export const bool = true as any as boolean;

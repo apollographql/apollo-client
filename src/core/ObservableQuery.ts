@@ -1423,12 +1423,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options: { fetchPolicy, pollInterval },
     } = this;
 
-    if (
-      !pollInterval ||
-      !this.hasObservers() ||
-      fetchPolicy === "cache-only" ||
-      fetchPolicy === "standby"
-    ) {
+    const shouldCancelPolling = () => {
+      const {
+        options: { fetchPolicy, pollInterval },
+      } = this;
+
+      return (
+        !pollInterval ||
+        !this.hasObservers() ||
+        fetchPolicy === "cache-only" ||
+        fetchPolicy === "standby"
+      );
+    };
+
+    if (shouldCancelPolling()) {
       if (__DEV__) {
         if (
           !this.didWarnCacheOnlyPolling &&
@@ -1455,7 +1463,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     info.interval = pollInterval;
 
     const maybeFetch = () => {
-      if (this.options.fetchPolicy === "standby") {
+      if (shouldCancelPolling()) {
         return this.cancelPolling();
       }
 

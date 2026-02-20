@@ -3,6 +3,8 @@ title: Core pagination API
 description: Fetching and caching paginated results
 ---
 
+> **Note:** The pagination helper functions provided by Apollo Client (such as `offsetLimitPagination` and `relayStylePagination`) are mostly examples of how to implement a type policy for paginated fields. In most cases, you will need to copy these helpers into your own codebase and adjust them to your requirements.
+
 Regardless of which pagination strategy your GraphQL server uses for a particular list field, your Apollo Client app needs to do the following to query that field effectively:
 
 - Call the [`fetchMore` function](#the-fetchmore-function) to fetch the next page of results when needed

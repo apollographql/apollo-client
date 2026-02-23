@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.1.6
+
+### Patch Changes
+
+- [#13128](https://github.com/apollographql/apollo-client/pull/13128) [`6c0b8e4`](https://github.com/apollographql/apollo-client/commit/6c0b8e4301609b62ed599340589c978e4f51f020) Thanks [@pavelivanov](https://github.com/pavelivanov)! - Fix `useQuery` hydration mismatch when `ssr: false` and `skip: true` are used together
+
+  When both options were combined, the server would return `loading: false` (because `useSSRQuery` checks `skip` first), but the client's `getServerSnapshot` was returning `ssrDisabledResult` with `loading: true`, causing a hydration mismatch.
+
 ## 4.1.5
 
 ### Patch Changes

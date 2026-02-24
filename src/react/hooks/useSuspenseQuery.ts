@@ -149,10 +149,7 @@ export declare namespace useSuspenseQuery {
 
   export type OptionsWithDefaults<
     TVariables extends OperationVariables,
-    TOptions extends
-      | Record<string, unknown>
-      | Options<TVariables & Record<string, never>>
-      | SkipToken,
+    TOptions extends Record<string, unknown> | Options<TVariables> | SkipToken,
   > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
     Omit<
       ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },

@@ -1723,11 +1723,11 @@ const cache: ApolloCache<any> = ... // [!code --]
 const cache: ApolloCache = ... // [!code ++]
 ```
 
-### Typed default options
+### Type safety for default options
 
 Certain default options might affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`. When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.
 
-#### What changed
+#### What changed?
 
 When you set certain default options in Apollo Client 3, the TypeScript types for query results didn't reflect those defaults. For example:
 
@@ -1779,7 +1779,7 @@ declare module "@apollo/client" {
 }
 ```
 
-Once declared, results will be typed correctly based on your defaults:
+Once declared, results are typed correctly based on your defaults:
 
 ```ts
 // Now result.data is correctly typed as TData | undefined
@@ -1797,8 +1797,8 @@ Options that can be declared:
 - **`Query`**: `errorPolicy`
 - **`Mutate`**: `errorPolicy`
 
-Declaring these options ensures you provide values for them in your `defaultOptions`.
-If you don't declare these options, you can't use these properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
+Declaring those options ensures you provide values for them in your `defaultOptions`.
+If you don't declare those options, you can't use certain properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
 
 #### Opting out
 

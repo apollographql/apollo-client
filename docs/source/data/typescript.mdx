@@ -636,7 +636,8 @@ When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaul
 
 ### Why to declare default options
 
-The following example demonstrates this behavior:
+Defining default options can alter the return type of hooks and client methods.
+The following example demonstrates this behavior and why it is important to also declare these default options at the type level:
 
 ```tsx
 const client = new ApolloClient({
@@ -697,10 +698,10 @@ Options that can be declared:
 - **`Query`**: `errorPolicy`
 - **`Mutate`**: `errorPolicy`
 
-Declaring these options ensures you provide values for them in your `defaultOptions`.
-If you don't declare these options, TypeScript prevents you from using these specific fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`, but you can still provide other default options.
+Declaring those options ensures you provide values for them in your `defaultOptions`.
+If you don't declare those options, TypeScript prevents you from using certain fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`. However, you can still provide other default options.
 
-If you can't declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring the options as `unknown`:
+If you can't declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring options as `unknown`:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";
@@ -723,8 +724,8 @@ declare module "@apollo/client" {
 }
 ```
 
-This will allow you to call the `ApolloClient` constructor with any arbitrary `defaultOptions`.
-In that case, all methods and hooks will assume that these `defaultOptions` are set to the defaults, so you might get incorrect return values.
+Doing that allows you to call the `ApolloClient` constructor with any arbitrary `defaultOptions`.
+In that case, all methods and hooks assume that those `defaultOptions` are set to the defaults, so you might get incorrect return values.
 
 ## Data masking
 

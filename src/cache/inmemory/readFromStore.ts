@@ -300,7 +300,28 @@ export class StoreReader {
       const count = (this.keyRefCounts.get(key) ?? 1) - 1;
       if (count <= 0) {
         this.keyRefCounts.delete(key);
+        // Release the memoized result from optimism's LRU cache.
         this.executeSelectionSet.forget(...keyArgs);
+
+        // Also remove the Trie routing path for this key. This frees the
+        // strong Map entries for string args (entity ref, varString) that
+        // the Trie holds permanently. removeArray prunes empty parent nodes
+        // bottom-up, so if "User:1" has no other varStrings it is also
+        // removed. supportsResultCaching narrows store to EntityStore,
+        // giving access to the CacheGroup's keyMaker Trie.
+
+        const [selectionSet, parent, ctx, canonizeResults] = keyArgs;
+        if (supportsResultCaching(ctx.store)) {
+          ctx.store.group.keyMaker.removeArray([
+            selectionSet,
+            // Matches what store.makeCacheKey passes to the Trie:
+            // a plain string when parent is a Reference, otherwise the
+            // StoreObject itself (WeakMap branch, so no issue leaving it).
+            isReference(parent) ? parent.__ref : parent,
+            ctx.varString,
+            canonizeResults,
+          ]);
+        }
       } else {
         this.keyRefCounts.set(key, count);
       }

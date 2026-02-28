@@ -23,7 +23,7 @@ jobs:
         run: npm run docmodel
 
       - name: Upload documentation model artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: client-api-documentation
           path: docs/public/client.api.json

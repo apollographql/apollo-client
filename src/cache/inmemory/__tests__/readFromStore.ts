@@ -2243,3 +2243,100 @@ describe("reading from the store", () => {
     expect(canonicalFragmentResult2).toEqual({ count: 1 });
   });
 });
+
+describe("StoreReader.forgetWatch", () => {
+  const query: TypedDocumentNode<{ user: { id: string; name: string } }> = gql`
+    query GetUser($id: ID!) {
+      user(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  function makeCache() {
+    const cache = new InMemoryCache({ resultCaching: true });
+    cache.writeQuery({
+      query,
+      variables: { id: "1" },
+      data: { user: { __typename: "User", id: "1", name: "Alice" } },
+    });
+    return cache;
+  }
+
+  it("removes the memoized executeSelectionSet entry when unwatch is called", () => {
+    const cache = makeCache();
+    const reader: StoreReader = (cache as any).storeReader;
+
+    let watchOptions: Cache.WatchOptions<any> | undefined;
+
+    const unwatch = cache.watch({
+      query,
+      variables: { id: "1" },
+      optimistic: true,
+      callback: () => {},
+      // capture the watch options object
+      immediate: false,
+    });
+
+    // Trigger a broadcast so the watch is associated with cache entries
+    cache.writeQuery({
+      query,
+      variables: { id: "1" },
+      data: { user: { __typename: "User", id: "1", name: "Alice Updated" } },
+    });
+
+    // After the write, watchEntries should have been populated during broadcastWatch
+    // (currentWatch is set by InMemoryCache.broadcastWatch)
+    // We call forgetWatch via unwatch()
+    const watchEntriesBefore = (reader as any).watchEntries;
+
+    unwatch();
+
+    // After unwatch, keyRefCounts should have been decremented (and entries removed
+    // if ref count reached 0 for this sole watch)
+    const keyRefCounts: Map<object, number> = (reader as any).keyRefCounts;
+    expect(keyRefCounts.size).toBe(0);
+  });
+
+  it("keeps memoized entries alive when multiple watches share the same cache key", () => {
+    const cache = makeCache();
+    const reader: StoreReader = (cache as any).storeReader;
+    const keyRefCounts: Map<object, number> = (reader as any).keyRefCounts;
+
+    const unwatch1 = cache.watch({
+      query,
+      variables: { id: "1" },
+      optimistic: true,
+      callback: () => {},
+      immediate: false,
+    });
+    const unwatch2 = cache.watch({
+      query,
+      variables: { id: "1" },
+      optimistic: true,
+      callback: () => {},
+      immediate: false,
+    });
+
+    // Trigger broadcasts so both watches are registered
+    cache.writeQuery({
+      query,
+      variables: { id: "1" },
+      data: { user: { __typename: "User", id: "1", name: "Bob" } },
+    });
+
+    // Both watches reference the same cache keys → ref count should be ≥ 1
+    // Removing watch1 should not drop ref count to 0 while watch2 is still active
+    unwatch1();
+
+    // watch2 is still active, so entries should still be tracked
+    expect(keyRefCounts.size).toBeGreaterThan(0);
+
+    // Now remove the last watch
+    unwatch2();
+
+    // All ref counts should be cleared
+    expect(keyRefCounts.size).toBe(0);
+  });
+});

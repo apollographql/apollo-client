@@ -142,6 +142,22 @@ export class StoreReader {
     SelectionSetNode
   >();
 
+  // Tracks which executeSelectionSet cache-key objects were accessed while
+  // computing a specific watch's result, along with the minimal args needed
+  // to call executeSelectionSet.forget() for that entry later.
+  private readonly watchEntries = new WeakMap<
+    Cache.WatchOptions<any, any>,
+    Map<object, ExecSelectionSetKeyArgs>
+  >();
+
+  // Reference counts for shared entries: how many active watches reference
+  // each memoized entry. An entry is only forgotten when its count reaches 0.
+  private readonly keyRefCounts = new Map<object, number>();
+
+  // Set by InMemoryCache.broadcastWatch before calling diff(), so that
+  // makeCacheKey can associate accessed entries with the current watch.
+  public currentWatch: Cache.WatchOptions<any, any> | undefined;
+
   public canon: ObjectCanon;
   public resetCanon() {
     this.canon = new ObjectCanon();
@@ -152,6 +168,10 @@ export class StoreReader {
       addTypename: config.addTypename !== false,
       canonizeResults: shouldCanonizeResults(config),
     });
+
+    // Keep a stable `self` reference so the arrow-function closures passed to
+    // `wrap()` can access instance fields (plain `this` isn't available there).
+    const self = this;
 
     this.canon = config.canon || new ObjectCanon();
 
@@ -204,12 +224,40 @@ export class StoreReader {
         // array returned by keyArgs.
         makeCacheKey(selectionSet, parent, context, canonizeResults) {
           if (supportsResultCaching(context.store)) {
-            return context.store.makeCacheKey(
+            const key = context.store.makeCacheKey(
               selectionSet,
               isReference(parent) ? parent.__ref : parent,
               context.varString,
               canonizeResults
             );
+
+            // Track this entry for the current watch so it can be released
+            // when the watch is removed (see forgetWatch below).
+            if (key !== undefined && self.currentWatch) {
+              const watch = self.currentWatch;
+              let entries = self.watchEntries.get(watch);
+              if (!entries) {
+                self.watchEntries.set(watch, (entries = new Map()));
+              }
+              if (!entries.has(key)) {
+                // Only need store + varString for a future forget() call since
+                // that's all makeCacheKey reads from the context argument.
+                entries.set(key, [
+                  selectionSet,
+                  parent,
+                  {
+                    store: context.store,
+                    varString: context.varString,
+                  } as ReadMergeModifyContext,
+                  canonizeResults,
+                ]);
+                self.keyRefCounts.set(
+                  key,
+                  (self.keyRefCounts.get(key) ?? 0) + 1
+                );
+              }
+            }
+            return key;
           }
         },
       }
@@ -235,6 +283,29 @@ export class StoreReader {
         },
       }
     );
+  }
+
+  /**
+   * Releases all memoized executeSelectionSet entries that were recorded for
+   * the given watch. Entries shared with other active watches are only freed
+   * when the last watch referencing them is removed (reference-counted).
+   *
+   * Called from InMemoryCache's unwatch function so that memoized result
+   * objects don't outlive the component that subscribed to this watch.
+   */
+  public forgetWatch(watch: Cache.WatchOptions<any, any>): void {
+    const entries = this.watchEntries.get(watch);
+    if (!entries) return;
+    entries.forEach((keyArgs, key) => {
+      const count = (this.keyRefCounts.get(key) ?? 1) - 1;
+      if (count <= 0) {
+        this.keyRefCounts.delete(key);
+        this.executeSelectionSet.forget(...keyArgs);
+      } else {
+        this.keyRefCounts.set(key, count);
+      }
+    });
+    this.watchEntries.delete(watch);
   }
 
   /**

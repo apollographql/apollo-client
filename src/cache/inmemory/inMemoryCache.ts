@@ -291,6 +291,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
       // leaks involving the closure of watch.callback.
       this.maybeBroadcastWatch.forget(watch);
+
+      // Release all memoized executeSelectionSet entries that were recorded
+      // for this watch. Entries shared with other active watches are kept
+      // alive until the last watch referencing them is removed.
+      this.storeReader.forgetWatch(watch);
     };
   }
 
@@ -561,7 +566,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // object, and without having to enumerate the relevant properties (query,
     // variables, etc.) explicitly. There will be some additional properties
     // (lastDiff, callback, etc.), but cache.diff ignores them.
-    const diff = this.diff<any>(c);
+
+    //
+    // Inform the StoreReader which watch is driving this diff so that every
+    // executeSelectionSet cache entry it accesses gets associated with `c`.
+    // The association is used in forgetWatch() to release those entries when
+    // the watch is later removed.
+    this.storeReader.currentWatch = c;
+    let diff: Cache.DiffResult<any>;
+    try {
+      diff = this.diff<any>(c);
+    } finally {
+      this.storeReader.currentWatch = undefined;
+    }
 
     if (options) {
       if (c.optimistic && typeof options.optimistic === "string") {

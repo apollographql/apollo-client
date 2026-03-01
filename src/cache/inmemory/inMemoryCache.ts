@@ -260,6 +260,30 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
+  // Like diff(), but pins storeReader.currentWatch to the given watch for the
+  // duration of the read. This ensures every executeSelectionSet cache entry
+  // touched by the diff is associated with `watch` in watchEntries, so that
+  // forgetWatch() can release those entries (and prune their Trie paths) when
+  // the watch is later removed.
+  //
+  // Called by QueryInfo.getDiff() and QueryInfo.markResult() so that reads
+  // driven by a query component are tracked from the first read, not just
+  // from the first broadcastWatch(). Without this, any entry computed before
+  // broadcastWatch() runs (e.g. during initial cache-miss detection or during
+  // the markResult transaction) would never be associated with the watch and
+  // would leak in the Trie until LRU pressure evicted it.
+  public diffWithWatch<TData = any>(
+    watch: Cache.WatchOptions,
+    options: Cache.DiffOptions
+  ): Cache.DiffResult<TData> {
+    this.storeReader.currentWatch = watch;
+    try {
+      return this.diff<TData>(options as Cache.DiffOptions<TData, any>);
+    } finally {
+      this.storeReader.currentWatch = undefined;
+    }
+  }
+
   public watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void {

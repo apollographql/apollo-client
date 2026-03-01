@@ -175,9 +175,22 @@ export class QueryInfo {
       return { complete: false };
     }
 
-    const diff = this.cache.diff(options);
+    const diff = this.diffWithWatchContext(options);
     this.updateLastDiff(diff, options);
     return diff;
+  }
+
+  // Calls cache.diff() with this.lastWatch pinned as the current watch
+  // context, so that every executeSelectionSet cache entry touched by the
+  // read is associated with the watch in watchEntries. Falls back to a
+  // plain cache.diff() for cache implementations that do not expose
+  // diffWithWatch (e.g. custom ApolloCache subclasses).
+  private diffWithWatchContext(options: Cache.DiffOptions): Cache.DiffResult<any> {
+    const { cache, lastWatch } = this;
+    if (lastWatch && "diffWithWatch" in cache) {
+      return (cache as any).diffWithWatch(lastWatch, options);
+    }
+    return cache.diff(options);
   }
 
   private lastDiff?: {
@@ -479,7 +492,6 @@ export class QueryInfo {
           }
 
           const diffOptions = this.getDiffOptions(options.variables);
-          const diff = cache.diff<T>(diffOptions);
 
           // In case the QueryManager stops this QueryInfo before its
           // results are delivered, it's important to avoid restarting the
@@ -487,11 +499,18 @@ export class QueryInfo {
           // the watch if we are writing a result that doesn't match the current
           // variables to avoid race conditions from broadcasting the wrong
           // result.
+          //
+          // updateWatch is intentionally called BEFORE cache.diff so that
+          // this.lastWatch is current when diffWithWatchContext runs. This
+          // ensures the diff entries are attributed to the correct watch,
+          // matching the behaviour of broadcastWatch and getDiff.
           if (!this.stopped && equal(this.variables, options.variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
             this.updateWatch(options.variables);
           }
+
+          const diff = this.diffWithWatchContext(diffOptions);
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the

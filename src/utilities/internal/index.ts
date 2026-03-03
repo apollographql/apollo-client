@@ -19,6 +19,7 @@ export type {
   ClassicSignature,
   SignatureStyle,
 } from "./types/SignatureStyle.js";
+export type { MergeOptionsWithDefaultOptions } from "./types/MergeOptionsWithDefaultOptions.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";

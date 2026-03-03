@@ -92,7 +92,10 @@ export declare namespace DefaultOptions {
 }
 
 type Calculate<UserDefaults, BaseDefaults> = {
-  [K in keyof BaseDefaults]: K extends keyof UserDefaults ? UserDefaults[K]
+  [K in keyof BaseDefaults]: K extends keyof UserDefaults ?
+    undefined extends UserDefaults[K] ?
+      BaseDefaults[K] | Exclude<UserDefaults[K], undefined>
+    : UserDefaults[K]
   : BaseDefaults[K];
 };
 

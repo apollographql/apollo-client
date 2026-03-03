@@ -7,14 +7,13 @@ import {
   useBackgroundQuery,
   useLoadableQuery,
 } from "../shared/scenarios.js";
+import { ApolloClient, InMemoryCache, ApolloLink } from "@apollo/client";
 
 declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
       interface WatchQuery {
-        // TODO: undefined here should map to "none"
         errorPolicy?: "none" | "ignore" | "all";
-        // similarly
         returnPartialData?: boolean;
       }
       interface Query {
@@ -27,7 +26,24 @@ declare module "@apollo/client" {
   }
 }
 
-import { ApolloClient, InMemoryCache, ApolloLink } from "@apollo/client";
+expectTypeOf<ApolloClient.DefaultOptions.WatchQuery.Calculated>()
+  .toEqualTypeOf<{
+  // undefined should be replaced with "none", merged in with existing "none"
+  errorPolicy: "none" | "ignore" | "all";
+  // undefined should be replaced with "false", merged in with existing "boolean"
+  returnPartialData: boolean;
+}>;
+
+expectTypeOf<ApolloClient.DefaultOptions.Query.Calculated>().toEqualTypeOf<{
+  // undefined should be replaced with "none", merged in with existing "none"
+  errorPolicy: "none" | "ignore" | "all";
+}>;
+
+expectTypeOf<ApolloClient.DefaultOptions.Mutate.Calculated>().toEqualTypeOf<{
+  // undefined should be replaced with "none", merged in with existing "none"
+  errorPolicy: "none" | "ignore" | "all";
+}>;
+
 const bool = {} as any as boolean;
 // ApolloClient constructor
 {

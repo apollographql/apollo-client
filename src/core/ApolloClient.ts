@@ -22,7 +22,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   ClassicSignature,
   LazyType,
-  RemoveIndexSignature,
+  MergeOptionsWithDefaultOptions,
   VariablesOption,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -298,10 +298,10 @@ export declare namespace ApolloClient {
   export type QueryOptionsWithDefaults<
     TVariables extends OperationVariables,
     TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>,
-  > = RemoveIndexSignature<TOptions> extends infer Options ?
-    Omit<ApolloClient.DefaultOptions.Query.Calculated & {}, keyof Options> &
-      Options
-  : never;
+  > = MergeOptionsWithDefaultOptions<
+    TOptions,
+    ApolloClient.DefaultOptions.Query.Calculated
+  >;
 
   export type QueryResultForOptions<
     TData,
@@ -311,11 +311,10 @@ export declare namespace ApolloClient {
     QueryResult<
       MaybeMasked<TData>,
       QueryOptionsWithDefaults<TVariables, TOptions> extends (
-        { errorPolicy?: infer E extends ErrorPolicy | undefined }
+        { errorPolicy: infer E extends ErrorPolicy }
       ) ?
-        // TODO should be changed from `undefined` to `None` if `undefined`.
         E
-      : undefined
+      : never
     >
   >;
 

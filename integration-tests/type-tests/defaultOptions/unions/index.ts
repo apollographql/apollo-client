@@ -398,6 +398,10 @@ const bool = {} as any as boolean;
 
 // useLoadableQuery
 {
+  expectTypeOf<useLoadableQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+  }>();
   useLoadableQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useLoadableQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;

@@ -30,7 +30,7 @@ import {
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   ClassicSignature,
-  RemoveIndexSignature,
+  OptionWithFallback,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -104,12 +104,8 @@ export declare namespace useLoadableQuery {
     returnPartialData?: boolean;
   }
 
-  export type OptionsWithDefaults<
-    TOptions extends Record<string, unknown> | Options,
-  > =
-    RemoveIndexSignature<TOptions> extends infer Opts ?
-      Omit<ApolloClient.DefaultOptions.WatchQuery.Calculated, keyof Opts> & Opts
-    : never;
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
   export type ResultForOptions<
     TData,
@@ -120,10 +116,8 @@ export declare namespace useLoadableQuery {
     TVariables,
     | "complete"
     | "streaming"
-    | (OptionsWithDefaults<TOptions> extends infer Opts ?
-        | (Opts extends { errorPolicy: "none" } ? never : "empty")
-        | (Opts extends { returnPartialData: false } ? never : "partial")
-      : never)
+    | (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty")
+    | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")
   >;
 
   export namespace DocumentationTypes {

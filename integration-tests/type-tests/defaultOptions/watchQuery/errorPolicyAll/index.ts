@@ -324,6 +324,10 @@ declare module "@apollo/client" {
 
 // useLoadableQuery
 {
+  expectTypeOf<useLoadableQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "all";
+    returnPartialData: false;
+  }>();
   useLoadableQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useLoadableQuery.Result<"complete" | "streaming" | "empty">
   >;

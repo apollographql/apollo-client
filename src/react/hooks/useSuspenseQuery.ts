@@ -28,7 +28,7 @@ import type {
   ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
-  RemoveIndexSignature,
+  OptionWithFallback,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
@@ -147,16 +147,10 @@ export declare namespace useSuspenseQuery {
   > = Base.Result<TData, TVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
-  export type OptionsWithDefaults<
-    TVariables extends OperationVariables,
-    TOptions extends Record<string, unknown> | Options<TVariables> | SkipToken,
-  > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
-    Omit<
-      ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
-      keyof Options
-    > &
-      Options
-  : never;
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {
+    skip: false;
+  }
 
   export type ResultForOptions<
     TData,
@@ -172,19 +166,33 @@ export declare namespace useSuspenseQuery {
     | "streaming"
     | (TOptions extends any ?
         TOptions extends SkipToken ? "empty"
-        : OptionsWithDefaults<TVariables, TOptions> extends infer Options ?
-          | (Options extends { errorPolicy: "none" } ? never : "empty")
-          | (Options extends { skip: false } ? never : "empty")
-          | (Options extends { returnPartialData: false } ? never : "partial")
-        : "never"
+        : | (OptionWithFallback<
+              TOptions,
+              DefaultOptions,
+              "errorPolicy"
+            > extends "none" ?
+              never
+            : "empty")
+          | (OptionWithFallback<
+              TOptions,
+              DefaultOptions,
+              "skip"
+            > extends false ?
+              never
+            : "empty")
+          | (OptionWithFallback<
+              TOptions,
+              DefaultOptions,
+              "returnPartialData"
+            > extends false ?
+              never
+            : "partial")
       : never)
     // special case, if only `SkipToken` is passed in (no union type),
     // then we want to still keep "partial" if `returnPartialData` is globally
     // set to `true` or `boolean` via defaultOptions
     | ([TOptions] extends [SkipToken] ?
-        ApolloClient.DefaultOptions.WatchQuery.Calculated extends (
-          { returnPartialData: false }
-        ) ?
+        DefaultOptions extends { returnPartialData: false } ?
           never
         : "partial"
       : never)

@@ -78,6 +78,11 @@ import { expectTypeOf } from "expect-type";
 }
 // useSuspenseQuery
 {
+  expectTypeOf<useSuspenseQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: false;
+    skip: false;
+  }>();
   useSuspenseQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming">
   >;

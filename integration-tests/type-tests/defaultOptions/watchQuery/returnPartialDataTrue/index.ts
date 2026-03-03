@@ -134,6 +134,11 @@ declare module "@apollo/client" {
 }
 // useSuspenseQuery
 {
+  expectTypeOf<useSuspenseQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: true;
+    skip: false;
+  }>();
   useSuspenseQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useSuspenseQuery.Result<"complete" | "streaming" | "partial">
   >;

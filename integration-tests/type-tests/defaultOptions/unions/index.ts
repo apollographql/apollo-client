@@ -202,6 +202,11 @@ const bool = {} as any as boolean;
 }
 // useSuspenseQuery
 {
+  expectTypeOf<useSuspenseQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+    skip: false;
+  }>();
   useSuspenseQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useSuspenseQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;

@@ -290,6 +290,11 @@ const bool = {} as any as boolean;
 }
 // useBackgroundQuery
 {
+  expectTypeOf<useBackgroundQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+    skip: false;
+  }>();
   useBackgroundQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;

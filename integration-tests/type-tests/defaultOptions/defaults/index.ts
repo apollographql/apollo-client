@@ -166,6 +166,11 @@ import { expectTypeOf } from "expect-type";
 }
 // useBackgroundQuery
 {
+  expectTypeOf<useBackgroundQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: false;
+    skip: false;
+  }>();
   useBackgroundQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming">
   >;

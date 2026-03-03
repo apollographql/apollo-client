@@ -222,6 +222,11 @@ declare module "@apollo/client" {
 }
 // useBackgroundQuery
 {
+  expectTypeOf<useBackgroundQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: true;
+    skip: false;
+  }>();
   useBackgroundQuery.errorPolicy.defaults.result.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial">
   >;

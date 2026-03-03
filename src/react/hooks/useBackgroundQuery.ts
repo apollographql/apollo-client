@@ -27,7 +27,7 @@ import type {
   ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
-  RemoveIndexSignature,
+  OptionWithFallback,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 
@@ -130,16 +130,10 @@ export declare namespace useBackgroundQuery {
     }
   }
 
-  export type OptionsWithDefaults<
-    TVariables extends OperationVariables,
-    TOptions extends Record<string, unknown> | Options<TVariables> | SkipToken,
-  > = RemoveIndexSignature<Exclude<TOptions, SkipToken>> extends infer Options ?
-    Omit<
-      ApolloClient.DefaultOptions.WatchQuery.Calculated & { skip: false },
-      keyof Options
-    > &
-      Options
-  : never;
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {
+    skip: false;
+  }
 
   export type ResultForOptions<
     TData,
@@ -148,20 +142,35 @@ export declare namespace useBackgroundQuery {
   > = [
     queryRef: TOptions extends any ?
       TOptions extends SkipToken ? undefined
-      : OptionsWithDefaults<TVariables, TOptions> extends infer Options ?
-        | QueryRef<
+      : | QueryRef<
             TData,
             TVariables,
             | "complete"
             | "streaming"
             | (
-                | (Options extends { errorPolicy: "none" } ? never : "empty")
-                | (Options extends { returnPartialData: false } ? never
+                | (OptionWithFallback<
+                    TOptions,
+                    DefaultOptions,
+                    "errorPolicy"
+                  > extends "none" ?
+                    never
+                  : "empty")
+                | (OptionWithFallback<
+                    TOptions,
+                    DefaultOptions,
+                    "returnPartialData"
+                  > extends false ?
+                    never
                   : "partial")
               )
           >
-        | (Options extends { skip: false } ? never : undefined)
-      : never
+        | (OptionWithFallback<
+            TOptions,
+            DefaultOptions,
+            "skip"
+          > extends false ?
+            never
+          : undefined)
     : never,
     result: useBackgroundQuery.Result<TData, TVariables>,
   ];

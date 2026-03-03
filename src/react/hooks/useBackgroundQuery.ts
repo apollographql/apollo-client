@@ -141,7 +141,8 @@ export declare namespace useBackgroundQuery {
     TOptions extends Record<string, never> | Options<TVariables> | SkipToken,
   > = [
     queryRef: TOptions extends any ?
-      TOptions extends SkipToken ? undefined
+      TOptions extends SkipToken ?
+        undefined
       : | QueryRef<
             TData,
             TVariables,
@@ -164,11 +165,7 @@ export declare namespace useBackgroundQuery {
                   : "partial")
               )
           >
-        | (OptionWithFallback<
-            TOptions,
-            DefaultOptions,
-            "skip"
-          > extends false ?
+        | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends false ?
             never
           : undefined)
     : never,

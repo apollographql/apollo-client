@@ -165,7 +165,8 @@ export declare namespace useSuspenseQuery {
     | "complete"
     | "streaming"
     | (TOptions extends any ?
-        TOptions extends SkipToken ? "empty"
+        TOptions extends SkipToken ?
+          "empty"
         : | (OptionWithFallback<
               TOptions,
               DefaultOptions,
@@ -173,11 +174,9 @@ export declare namespace useSuspenseQuery {
             > extends "none" ?
               never
             : "empty")
-          | (OptionWithFallback<
-              TOptions,
-              DefaultOptions,
-              "skip"
-            > extends false ?
+          | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends (
+              false
+            ) ?
               never
             : "empty")
           | (OptionWithFallback<

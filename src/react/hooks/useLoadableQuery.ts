@@ -116,8 +116,18 @@ export declare namespace useLoadableQuery {
     TVariables,
     | "complete"
     | "streaming"
-    | (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty")
-    | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")
+    | (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends (
+        "none"
+      ) ?
+        never
+      : "empty")
+    | (OptionWithFallback<
+        TOptions,
+        DefaultOptions,
+        "returnPartialData"
+      > extends false ?
+        never
+      : "partial")
   >;
 
   export namespace DocumentationTypes {

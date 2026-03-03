@@ -140,6 +140,9 @@ const bool = {} as any as boolean;
 
 // client.query
 {
+  expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
   clientQuery.errorPolicy.defaults.branded.toEqualTypeOf<
     Promise<
       | clientQuery.QueryResultNone
@@ -160,6 +163,11 @@ const bool = {} as any as boolean;
 
 // useQuery
 {
+  expectTypeOf<useQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+    skip: false;
+  }>();
   useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;

@@ -56,6 +56,7 @@ namespace clientQueryCase {
 }
 
 namespace useQueryCase {
+  export import hook = useQuery;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     useQuery.Result<Data, Variables, TStates, Variables>;
   export namespace returnPartialData {
@@ -73,6 +74,7 @@ namespace useQueryCase {
 }
 
 namespace useLazyQueryCase {
+  export import hook = useLazyQuery;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     useLazyQuery.ResultTuple<Data, Variables, TStates>;
   export namespace returnPartialData {
@@ -90,6 +92,7 @@ namespace useLazyQueryCase {
 }
 
 namespace useSuspenseQueryCase {
+  export import hook = useSuspenseQuery;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     useSuspenseQuery.Result<Data, Variables, TStates>;
 
@@ -229,6 +232,7 @@ namespace useSuspenseQueryCase {
 }
 
 namespace useBackgroundQueryCase {
+  export import hook = useBackgroundQuery;
   export type Result<
     TStates extends DataState<Data>["dataState"],
     AdditionalReturnValue = never,
@@ -379,6 +383,7 @@ namespace useBackgroundQueryCase {
   }
 }
 namespace useLoadableQueryCase {
+  export import hook = useLoadableQuery;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     useLoadableQuery.Result<Data, Variables, TStates>;
 

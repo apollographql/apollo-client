@@ -8,6 +8,7 @@ import {
   useBackgroundQuery,
   useLoadableQuery,
 } from "../shared/scenarios.js";
+import { expectTypeOf } from "expect-type";
 
 // ApolloClient constructor
 {
@@ -19,6 +20,9 @@ import {
 
 // client.query
 {
+  expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+  }>();
   clientQuery.errorPolicy.defaults.branded.toEqualTypeOf<
     Promise<clientQuery.QueryResultNone>
   >();
@@ -35,6 +39,11 @@ import {
 
 // useQuery
 {
+  expectTypeOf<useQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: false;
+    skip: false;
+  }>();
   useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming">
   >;

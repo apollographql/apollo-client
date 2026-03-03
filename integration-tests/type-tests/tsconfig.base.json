@@ -31,12 +31,14 @@
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "isolatedModules": false,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "moduleResolution": "nodenext",
     "skipLibCheck": true
   },
-  "include": ["${configDir}/*.ts"]
+  "include": [
+    "${configDir}/*.ts"
+  ]
 }

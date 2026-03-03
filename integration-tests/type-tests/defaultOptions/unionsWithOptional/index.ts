@@ -36,6 +36,10 @@ expectTypeOf<ApolloClient.DefaultOptions.Mutate.Calculated>().toEqualTypeOf<{
   errorPolicy: "none" | "ignore" | "all";
 }>;
 
+expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+  errorPolicy: "none" | "ignore" | "all";
+}>();
+
 const bool = {} as any as boolean;
 // ApolloClient constructor
 {

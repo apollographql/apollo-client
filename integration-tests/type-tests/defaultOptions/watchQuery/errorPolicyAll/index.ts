@@ -7,6 +7,7 @@ import {
   useBackgroundQuery,
   useLoadableQuery,
 } from "../../shared/scenarios.js";
+import { expectTypeOf } from "expect-type";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -94,6 +95,11 @@ declare module "@apollo/client" {
 
 // useQuery
 {
+  expectTypeOf<useQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "all";
+    returnPartialData: false;
+    skip: false;
+  }>();
   useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming">
   >;

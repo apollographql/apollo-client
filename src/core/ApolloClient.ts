@@ -22,7 +22,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   ClassicSignature,
   LazyType,
-  MergeOptionsWithDefaultOptions,
+  OptionWithFallback,
   VariablesOption,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -295,13 +295,8 @@ export declare namespace ApolloClient {
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
 
-  export type QueryOptionsWithDefaults<
-    TVariables extends OperationVariables,
-    TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>,
-  > = MergeOptionsWithDefaultOptions<
-    TOptions,
-    ApolloClient.DefaultOptions.Query.Calculated
-  >;
+  export interface QueryDefaultOptions
+    extends ApolloClient.DefaultOptions.Query.Calculated {}
 
   export type QueryResultForOptions<
     TData,
@@ -310,11 +305,8 @@ export declare namespace ApolloClient {
   > = LazyType<
     QueryResult<
       MaybeMasked<TData>,
-      QueryOptionsWithDefaults<TVariables, TOptions> extends (
-        { errorPolicy: infer E extends ErrorPolicy }
-      ) ?
-        E
-      : never
+      OptionWithFallback<TOptions, QueryDefaultOptions, "errorPolicy"> &
+        ErrorPolicy
     >
   >;
 

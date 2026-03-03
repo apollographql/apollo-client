@@ -1,6 +1,7 @@
 import { InMemoryCache } from "@apollo/client";
 import { ApolloClient, ApolloLink } from "@apollo/client";
 import { clientQuery } from "../../shared/scenarios.js";
+import { expectTypeOf } from "expect-type";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -88,6 +89,9 @@ declare module "@apollo/client" {
 
 // client.query
 {
+  expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "all";
+  }>();
   clientQuery.errorPolicy.defaults.branded.toEqualTypeOf<
     Promise<clientQuery.QueryResultAll>
   >();

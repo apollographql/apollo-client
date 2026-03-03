@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.0-alpha.0
+
+### Minor Changes
+
+- [#13130](https://github.com/apollographql/apollo-client/pull/13130) [`dd12231`](https://github.com/apollographql/apollo-client/commit/dd122316028b55307de4a40335512307c8fa916a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the accuracy of `client.query` return type to better detect the current `errorPolicy`. The `data` property is no longer nullable when the `errorPolicy` is `none`. This makes it possible to remove the `undefined` checks or optional chaining in most cases.
+
 ## 4.1.4
 
 ### Patch Changes

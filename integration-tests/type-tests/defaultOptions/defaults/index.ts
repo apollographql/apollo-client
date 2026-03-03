@@ -20,7 +20,7 @@ import { expectTypeOf } from "expect-type";
 
 // client.query
 {
-  expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+  expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
     errorPolicy: "none";
   }>();
   clientQuery.errorPolicy.defaults.branded.toEqualTypeOf<

@@ -89,7 +89,7 @@ declare module "@apollo/client" {
 
 // client.query
 {
-  expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+  expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
     errorPolicy: "none";
   }>();
   clientQuery.errorPolicy.defaults.branded.toEqualTypeOf<

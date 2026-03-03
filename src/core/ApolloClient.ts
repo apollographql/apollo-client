@@ -295,20 +295,22 @@ export declare namespace ApolloClient {
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
 
-  export interface QueryDefaultOptions
-    extends ApolloClient.DefaultOptions.Query.Calculated {}
+  export namespace query {
+    export interface DefaultOptions
+      extends ApolloClient.DefaultOptions.Query.Calculated {}
 
-  export type QueryResultForOptions<
-    TData,
-    TVariables extends OperationVariables,
-    TOptions extends Record<string, unknown> | QueryOptions<any, any>,
-  > = LazyType<
-    QueryResult<
-      MaybeMasked<TData>,
-      OptionWithFallback<TOptions, QueryDefaultOptions, "errorPolicy"> &
-        ErrorPolicy
-    >
-  >;
+    export type ResultForOptions<
+      TData,
+      TVariables extends OperationVariables,
+      TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>,
+    > = LazyType<
+      QueryResult<
+        MaybeMasked<TData>,
+        OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> &
+          ErrorPolicy
+      >
+    >;
+  }
 
   /**
    * Options object for the `client.refetchQueries` method.
@@ -1103,7 +1105,7 @@ export class ApolloClient {
     >,
   >(
     options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
-  ): Promise<ApolloClient.QueryResultForOptions<TData, TVariables, TOptions>>;
+  ): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
 
   public query<
     TData = unknown,

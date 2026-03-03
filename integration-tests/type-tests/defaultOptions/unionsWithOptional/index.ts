@@ -36,7 +36,7 @@ expectTypeOf<ApolloClient.DefaultOptions.Mutate.Calculated>().toEqualTypeOf<{
   errorPolicy: "none" | "ignore" | "all";
 }>;
 
-expectTypeOf<ApolloClient.QueryDefaultOptions>().toEqualTypeOf<{
+expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
   errorPolicy: "none" | "ignore" | "all";
 }>();
 

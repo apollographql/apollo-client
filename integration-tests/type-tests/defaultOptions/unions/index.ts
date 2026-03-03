@@ -183,6 +183,10 @@ const bool = {} as any as boolean;
 }
 // useLazyQuery
 {
+  expectTypeOf<useLazyQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+  }>();
   useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;

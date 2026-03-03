@@ -115,6 +115,10 @@ declare module "@apollo/client" {
 }
 // useLazyQuery
 {
+  expectTypeOf<useLazyQuery.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: true;
+  }>();
   useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;

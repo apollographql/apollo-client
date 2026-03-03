@@ -24,7 +24,7 @@ import type {
   ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
-  RemoveIndexSignature,
+  OptionWithFallback,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import {
@@ -229,14 +229,8 @@ export declare namespace useLazyQuery {
     }
   }
 
-  export type OptionsWithDefaults<
-    TData,
-    TVariables extends OperationVariables,
-    TOptions extends Record<string, unknown> | Options<TData, TVariables>,
-  > = RemoveIndexSignature<TOptions> extends infer Options ?
-    Omit<ApolloClient.DefaultOptions.WatchQuery.Calculated, keyof Options> &
-      Options
-  : never;
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
   export type ResultForOptions<
     TData,
@@ -248,11 +242,11 @@ export declare namespace useLazyQuery {
     | "complete"
     | "streaming"
     | "empty"
-    | (OptionsWithDefaults<TData, TVariables, TOptions> extends (
-        {
-          returnPartialData: false;
-        }
-      ) ?
+    | (OptionWithFallback<
+        TOptions,
+        DefaultOptions,
+        "returnPartialData"
+      > extends false ?
         never
       : "partial")
   >;

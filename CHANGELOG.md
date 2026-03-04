@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.0-alpha.1
+
+### Patch Changes
+
+- [#13166](https://github.com/apollographql/apollo-client/pull/13166) [`0537d97`](https://github.com/apollographql/apollo-client/commit/0537d97161a51479141a182d869458912e1b8e1d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Release changes in 4.1.5 and 4.1.6.
+
 ## 4.2.0-alpha.0
 
 ### Minor Changes

@@ -1269,7 +1269,7 @@ console.log(error); // => undefined
 
 </Note>
 
-### Network errors never terminate `ObservableQuery`
+### Network errors never terminate `ObservableQuery` or subscription Observables
 
 In Apollo Client 3, network errors emitted an `error` notification on the `ObservableQuery` instance. Because error notifications terminate observables, this meant you needed special handling to restart the `ObservableQuery` instance so that it listened for new results. Network errors were emitted to the `error` callback.
 
@@ -1292,6 +1292,12 @@ observable.subscribe({
   },
 });
 ```
+
+<Note>
+
+The change applies to all Apollo Client observables, including subscriptions created with `client.subscribe()`. GraphQL errors in subscriptions are always delivered through the `next` callback in `result.error`, never through the `error` callback. The subscription only terminates for non-recoverable errors like network failures.
+
+</Note>
 
 ### `ServerError` and `ServerParseError` are error classes
 

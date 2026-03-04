@@ -2357,6 +2357,53 @@ describe("useQuery Hook", () => {
       }
     });
 
+    // https://github.com/apollographql/apollo-client/issues/13154
+    it("doesn't poll when initially skipped", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+
+      const requestHandler = jest.fn<
+        ReturnType<ApolloLink.RequestHandler>,
+        Parameters<ApolloLink.RequestHandler>
+      >(() => of({ data: { hello: "world" } }));
+
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: new ApolloLink(requestHandler),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query, { pollInterval: 80, skip: true }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+      const { takeSnapshot } = renderStream;
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender({ timeout: 100 });
+      expect(requestHandler).not.toHaveBeenCalled();
+    });
+
     it("should start polling when changing skipToken to options", async () => {
       const query = gql`
         {

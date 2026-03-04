@@ -544,6 +544,7 @@ function useResult<TData, TVariables extends OperationVariables>(
   ssr: boolean | undefined
 ) {
   "use no memo";
+  const fetchPolicy = observable.options.fetchPolicy;
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -591,7 +592,13 @@ function useResult<TData, TVariables extends OperationVariables>(
       [observable, resultData]
     ),
     () => resultData.current,
-    () => (ssr === false ? useQuery.ssrDisabledResult : resultData.current)
+    () =>
+      (
+        (fetchPolicy !== "standby" && ssr === false) ||
+        fetchPolicy === "no-cache"
+      ) ?
+        useQuery.ssrDisabledResult
+      : resultData.current
   );
 }
 

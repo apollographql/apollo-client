@@ -272,7 +272,7 @@ export declare namespace useSuspenseQuery {
   }
 }
 
-/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery:function(1)} */
+/** {@inheritDoc @apollo/client!~useSuspenseQuery~DocumentationTypes~useSuspenseQuery_Deprecated:function(1)} */
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

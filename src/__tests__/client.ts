@@ -4167,7 +4167,6 @@ describe("@connection", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
-        // @ts-expect-error using defaultOptions which is type safe
         error: new CombinedGraphQLErrors({ errors }),
       });
     });

@@ -1070,7 +1070,12 @@ export class ApolloClient {
     TOptions extends ApolloClient.QueryOptions<
       NoInfer<TData>,
       NoInfer<TVariables>
-    >,
+    > &
+      VariablesOption<
+        TVariables & {
+          [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+        }
+      >,
   >(
     options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
   ): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;

@@ -30,6 +30,7 @@ test("uses defaultOptions from `query` key", async () => {
 
   await expect(client.query({ query })).resolves.toStrictEqualTyped({
     data: { greeting: null },
+    // @ts-expect-error Types do not account for default options yet
     error: new CombinedGraphQLErrors({
       data: { greeting: null },
       errors: [{ message: "Oops" }],

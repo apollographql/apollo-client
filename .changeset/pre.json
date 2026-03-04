@@ -6,7 +6,5 @@
     "@apollo/client-graphql-codegen": "2.0.0",
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
-  "changesets": [
-    "chilly-ravens-agree"
-  ]
+  "changesets": ["chilly-ravens-agree"]
 }

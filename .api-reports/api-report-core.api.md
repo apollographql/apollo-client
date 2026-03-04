@@ -11,6 +11,7 @@ import { ApolloReducerConfig } from '@apollo/client/cache';
 import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
+import type { ClassicSignature } from '@apollo/client/utilities/internal';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
@@ -52,10 +53,12 @@ import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
+import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import { isNetworkRequestSettled } from '@apollo/client/utilities';
 import { isReference } from '@apollo/client/utilities';
+import type { LazyType } from '@apollo/client/utilities/internal';
 import { LinkError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
 import { LocalStateError } from '@apollo/client/errors';
@@ -74,6 +77,7 @@ import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
 import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
+import type { OptionWithFallback } from '@apollo/client/utilities/internal';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { PossibleTypesMap } from '@apollo/client/cache';
 import { ReactiveVar } from '@apollo/client/cache';
@@ -111,6 +115,7 @@ export { ApolloCache }
 
 // @public (undocumented)
 export namespace ApolloClient {
+    export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -153,15 +158,6 @@ export namespace ApolloClient {
             fragmentName?: string;
             overwrite?: boolean;
         }
-    }
-    // (undocumented)
-    export interface DefaultOptions {
-        // (undocumented)
-        mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
-        // (undocumented)
-        query?: Partial<ApolloClient.QueryOptions<any, any>>;
-        // (undocumented)
-        watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
     }
     // (undocumented)
     export interface DevtoolsOptions {
@@ -207,6 +203,10 @@ export namespace ApolloClient {
         }
     }
     // (undocumented)
+    export namespace DocumentationTypes {
+        export function query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+    }
+    // (undocumented)
     export interface Experiment {
         // (undocumented)
         (this: ApolloClient, options: ApolloClient.Options): void;
@@ -240,7 +240,7 @@ export namespace ApolloClient {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
     // (undocumented)
-    export interface Options {
+    export interface Options extends InternalTypes_2.DefaultOptionsParentObject {
         assumeImmutableResults?: boolean;
         cache: ApolloCache;
         // (undocumented)
@@ -248,7 +248,6 @@ export namespace ApolloClient {
         dataMasking?: boolean;
         // (undocumented)
         defaultContext?: Partial<DefaultContext>;
-        defaultOptions?: ApolloClient.DefaultOptions;
         devtools?: ApolloClient.DevtoolsOptions;
         // (undocumented)
         documentTransform?: DocumentTransform;
@@ -263,6 +262,14 @@ export namespace ApolloClient {
         ssrForceFetchDelay?: number;
         ssrMode?: boolean;
     }
+    // (undocumented)
+    export namespace query {
+        // (undocumented)
+        export interface DefaultOptions extends ApolloClient.DefaultOptions.Query.Calculated {
+        }
+        // (undocumented)
+        export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>> = LazyType<QueryResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+    }
     export type QueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         errorPolicy?: ErrorPolicy;
@@ -270,18 +277,25 @@ export namespace ApolloClient {
         fetchPolicy?: FetchPolicy;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
-    export type QueryResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = TErrorPolicy extends "none" ? {
-        data: TData;
-        error?: never;
-    } : TErrorPolicy extends "all" ? {
-        data: TData | undefined;
-        error?: ErrorLike;
-    } : TErrorPolicy extends "ignore" ? {
-        data: TData | undefined;
-        error?: never;
-    } : {
-        data: TData | undefined;
-        error?: ErrorLike;
+    export type QueryResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
+    // (undocumented)
+    export type QueryResultMap<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = {
+        none: {
+            data: TData;
+            error?: never;
+        };
+        all: {
+            data: TData | undefined;
+            error?: ErrorLike;
+        };
+        ignore: {
+            data: TData | undefined;
+            error?: never;
+        };
+        undefined: {
+            data: TData | undefined;
+            error?: ErrorLike;
+        };
     };
     // (undocumented)
     export type ReadFragmentOptions<TData, TVariables extends OperationVariables> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
@@ -372,13 +386,13 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
-        errorPolicy: "all";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "all">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables> & {
-        errorPolicy: "ignore";
-    }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "ignore">>;
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, "none">>;
+    // @deprecated (undocumented)
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ClassicSignature & ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+    query<TData, TVariables extends OperationVariables, TOptions extends ApolloClient.QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & VariablesOption<TVariables & {
+        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+    }>>(options: TOptions & {
+        query: TypedDocumentNode<TData, TVariables>;
+    }): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
     // (undocumented)
     queryDeduplication: boolean;
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
@@ -583,7 +597,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { NextFetchPolicyContext, QueryManager };
+    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
 }
 
 export { isNetworkRequestSettled }
@@ -1197,7 +1211,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:405:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:436:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

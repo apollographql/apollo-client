@@ -112,7 +112,7 @@
     "changeset-publish": "npm pkg set 'workspaces[0]'=dist && npm run build && changeset publish",
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
-    "knip": "knip",
+    "knip": "knip --tags=-knipignore",
     "madge": "node ./config/madge.ts",
     "publint": "publint run --strict dist"
   },

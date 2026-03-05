@@ -12081,7 +12081,7 @@ describe("useSuspenseQuery", () => {
       );
       useSuspenseQuery(
         query,
-        // @ts-expect-error unknown variabless
+        // @ts-expect-error unknown variables
         skip ? skipToken : (
           {
             variables: {

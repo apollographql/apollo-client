@@ -493,6 +493,7 @@ Array [
   "mergeDeepArray",
   "mergeIncrementalData",
   "mergeOptions",
+  "muteDeprecations",
   "offsetLimitPagination",
   "omitDeep",
   "preventUnhandledRejection",
@@ -509,6 +510,8 @@ Array [
   "stringifyForDisplay",
   "stripTypename",
   "valueToObjectRepresentation",
+  "warnDeprecated",
+  "warnRemovedOption",
   "wrapPromiseWithState",
 ]
 `;

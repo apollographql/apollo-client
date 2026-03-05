@@ -29,7 +29,7 @@ import {
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useWarnRemovedOption } from "./internal/useWarnRemovedOption.js";
 import { invariant } from "../../utilities/globals/invariantWrappers.js";
-import { warnRemovedOption } from "../../utilities/deprecation/index.js";
+import { warnRemovedOption } from "../../utilities/index.js";
 import { useRenderGuard } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of

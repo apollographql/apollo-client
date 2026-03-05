@@ -16,10 +16,7 @@ import {
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, MutateProps } from "./types.js";
 import type { ApolloCache } from "../../core/index.js";
-import {
-  muteDeprecations,
-  warnDeprecated,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnDeprecated } from "../../utilities/index.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 /**

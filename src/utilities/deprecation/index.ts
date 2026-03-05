@@ -131,13 +131,3 @@ export function warnDeprecated(name: DeprecationName, cb: () => void) {
     cb();
   }
 }
-
-export function withDisabledDeprecations() {
-  const prev = global[muteAllDeprecations];
-  global[muteAllDeprecations] = true;
-  return {
-    [Symbol.dispose]() {
-      global[muteAllDeprecations] = prev;
-    },
-  };
-}

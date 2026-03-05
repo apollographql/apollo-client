@@ -17,10 +17,7 @@ import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer, VariablesOption } from "../index.js";
 import { wrapHook } from "../hooks/internal/index.js";
-import {
-  muteDeprecations,
-  warnRemovedOption,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnRemovedOption } from "../../utilities/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,

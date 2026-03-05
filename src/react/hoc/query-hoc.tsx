@@ -15,10 +15,7 @@ import {
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
 import invariant from "ts-invariant";
-import {
-  muteDeprecations,
-  warnDeprecated,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnDeprecated } from "../../utilities/index.js";
 
 /**
  * @deprecated

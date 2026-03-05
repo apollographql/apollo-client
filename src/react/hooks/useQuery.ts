@@ -55,7 +55,7 @@ import {
 import { useWarnRemovedOption, wrapHook } from "./internal/index.js";
 import type { RenderPromises } from "../ssr/RenderPromises.js";
 import type { MaybeMasked } from "../../masking/index.js";
-import { muteDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -214,7 +214,7 @@ function useInternalState<
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         ObservableQuery["inactiveOnCreation"].withValue(!renderPromises, () =>
-          muteDeprecations("canonizeResults", () => {
+          muteDeprecations(["canonizeResults", "partialRefetch"], () => {
             return client.watchQuery(
               getObsQueryOptions(
                 void 0,

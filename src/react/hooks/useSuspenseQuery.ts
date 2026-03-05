@@ -27,7 +27,7 @@ import {
   useWarnRemovedOption,
   wrapHook,
 } from "./internal/index.js";
-import { muteDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";

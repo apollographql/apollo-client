@@ -12,10 +12,7 @@ import {
   defaultCacheSizes,
 } from "../../utilities/index.js";
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
-import {
-  muteDeprecations,
-  warnDeprecated,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnDeprecated } from "../../utilities/index.js";
 
 export enum DocumentType {
   Query,

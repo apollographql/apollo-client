@@ -1182,7 +1182,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:96:7 - (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:93:7 - (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:93:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

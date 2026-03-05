@@ -835,6 +835,9 @@ interface DeleteModifier {
 // @public (undocumented)
 const _deleteModifier: unique symbol;
 
+// @public (undocumented)
+export type DeprecationName = keyof PossibleDeprecations | NonNullable<PossibleDeprecations[keyof PossibleDeprecations]>[number];
+
 // @public @deprecated (undocumented)
 export const DEV: boolean;
 
@@ -1978,6 +1981,11 @@ type MutationUpdaterFunction<TData, TVariables, TContext, TCache extends ApolloC
     variables?: TVariables;
 }) => void;
 
+// Warning: (ae-forgotten-export) The symbol "WithValueArgs" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function muteDeprecations<TResult, TArgs extends any[], TThis = any>(name: DeprecationName | DeprecationName[], ...args: WithValueArgs<TResult, TArgs, TThis>): TResult;
+
 // @public
 enum NetworkStatus {
     error = 8,
@@ -2221,6 +2229,85 @@ class Policies {
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
+
+// @public (undocumented)
+export type PossibleDeprecations = {
+    "cache.readQuery": ["canonizeResults"];
+    "cache.readFragment": ["canonizeResults"];
+    "cache.updateQuery": ["canonizeResults"];
+    "cache.updateFragment": ["canonizeResults"];
+    InMemoryCache: ["addTypename", "canonizeResults"];
+    "cache.read": ["canonizeResults"];
+    "cache.diff": ["canonizeResults"];
+    "cache.gc": ["resetResultIdentities"];
+    ApolloClient: [
+    "connectToDevTools",
+    "uri",
+    "credentials",
+    "headers",
+    "name",
+    "version",
+    "typeDefs"
+    ];
+    "client.watchQuery": ["canonizeResults", "partialRefetch"];
+    "client.query": ["canonizeResults", "notifyOnNetworkStatusChange"];
+    setOptions: ["canonizeResults"];
+    useBackgroundQuery: ["canonizeResults"];
+    useFragment: ["canonizeResults"];
+    useLazyQuery: [
+    "canonizeResults",
+    "variables",
+    "context",
+    "onCompleted",
+    "onError",
+    "defaultOptions",
+    "initialFetchPolicy",
+    "partialRefetch"
+    ];
+    "useLazyQuery.execute": [
+    "initialFetchPolicy",
+    "onCompleted",
+    "onError",
+    "defaultOptions",
+    "partialRefetch",
+    "canonizeResults",
+    "query",
+    "ssr",
+    "client",
+    "fetchPolicy",
+    "nextFetchPolicy",
+    "refetchWritePolicy",
+    "errorPolicy",
+    "pollInterval",
+    "notifyOnNetworkStatusChange",
+    "returnPartialData",
+    "skipPollAttempt"
+    ];
+    useLoadableQuery: ["canonizeResults"];
+    useMutation: ["ignoreResults"];
+    useQuery: [
+    "canonizeResults",
+    "partialRefetch",
+    "defaultOptions",
+    "onCompleted",
+    "onError"
+    ];
+    useSuspenseQuery: ["canonizeResults"];
+    preloadQuery: ["canonizeResults"];
+    MockedProvider: ["connectToDevTools", "addTypename"];
+    ObservableQuery: [
+    "observableQuery.result",
+    "getLastResult",
+    "getLastError",
+    "resetLastResults",
+    "setOptions"
+    ];
+    HOC: [
+    "graphql" | "withQuery" | "withMutation" | "withSubscription",
+    "parser"
+    ];
+    RenderProps: ["<Query />" | "<Mutation />" | "<Subscription />"];
+};
 
 // @public (undocumented)
 type PossibleTypesMap = {
@@ -2917,6 +3004,12 @@ export function valueToObjectRepresentation(argObj: any, name: NameNode, value: 
 // @public (undocumented)
 export type VariableValue = (node: VariableNode) => any;
 
+// @public (undocumented)
+export function warnDeprecated(name: DeprecationName, cb: () => void): void;
+
+// @public (undocumented)
+export function warnRemovedOption<TOptions extends Record<string, any>, CallSite extends keyof PossibleDeprecations>(options: TOptions, name: keyof TOptions & PossibleDeprecations[CallSite][number], callSite: CallSite, recommendation?: string): void;
+
 // @public
 interface WatchFragmentOptions<TData, TVars> {
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
@@ -2947,6 +3040,13 @@ type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
+
+// @public (undocumented)
+type WithValueArgs<TResult, TArgs extends any[], TThis> = [
+callback: (this: TThis, ...args: TArgs) => TResult,
+args?: TArgs | undefined,
+thisArg?: TThis | undefined
+];
 
 // @public (undocumented)
 export function wrapPromiseWithState<TValue>(promise: Promise<TValue>): PromiseWithState<TValue>;

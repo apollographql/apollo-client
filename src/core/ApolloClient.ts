@@ -294,7 +294,7 @@ import type {
   WatchFragmentResult,
 } from "../cache/core/cache.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
-import { warnRemovedOption } from "../utilities/deprecation/index.js";
+import { warnRemovedOption } from "../utilities/index.js";
 export { mergeOptions };
 
 /**

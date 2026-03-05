@@ -8,10 +8,7 @@ import { withSubscription } from "./subscription-hoc.js";
 import type { OperationOption, DataProps, MutateProps } from "./types.js";
 import type { OperationVariables } from "../../core/index.js";
 import { invariant } from "../../utilities/globals/index.js";
-import {
-  muteDeprecations,
-  warnDeprecated,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnDeprecated } from "../../utilities/index.js";
 
 /**
  * @deprecated

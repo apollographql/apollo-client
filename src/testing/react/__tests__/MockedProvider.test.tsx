@@ -11,7 +11,7 @@ import { QueryResult } from "../../../react/types/types";
 import { ApolloLink, FetchResult } from "../../../link/core";
 import { Observable } from "zen-observable-ts";
 import { ApolloError } from "../../../errors";
-import { withDisabledDeprecations } from "../../../utilities/deprecation";
+import { withMutedDeprecations } from "../../internal";
 
 const variables = {
   username: "mock_username",
@@ -872,7 +872,7 @@ describe("General use", () => {
   it("shows a warning in the console when there is no matched mock", async () => {
     const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    using _ = withDisabledDeprecations();
+    using _ = withMutedDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -918,7 +918,7 @@ describe("General use", () => {
 
   it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
     const consoleSpy = jest.spyOn(console, "warn");
-    using _ = withDisabledDeprecations();
+    using _ = withMutedDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -961,7 +961,7 @@ describe("General use", () => {
 
   it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
     const consoleSpy = jest.spyOn(console, "warn");
-    using _ = withDisabledDeprecations();
+    using _ = withMutedDeprecations();
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });

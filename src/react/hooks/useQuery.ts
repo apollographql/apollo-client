@@ -452,7 +452,7 @@ export function useQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken
-): useQuery.Result<TData, Record<string, never>, "empty">;
+): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
 /** {@inheritDoc @apollo/client!~useQuery~DocumentationTypes~useQuery:function(1)} */
 export function useQuery<

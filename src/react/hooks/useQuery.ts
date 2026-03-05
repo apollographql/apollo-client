@@ -214,7 +214,7 @@ function useInternalState<
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         ObservableQuery["inactiveOnCreation"].withValue(!renderPromises, () =>
-          muteDeprecations("canonizeResults", () => {
+          muteDeprecations(["canonizeResults", "partialRefetch"], () => {
             return client.watchQuery(
               getObsQueryOptions(
                 void 0,

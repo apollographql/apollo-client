@@ -10,10 +10,7 @@ import type { ApolloLink } from "../../link/core/index.js";
 import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 import type { DevtoolsOptions } from "../../core/ApolloClient.js";
-import {
-  warnRemovedOption,
-  muteDeprecations,
-} from "../../utilities/deprecation/index.js";
+import { warnRemovedOption, muteDeprecations } from "../../utilities/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;

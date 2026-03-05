@@ -14,10 +14,7 @@ import {
   defaultMapPropsToSkip,
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
-import {
-  muteDeprecations,
-  warnDeprecated,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnDeprecated } from "../../utilities/index.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 /**

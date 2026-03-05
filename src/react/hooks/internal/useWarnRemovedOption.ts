@@ -1,6 +1,6 @@
 import * as React from "rehackt";
-import type { PossibleDeprecations } from "../../../utilities/deprecation/index.js";
-import { warnRemovedOption } from "../../../utilities/deprecation/index.js";
+import type { PossibleDeprecations } from "../../../utilities/index.js";
+import { warnRemovedOption } from "../../../utilities/index.js";
 
 // Remove with Apollo Client 4.0
 export function useWarnRemovedOption<

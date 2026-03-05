@@ -18,7 +18,7 @@ import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 import { invariant } from "../../../utilities/globals/invariantWrappers.js";
 import type { MaybeMasked } from "../../../masking/index.js";
-import { muteDeprecations } from "../../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../../utilities/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>

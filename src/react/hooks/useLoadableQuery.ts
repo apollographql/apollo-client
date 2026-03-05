@@ -33,7 +33,7 @@ import type {
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import { invariant } from "../../utilities/globals/index.js";
-import { muteDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/index.js";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in

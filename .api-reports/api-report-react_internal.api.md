@@ -2648,8 +2648,8 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/react/hooks/useBackgroundQuery.ts:52:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:76:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:70:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:81:5 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:121:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:78:5 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:118:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

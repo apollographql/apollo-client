@@ -199,7 +199,7 @@ export declare namespace useQuery {
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | Options<TVariables>
+      | Options<TData, TVariables>
       | SkipToken,
   > = LazyType<
     Result<
@@ -459,7 +459,7 @@ export function useQuery<
   TData,
   TVariables extends OperationVariables,
   // this overload should never be manually defined, it should always be inferred
-  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+  TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
     VariablesOption<
       TVariables & {
         [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
@@ -481,7 +481,7 @@ export function useQuery<
   TData,
   TVariables extends OperationVariables,
   // this overload should never be manually defined, it should always be inferred
-  TOptions extends useQuery.Options<NoInfer<TVariables>> &
+  TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
     VariablesOption<
       TVariables & {
         [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;

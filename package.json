@@ -86,7 +86,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "node config/build.ts",
-    "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
+    "typecheck": "tsc --project config/tsconfig.json && tsc --noEmit --project tsconfig.json && cd integration-tests/type-tests && npm run test",
     "postinstall": "patch-package",
     "extract-api": "npm run clean && node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc --step=deprecateInternals && npm run extract-api:only",
     "extract-api:only": "node config/apiExtractor.ts --generate apiReport",

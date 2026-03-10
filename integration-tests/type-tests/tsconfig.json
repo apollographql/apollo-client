@@ -35,6 +35,12 @@
     },
     {
       "path": "./defaultOptions/query/errorPolicyIgnore/tsconfig.json"
+    },
+    {
+      "path": "./signatures/modern/tsconfig.json"
+    },
+    {
+      "path": "./signatures/classic/tsconfig.json"
     }
   ],
   "include": [],

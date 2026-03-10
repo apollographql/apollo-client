@@ -16,7 +16,7 @@ export function useWarnRemovedOption<
   const didWarn = React.useRef(false);
 
   if (__DEV__) {
-    if (!didWarn.current) {
+    if (name in options && !didWarn.current) {
       warnRemovedOption(options, name, callSite, recommendation);
 
       // eslint-disable-next-line react-compiler/react-compiler

@@ -749,10 +749,16 @@ You can also use a **partial union** that only lists the values you actually use
 
 ### Signature styles: classic and modern
 
-Apollo Client 4.1 introduces two signature styles for methods and hooks:
+Apollo Client methods and hooks have two signature styles: **classic** and **modern**.
 
-- **Classic signatures** are the signatures that shipped before Apollo Client 4.1. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`). Classic signatures are the default to avoid breaking existing code.
-- **Modern signatures** are the new signatures introduced in 4.1. They take global `defaultOptions` into account and provide more accurate types. However, **modern signatures cannot have generics specified manually**—TypeScript infers them from your document node. Attempting to manually specify generics results in a TypeScript type error.
+- **Classic signatures** are the default and are backward compatible with existing code. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`).
+- **Modern signatures** take global `defaultOptions` into account and provide more accurate return types. They infer types from the document node and do not support manually passing generic type arguments—TypeScript produces a type error if you try.
+
+<Tip>
+
+Avoid manually specifying generic type arguments on Apollo Client hooks and methods. Instead, rely on TypeScript's type inference together with a correctly typed [`TypedDocumentNode`](https://github.com/dotansimha/graphql-typed-document-node). This gives you accurate types without manual annotations and works correctly with both classic and modern signatures.
+
+</Tip>
 
 #### Switching to modern signatures
 
@@ -772,7 +778,7 @@ declare module "@apollo/client" {
 }
 ```
 
-You can also explicitly opt into modern signatures without declaring any `defaultOptions`. This is useful if you want accurate type inference and don't use `defaultOptions`:
+You can also explicitly opt into modern signatures without declaring any `defaultOptions`:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";
@@ -786,7 +792,7 @@ declare module "@apollo/client" {
 
 #### Switching back to classic signatures
 
-If you've declared `DeclareDefaultOptions` (which activates modern signatures automatically) but need to temporarily keep classic signatures for some code during migration, you can explicitly force classic signatures:
+If you've declared `DeclareDefaultOptions` (which activates modern signatures automatically) but need to temporarily keep classic signatures during migration, you can explicitly force classic signatures:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";
@@ -800,7 +806,7 @@ declare module "@apollo/client" {
 
 <Caution>
 
-Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. In this configuration, Apollo Client's methods and hooks produce the same potentially incorrect types as they did before Apollo Client 4.1—they do not reflect the `defaultOptions` you've declared.
+Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. In this configuration, Apollo Client's methods and hooks produce the same potentially incorrect types as they did before Apollo Client 4.2—they do not reflect the `defaultOptions` you've declared.
 
 </Caution>
 

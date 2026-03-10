@@ -95,38 +95,3 @@ With this declaration, the `ApolloClient` constructor accepts any of those value
 Note that making a property optional (`errorPolicy?:`) is equivalent to adding the TypeScript default value (`"none"`) to the union. So `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option could also be absent (i.e., `"none"`).
 
 You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"all"` or `"ignore"`, declare `errorPolicy: "all" | "ignore"` (required) to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
-
-### Classic and modern signatures
-
-Apollo Client 4.1 introduces two signature styles for methods and hooks:
-
-- **Classic signatures** are the signatures that shipped before Apollo Client 4.1. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`). Classic signatures are the default to avoid breaking existing code.
-- **Modern signatures** are the new signatures introduced in 4.1. They take global `defaultOptions` into account and provide more accurate types. However, **modern signatures cannot have generics specified manually**—TypeScript infers them from your document node. Attempting to manually specify generics results in a TypeScript type error.
-
-Once you declare any non-optional property in `DeclareDefaultOptions`, Apollo Client automatically switches all methods and hooks to modern signatures.
-
-You can also explicitly opt into modern signatures without declaring any `defaultOptions`:
-
-```ts
-// apollo.d.ts
-import type {} from "@apollo/client";
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "modern";
-  }
-}
-```
-
-If you've declared `DeclareDefaultOptions` and need to temporarily keep classic signatures during migration, you can force classic signatures:
-
-```ts
-// apollo.d.ts
-import type {} from "@apollo/client";
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "classic";
-  }
-}
-```
-
-Note that using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. Methods and hooks will produce the same potentially incorrect types as before Apollo Client 4.1 and will not reflect the `defaultOptions` you've declared.

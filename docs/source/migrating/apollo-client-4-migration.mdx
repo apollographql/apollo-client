@@ -1840,10 +1840,10 @@ You can also use a **partial union** that only lists the values you actually use
 
 #### Signature styles: classic and modern
 
-Apollo Client 4.1 introduces two signature styles for methods and hooks:
+Apollo Client 4.2 introduces two signature styles for methods and hooks. All signatures present in Apollo Client 4.x before 4.2 are now "classic" signatures. A new set of "modern" signatures are added alongside them.
 
-- **Classic signatures** are the signatures that shipped before Apollo Client 4.1. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`). Classic signatures are the default to avoid breaking existing code.
-- **Modern signatures** are the new signatures introduced in 4.1. They take global `defaultOptions` into account and provide more accurate types. However, **modern signatures cannot have generics specified manually**—TypeScript infers them from your document node. Attempting to manually specify generics results in a TypeScript type error.
+- **Classic signatures** are the default and are backward compatible with existing code. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`).
+- **Modern signatures** take global `defaultOptions` into account and provide more accurate return types. They infer types from the document node and do not support manually passing generic type arguments—TypeScript produces a type error if you attempt to do so.
 
 Once you declare any non-optional property in `DeclareDefaultOptions`, Apollo Client automatically switches to modern signatures. You can also explicitly opt in without declaring `defaultOptions`:
 
@@ -1871,7 +1871,7 @@ declare module "@apollo/client" {
 
 <Caution>
 
-Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. Methods and hooks will produce the same potentially incorrect types as they did before Apollo Client 4.1 and will not reflect the `defaultOptions` you've declared.
+Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. Methods and hooks will produce the same potentially incorrect types as they did before Apollo Client 4.2 and will not reflect the `defaultOptions` you've declared.
 
 </Caution>
 

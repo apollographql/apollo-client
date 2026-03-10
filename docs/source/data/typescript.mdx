@@ -747,6 +747,63 @@ Note that making a property optional (`errorPolicy?:`) is equivalent to adding t
 
 You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"all"` or `"ignore"`, declare `errorPolicy: "all" | "ignore"` (required) to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
 
+### Signature styles: classic and modern
+
+Apollo Client 4.1 introduces two signature styles for methods and hooks:
+
+- **Classic signatures** are the signatures that shipped before Apollo Client 4.1. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`). Classic signatures are the default to avoid breaking existing code.
+- **Modern signatures** are the new signatures introduced in 4.1. They take global `defaultOptions` into account and provide more accurate types. However, **modern signatures cannot have generics specified manually**—TypeScript infers them from your document node. Attempting to manually specify generics results in a TypeScript type error.
+
+#### Switching to modern signatures
+
+Once you declare any non-optional property in `DeclareDefaultOptions`, Apollo Client automatically switches all methods and hooks to modern signatures. No additional configuration is needed:
+
+```ts title="apollo.d.ts"
+import type {} from "@apollo/client";
+
+declare module "@apollo/client" {
+  namespace ApolloClient {
+    namespace DeclareDefaultOptions {
+      interface WatchQuery {
+        errorPolicy: "all"; // non-optional → modern signatures activated automatically
+      }
+    }
+  }
+}
+```
+
+You can also explicitly opt into modern signatures without declaring any `defaultOptions`. This is useful if you want accurate type inference and don't use `defaultOptions`:
+
+```ts title="apollo.d.ts"
+import type {} from "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    signatureStyle: "modern";
+  }
+}
+```
+
+#### Switching back to classic signatures
+
+If you've declared `DeclareDefaultOptions` (which activates modern signatures automatically) but need to temporarily keep classic signatures for some code during migration, you can explicitly force classic signatures:
+
+```ts title="apollo.d.ts"
+import type {} from "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    signatureStyle: "classic";
+  }
+}
+```
+
+<Caution>
+
+Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. In this configuration, Apollo Client's methods and hooks produce the same potentially incorrect types as they did before Apollo Client 4.1—they do not reflect the `defaultOptions` you've declared.
+
+</Caution>
+
 ## Data masking
 
 Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).

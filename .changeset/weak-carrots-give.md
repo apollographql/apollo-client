@@ -67,7 +67,7 @@ new ApolloClient({
 });
 ```
 
-If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change by declaring those options as optional union types covering all values you use:
+If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts
 // apollo.d.ts
@@ -90,6 +90,8 @@ declare module "@apollo/client" {
 }
 ```
 
-With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`, and the `defaultOptions` object becomes optional entirely. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
 
-You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"none"` or `"all"`, declare `errorPolicy?: "none" | "all"` to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
+Note that making a property optional (`errorPolicy?:`) is equivalent to adding the TypeScript default value (`"none"`) to the union. So `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option could also be absent (i.e., `"none"`).
+
+You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"all"` or `"ignore"`, declare `errorPolicy: "all" | "ignore"` (required) to keep the union narrow and avoid unused values broadening your signatures unnecessarily.

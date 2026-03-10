@@ -646,6 +646,9 @@ const client = new ApolloClient({
     watchQuery: {
       errorPolicy: "all",
     },
+    query: {
+      errorPolicy: "all",
+    },
   },
 });
 
@@ -654,6 +657,9 @@ const client = new ApolloClient({
 // even though it can be undefined when an error occurs.
 const result = useSuspenseQuery(MY_QUERY);
 result.data; // Actual runtime type: TData | undefined
+
+const queryResult = await client.query({ query: MY_QUERY });
+queryResult.data; // Actual runtime type: TData | undefined
 ```
 
 With `errorPolicy: "all"` as a default, when a GraphQL error occurs, both `data` and `error` can be present simultaneously. More importantly, `data` can be `undefined` if the error prevents any data from being returned. Without declaring this default option at the type level, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.

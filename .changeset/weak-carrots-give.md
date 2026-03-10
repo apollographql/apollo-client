@@ -67,7 +67,7 @@ new ApolloClient({
 });
 ```
 
-If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
+If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts
 // apollo.d.ts

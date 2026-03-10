@@ -1807,9 +1807,9 @@ Options that can be declared:
 Declaring those options ensures you provide values for them in your `defaultOptions`.
 If you don't declare those options, you can't use certain properties in the `defaultOptions` you pass to the `ApolloClient` constructor (other `defaultOptions` are still allowed).
 
-#### Opting out
+#### Relaxing constraints
 
-If you create multiple Apollo Client instances with conflicting default options and can't declare a single global default, you can opt out by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
+If you create multiple Apollo Client instances with conflicting default options and can't declare a single global default, you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";

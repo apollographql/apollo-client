@@ -67,7 +67,7 @@ new ApolloClient({
 });
 ```
 
-If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change with this global declaration:
+If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change by declaring those options as optional union types covering all values you use:
 
 ```ts
 // apollo.d.ts
@@ -76,18 +76,18 @@ declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
       interface WatchQuery {
-        errorPolicy?: unknown;
-        returnPartialData?: unknown;
+        errorPolicy?: "none" | "all" | "ignore";
+        returnPartialData?: boolean;
       }
       interface Query {
-        errorPolicy?: unknown;
+        errorPolicy?: "none" | "all" | "ignore";
       }
       interface Mutate {
-        errorPolicy?: unknown;
+        errorPolicy?: "none" | "all" | "ignore";
       }
     }
   }
 }
 ```
 
-With this in place, you can use any valid value for `errorPolicy` in `defaultOptions` without TypeScript complaining. However, all methods and hooks will return the broadest possible types for those options—`data` will always be typed as potentially `undefined` and partial data states will always be included in the return type. TypeScript can no longer narrow the return type based on your specific defaults.
+With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`, and the `defaultOptions` object becomes optional entirely. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.

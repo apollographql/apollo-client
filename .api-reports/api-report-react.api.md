@@ -46,6 +46,7 @@ import type { ReactiveVar } from '@apollo/client';
 import type * as ReactTypes from 'react';
 import type { RefetchFunction } from '@apollo/client/react/internal';
 import type { RefetchWritePolicy } from '@apollo/client';
+import type { SignatureStyle } from '@apollo/client/utilities/internal';
 import type { SubscribeToMoreFunction } from '@apollo/client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
@@ -749,63 +750,6 @@ export namespace useMutation {
     ];
 }
 
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-}): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: boolean;
-}): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: boolean;
-})): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), ...[options]: {} extends TVariables ? [
-options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
-] : [options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
-
-// @public @deprecated (undocumented)
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: ClassicSignature & (DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>), ...[options]: {} extends TVariables ? [
-options?: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
-] : [options: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", Partial<TVariables>>;
-
-// @public
-export function useQuery<TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-
-// @public
-export function useQuery<TData, TVariables extends OperationVariables, TOptions extends SkipToken>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, Record<string, never>, "empty">;
-
-// @public
-export function useQuery<TData, TVariables extends OperationVariables, TOptions extends useQuery.Options<NoInfer_2<TVariables>> & VariablesOption<TVariables & {
-    [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-}>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
-TVariables
-] extends [never] ? [options: never] : {} extends TVariables ? [options?: TOptions] : [
-options: TOptions
-]): useQuery.ResultForOptions<TData, TVariables, TOptions>;
-
-// @public
-export function useQuery<TData, TVariables extends OperationVariables, TOptions extends useQuery.Options<NoInfer_2<TVariables>> & VariablesOption<TVariables & {
-    [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-}>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
-TVariables
-] extends [never] ? [options: never] : {} extends TVariables ? [options?: TOptions | SkipToken] : [
-options: TOptions | SkipToken
-]): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
-
 // @public (undocumented)
 export namespace useQuery {
     // (undocumented)
@@ -871,23 +815,92 @@ export namespace useQuery {
     }
     // (undocumented)
     export namespace DocumentationTypes {
-        export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<TData, TVariables>): useQuery.Result<TData, TVariables>;
+        export interface useQuery {
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<TData, TVariables>): useQuery.Result<TData, TVariables>;
+        }
         // @deprecated (undocumented)
-        export function useQuery_Deprecated<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<TData, TVariables>): useQuery.Result<TData, TVariables>;
+        export interface useQuery_Deprecated {
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<TData, TVariables>): useQuery.Result<TData, TVariables>;
+        }
     }
     // (undocumented)
     export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TReturnVariables extends OperationVariables = TVariables> = Base.Result<TData, TVariables, TReturnVariables> & GetDataState<MaybeMasked_2<TData>, TStates>;
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")>>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")>>;
+    // (undocumented)
+    export interface Signature extends Signatures.Evaluated {
+    }
+    // (undocumented)
+    export namespace Signatures {
+        // (undocumented)
+        export interface Classic {
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+            }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+            })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+                returnPartialData: boolean;
+            }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+                returnPartialData: boolean;
+            })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+            ] : [options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+            // (undocumented)
+            <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            options?: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+            ] : [
+            options: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+            ]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", Partial<TVariables>>;
+            // (undocumented)
+            ssrDisabledResult: ObservableQuery.Result<any>;
+        }
+        // (undocumented)
+        export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+        // (undocumented)
+        export interface Modern {
+            // (undocumented)
+            <TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+            // (undocumented)
+            <TData, TVariables extends OperationVariables, TOptions extends SkipToken>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
+            // (undocumented)
+            <TData, TVariables extends OperationVariables, TOptions extends useQuery.Options<TData, NoInfer_2<TVariables>> & VariablesOption<TVariables & {
+                [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+            }>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
+            TVariables
+            ] extends [never] ? [options: never] : {} extends TVariables ? [options?: TOptions] : [
+            options: TOptions
+            ]): useQuery.ResultForOptions<TData, TVariables, TOptions>;
+            // (undocumented)
+            <TData, TVariables extends OperationVariables, TOptions extends useQuery.Options<TData, NoInfer_2<TVariables>> & VariablesOption<TVariables & {
+                [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+            }>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
+            TVariables
+            ] extends [never] ? [options: never] : {} extends TVariables ? [options?: TOptions | SkipToken] : [
+            options: TOptions | SkipToken
+            ]): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
+            // (undocumented)
+            ssrDisabledResult: ObservableQuery.Result<any>;
+        }
+    }
 }
 
 // @public (undocumented)
-export namespace useQuery {
-    var // (undocumented)
-    ssrDisabledResult: ObservableQuery.Result<any, "complete" | "streaming" | "partial" | "empty">;
-}
+export const useQuery: useQuery.Signature;
 
 // @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef_2<TData, TVariables, DataState<TData>["dataState"]>): useQueryRefHandlers.Result<TData, TVariables>;

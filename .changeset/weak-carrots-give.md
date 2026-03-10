@@ -67,7 +67,7 @@ new ApolloClient({
 });
 ```
 
-If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change and use the old behavior with this global declaration:
+If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can opt out of this change with this global declaration:
 
 ```ts
 // apollo.d.ts
@@ -90,4 +90,4 @@ declare module "@apollo/client" {
 }
 ```
 
-With this in place, you can use any valid value for `errorPolicy` in `defaultOptions` without TypeScript complaining, but you revert to the previous behavior, and you will not get type safety for `defaultOptions` anymore.
+With this in place, you can use any valid value for `errorPolicy` in `defaultOptions` without TypeScript complaining. However, all methods and hooks will return the broadest possible types for those options—`data` will always be typed as potentially `undefined` and partial data states will always be included in the return type. TypeScript can no longer narrow the return type based on your specific defaults.

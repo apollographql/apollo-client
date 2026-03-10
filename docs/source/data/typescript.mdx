@@ -643,16 +643,22 @@ The following example demonstrates this behavior and why it is important to also
 const client = new ApolloClient({
   // ...
   defaultOptions: {
-    query: {
+    watchQuery: {
       errorPolicy: "all",
     },
   },
 });
 
-const result = await client.query({ query: MY_QUERY });
+// Without declaring errorPolicy: "all" at the type level,
+// TypeScript incorrectly types `data` as non-nullable,
+// even though it can be undefined when an error occurs.
+const result = useSuspenseQuery(MY_QUERY);
+result.data; // Actual runtime type: TData | undefined
 ```
 
-With `errorPolicy: "all"`, when a GraphQL error occurs, both `data` and `error` can be present simultaneously. More importantly, `data` can be `undefined` if the error prevents any data from being returned. Without declaring this default option at the type level, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.
+With `errorPolicy: "all"` as a default, when a GraphQL error occurs, both `data` and `error` can be present simultaneously. More importantly, `data` can be `undefined` if the error prevents any data from being returned. Without declaring this default option at the type level, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.
+
+> **Note:** The `WatchQuery` interface applies to React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
 
 ### How to declare default options
 
@@ -664,12 +670,15 @@ import type {} from "@apollo/client";
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
+      // Affects React hooks (useQuery, useSuspenseQuery, etc.)
       interface WatchQuery {
         errorPolicy: "all";
       }
+      // Affects client.query()
       interface Query {
         errorPolicy: "all";
       }
+      // Affects client.mutate()
       interface Mutate {
         errorPolicy: "all";
       }
@@ -678,18 +687,20 @@ declare module "@apollo/client" {
 }
 ```
 
-Once declared, results will be typed correctly based on your defaults:
+Once declared, results are typed correctly based on your defaults:
 
 ```ts
-// With errorPolicy: "all" declared as default
-const result = await client.query({ query: MY_QUERY });
-result.data; // Type: TData | undefined
-result.error; // Type: ErrorLike | undefined
+// With WatchQuery.errorPolicy: "all" declared:
+const result1 = useSuspenseQuery(MY_QUERY);
+result1.data; // Type: TData | undefined (data can be absent when an error occurs)
 
-// Override the default to get different types
-const result2 = await client.query({ query: MY_QUERY, errorPolicy: "none" });
-result2.data; // Type: TData
-result2.error; // Type: never
+// Override the default per-call to get different types:
+const result2 = useSuspenseQuery(MY_QUERY, { errorPolicy: "none" });
+result2.data; // Type: TData (data is always present)
+
+// With Query.errorPolicy: "all" declared:
+const result3 = await client.query({ query: MY_QUERY });
+result3.data; // Type: TData | undefined
 ```
 
 Options that can be declared:
@@ -701,7 +712,7 @@ Options that can be declared:
 Declaring those options ensures you provide values for them in your `defaultOptions`.
 If you don't declare those options, TypeScript prevents you from using certain fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`. However, you can still provide other default options.
 
-If you can't declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring options as `unknown`:
+If you can't declare specific global defaults (for example, if you have multiple Apollo Client instances with different default options), you can opt out by declaring those options as optional with a union type, or as `unknown`:
 
 ```ts title="apollo.d.ts"
 import type {} from "@apollo/client";
@@ -725,7 +736,7 @@ declare module "@apollo/client" {
 ```
 
 Doing that allows you to call the `ApolloClient` constructor with any arbitrary `defaultOptions`.
-In that case, all methods and hooks assume that those `defaultOptions` are set to the defaults, so you might get incorrect return values.
+In that case, all methods and hooks return the broadest possible types for those options—for example, `data` is always typed as potentially `undefined` and partial data states are always included. This is because TypeScript can no longer narrow the return type based on your defaults.
 
 ## Data masking
 

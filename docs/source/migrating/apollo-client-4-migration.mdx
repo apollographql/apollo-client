@@ -1751,7 +1751,7 @@ result.data; // Type (wrong in AC3): TData
 
 In reality, with `errorPolicy: "all"`, `data` can be `undefined` when an error occurs. Apollo Client 4 fixes this by requiring you to declare these default options at the type level, ensuring the return types accurately reflect your defaults.
 
-> **Note:** The `WatchQuery` interface applies to React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
+> **Note:** The `WatchQuery` interface applies to React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`) and `client.watchQuery()`. The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
 
 #### How to migrate
 
@@ -1763,7 +1763,7 @@ import type {} from "@apollo/client";
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
-      // Affects React hooks (useQuery, useSuspenseQuery, etc.)
+      // Affects React hooks (useQuery, useSuspenseQuery, etc.) and client.watchQuery()
       interface WatchQuery {
         errorPolicy: "all";
         // Declare returnPartialData if you use it:
@@ -1833,6 +1833,8 @@ declare module "@apollo/client" {
 ```
 
 With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`, and the `defaultOptions` object becomes optional entirely. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+
+You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"none"` or `"all"`, declare `errorPolicy?: "none" | "all"` to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
 
 ## Apollo Link changes
 

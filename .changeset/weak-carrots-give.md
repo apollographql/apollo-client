@@ -91,3 +91,5 @@ declare module "@apollo/client" {
 ```
 
 With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`, and the `defaultOptions` object becomes optional entirely. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+
+You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"none"` or `"all"`, declare `errorPolicy?: "none" | "all"` to keep the union narrow and avoid unused values broadening your signatures unnecessarily.

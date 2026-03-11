@@ -664,7 +664,11 @@ queryResult.data; // Typed by TypeScript as `TData`, actual runtime type: `TData
 
 With `errorPolicy: "all"` as a default, when a GraphQL error occurs, both `data` and `error` can be present simultaneously. More importantly, `data` can be `undefined` if the error prevents any data from being returned. Without declaring this default option at the type level, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.
 
-> **Note:** The `WatchQuery` interface applies to `client.watchQuery()` and React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
+<Note>
+
+The `WatchQuery` interface applies to `client.watchQuery()` and React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
+
+</Note>
 
 ### How to declare default options
 

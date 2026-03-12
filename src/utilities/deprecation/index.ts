@@ -1,10 +1,17 @@
 import { Slot } from "optimism";
 import { invariant, global as untypedGlobal } from "../globals/index.js";
 
-const muteAllDeprecations = Symbol.for("apollo.deprecations");
-const global = untypedGlobal as { [muteAllDeprecations]?: boolean };
+type SlotType<T> =
+  typeof Slot<T> extends new (...args: any[]) => infer T ? T : unknown;
 
-const slot = new Slot<string[]>();
+const muteAllDeprecations = Symbol.for("apollo.deprecations");
+const deprecationsSlot = Symbol.for("apollo.deprecations.slot");
+const global = untypedGlobal as {
+  [muteAllDeprecations]?: boolean;
+  [deprecationsSlot]?: SlotType<string[]>;
+};
+
+const slot = (global[deprecationsSlot] ??= new Slot());
 
 type WithValueArgs<TResult, TArgs extends any[], TThis> = [
   callback: (this: TThis, ...args: TArgs) => TResult,

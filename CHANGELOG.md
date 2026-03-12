@@ -4,11 +4,11 @@
 
 ### Patch Changes
 
-- [#13172](https://github.com/apollographql/apollo-client/pull/13172) [`3155ee9`](https://github.com/apollographql/apollo-client/commit/3155ee92d6eaa0ce10eb2f2074b39fdda976a7fa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where muting a deprecation from one entrypoint would not mute the warning when checked in a different entrypoint. This caused some rogue deprecation warnings to appear in the console even though the warnings should have been muted.
+- [#13168](https://github.com/apollographql/apollo-client/pull/13168) [`6b84ec0`](https://github.com/apollographql/apollo-client/commit/6b84ec02d39a22690ae34113fccf24d59a1142a1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where muting a deprecation from one entrypoint would not mute the warning when checked in a different entrypoint. This caused some rogue deprecation warnings to appear in the console even though the warnings should have been muted.
 
-- [#13172](https://github.com/apollographql/apollo-client/pull/13172) [`3155ee9`](https://github.com/apollographql/apollo-client/commit/3155ee92d6eaa0ce10eb2f2074b39fdda976a7fa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a deprecation message for the `variableMatcher` option in `MockLink`.
+- [#12970](https://github.com/apollographql/apollo-client/pull/12970) [`f91fab5`](https://github.com/apollographql/apollo-client/commit/f91fab505d8c08ce2bd793e8e73e354f8b8e2534) Thanks [@acemir](https://github.com/acemir)! - Add a deprecation message for the `variableMatcher` option in `MockLink`.
 
-- [#13172](https://github.com/apollographql/apollo-client/pull/13172) [`3155ee9`](https://github.com/apollographql/apollo-client/commit/3155ee92d6eaa0ce10eb2f2074b39fdda976a7fa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure deprecation warnings are properly silenced in React hooks when globally disabled.
+- [#13168](https://github.com/apollographql/apollo-client/pull/13168) [`6b84ec0`](https://github.com/apollographql/apollo-client/commit/6b84ec02d39a22690ae34113fccf24d59a1142a1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure deprecation warnings are properly silenced in React hooks when globally disabled.
 
 ## 3.14.0
 

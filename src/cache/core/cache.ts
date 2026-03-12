@@ -36,10 +36,7 @@ import type {
   MaybeMasked,
   Unmasked,
 } from "../../masking/index.js";
-import {
-  muteDeprecations,
-  warnRemovedOption,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnRemovedOption } from "../../utilities/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

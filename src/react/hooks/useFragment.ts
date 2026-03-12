@@ -19,7 +19,7 @@ import {
 } from "./internal/index.js";
 import equal from "@wry/equality";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import { muteDeprecations } from "../../utilities/deprecation/index.js";
+import { muteDeprecations } from "../../utilities/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<

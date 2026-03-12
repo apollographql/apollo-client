@@ -149,3 +149,13 @@ export {
   defaultCacheSizes,
 } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";
+
+export {
+  muteDeprecations,
+  warnRemovedOption,
+  warnDeprecated,
+} from "./deprecation/index.js";
+export type {
+  DeprecationName,
+  PossibleDeprecations,
+} from "./deprecation/index.js";

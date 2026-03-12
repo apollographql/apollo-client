@@ -31,7 +31,12 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
+import {
+  createClientWrapper,
+  setupPaginatedCase,
+  spyOnConsole,
+  withMutedDeprecations,
+} from "../../../testing/internal";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
@@ -13605,6 +13610,41 @@ describe("useQuery Hook", () => {
         });
       }
     });
+  });
+});
+
+describe("deprecations", () => {
+  test("does not warn on deprecated options when deprecations are globally disabled", async () => {
+    using _ = spyOnConsole("warn");
+    using __ = withMutedDeprecations();
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(() => new Observable(() => {})),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useQuery(query, {
+          canonizeResults: true,
+          partialRefetch: true,
+          defaultOptions: {},
+          onCompleted: () => {},
+          onError: () => {},
+        }),
+      { wrapper: createClientWrapper(client) }
+    );
+
+    await expect(takeSnapshot).toRerender();
+
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });
 

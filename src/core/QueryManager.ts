@@ -110,7 +110,7 @@ import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "../masking/index.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
-import { muteDeprecations } from "../utilities/deprecation/index.js";
+import { muteDeprecations } from "../utilities/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;

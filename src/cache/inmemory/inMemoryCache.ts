@@ -34,10 +34,7 @@ import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
-import {
-  muteDeprecations,
-  warnRemovedOption,
-} from "../../utilities/deprecation/index.js";
+import { muteDeprecations, warnRemovedOption } from "../../utilities/index.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,

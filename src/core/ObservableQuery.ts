@@ -46,7 +46,7 @@ import {
   muteDeprecations,
   warnDeprecated,
   warnRemovedOption,
-} from "../utilities/deprecation/index.js";
+} from "../utilities/index.js";
 
 const { assign, hasOwnProperty } = Object;
 

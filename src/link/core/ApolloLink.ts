@@ -14,7 +14,7 @@ import {
   createOperation,
   transformOperation,
 } from "../utils/index.js";
-import { warnDeprecated } from "../../utilities/deprecation/index.js";
+import { warnDeprecated } from "../../utilities/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;

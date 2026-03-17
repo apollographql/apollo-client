@@ -999,7 +999,7 @@ A query is in standby if it is skipped with the `skip` option or `skipToken` in 
 
 </Note>
 
-This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
+This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` when using the `"active"` or `"all"` keywords, as these no longer include `ObservableQuery` instances without subscribers.
 
 ### Removal of the `canonizeResults` option
 

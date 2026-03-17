@@ -13,75 +13,16 @@ import {
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
 import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
-
-declare function test(name: string, test: () => void): void;
-declare function it(name: string, test: () => void): void;
-declare function setupVariablesCase(): {
-  query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
-};
-declare function setupMaskedVariablesCase(): {
-  query: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
-  unmaskedQuery: TypedDocumentNode<
-    UnmaskedVariablesCaseData,
-    VariablesCaseVariables
-  >;
-};
-
-interface VariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
-
-type MaskedVariablesCaseFragment = {
-  __typename: "Character";
-  name: string;
-} & { " $fragmentName"?: "MaskedVariablesCaseFragment" };
-
-export interface MaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-  } & {
-    " $fragmentRefs"?: {
-      MaskedVariablesCaseFragment: MaskedVariablesCaseFragment;
-    };
-  };
-}
-
-export interface UnmaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-declare const query: TypedDocumentNode<
-  VariablesCaseData,
-  VariablesCaseVariables
->;
-declare const maskedQuery: TypedDocumentNode<
+import {
+  it,
+  test,
   MaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-declare const unmaskedQuery: TypedDocumentNode<
   UnmaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-
-declare module "@apollo/client" {
-  export interface TypeOverrides
-    extends GraphQLCodegenDataMasking.TypeOverrides {
-    signatureStyle: "modern";
-  }
-}
+  VariablesCaseData,
+  setupMaskedVariablesCase,
+  setupVariablesCase,
+  VariablesCaseVariables,
+} from "./shared.js";
 
 it("returns unknown when TData cannot be inferred", () => {
   const query = gql`

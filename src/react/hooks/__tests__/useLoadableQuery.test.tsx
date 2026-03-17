@@ -56,7 +56,7 @@ import {
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { getMainDefinition } from "@apollo/client/utilities/internal";
-import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
 import type {
@@ -4699,4 +4699,3 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
     new InvariantError("The query has not been loaded. Please load the query.")
   );
 });
-

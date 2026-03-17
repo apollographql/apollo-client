@@ -8,58 +8,12 @@ import { QueryRef, useLoadableQuery, useReadQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { expectTypeOf } from "expect-type";
-
-declare function it(name: string, test: () => void): void;
-declare function useVariablesQueryCase(): {
-  query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
-};
-
-interface VariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
-
-interface MaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-  };
-}
-
-interface UnmaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-declare const query: TypedDocumentNode<
+import {
+  it,
   VariablesCaseData,
-  VariablesCaseVariables
->;
-declare const maskedQuery: TypedDocumentNode<
-  MaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-declare const unmaskedQuery: TypedDocumentNode<
-  UnmaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "classic";
-  }
-}
-
+  VariablesCaseVariables,
+  useVariablesQueryCase,
+} from "./shared.js";
 it("returns unknown when TData cannot be inferred", () => {
   const query = gql``;
 

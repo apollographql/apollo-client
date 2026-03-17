@@ -3,64 +3,15 @@ import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
 
-declare function test(name: string, test: () => void): void;
-declare function it(name: string, test: () => void): void;
-declare function useVariablesQueryCase(): {
-  query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
-};
-declare function useMaskedVariablesQueryCase(): {
-  query: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
-  unmaskedQuery: TypedDocumentNode<
-    MaskedVariablesCaseData,
-    VariablesCaseVariables
-  >;
-};
-
-interface VariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
-
-interface MaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-  };
-}
-
-interface UnmaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-declare const query: TypedDocumentNode<
-  VariablesCaseData,
-  VariablesCaseVariables
->;
-declare const maskedQuery: TypedDocumentNode<
+import {
+  it,
+  test,
   MaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-declare const unmaskedQuery: TypedDocumentNode<
-  UnmaskedVariablesCaseData,
-  VariablesCaseVariables
->;
+  VariablesCaseData,
+  useVariablesQueryCase,
+  useMaskedVariablesQueryCase,
+} from "./shared.js";
 
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "modern";
-  }
-}
 it("returns unknown when TData cannot be inferred", () => {
   const query = gql`
         query {

@@ -17,7 +17,6 @@ import type {
   DataState,
   ErrorPolicy,
   ObservableQuery,
-  OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
 import {
@@ -46,7 +45,6 @@ import {
   addDelayToMocks,
   createClientWrapper,
   createMockWrapper,
-  setupMaskedVariablesCase,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
@@ -65,10 +63,6 @@ import type {
   RefetchWritePolicy,
   SubscribeToMoreFunction,
 } from "../../../core/watchQueryOptions.js";
-import type {
-  MaskedVariablesCaseData,
-  UnmaskedVariablesCaseData,
-} from "../../../testing/internal/scenarios/index.js";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -6870,4 +6864,3 @@ describe("fetchMore", () => {
     );
   });
 });
-

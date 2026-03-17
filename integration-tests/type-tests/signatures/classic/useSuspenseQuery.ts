@@ -3,64 +3,17 @@ import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
 
-declare function test(name: string, test: () => void): void;
-declare function it(name: string, test: () => void): void;
-declare function useVariablesQueryCase(): {
-  query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
-};
-declare function useMaskedVariablesQueryCase(): {
-  query: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
-  unmaskedQuery: TypedDocumentNode<
-    MaskedVariablesCaseData,
-    VariablesCaseVariables
-  >;
-};
-
-interface VariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
-
-interface MaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-  };
-}
-
-interface UnmaskedVariablesCaseData {
-  character: {
-    __typename: "Character";
-    id: string;
-    name: string;
-  };
-}
-
-declare const query: TypedDocumentNode<
-  VariablesCaseData,
-  VariablesCaseVariables
->;
-declare const maskedQuery: TypedDocumentNode<
+import {
+  it,
+  test,
   MaskedVariablesCaseData,
-  VariablesCaseVariables
->;
-declare const unmaskedQuery: TypedDocumentNode<
   UnmaskedVariablesCaseData,
-  VariablesCaseVariables
->;
+  VariablesCaseData,
+  VariablesCaseVariables,
+  useVariablesQueryCase,
+  useMaskedVariablesQueryCase,
+} from "./shared.js";
 
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "classic";
-  }
-}
 it("returns unknown when TData cannot be inferred", () => {
   const query = gql`
         query {
@@ -2378,10 +2331,10 @@ test("optional variables are optional", () => {
   useSuspenseQuery(query, skip ? skipToken : { variables: { limit: 10 } });
   useSuspenseQuery(
     query,
-    // @ts-expect-error unknown variables
     skip ? skipToken : (
       {
         variables: {
+          // @ts-expect-error unknown variables
           foo: "bar",
         },
       }
@@ -2389,11 +2342,11 @@ test("optional variables are optional", () => {
   );
   useSuspenseQuery(
     query,
-    // @ts-expect-error unknown variables
     skip ? skipToken : (
       {
         variables: {
           limit: 10,
+          // @ts-expect-error unknown variables
           foo: "bar",
         },
       }
@@ -2441,10 +2394,10 @@ test("enforces required variables when TVariables includes required variables", 
   useSuspenseQuery(query, skip ? skipToken : { variables: { id: "1" } });
   useSuspenseQuery(
     query,
-    // @ts-expect-error unknown variables
     skip ? skipToken : (
       {
         variables: {
+          // @ts-expect-error unknown variables
           foo: "bar",
         },
       }
@@ -2452,11 +2405,11 @@ test("enforces required variables when TVariables includes required variables", 
   );
   useSuspenseQuery(
     query,
-    // @ts-expect-error unknown variables
     skip ? skipToken : (
       {
         variables: {
           id: "1",
+          // @ts-expect-error unknown variables
           foo: "bar",
         },
       }

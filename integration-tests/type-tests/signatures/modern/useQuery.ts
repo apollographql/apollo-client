@@ -2,23 +2,7 @@ import { DataValue, gql, TypedDocumentNode } from "@apollo/client";
 import { skipToken, useQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
-import { MockLink } from "@apollo/client/testing";
-
-declare function test(name: string, test: () => void): void;
-interface SimpleCaseData {
-  greeting: string;
-}
-declare const query: TypedDocumentNode<SimpleCaseData, Record<string, never>>;
-declare const mocks: MockLink.MockedResponse<
-  SimpleCaseData,
-  Record<string, any>
->[];
-
-declare module "@apollo/client" {
-  export interface TypeOverrides {
-    signatureStyle: "modern";
-  }
-}
+import { test, simpleQuery as query, SimpleCaseData } from "./shared.js";
 
 test("returns narrowed TData in default case", () => {
   const { data, dataState } = useQuery(query);

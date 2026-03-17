@@ -21,10 +21,10 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
-  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
+  SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import {
@@ -225,7 +225,7 @@ export declare namespace useLazyQuery {
 
   namespace DocumentationTypes {
     namespace useLazyQuery {
-      export import ResultTuple = _self.ResultTuple;
+      export type { ResultTuple };
     }
   }
 
@@ -287,28 +287,123 @@ export declare namespace useLazyQuery {
      * @param options - Default options to control how the query is executed.
      * @returns A tuple in the form of `[execute, result]`
      */
-    export function useLazyQuery<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    >(
-      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-      options: useLazyQuery.Options<TData, TVariables>
-    ): useLazyQuery.ResultTuple<TData, TVariables>;
+    export interface useLazyQuery {
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<TData, TVariables>
+      ): useLazyQuery.ResultTuple<TData, TVariables>;
+    }
 
     /**
      * @deprecated Avoid manually specifying generics on `useLazyQuery`.
      * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
      *
-     * {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery:function(1)}
+     * {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)}
      */
-    export function useLazyQuery_Deprecated<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    >(
-      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-      options: useLazyQuery.Options<TData, TVariables>
-    ): useLazyQuery.ResultTuple<TData, TVariables>;
+    export interface useLazyQuery_Deprecated {
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<TData, TVariables>
+      ): useLazyQuery.ResultTuple<TData, TVariables>;
+    }
   }
+
+  export namespace Signatures {
+    /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+    export interface Classic {
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+          returnPartialData: true;
+        }
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+          returnPartialData: boolean;
+        }
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming"
+      >;
+    }
+
+    /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+    export interface Modern {
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>
+      ): useLazyQuery.ResultForOptions<
+        TData,
+        TVariables,
+        Record<string, never>
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends useLazyQuery.Options<
+          NoInfer<TData>,
+          NoInfer<TVariables>
+        > & {
+          variables?: {
+            [K in Exclude<
+              keyof TOptions["variables"],
+              keyof TVariables
+            >]?: never;
+          };
+        },
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: TOptions
+      ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
+    }
+
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+  }
+
+  /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+  export interface Signature extends Signatures.Evaluated {}
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -322,78 +417,10 @@ const EAGER_METHODS = [
   "subscribeToMore",
 ] as const;
 
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: ClassicSignature &
-    (DocumentNode | TypedDocumentNode<TData, TVariables>),
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
+export const useLazyQuery: useLazyQuery.Signature =
+  useLazyQueryImplementation as any;
 
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: ClassicSignature &
-    (DocumentNode | TypedDocumentNode<TData, TVariables>),
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery_Deprecated:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: ClassicSignature &
-    (DocumentNode | TypedDocumentNode<TData, TVariables>),
-  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming"
->;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery:function(1)} */
-export function useLazyQuery<
-  TData,
-  TVariables extends OperationVariables,
-  // this overload should never be manually defined, it should always be inferred
-  TOptions extends never,
->(
-  query: {} extends TVariables ?
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  : // this overload should only be accessible if all `TVariables` are optional
-    never
-): useLazyQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-
-/** {@inheritDoc @apollo/client!~useLazyQuery~DocumentationTypes~useLazyQuery:function(1)} */
-export function useLazyQuery<
-  TData,
-  TVariables extends OperationVariables,
-  // this overload should never be manually defined, it should always be inferred
-  TOptions extends useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ? [options?: TOptions]
-  : [options: TOptions]
-): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
-
-export function useLazyQuery<
+function useLazyQueryImplementation<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],

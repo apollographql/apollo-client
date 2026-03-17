@@ -1,10 +1,21 @@
 import { TypedDocumentNode } from "@apollo/client";
 import type { GraphQLCodegenDataMasking } from "@apollo/client/masking";
-import { MockLink } from "../../../../src/testing/index.js";
+import { MockLink } from "@apollo/client/testing";
+import type { HKT } from "@apollo/client/utilities";
+
+// This type override is used in tests only so we can differentiate between
+// `TData` and `Streaming<TData>` in our type tests. This file doesn't make it
+// into the final build, so it doesn't affect the userland behavior of the library.
+
+type StreamingOverride<TData> = TData & { __streaming?: true };
+interface StreamingOverrideHKT extends HKT {
+  return: StreamingOverride<this["arg1"]>;
+}
 
 declare module "@apollo/client" {
   export interface TypeOverrides
     extends GraphQLCodegenDataMasking.TypeOverrides {
+    Streaming: StreamingOverrideHKT;
     signatureStyle: "modern";
   }
 }
@@ -84,6 +95,10 @@ export declare const simpleMocks: MockLink.MockedResponse<
   SimpleCaseData,
   Record<string, any>
 >[];
+export declare function setupSimpleCase(): {
+  query: TypedDocumentNode<SimpleCaseData, Record<string, never>>;
+  mocks: MockLink.MockedResponse<SimpleCaseData, Record<string, any>>[];
+};
 
 export declare function useMaskedVariablesQueryCase(): {
   query: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;

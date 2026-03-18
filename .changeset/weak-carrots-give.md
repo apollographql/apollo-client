@@ -16,7 +16,7 @@ result2.data;
 //      ^? TData | undefined
 ```
 
-While this was generally correct, if you were to register `errorPolicy: 'all'` as a default option for `MY_QUERY`, the type of `result.data` in the first case would still be `TData`, which is not correct - in reality it could also be `undefined`.
+While this was generally correct, if you were to register `errorPolicy: 'all'` as a default option for all queries, the type of `result.data` in the first case would still be `TData`, which is not correct - in reality it could also be `undefined`.
 
 With this change, we are now enforcing that certain `defaultOptions` need to be registered globally on a type level.
 This means that if you want to use `errorPolicy: 'all'` as a default option for a query, you will need to register it globally like this:

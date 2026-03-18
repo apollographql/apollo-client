@@ -2,7 +2,7 @@ import type { ApolloClient, TypeOverrides } from "@apollo/client";
 
 /**
  * Signature style used for `ApolloClient` methods and hooks.
- * Classic signatures are method signatures in place until 4.1
+ * Classic signatures are method signatures in place until 4.1.
  * Modern signatures are the method signatures introduced in 4.1,
  * which are more accurate and take global `defaultOptions` into account.
  * Modern signatures need to be inferred and cannot have manually specified

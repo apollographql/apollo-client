@@ -870,7 +870,11 @@ export class ApolloClient {
     this.link = link;
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || ({} as DefaultOptions);
+    // `DefaultOptions.Input` and `DefaultOptions` are inherently incompatible,
+    // as the `.Input` type restricts certain values from being passed in if not
+    // configured globally.
+    // Without those, it's compatible though so it is fine to cast.
+    this.defaultOptions = (defaultOptions || {}) as unknown as DefaultOptions;
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? __DEV__,
@@ -1039,9 +1043,7 @@ export class ApolloClient {
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(
-        this.defaultOptions.watchQuery as Partial<
-          ApolloClient.WatchQueryOptions<TData, TVariables>
-        >,
+        this.defaultOptions.watchQuery as typeof options,
         options
       );
     }
@@ -1088,8 +1090,7 @@ export class ApolloClient {
   ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(
-        // @ts-expect-error
-        this.defaultOptions.query,
+        this.defaultOptions.query as typeof options,
         options
       );
     }
@@ -1162,10 +1163,9 @@ export class ApolloClient {
           errorPolicy: "none" as ErrorPolicy,
         },
         this.defaultOptions.mutate
-      ),
-      // @ts-expect-error
+      ) as typeof options,
       options
-    ) as ApolloClient.MutateOptions<TData, TVariables, TCache> & {
+    ) satisfies typeof options as typeof options & {
       fetchPolicy: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
     };

@@ -26,28 +26,30 @@ export interface DefaultOptionsParentObject
      *
      * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
      */
-    defaultOptions?: ApolloClient.DefaultOptions;
+    defaultOptions?: ApolloClient.DefaultOptions.Input;
   }> {}
 
 /**
  * Possible default options for ApolloClient instances.
  */
 // This is the calculated type from any possible additions to `DeclareDefaultOptions`.
-export interface DefaultOptions
-  extends RequirePropertiesWithRequiredKeys<{
-    watchQuery?: DefaultOptions.WatchQuery;
-    query?: DefaultOptions.Query;
-    mutate?: DefaultOptions.Mutate;
-  }> {}
+export interface DefaultOptions {
+  watchQuery?: DefaultOptions.WatchQuery;
+  query?: DefaultOptions.Query;
+  mutate?: DefaultOptions.Mutate;
+}
 
 export declare namespace DefaultOptions {
-  export interface WatchQuery
-    extends RequireDefaultOptionDeclarations<
-      PossibleDefaultOptions.WatchQuery,
-      DeclareDefaultOptions.WatchQuery,
-      "watchQuery",
-      "errorPolicy" | "returnPartialData"
-    > {}
+  export interface Input
+    extends RequirePropertiesWithRequiredKeys<{
+      watchQuery?: DefaultOptions.WatchQuery.Input;
+      query?: DefaultOptions.Query.Input;
+      mutate?: DefaultOptions.Mutate.Input;
+    }> {}
+
+  type _WatchQuery = DefaultOptions.WatchQuery.Input &
+    PossibleDefaultOptions.WatchQuery;
+  export interface WatchQuery extends _WatchQuery {}
   export namespace WatchQuery {
     export type Calculated = Calculate<
       ApolloClient.DeclareDefaultOptions.WatchQuery,
@@ -56,15 +58,18 @@ export declare namespace DefaultOptions {
         returnPartialData: false;
       }
     >;
+
+    export interface Input
+      extends RequireDefaultOptionDeclarations<
+        PossibleDefaultOptions.WatchQuery,
+        DeclareDefaultOptions.WatchQuery,
+        "watchQuery",
+        "errorPolicy" | "returnPartialData"
+      > {}
   }
 
-  export interface Query
-    extends RequireDefaultOptionDeclarations<
-      PossibleDefaultOptions.Query,
-      DeclareDefaultOptions.Query,
-      "query",
-      "errorPolicy"
-    > {}
+  type _Query = DefaultOptions.Query.Input & PossibleDefaultOptions.Query;
+  export interface Query extends _Query {}
   export namespace Query {
     export type Calculated = Calculate<
       ApolloClient.DeclareDefaultOptions.Query,
@@ -72,15 +77,18 @@ export declare namespace DefaultOptions {
         errorPolicy: "none";
       }
     >;
+
+    export interface Input
+      extends RequireDefaultOptionDeclarations<
+        PossibleDefaultOptions.Query,
+        DeclareDefaultOptions.Query,
+        "query",
+        "errorPolicy"
+      > {}
   }
 
-  export interface Mutate
-    extends RequireDefaultOptionDeclarations<
-      PossibleDefaultOptions.Mutate,
-      DeclareDefaultOptions.Mutate,
-      "mutate",
-      "errorPolicy"
-    > {}
+  type _Mutate = DefaultOptions.Mutate.Input & PossibleDefaultOptions.Mutate;
+  export interface Mutate extends _Mutate {}
   export namespace Mutate {
     export type Calculated = Calculate<
       ApolloClient.DeclareDefaultOptions.Mutate,
@@ -88,6 +96,14 @@ export declare namespace DefaultOptions {
         errorPolicy: "none";
       }
     >;
+
+    export interface Input
+      extends RequireDefaultOptionDeclarations<
+        PossibleDefaultOptions.Mutate,
+        DeclareDefaultOptions.Mutate,
+        "mutate",
+        "errorPolicy"
+      > {}
   }
 }
 
@@ -105,9 +121,10 @@ type Calculate<UserDefaults, BaseDefaults> = {
  */
 export declare namespace PossibleDefaultOptions {
   export interface WatchQuery
-    extends ApolloClient.WatchQueryOptions<any, any> {}
-  export interface Query extends ApolloClient.QueryOptions<any, any> {}
-  export interface Mutate extends ApolloClient.MutateOptions<any, any, any> {}
+    extends Partial<ApolloClient.WatchQueryOptions<any, any>> {}
+  export interface Query extends Partial<ApolloClient.QueryOptions<any, any>> {}
+  export interface Mutate
+    extends Partial<ApolloClient.MutateOptions<any, any, any>> {}
 }
 
 type RequireDefaultOptionDeclarations<

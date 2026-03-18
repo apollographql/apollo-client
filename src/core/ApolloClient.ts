@@ -20,9 +20,9 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  ClassicSignature,
   LazyType,
   OptionWithFallback,
+  SignatureStyle,
   VariablesOption,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -310,6 +310,51 @@ export declare namespace ApolloClient {
           ErrorPolicy
       >
     >;
+    export namespace Signatures {
+      export interface Classic {
+        /**
+         * @deprecated Avoid manually specifying generics on `client.query`.
+         * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+         *
+         * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
+         */
+        <
+          TData = unknown,
+          TVariables extends OperationVariables = OperationVariables,
+        >(
+          options: ApolloClient.QueryOptions<TData, TVariables>
+        ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+      }
+      export interface Modern {
+        /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */
+        <
+          TData,
+          TVariables extends OperationVariables,
+          // this overload should never be manually defined, it should always be inferred
+          TOptions extends ApolloClient.QueryOptions<
+            NoInfer<TData>,
+            NoInfer<TVariables>
+          > &
+            VariablesOption<
+              TVariables & {
+                [K in Exclude<
+                  keyof TOptions["variables"],
+                  keyof TVariables
+                >]?: never;
+              }
+            >,
+        >(
+          options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
+        ): Promise<
+          ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>
+        >;
+      }
+
+      export type Evaluated =
+        SignatureStyle extends "classic" ? Classic : Modern;
+    }
+    /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */
+    export interface Signature extends Signatures.Evaluated {}
   }
 
   /**
@@ -1051,43 +1096,13 @@ export class ApolloClient {
     return this.queryManager.watchQuery<TData, TVariables>(options);
   }
 
-  /**
-   * @deprecated Avoid manually specifying generics on `client.query`.
-   * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-   *
-   * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
-   */
-  public query<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
-    options: ClassicSignature & ApolloClient.QueryOptions<TData, TVariables>
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
-
   /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */
-  public query<
-    TData,
-    TVariables extends OperationVariables,
-    // this overload should never be manually defined, it should always be inferred
-    TOptions extends ApolloClient.QueryOptions<
-      NoInfer<TData>,
-      NoInfer<TVariables>
-    > &
-      VariablesOption<
-        TVariables & {
-          [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-        }
-      >,
-  >(
-    options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
-  ): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
-
-  public query<
+  public query: ApolloClient.query.Signature = <
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.QueryOptions<TData, TVariables>
-  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>> => {
     if (this.defaultOptions.query) {
       options = mergeOptions(
         this.defaultOptions.query as typeof options,
@@ -1139,7 +1154,7 @@ export class ApolloClient {
     }
 
     return this.queryManager.query<TData, TVariables>(options);
-  }
+  };
 
   /**
    * This resolves a single mutation according to the options specified and returns a

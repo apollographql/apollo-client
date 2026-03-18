@@ -23,7 +23,7 @@ This means that if you want to use `errorPolicy: 'all'` as a default option for 
 
 ```ts
 // apollo.d.ts
-import type {} from "@apollo/client";
+import "@apollo/client";
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
@@ -71,7 +71,7 @@ If you are creating multiple instances of Apollo Client with conflicting default
 
 ```ts
 // apollo.d.ts
-import type {} from "@apollo/client";
+import "@apollo/client";
 declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {

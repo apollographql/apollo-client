@@ -675,7 +675,7 @@ The `WatchQuery` interface applies to `client.watchQuery()` and React hooks (`us
 Declare your default options using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `ApolloClient.DeclareDefaultOptions` namespace. Create a TypeScript declaration file in your project:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -725,7 +725,7 @@ If you don't declare those options, TypeScript prevents you from using certain f
 If you can't declare a single global default (for example, if you have multiple Apollo Client instances with different default options), you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -769,7 +769,7 @@ Avoid manually specifying generic type arguments on Apollo Client hooks and meth
 Once you declare any non-optional property in `DeclareDefaultOptions`, Apollo Client automatically switches all methods and hooks to modern signatures. No additional configuration is needed:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -785,7 +785,7 @@ declare module "@apollo/client" {
 You can also explicitly opt into modern signatures without declaring any `defaultOptions`:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   export interface TypeOverrides {
@@ -799,7 +799,7 @@ declare module "@apollo/client" {
 If you've declared `DeclareDefaultOptions` (which activates modern signatures automatically) but need to temporarily keep classic signatures during migration, you can explicitly force classic signatures:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   export interface TypeOverrides {

@@ -1758,7 +1758,7 @@ In reality, with `errorPolicy: "all"`, `data` can be `undefined` when an error o
 If you use `errorPolicy` or `returnPartialData` in your `defaultOptions`, declare them globally in a TypeScript declaration file:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -1812,7 +1812,7 @@ If you don't declare those options, you can't use certain properties in the `def
 If you create multiple Apollo Client instances with conflicting default options and can't declare a single global default, you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   namespace ApolloClient {
@@ -1848,7 +1848,7 @@ Apollo Client 4.2 introduces two signature styles for methods and hooks. All sig
 Once you declare any non-optional property in `DeclareDefaultOptions`, Apollo Client automatically switches to modern signatures. You can also explicitly opt in without declaring `defaultOptions`:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   export interface TypeOverrides {
@@ -1860,7 +1860,7 @@ declare module "@apollo/client" {
 If you've declared `DeclareDefaultOptions` and need to temporarily keep classic signatures during migration, you can force classic signatures:
 
 ```ts title="apollo.d.ts"
-import type {} from "@apollo/client";
+import "@apollo/client";
 
 declare module "@apollo/client" {
   export interface TypeOverrides {

@@ -14,7 +14,7 @@ Methods and hooks automatically switch to modern signatures the moment any non-o
 
 ```ts
 // apollo.d.ts
-import type {} from "@apollo/client";
+import "@apollo/client";
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
@@ -30,7 +30,7 @@ Users can also manually switch to modern signatures without declaring any `defau
 
 ```ts
 // apollo.d.ts
-import type {} from "@apollo/client";
+import "@apollo/client";
 declare module "@apollo/client" {
   export interface TypeOverrides {
     signatureStyle: "modern";
@@ -42,7 +42,7 @@ Users can do a global `DeclareDefaultOptions` type augmentation and then manuall
 
 ```ts
 // apollo.d.ts
-import type {} from "@apollo/client";
+import "@apollo/client";
 declare module "@apollo/client" {
   export interface TypeOverrides {
     signatureStyle: "classic";

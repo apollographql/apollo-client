@@ -5,8 +5,8 @@ import type { ApolloClient, TypeOverrides } from "@apollo/client";
  * Classic signatures are method signatures in place until 4.1.
  * Modern signatures are the method signatures introduced in 4.1,
  * which are more accurate and take global `defaultOptions` into account.
- * Modern signatures need to be inferred and cannot have manually specified
- * generics, so we want users to opt into them, either by explicitly declaring
+ * Modern signatures require type inference and don't allow manually specified
+ * generic arguments. Users need to opt into them, either by explicitly declaring
  * their signature style or by using `defaultOptions`.
  */
 export type SignatureStyle =

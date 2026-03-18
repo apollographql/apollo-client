@@ -4,6 +4,7 @@
 .agents/skills/apollo-client
 .github/instructions/docs.instructions.md
 .github/skills/apollo-client
+skills-lock.json
 
 # fs
 .DS_Store

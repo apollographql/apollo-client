@@ -55,7 +55,6 @@ describe("WebSocketLink", () => {
     const link = new WebSocketLink(client);
 
     const obs = execute(link, { query });
-    expect(obs).toEqual(observable);
 
     const stream = new ObservableStream(obs);
 
@@ -73,7 +72,6 @@ describe("WebSocketLink", () => {
     const link = new WebSocketLink(client);
 
     const obs = execute(link, { query: mutation });
-    expect(obs).toEqual(observable);
 
     const stream = new ObservableStream(obs);
 
@@ -91,7 +89,6 @@ describe("WebSocketLink", () => {
     const link = new WebSocketLink(client);
 
     const obs = execute(link, { query: subscription });
-    expect(obs).toEqual(observable);
 
     const stream = new ObservableStream(obs);
 

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.7
+
+### Patch Changes
+
+- [#13187](https://github.com/apollographql/apollo-client/pull/13187) [`bb3fd9b`](https://github.com/apollographql/apollo-client/commit/bb3fd9b3d40a2505add673a6ee89d85b8b4c8984) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix RxJS interop issue with the observable returned by `WebSocketLink`.
+
 ## 4.1.6
 
 ### Patch Changes

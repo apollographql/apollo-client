@@ -132,6 +132,8 @@ interface ProcessSelectionSetOptions {
   context: WriteContext;
   mergeTree: MergeTree;
   path: Array<string | number>;
+  field?: FieldNode;
+  parentTypename?: string;
 }
 
 export class StoreWriter {
@@ -276,6 +278,8 @@ export class StoreWriter {
     // to its callers without explicitly returning that information.
     mergeTree,
     path: currentPath,
+    field: parentField,
+    parentTypename,
   }: ProcessSelectionSetOptions): StoreObject | Reference {
     const { policies } = this.cache;
 
@@ -293,6 +297,35 @@ export class StoreWriter {
 
     if ("string" === typeof typename) {
       incoming.__typename = typename;
+    }
+
+    // If we were called from within an array field (parentField is set), check
+    // whether this object's type has a type-level merge function that is not
+    // already overridden by a field-level merge on the parent field. If so,
+    // register it on mergeTree.info now, so that applyMerges will call it for
+    // this element — even though this element was reached via an array and the
+    // parent's processSelectionSet loop would not set childTree.info for it.
+    if (parentField && !mergeTree.info) {
+      const fieldMerge = policies.getMergeFunction(
+        parentTypename,
+        parentField.name.value,
+        undefined
+      );
+      if (!fieldMerge) {
+        const typeMerge = policies.getMergeFunction(
+          parentTypename,
+          parentField.name.value,
+          typename
+        );
+        if (typeMerge) {
+          mergeTree.info = {
+            field: parentField,
+            typename: parentTypename,
+            merge: typeMerge,
+            path: currentPath,
+          };
+        }
+      }
     }
 
     // This readField function will be passed as context.readField in the
@@ -366,7 +399,8 @@ export class StoreWriter {
             getContextFlavor(context, false, false)
           : context,
           childTree,
-          path
+          path,
+          typename
         );
 
         // To determine if this field holds a child object with a merge function
@@ -510,7 +544,8 @@ export class StoreWriter {
     field: FieldNode,
     context: WriteContext,
     mergeTree: MergeTree,
-    path: Array<string | number>
+    path: Array<string | number>,
+    parentTypename?: string
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -526,7 +561,8 @@ export class StoreWriter {
           field,
           context,
           getChildMergeTree(mergeTree, i),
-          [...path, i]
+          [...path, i],
+          parentTypename
         );
         maybeRecycleChildMergeTree(mergeTree, i);
         return value;
@@ -539,6 +575,8 @@ export class StoreWriter {
       context,
       mergeTree,
       path,
+      field,
+      parentTypename,
     });
   }
 

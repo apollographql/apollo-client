@@ -6346,4 +6346,157 @@ describe("type policies", function () {
       __typename: "RootSubscription",
     });
   });
+
+  describe("type-level merge functions called for nested array items", () => {
+    it("calls type-level merge function for items returned in an array field", () => {
+      const mergeCallArgs: Array<{ existing: any; incoming: any }> = [];
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Item: {
+            merge(existing, incoming) {
+              mergeCallArgs.push({ existing, incoming });
+              return { ...existing, ...incoming };
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          items {
+            id
+            value
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          items: [
+            { __typename: "Item", id: 1, value: "a" },
+            { __typename: "Item", id: 2, value: "b" },
+          ],
+        },
+      });
+
+      expect(mergeCallArgs.length).toBe(2);
+      expect(mergeCallArgs[0].existing).toBeUndefined();
+      expect(mergeCallArgs[0].incoming).toMatchObject({ __ref: "Item:1" });
+      expect(mergeCallArgs[1].existing).toBeUndefined();
+      expect(mergeCallArgs[1].incoming).toMatchObject({ __ref: "Item:2" });
+
+      cache.writeQuery({
+        query,
+        data: {
+          items: [
+            { __typename: "Item", id: 1, value: "a-updated" },
+            { __typename: "Item", id: 2, value: "b-updated" },
+          ],
+        },
+      });
+
+      expect(mergeCallArgs.length).toBe(4);
+      expect(mergeCallArgs[2].incoming).toMatchObject({ __ref: "Item:1" });
+      expect(mergeCallArgs[3].incoming).toMatchObject({ __ref: "Item:2" });
+
+      expect(cache.readQuery({ query })).toEqual({
+        items: [
+          { __typename: "Item", id: 1, value: "a-updated" },
+          { __typename: "Item", id: 2, value: "b-updated" },
+        ],
+      });
+    });
+
+    it("calls type-level merge function for items in arrays within nested objects", () => {
+      const mergeCallArgs: Array<{ existing: any; incoming: any }> = [];
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Item: {
+            merge(existing, incoming) {
+              mergeCallArgs.push({ existing, incoming });
+              return { ...existing, ...incoming };
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          groups {
+            id
+            items {
+              id
+              value
+            }
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          groups: [
+            {
+              __typename: "Group",
+              id: "g1",
+              items: [
+                { __typename: "Item", id: 1, value: "a" },
+                { __typename: "Item", id: 2, value: "b" },
+              ],
+            },
+          ],
+        },
+      });
+
+      expect(mergeCallArgs.length).toBe(2);
+      expect(mergeCallArgs[0].incoming).toMatchObject({ __ref: "Item:1" });
+      expect(mergeCallArgs[1].incoming).toMatchObject({ __ref: "Item:2" });
+
+      expect(cache.readQuery({ query })).toEqual({
+        groups: [ {
+          __typename: "Group",
+          id: "g1",
+          items: [
+          { __typename: "Item", id: 1, value: "a" },
+          { __typename: "Item", id: 2, value: "b" },
+        ],
+      }
+      ]
+      });
+
+      cache.writeQuery({
+        query,
+        data: {
+          groups: [
+            {
+              __typename: "Group",
+              id: "g1",
+              items: [
+                { __typename: "Item", id: 1, value: "a-updated" },
+                { __typename: "Item", id: 2, value: "b-updated" },
+              ],
+            },
+          ],
+        },
+      });
+
+      expect(mergeCallArgs.length).toBe(4);
+      expect(mergeCallArgs[2].incoming).toMatchObject({ __ref: "Item:1" });
+      expect(mergeCallArgs[3].incoming).toMatchObject({ __ref: "Item:2" });
+      expect(cache.readQuery({ query })).toEqual({
+        groups: [ {
+          __typename: "Group",
+          id: "g1",
+          items: [
+          { __typename: "Item", id: 1, value: "a-updated" },
+          { __typename: "Item", id: 2, value: "b-updated" },
+        ],
+      }
+      ]
+      });
+    });
+  });
 });

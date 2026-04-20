@@ -631,17 +631,16 @@ const customLink = new ApolloLink((operation, forward) => {
 
 <MinVersion version="4.2">
 
-## Declaring default options for type safety
+## Declaring default options types
 
 </MinVersion>
 
 Certain default options can affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`.
 When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.
 
-### Why to declare default options
+### Why you need to declare default options
 
-Defining default options can alter the return type of hooks and client methods.
-The following example demonstrates this behavior and why it is important to also declare these default options at the type level:
+Defining default options can alter the return type of hooks and client methods. The following example demonstrates this behavior and why it is important to also declare these default options at the type level:
 
 ```tsx
 const client = new ApolloClient({
@@ -656,9 +655,9 @@ const client = new ApolloClient({
   },
 });
 
-// Without declaring errorPolicy: "all" at the type level,
+// Without declaring errorPolicy: "all" as a default options type,
 // TypeScript incorrectly types `data` as non-nullable,
-// even though it can be undefined when an error occurs.
+// even though it might be undefined at runtime when an error occurs.
 const result = useSuspenseQuery(MY_QUERY);
 result.data; // Typed by TypeScript as `TData`, actual runtime type: `TData | undefined`
 
@@ -666,17 +665,17 @@ const queryResult = await client.query({ query: MY_QUERY });
 queryResult.data; // Typed by TypeScript as `TData`, actual runtime type: `TData | undefined`
 ```
 
-With `errorPolicy: "all"` as a default, when a GraphQL error occurs, both `data` and `error` can be present simultaneously. More importantly, `data` can be `undefined` if the error prevents any data from being returned. Without declaring this default option at the type level, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.
+When the default `errorPolicy` is set to `"all"` and a GraphQL error occurs, both `data` and `error` might be present simultaneously. More importantly, `data` might be `undefined` when the error prevents `data` from being returned. Without declaring this default option type, TypeScript would incorrectly type `data` as non-nullable, leading to potential runtime errors.
 
 <Note>
 
-The `WatchQuery` interface applies to `client.watchQuery()` and React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()` and the `Mutate` interface applies to `client.mutate()`. These are separate and do not affect each other.
+The `WatchQuery` interface applies to `client.watchQuery()`, `preloadQuery`, and all query-based React hooks (`useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, `useLazyQuery`). The `Query` interface applies to `client.query()`. The `Mutate` interface applies to `client.mutate()` and `useMutation`. These types are separate and do not affect each other.
 
 </Note>
 
 ### How to declare default options
 
-Declare your default options using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `ApolloClient.DeclareDefaultOptions` namespace. Create a TypeScript declaration file in your project:
+Declare your default options using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) using the `ApolloClient.DeclareDefaultOptions` namespace. Create a TypeScript declaration file in your project:
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";
@@ -701,6 +700,27 @@ declare module "@apollo/client" {
 }
 ```
 
+Then update the instantiation of your `ApolloClient` instance to provide default options:
+
+```ts
+import { ApolloClient } from "@apollo/client";
+
+export const client = new ApolloClient({
+  // ...
+  defaultOptions: {
+    watchQuery: {
+      errorPolicy: "all",
+    },
+    query: {
+      errorPolicy: "all",
+    },
+    mutate: {
+      errorPolicy: "all",
+    },
+  },
+});
+```
+
 Once declared, results are typed correctly based on your defaults:
 
 ```ts
@@ -723,10 +743,9 @@ The following default options can be declared in `ApolloClient.DeclareDefaultOpt
 - **`Query`**: `errorPolicy`
 - **`Mutate`**: `errorPolicy`
 
-Declaring those options ensures you provide values for them in your `defaultOptions`.
-If you don't declare those options, TypeScript prevents you from using certain fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`. However, you can still provide other default options.
+Declaring default options types ensures you provide runtime values for them in your `defaultOptions`. If you don't declare these default options types, TypeScript prevents you from using certain fields (for example, `errorPolicy` or `returnPartialData`) in the `ApolloClient` constructor's `defaultOptions`. However, you can provide other default options without error.
 
-If you can't declare a single global default (for example, if you have multiple Apollo Client instances with different default options), you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
+If you can't declare a single global default, for example when you have multiple Apollo Client instances with different default options, you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls don't provide `defaultOptions`):
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";
@@ -749,9 +768,13 @@ declare module "@apollo/client" {
 }
 ```
 
-With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+With this type declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic. For example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
 
-Note that making a property optional (`errorPolicy?:`) is equivalent to adding the TypeScript default value (`"none"`) to the union. So `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option could also be absent (i.e., `"none"`).
+<Note>
+
+Marking a property as optional (e.g. `errorPolicy?:`) is equivalent to adding Apollo Client's default value type to the union. For example, `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option might be absent and use Apollo Client's default `errorPolicy` value of `"none"`.
+
+</Note>
 
 You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"all"` or `"ignore"`, declare `errorPolicy: "all" | "ignore"` (required) to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
 
@@ -759,12 +782,12 @@ You can also use a **partial union** that only lists the values you actually use
 
 Apollo Client methods and hooks have two signature styles: **classic** and **modern**.
 
-- **Classic signatures** are the default and are backward compatible with existing code. They support manually specifying TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`).
-- **Modern signatures** take global `defaultOptions` into account and provide more accurate return types. They infer types from the document node and do not support manually passing generic type arguments—TypeScript produces a type error if you try.
+- **Classic signatures** are the default and are backward compatible with existing code. They support manually specifying TypeScript generic arguments to provide operation and variable types (e.g., `useSuspenseQuery<MyData, MyVariables>(...)`). Classic signatures aren't compatible with default options types and don't use them for return types.
+- **Modern signatures** use default options types to provide accurate return types for clients that use `defaultOptions`. They support type inference from the GraphQL document type to provide operation and variable types. Modern signatures aren't compatible with generic arguments and result in TypeScript errors when using them.
 
 <Tip>
 
-Avoid manually specifying generic type arguments on Apollo Client hooks and methods. Instead, rely on TypeScript's type inference together with a correctly typed [`TypedDocumentNode`](https://github.com/dotansimha/graphql-typed-document-node). This gives you accurate types without manual annotations and works correctly with both classic and modern signatures.
+Avoid manually specifying generic type arguments on Apollo Client hooks and methods. Instead, rely on TypeScript's type inference together with a correctly typed [`TypedDocumentNode`](#using-operation-types). This gives you accurate types without manual annotations and works correctly with both classic and modern signatures.
 
 </Tip>
 
@@ -786,7 +809,7 @@ declare module "@apollo/client" {
 }
 ```
 
-You can also explicitly opt into modern signatures without declaring any `defaultOptions`:
+You can explicitly opt into modern signatures without using `DeclareDefaultOptions` by using the `signatureStyle` property in the `TypeOverrides` interface:
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";
@@ -798,9 +821,15 @@ declare module "@apollo/client" {
 }
 ```
 
-#### Switching back to classic signatures
+<Note>
 
-If you've declared `DeclareDefaultOptions` (which activates modern signatures automatically) but need to temporarily keep classic signatures during migration, you can explicitly force classic signatures:
+You don't need to specify `signatureStyle` if you are already using `DeclareDefaultOptions` as it is redundant.
+
+</Note>
+
+#### Switching to classic signatures
+
+If you've declared `DeclareDefaultOptions` (which automatically activates modern signatures) but need to temporarily use classic signatures for migration, you can set the `signatureStyle` property in the `TypeOverrides` interface to `"classic"`:
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";
@@ -814,7 +843,7 @@ declare module "@apollo/client" {
 
 <Caution>
 
-Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. In this configuration, Apollo Client's methods and hooks produce the same potentially incorrect types as they did before Apollo Client 4.2—they do not reflect the `defaultOptions` you've declared.
+Using classic signatures after declaring `DeclareDefaultOptions` is not recommended for long-term use. In this configuration, Apollo Client's methods and hooks produce the same potentially incorrect types as they did before Apollo Client 4.2 and don't reflect the `defaultOptions` you've declared.
 
 </Caution>
 

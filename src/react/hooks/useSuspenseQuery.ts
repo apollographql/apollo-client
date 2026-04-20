@@ -259,7 +259,7 @@ export declare namespace useSuspenseQuery {
     }
 
     /**
-     * @deprecated Avoid manually specifying generics on `useSuspenseQuery`.
+     * @deprecated Avoid manually specifying generic arguments on `useSuspenseQuery`.
      * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
      *
      * {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)}

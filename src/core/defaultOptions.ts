@@ -7,7 +7,7 @@ export declare namespace DeclareDefaultOptions {
   export interface Mutate {}
 }
 
-type PropertiesWithRequiredKeys<T extends Record<string, unknown>> =
+type PropertiesWithChildRequiredKeys<T extends Record<string, unknown>> =
   keyof T extends infer K ?
     K extends keyof T ?
       {} extends T[K] ?
@@ -16,11 +16,11 @@ type PropertiesWithRequiredKeys<T extends Record<string, unknown>> =
     : never
   : never;
 
-type RequirePropertiesWithRequiredKeys<T extends Record<string, unknown>> =
-  Prettify<T & Pick<Required<T>, PropertiesWithRequiredKeys<T>>>;
+type RequirePropertiesWithChildRequiredKeys<T extends Record<string, unknown>> =
+  Prettify<T & Pick<Required<T>, PropertiesWithChildRequiredKeys<T>>>;
 
 export interface DefaultOptionsParentObject
-  extends RequirePropertiesWithRequiredKeys<{
+  extends RequirePropertiesWithChildRequiredKeys<{
     /**
      * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
      *
@@ -41,7 +41,7 @@ export interface DefaultOptions {
 
 export declare namespace DefaultOptions {
   export interface Input
-    extends RequirePropertiesWithRequiredKeys<{
+    extends RequirePropertiesWithChildRequiredKeys<{
       watchQuery?: DefaultOptions.WatchQuery.Input;
       query?: DefaultOptions.Query.Input;
       mutate?: DefaultOptions.Mutate.Input;

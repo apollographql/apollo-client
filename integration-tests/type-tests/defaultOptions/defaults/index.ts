@@ -56,6 +56,18 @@ import { expectTypeOf } from "expect-type";
   useQuery.returnPartialData._bool.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
+  useQuery.skipToken.result.toEqualTypeOf<
+    useQuery.Result<"empty", Record<string, never>>
+  >;
+  useQuery.skipToken.returnPartialData._false.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useQuery.skipToken.returnPartialData._true.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.skipToken.returnPartialData._bool.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
 }
 // useLazyQuery
 {

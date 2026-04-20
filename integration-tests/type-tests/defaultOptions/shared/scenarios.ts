@@ -74,6 +74,21 @@ namespace useQueryCase {
       useQuery(QUERY, { returnPartialData: bool })
     );
   }
+  export namespace skipToken {
+    export const result = expectTypeOf(useQuery(QUERY, {} as SkipToken));
+
+    export namespace returnPartialData {
+      export const _false = expectTypeOf(
+        useQuery(QUERY, {} as SkipToken | { returnPartialData: false })
+      );
+      export const _true = expectTypeOf(
+        useQuery(QUERY, {} as SkipToken | { returnPartialData: true })
+      );
+      export const _bool = expectTypeOf(
+        useQuery(QUERY, {} as SkipToken | { returnPartialData: bool })
+      );
+    }
+  }
 }
 
 namespace useLazyQueryCase {

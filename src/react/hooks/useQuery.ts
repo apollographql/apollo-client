@@ -208,13 +208,17 @@ export declare namespace useQuery {
       | "complete"
       | "streaming"
       | "empty"
-      | (OptionWithFallback<
-          TOptions,
-          DefaultOptions,
-          "returnPartialData"
-        > extends false ?
-          never
-        : "partial")
+      | (TOptions extends any ?
+          TOptions extends SkipToken ?
+            never
+          : OptionWithFallback<
+              TOptions,
+              DefaultOptions,
+              "returnPartialData"
+            > extends false ?
+            never
+          : "partial"
+        : never)
     >
   >;
 

@@ -4138,16 +4138,9 @@ describe("useQuery Hook", () => {
       const Dogs: React.FC<{
         onDogSelected: (event: React.ChangeEvent<HTMLSelectElement>) => void;
       }> = ({ onDogSelected }) => {
-        // @ts-ignore
         const { loading, error, data } = useQuery<{
           dogs: { id: string; breed: string }[];
-        }>(query) as useQuery.Result<
-          {
-            dogs: { id: string; breed: string }[];
-          },
-          {},
-          "complete"
-        >;
+        }>(query);
 
         if (loading) return <>Loading...</>;
         if (error) return <>{`Error! ${error.message}`}</>;
@@ -4906,10 +4899,9 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
-            // @ts-ignore
             useQuery<any>(query, {
               variables: { limit: 2 },
-            }) as useQuery.Result<any>,
+            }),
           { wrapper }
         );
 
@@ -4988,11 +4980,10 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
-            // @ts-ignore
             useQuery<any>(query, {
               variables: { limit: 2 },
               notifyOnNetworkStatusChange: true,
-            }) as useQuery.Result<any>,
+            }),
           { wrapper }
         );
 

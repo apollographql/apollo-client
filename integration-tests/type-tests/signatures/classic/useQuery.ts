@@ -55,9 +55,10 @@ test("NoInfer prevents adding arbitrary additional variables", () => {
       nonExistingVariable: "string",
     },
   });
-  variables?.bar;
+
+  const x: number = variables?.bar;
   // @ts-expect-error
-  variables?.nonExistingVariable;
+  const y: string = variables?.nonExistingVariable;
 });
 
 test("variables are optional and can be anything with an DocumentNode", () => {

@@ -56,7 +56,9 @@ test("NoInfer prevents adding arbitrary additional variables", () => {
     },
   });
   // @ts-expect-error
-  const x: string = variables?.nonExistingVariable;
+  const x: number = variables?.bar;
+  // @ts-expect-error
+  const y: string = variables?.nonExistingVariable;
 });
 
 test("variables are optional and can be anything with a DocumentNode", () => {
@@ -120,54 +122,52 @@ test("variables are optional when TVariables are empty", () => {
   );
 });
 
-/* TODO
-  test("is invalid when TVariables is `never`", () => {
-    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+/* test("is invalid when TVariables is `never`", () => {
+  const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
+  // @ts-expect-error
+  useQuery(query);
+  // @ts-expect-error
+  useQuery(query, {});
+  useQuery(query, {
     // @ts-expect-error
-    useQuery(query);
-    // @ts-expect-error
-    useQuery(query, {});
-    useQuery(query, {
-      // @ts-expect-error
-      variables: {},
-    });
-    useQuery(query, {
-      // @ts-expect-error
-      variables: undefined,
-    });
-    useQuery(query, {
-      // @ts-expect-error
-      variables: {
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    // @ts-expect-error
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : {}
-    );
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : { variables: {} }
-    );
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : { variables: undefined }
-    );
-    useQuery(
-      query,
-      // @ts-expect-error unknown variables
-      skip ? skipToken : { variables: { foo: "bar" } }
-    );
+    variables: {},
   });
-  */
+  useQuery(query, {
+    // @ts-expect-error
+    variables: undefined,
+  });
+  useQuery(query, {
+    // @ts-expect-error
+    variables: {
+      foo: "bar",
+    },
+  });
+
+  let skip!: boolean;
+  // @ts-expect-error
+  useQuery(query, skip ? skipToken : undefined);
+  useQuery(
+    query,
+    // @ts-expect-error
+    skip ? skipToken : {}
+  );
+  useQuery(
+    query,
+    // @ts-expect-error
+    skip ? skipToken : { variables: {} }
+  );
+  useQuery(
+    query,
+    // @ts-expect-error
+    skip ? skipToken : { variables: undefined }
+  );
+  useQuery(
+    query,
+    // @ts-expect-error unknown variables
+    skip ? skipToken : { variables: { foo: "bar" } }
+  );
+}); */
 
 test("optional variables are optional", () => {
   const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
@@ -317,6 +317,7 @@ test("requires variables with mixed TVariables", () => {
     variables: {
       id: "1",
       language: "en",
+
       foo: "bar",
     },
   });

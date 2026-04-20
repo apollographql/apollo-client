@@ -1,5 +1,6 @@
 import {
   ApolloClient,
+  type OperationVariables,
   type DataState,
   type TypedDocumentNode,
 } from "@apollo/client";
@@ -57,8 +58,10 @@ namespace clientQueryCase {
 
 namespace useQueryCase {
   export import hook = useQuery;
-  export type Result<TStates extends DataState<Data>["dataState"]> =
-    useQuery.Result<Data, Variables, TStates, Variables>;
+  export type Result<
+    TStates extends DataState<Data>["dataState"],
+    TReturnVariables extends OperationVariables = Variables,
+  > = useQuery.Result<Data, Variables, TStates, TReturnVariables>;
   export namespace returnPartialData {
     export const defaults = expectTypeOf(useQuery(QUERY));
     export const _false = expectTypeOf(

@@ -629,7 +629,11 @@ const customLink = new ApolloLink((operation, forward) => {
 });
 ```
 
+<MinVersion version="4.2">
+
 ## Declaring default options for type safety
+
+</MinVersion>
 
 Certain default options can affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`.
 When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.

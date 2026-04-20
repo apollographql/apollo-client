@@ -235,7 +235,7 @@ const bool = {} as any as boolean;
     errorPolicy: "none" | "ignore" | "all";
     returnPartialData: boolean;
   }>();
-  useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
+  useLazyQuery.defaults.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useLazyQuery.returnPartialData._true.toEqualTypeOf<

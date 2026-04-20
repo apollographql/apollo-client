@@ -111,7 +111,7 @@ import { expectTypeOf } from "expect-type";
     errorPolicy: "none";
     returnPartialData: false;
   }>();
-  useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
+  useLazyQuery.defaults.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming">
   >;
   useLazyQuery.returnPartialData._true.toEqualTypeOf<

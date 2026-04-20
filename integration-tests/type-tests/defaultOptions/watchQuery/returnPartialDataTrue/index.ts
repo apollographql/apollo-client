@@ -119,7 +119,7 @@ declare module "@apollo/client" {
     errorPolicy: "none";
     returnPartialData: true;
   }>();
-  useLazyQuery.returnPartialData.defaults.toEqualTypeOf<
+  useLazyQuery.defaults.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useLazyQuery.returnPartialData._true.toEqualTypeOf<

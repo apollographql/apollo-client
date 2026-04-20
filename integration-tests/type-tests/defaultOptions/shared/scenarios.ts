@@ -151,8 +151,9 @@ namespace useLazyQueryCase {
   export import hook = useLazyQuery;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     useLazyQuery.ResultTuple<Data, Variables, TStates>;
+  export const defaults = expectTypeOf(useLazyQuery(QUERY));
+
   export namespace returnPartialData {
-    export const defaults = expectTypeOf(useLazyQuery(QUERY));
     export const _false = expectTypeOf(
       useLazyQuery(QUERY, { returnPartialData: false })
     );

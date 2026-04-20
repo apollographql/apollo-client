@@ -14,6 +14,7 @@ import {
   VariablesCaseVariables,
   setupVariablesCase,
 } from "./shared.js";
+
 it("returns unknown when TData cannot be inferred", () => {
   const query = gql``;
 

@@ -62,7 +62,7 @@ it("returns TData in default case", () => {
     }
   }
 
-  /*   {
+  /* {
     const { data, dataState } = useSuspenseQuery<
       VariablesCaseData,
       VariablesCaseVariables
@@ -107,7 +107,7 @@ it("returns TData in default case", () => {
     }
   }
 
-  /*  {
+  /* {
     const { data, dataState } = useSuspenseQuery<
       MaskedVariablesCaseData,
       VariablesCaseVariables

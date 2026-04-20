@@ -249,7 +249,7 @@ console.log("Data (errors ignored):", result.data);
 
 #### Observable-based APIs
 
-Observable-based APIs like `client.watchQuery` emit values and errors through the observer `next` callback. The error policy determines how the `data` and `error` properties are set:
+Observable-based APIs like `client.watchQuery` and `client.subscribe` emit values and errors through the observer `next` callback. The error policy determines how the `data` and `error` properties are set:
 
 ##### `errorPolicy: "none"`
 
@@ -312,6 +312,12 @@ observable.subscribe({
   },
 });
 ```
+
+<Note>
+
+The same error handling behavior applies to subscriptions when using `client.subscribe()`. All errors are delivered through the `next` callback in `result.error`, never through the `error` callback. When an error causes the connection to terminate, the error is emitted through `next`, followed by a `complete` notification. See the [subscriptions documentation](./subscriptions/#handling-errors-in-subscriptions) for more details.
+
+</Note>
 
 #### React hooks
 

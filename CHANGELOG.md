@@ -1,10 +1,32 @@
 # @apollo/client
 
+## 4.2.0-alpha.1
+
+### Patch Changes
+
+- [#13166](https://github.com/apollographql/apollo-client/pull/13166) [`0537d97`](https://github.com/apollographql/apollo-client/commit/0537d97161a51479141a182d869458912e1b8e1d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Release changes in 4.1.5 and 4.1.6.
+
 ## 4.2.0-alpha.0
 
 ### Minor Changes
 
 - [#13130](https://github.com/apollographql/apollo-client/pull/13130) [`dd12231`](https://github.com/apollographql/apollo-client/commit/dd122316028b55307de4a40335512307c8fa916a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the accuracy of `client.query` return type to better detect the current `errorPolicy`. The `data` property is no longer nullable when the `errorPolicy` is `none`. This makes it possible to remove the `undefined` checks or optional chaining in most cases.
+
+## 4.1.6
+
+### Patch Changes
+
+- [#13128](https://github.com/apollographql/apollo-client/pull/13128) [`6c0b8e4`](https://github.com/apollographql/apollo-client/commit/6c0b8e4301609b62ed599340589c978e4f51f020) Thanks [@pavelivanov](https://github.com/pavelivanov)! - Fix `useQuery` hydration mismatch when `ssr: false` and `skip: true` are used together
+
+  When both options were combined, the server would return `loading: false` (because `useSSRQuery` checks `skip` first), but the client's `getServerSnapshot` was returning `ssrDisabledResult` with `loading: true`, causing a hydration mismatch.
+
+## 4.1.5
+
+### Patch Changes
+
+- [#13155](https://github.com/apollographql/apollo-client/pull/13155) [`3ba1583`](https://github.com/apollographql/apollo-client/commit/3ba1583f93c40343501acd9d598ce506537d1c9b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `useQuery` would poll with `pollInterval` when `skip` was initialized to `true`.
+
+- [#13135](https://github.com/apollographql/apollo-client/pull/13135) [`fd42142`](https://github.com/apollographql/apollo-client/commit/fd42142495d24859a9bc7145a85bc8f8d857ec88) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where `client.query` would apply options from `defaultOptions.watchQuery`.
 
 ## 4.1.4
 

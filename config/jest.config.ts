@@ -61,6 +61,7 @@ const react17TestFileIgnoreList = [
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
   "src/react/ssr/__tests__/prerenderStatic.test.tsx",
+  "src/react/ssr/__tests__/useQueryEndToEnd.test.tsx",
 ];
 
 const tsStandardConfig = {

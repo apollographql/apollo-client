@@ -109,6 +109,12 @@ items:
     children:
       - label: Using Apollo Client with your view layer
         href: ./integrations/integrations
+      - label: Next.js App Router
+        href: ./integrations/nextjs
+      - label: React Router framework mode
+        href: ./integrations/react-router
+      - label: TanStack Start
+        href: ./integrations/tanstack-start
       - label: Integrating with React Native
         href: ./integrations/react-native
       - label: Loading queries with Webpack

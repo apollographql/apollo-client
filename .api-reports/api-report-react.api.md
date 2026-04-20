@@ -333,7 +333,7 @@ export namespace useBackgroundQuery {
                 skip: boolean;
                 returnPartialData: boolean;
             }): [
-            QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+            (QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined),
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // (undocumented)
@@ -370,7 +370,7 @@ export namespace useBackgroundQuery {
             <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
                 returnPartialData: boolean;
             })): [
-            QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+            (QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined),
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // (undocumented)
@@ -408,9 +408,7 @@ export namespace useBackgroundQuery {
             // (undocumented)
             <TData, TVariables extends OperationVariables, TOptions extends useBackgroundQuery.Options<NoInfer_2<TVariables>> & VariablesOption<TVariables & {
                 [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-            }>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
-            options?: TOptions | SkipToken
-            ] : [options: TOptions | SkipToken]): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
+            }>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken] : [options: TOptions | SkipToken]): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
         }
     }
 }
@@ -874,7 +872,7 @@ export namespace useQuery {
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TReturnVariables extends OperationVariables = TVariables> = Base.Result<TData, TVariables, TReturnVariables> & GetDataState<MaybeMasked_2<TData>, TStates>;
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")>>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (TOptions extends any ? TOptions extends SkipToken ? never : OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial" : never)>>;
     // (undocumented)
     export interface Signature extends Signatures.Evaluated {
     }

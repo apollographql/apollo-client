@@ -74,6 +74,62 @@ namespace useQueryCase {
       useQuery(QUERY, { returnPartialData: bool })
     );
   }
+
+  export namespace errorPolicy {
+    export namespace none {
+      export const result = expectTypeOf(
+        useQuery(QUERY, { errorPolicy: "none" })
+      );
+
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "none", returnPartialData: false })
+        );
+        export const _true = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "none", returnPartialData: true })
+        );
+        export const _bool = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "none", returnPartialData: bool })
+        );
+      }
+    }
+
+    export namespace all {
+      export const result = expectTypeOf(
+        useQuery(QUERY, { errorPolicy: "all" })
+      );
+
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "all", returnPartialData: false })
+        );
+        export const _true = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "all", returnPartialData: true })
+        );
+        export const _bool = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "all", returnPartialData: bool })
+        );
+      }
+    }
+
+    export namespace ignore {
+      export const result = expectTypeOf(
+        useQuery(QUERY, { errorPolicy: "ignore" })
+      );
+
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "ignore", returnPartialData: false })
+        );
+        export const _true = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "ignore", returnPartialData: true })
+        );
+        export const _bool = expectTypeOf(
+          useQuery(QUERY, { errorPolicy: "ignore", returnPartialData: bool })
+        );
+      }
+    }
+  }
   export namespace skipToken {
     export const result = expectTypeOf(useQuery(QUERY, {} as SkipToken));
 

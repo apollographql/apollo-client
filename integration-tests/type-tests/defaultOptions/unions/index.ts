@@ -180,6 +180,42 @@ const bool = {} as any as boolean;
   useQuery.returnPartialData._bool.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
+  useQuery.errorPolicy.none.result.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.none.returnPartialData._false.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useQuery.errorPolicy.none.returnPartialData._true.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.none.returnPartialData._bool.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.all.result.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.all.returnPartialData._false.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useQuery.errorPolicy.all.returnPartialData._true.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.all.returnPartialData._bool.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.ignore.result.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.ignore.returnPartialData._false.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useQuery.errorPolicy.ignore.returnPartialData._true.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useQuery.errorPolicy.ignore.returnPartialData._bool.branded.toEqualTypeOf<
+    useQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
   useQuery.skipToken.result.toEqualTypeOf<
     useQuery.Result<"empty", Record<string, never>>
   >;

@@ -62,8 +62,8 @@ namespace useQueryCase {
     TStates extends DataState<Data>["dataState"],
     TReturnVariables extends OperationVariables = Variables,
   > = useQuery.Result<Data, Variables, TStates, TReturnVariables>;
+  export const defaults = expectTypeOf(useQuery(QUERY));
   export namespace returnPartialData {
-    export const defaults = expectTypeOf(useQuery(QUERY));
     export const _false = expectTypeOf(
       useQuery(QUERY, { returnPartialData: false })
     );

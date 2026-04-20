@@ -168,7 +168,7 @@ const bool = {} as any as boolean;
     returnPartialData: boolean;
     skip: false;
   }>();
-  useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
+  useQuery.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useQuery.returnPartialData._true.branded.toEqualTypeOf<

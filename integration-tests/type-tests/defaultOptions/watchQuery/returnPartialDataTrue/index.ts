@@ -100,7 +100,7 @@ declare module "@apollo/client" {
     returnPartialData: true;
     skip: false;
   }>();
-  useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
+  useQuery.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
   useQuery.returnPartialData._true.branded.toEqualTypeOf<

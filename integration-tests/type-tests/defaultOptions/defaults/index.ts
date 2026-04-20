@@ -44,7 +44,7 @@ import { expectTypeOf } from "expect-type";
     returnPartialData: false;
     skip: false;
   }>();
-  useQuery.returnPartialData.defaults.branded.toEqualTypeOf<
+  useQuery.defaults.branded.toEqualTypeOf<
     useQuery.Result<"empty" | "complete" | "streaming">
   >;
   useQuery.returnPartialData._true.branded.toEqualTypeOf<

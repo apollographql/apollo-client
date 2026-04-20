@@ -123,6 +123,41 @@ import { expectTypeOf } from "expect-type";
   useLazyQuery.returnPartialData._bool.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;
+  useLazyQuery.errorPolicy.none.result.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useLazyQuery.errorPolicy.none.returnPartialData._false.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useLazyQuery.errorPolicy.none.returnPartialData._true.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useLazyQuery.errorPolicy.none.returnPartialData._bool.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useLazyQuery.errorPolicy.all.result.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useLazyQuery.errorPolicy.all.returnPartialData._false.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useLazyQuery.errorPolicy.all.returnPartialData._true.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useLazyQuery.errorPolicy.all.returnPartialData._bool.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useLazyQuery.errorPolicy.ignore.result.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming">
+  >;
+  useLazyQuery.errorPolicy.ignore.returnPartialData._false.branded
+    .toEqualTypeOf<useLazyQuery.Result<"empty" | "complete" | "streaming">>;
+  useLazyQuery.errorPolicy.ignore.returnPartialData._true.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
+  useLazyQuery.errorPolicy.ignore.returnPartialData._bool.branded.toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+  >;
 }
 // useSuspenseQuery
 {

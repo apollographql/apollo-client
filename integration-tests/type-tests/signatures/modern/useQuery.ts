@@ -59,7 +59,7 @@ test("NoInfer prevents adding arbitrary additional variables", () => {
   const x: string = variables?.nonExistingVariable;
 });
 
-test("variables are optional and can be anything with an DocumentNode", () => {
+test("variables are optional and can be anything with a DocumentNode", () => {
   const query = gql``;
 
   useQuery(query);

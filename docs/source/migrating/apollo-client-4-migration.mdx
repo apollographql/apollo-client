@@ -1723,7 +1723,11 @@ const cache: ApolloCache<any> = ... // [!code --]
 const cache: ApolloCache = ... // [!code ++]
 ```
 
+<MinVersion version="4.2">
+
 ### Type safety for default options
+
+</MinVersion>
 
 Apollo Client 4 improves type safety by requiring you to declare default options at the type level. Certain default options affect the return types of methods like `client.query` and hooks like `useQuery` or `useSuspenseQuery`. When you set `errorPolicy` or `returnPartialData` in your `ApolloClient` `defaultOptions`, declare them at the type level so TypeScript can accurately type your results.
 

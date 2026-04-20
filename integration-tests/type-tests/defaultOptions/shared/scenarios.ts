@@ -42,8 +42,9 @@ namespace clientQueryCase {
   export type QueryResultAll = ApolloClient.QueryResult<Data, "all">;
   export type QueryResultIgnore = ApolloClient.QueryResult<Data, "ignore">;
 
+  export const defaults = expectTypeOf(client.query({ query: QUERY }));
+
   export namespace errorPolicy {
-    export const defaults = expectTypeOf(client.query({ query: QUERY }));
     export const all = expectTypeOf(
       client.query({ query: QUERY, errorPolicy: "all" })
     );

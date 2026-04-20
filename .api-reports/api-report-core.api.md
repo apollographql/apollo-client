@@ -11,7 +11,6 @@ import { ApolloReducerConfig } from '@apollo/client/cache';
 import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
-import type { ClassicSignature } from '@apollo/client/utilities/internal';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
@@ -94,6 +93,7 @@ import { selectURI } from '@apollo/client/link/http';
 import { ServerError } from '@apollo/client/errors';
 import { ServerParseError } from '@apollo/client/errors';
 import { setVerbosity as setLogVerbosity } from '@apollo/client/utilities/invariant';
+import type { SignatureStyle } from '@apollo/client/utilities/internal';
 import { split } from '@apollo/client/link';
 import { StoreObject } from '@apollo/client/utilities';
 import { StoreValue } from '@apollo/client/cache';
@@ -269,6 +269,26 @@ export namespace ApolloClient {
         }
         // (undocumented)
         export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>> = LazyType<QueryResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+        export interface Signature extends Signatures.Evaluated {
+        }
+        // (undocumented)
+        export namespace Signatures {
+            // (undocumented)
+            export interface Classic {
+                // @deprecated (undocumented)
+                <TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+            }
+            // (undocumented)
+            export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+            // (undocumented)
+            export interface Modern {
+                <TData, TVariables extends OperationVariables, TOptions extends ApolloClient.QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & VariablesOption<TVariables & {
+                    [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+                }>>(options: TOptions & {
+                    query: TypedDocumentNode<TData, TVariables>;
+                }): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
+            }
+        }
     }
     export type QueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -386,13 +406,7 @@ export class ApolloClient {
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
-    // @deprecated (undocumented)
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ClassicSignature & ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
-    query<TData, TVariables extends OperationVariables, TOptions extends ApolloClient.QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & VariablesOption<TVariables & {
-        [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-    }>>(options: TOptions & {
-        query: TypedDocumentNode<TData, TVariables>;
-    }): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
+    query: ApolloClient.query.Signature;
     // (undocumented)
     queryDeduplication: boolean;
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
@@ -1211,7 +1225,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:436:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:481:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

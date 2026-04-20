@@ -12,7 +12,7 @@ import {
   it,
   VariablesCaseData,
   VariablesCaseVariables,
-  useVariablesQueryCase,
+  setupVariablesCase,
 } from "./shared.js";
 
 it("returns unknown when TData cannot be inferred", () => {
@@ -154,7 +154,7 @@ it("requires variables with mixed TVariables", () => {
 });
 
 it("returns TData in default case", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query);
@@ -221,7 +221,7 @@ it("returns TData in default case", () => {
 });
 
 it('returns TData | undefined with errorPolicy: "ignore"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -298,7 +298,7 @@ it('returns TData | undefined with errorPolicy: "ignore"', () => {
 });
 
 it('returns TData | undefined with errorPolicy: "all"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -375,7 +375,7 @@ it('returns TData | undefined with errorPolicy: "all"', () => {
 });
 
 it('returns TData with errorPolicy: "none"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -426,7 +426,7 @@ it('returns TData with errorPolicy: "none"', () => {
 });
 
 it("returns DeepPartial<TData> with returnPartialData: true", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -511,7 +511,7 @@ it("returns DeepPartial<TData> with returnPartialData: true", () => {
 });
 
 it("returns TData with returnPartialData: false", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -580,7 +580,7 @@ it("returns TData with returnPartialData: false", () => {
 });
 
 it("returns TData when passing an option that does not affect TData", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -649,7 +649,7 @@ it("returns TData when passing an option that does not affect TData", () => {
 });
 
 it("handles combinations of options", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {
@@ -827,7 +827,7 @@ it("handles combinations of options", () => {
 });
 
 it("returns correct TData type when combined options that do not affect TData", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const [, queryRef] = useLoadableQuery(query, {

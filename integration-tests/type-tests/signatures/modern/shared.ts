@@ -81,9 +81,6 @@ export declare const unmaskedQuery: TypedDocumentNode<
   UnmaskedVariablesCaseData,
   VariablesCaseVariables
 >;
-export declare function useVariablesQueryCase(): {
-  query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
-};
 export interface SimpleCaseData {
   greeting: string;
 }
@@ -98,12 +95,4 @@ export declare const simpleMocks: MockLink.MockedResponse<
 export declare function setupSimpleCase(): {
   query: TypedDocumentNode<SimpleCaseData, Record<string, never>>;
   mocks: MockLink.MockedResponse<SimpleCaseData, Record<string, any>>[];
-};
-
-export declare function useMaskedVariablesQueryCase(): {
-  query: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
-  unmaskedQuery: TypedDocumentNode<
-    MaskedVariablesCaseData,
-    VariablesCaseVariables
-  >;
 };

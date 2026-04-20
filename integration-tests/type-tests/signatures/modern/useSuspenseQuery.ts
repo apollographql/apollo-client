@@ -7,9 +7,10 @@ import {
   it,
   test,
   MaskedVariablesCaseData,
+  UnmaskedVariablesCaseData,
   VariablesCaseData,
-  useVariablesQueryCase,
-  useMaskedVariablesQueryCase,
+  setupVariablesCase,
+  setupMaskedVariablesCase,
 } from "./shared.js";
 
 it("returns unknown when TData cannot be inferred", () => {
@@ -26,7 +27,7 @@ it("returns unknown when TData cannot be inferred", () => {
 });
 
 it("disallows wider variables type than specified", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   // @ts-expect-error unknown variable
   useSuspenseQuery(query, {
@@ -38,7 +39,7 @@ it("disallows wider variables type than specified", () => {
 });
 
 it("returns TData in default case", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -83,7 +84,7 @@ it("returns TData in default case", () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -130,7 +131,7 @@ it("returns TData in default case", () => {
 });
 
 it('returns TData | undefined with errorPolicy: "ignore"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -187,7 +188,7 @@ it('returns TData | undefined with errorPolicy: "ignore"', () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -247,7 +248,7 @@ it('returns TData | undefined with errorPolicy: "ignore"', () => {
 });
 
 it('returns TData | undefined with errorPolicy: "all"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -304,7 +305,7 @@ it('returns TData | undefined with errorPolicy: "all"', () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -364,7 +365,7 @@ it('returns TData | undefined with errorPolicy: "all"', () => {
 });
 
 it('returns TData with errorPolicy: "none"', () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -413,7 +414,7 @@ it('returns TData with errorPolicy: "none"', () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -461,7 +462,7 @@ it('returns TData with errorPolicy: "none"', () => {
 });
 
 it("returns DeepPartial<TData> with returnPartialData: true", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -526,7 +527,7 @@ it("returns DeepPartial<TData> with returnPartialData: true", () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -590,7 +591,7 @@ it("returns DeepPartial<TData> with returnPartialData: true", () => {
 });
 
 it("returns TData with returnPartialData: false", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -639,7 +640,7 @@ it("returns TData with returnPartialData: false", () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -687,7 +688,7 @@ it("returns TData with returnPartialData: false", () => {
 });
 
 it("returns TData | undefined when skip is present", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -777,7 +778,7 @@ it("returns TData | undefined when skip is present", () => {
     }
   }
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -869,7 +870,7 @@ it("returns TData | undefined when skip is present", () => {
 });
 
 it("returns TData | undefined when using `skipToken` as options", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
   const options = {
     skip: true,
   };
@@ -926,7 +927,7 @@ it("returns TData | undefined when using `skipToken` as options", () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(
@@ -986,7 +987,7 @@ it("returns TData | undefined when using `skipToken` as options", () => {
 });
 
 it("returns TData | undefined when using `skipToken` with undefined options", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
   const options = {
     skip: true,
   };
@@ -1043,7 +1044,7 @@ it("returns TData | undefined when using `skipToken` with undefined options", ()
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(
@@ -1103,7 +1104,7 @@ it("returns TData | undefined when using `skipToken` with undefined options", ()
 });
 
 it("returns DeepPartial<TData> | undefined when using `skipToken` as options with `returnPartialData`", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
   const options = {
     skip: true,
   };
@@ -1185,7 +1186,7 @@ it("returns DeepPartial<TData> | undefined when using `skipToken` as options wit
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(
@@ -1266,7 +1267,7 @@ it("returns DeepPartial<TData> | undefined when using `skipToken` as options wit
 });
 
 it("returns TData when passing an option that does not affect TData", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -1315,7 +1316,7 @@ it("returns TData when passing an option that does not affect TData", () => {
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -1371,8 +1372,8 @@ it("handles combinations of options", () => {
     skip: true,
   };
 
-  const { query } = useVariablesQueryCase();
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query } = setupVariablesCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -1874,7 +1875,7 @@ it("handles combinations of options", () => {
 });
 
 it("returns correct TData type when combined options that do not affect TData", () => {
-  const { query } = useVariablesQueryCase();
+  const { query } = setupVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(query, {
@@ -1943,7 +1944,7 @@ it("returns correct TData type when combined options that do not affect TData", 
     }
   } */
 
-  const { query: maskedQuery } = useMaskedVariablesQueryCase();
+  const { query: maskedQuery } = setupMaskedVariablesCase();
 
   {
     const { data, dataState } = useSuspenseQuery(maskedQuery, {
@@ -2014,7 +2015,7 @@ it("returns correct TData type when combined options that do not affect TData", 
 });
 
 it("uses proper masked types for refetch", async () => {
-  const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+  const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
   {
     const { refetch } = useSuspenseQuery(query, { variables: { id: "1" } });
@@ -2029,12 +2030,12 @@ it("uses proper masked types for refetch", async () => {
     });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
   }
 });
 
 it("uses proper masked types for fetchMore", async () => {
-  const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+  const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
   /* {
     const { fetchMore } = useSuspenseQuery(query, {
@@ -2097,7 +2098,7 @@ it("uses proper masked types for subscribeToMore", async () => {
     };
   };
 
-  const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+  const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
   /* {
     const { subscribeToMore } = useSuspenseQuery(query, {

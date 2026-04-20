@@ -290,8 +290,7 @@ export declare namespace useLoadableQuery {
       ): useLoadableQuery.ResultForOptions<TData, TVariables, TOptions>;
     }
 
-    export type Evaluated =
-      SignatureStyle extends "classic" ? Classic : Modern;
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
   }
 
   /** {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)} */

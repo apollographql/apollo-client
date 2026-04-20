@@ -206,9 +206,8 @@ declare module "@apollo/client" {
   useLazyQuery.errorPolicy.ignore.result.branded.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming">
   >;
-  useLazyQuery.errorPolicy.ignore.returnPartialData._false.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming">
-  >;
+  useLazyQuery.errorPolicy.ignore.returnPartialData._false.branded
+    .toEqualTypeOf<useLazyQuery.Result<"empty" | "complete" | "streaming">>;
   useLazyQuery.errorPolicy.ignore.returnPartialData._true.branded.toEqualTypeOf<
     useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
   >;

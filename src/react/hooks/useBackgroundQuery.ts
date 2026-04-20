@@ -360,7 +360,10 @@ export declare namespace useBackgroundQuery {
           returnPartialData: boolean;
         }
       ): [
-        QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+        (
+          | QueryRef<TData, TVariables, "complete" | "streaming" | "partial">
+          | undefined
+        ),
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
@@ -443,7 +446,10 @@ export declare namespace useBackgroundQuery {
               returnPartialData: boolean;
             })
       ): [
-        QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
+        (
+          | QueryRef<TData, TVariables, "complete" | "streaming" | "partial">
+          | undefined
+        ),
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
@@ -468,7 +474,11 @@ export declare namespace useBackgroundQuery {
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
-          [options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
+          [
+            options?:
+              | SkipToken
+              | useBackgroundQuery.Options<NoInfer<TVariables>>,
+          ]
         : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
       ): [
         QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
@@ -554,8 +564,7 @@ export declare namespace useBackgroundQuery {
           >,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ?
-          [options?: TOptions | SkipToken]
+        ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
         : [options: TOptions | SkipToken]
       ): useBackgroundQuery.ResultForOptions<
         TData,
@@ -564,8 +573,7 @@ export declare namespace useBackgroundQuery {
       >;
     }
 
-    export type Evaluated =
-      SignatureStyle extends "classic" ? Classic : Modern;
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
   }
 
   /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */

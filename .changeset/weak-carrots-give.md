@@ -16,14 +16,14 @@ result2.data;
 //      ^? TData | undefined
 ```
 
-While this was generally correct, if you were to register `errorPolicy: 'all'` as a default option for all queries, the type of `result.data` in the first case would still be `TData`, which is not correct - in reality it could also be `undefined`.
+While these types are generally correct, if you were to set `errorPolicy: 'all'` as a default option, the type of `result.data` for the first query would remain `TData` instead of changing to `TData | undefined` to match the runtime behavior.
 
-With this change, we are now enforcing that certain `defaultOptions` need to be registered globally on a type level.
-This means that if you want to use `errorPolicy: 'all'` as a default option for a query, you will need to register it globally like this:
+We are now enforcing that certain `defaultOptions` types need to be registered globally. This means that if you want to use `errorPolicy: 'all'` as a default option for a query, you will need to register its type like this:
 
 ```ts
 // apollo.d.ts
 import "@apollo/client";
+
 declare module "@apollo/client" {
   namespace ApolloClient {
     namespace DeclareDefaultOptions {
@@ -46,12 +46,11 @@ declare module "@apollo/client" {
 }
 ```
 
-Once this is in place, the type of `result.data` in the first case will correctly be `TData | undefined`, reflecting the fact that if an error occurs, `data` will be `undefined`.
-If you were to manually call `useSuspenseQuery(MY_QUERY, { errorPolicy: 'none' });`, it would become `TData` again.
+Once this type declaration is in place, the type of `result.data` in the above example will correctly be changed to `TData | undefined`, reflecting the possibility that if an error occurs, `data` might be `undefined`. Manually specifying `useSuspenseQuery(MY_QUERY, { errorPolicy: "none" });` changes `result.data` to `TData` to reflect the local override.
 
-This change means that you are now forced to register these default options globally, or TypeScript will error out.
+This change means that you will need to declare your default options types in order to use `defaultOptions` with `ApolloClient`, otherwise you will see a TypeScript error.
 
-Without this global registration, the following (previously valid) code will now error:
+Without the type declaration, the following (previously valid) code will now error:
 
 ```ts
 new ApolloClient({
@@ -67,11 +66,12 @@ new ApolloClient({
 });
 ```
 
-If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can relax the constraints by declaring those options as union types covering all values you use. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
+If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can relax the constraints by declaring those options as union types covering all values used by all clients. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
 
 ```ts
 // apollo.d.ts
 import "@apollo/client";
+
 declare module "@apollo/client" {
   export namespace ApolloClient {
     export namespace DeclareDefaultOptions {
@@ -90,7 +90,7 @@ declare module "@apollo/client" {
 }
 ```
 
-With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic—for example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic. For example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
 
 Note that making a property optional (`errorPolicy?:`) is equivalent to adding the TypeScript default value (`"none"`) to the union. So `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option could also be absent (i.e., `"none"`).
 

@@ -38,7 +38,9 @@
     "rollup",
     "glob",
     "prettier",
-    "eslint-plugin-react-compiler"
+    "eslint-plugin-react-compiler",
+    "graphql-17-alpha-2",
+    "graphql-17-alpha-9"
   ],
   "reviewers": [],
   "reviewersFromCodeOwners": false,

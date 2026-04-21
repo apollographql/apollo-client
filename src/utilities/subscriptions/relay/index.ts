@@ -33,6 +33,8 @@ export function createFetchMultipartSubscription(
     const options = generateOptionsForMultipartSubscription(headers || {});
 
     return Observable.create((sink) => {
+      const controller = new AbortController();
+
       try {
         options.body = JSON.stringify(body);
       } catch (parseError) {
@@ -42,7 +44,7 @@ export function createFetchMultipartSubscription(
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
       const observerNext = sink.next.bind(sink);
 
-      currentFetch!(uri, options)
+      currentFetch!(uri, { ...options, signal: controller.signal })
         .then((response) => {
           const ctype = response.headers?.get("content-type");
 
@@ -56,8 +58,14 @@ export function createFetchMultipartSubscription(
           sink.complete();
         })
         .catch((err: any) => {
-          sink.error(err);
+          if (err.name !== "AbortError") {
+            sink.error(err);
+          }
         });
+
+      return () => {
+        controller.abort();
+      };
     });
   };
 }

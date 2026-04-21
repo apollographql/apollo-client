@@ -25,7 +25,10 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
-import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
+import {
+  maybeDeepFreeze,
+  variablesUnknownSymbol,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useRenderGuard } from "./internal/index.js";
@@ -344,6 +347,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
+      [variablesUnknownSymbol]: true,
     } as ApolloClient.WatchQueryOptions<TData, TVariables>);
   }
 
@@ -492,9 +496,11 @@ export function useLazyQuery<
       ...eagerMethods,
       ...result,
       client,
+      // eslint-disable-next-line react-hooks/refs
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
+      // eslint-disable-next-line react-hooks/refs
       called: !!resultRef.current,
     };
   }, [client, observableResult, eagerMethods, observable]);

@@ -65,4 +65,11 @@ export type {
   UseSuspenseQueryResult,
 } from "./types/deprecated.js";
 
+// internal types
+import type { HookWrappers } from "./hooks/internal/wrapHook.js";
+/** @internal */
+export declare namespace InternalTypes {
+  export type { HookWrappers };
+}
+
 export const reactCompilerVersion = "uncompiled" as string;

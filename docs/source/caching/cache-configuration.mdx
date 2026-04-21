@@ -192,7 +192,7 @@ This example shows a variety of `typePolicies` with different `keyFields`:
     ```
 - The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
 - The `Store` type provides an example of how you can [disable normalization](https://www.apollographql.com/docs/react/caching/cache-configuration/#disabling-normalization) by setting the keyFields to `false`
-- The `Location` type provides an example of using custom fuction given object and runtime context to calculate what fields should be used for the key field selection.
+- The `Location` type provides an example of using custom function given object and runtime context to calculate what fields should be used for the key field selection.
   - Keep in mind that the first argument here is a reference to the record that will be written. As such, it does NOT include subselected fields, only scalar fields, and it contains aliases from the operation. If you need to read the real type you can use `context.storeObject`. To read even more indepth about how this function can work the best source will be our own [test cases for the cache policies](https://github.com/apollographql/apollo-client/blob/8bc7d4d406402962bf5151cdd2c5c75c9398d10c/src/cache/inmemory/__tests__/policies.ts#L5543-L5622)
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.

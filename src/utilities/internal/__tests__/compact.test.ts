@@ -54,3 +54,31 @@ test("should not leave undefined properties in result object", () => {
   expect(hasOwn.call(result, "c")).toBe(false);
   expect(result).toEqual({ a: 2 });
 });
+
+test("should preserve symbol options", () => {
+  const symA = Symbol("a");
+  const symB = Symbol("b");
+
+  const result = compact(
+    {
+      [symA]: 123,
+      [symB]: 456,
+      foo: "bar",
+    },
+    {
+      [symA]: 789,
+      baz: "qux",
+    },
+    {
+      [symA]: void 0,
+      byd: "tbd",
+    }
+  );
+  expect(result).toStrictEqualTyped({
+    [symA]: 789,
+    [symB]: 456,
+    foo: "bar",
+    baz: "qux",
+    byd: "tbd",
+  });
+});

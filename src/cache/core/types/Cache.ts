@@ -5,6 +5,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { ApolloCache } from "../cache.js";
 
@@ -77,6 +78,12 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: ExtensionsWithStreamInfo;
   }
 
   export interface DiffOptions<
@@ -124,30 +131,40 @@ export declare namespace Cache {
     TCache extends ApolloCache,
     TUpdateResult = void,
   > {
-    // Same as the first parameter of performTransaction, except the cache
-    // argument will have the subclass type rather than ApolloCache.
+    /**
+     * A function that performs cache operations. Receives the cache instance as its argument.
+     *
+     * The return value of this function becomes the return value of `batch`.
+     */
     update(cache: TCache): TUpdateResult;
 
-    // Passing a string for this option creates a new optimistic layer, with the
-    // given string as its layer.id, just like passing a string for the
-    // optimisticId parameter of performTransaction. Passing true is the same as
-    // passing undefined to performTransaction (running the batch operation
-    // against the current top layer of the cache), and passing false is the
-    // same as passing null (running the operation against root/non-optimistic
-    // cache data).
+    /**
+     * Controls how optimistic data is handled:
+     *
+     * - `string`: Creates a new optimistic layer with this ID. Use `removeOptimistic` later to remove it.
+     * - `true`: Updates the current top layer of the cache (including any optimistic data).
+     * - `false`: Updates only the root (non-optimistic) cache data.
+     *
+     * @defaultValue false
+     */
     optimistic?: string | boolean;
 
-    // If you specify the ID of an optimistic layer using this option, that
-    // layer will be removed as part of the batch transaction, triggering at
-    // most one broadcast for both the transaction and the removal of the layer.
-    // Note: this option is needed because calling cache.removeOptimistic during
-    // the transaction function may not be not safe, since any modifications to
-    // cache layers may be discarded after the transaction finishes.
+    /**
+     * If provided, removes the optimistic layer with this ID after the batch completes.
+     *
+     * This is useful for atomically applying server data while removing a pending optimistic update, triggering at most one broadcast for both operations.
+     *
+     * Note: this option is needed because calling `cache.removeOptimistic` during the transaction function may not be safe, since any modifications to cache layers may be discarded after the transaction finishes.
+     */
     removeOptimistic?: string;
 
-    // If you want to find out which watched queries were invalidated during
-    // this batch operation, pass this optional callback function. Returning
-    // false from the callback will prevent broadcasting this result.
+    /**
+     * Optional callback invoked for each watcher affected by the batch operation.
+     *
+     * Receives the watch options, the new diff result, and optionally the previous diff result.
+     *
+     * Return `false` to prevent broadcasting to that specific watcher.
+     */
     onWatchUpdated?: (
       this: TCache,
       watch: Cache.WatchOptions,
@@ -192,17 +209,10 @@ export declare namespace Cache {
     optimistic?: boolean;
   }
 
-  export interface ReadFragmentOptions<
+  export type ReadFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by the `cache.identify` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
+  > = {
     /**
      * A GraphQL document created using the `gql` template string tag from
      * `graphql-tag` with one or more fragments which will be used to determine
@@ -236,7 +246,7 @@ export declare namespace Cache {
      * @defaultValue false
      */
     optimistic?: boolean;
-  }
+  } & Cache.CacheIdentifierOption<TData>;
 
   export interface WriteQueryOptions<
     TData,
@@ -276,19 +286,18 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
+
+    /**
+     * GraphQL extensions for the write operation. Any provided `extensions`
+     * are available in `merge` functions.
+     */
+    extensions?: ExtensionsWithStreamInfo;
   }
 
-  export interface WriteFragmentOptions<
+  export type WriteFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > {
-    /**
-     * The root id to be used. This id should take the same form as the
-     * value returned by the `cache.identify` function. If a value with your
-     * id does not exist in the store, `null` will be returned.
-     */
-    id?: string;
-
+  > = {
     /**
      * A GraphQL document created using the `gql` template string
      * with one or more fragments which will be used to determine
@@ -324,7 +333,7 @@ export declare namespace Cache {
      * @defaultValue false
      */
     overwrite?: boolean;
-  }
+  } & Cache.CacheIdentifierOption<TData>;
 
   export interface UpdateQueryOptions<
     TData,
@@ -335,14 +344,15 @@ export declare namespace Cache {
       "data"
     > {}
 
-  export interface UpdateFragmentOptions<
+  export type UpdateFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > extends Omit<
-      ReadFragmentOptions<TData, TVariables> &
-        WriteFragmentOptions<TData, TVariables>,
-      "data"
-    > {}
+  > = Omit<
+    ReadFragmentOptions<TData, TVariables> &
+      WriteFragmentOptions<TData, TVariables>,
+    "data" | "id" | "from"
+  > &
+    Cache.CacheIdentifierOption<TData>;
 
   export type DiffResult<TData> =
     | {
@@ -356,5 +366,45 @@ export declare namespace Cache {
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
+      };
+
+  export type CacheIdentifierOption<TData> =
+    | {
+        /**
+         * The root id to be used. This id should take the same form as the
+         * value returned by the `cache.identify` function. If a value with your
+         * id does not exist in the store, `null` will be returned.
+         */
+        id?: string;
+
+        /**
+         * An object containing a `__typename` and primary key fields
+         * (such as `id`) identifying the entity object from which the fragment will
+         * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+         * (uncommon).
+         *
+         * @remarks
+         * `from` is given precedence over `id` when both are provided.
+         */
+        from?: never;
+      }
+    | {
+        /**
+         * The root id to be used. This id should take the same form as the
+         * value returned by the `cache.identify` function. If a value with your
+         * id does not exist in the store, `null` will be returned.
+         */
+        id?: never;
+
+        /**
+         * An object containing a `__typename` and primary key fields
+         * (such as `id`) identifying the entity object from which the fragment will
+         * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+         * (uncommon).
+         *
+         * @remarks
+         * `from` is given precedence over `id` when both are provided.
+         */
+        from?: ApolloCache.FromOptionValue<TData>;
       };
 }

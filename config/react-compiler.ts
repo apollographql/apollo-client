@@ -1,8 +1,10 @@
+import { readFileSync } from "node:fs";
 import { cp, mkdir } from "node:fs/promises";
-import { format, join, parse } from "node:path";
+import { dirname, format, join, parse, resolve } from "node:path";
 
 import { transformFromAstAsync } from "@babel/core";
 import { visit } from "recast";
+import { SourceMapConsumer } from "source-map";
 
 import type { BuildStep } from "./build.ts";
 import { applyRecast, updatePackageJson } from "./helpers.ts";
@@ -11,15 +13,15 @@ export const reactCompiler: BuildStep = async (options) => {
   if (options.type !== "esm") {
     return;
   }
-  await cp(
-    join(options.targetDir, "react", "hooks"),
-    join(options.targetDir, "react", "hooks-compiled"),
-    { recursive: true }
-  );
+  const cwd = join(options.targetDir, "react", "hooks-compiled");
+  await cp(join(options.targetDir, "react", "hooks"), cwd, { recursive: true });
   await applyRecast({
     glob: `**/*.${options.jsExt}`,
-    cwd: join(options.targetDir, "react", "hooks-compiled"),
-    async transformStep({ ast, sourceName }) {
+    cwd,
+    async transformStep({ ast, sourceName, relativeSourcePath }) {
+      const mapPath = join(cwd, relativeSourcePath + ".map");
+      const rawMap = JSON.parse(readFileSync(mapPath, "utf-8"));
+      let consumer: SourceMapConsumer | null = null;
       const result = await transformFromAstAsync(ast as any, undefined, {
         filename: sourceName,
         sourceFileName: sourceName,
@@ -33,6 +35,47 @@ export const reactCompiler: BuildStep = async (options) => {
             "babel-plugin-react-compiler",
             {
               target: "17",
+              // still too many errors to enable panicThreshold on any level
+              // panicThreshold: "critical_errors",
+              // panicThreshold: "all_errors",
+              logger: {
+                logEvent(_, event) {
+                  if (event.kind === "CompileError") {
+                    const loc =
+                      event.detail.primaryLocation?.() || event.detail.loc;
+
+                    let source = `${join(cwd, relativeSourcePath)}${
+                      loc ? `:${loc.start.line}:${loc.start.column}` : ""
+                    }`;
+
+                    if (loc) {
+                      const { line, column } = loc.start;
+                      consumer ||= new SourceMapConsumer(rawMap);
+                      const original = consumer.originalPositionFor({
+                        line,
+                        column,
+                      });
+                      if (original.source) {
+                        source += `, original source ${resolve(
+                          dirname(join(cwd, relativeSourcePath)),
+                          original.source
+                        )}:${original.line}:${original.column}`;
+                      }
+                    }
+
+                    console.error(`\nCompilation failed: ${source}`);
+                    console.error(`Reason: ${event.detail.reason}`);
+
+                    if (event.detail.description) {
+                      console.error(`Details: ${event.detail.description}`);
+                    }
+
+                    if (event.detail.suggestions) {
+                      console.error("Suggestions:", event.detail.suggestions);
+                    }
+                  }
+                },
+              },
             },
           ],
           {

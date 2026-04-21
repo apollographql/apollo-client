@@ -8,11 +8,12 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
+import type { GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary } from "react-error-boundary";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloCache,
@@ -32,10 +33,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import type { Incremental } from "@apollo/client/incremental";
-import {
-  Defer20220824Handler,
-  NotImplementedHandler,
-} from "@apollo/client/incremental";
+import { NotImplementedHandler } from "@apollo/client/incremental";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -50,7 +48,7 @@ import type {
 import {
   actAsync,
   createClientWrapper,
-  markAsStreaming,
+  createMockWrapper,
   renderAsync,
   renderHookAsync,
   setupPaginatedCase,
@@ -69,6 +67,8 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
+
+import { renderUseSuspenseQuery } from "./useSuspenseQuery/testUtils.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -96,6 +96,11 @@ interface SimpleQueryData {
   greeting: string;
 }
 
+/**
+ * @deprecated
+ * Use the `renderUseSuspenseQuery` helper from utils which uses render streams
+ * instead of function call render counting.
+ */
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}
@@ -297,7 +302,10 @@ function useVariablesQueryCase() {
         character: { __typename: "Character", id: String(index + 1), name },
       },
     },
-    delay: 20,
+    // React runs layout effects much later in React 18 which means tracked
+    // components aren't captured correctly, specifically when changing
+    // variables that cause the component to suspend.
+    delay: IS_REACT_19 ? 20 : 200,
   }));
 
   return { query, mocks };
@@ -379,7 +387,7 @@ describe("useSuspenseQuery", () => {
       renderHook(() => useSuspenseQuery(query), {
         wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
       });
-    }).toThrowError(
+    }).toThrow(
       new InvariantError(
         "Running a query requires a graphql query, but a mutation was used instead."
       )
@@ -398,7 +406,7 @@ describe("useSuspenseQuery", () => {
             <MockedProvider>{children}</MockedProvider>
           ),
         });
-      }).toThrowError(
+      }).toThrow(
         new InvariantError(
           `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
         )
@@ -431,7 +439,7 @@ describe("useSuspenseQuery", () => {
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         });
-      }).toThrowError(
+      }).toThrow(
         new InvariantError(
           `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
         )
@@ -1085,47 +1093,51 @@ describe("useSuspenseQuery", () => {
   it("suspends when changing variables", async () => {
     const { query, mocks } = useVariablesQueryCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("suspends and fetches data from new client when changing clients", async () => {
@@ -1564,135 +1576,137 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { client, initialProps: { id: "1" } }
+      { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
+    }
+
+    client.writeQuery({
+      query,
+      variables: { id: "2" },
+      data: { character: { id: "2", name: "Cached hero" } },
     });
 
-    act(() => {
-      client.writeQuery({
-        query,
-        variables: { id: "2" },
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "2", name: "Cached hero" } },
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
-    });
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: { character: { id: "2", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { character: { id: "2", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("uses cached result and does not suspend when switching back to already used variables while using `cache-first` fetch policy", async () => {
     const { query, mocks } = useVariablesQueryCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-first",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    expect(result.current).toStrictEqualTyped({
-      ...mocks[0].result,
-      dataState: "complete",
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
@@ -1714,7 +1728,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1727,7 +1741,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1740,85 +1754,85 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-and-network",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    expect(result.current).toStrictEqualTyped({
-      ...mocks[0].result,
-      dataState: "complete",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
@@ -1840,7 +1854,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1853,7 +1867,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1866,72 +1880,79 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
         dataState: "complete",
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
@@ -1953,7 +1974,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1966,7 +1987,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1979,72 +2000,79 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "no-cache",
           variables: { id },
         }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[2].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[2].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("responds to cache updates after changing back to already fetched variables", async () => {
@@ -2055,87 +2083,83 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { client, initialProps: { id: "1" } }
+      { wrapper: createClientWrapper(client), initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "1" });
+    await rerender({ id: "1" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
+    }
+
+    client.writeQuery({
+      query,
+      variables: { id: "1" },
+      data: { character: { id: "1", name: "Cached hero" } },
     });
 
-    act(() => {
-      client.writeQuery({
-        query,
-        variables: { id: "1" },
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1", name: "Cached hero" } },
+        dataState: "complete",
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
-    });
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: { character: { id: "1", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { character: { id: "1", name: "Cached hero" } },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
@@ -2357,66 +2381,65 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-first",
           returnPartialData: true,
           variables: { id },
         }),
-      { cache, mocks, initialProps: { id: "1" } }
+      {
+        wrapper: createMockWrapper({ cache, mocks }),
+        initialProps: { id: "1" },
+      }
     );
 
-    expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toStrictEqualTyped({
-      data: { character: { id: "1" } },
-      dataState: "partial",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await rerenderAsync({ id: "2" });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1" } },
         dataState: "partial",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    await rerender({ id: "2" });
+
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
@@ -2847,66 +2870,65 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-and-network",
           returnPartialData: true,
           variables: { id },
         }),
-      { cache, mocks, initialProps: { id: "1" } }
+      {
+        wrapper: createMockWrapper({ cache, mocks }),
+        initialProps: { id: "1" },
+      }
     );
 
-    expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toStrictEqualTyped({
-      data: { character: { id: "1" } },
-      dataState: "partial",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[0].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await rerenderAsync({ id: "2" });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        ...mocks[1].result,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { id: "1" } },
         dataState: "partial",
         networkStatus: NetworkStatus.loading,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
+      });
+    }
+
+    await rerender({ id: "2" });
+
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it.each<useSuspenseQuery.FetchPolicy>([
@@ -3065,53 +3087,51 @@ describe("useSuspenseQuery", () => {
     async (fetchPolicy) => {
       const { query, mocks } = useVariablesQueryCase();
 
-      const { result, rerenderAsync, renders } = await renderSuspenseHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeRender, rerender } = await renderUseSuspenseQuery(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
-        { mocks, initialProps: { id: "1" } }
+        { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
       );
 
-      expect(renders.suspenseCount).toBe(1);
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
+      {
+        const { renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+      }
+
+      {
+        const { snapshot, renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+        expect(snapshot).toStrictEqualTyped({
           ...mocks[0].result,
           dataState: "complete",
           networkStatus: NetworkStatus.ready,
           error: undefined,
         });
-      });
+      }
 
-      await rerenderAsync({ id: "2" });
+      await rerender({ id: "2" });
 
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
+      {
+        const { renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+      }
+
+      {
+        const { snapshot, renderedComponents } = await takeRender();
+
+        expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+        expect(snapshot).toStrictEqualTyped({
           ...mocks[1].result,
           dataState: "complete",
           networkStatus: NetworkStatus.ready,
           error: undefined,
         });
-      });
+      }
 
-      // Renders:
-      // 1. Initiate fetch and suspend
-      // 2. Unsuspend and return results from initial fetch
-      // 3. Change variables and suspend
-      // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-      expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toStrictEqualTyped([
-        {
-          ...mocks[0].result,
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-        {
-          ...mocks[1].result,
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-      ]);
+      await expect(takeRender).not.toRerender();
     }
   );
 
@@ -3513,10 +3533,7 @@ describe("useSuspenseQuery", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink((operation) => {
-        return new Observable((observer) => {
-          observer.next({ data: { vars: operation.variables } });
-          observer.complete();
-        });
+        return of({ data: { vars: operation.variables } }).pipe(delay(200));
       }),
       defaultOptions: {
         watchQuery: {
@@ -3525,17 +3542,30 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderUseSuspenseQuery(
       ({ source }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
           variables: { source, localOnlyVar: true },
         }),
-      { client, initialProps: { source: "local" } }
+      {
+        wrapper: createClientWrapper(client),
+        initialProps: { source: "local" },
+      }
     );
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: {
           vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3543,12 +3573,21 @@ describe("useSuspenseQuery", () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ source: "rerender" });
+    await rerender({ source: "rerender" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: {
           vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3556,26 +3595,9 @@ describe("useSuspenseQuery", () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("can unset a globally defined variable", async () => {
@@ -3749,7 +3771,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
     // The query was never retained since the error was thrown before the
-    // useEffect coud run. We need to wait for the auto dispose timeout to kick
+    // useEffect could run. We need to wait for the auto dispose timeout to kick
     // in before we check whether the observable was cleaned up
     jest.advanceTimersByTime(30_000);
 
@@ -4349,7 +4371,9 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const graphQLErrors = [new GraphQLError("Could not fetch user 1")];
+    const graphQLErrors: GraphQLFormattedError[] = [
+      { message: "Could not fetch user 1" },
+    ];
 
     const mocks = [
       {
@@ -4357,63 +4381,65 @@ describe("useSuspenseQuery", () => {
         result: {
           errors: graphQLErrors,
         },
-        delay: 20,
+        delay: 200,
       },
       {
         request: { query, variables: { id: "2" } },
         result: {
           data: { user: { id: "2", name: "Captain Marvel" } },
         },
-        delay: 20,
+        delay: 200,
       },
     ];
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderUseSuspenseQuery(
       ({ id }) =>
         useSuspenseQuery(query, { errorPolicy: "all", variables: { id } }),
-      { mocks, initialProps: { id: "1" } }
+      { wrapper: createMockWrapper({ mocks }), initialProps: { id: "1" } }
     );
 
     const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: undefined,
         dataState: "empty",
         networkStatus: NetworkStatus.error,
         error: expectedError,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot).toStrictEqualTyped({
         data: mocks[1].result.data,
         dataState: "complete",
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: undefined,
-        dataState: "empty",
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      },
-      {
-        data: mocks[1].result.data,
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("re-suspends when calling `refetch`", async () => {
@@ -7137,2863 +7163,6 @@ describe("useSuspenseQuery", () => {
     expect(client.getObservableQueries().size).toBe(1);
   });
 
-  it("suspends deferred queries until initial chunk loads then streams in data as it loads", async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-
-    link.simulateResult({
-      result: {
-        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: { message: "Hello world", __typename: "Greeting" },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-                __typename: "Greeting",
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          greeting: { message: "Hello world", __typename: "Greeting" },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it.each<useSuspenseQuery.FetchPolicy>([
-    "cache-first",
-    "network-only",
-    "no-cache",
-    "cache-and-network",
-  ])(
-    'suspends deferred queries until initial chunk loads then streams in data as it loads when using a "%s" fetch policy',
-    async (fetchPolicy) => {
-      const query = gql`
-        query {
-          greeting {
-            message
-            ... on Greeting @defer {
-              recipient {
-                name
-              }
-            }
-          }
-        }
-      `;
-
-      const link = new MockSubscriptionLink();
-
-      const { result, renders } = await renderSuspenseHook(
-        () => useSuspenseQuery(query, { fetchPolicy }),
-        { link, incrementalHandler: new Defer20220824Handler() }
-      );
-
-      expect(renders.suspenseCount).toBe(1);
-
-      link.simulateResult({
-        result: {
-          data: {
-            greeting: { message: "Hello world", __typename: "Greeting" },
-          },
-          hasNext: true,
-        },
-      });
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: markAsStreaming({
-            greeting: { message: "Hello world", __typename: "Greeting" },
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        });
-      });
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: { name: "Alice", __typename: "Person" },
-                  __typename: "Greeting",
-                },
-                path: ["greeting"],
-              },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: {
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        });
-      });
-
-      expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-      expect(renders.suspenseCount).toBe(1);
-      expect(renders.frames).toStrictEqualTyped([
-        {
-          data: markAsStreaming({
-            greeting: { message: "Hello world", __typename: "Greeting" },
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        },
-        {
-          data: {
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-      ]);
-    }
-  );
-
-  it('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache();
-
-    cache.writeQuery({
-      query,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello world",
-          recipient: { __typename: "Person", name: "Alice" },
-        },
-      },
-    });
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
-      { cache, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    expect(result.current).toStrictEqualTyped({
-      data: {
-        greeting: {
-          message: "Hello world",
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Alice" },
-        },
-      },
-      dataState: "complete",
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-
-    expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const cache = new InMemoryCache();
-
-    // We are intentionally writing partial data to the cache. Supress console
-    // warnings to avoid unnecessary noise in the test.
-    {
-      using _consoleSpy = spyOnConsole("error");
-      cache.writeQuery({
-        query,
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        },
-      });
-    }
-
-    const { result, renders } = await renderSuspenseHook(
-      () =>
-        useSuspenseQuery(query, {
-          fetchPolicy: "cache-first",
-          returnPartialData: true,
-        }),
-      { cache, link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    expect(result.current).toStrictEqualTyped({
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-      dataState: "partial",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
-
-    link.simulateResult({
-      result: {
-        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                __typename: "Greeting",
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        },
-        dataState: "partial",
-        networkStatus: NetworkStatus.loading,
-        error: undefined,
-      },
-      {
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const cache = new InMemoryCache();
-    const client = new ApolloClient({
-      cache,
-      link,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello cached",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-    });
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: "cache-and-network" }),
-      { client }
-    );
-
-    expect(result.current).toStrictEqualTyped({
-      data: {
-        greeting: {
-          message: "Hello cached",
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-      dataState: "complete",
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    });
-
-    link.simulateResult({
-      result: {
-        data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-                __typename: "Greeting",
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello cached",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.loading,
-        error: undefined,
-      },
-      {
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Cached Alice" },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "Person", name: "Alice" },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it("suspends deferred queries with lists and properly patches results", async () => {
-    const query = gql`
-      query {
-        greetings {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-
-    link.simulateResult({
-      result: {
-        data: {
-          greetings: [
-            { __typename: "Greeting", message: "Hello world" },
-            { __typename: "Greeting", message: "Hello again" },
-          ],
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greetings: [
-            { __typename: "Greeting", message: "Hello world" },
-            { __typename: "Greeting", message: "Hello again" },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              __typename: "Greeting",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-            path: ["greetings", 0],
-          },
-        ],
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-            {
-              __typename: "Greeting",
-              message: "Hello again",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                __typename: "Greeting",
-                recipient: { __typename: "Person", name: "Bob" },
-              },
-              path: ["greetings", 1],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-            {
-              __typename: "Greeting",
-              message: "Hello again",
-              recipient: { __typename: "Person", name: "Bob" },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          greetings: [
-            { __typename: "Greeting", message: "Hello world" },
-            { __typename: "Greeting", message: "Hello again" },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: markAsStreaming({
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-            {
-              __typename: "Greeting",
-              message: "Hello again",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-            {
-              __typename: "Greeting",
-              message: "Hello again",
-              recipient: { __typename: "Person", name: "Bob" },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it("suspends queries with deferred fragments in lists and properly merges arrays", async () => {
-    const query = gql`
-      query DeferVariation {
-        allProducts {
-          delivery {
-            ...MyFragment @defer
-          }
-          sku
-          id
-        }
-      }
-
-      fragment MyFragment on DeliveryEstimates {
-        estimatedDelivery
-        fastestDelivery
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-
-    link.simulateResult({
-      result: {
-        data: {
-          allProducts: [
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-federation",
-              sku: "federation",
-            },
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-studio",
-              sku: "studio",
-            },
-          ],
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          allProducts: [
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-federation",
-              sku: "federation",
-            },
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-              },
-              id: "apollo-studio",
-              sku: "studio",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult({
-      result: {
-        hasNext: true,
-        incremental: [
-          {
-            data: {
-              __typename: "DeliveryEstimates",
-              estimatedDelivery: "6/25/2021",
-              fastestDelivery: "6/24/2021",
-            },
-            path: ["allProducts", 0, "delivery"],
-          },
-          {
-            data: {
-              __typename: "DeliveryEstimates",
-              estimatedDelivery: "6/25/2021",
-              fastestDelivery: "6/24/2021",
-            },
-            path: ["allProducts", 1, "delivery"],
-          },
-        ],
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          allProducts: [
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-                estimatedDelivery: "6/25/2021",
-                fastestDelivery: "6/24/2021",
-              },
-              id: "apollo-federation",
-              sku: "federation",
-            },
-            {
-              __typename: "Product",
-              delivery: {
-                __typename: "DeliveryEstimates",
-                estimatedDelivery: "6/25/2021",
-                fastestDelivery: "6/24/2021",
-              },
-              id: "apollo-studio",
-              sku: "studio",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-  });
-
-  it("incrementally rerenders data returned by a `refetch` for a deferred query", async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { client }
-    );
-
-    link.simulateResult({
-      result: {
-        data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    let refetchPromise: Promise<ApolloClient.QueryResult<unknown>>;
-    await actAsync(async () => {
-      refetchPromise = result.current.refetch();
-    });
-
-    link.simulateResult({
-      result: {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Goodbye",
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Bob", __typename: "Person" },
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Bob",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await expect(refetchPromise!).resolves.toStrictEqualTyped({
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Goodbye",
-          recipient: {
-            __typename: "Person",
-            name: "Bob",
-          },
-        },
-      },
-    });
-
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Bob",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it("incrementally renders data returned after skipping a deferred query", async () => {
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
-      ({ skip }) => useSuspenseQuery(query, { skip }),
-      { client, initialProps: { skip: true } }
-    );
-
-    expect(result.current).toStrictEqualTyped({
-      data: undefined,
-      dataState: "empty",
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-
-    await rerenderAsync({ skip: false });
-
-    expect(renders.suspenseCount).toBe(1);
-
-    link.simulateResult({
-      result: {
-        data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              path: ["greeting"],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: undefined,
-        dataState: "empty",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: markAsStreaming({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: {
-              __typename: "Person",
-              name: "Alice",
-            },
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  // TODO: This test is a bit of a lie. `fetchMore` should incrementally
-  // rerender when using `@defer` but there is currently a bug in the core
-  // implementation that prevents updates until the final result is returned.
-  // This test reflects the behavior as it exists today, but will need
-  // to be updated once the core bug is fixed.
-  //
-  // NOTE: A duplicate it.failng test has been added right below this one with
-  // the expected behavior added in (i.e. the commented code in this test). Once
-  // the core bug is fixed, this test can be removed in favor of the other test.
-  //
-  // https://github.com/apollographql/apollo-client/issues/11034
-  it("rerenders data returned by `fetchMore` for a deferred query", async () => {
-    const query = gql`
-      query ($offset: Int) {
-        greetings(offset: $offset) {
-          message
-          ... @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            greetings: offsetLimitPagination(),
-          },
-        },
-      },
-    });
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { variables: { offset: 0 } }),
-      { client }
-    );
-
-    link.simulateResult({
-      result: {
-        data: {
-          greetings: [{ __typename: "Greeting", message: "Hello world" }],
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              path: ["greetings", 0],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    let fetchMorePromise: Promise<ApolloClient.QueryResult<unknown>>;
-    await actAsync(() => {
-      fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
-    });
-
-    link.simulateResult({
-      result: {
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-            },
-          ],
-        },
-        hasNext: true,
-      },
-    });
-
-    // TODO: Re-enable once the core bug is fixed
-    // await waitFor(() => {
-    //   expect(result.current).toStrictEqualTyped({
-    //     data: {
-    //       greetings: [
-    //         {
-    //           __typename: 'Greeting',
-    //           message: 'Hello world',
-    //           recipient: {
-    //             __typename: 'Person',
-    //             name: 'Alice',
-    //           },
-    //         },
-    //         {
-    //           __typename: 'Greeting',
-    //           message: 'Goodbye',
-    //         },
-    //       ],
-    //     },
-    //     dataState: "streaming",
-    //     networkStatus: NetworkStatus.streaming,
-    //     error: undefined,
-    //   });
-    // });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              data: {
-                recipient: { name: "Bob", __typename: "Person" },
-              },
-              path: ["greetings", 0],
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-              recipient: {
-                __typename: "Person",
-                name: "Bob",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await expect(fetchMorePromise!).resolves.toStrictEqualTyped({
-      data: {
-        greetings: [
-          {
-            __typename: "Greeting",
-            message: "Goodbye",
-            recipient: {
-              __typename: "Person",
-              name: "Bob",
-            },
-          },
-        ],
-      },
-    });
-
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-            },
-          ],
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      // TODO: Re-enable when the core `fetchMore` bug is fixed
-      // {
-      //   data: {
-      //     greetings: [
-      //       {
-      //         __typename: 'Greeting',
-      //         message: 'Hello world',
-      //         recipient: {
-      //           __typename: 'Person',
-      //           name: 'Alice',
-      //         },
-      //       },
-      //       {
-      //         __typename: 'Greeting',
-      //         message: 'Goodbye',
-      //       },
-      //     ],
-      //   },
-      //   dataState: "streaming",
-      //   networkStatus: NetworkStatus.streaming,
-      //   error: undefined,
-      // },
-      {
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: {
-                __typename: "Person",
-                name: "Alice",
-              },
-            },
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-              recipient: {
-                __typename: "Person",
-                name: "Bob",
-              },
-            },
-          ],
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  // TODO: This is a duplicate of the test above, but with the expected behavior
-  // added (hence the `it.failing`). Remove the previous test once issue #11034
-  // is fixed.
-  //
-  // https://github.com/apollographql/apollo-client/issues/11034
-  it.failing(
-    "incrementally rerenders data returned by a `fetchMore` for a deferred query",
-    async () => {
-      const query = gql`
-        query ($offset: Int) {
-          greetings(offset: $offset) {
-            message
-            ... @defer {
-              recipient {
-                name
-              }
-            }
-          }
-        }
-      `;
-
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              greetings: offsetLimitPagination(),
-            },
-          },
-        },
-      });
-      const link = new MockSubscriptionLink();
-      const client = new ApolloClient({
-        link,
-        cache,
-        incrementalHandler: new Defer20220824Handler(),
-      });
-
-      const { result, renders } = await renderSuspenseHook(
-        () => useSuspenseQuery(query, { variables: { offset: 0 } }),
-        { client }
-      );
-
-      link.simulateResult({
-        result: {
-          data: {
-            greetings: [{ __typename: "Greeting", message: "Hello world" }],
-          },
-          hasNext: true,
-        },
-      });
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: markAsStreaming({
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-              },
-            ],
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        });
-      });
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: { name: "Alice", __typename: "Person" },
-                },
-                path: ["greetings", 0],
-              },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: {
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-            ],
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        });
-      });
-
-      let fetchMorePromise: Promise<ApolloClient.QueryResult<unknown>>;
-      await actAsync(() => {
-        fetchMorePromise = result.current.fetchMore({
-          variables: { offset: 1 },
-        });
-      });
-
-      link.simulateResult({
-        result: {
-          data: {
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Goodbye",
-              },
-            ],
-          },
-          hasNext: true,
-        },
-      });
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: markAsStreaming({
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-              {
-                __typename: "Greeting",
-                message: "Goodbye",
-              },
-            ],
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        });
-      });
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: { name: "Bob", __typename: "Person" },
-                },
-                path: ["greetings", 0],
-              },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await waitFor(() => {
-        expect(result.current).toStrictEqualTyped({
-          data: {
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-              {
-                __typename: "Greeting",
-                message: "Goodbye",
-                recipient: {
-                  __typename: "Person",
-                  name: "Bob",
-                },
-              },
-            ],
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        });
-      });
-
-      await expect(fetchMorePromise!).resolves.toEqual({
-        data: {
-          greetings: [
-            {
-              __typename: "Greeting",
-              message: "Goodbye",
-              recipient: {
-                __typename: "Person",
-                name: "Bob",
-              },
-            },
-          ],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-
-      expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-      expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toStrictEqualTyped([
-        {
-          data: markAsStreaming({
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-              },
-            ],
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        },
-        {
-          data: {
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-            ],
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-        {
-          data: markAsStreaming({
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-              {
-                __typename: "Greeting",
-                message: "Goodbye",
-              },
-            ],
-          }),
-          dataState: "streaming",
-          networkStatus: NetworkStatus.streaming,
-          error: undefined,
-        },
-        {
-          data: {
-            greetings: [
-              {
-                __typename: "Greeting",
-                message: "Hello world",
-                recipient: {
-                  __typename: "Person",
-                  name: "Alice",
-                },
-              },
-              {
-                __typename: "Greeting",
-                message: "Goodbye",
-                recipient: {
-                  __typename: "Person",
-                  name: "Bob",
-                },
-              },
-            ],
-          },
-          dataState: "complete",
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-      ]);
-    }
-  );
-
-  it("throws network errors returned by deferred queries", async () => {
-    using _consoleSpy = spyOnConsole("error");
-
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      {
-        link,
-        incrementalHandler: new Defer20220824Handler(),
-      }
-    );
-
-    link.simulateResult({
-      error: new Error("Could not fetch"),
-    });
-
-    await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(renders.errors.length).toBe(1);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors;
-
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toEqual(new Error("Could not fetch"));
-  });
-
-  it("throws graphql errors returned by deferred queries", async () => {
-    using _consoleSpy = spyOnConsole("error");
-
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      {
-        link,
-        incrementalHandler: new Defer20220824Handler(),
-      }
-    );
-
-    link.simulateResult({
-      result: {
-        errors: [new GraphQLError("Could not fetch greeting")],
-      },
-    });
-
-    await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(renders.errors.length).toBe(1);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors;
-
-    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
-    expect(error).toEqual(
-      new CombinedGraphQLErrors({
-        errors: [{ message: "Could not fetch greeting" }],
-      })
-    );
-  });
-
-  it("throws errors returned by deferred queries that include partial data", async () => {
-    using _consoleSpy = spyOnConsole("error");
-
-    const query = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      {
-        link,
-        incrementalHandler: new Defer20220824Handler(),
-      }
-    );
-
-    link.simulateResult({
-      result: {
-        data: { greeting: null },
-        errors: [new GraphQLError("Could not fetch greeting")],
-      },
-    });
-
-    await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(renders.errors.length).toBe(1);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors;
-
-    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
-    expect(error).toEqual(
-      new CombinedGraphQLErrors({
-        data: { greeting: null },
-        errors: [{ message: "Could not fetch greeting" }],
-      })
-    );
-  });
-
-  it("discards partial data and throws errors returned in incremental chunks", async () => {
-    using _consoleSpy = spyOnConsole("error");
-
-    const query = gql`
-      query {
-        hero {
-          name
-          heroFriends {
-            id
-            name
-            ... @defer {
-              homeWorld
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                new GraphQLError(
-                  "homeWorld for character with ID 1000 could not be fetched.",
-                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                ),
-              ],
-              data: {
-                homeWorld: null,
-              },
-            },
-            // This chunk is ignored since errorPolicy `none` throws away partial
-            // data
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
-    });
-
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-    ]);
-
-    const [error] = renders.errors;
-
-    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
-    expect(error).toEqual(
-      new CombinedGraphQLErrors({
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-                homeWorld: null,
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-                homeWorld: "Alderaan",
-              },
-            ],
-            name: "R2-D2",
-          },
-        },
-        errors: [
-          {
-            message:
-              "homeWorld for character with ID 1000 could not be fetched.",
-            path: ["hero", "heroFriends", 0, "homeWorld"],
-          },
-        ],
-      })
-    );
-  });
-
-  it("adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`", async () => {
-    const query = gql`
-      query {
-        hero {
-          name
-          heroFriends {
-            id
-            name
-            ... @defer {
-              homeWorld
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { errorPolicy: "all" }),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                new GraphQLError(
-                  "homeWorld for character with ID 1000 could not be fetched.",
-                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                ),
-              ],
-              data: {
-                homeWorld: null,
-              },
-            },
-            // Unlike the default (errorPolicy = `none`), this data will be
-            // added to the final result
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-                homeWorld: null,
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-                homeWorld: "Alderaan",
-              },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors({
-          data: {
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                  homeWorld: null,
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                  homeWorld: "Alderaan",
-                },
-              ],
-              name: "R2-D2",
-            },
-          },
-          errors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
-      });
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-                homeWorld: null,
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-                homeWorld: "Alderaan",
-              },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors({
-          data: {
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                  homeWorld: null,
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                  homeWorld: "Alderaan",
-                },
-              ],
-              name: "R2-D2",
-            },
-          },
-          errors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
-      },
-    ]);
-  });
-
-  it("adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`", async () => {
-    const query = gql`
-      query {
-        hero {
-          name
-          heroFriends {
-            id
-            name
-            ... @defer {
-              homeWorld
-            }
-          }
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
-      { link, incrementalHandler: new Defer20220824Handler() }
-    );
-
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                new GraphQLError(
-                  "homeWorld for character with ID 1000 could not be fetched.",
-                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                ),
-              ],
-              data: {
-                homeWorld: null,
-              },
-            },
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-                homeWorld: null,
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-                homeWorld: "Alderaan",
-              },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-              },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: "1000",
-                name: "Luke Skywalker",
-                homeWorld: null,
-              },
-              {
-                id: "1003",
-                name: "Leia Organa",
-                homeWorld: "Alderaan",
-              },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it("can refetch and respond to cache updates after encountering an error in an incremental chunk for a deferred query when `errorPolicy` is `all`", async () => {
-    const query = gql`
-      query {
-        hero {
-          name
-          heroFriends {
-            id
-            name
-            ... @defer {
-              homeWorld
-            }
-          }
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache,
-      incrementalHandler: new Defer20220824Handler(),
-    });
-
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { errorPolicy: "all" }),
-      { client }
-    );
-
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
-            ],
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              errors: [
-                new GraphQLError(
-                  "homeWorld for character with ID 1000 could not be fetched.",
-                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                ),
-              ],
-              data: {
-                homeWorld: null,
-              },
-            },
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: null },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors({
-          data: {
-            hero: {
-              heroFriends: [
-                { id: "1000", name: "Luke Skywalker", homeWorld: null },
-                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-              ],
-              name: "R2-D2",
-            },
-          },
-          errors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
-      });
-    });
-
-    let refetchPromise: Promise<ApolloClient.QueryResult<unknown>>;
-    await actAsync(async () => {
-      refetchPromise = result.current.refetch();
-    });
-
-    link.simulateResult({
-      result: {
-        data: {
-          hero: {
-            name: "R2-D2",
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
-            ],
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: null },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      });
-    });
-
-    link.simulateResult(
-      {
-        result: {
-          incremental: [
-            {
-              path: ["hero", "heroFriends", 0],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-            {
-              path: ["hero", "heroFriends", 1],
-              data: {
-                homeWorld: "Alderaan",
-              },
-            },
-          ],
-          hasNext: false,
-        },
-      },
-      true
-    );
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    await expect(refetchPromise!).resolves.toStrictEqualTyped({
-      data: {
-        hero: {
-          heroFriends: [
-            { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
-            { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-          ],
-          name: "R2-D2",
-        },
-      },
-    });
-
-    cache.updateQuery<any>({ query }, (data) => ({
-      hero: {
-        ...data.hero,
-        name: "C3PO",
-      },
-    }));
-
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "C3PO",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(7 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: null },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors({
-          data: {
-            hero: {
-              heroFriends: [
-                { id: "1000", name: "Luke Skywalker", homeWorld: null },
-                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-              ],
-              name: "R2-D2",
-            },
-          },
-          errors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
-      },
-      {
-        data: markAsStreaming({
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: null },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        }),
-        dataState: "streaming",
-        networkStatus: NetworkStatus.streaming,
-        error: undefined,
-      },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "R2-D2",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
-              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-            ],
-            name: "C3PO",
-          },
-        },
-        dataState: "complete",
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
   it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
     interface SubscriptionData {
       greetingUpdated: string;
@@ -12255,6 +9424,126 @@ describe("useSuspenseQuery", () => {
       );
     }
   });
+
+  {
+    interface Query {
+      hello?: string | null;
+    }
+    interface QueryVariables {
+      skipHello: boolean;
+    }
+    type Result = Pick<
+      useSuspenseQuery.Result<Query, QueryVariables>,
+      "data" | "dataState" | "networkStatus" | "error"
+    >;
+    it.each<[useSuspenseQuery.Options["fetchPolicy"], ...Array<Result | null>]>(
+      [
+        [
+          "cache-and-network",
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.loading,
+            error: undefined,
+          },
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "cache-first",
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "network-only",
+          null,
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+        [
+          "no-cache",
+          null,
+          {
+            data: {},
+            dataState: "complete",
+            networkStatus: NetworkStatus.ready,
+            error: undefined,
+          },
+        ],
+      ]
+    )(
+      "unsuspends with `data: {}` and `dataState: 'complete'` when all fields are skipped (using fetchPolicy: %s)",
+      async (fetchPolicy, ...expectedResults) => {
+        const query: TypedDocumentNode<Query, QueryVariables> = gql`
+          query SkipQuery($skipHello: Boolean!) {
+            hello @skip(if: $skipHello)
+          }
+        `;
+
+        const link = new MockLink([
+          {
+            request: { query, variables: { skipHello: true } },
+            result: { data: {} },
+            delay: 20,
+          },
+        ]);
+
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link,
+        });
+
+        const renderStream = createRenderStream({
+          initialSnapshot: {
+            result: null as Result | null,
+          },
+        });
+
+        function App() {
+          const result = useSuspenseQuery(query, {
+            variables: { skipHello: true },
+            fetchPolicy,
+          });
+
+          renderStream.replaceSnapshot({ result });
+
+          return null;
+        }
+
+        using _disabledAct = disableActEnvironment();
+        await renderStream.render(
+          <Suspense fallback="Loading">
+            <App />
+          </Suspense>,
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+        for (const expectedResult of expectedResults) {
+          const { snapshot } = await renderStream.takeRender();
+          const { result } = snapshot;
+          expect(result).toStrictEqualTyped(expectedResult);
+        }
+
+        await expect(renderStream).not.toRerender();
+      }
+    );
+  }
 
   describe.skip("type tests", () => {
     it("returns unknown when TData cannot be inferred", () => {

@@ -22,7 +22,7 @@ const scriptEntries = Array.from(
 /** @type{import('knip').KnipConfig}*/
 const config = {
   exclude: ["optionalPeerDependencies", "unresolved"],
-  entry: []
+  entry: /**@type {string[]}*/ ([])
     .concat(packageEntries)
     .concat(scriptEntries)
     .concat([
@@ -47,6 +47,8 @@ const config = {
     "src/config/jest/resolver.ts",
     "config/listImports.ts",
     "scripts/codemods/**/__testfixtures__/**/*",
+    // Exports `KeyOptions` used in `matchers/index.d.ts`, but can't pick it up
+    "src/testing/matchers/toHaveFragmentWatchesOn.ts",
   ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [

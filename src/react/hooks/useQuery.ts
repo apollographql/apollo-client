@@ -16,7 +16,6 @@ import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
 import type {
-  ApolloClient,
   DataState,
   DefaultContext,
   DocumentNode,
@@ -32,6 +31,7 @@ import type {
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
@@ -42,9 +42,12 @@ import type {
 import {
   maybeDeepFreeze,
   mergeOptions,
+  variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
 
-import { wrapHook } from "./internal/index.js";
+import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
@@ -120,6 +123,7 @@ export declare namespace useQuery {
     export interface Result<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
+      TReturnVariables extends OperationVariables = TVariables,
     > {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
       client: ApolloClient;
@@ -157,7 +161,7 @@ export declare namespace useQuery {
       ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-      variables: TVariables;
+      variables: TReturnVariables;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
       fetchMore: <
@@ -178,7 +182,8 @@ export declare namespace useQuery {
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = Base.Result<TData, TVariables> &
+    TReturnVariables extends OperationVariables = TVariables,
+  > = Base.Result<TData, TVariables, TReturnVariables> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export namespace DocumentationTypes {
@@ -287,6 +292,33 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken
+): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: true;
+      })
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial",
+  Partial<TVariables>
+>;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: boolean;
   }
@@ -302,11 +334,19 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+  options:
+    | SkipToken
+    | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: boolean;
+      })
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial",
+  Partial<TVariables>
+>;
 
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
 export function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -315,37 +355,68 @@ export function useQuery<
   ...[options]: {} extends TVariables ?
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+
+/** {@inheritDoc @apollo/client/react!useQuery:function(1)} */
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming",
+  Partial<TVariables>
+>;
+
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [
+      options?:
+        | SkipToken
+        | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables> {
   "use no memo";
   return wrapHook(
     "useQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
-    useApolloClient(options && options.client)
+    useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = {} as useQuery.Options<TData, TVariables>
+  options:
+    | SkipToken
+    | useQuery.Options<
+        NoInfer<TData>,
+        NoInfer<TVariables>
+      > = {} as useQuery.Options<TData, TVariables>
 ): useQuery.Result<TData, TVariables> {
-  const client = useApolloClient(options.client);
-  const { skip, ssr, ...opts } = options;
+  const client = useApolloClient(
+    typeof options === "object" ? options.client : undefined
+  );
+  const { ssr } = typeof options === "object" ? options : {};
 
-  const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
-    mergeOptions(client.defaultOptions.watchQuery as any, { ...opts, query });
-
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      options.initialFetchPolicy || options.fetchPolicy;
-    watchQueryOptions.fetchPolicy = "standby";
-  }
+  const watchQueryOptions = useOptions(
+    query,
+    options,
+    client.defaultOptions.watchQuery
+  );
 
   function createState(
     previous?: InternalState<TData, TVariables>
@@ -391,11 +462,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useResult<TData, TVariables>(
-    observable,
-    resultData,
-    options.ssr
-  );
+  const result = useResult<TData, TVariables>(observable, resultData, ssr);
 
   const obsQueryFields = React.useMemo(
     () => ({
@@ -424,6 +491,40 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, client, observable, previousData, obsQueryFields]);
 }
 
+const fromSkipToken = Symbol();
+
+function useOptions<TData, TVariables extends OperationVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+  defaultOptions: Partial<ApolloClient.WatchQueryOptions<any, any>> | undefined
+): ApolloClient.WatchQueryOptions<TData, TVariables> {
+  return useDeepMemo<ApolloClient.WatchQueryOptions<TData, TVariables>>(() => {
+    if (options === skipToken) {
+      const opts: ApolloClient.WatchQueryOptions<TData, TVariables> = {
+        ...mergeOptions(defaultOptions as any, {
+          query,
+          fetchPolicy: "standby",
+        }),
+        [variablesUnknownSymbol]: true,
+      };
+      (opts as any)[fromSkipToken] = true;
+
+      return opts;
+    }
+
+    const watchQueryOptions: ApolloClient.WatchQueryOptions<TData, TVariables> =
+      mergeOptions(defaultOptions as any, { ...options, query });
+
+    if (options.skip) {
+      watchQueryOptions.initialFetchPolicy =
+        options.initialFetchPolicy || options.fetchPolicy;
+      watchQueryOptions.fetchPolicy = "standby";
+    }
+
+    return watchQueryOptions;
+  }, [query, options, defaultOptions]);
+}
+
 function useInitialFetchPolicyIfNecessary<
   TData,
   TVariables extends OperationVariables,
@@ -443,6 +544,7 @@ function useResult<TData, TVariables extends OperationVariables>(
   ssr: boolean | undefined
 ) {
   "use no memo";
+  const fetchPolicy = observable.options.fetchPolicy;
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -468,7 +570,6 @@ function useResult<TData, TVariables extends OperationVariables>(
               return;
             }
 
-            // eslint-disable-next-line react-compiler/react-compiler
             resultData.variables = observable.variables;
 
             if (previous.data && !equal(previous.data, result.data)) {
@@ -491,7 +592,13 @@ function useResult<TData, TVariables extends OperationVariables>(
       [observable, resultData]
     ),
     () => resultData.current,
-    () => (ssr === false ? useQuery.ssrDisabledResult : resultData.current)
+    () =>
+      (
+        (fetchPolicy !== "standby" && ssr === false) ||
+        fetchPolicy === "no-cache"
+      ) ?
+        useQuery.ssrDisabledResult
+      : resultData.current
   );
 }
 
@@ -512,6 +619,16 @@ function useResubscribeIfNecessary<
     observable[lastWatchOptions] &&
     !equal(observable[lastWatchOptions], watchQueryOptions)
   ) {
+    // If skipToken was used to generate options, we won't know the correct
+    // initialFetchPolicy until the hook is rerendered with real options, so we
+    // set it the next time we get real options
+    if (
+      (observable[lastWatchOptions] as any)[fromSkipToken] &&
+      !watchQueryOptions.initialFetchPolicy
+    ) {
+      (watchQueryOptions.initialFetchPolicy as any) =
+        watchQueryOptions.fetchPolicy;
+    }
     // Though it might be tempting to postpone this reobserve call to the
     // useEffect block, we need getCurrentResult to return an appropriate
     // loading:true result synchronously (later within the same call to

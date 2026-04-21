@@ -380,18 +380,22 @@ export class PersistedQueryLink extends ApolloLink {
             // need to recall the link chain
             if (subscription) subscription.unsubscribe();
             // actually send the query this time
-            operation.setContext({
-              http: {
-                includeQuery: true,
-                ...(enabled ? { includeExtensions: true } : {}),
-              },
-              fetchOptions: {
-                // Since we're including the full query, which may be
-                // large, we should send it in the body of a POST request.
-                // See issue #7456.
-                method: "POST",
-              },
-            });
+            operation.setContext(
+              ({ http: prevHttp, fetchOptions: prevFetchOptions }) => ({
+                http: {
+                  ...prevHttp,
+                  includeQuery: true,
+                  ...(enabled ? { includeExtensions: true } : {}),
+                },
+                fetchOptions: {
+                  // Since we're including the full query, which may be
+                  // large, we should send it in the body of a POST request.
+                  // See issue #7456.
+                  ...prevFetchOptions,
+                  method: "POST",
+                },
+              })
+            );
             if (setFetchOptions) {
               operation.setContext({ fetchOptions: originalFetchOptions });
             }
@@ -460,9 +464,12 @@ export class PersistedQueryLink extends ApolloLink {
         };
 
         // don't send the query the first time
-        operation.setContext({
-          http: enabled ? { includeQuery: false, includeExtensions: true } : {},
-        });
+        operation.setContext(({ http: prevHttp }) => ({
+          http:
+            enabled ?
+              { ...prevHttp, includeQuery: false, includeExtensions: true }
+            : prevHttp,
+        }));
 
         // If requested, set method to GET if there are no mutations. Remember the
         // original fetchOptions so we can restore them if we fall back to a

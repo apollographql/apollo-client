@@ -5,22 +5,17 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
-import type { createQueryPreloader } from '@apollo/client/react';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
-import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
-import type { useBackgroundQuery } from '@apollo/client/react';
-import type { useFragment } from '@apollo/client/react';
-import type { useQuery } from '@apollo/client/react';
-import type { useQueryRefHandlers } from '@apollo/client/react';
-import type { useReadQuery } from '@apollo/client/react';
-import type { useSuspenseFragment } from '@apollo/client/react';
-import type { useSuspenseQuery } from '@apollo/client/react';
+import type { ResultOf } from '@graphql-typed-document-node/core';
+import type { VariablesOf } from '@graphql-typed-document-node/core';
 
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //
@@ -42,9 +37,9 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <T
 
 // @public (undocumented)
 type FragmentCacheKey = [
-cacheId: string,
 fragment: DocumentNode,
-stringifiedVariables: string
+stringifiedVariables: string,
+cacheId: string | null
 ];
 
 // @public (undocumented)
@@ -57,7 +52,7 @@ export interface FragmentKey {
 class FragmentReference<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string;
+        from: string | null | Array<string | null>;
     }, options: FragmentReferenceOptions);
     // (undocumented)
     readonly key: FragmentKey;
@@ -66,7 +61,7 @@ class FragmentReference<TData = unknown, TVariables extends OperationVariables =
     // (undocumented)
     listen(listener: Listener_2<MaybeMasked<TData>>): () => void;
     // (undocumented)
-    readonly observable: Observable<ApolloClient.WatchFragmentResult<TData>>;
+    readonly observable: ApolloClient.ObservableFragment<TData | null>;
     // Warning: (ae-forgotten-export) The symbol "FragmentRefPromise" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -86,9 +81,6 @@ interface FragmentReferenceOptions {
 // @public (undocumented)
 type FragmentRefPromise<TData> = DecoratedPromise<TData>;
 
-// @public (undocumented)
-type FunctionSignature<T> = T extends (...args: infer A) => infer R ? (...args: A) => R : never;
-
 // Warning: (ae-forgotten-export) The symbol "SuspenseCache" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -101,12 +93,8 @@ export function getSuspenseCache(client: ApolloClient & {
 // @public (undocumented)
 export function getWrappedPromise<TData, TStates extends DataState<TData>["dataState"]>(queryRef: WrappedQueryRef<TData, any, TStates>): QueryRefPromise<TData, TStates>;
 
-// Warning: (ae-forgotten-export) The symbol "WrappableHooks" needs to be exported by the entry point index.d.ts
-//
-// @internal @deprecated
-export type HookWrappers = {
-    [K in keyof WrappableHooks]?: (originalHook: WrappableHooks[K]) => WrappableHooks[K];
-};
+// @public (undocumented)
+export type HookWrappers = InternalTypes.HookWrappers;
 
 // @public (undocumented)
 export class InternalQueryReference<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> {
@@ -202,6 +190,12 @@ export interface QueryRef<TData = unknown, TVariables extends OperationVariables
 }
 
 // @public (undocumented)
+export namespace QueryRef {
+    // (undocumented)
+    export type ForQuery<Document extends DocumentTypeDecoration<any, any>, TStates extends DataState<ResultOf<Document>>["dataState"] = "complete" | "streaming"> = QueryRef<ResultOf<Document>, VariablesOf<Document>, TStates>;
+}
+
+// @public (undocumented)
 type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
@@ -217,7 +211,7 @@ class SuspenseCache {
     //
     // (undocumented)
     getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string;
+        from: string | null | Array<string | null>;
     }): FragmentReference<TData, TVariables>;
     // (undocumented)
     getQueryRef<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData, TStates>;
@@ -239,28 +233,6 @@ export function unwrapQueryRef<TData, TStates extends DataState<TData>["dataStat
 
 // @public (undocumented)
 export function updateWrappedQueryRef<TData, TStates extends DataState<TData>["dataState"]>(queryRef: WrappedQueryRef<TData, any, TStates>, promise: QueryRefPromise<TData, TStates>): void;
-
-// @public (undocumented)
-interface WrappableHooks {
-    // Warning: (ae-forgotten-export) The symbol "FunctionSignature" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    createQueryPreloader: FunctionSignature<typeof createQueryPreloader>;
-    // (undocumented)
-    useBackgroundQuery: FunctionSignature<typeof useBackgroundQuery>;
-    // (undocumented)
-    useFragment: FunctionSignature<typeof useFragment>;
-    // (undocumented)
-    useQuery: FunctionSignature<typeof useQuery>;
-    // (undocumented)
-    useQueryRefHandlers: FunctionSignature<typeof useQueryRefHandlers>;
-    // (undocumented)
-    useReadQuery: FunctionSignature<typeof useReadQuery>;
-    // (undocumented)
-    useSuspenseFragment: FunctionSignature<typeof useSuspenseFragment>;
-    // (undocumented)
-    useSuspenseQuery: FunctionSignature<typeof useSuspenseQuery>;
-}
 
 // @internal @deprecated
 interface WrappedQueryRef<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {

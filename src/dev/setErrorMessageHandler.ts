@@ -22,7 +22,7 @@ export type ErrorMessageHandler = {
    *
    * ⚠️ Note that arguments will only be passed in for error messages.
    * For normal log messages, you will get an empty array here and they will directly
-   * be passed to `console.log` instead, to have the string subsitution done by the
+   * be passed to `console.log` instead, to have the string substitution done by the
    * engine, as that allows for nicer (and in the case of a browser, interactive)
    * output.
    *

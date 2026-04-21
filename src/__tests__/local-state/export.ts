@@ -123,7 +123,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  test("should store the @client nested field value in the specified @export variable, and make it avilable to a subsequent resolver", async () => {
+  test("should store the @client nested field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor @client {

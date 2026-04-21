@@ -29,27 +29,38 @@ export declare namespace Defer20220824Handler {
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
+    incremental?: ReadonlyArray<IncrementalResult<TData>>;
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     hasNext: boolean;
-    incremental?: Array<IncrementalDeferPayload<TData>>;
+    incremental?: Array<IncrementalResult<TData>>;
   };
 
-  export type Chunk<TData extends Record<string, unknown>> =
-    | InitialResult<TData>
-    | SubsequentResult<TData>;
-
-  export type IncrementalDeferPayload<TData = Record<string, unknown>> = {
-    data?: TData | null | undefined;
+  export type IncrementalDeferResult<TData = Record<string, unknown>> = {
+    data?: TData | null;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     path?: Incremental.Path;
     label?: string;
   };
+
+  export type IncrementalStreamResult<TData = Array<unknown>> = {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    items?: TData;
+    path?: Incremental.Path;
+    label?: string;
+    extensions?: Record<string, unknown>;
+  };
+
+  export type IncrementalResult<TData = Record<string, unknown>> =
+    | IncrementalDeferResult<TData>
+    | IncrementalStreamResult<TData>;
+
+  export type Chunk<TData extends Record<string, unknown>> =
+    | InitialResult<TData>
+    | SubsequentResult<TData>;
 }
 
 class DeferRequest<TData extends Record<string, unknown>>
@@ -61,13 +72,22 @@ class DeferRequest<TData extends Record<string, unknown>>
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
+  // This tracks paths for `@stream` arrays that returns items: null due to
+  // errors thrown for non-null array items. We stop processing future updates
+  // to these stream arrays to prevent creating sparse arrays or inserting
+  // `null` for an expected non-null value which could cause runtime crashes.
+  private ignoredImpossibleStreamPaths = new Set<string>();
 
-  private mergeIn(
+  private merge(
     normalized: FormattedExecutionResult<TData>,
-    merger: DeepMerger<any[]>
+    atPath?: DeepMerger.MergeOptions["atPath"]
   ) {
     if (normalized.data !== undefined) {
-      this.data = merger.merge(this.data, normalized.data);
+      this.data = new DeepMerger({ arrayMerge: "truncate" }).merge(
+        this.data,
+        normalized.data,
+        { atPath }
+      );
     }
     if (normalized.errors) {
       this.errors.push(...normalized.errors);
@@ -84,30 +104,49 @@ class DeferRequest<TData extends Record<string, unknown>>
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
 
-    this.mergeIn(chunk, new DeepMerger());
-
     if (hasIncrementalChunks(chunk)) {
-      const merger = new DeepMerger();
       for (const incremental of chunk.incremental) {
-        let { data, path, errors, extensions } = incremental;
-        if (data && path) {
-          for (let i = path.length - 1; i >= 0; --i) {
-            const key = path[i];
-            const isNumericKey = !isNaN(+key);
-            const parent: Record<string | number, any> = isNumericKey ? [] : {};
-            parent[key] = data;
-            data = parent as typeof data;
+        const { path, errors, extensions } = incremental;
+
+        if ("items" in incremental) {
+          // Remove the array index from the end of the array since each future
+          // chunk sends a different array index. This normalizes the path to
+          // ensure we ignore updates to this field if `items` is `null`.
+          const stringPath = path?.slice(0, -1).join(".") ?? "";
+
+          if (incremental.items === null) {
+            this.ignoredImpossibleStreamPaths.add(stringPath);
+          }
+
+          if (this.ignoredImpossibleStreamPaths.has(stringPath)) {
+            this.merge({ errors, extensions });
+            continue;
           }
         }
-        this.mergeIn(
-          {
-            errors,
-            extensions,
-            data: data ? (data as TData) : undefined,
-          },
-          merger
-        );
+
+        let data: any =
+          "items" in incremental ? incremental.items
+            // Ensure `data: null` isn't merged for `@defer` responses by
+            // falling back to `undefined`
+          : "data" in incremental ? incremental.data ?? undefined
+          : undefined;
+
+        if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
+          const startingIdx = path.at(-1) as number;
+          data.forEach((item, idx) => {
+            this.merge({ data: item }, [
+              ...path!.slice(0, -1),
+              startingIdx + idx,
+            ]);
+          });
+        } else {
+          this.merge({ data }, path);
+        }
+
+        this.merge({ errors, extensions });
       }
+    } else {
+      this.merge(chunk);
     }
 
     const result: FormattedExecutionResult<TData> = { data: this.data };
@@ -151,7 +190,9 @@ export class Defer20220824Handler
       }
     };
     if (this.isIncrementalResult(result)) {
-      push(result);
+      if ("errors" in result) {
+        push(result);
+      }
       if (hasIncrementalChunks(result)) {
         result.incremental.forEach(push);
       }
@@ -162,7 +203,7 @@ export class Defer20220824Handler
   }
 
   prepareRequest(request: ApolloLink.Request): ApolloLink.Request {
-    if (hasDirectives(["defer"], request.query)) {
+    if (hasDirectives(["defer", "stream"], request.query)) {
       const context = request.context ?? {};
       const http = (context.http ??= {});
       http.accept = [

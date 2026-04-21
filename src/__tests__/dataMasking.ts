@@ -2139,7 +2139,7 @@ describe("client.watchQuery", () => {
     );
 
     // Even though `data` didn't change, the `dataState` is updated to reflect
-    // that the full result has been stremed in so we expect another render
+    // that the full result has been streamed in so we expect another render
     // value.
     await expect(stream).toEmitTypedValue({
       data: {

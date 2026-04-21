@@ -88,6 +88,41 @@ In order to use `@defer` in a React Native application, additional configuration
 
 For more information on using the `@defer` directive, see the [Defer](./defer) guide.
 
+<MinVersion version="4.1">
+
+## `@stream`
+
+</MinVersion>
+
+The [`@stream` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md) enables your queries to receive list items _incrementally_, instead of receiving the entire list at once. This is helpful when a field returns a large list that takes time to fully resolve.
+
+<Note>
+
+To use the `@stream` directive, you need to configure an incremental delivery format handler. See the [Defer](./defer#setting-up-defer-support-by-choosing-an-incrementalhandler) guide for more information.
+
+</Note>
+
+Apply the `@stream` directive to a list field. Use the `initialCount` argument to specify the number of items to include in the initial response:
+
+```graphql
+query FeedQuery {
+  feed @stream(initialCount: 5) {
+    id
+    contents
+  }
+}
+```
+
+The server returns the first five items immediately, then delivers remaining items as they become available. Your UI can render the initial items while waiting for the rest.
+
+<Note>
+
+In order to use `@stream` in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.
+
+</Note>
+
+For more information on using `@stream`, including details on how `loading`, `networkStatus`, and `dataState` change as list items arrive, see the [Defer](./defer#loading-networkstatus-datastate-and-data-merging) guide.
+
 ## `@export`
 
 If your GraphQL query uses variables, the local-only fields of that query can provide the values of those variables.

@@ -5,6 +5,7 @@ import { map } from "rxjs";
 
 import type {
   ApolloCache,
+  Cache,
   IgnoreModifier,
   Reference,
 } from "@apollo/client/cache";
@@ -17,11 +18,15 @@ import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { VariablesOption } from "@apollo/client/utilities/internal";
+import type {
+  VariablesOption,
+  variablesUnknownSymbol,
+} from "@apollo/client/utilities/internal";
 import {
   checkDocument,
   compact,
   getApolloClientMemoryInternals,
+  mapObservableFragmentMemoized,
   mergeOptions,
   removeMaskedFragmentSpreads,
 } from "@apollo/client/utilities/internal";
@@ -118,7 +123,7 @@ export declare namespace ApolloClient {
      *
      * @since 3.11.0
      */
-    devtools?: DevtoolsOptions;
+    devtools?: ApolloClient.DevtoolsOptions;
 
     /**
      * Determines if data masking is enabled for the client.
@@ -132,6 +137,15 @@ export declare namespace ApolloClient {
      * queries.
      */
     incrementalHandler?: Incremental.Handler<any>;
+
+    /**
+     * @experimental
+     * Allows passing in "experiments", experimental features that might one day
+     * become part of Apollo Client's core functionality.
+     * Keep in mind that these features might change the core of Apollo Client.
+     * Do not pass in experiments that are not provided by Apollo.
+     */
+    experiments?: ApolloClient.Experiment[];
   }
 
   interface DevtoolsOptions {
@@ -337,7 +351,15 @@ export declare namespace ApolloClient {
   > = ApolloCache.WatchFragmentOptions<TData, TVariables>;
 
   export type WatchFragmentResult<TData = unknown> =
-    ApolloCache.WatchFragmentResult<TData>;
+    ApolloCache.WatchFragmentResult<MaybeMasked<TData>>;
+
+  export interface ObservableFragment<TData = unknown>
+    extends Observable<ApolloClient.WatchFragmentResult<TData>> {
+    /**
+     * Return the current result for the fragment.
+     */
+    getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
+  }
 
   /**
    * Watched query options.
@@ -384,6 +406,20 @@ export declare namespace ApolloClient {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * @internal This API is meant for framework integrations only.
+     * Do not use for everyday use.
+     *
+     * Indicates that the variables are unknown at the time of query creation.
+     * This option can only be set when `fetchPolicy` is `'standby'`.
+     * Setting this to `true` will prevent `client.refetchQueries` from refetching
+     * this query before it has left the `'standby'` state, either by setting a
+     * `fetchPolicy`, or by calling `observableQuery.refetch()` explicitly.
+     *
+     * Changing this option after the query has been created will have no effect.
+     */
+    [variablesUnknownSymbol]?: boolean;
   } & VariablesOption<NoInfer<TVariables>>;
 
   namespace Base {
@@ -443,13 +479,6 @@ export declare namespace ApolloClient {
       TVariables extends OperationVariables,
     > {
       /**
-       * The root id to be used. This id should take the same form as the
-       * value returned by the `cache.identify` function. If a value with your
-       * id does not exist in the store, `null` will be returned.
-       */
-      id?: string;
-
-      /**
        * A GraphQL document created using the `gql` template string tag
        * with one or more fragments which will be used to determine
        * the shape of data to read. If you provide more than one fragment in this
@@ -479,10 +508,38 @@ export declare namespace ApolloClient {
       optimistic?: boolean;
     }
   }
+
+  export namespace DocumentationTypes {
+    export interface ReadFragmentOptions<
+      TData,
+      TVariables extends OperationVariables,
+    > extends Base.ReadFragmentOptions<TData, TVariables> {
+      /**
+       * The root id to be used. This id should take the same form as the
+       * value returned by the `cache.identify` function. If a value with your
+       * id does not exist in the store, `null` will be returned.
+       */
+      id?: string;
+
+      /**
+       * An object containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+       * (uncommon).
+       *
+       * @remarks
+       * `from` is given precedence over `id` when both are provided.
+       */
+      from?: ApolloCache.FromOptionValue<TData>;
+    }
+  }
+
   export type ReadFragmentOptions<
     TData,
     TVariables extends OperationVariables,
-  > = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables>;
+  > = Base.ReadFragmentOptions<TData, TVariables> &
+    VariablesOption<TVariables> &
+    Cache.CacheIdentifierOption<TData>;
 
   export namespace DocumentationTypes {
     export interface WriteQueryOptions<
@@ -529,6 +586,11 @@ export declare namespace ApolloClient {
        * @defaultValue false
        */
       overwrite?: boolean;
+      /**
+       * GraphQL extensions for the write operation. Any provided `extensions`
+       * are available in `merge` functions.
+       */
+      extensions?: Record<string, unknown>;
     }
   }
   export type WriteQueryOptions<
@@ -553,13 +615,6 @@ export declare namespace ApolloClient {
       TData,
       TVariables extends OperationVariables,
     > {
-      /**
-       * The root id to be used. This id should take the same form as the
-       * value returned by the `cache.identify` function. If a value with your
-       * id does not exist in the store, `null` will be returned.
-       */
-      id?: string;
-
       /**
        * A GraphQL document created using the `gql` template string tag from
        * `graphql-tag` with one or more fragments which will be used to determine
@@ -597,7 +652,8 @@ export declare namespace ApolloClient {
     TData,
     TVariables extends OperationVariables,
   > = Base.WriteFragmentOptions<TData, TVariables> &
-    VariablesOption<TVariables>;
+    VariablesOption<TVariables> &
+    Cache.CacheIdentifierOption<TData>;
 
   export namespace DocumentationTypes {
     export interface WriteFragmentOptions<
@@ -605,10 +661,33 @@ export declare namespace ApolloClient {
       TVariables extends OperationVariables,
     > extends Base.WriteFragmentOptions<TData, TVariables> {
       /**
+       * The root id to be used. This id should take the same form as the
+       * value returned by the `cache.identify` function. If a value with your
+       * id does not exist in the store, `null` will be returned.
+       */
+      id?: string;
+
+      /**
+       * An object containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+       * (uncommon).
+       *
+       * @remarks
+       * `from` is given precedence over `id` when both are provided.
+       */
+      from?: ApolloCache.FromOptionValue<TData>;
+
+      /**
        * Any variables that your GraphQL fragments depend on.
        */
       variables?: TVariables;
     }
+  }
+
+  export interface Experiment {
+    (this: ApolloClient, options: ApolloClient.Options): void;
+    v: 1;
   }
 }
 
@@ -656,24 +735,22 @@ export class ApolloClient {
    * @example
    *
    * ```js
-   * import { ApolloClient, InMemoryCache } from "@apollo/client";
+   * import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
    *
    * const cache = new InMemoryCache();
+   * const link = new HttpLink({ uri: "http://localhost:4000/" });
    *
    * const client = new ApolloClient({
    *   // Provide required constructor fields
    *   cache: cache,
-   *   uri: "http://localhost:4000/",
+   *   link: link,
    *
    *   // Provide some optional constructor fields
-   *   name: "react-web-client",
-   *   version: "1.3",
-   *   queryDeduplication: false,
-   *   defaultOptions: {
-   *     watchQuery: {
-   *       fetchPolicy: "cache-and-network",
-   *     },
+   *   clientAwareness: {
+   *     name: "react-web-client",
+   *     version: "1.3",
    *   },
+   *   queryDeduplication: false,
    * });
    * ```
    */
@@ -708,6 +785,7 @@ export class ApolloClient {
       dataMasking,
       link,
       incrementalHandler = new NotImplementedHandler(),
+      experiments = [],
     } = options;
 
     this.link = link;
@@ -759,6 +837,8 @@ export class ApolloClient {
     }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
+
+    experiments.forEach((experiment) => experiment.call(this, options));
   }
 
   private connectToDevTools() {
@@ -1097,42 +1177,98 @@ export class ApolloClient {
    * the cache to identify the fragment and optionally specify whether to react
    * to optimistic updates.
    */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.FromOptionValue<TData>>;
+    }
+  ): ApolloClient.ObservableFragment<Array<TData>>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<null>;
+    }
+  ): ApolloClient.ObservableFragment<Array<null>>;
+
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: Array<ApolloCache.FromOptionValue<TData> | null>;
+    }
+  ): ApolloClient.ObservableFragment<Array<TData | null>>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: null;
+    }
+  ): ApolloClient.ObservableFragment<null>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
+      from: ApolloCache.FromOptionValue<TData>;
+    }
+  ): ApolloClient.ObservableFragment<TData>;
+
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
+  public watchFragment<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: ApolloClient.WatchFragmentOptions<TData, TVariables>
+  ): ApolloClient.ObservableFragment<TData | null>;
 
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.WatchFragmentOptions<TData, TVariables>
-  ): Observable<ApolloClient.WatchFragmentResult<MaybeMasked<TData>>> {
+  ):
+    | ApolloClient.ObservableFragment<TData>
+    | ApolloClient.ObservableFragment<Array<TData>> {
     const dataMasking = this.queryManager.dataMasking;
+    const observable = this.cache.watchFragment({
+      ...options,
+      fragment: this.transform(options.fragment, dataMasking),
+    });
 
-    return this.cache
-      .watchFragment({
-        ...options,
-        fragment: this.transform(options.fragment, dataMasking),
-      })
-      .pipe(
-        map((result) => {
+    if (__DEV__) {
+      return mapObservableFragmentMemoized(
+        observable,
+        Symbol.for("apollo.transform.dev.mask"),
+        (
+          result: ApolloClient.WatchFragmentResult<any>
+        ): ApolloClient.WatchFragmentResult<any> => ({
+          ...result,
           // The transform will remove fragment spreads from the fragment
-          // document when dataMasking is enabled. The `maskFragment` function
+          // document when dataMasking is enabled. The `mask` function
           // remains to apply warnings to fragments marked as
           // `@unmask(mode: "migrate")`. Since these warnings are only applied
           // in dev, we can skip the masking algorithm entirely for production.
-          if (__DEV__) {
-            if (dataMasking) {
-              const data = this.queryManager.maskFragment({
-                ...options,
-                data: result.data,
-              });
-              return { ...result, data } as ApolloClient.WatchFragmentResult<
-                MaybeMasked<TData>
-              >;
-            }
-          }
-
-          return result as ApolloClient.WatchFragmentResult<MaybeMasked<TData>>;
+          data: this.queryManager.maskFragment({
+            ...options,
+            data: result.data,
+          }),
         })
-      );
+      ) satisfies ApolloClient.ObservableFragment<any> as ApolloClient.ObservableFragment<any>;
+    }
+
+    return observable as ApolloClient.ObservableFragment<any>;
   }
 
   /**
@@ -1418,6 +1554,14 @@ export class ApolloClient {
 
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
+   *
+   * @remarks
+   *
+   * This can be useful for debugging in order to inspect the full state of the
+   * cache.
+   *
+   * @param optimistic - Determines whether the result contains data from the
+   * optimistic layer
    */
   public extract(optimistic?: boolean) {
     return this.cache.extract(optimistic);
@@ -1537,7 +1681,7 @@ export class ApolloClient {
    * }
    * ```
    */
-  public getMemoryInternals?: typeof getApolloClientMemoryInternals;
+  public declare getMemoryInternals?: typeof getApolloClientMemoryInternals;
 }
 
 if (__DEV__) {

@@ -20,7 +20,7 @@ If your application is built using TypeScript, we recommend reading the [TypeScr
 </Note>
 
 This article assumes you're familiar with building basic GraphQL mutations. If you need a refresher, we recommend that you
-[read this guide](http://graphql.org/learn/queries/#mutations).
+[read this guide](https://graphql.org/learn/mutations/).
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For help with those steps, [get started](../get-started/).
 
@@ -153,6 +153,31 @@ In [the example snippets above](#providing-options), `value` would override `"pl
 <Note>
 
 When using TypeScript, you might see an error related to a missing variable when a required variable is not provided to either the hook or the `mutate` function. Providing required variables to the hook makes them optional in the `mutate` function. If a required variable is not provided to the hook, it is required in the `mutate` function.
+
+</Note>
+
+<MinVersion version="4.1">
+
+##### Merging `context` from the hook and `mutate` function
+
+</MinVersion>
+
+Due to option precedence, `context` provided to the `mutate` function overrides `context` provided to the `useMutation` hook. In some cases, you might want to merge the `context` value provided to the hook with a value available at the time you execute the `mutate` function.
+
+You accomplish this by using a callback function for the `context` option provided to the `mutate` function. The callback function is called with the `context` value provided to the hook, allowing you to merge them together.
+
+```ts
+addTodo({
+  context: (hookContext) => ({
+    ...hookContext,
+    myCustomValue: true,
+  }),
+});
+```
+
+<Note>
+
+Your callback function is not required to merge the context values together. The `context` value sent to the link chain is the value returned from the function which makes it possible to change the `context` value in any way you wish, such as omitting a property from the hook context.
 
 </Note>
 

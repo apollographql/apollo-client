@@ -2006,7 +2006,7 @@ describe("writing to the store", () => {
         result,
         query,
       });
-    }).toThrowError(/No fragment/);
+    }).toThrow(/No fragment/);
   });
 
   it("does not change object references if the value is the same", () => {
@@ -2288,9 +2288,9 @@ describe("writing to the store", () => {
       });
     });
 
-    it("should not warn if a field is defered", () => {
+    it("should not warn if a field is deferred", () => {
       using _consoleSpy = spyOnConsole.takeSnapshots("error");
-      const defered = gql`
+      const deferred = gql`
         query LazyLoad {
           id
           expensive @defer
@@ -2308,7 +2308,7 @@ describe("writing to the store", () => {
 
       const newStore = writeQueryToStore({
         writer,
-        query: defered,
+        query: deferred,
         result,
       });
 
@@ -3067,7 +3067,7 @@ describe("writing to the store", () => {
           count: 1,
         },
       });
-    }).toThrowError(/Could not identify object/);
+    }).toThrow(/Could not identify object/);
   });
 
   it('user objects should be able to have { __typename: "Subscription" }', () => {

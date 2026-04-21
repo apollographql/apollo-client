@@ -182,7 +182,7 @@ type MergeObjects<T, U> = Prettify<
   } & Pick<U, Exclude<keyof U, keyof T>>
 >;
 
-// force distrubution when T is a union with | undefined
+// force distribution when T is a union with | undefined
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
 

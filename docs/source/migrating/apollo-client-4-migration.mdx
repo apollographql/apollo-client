@@ -38,7 +38,7 @@ Apollo Client 4.0 is a major-version release that includes breaking changes. If 
 Install Apollo Client 4 along with its peer dependencies with the following command:
 
 ```sh showLineNumbers=false
-npm install @apollo/client graphql rxjs
+npm install @apollo/client@latest graphql rxjs
 ```
 
 <Note>
@@ -366,6 +366,12 @@ End: Inserted by Apollo Client 3->4 migration codemod.
 
 ### Running the codemod
 
+<Note>
+
+The codemod requires a Node.js version that supports loading ECMAScript modules with `require`. See the table in the [Node.js documentation](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) for the versions that support this feature (you might need to expand the "History" section to see the table.)
+
+</Note>
+
 To run the codemod, use the following command:
 
 ```sh showLineNumbers=false
@@ -375,6 +381,12 @@ npx @apollo/client-codemod-migrate-3-to-4 src
 <Note>
 
 This command behaves similarly to [`jscodeshift`](https://github.com/facebook/jscodeshift) with a preselected codemod.
+
+</Note>
+
+<Note>
+
+This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
 
 </Note>
 
@@ -392,12 +404,6 @@ If you have a TypeScript project, we recommend running the codemod against `.ts`
 npx @apollo/client-codemod-migrate-3-to-4 --parser ts --extensions ts src
 npx @apollo/client-codemod-migrate-3-to-4 --parser tsx --extensions tsx src
 ```
-
-<Note>
-
-This example targets the `src` directory with the codemod. Replace `src` with the file pattern applicable to your file structure if it differs.
-
-</Note>
 
 ### Running specific modifications
 
@@ -993,7 +999,7 @@ A query is in standby if it is skipped with the `skip` option or `skipToken` in 
 
 </Note>
 
-This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` as these no longer include `ObservableQuery` instances without subscribers.
+This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` when using the `"active"` or `"all"` keywords, as these no longer include `ObservableQuery` instances without subscribers.
 
 ### Removal of the `canonizeResults` option
 
@@ -1003,6 +1009,87 @@ The `canonizeResults` option has been removed because it caused memory leaks. If
 useQuery(QUERY, {
   canonizeResults: true,// [!code --]
 });
+```
+
+### Subscription deduplication
+
+Subscriptions are now deduplicated when `queryDeduplication` is enabled (the default). Subscriptions that qualify for deduplication attach to the same connection as a previously connected subscription.
+
+To disable query deduplication, provide `queryDeduplication: false` to the `context` option when creating the subscription.
+
+```ts
+// with React's `useSubscription`
+useSubscription(SUBSCRIPTION, {
+  context: { queryDeduplication: false },
+});
+
+// with the core API
+const observable = client.subscribe({
+  query: SUBSCRIPTION,
+  context: { queryDeduplication: false },
+});
+```
+
+<Caution>
+
+Some GraphQL servers emit an initial value when the subscription first connects. A subscription that attaches to an existing connection because of deduplication does not receive an update until the server next emits a value. Depending on the frequency of updates pushed from the server, the deduplicated subscription might wait for an extended period of time before receiving its first value.<br/><br/>
+
+If you rely on the initial value to read data from the subscription, we recommend disabling query deduplication so that the subscription creates a new connection.
+
+</Caution>
+
+### `ObservableQuery` no longer inherits from `Observable`
+
+`ObservableQuery` instances returned from `client.watchQuery` no longer inherit from `Observable`. This might cause TypeScript errors when using `ObservableQuery` with some RxJS utilities that expect `Observable` instances, such as [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom).
+
+Convert `ObservableQuery` to an `Observable` using the [`from`](https://rxjs.dev/api/index/function/from) function.
+
+```ts
+import { from } from "rxjs";
+
+const observable = from(observableQuery);
+//    ^? Observable<ObservableQuery.Result<MaybeMasked<TData>>>
+```
+
+<Note>
+
+`ObservableQuery` implements the [`Subscribable`](https://rxjs.dev/api/index/interface/Subscribable) interface, so you can call `subscribe` directly without converting to an `Observable`. It also implements the `pipe` function, so you can chain operators.<br/><br/>
+
+Use `from` only for functions that require an `Observable` instance.
+
+</Note>
+
+### Removal of `Observable` utilities
+
+Apollo Client 3 included several utilities for working with `Observable` instances from the `zen-observable` library. Apollo Client 4 removes these utilities in favor of RxJS's operators.
+
+#### `fromError`
+
+Use the [`throwError`](https://rxjs.dev/api/index/function/throwError) function instead.
+
+```ts
+const observable = fromError(new Error("Oops"));// [!code --]
+const observable = throwError(() => {// [!code ++:3]
+  return new Error("Oops");
+});
+```
+
+#### `fromPromise`
+
+Use the [`from`](https://rxjs.dev/api/index/function/from) function instead.
+
+```ts
+const observable = fromPromise(promise);// [!code --]
+const observable = from(promise);// [!code ++]
+```
+
+#### `toPromise`
+
+Use the [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) function instead.
+
+```ts
+const promise = toPromise(observable);// [!code --]
+const promise = firstValueFrom(observable);// [!code ++]
 ```
 
 ## New error handling
@@ -1182,7 +1269,7 @@ console.log(error); // => undefined
 
 </Note>
 
-### Network errors never terminate `ObservableQuery`
+### Network errors never terminate `ObservableQuery` or subscription Observables
 
 In Apollo Client 3, network errors emitted an `error` notification on the `ObservableQuery` instance. Because error notifications terminate observables, this meant you needed special handling to restart the `ObservableQuery` instance so that it listened for new results. Network errors were emitted to the `error` callback.
 
@@ -1205,6 +1292,12 @@ observable.subscribe({
   },
 });
 ```
+
+<Note>
+
+The change applies to all Apollo Client observables, including subscriptions created with `client.subscribe()`. GraphQL errors in subscriptions are always delivered through the `next` callback in `result.error`, never through the `error` callback. The subscription only terminates for non-recoverable errors like network failures.
+
+</Note>
 
 ### `ServerError` and `ServerParseError` are error classes
 
@@ -1308,6 +1401,12 @@ function onUserInteraction(){
 ```
 
 If you need to change the value of an option, rerender the component with the new option value before calling the `execute` function again.
+
+<Note>
+
+When calling the `execute` function multiple times, the `fetchPolicy` is not reset to `initialFetchPolicy` between executions. This means that subsequent calls to `execute` continue using the fetch policy from the previous execution. This primarily affects you if you're using `nextFetchPolicy` to change the `fetchPolicy` after the initial fetch.
+
+</Note>
 
 #### Executing the query during render
 
@@ -1445,6 +1544,58 @@ async function onUserInteraction() {
 
 </Tip>
 
+#### Changes to promise resolution with errors for the `execute` function
+
+The promise returned from the `execute` function is now consistently resolved or rejected based on your configured `errorPolicy` when errors are returned. With an `errorPolicy` of `none`, the promise always rejects. With an `errorPolicy` of `all`, the promise always resolves and sets the `error` property on the result. With an `errorPolicy` of `ignore`, the promise always resolves and discards the errors.
+
+Previously, Apollo Client 3 resolved the promise when GraphQL errors were returned when using an `errorPolicy` of `none`. Network errors always caused the promise to reject, regardless of your configured error policy. This change unifies the error behavior across all error types to ensure errors are handled consistently.
+
+To migrate code that uses an `errorPolicy` of `none`, wrap the call to `execute` in a `try`/`catch` block and use `CombinedGraphQLErrors.is(error)` to check for GraphQL errors.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "none",
+});
+
+async function onUserInteraction() {
+  const { data, error } = await execute({ variables });// [!code --:4]
+  if (error.graphQLErrors) {
+    // handle GraphQL errors
+  }
+
+  try {// [!code ++:6]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (CombinedGraphQLErrors.is(error)) {
+      // handle GraphQL errors
+    }
+  }
+}
+```
+
+To migrate code that uses an `errorPolicy` of `all`, read the error from the `error` property returned in the result. You can optionally remove any `try`/`catch` statements because the promise resolves for all error types.
+
+```ts disableCopy=true
+const [execute] = useLazyQuery(QUERY, {
+  errorPolicy: "all",
+});
+
+async function onUserInteraction() {
+  try {// [!code --:7]
+    const { data } = await execute({ variables });
+  } catch (error) {
+    if (error.graphQLErrors) {
+      // handle GraphQL errors
+    }
+  }
+
+  const { data, error } = await execute({ variables });// [!code ++:4]
+  if (CombinedGraphQLErrors.is(error)) {
+    // handle GraphQL errors
+  }
+}
+```
+
 ### Changes to `useMutation`
 
 `useMutation` has been modified to work with our [philosophy](#a-note-about-hook-usage) that React hooks should be used to synchronize hook state with your component.
@@ -1484,9 +1635,26 @@ The `onCompleted` and `onError` callback options have been removed. Their behavi
 
 You can read more about this decision and recommendations on what to do instead in the [related GitHub issue](https://github.com/apollographql/apollo-client/issues/12352).
 
+### Changes to `preloadQuery`
+
+#### `toPromise` moved from `queryRef` to the `preloadQuery` function
+
+The `toPromise` method now exists as a property on the `preloadQuery` function instead of on the `queryRef` object. This change makes `queryRef` objects more serializable for SSR environments.
+
+To migrate, call `preloadQuery.toPromise` and pass it the `queryRef`.
+
+```ts disableCopy=true
+function loader() {
+  const queryRef = preloadQuery(QUERY, options);
+
+  return queryRef.toPromise();// [!code --]
+  return preloadQuery.toPromise(queryRef);// [!code ++]
+}
+```
+
 ### Recommended: Avoid using generated hooks
 
-Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen](https://the-guild.dev/graphql/codegen), you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
+Apollo Client 4 comes with a lot of TypeScript improvements to the hook types. If you use generated hooks from a tool such as [GraphQL Codegen's](https://the-guild.dev/graphql/codegen) [`@graphql-codegen/typescript-react-apollo`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-react-apollo) plugin, you will not benefit from these improvements since the generated hooks are missing the necessary function overloads to provide critical type safety. We recommend that you stop using generated hooks immediately and create a migration strategy to move away from them.
 
 Use the hooks exported from Apollo Client directly with `TypedDocumentNode` instead.
 
@@ -1548,6 +1716,17 @@ new ApolloClient<any>({ // [!code --]
 new ApolloClient({ // [!code ++]
   // ...
 });
+```
+
+### Removal of `<TSerialized>` generic argument
+
+The `TSerialized` generic argument has been removed from the `ApolloCache` abstract class. Most users set this type to `any` which provided little benefit for type safety. APIs that previously relied on `TSerialized` are now set to `unknown`.
+
+To migrate, remove the `TSerialized` generic argument when referencing `ApolloCache`.
+
+```ts
+const cache: ApolloCache<any> = ... // [!code --]
+const cache: ApolloCache = ... // [!code ++]
 ```
 
 ## Apollo Link changes

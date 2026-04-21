@@ -1,3 +1,5 @@
+import assert from "node:assert";
+
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
@@ -268,6 +270,8 @@ test("can access the client from operation argument", async () => {
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }, { client }));
 
-  const { data } = await stream.takeNext();
-  expect(data!.client).toBe(client);
+  const result = await stream.takeNext();
+
+  assert("data" in result);
+  expect(result.data!.client).toBe(client);
 });

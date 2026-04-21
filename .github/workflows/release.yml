@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - version-3.x
+      - "release-*"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -20,9 +22,12 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published || steps.changesets-prerelease.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages || steps.changesets-prerelease.outputs.publishedPackages }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
@@ -30,40 +35,53 @@ jobs:
 
       - name: Check for pre.json file existence
         id: check_files
-        uses: andstor/file-existence-action@v3.0.0
+        uses: andstor/file-existence-action@v3.1.0
         with:
           files: ".changeset/pre.json"
 
-      - name: Append NPM token to .npmrc
-        run: |
-          cat << EOF > "$HOME/.npmrc"
-            provenance=true
-            //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          EOF
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ">=23.6.0"
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Create release PR or publish to npm + GitHub
+      - name: "[main] Create release PR or publish to npm + GitHub"
         id: changesets
-        if: steps.check_files.outputs.files_exists == 'false'
+        if: contains(fromJSON('["main", "version-3.x"]'), github.ref_name) && steps.check_files.outputs.files_exists == 'false'
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
           publish: npm run changeset-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ""
 
+      - name: "[prerelease] Publish to npm + GitHub"
+        id: changesets-prerelease
+        # Only run publish if we're still in pre mode and the last commit was
+        # via an automatically created Version Packages PR
+        if: github.ref_name != 'main' && github.ref_name != 'version-3.x' && steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
+        uses: changesets/action@v1
+        with:
+          version: echo "This step should never version"
+          publish: npm run changeset-publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ""
+
+  slack-notification:
+    name: Postrelease Slack Notification
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
+    steps:
       - name: Send a Slack notification on publish
-        if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
         id: slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
@@ -79,7 +97,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "A new version of `@apollo/client` was released :rocket:"
+                    "text": "A new version of `{{ matrix.package.name }}` was released :rocket:"
                   }
                 },
                 {
@@ -87,15 +105,15 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Version:*\n`${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}`"
+                      "text": "*Version:*\n`${{ matrix.package.version }}`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Tag:*\n`latest`"
+                      "text": "*Tag:*\n`${{ github.ref_name == 'main' && 'latest' || 'next' }}`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|link>"
+                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/${{ matrix.package.name }}@${{ matrix.package.version }}|link>"
                     },
                     {
                       "type": "mrkdwn",
@@ -107,3 +125,32 @@ jobs:
             }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  tag-next:
+    name: Postrelease Tag Next Release
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.ref_name != 'main' && github.ref_name != 'version-3.x' && needs.release.result == 'success' && needs.release.outputs.published == 'true'
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies with cache
+        uses: bahmutov/npm-install@v1
+
+      - name: Tag release with next on npm
+        run: |
+          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt("${{ matrix.package.version }}",process.env.NEXT)?0:1)'; then
+            npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next;
+          fi

@@ -1392,7 +1392,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      // The nextFetchPolicy function we provided always returnes cache-first,
+      // The nextFetchPolicy function we provided always returns cache-first,
       // even when context.reason is variables-changed (which by default
       // resets the fetchPolicy to context.initialFetchPolicy), so cache-first is
       // still what we see here.

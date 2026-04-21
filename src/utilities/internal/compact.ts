@@ -13,8 +13,8 @@ export function compact<TArgs extends any[]>(
 
   objects.forEach((obj) => {
     if (!obj) return;
-    Object.keys(obj).forEach((key) => {
-      const value = (obj as any)[key];
+    Reflect.ownKeys(obj).forEach((key: keyof typeof obj) => {
+      const value = obj[key];
       if (value !== void 0) {
         result[key] = value;
       }

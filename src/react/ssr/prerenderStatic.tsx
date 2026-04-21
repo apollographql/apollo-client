@@ -39,7 +39,23 @@ export interface PrerenderStaticInternalContext {
 }
 
 export declare namespace prerenderStatic {
-  export interface Options {
+  /** {@inheritDoc @apollo/client!~prerenderStatic~Options#renderFunction:member} */
+  export type PrerenderFunction =
+    | RenderToString
+    | RenderToStringPromise
+    | PrerenderToWebStream
+    | PrerenderToNodeStream
+    | ((
+        reactNode: ReactTypes.ReactNode
+      ) =>
+        | ReturnType<RenderToString>
+        | ReturnType<RenderToStringPromise>
+        | ReturnType<PrerenderToWebStream>
+        | ReturnType<PrerenderToNodeStream>);
+
+  export interface Options<
+    Prerender extends PrerenderFunction = PrerenderFunction,
+  > {
     /**
      * The React component tree to prerender
      */
@@ -86,18 +102,8 @@ export declare namespace prerenderStatic {
      *   - slightly faster than `renderToString`, but the result cannot be hydrated
      *   - this API has no suspense support and will not work with hooks like `useSuspenseQuery`
      */
-    renderFunction:
-      | RenderToString
-      | RenderToStringPromise
-      | PrerenderToWebStream
-      | PrerenderToNodeStream
-      | ((
-          reactNode: ReactTypes.ReactNode
-        ) =>
-          | ReturnType<RenderToString>
-          | ReturnType<RenderToStringPromise>
-          | ReturnType<PrerenderToWebStream>
-          | ReturnType<PrerenderToNodeStream>);
+    renderFunction: Prerender;
+
     /**
      * If this is set to `true`, the result will contain a `diagnostics` property that can help you e.g. detect `useQuery` waterfalls in your application.
      * @defaultValue false
@@ -114,11 +120,20 @@ export declare namespace prerenderStatic {
     maxRerenders?: number;
   }
 
-  export interface Result {
+  export interface Result<
+    Prerender extends PrerenderFunction = PrerenderFunction,
+  > {
     /**
      * The result of the last render, or an empty string if `ignoreResults` was set to `true`.
      */
     result: string;
+
+    /**
+     * The result of the last execution of the `renderFunction`.
+     */
+    renderFnResult: ReturnType<Prerender> extends PromiseLike<infer U> ? U
+    : ReturnType<Prerender>;
+
     /**
      * If the render was aborted early because the `AbortSignal` was cancelled,
      * this will be `true`.
@@ -178,7 +193,10 @@ const noopObserver: Partial<Observer<unknown>> = { complete() {} };
  * You can then transport that data and hydrate your cache via `client.restore(extractedData)`
  * before hydrating your React tree in the browser.
  */
-export function prerenderStatic({
+export function prerenderStatic<
+  Prerender extends
+    prerenderStatic.PrerenderFunction = prerenderStatic.PrerenderFunction,
+>({
   tree,
   context = {},
   // The rendering function is configurable! We use renderToStaticMarkup as
@@ -189,7 +207,9 @@ export function prerenderStatic({
   ignoreResults,
   diagnostics,
   maxRerenders = 50,
-}: prerenderStatic.Options): Promise<prerenderStatic.Result> {
+}: prerenderStatic.Options<Prerender>): Promise<
+  prerenderStatic.Result<Prerender>
+> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
     ObservableQuery
@@ -222,7 +242,7 @@ export function prerenderStatic({
     },
   };
 
-  async function process(): Promise<prerenderStatic.Result> {
+  async function process(): Promise<prerenderStatic.Result<any>> {
     renderCount++;
     invariant(
       renderCount <= maxRerenders,
@@ -257,13 +277,22 @@ you have an infinite render loop in your application.`,
         {tree}
       </ApolloContext.Provider>
     );
-    const result = await consume(await renderFunction(element));
+    const renderFnResult = await renderFunction(element);
+    const result = await consume(renderFnResult);
 
     if (recentlyCreatedObservableQueries.size == 0) {
-      return { result, aborted: false };
+      return {
+        result,
+        renderFnResult,
+        aborted: signal?.aborted ?? false,
+      };
     }
     if (signal?.aborted) {
-      return { result, aborted: true };
+      return {
+        result,
+        renderFnResult,
+        aborted: true,
+      };
     }
 
     const dataPromise = Promise.all(
@@ -285,7 +314,11 @@ you have an infinite render loop in your application.`,
     signal?.removeEventListener("abort", resolveAbortPromise);
 
     if (signal?.aborted) {
-      return { result, aborted: true };
+      return {
+        result,
+        renderFnResult,
+        aborted: true,
+      } as prerenderStatic.Result<any>;
     }
     return process();
   }

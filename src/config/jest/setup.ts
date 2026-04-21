@@ -24,6 +24,7 @@ import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areLocalStateErrorsEqual } from "./areLocalStateErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 import { areServerErrorsEqual } from "./areServerErrorsEqual.js";
+import { areWeakRefsEqual } from "./areWeakRefsEqual.js";
 
 setLogVerbosity("log");
 
@@ -68,6 +69,7 @@ expect.addEqualityTesters([
   areGraphQLErrorsEqual,
   areLocalStateErrorsEqual,
   areMissingFieldErrorsEqual,
+  areWeakRefsEqual,
 ]);
 
 // not available in JSDOM 🙄

@@ -17,9 +17,7 @@ import type {
 } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
-  CacheKey,
   FetchMoreFunction,
   QueryKey,
   RefetchFunction,
@@ -31,10 +29,16 @@ import type {
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { variablesUnknownSymbol } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import {
+  __use,
+  useDeepMemo,
+  useSuspenseHookCacheKey,
+  wrapHook,
+} from "./internal/index.js";
 import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 
@@ -349,7 +353,6 @@ export function useSuspenseQuery<
   "use no memo";
   return wrapHook(
     "useSuspenseQuery",
-    // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options ?? ({} as any));
@@ -375,14 +378,8 @@ function useSuspenseQuery_<
     query,
     options,
   });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
-
-  const cacheKey: CacheKey = [
-    query,
-    canonicalStringify(variables),
-    ...([] as any[]).concat(queryKey),
-  ];
+  const { fetchPolicy } = watchQueryOptions;
+  const cacheKey = useSuspenseHookCacheKey(query, options);
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
@@ -394,13 +391,15 @@ function useSuspenseQuery_<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
-    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/immutability
     current[0] = queryRef.key;
+    // eslint-disable-next-line react-hooks/immutability
     current[1] = queryRef.promise;
   }
   let promise = current[1];
 
   if (queryRef.didChangeOptions(watchQueryOptions)) {
+    // eslint-disable-next-line react-hooks/immutability
     current[1] = promise = queryRef.applyOptions(watchQueryOptions);
   }
 
@@ -505,6 +504,7 @@ export function useWatchQueryOptions<
       return {
         query,
         fetchPolicy: "standby",
+        [variablesUnknownSymbol]: true,
       } as ApolloClient.WatchQueryOptions<TData, TVariables>;
     }
 

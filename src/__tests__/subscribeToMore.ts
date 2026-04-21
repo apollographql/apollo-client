@@ -43,11 +43,11 @@ describe("subscribeToMore", () => {
 
   const results2 = [
     { result: { data: { name: "Amanda Liu" } }, delay: 10 },
-    { error: new Error("You cant touch this"), delay: 10 },
+    { error: new Error("You can't touch this"), delay: 10 },
   ];
 
   const results3 = [
-    { error: new Error("You cant touch this"), delay: 10 },
+    { error: new Error("You can't touch this"), delay: 10 },
     { result: { data: { name: "Amanda Liu" } }, delay: 10 },
   ];
 
@@ -185,7 +185,7 @@ describe("subscribeToMore", () => {
     await wait(15);
 
     expect(onError).toHaveBeenCalledTimes(1);
-    expect(onError).toHaveBeenCalledWith(new Error("You cant touch this"));
+    expect(onError).toHaveBeenCalledWith(new Error("You can't touch this"));
   });
 
   it("prints unhandled subscription errors to the console", async () => {
@@ -241,7 +241,7 @@ describe("subscribeToMore", () => {
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       "Unhandled GraphQL subscription error",
-      new Error("You cant touch this")
+      new Error("You can't touch this")
     );
 
     await expect(stream).not.toEmitAnything();

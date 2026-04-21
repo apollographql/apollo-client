@@ -43,7 +43,9 @@ export namespace MockLink {
         variables?: TVariables | VariableMatcher<TVariables>;
     }
     // (undocumented)
-    export interface MockedResponse<out TData = Record<string, any>, out TVariables extends OperationVariables = Record<string, any>> {
+    export interface MockedResponse<
+    /** @ts-ignore */
+    out TData = Record<string, any>, out TVariables extends OperationVariables = Record<string, any>> {
         // (undocumented)
         delay?: number | MockLink.DelayFunction;
         // (undocumented)

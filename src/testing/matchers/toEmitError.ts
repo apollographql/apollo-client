@@ -48,7 +48,7 @@ export const toEmitError: MatcherFunction<
             expected,
             typeof expected === "string" ? error.message : error,
             "Expected",
-            "Recieved",
+            "Received",
             true
           )
         );

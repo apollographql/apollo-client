@@ -192,7 +192,7 @@ export declare namespace useSubscription {
  *   const [accumulatedData, setAccumulatedData] = useState([]);
  *   const { data, error, loading } = useSubscription(query, {
  *     onData({ data }) {
- *       setAccumulatedData((prev) => [...prev, data]);
+ *       setAccumulatedData((prev) => [...prev, data.data]);
  *     },
  *   });
  *
@@ -372,7 +372,7 @@ export function useSubscription<
     } else {
       observable?.restart();
     }
-  }, [optionsRef, recreateRef, observable]);
+  }, [observable, setObservable, optionsRef, recreateRef]);
 
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }

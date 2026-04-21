@@ -290,7 +290,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
@@ -302,7 +302,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -325,7 +325,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
@@ -345,7 +345,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -490,6 +490,114 @@ describe("Cache", () => {
             fragmentName: "fragmentBar",
           })
         ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
+      }
+    );
+
+    itWithInitialData(
+      "will read some data from the store with `from`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+      }
+    );
+
+    itWithInitialData(
+      "prefers `from` over `id`",
+      [
+        {
+          "Foo:1": {
+            __typename: "Foo",
+            id: 1,
+            e: 4,
+            f: 5,
+          },
+        },
+      ],
+      (proxy) => {
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __typename: "Foo", id: 1 },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: { __ref: "Foo:1" },
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
+
+        expect(
+          // @ts-expect-error types don't allow `id` and `from`
+          proxy.readFragment({
+            fragment: gql`
+              fragment foo on Foo {
+                e
+                f
+              }
+            `,
+            id: "unknown",
+            from: "Foo:1",
+          })
+        ).toEqual({ __typename: "Foo", e: 4, f: 5 });
       }
     );
 
@@ -1042,6 +1150,49 @@ describe("Cache", () => {
         });
       }
     );
+
+    it("does not write @stream directive as part of the cache key", () => {
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        data: {
+          list: [{ __typename: "Item", id: "1", value: 1 }],
+        },
+        query: gql`
+          query {
+            list @stream(initialCount: 1) {
+              id
+              value
+            }
+          }
+        `,
+      });
+
+      expect(cache.extract()).toStrictEqualTyped({
+        ROOT_QUERY: {
+          __typename: "Query",
+          list: [{ __ref: "Item:1" }],
+        },
+        "Item:1": { __typename: "Item", id: "1", value: 1 },
+      });
+
+      // We should be able to read the list without the `@stream` directive and
+      // get back results
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              list {
+                id
+                value
+              }
+            }
+          `,
+        })
+      ).toStrictEqualTyped({
+        list: [{ __typename: "Item", id: "1", value: 1 }],
+      });
+    });
   });
 
   describe("writeFragment", () => {
@@ -1061,7 +1212,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
@@ -1074,7 +1225,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -1098,7 +1249,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
@@ -1119,7 +1270,7 @@ describe("Cache", () => {
               }
             `,
           });
-        }).toThrowError(
+        }).toThrow(
           "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
       }
@@ -1307,6 +1458,97 @@ describe("Cache", () => {
         });
       }
     );
+
+    itWithCacheConfig("can use the `from` option", {}, (proxy) => {
+      proxy.writeFragment({
+        data: {
+          id: 1,
+          a: 1,
+          b: 2,
+          __typename: "Foo",
+        },
+        from: { __typename: "Foo", id: 1 },
+        fragment: gql`
+          fragment foo on Foo {
+            id
+            a
+            b
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          c: 3,
+          d: 4,
+          __typename: "Foo",
+        },
+        from: { __ref: "Foo:1" },
+        fragment: gql`
+          fragment foo on Foo {
+            c
+            d
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+        },
+      });
+
+      proxy.writeFragment({
+        data: {
+          e: 5,
+          f: 6,
+          __typename: "Foo",
+        },
+        from: "Foo:1",
+        fragment: gql`
+          fragment foo on Foo {
+            e
+            f
+          }
+        `,
+      });
+
+      expect(proxy.extract()).toEqual({
+        __META: {
+          extraRootIds: ["Foo:1"],
+        },
+        "Foo:1": {
+          __typename: "Foo",
+          id: 1,
+          a: 1,
+          b: 2,
+          c: 3,
+          d: 4,
+          e: 5,
+          f: 6,
+        },
+      });
+    });
   });
 
   describe("cache.updateQuery and cache.updateFragment", () => {
@@ -1477,6 +1719,41 @@ describe("Cache", () => {
       });
 
       cancel();
+    });
+
+    it("can use `from` with `updateFragment`", async () => {
+      type Data = { a: number; b: number; __typename: "Foo" };
+
+      const cache = new InMemoryCache();
+      const fragment: TypedDocumentNode<Data, Record<string, never>> = gql`
+        fragment foo on Foo {
+          a
+          b
+        }
+      `;
+
+      function update(data: Data | null): Data {
+        if (!data) {
+          return { a: 1, b: 2, __typename: "Foo" };
+        }
+
+        return { a: data.a + 1, b: data.b + 1, __typename: "Foo" };
+      }
+
+      expect(
+        cache.updateFragment(
+          { fragment, from: { __typename: "Foo", id: 1 } },
+          update
+        )
+      ).toStrictEqualTyped({ __typename: "Foo", a: 1, b: 2 });
+
+      expect(
+        cache.updateFragment({ fragment, from: { __ref: "Foo:1" } }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 2, b: 3 });
+
+      expect(
+        cache.updateFragment({ fragment, from: "Foo:1" }, update)
+      ).toStrictEqualTyped({ __typename: "Foo", a: 3, b: 4 });
     });
   });
 
@@ -3613,19 +3890,19 @@ describe("ReactiveVar and makeVar", () => {
     expect(diffs.length).toBe(5);
 
     expect(cache["watches"].size).toBe(5);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(4);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.shift()!();
     expect(cache["watches"].size).toBe(3);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(2);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     expect(diffs.length).toBe(5);
     unwatchers.push(watch());
@@ -3635,8 +3912,8 @@ describe("ReactiveVar and makeVar", () => {
     unwatchers.forEach((unwatch) => unwatch());
 
     expect(cache["watches"].size).toBe(0);
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(cache);
   });
 
   it("should remove all watchers when cache.reset() called", () => {
@@ -3774,23 +4051,23 @@ describe("ReactiveVar and makeVar", () => {
     expect(names()).toEqual(["Ben", "Ben", "Ben"]);
 
     expect(cache["watches"].size).toBe(3);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(2);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     unwatchers.shift()!();
     expect(cache["watches"].size).toBe(1);
-    expect(spy).not.toBeCalled();
+    expect(spy).not.toHaveBeenCalled();
 
     nameVar("Hugh");
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(0);
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(cache);
 
     // This update is ignored because the cache no longer has any watchers.
     nameVar("ignored");
@@ -3807,8 +4084,8 @@ describe("ReactiveVar and makeVar", () => {
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh", "Jenn"]);
 
     unwatchers.forEach((cancel) => cancel());
-    expect(spy).toBeCalledTimes(2);
-    expect(spy).toBeCalledWith(cache);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledWith(cache);
 
     // Ignored again because all watchers have been cancelled.
     nameVar("also ignored");

@@ -71,7 +71,8 @@ The `useReactiveVar` hook can be used to read from a reactive variable in a way 
 Previously, the only way for a reactive variable to trigger a React component re-render was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
 
 ```jsx
-import { makeVar, useReactiveVar } from "@apollo/client";
+import { makeVar } from "@apollo/client";
+import { useReactiveVar } from "@apollo/client/react";
 export const cartItemsVar = makeVar([]);
 
 export function Cart() {

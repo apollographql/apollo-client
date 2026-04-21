@@ -44,7 +44,8 @@ async function* consumeMultipartBody(
     */
     /;\s*boundary=(?:'([^']+)'|"([^"]+)"|([^"'].+?))\s*(?:;|$)/i
   );
-  const boundary = "\r\n--" + (match?.findLast((val) => !!val) || "-");
+  const boundary =
+    "\r\n--" + (match ? match[1] ?? match[2] ?? match[3] ?? "-" : "-");
   let buffer = "";
   invariant(
     response.body && typeof response.body.getReader === "function",

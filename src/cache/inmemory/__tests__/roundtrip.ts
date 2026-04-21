@@ -271,7 +271,20 @@ describe("roundtrip", () => {
         `,
         {},
         {},
-        null
+        {}
+      );
+    });
+
+    it("should be able to query with include directive false", () => {
+      storeRoundtrip(
+        gql`
+          query {
+            fortuneCookie @include(if: false)
+          }
+        `,
+        {},
+        {},
+        {}
       );
     });
 

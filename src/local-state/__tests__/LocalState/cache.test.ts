@@ -7,7 +7,7 @@ import {
 import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 
-import { gql } from "./testUtils.js";
+import { gql, WARNINGS } from "./testUtils.js";
 
 test("can write to the cache with a mutation", async () => {
   const query = gql`
@@ -45,6 +45,7 @@ test("can write to the cache with a mutation", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
@@ -104,6 +105,7 @@ test("can write to the cache with a mutation using an ID", async () => {
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
@@ -174,6 +176,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
@@ -214,6 +217,7 @@ test("reads from the cache on a root scalar field by default if a resolver is no
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
@@ -253,6 +257,7 @@ test("reads from the cache on a root object field by default if a resolver is no
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
@@ -292,6 +297,7 @@ test("handles read functions for root scalar field from cache if resolver is not
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
@@ -332,13 +338,14 @@ test("handles read functions for root object field from cache if resolver is not
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
 });
 
-test("does not warn if resolver is not defined if cache does not have value", async () => {
+test("warns if resolver or read function isn't defined if cache does not have value", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {
@@ -360,10 +367,15 @@ test("does not warn if resolver is not defined if cache does not have value", as
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({ data: { count: null } });
 
-  expect(console.warn).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.MISSING_RESOLVER,
+    "Query.count"
+  );
 });
 
 test("reads from the cache on a nested scalar field by default if a resolver is not defined", async () => {
@@ -401,6 +413,7 @@ test("reads from the cache on a nested scalar field by default if a resolver is 
       context: {},
       variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, isLoggedIn: true } },
@@ -461,6 +474,7 @@ test("reads from the cache with a read function on a nested scalar field if a re
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, isLoggedIn: true } },
@@ -511,6 +525,7 @@ test("reads from the cache on a nested object field by default if a resolver is 
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -580,6 +595,7 @@ test("reads from the cache with a read function on a nested object field by defa
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -647,6 +663,7 @@ test("reads from the cache on a nested client field on a non-normalized object",
       remoteResult: {
         data: { user: { __typename: "User" } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -697,6 +714,7 @@ test("does not confuse field missing resolver with root field of same name on a 
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -709,7 +727,11 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  expect(console.warn).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.MISSING_RESOLVER,
+    "User.count"
+  );
 });
 
 test("does not confuse field missing resolver with root field of same name on a non-normalized record", async () => {
@@ -750,6 +772,7 @@ test("does not confuse field missing resolver with root field of same name on a 
       remoteResult: {
         data: { user: { __typename: "User" } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -761,7 +784,11 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  expect(console.warn).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.MISSING_RESOLVER,
+    "User.count"
+  );
 });
 
 test("warns on undefined value if partial data is written to the cache for an object client field", async () => {
@@ -814,6 +841,7 @@ test("warns on undefined value if partial data is written to the cache for an ob
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -880,6 +908,7 @@ test("uses a written cache value from a nested client field from parent resolver
       context: {},
       variables: {},
       remoteResult: undefined,
+      fetchPolicy: "cache-first",
     })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },

@@ -15,40 +15,37 @@ if (!process.features.typescript) {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
-import { FlatCompat } from "@eslint/eslintrc";
-import js from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
-import _import from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import";
 import * as mdx from "eslint-plugin-mdx";
-import reactCompiler from "eslint-plugin-react-compiler";
 import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import testingLibrary from "eslint-plugin-testing-library";
 
 import localRules from "./eslint-local-rules/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
 
 /**
  * Some rules can be very costly so we only want to run them from CLI, not from the LSP.
  */
 const runExtendedRules = !!process.env.EXTENDED_RULES;
 
+/** @type {Record<string, import("eslint").ESLint.Plugin>} */
 const tsPlugins = {
-  import: fixupPluginRules(_import),
+  import: importPlugin,
   "local-rules": {
     rules: localRules,
   },
+  // @ts-ignore - slight mismatch between old and new ESLint plugin types
   "@typescript-eslint": typescriptEslint,
 };
 
-export default [
+export default defineConfig([
+  globalIgnores(["integration-tests/"]),
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: tsPlugins,
@@ -79,6 +76,19 @@ export default [
 
     // rules for the whole repo
     rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@wry/equality",
+              importNames: ["default"],
+              message:
+                "Please use named export `{ equal }` from @wry/equality instead.",
+            },
+          ],
+        },
+      ],
       "import/no-unresolved": "error",
       "import/order": [
         "warn",
@@ -130,19 +140,16 @@ export default [
       ],
     },
   },
-  ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
-    (config) => ({
-      ...config,
-      files: ["**/*.ts", "**/*.tsx"],
-      ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
-    })
-  ),
+  {
+    ...reactHooks.configs.flat["recommended-latest"],
+    files: ["src/react/**/*.ts", "src/react/**/*.tsx"],
+    ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
+  },
   {
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["**/__tests__/**/*.*", "**/*.d.ts"],
 
     plugins: {
-      "react-compiler": reactCompiler,
       ...tsPlugins,
     },
 
@@ -165,7 +172,6 @@ export default [
 
     // rules for source files, but no tests
     rules: {
-      "react-compiler/react-compiler": "error",
       "@typescript-eslint/consistent-type-exports": ["error"],
       "@typescript-eslint/no-import-type-side-effects": "error",
       "@typescript-eslint/no-restricted-types": [
@@ -203,16 +209,15 @@ export default [
       "local-rules/tdata-tvariables-order": "error",
     },
   },
-  ...compat.extends("plugin:testing-library/react").map((config) => ({
-    ...config,
-
+  {
     files: [
       "**/__tests__/**/*.[jt]s",
       "**/__tests__/**/*.[jt]sx",
       "**/?(*.)+(test).[jt]s",
       "**/?(*.)+(test).[jt]sx",
     ],
-  })),
+    ...testingLibrary.configs["flat/react"],
+  },
   {
     files: [
       "**/__tests__/**/*.[jt]s",
@@ -281,4 +286,4 @@ export default [
     basePath: "docs",
     ...mdx.flatCodeBlocks,
   },
-];
+]);

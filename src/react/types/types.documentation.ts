@@ -196,7 +196,7 @@ export interface QueryResultDocumentation {
    */
   previousData: unknown;
   /**
-   * A single ErrorLike object describing the error that occured during the latest
+   * A single ErrorLike object describing the error that occurred during the latest
    * query execution.
    *
    * For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).
@@ -447,25 +447,13 @@ export interface MutationOptionsDocumentation {
    * @docGroup 1. Operation options
    */
   onError: unknown;
-  /**
-   * If `true`:
-   *
-   * - The initial state update (setting loading to true) is skipped
-   * - The success state update (setting data and setting loading to false) is skipped
-   * - Error updates will still occur
-   *
-   * The default value is `false`.
-   *
-   * This option is useful when you want to execute a mutation but don't need to track its progress or result in the UI, potentially improving performance by reducing re-renders.
-   *
-   * @docGroup 1. Operation options
-   */
-  ignoreResults: unknown;
 }
 
 export interface MutationResultDocumentation {
   /**
-   * The data returned from your mutation. Can be `undefined` if `ignoreResults` is `true`.
+   * The data returned from your mutation. Can be `undefined` if the `errorPolicy`
+   * is `all` or `ignore` and the server returns a GraphQL response with `errors`
+   * but not `data` or a network error is returned.
    */
   data: unknown;
   /**

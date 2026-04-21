@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`exports of public entry points @apollo/client 1`] = `
 Array [
@@ -145,6 +145,7 @@ exports[`exports of public entry points @apollo/client/incremental 1`] = `
 Array [
   "Defer20220824Handler",
   "GraphQL17Alpha2Handler",
+  "GraphQL17Alpha9Handler",
   "NotImplementedHandler",
 ]
 `;
@@ -356,14 +357,21 @@ Array [
   "ObservableStream",
   "actAsync",
   "addDelayToMocks",
+  "asyncIterableSubject",
   "createClientWrapper",
   "createMockWrapper",
   "createOperationWithDefaultContext",
   "enableFakeTimers",
+  "executeSchemaGraphQL17Alpha2",
+  "executeSchemaGraphQL17Alpha9",
   "executeWithDefaultContext",
+  "friendListSchemaGraphQL17Alpha2",
+  "friendListSchemaGraphQL17Alpha9",
   "markAsStreaming",
-  "mockDeferStream",
+  "mockDefer20220824",
+  "mockDeferStreamGraphQL17Alpha9",
   "mockMultipartSubscriptionStream",
+  "promiseWithResolvers",
   "renderAsync",
   "renderHookAsync",
   "resetApolloContext",
@@ -395,6 +403,8 @@ Array [
   "getMainDefinition",
   "isFormattedExecutionResult",
   "isMutationOperation",
+  "isNetworkRequestInFlight",
+  "isNetworkRequestSettled",
   "isQueryOperation",
   "isReference",
   "isSubscriptionOperation",
@@ -417,10 +427,12 @@ Array [
   "AutoCleanedWeakCache",
   "DeepMerger",
   "argumentsObjectFromField",
+  "bindCacheKey",
   "canUseDOM",
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
+  "combineLatestBatched",
   "compact",
   "createFragmentMap",
   "createFulfilledPromise",
@@ -428,6 +440,7 @@ Array [
   "dealias",
   "decoratePromise",
   "equalByQuery",
+  "extensionsSymbol",
   "filterMap",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
@@ -454,6 +467,7 @@ Array [
   "isPlainObject",
   "makeReference",
   "makeUniqueId",
+  "mapObservableFragmentMemoized",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
@@ -466,8 +480,10 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
+  "streamInfoSymbol",
   "stringifyForDisplay",
   "toQueryResult",
+  "variablesUnknownSymbol",
 ]
 `;
 
@@ -475,6 +491,12 @@ exports[`exports of public entry points @apollo/client/utilities/internal/global
 Array [
   "global",
   "maybe",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/internal/ponyfills 1`] = `
+Array [
+  "FinalizationRegistry",
 ]
 `;
 

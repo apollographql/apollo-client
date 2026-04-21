@@ -349,6 +349,38 @@ describe("happy path", () => {
       })
     );
   });
+
+  it("preserves existing http context on initial request", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+
+    const contextLink = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        headers: { "X-Custom-Header": "true" },
+        http: {
+          preserveHeaderCase: true,
+        },
+      });
+      return forward(operation);
+    });
+
+    const link = contextLink
+      .concat(new PersistedQueryLink({ sha256 }))
+      .concat(new HttpLink());
+
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    const [, request] = fetchMock.lastCall()!;
+    const headers = request!.headers;
+
+    // This would fail if preserveHeaderCase was overwritten,
+    // since headers are lowercased by HttpLink by default
+    expect(headers).toHaveProperty("X-Custom-Header");
+  });
 });
 
 describe("failure path", () => {
@@ -825,6 +857,93 @@ describe("failure path", () => {
       expect(
         JSON.parse(success!.body!.toString()).extensions
       ).not.toBeUndefined();
+    });
+  });
+
+  it("preserves existing http context on retry", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: errorResponse })),
+      { repeat: 1 }
+    );
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
+
+    let httpContextOnRetry: HttpLink.ContextOptions["http"];
+
+    const contextLink = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        http: {
+          preserveHeaderCase: true,
+        },
+      });
+      return forward(operation);
+    });
+
+    const checkContextLink = new ApolloLink((operation, forward) => {
+      httpContextOnRetry = operation.getContext().http;
+      return forward(operation);
+    });
+
+    const link = contextLink
+      .concat(new PersistedQueryLink({ sha256 }))
+      .concat(checkContextLink)
+      .concat(new HttpLink());
+
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(httpContextOnRetry).toStrictEqualTyped({
+      preserveHeaderCase: true,
+      includeQuery: true,
+      includeExtensions: true,
+    });
+  });
+
+  it("preserves existing fetchOptions context on retry", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: errorResponse })),
+      { repeat: 1 }
+    );
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
+
+    let fetchOptionsOnRetry: HttpLink.ContextOptions["fetchOptions"];
+
+    const contextLink = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        fetchOptions: {
+          credentials: "include",
+        },
+      });
+      return forward(operation);
+    });
+
+    const checkContextLink = new ApolloLink((operation, forward) => {
+      fetchOptionsOnRetry = operation.getContext().fetchOptions;
+      return forward(operation);
+    });
+
+    const link = contextLink
+      .concat(new PersistedQueryLink({ sha256 }))
+      .concat(checkContextLink)
+      .concat(new HttpLink());
+
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(fetchOptionsOnRetry).toStrictEqualTyped({
+      credentials: "include",
+      method: "POST",
     });
   });
 });

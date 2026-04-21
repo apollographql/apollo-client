@@ -1,0 +1,13 @@
+diff --git a/node_modules/optimism/lib/index.d.ts b/node_modules/optimism/lib/index.d.ts
+index 06c3327..19868ac 100644
+--- a/node_modules/optimism/lib/index.d.ts
++++ b/node_modules/optimism/lib/index.d.ts
+@@ -25,7 +25,7 @@ export interface CommonCacheConstructor<TCacheKey, TResult, TArgs extends any[]>
+ export type OptimisticWrapOptions<TArgs extends any[], TKeyArgs extends any[] = TArgs, TCacheKey = any, TResult = any> = {
+     max?: number;
+     keyArgs?: (...args: TArgs) => TKeyArgs;
+-    makeCacheKey?: (...args: NoInfer<TKeyArgs>) => TCacheKey | undefined;
++    makeCacheKey: (...args: NoInfer<TKeyArgs>) => TCacheKey | undefined;
+     normalizeResult?: (newer: TResult, older: TResult) => TResult;
+     subscribe?: (...args: TArgs) => void | (() => any);
+     cache?: CommonCache<NoInfer<TCacheKey>, Entry<NoInfer<TArgs>, NoInfer<TResult>>> | CommonCacheConstructor<NoInfer<TCacheKey>, NoInfer<TResult>, NoInfer<TArgs>>;

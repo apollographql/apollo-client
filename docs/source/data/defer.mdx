@@ -19,9 +19,10 @@ The incremental delivery format used by `@defer` has not yet been standardized. 
 
 Apollo Client provides the following incremental delivery handlers that are all exported from `@apollo/client/incremental`:
 
-- `NotImplementedHandler` (default) - Throws when `@defer` is detected
-- `Defer20220824Handler` - Implements the `@defer` transport format that ships with [Apollo Router](https://www.apollographql.com/docs/graphos/routing/operations/defer)
-- `GraphQL17Alpha2Handler` - Implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
+- `NotImplementedHandler` (default) - Throws when `@defer` or `@stream` is detected
+- `Defer20220824Handler` - Implements the `@defer` and `@stream` transport format that ships with [Apollo Router](https://www.apollographql.com/docs/graphos/routing/operations/defer)
+- `GraphQL17Alpha2Handler` - Implements the `@defer` and `@stream` transport format that ships with GraphQL 17.0.0-alpha.2
+- `GraphQL17Alpha9Handler` - Implements the `@defer` and `@stream` transport format that ships with GraphQL 17.0.0-alpha.9
 
 <Note>
 

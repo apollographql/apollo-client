@@ -269,7 +269,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
@@ -281,7 +281,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         'Schema type definitions not allowed in queries. Found: "SchemaDefinition"'
       );
     });
@@ -305,7 +305,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
@@ -325,7 +325,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
@@ -836,7 +836,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
       );
       expect(() => {
@@ -849,7 +849,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
@@ -874,7 +874,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
       expect(() => {
@@ -895,7 +895,7 @@ describe("ApolloClient", () => {
             }
           `,
         });
-      }).toThrowError(
+      }).toThrow(
         "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
       );
     });
@@ -3052,7 +3052,28 @@ describe("ApolloClient", () => {
 
     await expect(() => client.query({ query })).rejects.toThrow(
       new InvariantError(
-        "`@defer` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+        "`@defer` and `@stream` are not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+      )
+    );
+  });
+
+  test("will error when used with `@stream` in a without specifying an incremental strategy", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    const query = gql`
+      query {
+        items @stream {
+          bar
+        }
+      }
+    `;
+
+    await expect(() => client.query({ query })).rejects.toThrow(
+      new InvariantError(
+        "`@defer` and `@stream` are not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
       )
     );
   });

@@ -6,7 +6,10 @@ import type { Observable } from "rxjs";
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
-import { executeWithDefaultContext as execute } from "@apollo/client/testing/internal";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {
@@ -174,4 +177,32 @@ describe("GraphQLWSlink", () => {
       );
     });
   });
+});
+
+// https://github.com/apollographql/apollo-client/issues/12946
+test("sends only known keys to the GraphQLWsLink", async () => {
+  const knownKeys = [
+    "query",
+    "variables",
+    "operationName",
+    "extensions",
+  ].sort();
+
+  type SubscribeFn = Client["subscribe"];
+  const subscribe = jest.fn<ReturnType<SubscribeFn>, Parameters<SubscribeFn>>(
+    (_payload, sink) => {
+      sink.complete();
+      return () => {};
+    }
+  );
+  const client = mockClient(subscribe);
+  const link = new GraphQLWsLink(client);
+
+  const stream = new ObservableStream(execute(link, { query: subscription }));
+  await stream.takeComplete();
+
+  expect(subscribe).toHaveBeenCalledTimes(1);
+
+  const payload = subscribe.mock.calls[0][0];
+  expect(Object.keys(payload).sort()).toStrictEqual(knownKeys);
 });

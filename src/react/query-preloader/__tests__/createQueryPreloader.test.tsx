@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -25,7 +25,6 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { PreloadedQueryRef, QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -41,7 +40,6 @@ import type {
 } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
-  markAsStreaming,
   renderHookAsync,
   setupMaskedVariablesCase,
   setupSimpleCase,
@@ -1806,97 +1804,6 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   }
 });
 
-test("suspends deferred queries until initial chunk loads then rerenders with deferred data", async () => {
-  const query = gql`
-    query {
-      greeting {
-        message
-        ... on Greeting @defer {
-          recipient {
-            name
-          }
-        }
-      }
-    }
-  `;
-
-  const link = new MockSubscriptionLink();
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link,
-    incrementalHandler: new Defer20220824Handler(),
-  });
-
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(query);
-
-  using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
-
-  {
-    const { renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
-  }
-
-  link.simulateResult({
-    result: {
-      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-      hasNext: true,
-    },
-  });
-
-  {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toStrictEqualTyped({
-      data: markAsStreaming({
-        greeting: { message: "Hello world", __typename: "Greeting" },
-      }),
-      dataState: "streaming",
-      error: undefined,
-      networkStatus: NetworkStatus.streaming,
-    });
-  }
-
-  link.simulateResult(
-    {
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
-      },
-    },
-    true
-  );
-
-  {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toStrictEqualTyped({
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello world",
-          recipient: { __typename: "Person", name: "Alice" },
-        },
-      },
-      dataState: "complete",
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-});
-
 test("masks result when dataMasking is `true`", async () => {
   const { query, mocks } = setupMaskedVariablesCase();
   const client = new ApolloClient({
@@ -2005,6 +1912,102 @@ test("does not mask results by default", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+});
+
+describe("`PreloadedQueryRef` disposal", () => {
+  test("when the `PreloadedQueryRef` is disposed of, the ObservableQuery is unsubscribed", async () => {
+    const { query, mocks } = setupVariablesCase();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    let queryRef: PreloadedQueryRef | null = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef.observable.hasObservers()).toBe(true);
+    expect(internalQueryRef["softReferences"]).toBe(1);
+    queryRef = null;
+
+    await waitFor(() => {
+      global.gc!();
+      expect(internalQueryRef.observable.hasObservers()).toBe(false);
+    });
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
+
+  test("when the `PreloadedQueryRef` is disposed of, while the initial request is still ongoing the ObservableQuery stays subscribed to", async () => {
+    const { query } = setupVariablesCase();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    let queryRef: PreloadedQueryRef | null = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef.observable.hasObservers()).toBe(true);
+    expect(internalQueryRef["softReferences"]).toBe(1);
+    queryRef = null;
+
+    await expect(
+      waitFor(() => {
+        global.gc!();
+        expect(internalQueryRef.observable.hasObservers()).toBe(false);
+      })
+    ).rejects.toThrow();
+    expect(internalQueryRef["softReferences"]).toBe(1);
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            character: { __typename: "Character", id: "1", name: "Spider-Man" },
+          },
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      global.gc!();
+      expect(internalQueryRef.observable.hasObservers()).toBe(false);
+    });
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
+
+  test("when retained by a component, the soft retain lets go", async () => {
+    const { query, mocks } = setupVariablesCase();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+    const preloadQuery = createQueryPreloader(client);
+
+    const queryRef = preloadQuery(query, {
+      variables: { id: "1" },
+    });
+    const internalQueryRef = unwrapQueryRef(queryRef)!;
+
+    expect(internalQueryRef["softReferences"]).toBe(1);
+
+    using _disabledAct = disableActEnvironment();
+    const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
+      client,
+      queryRef,
+    });
+    await renderStream.takeRender();
+    await renderStream.takeRender();
+
+    expect(internalQueryRef["softReferences"]).toBe(0);
+  });
 });
 
 describe.skip("type tests", () => {

@@ -51,7 +51,7 @@ export function registerGlobalCache(
  * of the type `ApolloCache`, while the extending class `InMemoryCache` has a
  * `getMemoryInternals` function that requires a `this` of the type
  * `InMemoryCache`.
- * This is not compatible with TypeScript's inheritence system (although it is
+ * This is not compatible with TypeScript's inheritance system (although it is
  * perfectly correct), and so TypeScript will complain loudly.
  *
  * We still want to define our functions with the `this` annotation, though,

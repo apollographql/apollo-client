@@ -1,7 +1,5 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-08-20**
-
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
 > **Please note:** This is an approximation of **larger effort** work planned for the next 6 - 12 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PRs.
@@ -13,52 +11,35 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## In progress
+## Ecosystem
 
 ### Apollo Client
 
-#### 3.14.0 - August 21st, 2025
-
-_Release candidate - July 7th, 2025_
-
-- 4.0 compatibility release/deprecations
-
-To be released together with 4.0.
-
-#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - August 21st, 2025
-
-_Release candidate - June 18th 2025_
+_No planned work_
 
 ### GraphQL Testing Library
 
-- New documentation
-- Subscription support
-
-_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+_No planned work_
 
 ### VSCode Extension
 
-_No outstanding work_
+_No planned work_
 
 ### GraphQL Tag
 
-- `Release 3.0` will be our next major release of `graphql-tag` and is still in planning. See Github [3.0 Milestone](https://github.com/apollographql/graphql-tag/milestone/3) for more details.
+_No planned work_
 
 ### Apollo Client DevTools
 
-- Memory panel
-- Add compatibility for 4.0
-
-_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+- Support for inspecting Apollo Client instances in iframes
 
 ### Apollo Client React Framework Integrations
 
-- New/more robust documentation
-- Add compatibility for 4.0
+- Client integration documentation
 
 **TanStack Start**
 
-- Support for Apollo Client Streaming in TanStack Router - will stay alpha
+- Support for Apollo Client Streaming in TanStack Start - will stay release candidate
 
 **React Router**
 

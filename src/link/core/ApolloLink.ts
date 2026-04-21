@@ -493,5 +493,5 @@ export class ApolloLink {
    * @internal
    * Can be provided by a link that has an internal cache to report it's memory details.
    */
-  getMemoryInternals?: () => unknown;
+  declare getMemoryInternals?: () => unknown;
 }

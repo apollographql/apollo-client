@@ -26,11 +26,10 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { Defer20220824Handler } from "@apollo/client/incremental";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
-import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import { MockLink } from "@apollo/client/testing";
+import { spyOnConsole, wait } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -511,6 +510,47 @@ describe("useMutation Hook", () => {
       }
 
       await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("does not cause unhandled rejections", async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [{ message: CREATE_TODO_ERROR }],
+          },
+          delay: 10,
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { variables }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
+
+      await takeSnapshot();
+
+      const [createTodo] = getCurrentSnapshot();
+
+      // Intentionally don't await this to ensure we don't get unhandled rejections
+      createTodo();
+      await wait(15);
+
+      // No assertions needed. This test fails if the promise throws an
+      // unhandled rection
     });
 
     it(`should reject when errorPolicy is 'none'`, async () => {
@@ -3789,7 +3829,7 @@ describe("useMutation Hook", () => {
 
         expect(useQueryResult.loading).toBe(false);
         expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
-        // This mutation did not braodcast results, so we expect our numbers to
+        // This mutation did not broadcast results, so we expect our numbers to
         // equal the previous set.
         expect(useQueryResult.data).toEqual(getNumbersData(5));
 
@@ -3879,381 +3919,6 @@ describe("useMutation Hook", () => {
       await waitFor(() => screen.findByText("item 1"));
       await userEvent.click(screen.getByRole("button", { name: /mutate/i }));
       await waitFor(() => screen.findByText("item 3"));
-    });
-  });
-  describe("defer", () => {
-    const CREATE_TODO_MUTATION_DEFER = gql`
-      mutation createTodo($description: String!, $priority: String) {
-        createTodo(description: $description, priority: $priority) {
-          id
-          ... @defer {
-            description
-            priority
-          }
-        }
-      }
-    `;
-    const variables = {
-      description: "Get milk!",
-    };
-    it("resolves a deferred mutation with the full result", async () => {
-      using consoleSpies = spyOnConsole("error");
-      const link = new MockSubscriptionLink();
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-        incrementalHandler: new Defer20220824Handler(),
-      });
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useMutation(CREATE_TODO_MUTATION_DEFER),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-      {
-        const [, mutation] = await takeSnapshot();
-
-        expect(mutation).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: false,
-          called: false,
-        });
-      }
-
-      const [mutate] = getCurrentSnapshot();
-
-      const promise = mutate({ variables });
-
-      {
-        const [, mutation] = await takeSnapshot();
-
-        expect(mutation).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: true,
-          called: true,
-        });
-      }
-
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              createTodo: {
-                id: 1,
-                __typename: "Todo",
-              },
-            },
-            hasNext: true,
-          },
-        });
-      });
-
-      await expect(takeSnapshot).not.toRerender();
-
-      setTimeout(() => {
-        link.simulateResult(
-          {
-            result: {
-              incremental: [
-                {
-                  data: {
-                    description: "Get milk!",
-                    priority: "High",
-                    __typename: "Todo",
-                  },
-                  path: ["createTodo"],
-                },
-              ],
-              hasNext: false,
-            },
-          },
-          true
-        );
-      });
-
-      {
-        const [, mutation] = await takeSnapshot();
-
-        expect(mutation).toStrictEqualTyped({
-          data: {
-            createTodo: {
-              id: 1,
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-          },
-          error: undefined,
-          loading: false,
-          called: true,
-        });
-      }
-
-      await expect(promise).resolves.toStrictEqualTyped({
-        data: {
-          createTodo: {
-            id: 1,
-            description: "Get milk!",
-            priority: "High",
-            __typename: "Todo",
-          },
-        },
-      });
-
-      expect(consoleSpies.error).not.toHaveBeenCalled();
-    });
-
-    it("resolves with resulting errors and calls onError callback", async () => {
-      using consoleSpies = spyOnConsole("error");
-      const link = new MockSubscriptionLink();
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-        incrementalHandler: new Defer20220824Handler(),
-      });
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useMutation(CREATE_TODO_MUTATION_DEFER, { onError }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: false,
-          called: false,
-        });
-      }
-
-      const [createTodo] = getCurrentSnapshot();
-
-      const promise = createTodo({ variables });
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: true,
-          called: true,
-        });
-      }
-
-      link.simulateResult({
-        result: {
-          data: {
-            createTodo: {
-              id: 1,
-              __typename: "Todo",
-            },
-          },
-          hasNext: true,
-        },
-      });
-
-      await expect(takeSnapshot).not.toRerender();
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: null,
-                errors: [{ message: CREATE_TODO_ERROR }],
-                path: ["createTodo"],
-              },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await expect(promise).rejects.toThrow(
-        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
-      );
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          error: new CombinedGraphQLErrors({
-            data: { createTodo: { __typename: "Todo", id: 1 } },
-            errors: [{ message: CREATE_TODO_ERROR }],
-          }),
-          loading: false,
-          called: true,
-        });
-      }
-
-      await expect(takeSnapshot).not.toRerender();
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors({
-          data: { createTodo: { __typename: "Todo", id: 1 } },
-          errors: [{ message: CREATE_TODO_ERROR }],
-        }),
-        expect.anything()
-      );
-      expect(consoleSpies.error).not.toHaveBeenCalled();
-    });
-
-    it("calls the update function with the final merged result data", async () => {
-      using consoleSpies = spyOnConsole("error");
-      const link = new MockSubscriptionLink();
-      const update = jest.fn();
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-        incrementalHandler: new Defer20220824Handler(),
-      });
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useMutation<any>(CREATE_TODO_MUTATION_DEFER, { update }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: false,
-          called: false,
-        });
-      }
-
-      const [createTodo] = getCurrentSnapshot();
-
-      const promiseReturnedByMutate = createTodo({ variables });
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          error: undefined,
-          loading: true,
-          called: true,
-        });
-      }
-
-      link.simulateResult({
-        result: {
-          data: {
-            createTodo: {
-              id: 1,
-              __typename: "Todo",
-            },
-          },
-          hasNext: true,
-        },
-      });
-
-      await expect(takeSnapshot).not.toRerender();
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: {
-                  description: "Get milk!",
-                  priority: "High",
-                  __typename: "Todo",
-                },
-                path: ["createTodo"],
-              },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await expect(promiseReturnedByMutate).resolves.toStrictEqualTyped({
-        data: {
-          createTodo: {
-            id: 1,
-            description: "Get milk!",
-            priority: "High",
-            __typename: "Todo",
-          },
-        },
-      });
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: {
-            createTodo: {
-              id: 1,
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-          },
-          error: undefined,
-          loading: false,
-          called: true,
-        });
-      }
-
-      await expect(takeSnapshot).not.toRerender();
-
-      expect(update).toHaveBeenCalledTimes(1);
-      expect(update).toHaveBeenCalledWith(
-        // the first item is the cache, which we don't need to make any
-        // assertions against in this test
-        expect.anything(),
-        // second argument is the result
-        expect.objectContaining({
-          data: {
-            createTodo: {
-              id: 1,
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-          },
-        }),
-        // third argument is an object containing context and variables
-        // but we only care about variables here
-        expect.objectContaining({ variables })
-      );
-
-      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
   });
 });

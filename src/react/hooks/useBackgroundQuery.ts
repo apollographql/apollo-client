@@ -581,25 +581,23 @@ export declare namespace useBackgroundQuery {
 }
 
 export const useBackgroundQuery: useBackgroundQuery.Signature =
-  useBackgroundQueryImplementation as any;
-
-function useBackgroundQueryImplementation<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
-): [
-  QueryRef<TData, TVariables, DataState<TData>["dataState"]> | undefined,
-  useBackgroundQuery.Result<TData, TVariables>,
-] {
-  "use no memo";
-  return wrapHook(
-    "useBackgroundQuery",
-    useBackgroundQuery_,
-    useApolloClient(typeof options === "object" ? options.client : undefined)
-  )(query, options ?? ({} as any));
-}
+  function useBackgroundQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
+  ): [
+    QueryRef<TData, TVariables, DataState<TData>["dataState"]> | undefined,
+    useBackgroundQuery.Result<TData, TVariables>,
+  ] {
+    "use no memo";
+    return wrapHook(
+      "useBackgroundQuery",
+      useBackgroundQuery_,
+      useApolloClient(typeof options === "object" ? options.client : undefined)
+    )(query, options ?? ({} as any));
+  } as any;
 
 function useBackgroundQuery_<
   TData = unknown,

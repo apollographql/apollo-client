@@ -495,26 +495,24 @@ export declare namespace useSuspenseQuery {
 }
 
 export const useSuspenseQuery: useSuspenseQuery.Signature =
-  useSuspenseQueryImplementation as any;
-
-function useSuspenseQueryImplementation<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
-): useSuspenseQuery.Result<
-  TData,
-  TVariables,
-  "empty" | "streaming" | "complete" | "partial"
-> {
-  "use no memo";
-  return wrapHook(
-    "useSuspenseQuery",
-    useSuspenseQuery_,
-    useApolloClient(typeof options === "object" ? options.client : undefined)
-  )(query, options ?? ({} as any));
-}
+  function useSuspenseQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+  ): useSuspenseQuery.Result<
+    TData,
+    TVariables,
+    "empty" | "streaming" | "complete" | "partial"
+  > {
+    "use no memo";
+    return wrapHook(
+      "useSuspenseQuery",
+      useSuspenseQuery_,
+      useApolloClient(typeof options === "object" ? options.client : undefined)
+    )(query, options ?? ({} as any));
+  } as any;
 
 function useSuspenseQuery_<
   TData = unknown,

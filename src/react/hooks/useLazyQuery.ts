@@ -417,10 +417,7 @@ const EAGER_METHODS = [
   "subscribeToMore",
 ] as const;
 
-export const useLazyQuery: useLazyQuery.Signature =
-  useLazyQueryImplementation as any;
-
-function useLazyQueryImplementation<
+export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
@@ -599,7 +596,7 @@ function useLazyQueryImplementation<
   }, [client, observableResult, eagerMethods, observable]);
 
   return [stableExecute, result as any];
-}
+} as any;
 
 const initialResult: ObservableQuery.Result<any> = maybeDeepFreeze({
   data: undefined,

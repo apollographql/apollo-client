@@ -525,9 +525,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   resultData: InternalResult<TData>;
 }
 
-export const useQuery: useQuery.Signature = useQueryImplementation as any;
-
-function useQueryImplementation<
+export const useQuery: useQuery.Signature = function useQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -546,7 +544,7 @@ function useQueryImplementation<
     useQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
-}
+} as any;
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

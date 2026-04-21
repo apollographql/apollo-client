@@ -298,131 +298,133 @@ export declare namespace useLoadableQuery {
 }
 
 export const useLoadableQuery: useLoadableQuery.Signature =
-  useLoadableQueryImplementation as any;
+  function useLoadableQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options: useLoadableQuery.Options = {}
+  ): useLoadableQuery.Result<TData, TVariables> {
+    const client = useApolloClient(options.client);
+    const suspenseCache = getSuspenseCache(client);
+    const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+    const { queryKey = [] } = options;
 
-function useLoadableQueryImplementation<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLoadableQuery.Options = {}
-): useLoadableQuery.Result<TData, TVariables> {
-  const client = useApolloClient(options.client);
-  const suspenseCache = getSuspenseCache(client);
-  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { queryKey = [] } = options;
+    const [queryRef, setQueryRef] = React.useState<QueryRef<
+      TData,
+      TVariables,
+      DataState<TData>["dataState"]
+    > | null>(null);
 
-  const [queryRef, setQueryRef] = React.useState<QueryRef<
-    TData,
-    TVariables,
-    DataState<TData>["dataState"]
-  > | null>(null);
+    assertWrappedQueryRef(queryRef);
 
-  assertWrappedQueryRef(queryRef);
+    const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
 
-  const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
+    if (queryRef && internalQueryRef?.didChangeOptions(watchQueryOptions)) {
+      const promise = internalQueryRef.applyOptions(watchQueryOptions);
+      updateWrappedQueryRef(queryRef, promise);
+    }
 
-  if (queryRef && internalQueryRef?.didChangeOptions(watchQueryOptions)) {
-    const promise = internalQueryRef.applyOptions(watchQueryOptions);
-    updateWrappedQueryRef(queryRef, promise);
-  }
+    const calledDuringRender = useRenderGuard();
 
-  const calledDuringRender = useRenderGuard();
-
-  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-    (options) => {
-      if (!internalQueryRef) {
-        throw new Error(
-          "The query has not been loaded. Please load the query."
-        );
-      }
-
-      const promise = internalQueryRef.fetchMore(options);
-
-      setQueryRef(wrapQueryRef(internalQueryRef));
-
-      return promise;
-    },
-    [internalQueryRef]
-  );
-
-  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
-    (options) => {
-      if (!internalQueryRef) {
-        throw new Error(
-          "The query has not been loaded. Please load the query."
-        );
-      }
-
-      const promise = internalQueryRef.refetch(options);
-
-      setQueryRef(wrapQueryRef(internalQueryRef));
-
-      return promise;
-    },
-    [internalQueryRef]
-  );
-
-  const loadQuery: useLoadableQuery.LoadQueryFunction<TVariables> =
-    React.useCallback(
-      (...args) => {
-        invariant(
-          !calledDuringRender(),
-          "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
-        );
-
-        const [variables] = args;
-
-        const cacheKey: CacheKey = [
-          query,
-          canonicalStringify(variables),
-          ...([] as any[]).concat(queryKey),
-        ];
-
-        const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-          client.watchQuery({
-            ...watchQueryOptions,
-            variables,
-          } as ApolloClient.WatchQueryOptions<any, any>)
-        );
-
-        setQueryRef(wrapQueryRef(queryRef));
-      },
-      [
-        query,
-        queryKey,
-        suspenseCache,
-        watchQueryOptions,
-        calledDuringRender,
-        client,
-      ]
-    );
-
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    React.useCallback(
+    const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
       (options) => {
-        invariant(
-          internalQueryRef,
-          "The query has not been loaded. Please load the query."
-        );
+        if (!internalQueryRef) {
+          throw new Error(
+            "The query has not been loaded. Please load the query."
+          );
+        }
 
-        return internalQueryRef.observable.subscribeToMore(
-          // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
-          options as any as ObservableQuery.SubscribeToMoreOptions<
-            TData,
-            OperationVariables
-          >
-        );
+        const promise = internalQueryRef.fetchMore(options);
+
+        setQueryRef(wrapQueryRef(internalQueryRef));
+
+        return promise;
       },
       [internalQueryRef]
     );
 
-  const reset: ResetFunction = React.useCallback(() => {
-    setQueryRef(null);
-  }, []);
+    const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
+      (options) => {
+        if (!internalQueryRef) {
+          throw new Error(
+            "The query has not been loaded. Please load the query."
+          );
+        }
 
-  return [loadQuery, queryRef, { fetchMore, refetch, reset, subscribeToMore }];
-}
+        const promise = internalQueryRef.refetch(options);
+
+        setQueryRef(wrapQueryRef(internalQueryRef));
+
+        return promise;
+      },
+      [internalQueryRef]
+    );
+
+    const loadQuery: useLoadableQuery.LoadQueryFunction<TVariables> =
+      React.useCallback(
+        (...args) => {
+          invariant(
+            !calledDuringRender(),
+            "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
+          );
+
+          const [variables] = args;
+
+          const cacheKey: CacheKey = [
+            query,
+            canonicalStringify(variables),
+            ...([] as any[]).concat(queryKey),
+          ];
+
+          const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+            client.watchQuery({
+              ...watchQueryOptions,
+              variables,
+            } as ApolloClient.WatchQueryOptions<any, any>)
+          );
+
+          setQueryRef(wrapQueryRef(queryRef));
+        },
+        [
+          query,
+          queryKey,
+          suspenseCache,
+          watchQueryOptions,
+          calledDuringRender,
+          client,
+        ]
+      );
+
+    const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+      React.useCallback(
+        (options) => {
+          invariant(
+            internalQueryRef,
+            "The query has not been loaded. Please load the query."
+          );
+
+          return internalQueryRef.observable.subscribeToMore(
+            // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
+            options as any as ObservableQuery.SubscribeToMoreOptions<
+              TData,
+              OperationVariables
+            >
+          );
+        },
+        [internalQueryRef]
+      );
+
+    const reset: ResetFunction = React.useCallback(() => {
+      setQueryRef(null);
+    }, []);
+
+    return [
+      loadQuery,
+      queryRef,
+      { fetchMore, refetch, reset, subscribeToMore },
+    ];
+  } as any;
 
 function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   client,

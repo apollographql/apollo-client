@@ -84,7 +84,7 @@ export interface MaskedVariablesCaseData {
   };
 }
 
-export interface UnmaskedVariablesCaseData {
+interface UnmaskedVariablesCaseData {
   character: {
     __typename: "Character";
     id: string;

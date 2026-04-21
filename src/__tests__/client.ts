@@ -4156,7 +4156,10 @@ describe("@connection", () => {
         link,
         cache: new InMemoryCache(),
         defaultOptions: {
-          query: { errorPolicy: "all" },
+          query: {
+            // @ts-expect-error
+            errorPolicy: "all",
+          },
         },
       });
 
@@ -4164,7 +4167,6 @@ describe("@connection", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
-        // @ts-expect-error using defaultOptions which is type safe
         error: new CombinedGraphQLErrors({ errors }),
       });
     });

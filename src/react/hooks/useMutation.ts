@@ -48,89 +48,71 @@ type MakeRequiredVariablesOptional<
 export declare namespace useMutation {
   import _self = useMutation;
 
-  export namespace Base {
-    export interface Options<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-      TCache extends ApolloCache = ApolloCache,
-      TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
-    > {
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
-      optimisticResponse?:
-        | Unmasked<NoInfer<TData>>
-        | ((
-            vars: TVariables,
-            { IGNORE }: { IGNORE: IgnoreModifier }
-          ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
-      updateQueries?: MutationQueryReducersMap<TData>;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
-      refetchQueries?:
-        | ((
-            result: NormalizedExecutionResult<Unmasked<TData>>
-          ) => InternalRefetchQueriesInclude)
-        | InternalRefetchQueriesInclude;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
-      awaitRefetchQueries?: boolean;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
-      onQueryUpdated?: OnQueryUpdated<any>;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-      errorPolicy?: ErrorPolicy;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-      variables?: Partial<TVariables> & TConfiguredVariables;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
-      context?: DefaultContext;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
-      fetchPolicy?: MutationFetchPolicy;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
-      keepRootFields?: boolean;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
-      client?: ApolloClient;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-      notifyOnNetworkStatusChange?: boolean;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
-      onCompleted?: (
-        data: MaybeMasked<TData>,
-        clientOptions?: _self.Options<TData, TVariables, TCache>
-      ) => void;
-
-      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-      onError?: (
-        error: ErrorLike,
-        clientOptions?: _self.Options<TData, TVariables, TCache>
-      ) => void;
-    }
-  }
   export interface Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
     TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
-  > extends Base.Options<TData, TVariables, TCache, TConfiguredVariables> {}
+  > {
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+    optimisticResponse?:
+      | Unmasked<NoInfer<TData>>
+      | ((
+          vars: TVariables,
+          { IGNORE }: { IGNORE: IgnoreModifier }
+        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
 
-  export namespace DocumentationTypes {
-    namespace useMutation {
-      export interface Options<
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
-        TCache extends ApolloCache = ApolloCache,
-      > extends Base.Options<TData, TVariables, TCache> {}
-    }
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+    updateQueries?: MutationQueryReducersMap<TData>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+    refetchQueries?:
+      | ((
+          result: NormalizedExecutionResult<Unmasked<TData>>
+        ) => InternalRefetchQueriesInclude)
+      | InternalRefetchQueriesInclude;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+    awaitRefetchQueries?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+    update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+    onQueryUpdated?: OnQueryUpdated<any>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+    variables?: Partial<TVariables> & TConfiguredVariables;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: MutationFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+    keepRootFields?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
+    onCompleted?: (
+      data: MaybeMasked<TData>,
+      clientOptions?: _self.Options<TData, TVariables, TCache>
+    ) => void;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
+    onError?: (
+      error: ErrorLike,
+      clientOptions?: _self.Options<TData, TVariables, TCache>
+    ) => void;
   }
 
   export namespace Base {

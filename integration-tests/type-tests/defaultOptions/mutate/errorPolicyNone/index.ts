@@ -57,6 +57,42 @@ declare module "@apollo/client" {
       },
     },
   });
+  new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        // @ts-expect-error: Type '"all"' is not assignable to type '"A default option for watchQuery.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
+        errorPolicy: "all",
+      },
+      query: {
+        // @ts-expect-error: Type '"none"' is not assignable to type '"A default option for mutate.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
+        errorPolicy: "none",
+      },
+      mutate: {
+        errorPolicy: "none",
+      },
+    },
+  });
+  new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        context: {
+          headers: {
+            "x-custom-header": "custom-value",
+          },
+        },
+      },
+      query: {
+        fetchPolicy: "network-only",
+      },
+      mutate: {
+        errorPolicy: "none",
+      },
+    },
+  });
 }
 
 // client.mutate

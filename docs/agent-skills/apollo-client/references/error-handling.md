@@ -11,7 +11,7 @@ For older Apollo Client 3.x error handling documentation, see [Apollo Client 3.x
 - [Identifying Error Types](#identifying-error-types)
 - [GraphQL Error Policies](#graphql-error-policies)
 - [Error Links](#error-links)
-- [Retry Logic](#retry-logic)
+- [Retry Link](#retry-link)
 - [Error Boundaries](#error-boundaries)
 
 ## Understanding Errors

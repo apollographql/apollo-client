@@ -55,7 +55,7 @@ function UserProfile({ userId }: { userId: string }) {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  // TypeScript: dataState === "ready" provides better type narrowing than just checking data
+  // TypeScript: dataState === "complete" provides better type narrowing than just checking data
   return <div>{data.user.name}</div>;
 }
 ```

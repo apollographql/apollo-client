@@ -42,7 +42,7 @@ function Dogs() {
 
   return (
     <ul>
-      {data.dogs.map((dog) => (
+      {data?.dogs.map((dog) => (
         <li key={dog.id}>{dog.breed}</li>
       ))}
     </ul>

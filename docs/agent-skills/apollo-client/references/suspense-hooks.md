@@ -265,7 +265,7 @@ export const preloadQuery = createQueryPreloader(client);
 
 ### Using preloadQuery with Route Loaders
 
-> **Note**: This example applies to React Router in non-framework mode. For React Router framework mode, see [setup-react-router.md](./setup-react-router.md).
+> **Note**: This example applies to React Router in non-framework mode. For React Router framework mode, see [integration-react-router.md](./integration-react-router.md).
 
 Use the preload function with React Router's `loader` function to begin loading data during route transitions:
 
@@ -306,7 +306,7 @@ function DogDetails({ queryRef }: { queryRef: QueryRef<DogData> }) {
 
 ### Preventing Route Transitions Until Query Loads
 
-Use the `toPromise()` method to prevent route transitions until the query finishes loading:
+Use `preloadQuery.toPromise()` to prevent route transitions until the query finishes loading:
 
 ```tsx
 export async function loader({ params }: { params: { id: string } }) {
@@ -316,17 +316,17 @@ export async function loader({ params }: { params: { id: string } }) {
   });
 
   // Wait for the query to complete before transitioning
-  return queryRef.toPromise();
+  return preloadQuery.toPromise(queryRef);
 }
 ```
 
-When `toPromise()` is used, the route transition waits for the query to complete, and the data renders immediately without showing a loading fallback.
+When `preloadQuery.toPromise()` is used, the route transition waits for the query to complete, and the data renders immediately without showing a loading fallback.
 
-> **Note**: `toPromise()` resolves with the `queryRef` itself (not the data) to encourage using `useReadQuery` for cache updates. If you need raw query data in your loader, use `client.query()` directly.
+> **Note**: `preloadQuery.toPromise()` resolves with the `queryRef` itself (not the data) to encourage using `useReadQuery` for cache updates. If you need raw query data in your loader, use `client.query()` directly.
 
 ### With Next.js Server Components
 
-> **Note**: For Next.js App Router, use the `PreloadQuery` component from `@apollo/client-integration-nextjs` instead. See [setup-nextjs.md](./setup-nextjs.md) for details.
+> **Note**: For Next.js App Router, use the `PreloadQuery` component from `@apollo/client-integration-nextjs` instead. See [integration-nextjs.md](./integration-nextjs.md) for details.
 
 ## useQueryRefHandlers
 
@@ -696,9 +696,9 @@ const { data } = useSuspenseQuery(GET_POSTS, {
 
 Apollo Client integrates with modern React frameworks that support Streaming SSR and React Server Components. For detailed setup instructions specific to your framework, see:
 
-- **Next.js App Router**: [setup-nextjs.md](./setup-nextjs.md) - Includes React Server Components, PreloadQuery component, and streaming SSR
-- **React Router**: [setup-react-router.md](./setup-react-router.md) - Framework mode with SSR support
-- **TanStack Start**: [setup-tanstack-start.md](./setup-tanstack-start.md) - Full-stack React framework with SSR
+- **Next.js App Router**: [integration-nextjs.md](./integration-nextjs.md) - Includes React Server Components, PreloadQuery component, and streaming SSR
+- **React Router**: [integration-react-router.md](./integration-react-router.md) - Framework mode with SSR support
+- **TanStack Start**: [integration-tanstack-start.md](./integration-tanstack-start.md) - Full-stack React framework with SSR
 
 These guides cover:
 

@@ -137,7 +137,8 @@ function RouteComponent() {
 You can also use Apollo Client's suspenseful hooks directly in your component without a loader:
 
 ```typescript
-import { gql, useSuspenseQuery } from "@apollo/client/react";
+import { gql } from "@apollo/client";
+import { useSuspenseQuery } from "@apollo/client/react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { TypedDocumentNode } from "@apollo/client";
 

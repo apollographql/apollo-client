@@ -4,7 +4,7 @@
 
 - [Reactive Variables](#reactive-variables)
 - [Local-Only Fields](#local-only-fields)
-- [Type Policies for Local State](#type-policies-for-local-state)
+- [Local Field Read Functions (Type Policies)](#local-field-read-functions-type-policies)
 - [Combining Remote and Local State](#combining-remote-and-local-state)
 - [useReactiveVar Hook](#usereactivevar-hook)
 
@@ -191,6 +191,7 @@ const client = new ApolloClient({
 
         // Read from cache
         currentUser: (_, __, { cache }) => {
+          if (typeof window === "undefined") return null;
           const userId = localStorage.getItem("currentUserId");
           if (!userId) return null;
           return cache.readFragment({

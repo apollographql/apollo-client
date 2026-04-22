@@ -48,7 +48,6 @@ expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
   errorPolicy: "none" | "ignore" | "all";
 }>();
 
-const bool = {} as any as boolean;
 // ApolloClient constructor
 {
   new ApolloClient({

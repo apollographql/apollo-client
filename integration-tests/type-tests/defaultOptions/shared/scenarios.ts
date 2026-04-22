@@ -8,6 +8,7 @@ import {
   useBackgroundQuery,
   useLazyQuery,
   useLoadableQuery,
+  useMutation,
   useQuery,
   useSuspenseQuery,
   type QueryRef,
@@ -34,6 +35,7 @@ declare module "@apollo/client" {
 
 export declare const client: ApolloClient;
 export declare const QUERY: TypedDocumentNode<Data, Variables>;
+export declare const MUTATION: TypedDocumentNode<Data, Variables>;
 export const bool = true as any as boolean;
 type bool = boolean;
 
@@ -53,6 +55,46 @@ namespace clientQueryCase {
     );
     export const none = expectTypeOf(
       client.query({ query: QUERY, errorPolicy: "none" })
+    );
+  }
+}
+
+namespace clientMutateCase {
+  export type MutateResultNone = ApolloClient.MutateResult<Data, "none">;
+  export type MutateResultAll = ApolloClient.MutateResult<Data, "all">;
+  export type MutateResultIgnore = ApolloClient.MutateResult<Data, "ignore">;
+
+  export const defaults = expectTypeOf(client.mutate({ mutation: MUTATION }));
+
+  export namespace errorPolicy {
+    export const all = expectTypeOf(
+      client.mutate({ mutation: MUTATION, errorPolicy: "all" })
+    );
+    export const ignore = expectTypeOf(
+      client.mutate({ mutation: MUTATION, errorPolicy: "ignore" })
+    );
+    export const none = expectTypeOf(
+      client.mutate({ mutation: MUTATION, errorPolicy: "none" })
+    );
+  }
+}
+
+namespace useMutationCase {
+  export import hook = useMutation;
+  export type ResultTuple<TErrorPolicy extends "none" | "all" | "ignore"> =
+    useMutation.ResultTuple<Data, Variables, any, TErrorPolicy>;
+
+  export const defaults = expectTypeOf(useMutation(MUTATION));
+
+  export namespace errorPolicy {
+    export const all = expectTypeOf(
+      useMutation(MUTATION, { errorPolicy: "all" })
+    );
+    export const ignore = expectTypeOf(
+      useMutation(MUTATION, { errorPolicy: "ignore" })
+    );
+    export const none = expectTypeOf(
+      useMutation(MUTATION, { errorPolicy: "none" })
     );
   }
 }
@@ -622,9 +664,11 @@ namespace useLoadableQueryCase {
 
 export {
   clientQueryCase as clientQuery,
+  clientMutateCase as clientMutate,
   useQueryCase as useQuery,
   useSuspenseQueryCase as useSuspenseQuery,
   useBackgroundQueryCase as useBackgroundQuery,
   useLoadableQueryCase as useLoadableQuery,
   useLazyQueryCase as useLazyQuery,
+  useMutationCase as useMutation,
 };

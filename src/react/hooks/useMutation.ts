@@ -20,7 +20,13 @@ import type {
   Unmasked,
 } from "@apollo/client";
 import type { IgnoreModifier } from "@apollo/client/cache";
-import type { NoInfer, Prettify } from "@apollo/client/utilities/internal";
+import type {
+  LazyType,
+  NoInfer,
+  OptionWithFallback,
+  Prettify,
+  SignatureStyle,
+} from "@apollo/client/utilities/internal";
 import {
   mergeOptions,
   preventUnhandledRejection,
@@ -40,106 +46,182 @@ type MakeRequiredVariablesOptional<
 >;
 
 export declare namespace useMutation {
+  import _self = useMutation;
+
+  export namespace Base {
+    export interface Options<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+      TCache extends ApolloCache = ApolloCache,
+      TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
+    > {
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+      optimisticResponse?:
+        | Unmasked<NoInfer<TData>>
+        | ((
+            vars: TVariables,
+            { IGNORE }: { IGNORE: IgnoreModifier }
+          ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+      updateQueries?: MutationQueryReducersMap<TData>;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+      refetchQueries?:
+        | ((
+            result: NormalizedExecutionResult<Unmasked<TData>>
+          ) => InternalRefetchQueriesInclude)
+        | InternalRefetchQueriesInclude;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+      awaitRefetchQueries?: boolean;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+      onQueryUpdated?: OnQueryUpdated<any>;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: ErrorPolicy;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+      variables?: Partial<TVariables> & TConfiguredVariables;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+      context?: DefaultContext;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+      fetchPolicy?: MutationFetchPolicy;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+      keepRootFields?: boolean;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
+      client?: ApolloClient;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+      notifyOnNetworkStatusChange?: boolean;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
+      onCompleted?: (
+        data: MaybeMasked<TData>,
+        clientOptions?: _self.Options<TData, TVariables, TCache>
+      ) => void;
+
+      /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
+      onError?: (
+        error: ErrorLike,
+        clientOptions?: _self.Options<TData, TVariables, TCache>
+      ) => void;
+    }
+  }
   export interface Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
     TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
-  > {
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
-    optimisticResponse?:
-      | Unmasked<NoInfer<TData>>
-      | ((
-          vars: TVariables,
-          { IGNORE }: { IGNORE: IgnoreModifier }
-        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+  > extends Base.Options<TData, TVariables, TCache, TConfiguredVariables> {}
 
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
-    updateQueries?: MutationQueryReducersMap<TData>;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
-    refetchQueries?:
-      | ((
-          result: NormalizedExecutionResult<Unmasked<TData>>
-        ) => InternalRefetchQueriesInclude)
-      | InternalRefetchQueriesInclude;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
-    awaitRefetchQueries?: boolean;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
-    update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
-    onQueryUpdated?: OnQueryUpdated<any>;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-    errorPolicy?: ErrorPolicy;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-    variables?: Partial<TVariables> & TConfiguredVariables;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
-    context?: DefaultContext;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: MutationFetchPolicy;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
-    keepRootFields?: boolean;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
-    client?: ApolloClient;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-    notifyOnNetworkStatusChange?: boolean;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
-    onCompleted?: (
-      data: MaybeMasked<TData>,
-      clientOptions?: Options<TData, TVariables, TCache>
-    ) => void;
-
-    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-    onError?: (
-      error: ErrorLike,
-      clientOptions?: Options<TData, TVariables, TCache>
-    ) => void;
+  export namespace DocumentationTypes {
+    namespace useMutation {
+      export interface Options<
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+        TCache extends ApolloCache = ApolloCache,
+      > extends Base.Options<TData, TVariables, TCache> {}
+    }
   }
 
-  export interface Result<TData = unknown> {
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-    data: MaybeMasked<TData> | null | undefined;
+  export namespace Base {
+    export interface Result<TData = unknown> {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
+      loading: boolean;
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-    error: ErrorLike | undefined;
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
+      called: boolean;
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
-    loading: boolean;
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
+      client: ApolloClient;
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
-    called: boolean;
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
+      reset: () => void;
+    }
+  }
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
-    client: ApolloClient;
+  /**
+   * Maps `errorPolicy` to the shape of `data` and `error` as observable from
+   * the hook result state.
+   *
+   * The hook has additional states (before call, during loading) where `data`
+   * and `error` are `undefined`, so `data` remains nullable even on error
+   * policies that would otherwise guarantee it. Only `error` is narrowed away
+   * for `"ignore"`, since the underlying `client.mutate` promise never rejects
+   * and never resolves with an error for that policy.
+   */
+  export type ResultStateMap<TData = unknown> = {
+    none: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: MaybeMasked<TData> | null | undefined;
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
-    reset: () => void;
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
+    };
+    all: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: MaybeMasked<TData> | null | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
+    };
+    ignore: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: MaybeMasked<TData> | null | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error: undefined;
+    };
+    undefined: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: MaybeMasked<TData> | null | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
+    };
+  };
+
+  export type Result<
+    TData = unknown,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = Base.Result<TData> & ResultStateMap<TData>[`${TErrorPolicy}`];
+
+  export namespace DocumentationTypes {
+    namespace useMutation {
+      export interface Result<TData = unknown> extends Base.Result<TData> {
+        /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+        data: MaybeMasked<TData> | null | undefined;
+
+        /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+        error: ErrorLike | undefined;
+      }
+    }
   }
 
   export type ResultTuple<
     TData,
     TVariables extends OperationVariables,
     TCache extends ApolloCache = ApolloCache,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = [
-    mutate: MutationFunction<TData, TVariables, TCache>,
-    result: Result<TData>,
+    mutate: MutationFunction<TData, TVariables, TCache, TErrorPolicy>,
+    result: Result<TData, TErrorPolicy>,
   ];
 
   export type MutationFunction<
     TData,
     TVariables extends OperationVariables,
     TCache extends ApolloCache = ApolloCache,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = (
     ...[options]: {} extends TVariables ?
       [
@@ -154,7 +236,7 @@ export declare namespace useMutation {
           variables: TVariables;
         },
       ]
-  ) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
+  ) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
 
   export type MutationFunctionOptions<
     TData = unknown,
@@ -173,65 +255,176 @@ export declare namespace useMutation {
       | ((hookContext: DefaultContext | undefined) => DefaultContext);
   };
 
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.Mutate.Calculated {}
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TCache extends ApolloCache,
+    TOptions extends Record<string, never> | Options<TData, TVariables, TCache>,
+  > = LazyType<
+    ResultTuple<
+      TData,
+      TVariables,
+      TCache,
+      OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
+    >
+  >;
+
   export namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client/react!useMutation:function(1)} */
-    export function useMutation<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    >(
-      mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-      options?: useMutation.Options<TData, TVariables>
-    ): useMutation.ResultTuple<TData, TVariables>;
+    /**
+     * > Refer to the [Mutations](https://www.apollographql.com/docs/react/data/mutations/) section for a more in-depth overview of `useMutation`.
+     *
+     * @example
+     *
+     * ```jsx
+     * import { gql, useMutation } from "@apollo/client";
+     *
+     * const ADD_TODO = gql`
+     *   mutation AddTodo($type: String!) {
+     *     addTodo(type: $type) {
+     *       id
+     *       type
+     *     }
+     *   }
+     * `;
+     *
+     * function AddTodo() {
+     *   let input;
+     *   const [addTodo, { data }] = useMutation(ADD_TODO);
+     *
+     *   return (
+     *     <div>
+     *       <form
+     *         onSubmit={(e) => {
+     *           e.preventDefault();
+     *           addTodo({ variables: { type: input.value } });
+     *           input.value = "";
+     *         }}
+     *       >
+     *         <input
+     *           ref={(node) => {
+     *             input = node;
+     *           }}
+     *         />
+     *         <button type="submit">Add Todo</button>
+     *       </form>
+     *     </div>
+     *   );
+     * }
+     * ```
+     *
+     * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
+     * @param options - Options to control how the mutation is executed.
+     * @returns A tuple in the form of `[mutate, result]`
+     */
+    export interface useMutation {
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: _self.Options<TData, TVariables>
+      ): _self.ResultTuple<TData, TVariables>;
+    }
+
+    /**
+     * @deprecated Avoid manually specifying generics on `useMutation`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
+     *
+     * {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)}
+     */
+    export interface useMutation_Deprecated {
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: _self.Options<TData, TVariables>
+      ): _self.ResultTuple<TData, TVariables>;
+    }
   }
+
+  export namespace Signatures {
+    /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation_Deprecated:call(1)} */
+    export interface Classic {
+      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+        TCache extends ApolloCache = ApolloCache,
+        TConfiguredVariables extends Partial<TVariables> = {},
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: useMutation.Options<
+          NoInfer<TData>,
+          NoInfer<TVariables>,
+          TCache,
+          {
+            [K in keyof TConfiguredVariables]: K extends keyof TVariables ?
+              TConfiguredVariables[K]
+            : never;
+          }
+        >
+      ): useMutation.ResultTuple<
+        TData,
+        MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
+        TCache
+      >;
+    }
+
+    /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
+    export interface Modern {
+      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        TCache extends ApolloCache,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>
+      ): useMutation.ResultForOptions<
+        TData,
+        TVariables,
+        TCache,
+        Record<string, never>
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        TCache extends ApolloCache,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends useMutation.Options<
+          NoInfer<TData>,
+          NoInfer<TVariables>,
+          TCache
+        > & {
+          variables?: {
+            [K in Exclude<
+              keyof TOptions["variables"],
+              keyof TVariables
+            >]?: never;
+          };
+        },
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: TOptions
+      ): useMutation.ResultForOptions<TData, TVariables, TCache, TOptions>;
+    }
+
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+  }
+
+  /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
+  export interface Signature extends Signatures.Evaluated {}
 }
 
-/**
- * > Refer to the [Mutations](https://www.apollographql.com/docs/react/data/mutations/) section for a more in-depth overview of `useMutation`.
- *
- * @example
- *
- * ```jsx
- * import { gql, useMutation } from "@apollo/client";
- *
- * const ADD_TODO = gql`
- *   mutation AddTodo($type: String!) {
- *     addTodo(type: $type) {
- *       id
- *       type
- *     }
- *   }
- * `;
- *
- * function AddTodo() {
- *   let input;
- *   const [addTodo, { data }] = useMutation(ADD_TODO);
- *
- *   return (
- *     <div>
- *       <form
- *         onSubmit={(e) => {
- *           e.preventDefault();
- *           addTodo({ variables: { type: input.value } });
- *           input.value = "";
- *         }}
- *       >
- *         <input
- *           ref={(node) => {
- *             input = node;
- *           }}
- *         />
- *         <button type="submit">Add Todo</button>
- *       </form>
- *     </div>
- *   );
- * }
- * ```
- *
- * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
- * @param options - Options to control how the mutation is executed.
- * @returns A tuple in the form of `[mutate, result]`
- */
-export function useMutation<
+/** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
+export const useMutation: useMutation.Signature = function useMutation<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TCache extends ApolloCache = ApolloCache,
@@ -401,7 +594,7 @@ export function useMutation<
   }, []);
 
   return [execute as any, { reset, ...result }];
-}
+} as any;
 
 function createInitialResult(client: ApolloClient) {
   return {

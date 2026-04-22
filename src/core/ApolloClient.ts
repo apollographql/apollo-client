@@ -222,16 +222,124 @@ export declare namespace ApolloClient {
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   } & VariablesOption<NoInfer<TVariables>>;
 
-  export interface MutateResult<TData = unknown> {
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-    data: TData | undefined;
+  export namespace mutate {
+    export interface DefaultOptions
+      extends ApolloClient.DefaultOptions.Mutate.Calculated {}
 
-    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-    error?: ErrorLike;
+    export type ResultForOptions<
+      TData,
+      TVariables extends OperationVariables,
+      TCache extends ApolloCache,
+      TOptions extends
+        | Record<string, unknown>
+        | MutateOptions<any, TVariables, TCache>,
+    > = LazyType<
+      MutateResult<
+        MaybeMasked<TData>,
+        OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> &
+          ErrorPolicy
+      >
+    >;
+    export namespace Signatures {
+      export interface Classic {
+        /**
+         * @deprecated Avoid manually specifying generics on `client.mutate`.
+         * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
+         *
+         * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)}
+         */
+        <
+          TData = unknown,
+          TVariables extends OperationVariables = OperationVariables,
+          TCache extends ApolloCache = ApolloCache,
+        >(
+          options: ApolloClient.MutateOptions<TData, TVariables, TCache>
+        ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
+      }
+      export interface Modern {
+        /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)} */
+        <
+          TData,
+          TVariables extends OperationVariables,
+          TCache extends ApolloCache,
+          // this overload should never be manually defined, it should always be inferred
+          TOptions extends ApolloClient.MutateOptions<
+            NoInfer<TData>,
+            NoInfer<TVariables>,
+            TCache
+          > &
+            VariablesOption<
+              TVariables & {
+                [K in Exclude<
+                  keyof TOptions["variables"],
+                  keyof TVariables
+                >]?: never;
+              }
+            >,
+        >(
+          options: TOptions & {
+            mutation: TypedDocumentNode<TData, TVariables>;
+          }
+        ): Promise<
+          ApolloClient.mutate.ResultForOptions<
+            TData,
+            TVariables,
+            TCache,
+            TOptions
+          >
+        >;
+      }
 
+      export type Evaluated =
+        SignatureStyle extends "classic" ? Classic : Modern;
+    }
+    /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)} */
+    export interface Signature extends Signatures.Evaluated {}
+  }
+
+  export type MutateResultMap<
+    TData = unknown,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = {
+    none: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: TData;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error?: never;
+    };
+    all: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
+    ignore: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error?: never;
+    };
+    // Fallback case via `undefined` for backwards compatibility when the
+    // `errorPolicy` is not known at the call site.
+    undefined: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
+  };
+
+  export type MutateResult<
+    TData = unknown,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = MutateResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`] & {
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
     extensions?: Record<string, unknown>;
-  }
+  };
 
   /**
    * Query options.
@@ -812,6 +920,22 @@ export declare namespace ApolloClient {
     >(
       options: ApolloClient.QueryOptions<TData, TVariables>
     ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+
+    /**
+     * This resolves a single mutation according to the options specified and returns a
+     * Promise which is either resolved with the resulting data or rejected with an
+     * error. In some cases both `data` and `errors` might be undefined, for example
+     * when `errorPolicy` is set to `'ignore'`.
+     *
+     * It takes options as an object with the following keys and values:
+     */
+    function mutate<
+      TData = unknown,
+      TVariables extends OperationVariables = OperationVariables,
+      TCache extends ApolloCache = ApolloCache,
+    >(
+      options: ApolloClient.MutateOptions<TData, TVariables, TCache>
+    ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
   }
 }
 
@@ -1156,21 +1280,14 @@ export class ApolloClient {
     return this.queryManager.query<TData, TVariables>(options);
   };
 
-  /**
-   * This resolves a single mutation according to the options specified and returns a
-   * Promise which is either resolved with the resulting data or rejected with an
-   * error. In some cases both `data` and `errors` might be undefined, for example
-   * when `errorPolicy` is set to `'ignore'`.
-   *
-   * It takes options as an object with the following keys and values:
-   */
-  public mutate<
+  /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)} */
+  public mutate: ApolloClient.mutate.Signature = <
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
   >(
     options: ApolloClient.MutateOptions<TData, TVariables, TCache>
-  ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
+  ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> => {
     const optionsWithDefaults = mergeOptions(
       compact(
         {
@@ -1203,7 +1320,7 @@ export class ApolloClient {
     return this.queryManager.mutate<TData, TVariables, TCache>(
       optionsWithDefaults
     );
-  }
+  };
 
   /**
    * This subscribes to a graphql subscription according to the options specified and returns an

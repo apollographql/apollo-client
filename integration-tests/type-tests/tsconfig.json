@@ -37,6 +37,15 @@
       "path": "./defaultOptions/query/errorPolicyIgnore/tsconfig.json"
     },
     {
+      "path": "./defaultOptions/mutate/errorPolicyNone/tsconfig.json"
+    },
+    {
+      "path": "./defaultOptions/mutate/errorPolicyAll/tsconfig.json"
+    },
+    {
+      "path": "./defaultOptions/mutate/errorPolicyIgnore/tsconfig.json"
+    },
+    {
       "path": "./signatures/modern/tsconfig.json"
     },
     {

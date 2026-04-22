@@ -51,11 +51,9 @@ import { useReactiveVar } from "@apollo/client/react";
 function AuthButton() {
   const isLoggedIn = useReactiveVar(isLoggedInVar);
 
-  return isLoggedIn ? (
-    <button onClick={() => isLoggedInVar(false)}>Logout</button>
-  ) : (
-    <button onClick={() => isLoggedInVar(true)}>Login</button>
-  );
+  return isLoggedIn ?
+      <button onClick={() => isLoggedInVar(false)}>Logout</button>
+    : <button onClick={() => isLoggedInVar(true)}>Login</button>;
 }
 ```
 
@@ -270,7 +268,9 @@ const cache = new InMemoryCache({
         quantity: {
           read(_, { readField }) {
             const id = readField("id");
-            const cartItem = cartItemsVar().find((item) => item.productId === id);
+            const cartItem = cartItemsVar().find(
+              (item) => item.productId === id
+            );
             return cartItem?.quantity ?? 0;
           },
         },
@@ -303,9 +303,12 @@ const client = new ApolloClient({
 
           const existing = cart.find((item) => item.productId === productId);
 
-          const updatedCart = existing
-            ? cart.map((item) =>
-                item.productId === productId ? { ...item, quantity: item.quantity + quantity } : item,
+          const updatedCart =
+            existing ?
+              cart.map((item) =>
+                item.productId === productId ?
+                  { ...item, quantity: item.quantity + quantity }
+                : item
               )
             : [...cart, { productId, quantity, __typename: "CartItem" }];
 
@@ -333,7 +336,10 @@ const ADD_TO_CART = gql`
 
 ```typescript
 // Create a helper function to permanently subscribe to reactive variable changes, without creating memory leaks
-function subscribeToVariable<T>(weakRef: WeakRef<ReactiveVar<T>>, listener: ReactiveListener<T>) {
+function subscribeToVariable<T>(
+  weakRef: WeakRef<ReactiveVar<T>>,
+  listener: ReactiveListener<T>
+) {
   weakRef.deref()?.onNextChange((value) => {
     listener(value);
     subscribeToVariable(weakRef, listener);
@@ -342,7 +348,9 @@ function subscribeToVariable<T>(weakRef: WeakRef<ReactiveVar<T>>, listener: Reac
 
 // Create reactive variable with persistence
 const persistentCartVar = makeVar<CartItem[]>(
-  typeof window !== "undefined" && localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")!) : [],
+  typeof window !== "undefined" && localStorage.getItem("cart") ?
+    JSON.parse(localStorage.getItem("cart")!)
+  : []
 );
 
 // Save to localStorage when reactive variable changes
@@ -369,7 +377,11 @@ import { useReactiveVar } from "@apollo/client/react";
 function ThemeToggle() {
   const theme = useReactiveVar(themeVar);
 
-  return <button onClick={() => themeVar(theme === "light" ? "dark" : "light")}>Current: {theme}</button>;
+  return (
+    <button onClick={() => themeVar(theme === "light" ? "dark" : "light")}>
+      Current: {theme}
+    </button>
+  );
 }
 ```
 
@@ -381,7 +393,10 @@ function CartSummary() {
 
   // Derived values are computed on each render
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   return (
     <div>

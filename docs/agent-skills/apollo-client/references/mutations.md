@@ -146,7 +146,8 @@ const { data } = await createUser({
 
 ```tsx
 function CreatePost() {
-  const [createPost, { loading, error, data, reset }] = useMutation(CREATE_POST);
+  const [createPost, { loading, error, data, reset }] =
+    useMutation(CREATE_POST);
 
   if (data) {
     return (
@@ -353,7 +354,9 @@ const [deleteTodo] = useMutation(DELETE_TODO, {
     cache.modify({
       fields: {
         todos: (existingTodos: Reference[], { readField }) => {
-          return existingTodos.filter((todoRef) => readField("id", todoRef) !== data.deleteTodo.id);
+          return existingTodos.filter(
+            (todoRef) => readField("id", todoRef) !== data.deleteTodo.id
+          );
         },
       },
     });
@@ -384,14 +387,20 @@ const [createPost] = useMutation(CREATE_POST, {
       id: cache.identify({ __typename: "User", id: data.createPost.authorId }),
       fields: {
         postCount: (existing) => existing + 1,
-        posts: (existing, { toReference }) => [...existing, toReference(data.createPost)],
+        posts: (existing, { toReference }) => [
+          ...existing,
+          toReference(data.createPost),
+        ],
       },
     });
 
     // Add to feed
     cache.modify({
       fields: {
-        feed: (existing, { toReference }) => [toReference(data.createPost), ...existing],
+        feed: (existing, { toReference }) => [
+          toReference(data.createPost),
+          ...existing,
+        ],
       },
     });
   },
@@ -530,7 +539,7 @@ const handleSubmit = async (input: CreateUserInput) => {
       }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   if (fieldErrors?.email) {

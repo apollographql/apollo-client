@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/agent-skills/apollo-client/**'
+      - "docs/agent-skills/apollo-client/**"
   workflow_dispatch: # for testing
 permissions: {}
 jobs:

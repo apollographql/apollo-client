@@ -283,7 +283,12 @@ const client = new ApolloClient({
 const retryLink = new RetryLink({
   attempts: (count, operation, error) => {
     // Don't retry mutations
-    if (operation.query.definitions.some((def) => def.kind === "OperationDefinition" && def.operation === "mutation")) {
+    if (
+      operation.query.definitions.some(
+        (def) =>
+          def.kind === "OperationDefinition" && def.operation === "mutation"
+      )
+    ) {
       return false;
     }
 
@@ -325,7 +330,9 @@ function SafeUserList() {
   return (
     <div>
       {error?.graphQLErrors && (
-        <Alert severity="warning">Some data may be incomplete: {error.graphQLErrors[0].message}</Alert>
+        <Alert severity="warning">
+          Some data may be incomplete: {error.graphQLErrors[0].message}
+        </Alert>
       )}
 
       {loading && <LinearProgress />}

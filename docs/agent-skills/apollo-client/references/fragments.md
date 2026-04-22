@@ -106,7 +106,11 @@ if (false) {
 import { UserCard_UserFragmentDoc } from "./fragments.generated.ts";
 
 // Component receives the (partially masked) parent object
-export function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+export function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   // Creates a subscription to the fragment in the cache
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,
@@ -202,7 +206,11 @@ import { useSuspenseFragment } from "@apollo/client/react";
 import { FragmentType } from "@apollo/client";
 import { UserCard_UserFragmentDoc } from "./fragments.generated";
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,
     fragmentName: "UserCard_user",
@@ -222,7 +230,11 @@ import { useFragment } from "@apollo/client/react";
 import { FragmentType } from "@apollo/client";
 import { UserCard_UserFragmentDoc } from "./fragments.generated";
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   const { data, complete } = useFragment({
     fragment: UserCard_UserFragmentDoc,
     fragmentName: "UserCard_user",
@@ -305,7 +317,11 @@ With data masking:
 // ✅ With data masking - component can only access its fragment data
 import { UserCard_UserFragmentDoc } from "./fragments.generated";
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,
     from: user,
@@ -454,7 +470,10 @@ export type UserCard_UserFragment = {
   avatarUrl: string;
 } & { " $fragmentName"?: "UserCard_UserFragment" };
 
-export const UserCard_UserFragmentDoc: TypedDocumentNode<UserCard_UserFragment, never>;
+export const UserCard_UserFragmentDoc: TypedDocumentNode<
+  UserCard_UserFragment,
+  never
+>;
 ```
 
 ### Type-Safe Fragment Usage
@@ -465,7 +484,11 @@ Use `FragmentType` to accept masked fragment data:
 import { FragmentType } from "@apollo/client";
 import { UserCard_UserFragmentDoc } from "./fragments.generated";
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,
     from: user,
@@ -596,7 +619,11 @@ import { FragmentType } from "@apollo/client";
 import { useSuspenseFragment } from "@apollo/client/react";
 import { UserCard_UserFragmentDoc } from "./fragments.generated";
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,
     from: user,
@@ -758,7 +785,11 @@ function ParentComponent() {
   return <UserCard user={data.user} />;
 }
 
-function UserCard({ user }: { user: FragmentType<typeof UserCard_UserFragmentDoc> }) {
+function UserCard({
+  user,
+}: {
+  user: FragmentType<typeof UserCard_UserFragmentDoc>;
+}) {
   // Creates a cache subscription specifically for UserCard_user fields
   const { data } = useSuspenseFragment({
     fragment: UserCard_UserFragmentDoc,

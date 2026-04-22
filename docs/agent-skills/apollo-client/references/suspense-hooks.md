@@ -83,7 +83,10 @@ function DogSelector() {
 
   return (
     <>
-      <select value={selectedDog} onChange={(e) => setSelectedDog(e.target.value)}>
+      <select
+        value={selectedDog}
+        onChange={(e) => setSelectedDog(e.target.value)}
+      >
         {data.dogs.map((dog) => (
           <option key={dog.id} value={dog.id}>
             {dog.name}
@@ -206,8 +209,14 @@ function App() {
 
   return (
     <>
-      <button onClick={() => loadGreeting({ variables: { language: "english" } })}>Load Greeting</button>
-      <Suspense fallback={<div>Loading...</div>}>{queryRef && <Greeting queryRef={queryRef} />}</Suspense>
+      <button
+        onClick={() => loadGreeting({ variables: { language: "english" } })}
+      >
+        Load Greeting
+      </button>
+      <Suspense fallback={<div>Loading...</div>}>
+        {queryRef && <Greeting queryRef={queryRef} />}
+      </Suspense>
     </>
   );
 }
@@ -720,11 +729,11 @@ const GET_USER = gql`
 function UserProfile({ userId }: { userId: string | null }) {
   const { data, dataState } = useSuspenseQuery(
     GET_USER,
-    !userId
-      ? skipToken
-      : {
-          variables: { id: userId },
-        },
+    !userId ? skipToken : (
+      {
+        variables: { id: userId },
+      }
+    )
   );
 
   if (dataState !== "complete") {

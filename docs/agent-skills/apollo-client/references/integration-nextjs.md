@@ -30,7 +30,11 @@ Create an `ApolloClient.ts` file in your app directory:
 
 ```typescript
 import { HttpLink } from "@apollo/client";
-import { registerApolloClient, ApolloClient, InMemoryCache } from "@apollo/client-integration-nextjs";
+import {
+  registerApolloClient,
+  ApolloClient,
+  InMemoryCache,
+} from "@apollo/client-integration-nextjs";
 
 export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
   return new ApolloClient({
@@ -220,7 +224,11 @@ In your Client Component:
 ```tsx
 "use client";
 
-import { useQueryRefHandlers, useReadQuery, QueryRef } from "@apollo/client/react";
+import {
+  useQueryRefHandlers,
+  useReadQuery,
+  QueryRef,
+} from "@apollo/client/react";
 
 export function ClientChild({ queryRef }: { queryRef: QueryRef<TQueryData> }) {
   const { refetch } = useQueryRefHandlers(queryRef);

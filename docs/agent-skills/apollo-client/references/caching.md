@@ -383,9 +383,7 @@ function PostList() {
 
   return (
     <div>
-      {data?.posts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+      {data?.posts.map((post) => <PostCard key={post.id} post={post} />)}
       <button onClick={loadMore} disabled={loading}>
         Load More
       </button>
@@ -418,7 +416,9 @@ const userData = cache.readQuery({
 cache.writeQuery({
   query: GET_TODOS,
   data: {
-    todos: [{ __typename: "Todo", id: "1", text: "Buy milk", completed: false }],
+    todos: [
+      { __typename: "Todo", id: "1", text: "Buy milk", completed: false },
+    ],
   },
 });
 
@@ -503,7 +503,10 @@ cache.modify({
     temporaryField: (_, { DELETE }) => DELETE,
 
     // Add to array
-    friends: (existing, { toReference }) => [...existing, toReference({ __typename: "User", id: "2" })],
+    friends: (existing, { toReference }) => [
+      ...existing,
+      toReference({ __typename: "User", id: "2" }),
+    ],
   },
 });
 ```

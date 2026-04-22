@@ -226,7 +226,8 @@ const GET_DOG_PHOTO = gql`
 `;
 
 function DelayedQuery() {
-  const [getDog, { loading, error, data, called }] = useLazyQuery(GET_DOG_PHOTO);
+  const [getDog, { loading, error, data, called }] =
+    useLazyQuery(GET_DOG_PHOTO);
 
   if (called && loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
@@ -234,7 +235,9 @@ function DelayedQuery() {
   return (
     <div>
       {data?.dog && <img src={data.dog.displayImage} />}
-      <button onClick={() => getDog({ variables: { breed: "bulldog" } })}>Get Bulldog Photo</button>
+      <button onClick={() => getDog({ variables: { breed: "bulldog" } })}>
+        Get Bulldog Photo
+      </button>
     </div>
   );
 }
@@ -301,12 +304,10 @@ function DogList() {
   return (
     <div>
       <button onClick={() => refetch()}>Refresh</button>
-      <button onClick={() => refetch({ breed: "poodle" })}>Refetch Poodles</button>
-      <ul>
-        {data?.dogs.map((dog) => (
-          <li key={dog.id}>{dog.breed}</li>
-        ))}
-      </ul>
+      <button onClick={() => refetch({ breed: "poodle" })}>
+        Refetch Poodles
+      </button>
+      <ul>{data?.dogs.map((dog) => <li key={dog.id}>{dog.breed}</li>)}</ul>
     </div>
   );
 }
@@ -384,11 +385,11 @@ import { skipToken } from "@apollo/client";
 function UserProfile({ userId }: { userId: string | null }) {
   const { data } = useQuery(
     GET_USER,
-    !userId
-      ? skipToken
-      : {
-          variables: { id: userId },
-        },
+    !userId ? skipToken : (
+      {
+        variables: { id: userId },
+      }
+    )
   );
 
   return userId ? <Profile user={data?.user} /> : <p>Select a user</p>;

@@ -46,8 +46,6 @@ type MakeRequiredVariablesOptional<
 >;
 
 export declare namespace useMutation {
-  import _self = useMutation;
-
   export interface Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -105,13 +103,13 @@ export declare namespace useMutation {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
     onCompleted?: (
       data: MaybeMasked<TData>,
-      clientOptions?: _self.Options<TData, TVariables, TCache>
+      clientOptions?: Options<TData, TVariables, TCache>
     ) => void;
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
     onError?: (
       error: ErrorLike,
-      clientOptions?: _self.Options<TData, TVariables, TCache>
+      clientOptions?: Options<TData, TVariables, TCache>
     ) => void;
   }
 
@@ -307,8 +305,8 @@ export declare namespace useMutation {
         TVariables extends OperationVariables = OperationVariables,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: _self.Options<TData, TVariables>
-      ): _self.ResultTuple<TData, TVariables>;
+        options?: Options<TData, TVariables>
+      ): ResultTuple<TData, TVariables>;
     }
 
     /**
@@ -323,8 +321,8 @@ export declare namespace useMutation {
         TVariables extends OperationVariables = OperationVariables,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: _self.Options<TData, TVariables>
-      ): _self.ResultTuple<TData, TVariables>;
+        options?: Options<TData, TVariables>
+      ): ResultTuple<TData, TVariables>;
     }
   }
 

@@ -9,7 +9,8 @@
     "react",
     "hooks",
     "client",
-    "cache"
+    "cache",
+    "tanstack-intent"
   ],
   "author": "packages@apollographql.com",
   "license": "MIT",

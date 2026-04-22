@@ -116,7 +116,7 @@ export declare namespace useMutation {
   }
 
   export namespace Base {
-    export interface Result<TData = unknown> {
+    export interface Result {
       /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
       loading: boolean;
 
@@ -175,11 +175,11 @@ export declare namespace useMutation {
   export type Result<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = Base.Result<TData> & ResultStateMap<TData>[`${TErrorPolicy}`];
+  > = Base.Result & ResultStateMap<TData>[`${TErrorPolicy}`];
 
   export namespace DocumentationTypes {
     namespace useMutation {
-      export interface Result<TData = unknown> extends Base.Result<TData> {
+      export interface Result<TData = unknown> extends Base.Result {
         /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
         data: MaybeMasked<TData> | null | undefined;
 

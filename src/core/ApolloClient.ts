@@ -297,10 +297,7 @@ export declare namespace ApolloClient {
     export interface Signature extends Signatures.Evaluated {}
   }
 
-  export type MutateResultMap<
-    TData = unknown,
-    TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = {
+  export type MutateResultMap<TData = unknown> = {
     none: {
       /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
       data: TData;
@@ -336,7 +333,7 @@ export declare namespace ApolloClient {
   export type MutateResult<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = MutateResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`] & {
+  > = MutateResultMap<TData>[`${TErrorPolicy}`] & {
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
     extensions?: Record<string, unknown>;
   };
@@ -361,10 +358,7 @@ export declare namespace ApolloClient {
     fetchPolicy?: FetchPolicy;
   } & VariablesOption<NoInfer<TVariables>>;
 
-  export type QueryResultMap<
-    TData = unknown,
-    TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = {
+  export type QueryResultMap<TData = unknown> = {
     none: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
       data: TData;
@@ -401,7 +395,7 @@ export declare namespace ApolloClient {
   export type QueryResult<
     TData = unknown,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
-  > = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
+  > = QueryResultMap<TData>[`${TErrorPolicy}`];
 
   export namespace query {
     export interface DefaultOptions

@@ -5,6 +5,7 @@ on:
     paths:
       - 'docs/agent-skills/apollo-client/**'
   workflow_dispatch: # for testing
+permissions: {}
 jobs:
   dispatch:
     runs-on: ubuntu-latest

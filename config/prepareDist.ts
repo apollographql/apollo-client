@@ -11,7 +11,7 @@
 // - Create a new `package.json` for each sub-set bundle we support, and
 //   store it in the appropriate dist sub-directory.
 
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, cp, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { BuildStep } from "./build.ts";
@@ -74,5 +74,12 @@ export const prepareDist: BuildStep = async (options) => {
   await copyFile(
     `${options.rootDir}/CHANGELOG.md`,
     `${options.packageRoot}/CHANGELOG.md`
+  );
+
+  // Copy agent skill into "dist/skills/apollo-client" for tanstack/intent npm discovery
+  await cp(
+    join(options.rootDir, "docs/agent-skills/apollo-client"),
+    join(options.packageRoot, "skills/apollo-client"),
+    { recursive: true }
   );
 };

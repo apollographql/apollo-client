@@ -39,6 +39,7 @@ export const prepareDist: BuildStep = async (options) => {
       delete packageJson.devEngines;
       delete packageJson.devDependencies;
       delete packageJson.overrides;
+      delete packageJson.workspaces;
 
       packageJson.exports = {
         "./package.json": "./package.json",

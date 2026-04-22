@@ -1,6 +1,7 @@
 import { expectTypeOf } from "expect-type";
 import { ApolloClient, InMemoryCache, ApolloLink } from "@apollo/client";
 import {
+  clientMutate,
   clientQuery,
   useBackgroundQuery,
   useLazyQuery,
@@ -108,6 +109,29 @@ expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
       },
     },
   });
+}
+
+// client.mutate
+{
+  expectTypeOf<ApolloClient.mutate.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
+  clientMutate.defaults.branded.toEqualTypeOf<
+    Promise<
+      | clientMutate.MutateResultNone
+      | clientMutate.MutateResultAll
+      | clientMutate.MutateResultIgnore
+    >
+  >();
+  clientMutate.errorPolicy.all.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultAll>
+  >();
+  clientMutate.errorPolicy.ignore.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultIgnore>
+  >();
+  clientMutate.errorPolicy.none.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultNone>
+  >();
 }
 
 // client.query

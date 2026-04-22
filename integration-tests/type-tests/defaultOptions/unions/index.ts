@@ -1,5 +1,6 @@
 import { expectTypeOf } from "expect-type";
 import {
+  clientMutate,
   clientQuery,
   useQuery,
   useLazyQuery,
@@ -136,6 +137,29 @@ const bool = {} as any as boolean;
       },
     },
   });
+}
+
+// client.mutate
+{
+  expectTypeOf<ApolloClient.mutate.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
+  clientMutate.defaults.branded.toEqualTypeOf<
+    Promise<
+      | clientMutate.MutateResultNone
+      | clientMutate.MutateResultAll
+      | clientMutate.MutateResultIgnore
+    >
+  >();
+  clientMutate.errorPolicy.all.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultAll>
+  >();
+  clientMutate.errorPolicy.ignore.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultIgnore>
+  >();
+  clientMutate.errorPolicy.none.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultNone>
+  >();
 }
 
 // client.query

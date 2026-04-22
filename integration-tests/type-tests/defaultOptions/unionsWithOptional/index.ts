@@ -6,6 +6,7 @@ import {
   useBackgroundQuery,
   useLazyQuery,
   useLoadableQuery,
+  useMutation,
   useQuery,
   useSuspenseQuery,
 } from "../shared/scenarios.js";
@@ -155,6 +156,25 @@ expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
   clientQuery.errorPolicy.none.branded.toEqualTypeOf<
     Promise<clientQuery.QueryResultNone>
   >();
+}
+
+// useMutation
+{
+  expectTypeOf<useMutation.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
+  useMutation.defaults.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"none" | "ignore" | "all">
+  >;
+  useMutation.errorPolicy.all.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"all">
+  >;
+  useMutation.errorPolicy.ignore.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"ignore">
+  >;
+  useMutation.errorPolicy.none.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"none">
+  >;
 }
 
 // useQuery

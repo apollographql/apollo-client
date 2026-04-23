@@ -408,6 +408,110 @@ test("updates mutate result using explicit error policy", () => {
   }
 });
 
+test("works with optional variables", () => {
+  interface Mutation {
+    increment: number;
+  }
+
+  interface Variables {
+    by?: number;
+  }
+
+  const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+    mutation ($id: ID!) {
+      increment(by: $id) {
+        id
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  {
+    const [mutate, { data }] = useMutation(mutation);
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation>>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, { variables: { by: 2 } });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation>>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, { errorPolicy: "none" });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "none">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      errorPolicy: "none",
+      variables: { by: 2 },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "none">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, { errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "all">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      errorPolicy: "all",
+      variables: { by: 2 },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "all">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, { errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "ignore">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      errorPolicy: "ignore",
+      variables: { by: 2 },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "ignore">>
+    >();
+  }
+});
+
 test("variables are optional and can be anything with an DocumentNode", () => {
   const mutation = gql``;
 

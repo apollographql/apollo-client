@@ -4,7 +4,7 @@
 
 - [Reactive Variables](#reactive-variables)
 - [Local-Only Fields](#local-only-fields)
-- [Local Field Read Functions (Type Policies)](#local-field-read-functions-type-policies)
+- [LocalState Resolvers](#localstate-resolvers)
 - [Combining Remote and Local State](#combining-remote-and-local-state)
 - [useReactiveVar Hook](#usereactivevar-hook)
 

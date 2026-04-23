@@ -66,7 +66,7 @@ declare module "@apollo/client" {
         errorPolicy: "all",
       },
       query: {
-        // @ts-expect-error: Type '"none"' is not assignable to type '"A default option for mutate.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
+        // @ts-expect-error: Type '"none"' is not assignable to type '"A default option for query.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
         errorPolicy: "none",
       },
       mutate: {

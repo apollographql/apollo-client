@@ -306,7 +306,7 @@ function DogDetails({ queryRef }: { queryRef: QueryRef<DogData> }) {
 
 ### Preventing Route Transitions Until Query Loads
 
-Use `preloadQuery.toPromise()` to prevent route transitions until the query finishes loading:
+Use `preloadQuery.toPromise(queryRef)` to prevent route transitions until the query finishes loading:
 
 ```tsx
 export async function loader({ params }: { params: { id: string } }) {

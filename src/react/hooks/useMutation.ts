@@ -23,7 +23,6 @@ import type { IgnoreModifier } from "@apollo/client/cache";
 import type {
   LazyType,
   NoInfer,
-  OptionWithFallback,
   Prettify,
   SignatureStyle,
 } from "@apollo/client/utilities/internal";
@@ -44,6 +43,44 @@ type MakeRequiredVariablesOptional<
     : never]?: TVariables[K];
   } & Omit<TVariables, keyof TConfiguredVariables>
 >;
+
+// Extract the `variables` value from an inferred `TOptions`. We use a keyof
+// guard (rather than `TOptions extends { variables: infer V }`) because
+// `variables` in the modern signature's constraint is declared optional, so
+// the `extends { variables: infer V }` form fails to match when the user
+// passes a complex options object that gets widened to include the optional
+// modifier. `TOptions["variables"]` works for both required and optional
+// `variables` entries.
+type ExtractConfiguredVariables<
+  TOptions,
+  TVariables extends OperationVariables,
+> = "variables" extends keyof TOptions ?
+  Exclude<TOptions["variables"], undefined> extends infer V ?
+    [V] extends [never] ? {}
+    : V extends Partial<TVariables> ? V
+    : {}
+  : {}
+: {};
+
+// Resolve the `TErrorPolicy` to thread into `MutateResult` given the inferred
+// `TOptions`. We cannot use `OptionWithFallback` directly because when the
+// user passes complex options (e.g. `optimisticResponse`) with a typed
+// `TData`, TypeScript widens `TOptions` to the full `Options<...>` shape,
+// which includes `errorPolicy?: ErrorPolicy`. `OptionWithFallback` would
+// then distribute over the full `ErrorPolicy` union and produce a very
+// broad return type even though the user never set `errorPolicy`.
+//
+// Use a required-position check (`extends { errorPolicy: infer E }`) so we
+// only pick up an explicit, user-written `errorPolicy`. The widened TOptions
+// has `errorPolicy?:` (optional), which doesn't match the required position,
+// so widening falls through to `TDefaults.errorPolicy`.
+type ResolveErrorPolicy<TOptions, TDefaults> =
+  TOptions extends { errorPolicy: infer E } ?
+    E extends ErrorPolicy ? E
+    : TDefaults extends { errorPolicy: infer D } ? D
+    : undefined
+  : TDefaults extends { errorPolicy: infer D } ? D
+  : undefined;
 
 export declare namespace useMutation {
   export interface Options<
@@ -246,9 +283,12 @@ export declare namespace useMutation {
   > = LazyType<
     ResultTuple<
       TData,
-      TVariables,
+      MakeRequiredVariablesOptional<
+        TVariables,
+        ExtractConfiguredVariables<TOptions, TVariables>
+      >,
       TCache,
-      OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
+      ResolveErrorPolicy<TOptions, DefaultOptions>
     >
   >;
 

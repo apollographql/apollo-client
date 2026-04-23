@@ -123,7 +123,7 @@ test("uses TData type when using plain TypedDocumentNode", () => {
 
   expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
   expectTypeOf(mutate()).toEqualTypeOf<
-    Promise<ApolloClient.MutateResult<Mutation>>
+    Promise<ApolloClient.MutateResult<Mutation, "none">>
   >();
 });
 
@@ -206,7 +206,7 @@ test("uses proper masked/unmasked type", async () => {
 
   expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
   expectTypeOf(mutate({ variables: { id: "1" } })).toEqualTypeOf<
-    Promise<ApolloClient.MutateResult<Mutation>>
+    Promise<ApolloClient.MutateResult<Mutation, "none">>
   >();
 });
 

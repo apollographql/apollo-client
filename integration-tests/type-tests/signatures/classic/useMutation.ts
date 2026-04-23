@@ -210,6 +210,69 @@ test("uses proper masked/unmasked type", async () => {
   >();
 });
 
+test("updates mutate result using explicit error policy", () => {
+  interface Mutation {
+    updateUser: {
+      __typename: "User";
+      id: string;
+      age: number;
+    };
+  }
+
+  interface Variables {
+    id: string;
+  }
+
+  const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+    mutation ($id: ID!) {
+      updateUser(id: $id) {
+        id
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "none">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "all">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      errorPolicy: "ignore",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "ignore">>
+    >();
+  }
+});
+
 test("variables are optional and can be anything with an DocumentNode", () => {
   const mutation = gql``;
 

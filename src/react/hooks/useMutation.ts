@@ -375,6 +375,7 @@ export declare namespace useMutation {
         TVariables extends OperationVariables = OperationVariables,
         TCache extends ApolloCache = ApolloCache,
         TConfiguredVariables extends Partial<TVariables> = {},
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options?: useMutation.Options<
@@ -386,11 +387,15 @@ export declare namespace useMutation {
               TConfiguredVariables[K]
             : never;
           }
-        >
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+          errorPolicy?: TErrorPolicy;
+        }
       ): useMutation.ResultTuple<
         TData,
         MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
-        TCache
+        TCache,
+        TErrorPolicy
       >;
     }
 

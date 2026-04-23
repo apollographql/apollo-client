@@ -207,48 +207,48 @@ export declare namespace useSuspenseQuery {
     }
   }
   export namespace DocumentationTypes {
-    /**
-     * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
-     *
-     * @example
-     *
-     * ```jsx
-     * import { Suspense } from "react";
-     * import { useSuspenseQuery } from "@apollo/client";
-     *
-     * const listQuery = gql`
-     *   query {
-     *     list {
-     *       id
-     *     }
-     *   }
-     * `;
-     *
-     * function App() {
-     *   return (
-     *     <Suspense fallback={<Spinner />}>
-     *       <List />
-     *     </Suspense>
-     *   );
-     * }
-     *
-     * function List() {
-     *   const { data } = useSuspenseQuery(listQuery);
-     *
-     *   return (
-     *     <ol>
-     *       {data.list.map((item) => (
-     *         <Item key={item.id} id={item.id} />
-     *       ))}
-     *     </ol>
-     *   );
-     * }
-     * ```
-     *
-     * @param query - A GraphQL query document parsed into an AST by `gql`.
-     * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
-     */
     export interface useSuspenseQuery {
+      /**
+       * For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+       *
+       * @example
+       *
+       * ```jsx
+       * import { Suspense } from "react";
+       * import { useSuspenseQuery } from "@apollo/client";
+       *
+       * const listQuery = gql`
+       *   query {
+       *     list {
+       *       id
+       *     }
+       *   }
+       * `;
+       *
+       * function App() {
+       *   return (
+       *     <Suspense fallback={<Spinner />}>
+       *       <List />
+       *     </Suspense>
+       *   );
+       * }
+       *
+       * function List() {
+       *   const { data } = useSuspenseQuery(listQuery);
+       *
+       *   return (
+       *     <ol>
+       *       {data.list.map((item) => (
+       *         <Item key={item.id} id={item.id} />
+       *       ))}
+       *     </ol>
+       *   );
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - An optional object containing options for the query. Instead of passing a `useSuspenseQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -258,13 +258,13 @@ export declare namespace useSuspenseQuery {
       ): useSuspenseQuery.Result<TData, TVariables>;
     }
 
-    /**
-     * @deprecated Avoid manually specifying generic arguments on `useSuspenseQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)}
-     */
     export interface useSuspenseQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generic arguments on `useSuspenseQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

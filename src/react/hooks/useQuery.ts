@@ -278,13 +278,13 @@ export declare namespace useQuery {
       ): useQuery.Result<TData, TVariables>;
     }
 
-    /**
-     * @deprecated Avoid manually specifying generics on `useQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)}
-     */
     export interface useQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

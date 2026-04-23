@@ -62,26 +62,6 @@ type ExtractConfiguredVariables<
   : {}
 : {};
 
-// Resolve the `TErrorPolicy` to thread into `MutateResult` given the inferred
-// `TOptions`. We cannot use `OptionWithFallback` directly because when the
-// user passes complex options (e.g. `optimisticResponse`) with a typed
-// `TData`, TypeScript widens `TOptions` to the full `Options<...>` shape,
-// which includes `errorPolicy?: ErrorPolicy`. `OptionWithFallback` would
-// then distribute over the full `ErrorPolicy` union and produce a very
-// broad return type even though the user never set `errorPolicy`.
-//
-// Use a required-position check (`extends { errorPolicy: infer E }`) so we
-// only pick up an explicit, user-written `errorPolicy`. The widened TOptions
-// has `errorPolicy?:` (optional), which doesn't match the required position,
-// so widening falls through to `TDefaults.errorPolicy`.
-type ResolveErrorPolicy<TOptions, TDefaults> =
-  TOptions extends { errorPolicy: infer E } ?
-    E extends ErrorPolicy ? E
-    : TDefaults extends { errorPolicy: infer D } ? D
-    : undefined
-  : TDefaults extends { errorPolicy: infer D } ? D
-  : undefined;
-
 export declare namespace useMutation {
   export interface Options<
     TData = unknown,
@@ -280,6 +260,7 @@ export declare namespace useMutation {
     TVariables extends OperationVariables,
     TCache extends ApolloCache,
     TOptions extends Record<string, never> | Options<TData, TVariables, TCache>,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = LazyType<
     ResultTuple<
       TData,
@@ -288,7 +269,11 @@ export declare namespace useMutation {
         ExtractConfiguredVariables<TOptions, TVariables>
       >,
       TCache,
-      ResolveErrorPolicy<TOptions, DefaultOptions>
+      [TErrorPolicy] extends [undefined] ?
+        DefaultOptions extends { errorPolicy: infer D } ?
+          D
+        : undefined
+      : TErrorPolicy
     >
   >;
 
@@ -423,6 +408,8 @@ export declare namespace useMutation {
         TVariables extends OperationVariables,
         TCache extends ApolloCache,
         // this overload should never be manually defined, it should always be inferred
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
+        // this overload should never be manually defined, it should always be inferred
         TOptions extends useMutation.Options<
           NoInfer<TData>,
           NoInfer<TVariables>,
@@ -434,11 +421,20 @@ export declare namespace useMutation {
               keyof TVariables
             >]?: never;
           };
-        },
+        } = useMutation.Options<NoInfer<TData>, NoInfer<TVariables>, TCache>,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: TOptions
-      ): useMutation.ResultForOptions<TData, TVariables, TCache, TOptions>;
+        options?: TOptions & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+          errorPolicy?: TErrorPolicy;
+        }
+      ): useMutation.ResultForOptions<
+        TData,
+        TVariables,
+        TCache,
+        TOptions,
+        TErrorPolicy
+      >;
     }
 
     export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;

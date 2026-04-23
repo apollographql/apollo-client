@@ -102,11 +102,7 @@ function UserList() {
 
   // TypeScript note: for stricter type narrowing, you can also check `dataState === "complete"` before accessing data
   return (
-    <ul>
-      {data?.users.map((user) => (
-        <li key={user.id}>{user.name}</li>
-      ))}
-    </ul>
+    <ul>{data?.users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
   );
 }
 ```

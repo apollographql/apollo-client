@@ -7,7 +7,7 @@ import type { HKT } from "@apollo/client/utilities";
 // `TData` and `Streaming<TData>` in our type tests. This file doesn't make it
 // into the final build, so it doesn't affect the userland behavior of the library.
 
-type StreamingOverride<TData> = TData & { __streaming?: true };
+export type StreamingOverride<TData> = TData & { __streaming?: true };
 interface StreamingOverrideHKT extends HKT {
   return: StreamingOverride<this["arg1"]>;
 }

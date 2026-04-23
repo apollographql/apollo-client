@@ -45,22 +45,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            .agents/skills/apollo-client/
-            .github/skills/apollo-client/
             .github/instructions/docs.instructions.md
           key: skills-${{ steps.skills-head.outputs.sha }}
           restore-keys: |
             skills-
-
-      - name: Install JavaScript dependencies (with cache)
-        uses: bahmutov/npm-install@v1
-
-      - name: Install Apollo Client Skill
-        if: steps.cache-skills.outputs.cache-hit != 'true'
-        run: |
-          echo "Installing Apollo Client skill using npx skills CLI"
-          npx --yes skills add apollographql/skills --skill apollo-client --agent github-copilot --scope project --method copy --yes
-          echo "Apollo Client skill installed successfully"
 
       - name: Copy Documentation Instructions
         if: steps.cache-skills.outputs.cache-hit != 'true'

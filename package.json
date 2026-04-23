@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.1.7",
+  "version": "4.1.8",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -9,7 +9,8 @@
     "react",
     "hooks",
     "client",
-    "cache"
+    "cache",
+    "tanstack-intent"
   ],
   "author": "packages@apollographql.com",
   "license": "MIT",

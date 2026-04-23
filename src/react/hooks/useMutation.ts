@@ -408,8 +408,6 @@ export declare namespace useMutation {
         TVariables extends OperationVariables,
         TCache extends ApolloCache,
         // this overload should never be manually defined, it should always be inferred
-        TErrorPolicy extends ErrorPolicy | undefined = undefined,
-        // this overload should never be manually defined, it should always be inferred
         TOptions extends useMutation.Options<
           NoInfer<TData>,
           NoInfer<TVariables>,
@@ -421,7 +419,8 @@ export declare namespace useMutation {
               keyof TVariables
             >]?: never;
           };
-        } = useMutation.Options<NoInfer<TData>, NoInfer<TVariables>, TCache>,
+        },
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options?: TOptions & {

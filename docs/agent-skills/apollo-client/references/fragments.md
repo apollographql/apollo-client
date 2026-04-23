@@ -132,7 +132,7 @@ export function UserCard({
 
 A suggested naming pattern for fragments follows this convention:
 
-```
+```text
 {ComponentName}_{propName}
 ```
 

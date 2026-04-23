@@ -120,7 +120,9 @@ function UserProfile({ userId }: { userId: string }) {
     variables: { id: userId },
   });
 
-  return <div>{data.user.name}</div>;
+  // ... other logic ...
+
+  return <div>{data?.user.name}</div>;
 }
 ```
 

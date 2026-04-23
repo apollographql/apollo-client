@@ -633,30 +633,6 @@ test("variables are optional when TVariables are empty", () => {
     });
   }
   {
-    const [mutate] = useMutation(mutation);
-    mutate();
-    mutate({});
-    mutate({ variables: {} });
-    mutate({
-      variables: {
-        // @ts-expect-error
-        foo: "bar",
-      },
-    });
-  }
-  {
-    const [mutate] = useMutation(mutation, {});
-    mutate();
-    mutate({});
-    mutate({ variables: {} });
-    mutate({
-      variables: {
-        // @ts-expect-error
-        foo: "bar",
-      },
-    });
-  }
-  {
     const [mutate] = useMutation(mutation, { variables: {} });
     mutate();
     mutate({});

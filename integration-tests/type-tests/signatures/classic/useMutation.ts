@@ -251,6 +251,51 @@ test("updates mutate result using explicit error policy", () => {
   {
     const [mutate, { data }] = useMutation(mutation, {
       variables: { id: "1" },
+      errorPolicy: "none",
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toEqualTypeOf<
+            Mutation | StreamingOverride<Mutation>
+          >();
+          if (mutationResult.dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<
+              StreamingOverride<Mutation>
+            >();
+          }
+          if (mutationResult.dataState === "complete") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<Mutation>();
+          }
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toEqualTypeOf<
+          Mutation | StreamingOverride<Mutation>
+        >();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toEqualTypeOf<Mutation | null | undefined>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "none">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
       errorPolicy: "all",
     });
 
@@ -263,7 +308,97 @@ test("updates mutate result using explicit error policy", () => {
   {
     const [mutate, { data }] = useMutation(mutation, {
       variables: { id: "1" },
+      errorPolicy: "all",
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toEqualTypeOf<
+            Mutation | StreamingOverride<Mutation>
+          >();
+          if (mutationResult.dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<
+              StreamingOverride<Mutation>
+            >();
+          }
+          if (mutationResult.dataState === "complete") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<Mutation>();
+          }
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toEqualTypeOf<
+          Mutation | StreamingOverride<Mutation>
+        >();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toEqualTypeOf<Mutation | null | undefined>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "all">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
       errorPolicy: "ignore",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Mutation, "ignore">>
+    >();
+  }
+
+  {
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      errorPolicy: "ignore",
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toEqualTypeOf<
+            Mutation | StreamingOverride<Mutation>
+          >();
+          if (mutationResult.dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<
+              StreamingOverride<Mutation>
+            >();
+          }
+          if (mutationResult.dataState === "complete") {
+            expectTypeOf(mutationResult.data).toEqualTypeOf<Mutation>();
+          }
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toEqualTypeOf<
+          Mutation | StreamingOverride<Mutation>
+        >();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toEqualTypeOf<Mutation | null | undefined>();
+      },
     });
 
     expectTypeOf(data).toEqualTypeOf<Mutation | null | undefined>();

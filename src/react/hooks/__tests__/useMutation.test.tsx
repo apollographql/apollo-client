@@ -11,7 +11,6 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import { expectTypeOf } from "expect-type";
 import fetchMock from "fetch-mock";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
@@ -31,7 +30,6 @@ import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import { MockLink } from "@apollo/client/testing";
 import { spyOnConsole, wait } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");

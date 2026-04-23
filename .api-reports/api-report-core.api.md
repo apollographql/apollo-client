@@ -259,11 +259,11 @@ export namespace ApolloClient {
         mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
-    export type MutateResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = MutateResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`] & {
+    export type MutateResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = MutateResultMap<TData>[`${TErrorPolicy}`] & {
         extensions?: Record<string, unknown>;
     };
     // (undocumented)
-    export type MutateResultMap<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = {
+    export type MutateResultMap<TData = unknown> = {
         none: {
             data: TData;
             error?: never;
@@ -343,9 +343,9 @@ export namespace ApolloClient {
         fetchPolicy?: FetchPolicy;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
-    export type QueryResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = QueryResultMap<TData, TErrorPolicy>[`${TErrorPolicy}`];
+    export type QueryResult<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = QueryResultMap<TData>[`${TErrorPolicy}`];
     // (undocumented)
-    export type QueryResultMap<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = {
+    export type QueryResultMap<TData = unknown> = {
         none: {
             data: TData;
             error?: never;
@@ -1271,7 +1271,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:589:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:583:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

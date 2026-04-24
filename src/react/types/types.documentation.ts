@@ -165,6 +165,15 @@ export interface QueryOptionsDocumentation {
    * @docGroup 2. Networking options
    */
   skipPollAttempt: unknown;
+
+  /**
+   * Determines whether events trigger refetches for the query. Disable
+   * automatic refetches per event by providing an object with each event set to
+   * `false`. Disable all automatic refetch events by providing `false`.
+   *
+   * @docGroup 1. Operation options
+   */
+  refetchOn: unknown;
 }
 
 export interface QueryResultDocumentation {

@@ -1,9 +1,14 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { ApolloClient } from "./ApolloClient.js";
 import type { RefetchEvent } from "./types.js";
 
 export declare namespace RefetchEventManager {
   export interface Options {
-    sources?: Partial<Record<RefetchEvent, RefetchEventManager.EventSource>>;
+    sources?: Partial<
+      Record<RefetchEvent, true | RefetchEventManager.EventSource>
+    >;
     handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
   }
 
@@ -33,7 +38,7 @@ function defaultHandler({
 
 export class RefetchEventManager {
   private sources: Partial<
-    Record<RefetchEvent, RefetchEventManager.EventSource>
+    Record<RefetchEvent, true | RefetchEventManager.EventSource>
   >;
   private handlers: Partial<
     Record<RefetchEvent, RefetchEventManager.EventHandler>
@@ -52,7 +57,9 @@ export class RefetchEventManager {
     this.client = client;
 
     Object.entries(this.sources).forEach(([event, source]) => {
-      this.addListener(event as RefetchEvent, source);
+      if (typeof source === "function") {
+        this.addListener(event as RefetchEvent, source);
+      }
     });
   }
 
@@ -84,11 +91,31 @@ export class RefetchEventManager {
   }
 
   emit(event: RefetchEvent) {
+    if (!this.client) {
+      if (__DEV__) {
+        invariant.warn(
+          "Received '%s' event but an `ApolloClient` instance is not connected to the `RefetchEventManager`. No queries will refetch. Pass the manager to the `refetchEventManager` option on the `ApolloClient` constructor.",
+          event
+        );
+      }
+
+      return;
+    }
+
+    if (!(event in this.sources)) {
+      if (__DEV__) {
+        invariant.warn(
+          "Received '%s' event but no source is configured for it on the `RefetchEventManager`. No queries will refetch. Add the event to the `sources` option or call `setEventSource`.",
+          event
+        );
+      }
+
+      return;
+    }
+
     const handler = this.handlers[event] ?? defaultHandler;
 
-    if (this.client) {
-      handler({ client: this.client, event });
-    }
+    handler({ client: this.client, event });
   }
 
   private addListener(

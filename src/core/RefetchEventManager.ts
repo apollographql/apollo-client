@@ -58,7 +58,7 @@ export class RefetchEventManager {
 
     Object.entries(this.sources).forEach(([event, source]) => {
       if (typeof source === "function") {
-        this.addListener(event as RefetchEvent, source);
+        this.setEventSource(event as RefetchEvent, source);
       }
     });
   }
@@ -76,11 +76,14 @@ export class RefetchEventManager {
   }
 
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
-    if (this.cleanupFns.has(event)) {
-      this.cleanupFns.get(event)!();
-    }
+    this.cleanupFns.get(event)?.();
 
-    this.addListener(event, source);
+    this.cleanupFns.set(
+      event,
+      source(() => {
+        this.emit(event);
+      })
+    );
   }
 
   setEventHandler(
@@ -116,18 +119,5 @@ export class RefetchEventManager {
     const handler = this.handlers[event] ?? defaultHandler;
 
     handler({ client: this.client, event });
-  }
-
-  private addListener(
-    event: RefetchEvent,
-    source: RefetchEventManager.EventSource
-  ) {
-    const emit = () => {
-      this.emit(event);
-    };
-
-    const cleanup = source(emit);
-
-    this.cleanupFns.set(event, cleanup);
   }
 }

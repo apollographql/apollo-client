@@ -16,6 +16,7 @@ export type {
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
 export { ObservableQuery } from "./ObservableQuery.js";
+export { RefetchEventManager } from "./RefetchEventManager.js";
 export type {
   ErrorPolicy,
   FetchPolicy,

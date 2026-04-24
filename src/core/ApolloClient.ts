@@ -44,6 +44,7 @@ import type {
 } from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
+import type { RefetchEventManager } from "./RefetchEventManager.js";
 import type {
   DefaultContext,
   ErrorLike,
@@ -165,6 +166,12 @@ export declare namespace ApolloClient {
      * Do not pass in experiments that are not provided by Apollo.
      */
     experiments?: ApolloClient.Experiment[];
+
+    /**
+     * The `RefetchEventManager` instance that manages automatic refetches for
+     * the client.
+     */
+    refetchEventManager?: RefetchEventManager;
   }
 
   export interface DevtoolsOptions {
@@ -977,6 +984,7 @@ export class ApolloClient {
   public queryDeduplication: boolean;
   public defaultOptions: ApolloClient.DefaultOptions;
   public readonly devtoolsConfig: ApolloClient.DevtoolsOptions;
+  public readonly refetchEventManager: RefetchEventManager | undefined;
 
   private queryManager: QueryManager;
   private devToolsHookCb?: Function;
@@ -1040,6 +1048,7 @@ export class ApolloClient {
       link,
       incrementalHandler = new NotImplementedHandler(),
       experiments = [],
+      refetchEventManager,
     } = options;
 
     this.link = link;
@@ -1097,6 +1106,9 @@ export class ApolloClient {
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
 
     experiments.forEach((experiment) => experiment.call(this, options));
+
+    this.refetchEventManager = refetchEventManager;
+    this.refetchEventManager?.connect(this);
   }
 
   private connectToDevTools() {
@@ -1186,9 +1198,11 @@ export class ApolloClient {
    * - Unsubscribes all active `ObservableQuery` instances by emitting a `completed` event
    * - Rejects all currently running queries with "QueryManager stopped while query was in flight"
    * - Removes all queryRefs from the suspense cache
+   * - Disconnects the `RefetchEventManager` if configured.
    */
   public stop() {
     this.queryManager.stop();
+    this.refetchEventManager?.disconnect();
   }
 
   /**

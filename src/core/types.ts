@@ -152,6 +152,12 @@ export interface DefaultContext extends Record<string, any> {
   clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
 }
 
+export interface RefetchEvents {
+  windowFocus: true;
+}
+
+export type RefetchEvent = keyof RefetchEvents;
+
 /**
  * Represents an `Error` type, but used throughout Apollo Client to represent
  * errors that may otherwise fail `instanceof` checks if they are cross-realm

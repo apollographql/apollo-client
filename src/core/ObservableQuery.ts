@@ -43,6 +43,7 @@ import type {
   GetDataState,
   OperationVariables,
   QueryNotification,
+  RefetchEvent,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -162,6 +163,9 @@ export declare namespace ObservableQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
     variables: TVariables;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+    refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
   };
 
   export type FetchMoreOptions<

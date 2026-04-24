@@ -7,6 +7,7 @@ import type {
   DocumentNode,
   ErrorPolicy,
   OperationVariables,
+  RefetchEvent,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -65,6 +66,9 @@ export declare namespace useBackgroundQuery {
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
       queryKey?: string | number | any[];
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+      refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
 
       /**
        * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}

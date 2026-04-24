@@ -83,7 +83,7 @@ export class RefetchEventManager {
     this.handlers[event] = handler;
   }
 
-  trigger(event: RefetchEvent) {
+  emit(event: RefetchEvent) {
     const handler = this.handlers[event] ?? defaultHandler;
 
     if (this.client) {
@@ -96,7 +96,7 @@ export class RefetchEventManager {
     source: RefetchEventManager.EventSource
   ) {
     const emit = () => {
-      this.trigger(event);
+      this.emit(event);
     };
 
     const cleanup = source(emit);

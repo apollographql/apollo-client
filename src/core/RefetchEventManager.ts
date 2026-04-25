@@ -94,6 +94,12 @@ export class RefetchEventManager {
     }
   }
 
+  removeSource(event: RefetchEvent) {
+    this.cleanupFns.get(event)?.();
+    this.cleanupFns.delete(event);
+    delete this.sources[event];
+  }
+
   setEventHandler(
     event: RefetchEvent,
     handler: RefetchEventManager.EventHandler

@@ -1715,3 +1715,79 @@ test("disconnect cleans up sources added via setEventSource after construction",
 
   expect(cleanup).toHaveBeenCalledTimes(1);
 });
+
+test("removeSource calls cleanup and stops the event from triggering refetches", () => {
+  using _ = spyOnConsole("warn");
+
+  const cleanup = jest.fn();
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: () => cleanup,
+    },
+  });
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(cleanup).not.toHaveBeenCalled();
+
+  refetchEventManager.removeSource("test");
+
+  expect(cleanup).toHaveBeenCalledTimes(1);
+
+  refetchEventManager.emit("test");
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Received '%s' event but no source is configured for it on the `RefetchEventManager`. No queries will refetch. Add the event to the `sources` option or call `setEventSource`.",
+    "test"
+  );
+});
+
+test("removeSource removes events declared with `true`", () => {
+  using _ = spyOnConsole("warn");
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { test: true },
+  });
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  refetchEventManager.removeSource("test");
+
+  refetchEventManager.emit("test");
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+});
+
+test("removeSource is a no-op when called for an event that was never declared", () => {
+  const refetchEventManager = new RefetchEventManager({ sources: {} });
+
+  expect(() => refetchEventManager.removeSource("test")).not.toThrow();
+});
+
+test("removeSource works before the manager is connected", () => {
+  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { test: source },
+  });
+
+  refetchEventManager.removeSource("test");
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(source).not.toHaveBeenCalled();
+});

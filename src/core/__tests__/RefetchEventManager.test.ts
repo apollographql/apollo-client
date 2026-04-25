@@ -16,7 +16,6 @@ import {
 declare module "@apollo/client" {
   interface RefetchEvents {
     test: true;
-    windowFocus: true;
   }
 }
 

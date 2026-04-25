@@ -152,7 +152,10 @@ export interface DefaultContext extends Record<string, any> {
   clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
 }
 
-export interface RefetchEvents {}
+export interface RefetchEvents {
+  windowFocus: true;
+  online: true;
+}
 
 export type RefetchEvent = keyof RefetchEvents;
 

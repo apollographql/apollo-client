@@ -17,6 +17,8 @@ export type {
 export { ApolloClient } from "./ApolloClient.js";
 export { ObservableQuery } from "./ObservableQuery.js";
 export { RefetchEventManager } from "./RefetchEventManager.js";
+export { onlineSource } from "./refetchSources/onlineSource.js";
+export { windowFocusSource } from "./refetchSources/windowFocusSource.js";
 export type {
   ErrorPolicy,
   FetchPolicy,

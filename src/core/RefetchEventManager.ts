@@ -6,9 +6,21 @@ import type { RefetchEvent } from "./types.js";
 
 export declare namespace RefetchEventManager {
   export interface Options {
+    /**
+     * A mapping of event names to source functions. The source function is
+     * called by the refetch event manager to begin listening for events that
+     * trigger automatic refetches. Set to `true` if the event is only
+     * triggered by calling `emit` and has no automatic detection logic.
+     */
     sources?: Partial<
       Record<RefetchEvent, true | RefetchEventManager.EventSource>
     >;
+
+    /**
+     * A mapping of event names to handler functions that run
+     * `client.refetchQueries`. Provide a handler for an event to customize
+     * which queries are refetched when an event is triggered.
+     */
     handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
   }
 
@@ -18,7 +30,14 @@ export declare namespace RefetchEventManager {
   ) => ApolloClient.RefetchQueriesResult<any> | void;
 
   export interface RefetchHandlerContext {
+    /**
+     * The `ApolloClient` instance connected to the refetch event manager.
+     */
     client: ApolloClient;
+
+    /**
+     * The event that triggered the refetch.
+     */
     event: RefetchEvent;
   }
 }
@@ -58,6 +77,10 @@ export class RefetchEventManager {
     this.handlers = options.handlers ?? {};
   }
 
+  /**
+   * Connects the client to this refetch event manager. Connecting a client
+   * calls each configured source function so they can begin listening for events.
+   */
   connect(client: ApolloClient) {
     if (this.client === client) {
       return;
@@ -81,12 +104,21 @@ export class RefetchEventManager {
     });
   }
 
+  /**
+   * Disconnects the client from this refetch event manager and calls the cleanup
+   * function for each event source.
+   */
   disconnect() {
     this.client = undefined;
     this.cleanupFns.forEach((cleanup) => cleanup());
     this.cleanupFns.clear();
   }
 
+  /**
+   * Replaces the source for an event. If a source was previously configured
+   * for the event, its cleanup function is called before the new source is
+   * registered.
+   */
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
     this.cleanupFns.get(event)?.();
     this.cleanupFns.delete(event);
@@ -103,12 +135,18 @@ export class RefetchEventManager {
     }
   }
 
+  /**
+   * Removes the configured source for an event and runs its cleanup function.
+   */
   removeSource(event: RefetchEvent) {
     this.cleanupFns.get(event)?.();
     this.cleanupFns.delete(event);
     delete this.sources[event];
   }
 
+  /**
+   * Replaces the handler for an event.
+   */
   setEventHandler(
     event: RefetchEvent,
     handler: RefetchEventManager.EventHandler
@@ -116,6 +154,13 @@ export class RefetchEventManager {
     this.handlers[event] = handler;
   }
 
+  /**
+   * Manually triggers a refetch for the provided event.
+   *
+   * @remarks
+   * This method warns and does not refetch if the refetch event manager is not
+   * connected to a client or a source is not configured for the event.
+   */
   emit(event: RefetchEvent) {
     if (!this.client) {
       if (__DEV__) {

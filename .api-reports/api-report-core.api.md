@@ -1155,16 +1155,12 @@ export namespace RefetchEventManager {
     export type EventSource = (emit: () => void) => (() => void) | void;
     // (undocumented)
     export interface Options {
-        // (undocumented)
         handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
-        // (undocumented)
         sources?: Partial<Record<RefetchEvent, true | RefetchEventManager.EventSource>>;
     }
     // (undocumented)
     export interface RefetchHandlerContext {
-        // (undocumented)
         client: ApolloClient;
-        // (undocumented)
         event: RefetchEvent;
     }
 }
@@ -1172,17 +1168,11 @@ export namespace RefetchEventManager {
 // @public (undocumented)
 export class RefetchEventManager {
     constructor(options?: RefetchEventManager.Options);
-    // (undocumented)
     connect(client: ApolloClient): void;
-    // (undocumented)
     disconnect(): void;
-    // (undocumented)
     emit(event: RefetchEvent): void;
-    // (undocumented)
     removeSource(event: RefetchEvent): void;
-    // (undocumented)
     setEventHandler(event: RefetchEvent, handler: RefetchEventManager.EventHandler): void;
-    // (undocumented)
     setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource): void;
 }
 

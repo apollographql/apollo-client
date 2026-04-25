@@ -52,6 +52,19 @@ export class RefetchEventManager {
   }
 
   connect(client: ApolloClient) {
+    if (this.client === client) {
+      return;
+    }
+
+    if (this.client) {
+      if (__DEV__) {
+        invariant.warn(
+          "Connected an `ApolloClient` instance to a `RefetchEventManager` that was already connected to a different `ApolloClient`. The previous client has been disconnected and will no longer receive refetch events from this manager."
+        );
+      }
+      this.disconnect();
+    }
+
     this.client = client;
 
     Object.entries(this.sources).forEach(([event, source]) => {

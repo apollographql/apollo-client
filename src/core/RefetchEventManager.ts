@@ -15,9 +15,7 @@ export declare namespace RefetchEventManager {
   export type EventSource = (emit: () => void) => () => void;
   export type EventHandler = (
     context: RefetchEventManager.RefetchHandlerContext
-  ) =>
-    | ApolloClient.RefetchQueriesResult<Promise<ApolloClient.QueryResult<any>>>
-    | undefined;
+  ) => ApolloClient.RefetchQueriesResult<any> | void;
 
   export interface RefetchHandlerContext {
     client: ApolloClient;

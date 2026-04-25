@@ -46,7 +46,7 @@ export class RefetchEventManager {
 
   private client: ApolloClient | undefined;
 
-  constructor(options: RefetchEventManager.Options) {
+  constructor(options: RefetchEventManager.Options = {}) {
     this.sources = options.sources ?? {};
     this.handlers = options.handlers ?? {};
   }

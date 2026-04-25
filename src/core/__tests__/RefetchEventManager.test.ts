@@ -1014,7 +1014,7 @@ test("warns and no-ops when emit is called before a client is connected", () => 
 test("warns and no-ops when emit is called for an event that is not configured as a source", () => {
   using _ = spyOnConsole("warn");
 
-  const refetchEventManager = new RefetchEventManager({ sources: {} });
+  const refetchEventManager = new RefetchEventManager();
 
   new ApolloClient({
     cache: new InMemoryCache(),
@@ -1613,7 +1613,7 @@ test("setEventSource adds an event that was not declared in the constructor", as
   const counts: Record<string, number> = {};
   let emitWindowFocus!: () => void;
 
-  const refetchEventManager = new RefetchEventManager({ sources: {} });
+  const refetchEventManager = new RefetchEventManager();
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -1681,7 +1681,7 @@ test("setEventSource adds an event that was not declared in the constructor", as
 test("setEventSource before connect does not invoke the source function until connect is called", () => {
   const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
 
-  const refetchEventManager = new RefetchEventManager({ sources: {} });
+  const refetchEventManager = new RefetchEventManager();
 
   refetchEventManager.setEventSource("test", source);
 
@@ -1699,7 +1699,7 @@ test("setEventSource before connect does not invoke the source function until co
 test("disconnect cleans up sources added via setEventSource after construction", () => {
   const cleanup = jest.fn();
 
-  const refetchEventManager = new RefetchEventManager({ sources: {} });
+  const refetchEventManager = new RefetchEventManager();
 
   new ApolloClient({
     cache: new InMemoryCache(),
@@ -1769,7 +1769,7 @@ test("removeSource removes events declared with `true`", () => {
 });
 
 test("removeSource is a no-op when called for an event that was never declared", () => {
-  const refetchEventManager = new RefetchEventManager({ sources: {} });
+  const refetchEventManager = new RefetchEventManager();
 
   expect(() => refetchEventManager.removeSource("test")).not.toThrow();
 });

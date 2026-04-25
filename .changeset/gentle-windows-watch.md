@@ -44,6 +44,11 @@ useQuery(QUERY, {
 useQuery(OTHER_QUERY, {
   refetchOn: false,
 });
+
+// Enable every event for this query, regardless of defaultOptions
+useQuery(LIVE_DASHBOARD, {
+  refetchOn: true,
+});
 ```
 
 To enable per-query opt-in rather than opt-out, set `defaultOptions.watchQuery.refetchOn` to `false` and enable it per-query instead.

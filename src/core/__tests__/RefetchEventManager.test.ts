@@ -1883,3 +1883,179 @@ test("setEventSource calls the previous cleanup once when replacing with a sourc
 
   expect(previousCleanup).toHaveBeenCalledTimes(1);
 });
+
+test("per-query refetchOn: true enables every event regardless of defaultOptions", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+  let emitWindowFocus!: () => void;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: false,
+      },
+    },
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+        windowFocus: (emit) => {
+          emitWindowFocus = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitWindowFocus();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 3 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("defaultOptions refetchOn: true enables every event for all queries", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: true,
+      },
+    },
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

@@ -108,7 +108,7 @@ export declare namespace useQuery {
       skip?: boolean;
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-      refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+      refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
     }
   }
   export type Options<

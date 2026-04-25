@@ -105,7 +105,7 @@ export declare namespace useLoadableQuery {
     returnPartialData?: boolean;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
   }
 
   export interface DefaultOptions

@@ -632,7 +632,7 @@ export declare namespace ApolloClient {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
 
     /**
      * @internal This API is meant for framework integrations only.

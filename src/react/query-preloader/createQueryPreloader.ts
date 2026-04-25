@@ -43,7 +43,7 @@ export type PreloadQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-  refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+  refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
 } & VariablesOption<TVariables>;
 
 /**

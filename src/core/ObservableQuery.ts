@@ -165,7 +165,7 @@ export declare namespace ObservableQuery {
     variables: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
   };
 
   export type FetchMoreOptions<

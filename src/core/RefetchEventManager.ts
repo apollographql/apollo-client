@@ -29,8 +29,15 @@ function defaultHandler({
 }: RefetchEventManager.RefetchHandlerContext) {
   return client.refetchQueries({
     include: "active",
-    onQueryUpdated: (oq) =>
-      oq.options.refetchOn !== false && oq.options.refetchOn?.[event] !== false,
+    onQueryUpdated: (oq) => {
+      const refetchOn = oq.options.refetchOn;
+
+      if (typeof refetchOn === "boolean") {
+        return refetchOn;
+      }
+
+      return refetchOn?.[event] !== false;
+    },
   });
 }
 

@@ -4,9 +4,9 @@
 
 Add support for automatic event-based refetching, such as window focus.
 
-The `RefetchEventManager` class handles automatic refetches in response to events. Apollo Client provides built-in sources for window focus and network reconnect ship as `windowFocusSource` and `onlineSource`.
+The `RefetchEventManager` class handles automatic refetches in response to events. Apollo Client provides built-in sources for window focus and network reconnect as `windowFocusSource` and `onlineSource`.
 
-Event refetching is fully opt-in. Create and pass a `RefetchEventManager` instance to the `ApolloClient` constructor to activate the the event listeners.
+Event refetching is fully opt-in. Create and pass a `RefetchEventManager` instance to the `ApolloClient` constructor to activate the event listeners.
 
 ```ts
 import {
@@ -69,7 +69,7 @@ const client = new ApolloClient({
 useQuery(DASHBOARD_QUERY, { refetchOn: { windowFocus: true } });
 ```
 
-When `defaultOptions.refetchOn` and per-query `refetchOn` options are provided, the objects are merged together.
+When `defaultOptions.watchQuery.refetchOn` and per-query `refetchOn` options are provided, the objects are merged together.
 
 ### Custom events
 
@@ -82,7 +82,7 @@ declare module "@apollo/client" {
   }
 }
 
-import { AppState } from "react-native";
+import { AppState, AppStateStatus } from "react-native";
 
 const refetchEventManager = new RefetchEventManager({
   sources: {

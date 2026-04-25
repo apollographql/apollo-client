@@ -372,6 +372,7 @@ export namespace ApolloClient {
         // (undocumented)
         localState?: LocalState;
         queryDeduplication?: boolean;
+        refetchEventManager?: RefetchEventManager;
         ssrForceFetchDelay?: number;
         ssrMode?: boolean;
     }
@@ -480,6 +481,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
         [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
@@ -530,6 +532,8 @@ export class ApolloClient {
     // @deprecated
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
+    // (undocumented)
+    readonly refetchEventManager: RefetchEventManager | undefined;
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
@@ -2141,6 +2145,7 @@ export namespace ObservableQuery {
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
+        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
     };
     // (undocumented)
     export type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {
@@ -2214,6 +2219,9 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables;
 }
+
+// @public (undocumented)
+export const onlineSource: RefetchEventManager.EventSource;
 
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
@@ -2602,6 +2610,56 @@ export interface Reference {
 }
 
 // @public (undocumented)
+export type RefetchEvent = keyof RefetchEvents;
+
+// @public (undocumented)
+export namespace RefetchEventManager {
+    // (undocumented)
+    export type EventHandler = (context: RefetchEventManager.RefetchHandlerContext) => ApolloClient.RefetchQueriesResult<any> | void;
+    // (undocumented)
+    export type EventSource = (emit: () => void) => (() => void) | void;
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
+        // (undocumented)
+        sources?: Partial<Record<RefetchEvent, true | RefetchEventManager.EventSource>>;
+    }
+    // (undocumented)
+    export interface RefetchHandlerContext {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        event: RefetchEvent;
+    }
+}
+
+// @public (undocumented)
+export class RefetchEventManager {
+    constructor(options?: RefetchEventManager.Options);
+    // (undocumented)
+    connect(client: ApolloClient): void;
+    // (undocumented)
+    disconnect(): void;
+    // (undocumented)
+    emit(event: RefetchEvent): void;
+    // (undocumented)
+    removeSource(event: RefetchEvent): void;
+    // (undocumented)
+    setEventHandler(event: RefetchEvent, handler: RefetchEventManager.EventHandler): void;
+    // (undocumented)
+    setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource): void;
+}
+
+// @public (undocumented)
+export interface RefetchEvents {
+    // (undocumented)
+    online: true;
+    // (undocumented)
+    windowFocus: true;
+}
+
+// @public (undocumented)
 export type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesIncludeShorthand;
 
 // @public (undocumented)
@@ -2947,6 +3005,9 @@ export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network" | "standby
 export type WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.WatchQueryOptions<TData, TVariables>;
 
 // @public (undocumented)
+export const windowFocusSource: RefetchEventManager.EventSource;
+
+// @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {
     // (undocumented)
     clientOnly: boolean;
@@ -2985,9 +3046,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:191:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:591:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:199:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:599:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

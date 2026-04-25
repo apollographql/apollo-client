@@ -82,13 +82,16 @@ export class RefetchEventManager {
 
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
     this.cleanupFns.get(event)?.();
+    this.sources[event] = source;
 
-    this.cleanupFns.set(
-      event,
-      source(() => {
-        this.emit(event);
-      })
-    );
+    if (this.client) {
+      this.cleanupFns.set(
+        event,
+        source(() => {
+          this.emit(event);
+        })
+      );
+    }
   }
 
   setEventHandler(

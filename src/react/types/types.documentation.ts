@@ -167,9 +167,15 @@ export interface QueryOptionsDocumentation {
   skipPollAttempt: unknown;
 
   /**
-   * Determines whether events trigger refetches for the query. Disable
-   * automatic refetches per event by providing an object with each event set to
-   * `false`. Disable all automatic refetch events by providing `false`.
+   * Determines whether events trigger refetches for the query. Provide an
+   * object mapping each `RefetchEvent` to `true` (enable) or `false` (disable)
+   * to control individual events. Provide `false` to disable all automatic
+   * refetch events for this query. Provide `true` to enable all automatic
+   * refetch events for this query.
+   *
+   * @remarks
+   * `refetchOn` defaults to refetch on all events. `refetchOn: true` is
+   * unnecessary except when `defaultOptions.watchQuery.refetchOn` is `false`.
    *
    * @docGroup 1. Operation options
    */

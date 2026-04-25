@@ -12,7 +12,7 @@ export declare namespace RefetchEventManager {
     handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
   }
 
-  export type EventSource = (emit: () => void) => () => void;
+  export type EventSource = (emit: () => void) => (() => void) | void;
   export type EventHandler = (
     context: RefetchEventManager.RefetchHandlerContext
   ) => ApolloClient.RefetchQueriesResult<any> | void;
@@ -82,15 +82,17 @@ export class RefetchEventManager {
 
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
     this.cleanupFns.get(event)?.();
+    this.cleanupFns.delete(event);
     this.sources[event] = source;
 
     if (this.client) {
-      this.cleanupFns.set(
-        event,
-        source(() => {
-          this.emit(event);
-        })
-      );
+      const cleanup = source(() => {
+        this.emit(event);
+      });
+
+      if (cleanup) {
+        this.cleanupFns.set(event, cleanup);
+      }
     }
   }
 

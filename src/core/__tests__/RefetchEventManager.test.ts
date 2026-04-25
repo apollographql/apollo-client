@@ -1791,3 +1791,96 @@ test("removeSource works before the manager is connected", () => {
 
   expect(source).not.toHaveBeenCalled();
 });
+
+test("source functions are not required to return a cleanup function", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: (emit) => {
+        emitTestEvent = emit;
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(() => refetchEventManager.disconnect()).not.toThrow();
+});
+
+test("setEventSource calls the previous cleanup once when replacing with a source that returns no cleanup", () => {
+  const previousCleanup = jest.fn();
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { test: () => previousCleanup },
+  });
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(previousCleanup).not.toHaveBeenCalled();
+
+  refetchEventManager.setEventSource("test", () => {});
+
+  expect(previousCleanup).toHaveBeenCalledTimes(1);
+
+  refetchEventManager.disconnect();
+
+  expect(previousCleanup).toHaveBeenCalledTimes(1);
+});

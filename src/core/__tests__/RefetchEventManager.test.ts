@@ -1548,3 +1548,170 @@ test("calls source functions when manager reconnects to a client after disconnec
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("warns and replaces the previously connected client when connect is called with a different client", () => {
+  using _ = spyOnConsole("warn");
+
+  const cleanup = jest.fn();
+  const source: RefetchEventManager.EventSource = jest.fn(() => cleanup);
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { test: source },
+  });
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(source).toHaveBeenCalledTimes(1);
+  expect(cleanup).not.toHaveBeenCalled();
+  expect(console.warn).not.toHaveBeenCalled();
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Connected an `ApolloClient` instance to a `RefetchEventManager` that was already connected to a different `ApolloClient`. The previous client has been disconnected and will no longer receive refetch events from this manager."
+  );
+
+  expect(cleanup).toHaveBeenCalledTimes(1);
+  expect(source).toHaveBeenCalledTimes(2);
+});
+
+test("does not warn or rewire sources when connect is called with the same already-connected client", () => {
+  using _ = spyOnConsole("warn");
+
+  const cleanup = jest.fn();
+  const source: RefetchEventManager.EventSource = jest.fn(() => cleanup);
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { test: source },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(source).toHaveBeenCalledTimes(1);
+
+  refetchEventManager.connect(client);
+
+  expect(console.warn).not.toHaveBeenCalled();
+  expect(source).toHaveBeenCalledTimes(1);
+  expect(cleanup).not.toHaveBeenCalled();
+});
+
+test("setEventSource adds an event that was not declared in the constructor", async () => {
+  const counts: Record<string, number> = {};
+  let emitWindowFocus!: () => void;
+
+  const refetchEventManager = new RefetchEventManager({ sources: {} });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  refetchEventManager.setEventSource("windowFocus", (emit) => {
+    emitWindowFocus = emit;
+
+    return () => {};
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitWindowFocus();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("setEventSource before connect does not invoke the source function until connect is called", () => {
+  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+
+  const refetchEventManager = new RefetchEventManager({ sources: {} });
+
+  refetchEventManager.setEventSource("test", source);
+
+  expect(source).not.toHaveBeenCalled();
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  expect(source).toHaveBeenCalledTimes(1);
+});
+
+test("disconnect cleans up sources added via setEventSource after construction", () => {
+  const cleanup = jest.fn();
+
+  const refetchEventManager = new RefetchEventManager({ sources: {} });
+
+  new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager,
+  });
+
+  refetchEventManager.setEventSource("test", () => cleanup);
+
+  expect(cleanup).not.toHaveBeenCalled();
+
+  refetchEventManager.disconnect();
+
+  expect(cleanup).toHaveBeenCalledTimes(1);
+});

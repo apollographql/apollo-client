@@ -481,7 +481,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
         [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
@@ -2145,7 +2145,7 @@ export namespace ObservableQuery {
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
-        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
     };
     // (undocumented)
     export type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {

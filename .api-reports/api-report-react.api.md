@@ -177,7 +177,7 @@ export type PreloadQueryOptions<TVariables extends OperationVariables = Operatio
     fetchPolicy?: PreloadQueryFetchPolicy;
     returnPartialData?: boolean;
     refetchWritePolicy?: RefetchWritePolicy;
-    refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
 } & VariablesOption<TVariables>;
 
 // @public @deprecated (undocumented)
@@ -227,7 +227,7 @@ export namespace useBackgroundQuery {
             errorPolicy?: ErrorPolicy;
             fetchPolicy?: FetchPolicy;
             queryKey?: string | number | any[];
-            refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+            refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             // @deprecated
@@ -585,7 +585,7 @@ export namespace useLazyQuery {
         nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
         notifyOnNetworkStatusChange?: boolean;
         pollInterval?: number;
-        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
         refetchWritePolicy?: RefetchWritePolicy;
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
@@ -676,7 +676,7 @@ export namespace useLoadableQuery {
         errorPolicy?: ErrorPolicy;
         fetchPolicy?: FetchPolicy;
         queryKey?: string | number | any[];
-        refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
         refetchWritePolicy?: RefetchWritePolicy;
         returnPartialData?: boolean;
     }
@@ -880,7 +880,7 @@ export namespace useQuery {
             nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
             notifyOnNetworkStatusChange?: boolean;
             pollInterval?: number;
-            refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+            refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             skip?: boolean;
@@ -1236,7 +1236,7 @@ export namespace useSuspenseQuery {
             errorPolicy?: ErrorPolicy;
             fetchPolicy?: FetchPolicy;
             queryKey?: string | number | any[];
-            refetchOn?: false | Partial<Record<RefetchEvent, boolean>>;
+            refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             // @deprecated

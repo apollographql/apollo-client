@@ -63,14 +63,8 @@ export class RefetchEventManager {
 
   disconnect() {
     this.client = undefined;
-
-    Object.keys(this.sources).forEach((key) => {
-      const event = key as RefetchEvent;
-
-      if (this.cleanupFns.has(event)) {
-        this.cleanupFns.get(event)!();
-      }
-    });
+    this.cleanupFns.forEach((cleanup) => cleanup());
+    this.cleanupFns.clear();
   }
 
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {

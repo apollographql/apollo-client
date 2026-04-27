@@ -4,7 +4,7 @@ import type {
   DocumentNode,
   ErrorPolicy,
   OperationVariables,
-  RefetchEvent,
+  RefetchEventManager,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -43,7 +43,7 @@ export type PreloadQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-  refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
+  refetchOn?: RefetchEventManager.RefetchOnOption;
 } & VariablesOption<TVariables>;
 
 /**

@@ -2059,3 +2059,310 @@ test("defaultOptions refetchOn: true enables every event for all queries", async
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("calls top-level refetchOn callback to determine if a query refetches per event", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+  let emitWindowFocus!: () => void;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+        windowFocus: (emit) => {
+          emitWindowFocus = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: ({ event }) => event === "test",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitWindowFocus();
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("calls per-event refetchOn callback to determine if a query refetches", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+  let allowed = false;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: { test: () => allowed },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+
+  await expect(stream).not.toEmitAnything();
+
+  allowed = true;
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("passes the event to the refetchOn callback context", async () => {
+  let emitTestEvent!: () => void;
+  let emitWindowFocus!: () => void;
+  const callback = jest.fn(() => false);
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { id: "a" } },
+        result: { data: { count: 1 } },
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+        windowFocus: (emit) => {
+          emitWindowFocus = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: callback,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitTestEvent();
+  emitWindowFocus();
+
+  expect(callback).toHaveBeenNthCalledWith(1, { event: "test" });
+  expect(callback).toHaveBeenNthCalledWith(2, { event: "windowFocus" });
+});
+
+test("supports mixing booleans and callbacks within the per-event refetchOn object", async () => {
+  const counts: Record<string, number> = {};
+  let emitTestEvent!: () => void;
+  let emitWindowFocus!: () => void;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        test: (emit) => {
+          emitTestEvent = emit;
+
+          return () => {};
+        },
+        windowFocus: (emit) => {
+          emitWindowFocus = emit;
+
+          return () => {};
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: {
+        windowFocus: false,
+        test: () => true,
+      },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  emitWindowFocus();
+
+  await expect(stream).not.toEmitAnything();
+
+  emitTestEvent();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

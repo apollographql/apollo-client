@@ -40,6 +40,24 @@ export declare namespace RefetchEventManager {
      */
     event: RefetchEvent;
   }
+
+  export interface RefetchOnContext {
+    /**
+     * The event that triggered the refetch.
+     */
+    event: RefetchEvent;
+  }
+
+  export type RefetchOnCallback = (
+    context: RefetchEventManager.RefetchOnContext
+  ) => boolean;
+
+  export type RefetchOnOption =
+    | boolean
+    | RefetchEventManager.RefetchOnCallback
+    | Partial<
+        Record<RefetchEvent, boolean | RefetchEventManager.RefetchOnCallback>
+      >;
 }
 
 function defaultHandler({
@@ -53,6 +71,14 @@ function defaultHandler({
 
       if (typeof refetchOn === "boolean") {
         return refetchOn;
+      }
+
+      if (typeof refetchOn === "function") {
+        return refetchOn({ event });
+      }
+
+      if (typeof refetchOn?.[event] === "function") {
+        return refetchOn[event]({ event });
       }
 
       return refetchOn?.[event] !== false;

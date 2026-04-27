@@ -55,7 +55,6 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
-  RefetchEvent,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
   SubscriptionObservable,
@@ -632,7 +631,7 @@ export declare namespace ApolloClient {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: RefetchEventManager.RefetchOnOption;
 
     /**
      * @internal This API is meant for framework integrations only.

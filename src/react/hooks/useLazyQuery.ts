@@ -14,7 +14,7 @@ import type {
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
-  RefetchEvent,
+  RefetchEventManager,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
@@ -79,7 +79,7 @@ export declare namespace useLazyQuery {
     client?: ApolloClient;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
+    refetchOn?: RefetchEventManager.RefetchOnOption;
   }
   namespace DocumentationTypes {
     namespace useLazyQuery {

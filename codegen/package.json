@@ -35,7 +35,7 @@
     "publint": "publint run --strict ."
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.0",
     "@graphql-codegen/plugin-helpers": "^6.0.0",
     "@graphql-codegen/typescript": "^5.0.0",
     "@graphql-codegen/visitor-plugin-common": "^6.0.0"

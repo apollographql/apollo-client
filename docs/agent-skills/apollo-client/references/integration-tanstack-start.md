@@ -1,8 +1,4 @@
----
-title: TanStack Start
-subtitle: Integrate Apollo Client with TanStack Start
-description: Learn how to integrate Apollo Client in TanStack Start applications with support for modern streaming SSR.
----
+# Apollo Client Integration with TanStack Start
 
 This guide covers integrating Apollo Client in a TanStack Start application with support for modern streaming SSR.
 
@@ -16,11 +12,11 @@ Install Apollo Client and the TanStack Start integration package:
 npm install @apollo/client-integration-tanstack-start @apollo/client graphql rxjs
 ```
 
-> **TypeScript users:** For type-safe GraphQL operations, see the [GraphQL Codegen guide](../development-testing/graphql-codegen).
+> **TypeScript users:** For type-safe GraphQL operations, see the [TypeScript Code Generation guide](typescript-codegen.md).
 
 ## Setup
 
-### Step 1: Configure root route with context
+### Step 1: Configure Root Route with Context
 
 In your `routes/__root.tsx`, change from `createRootRoute` to `createRootRouteWithContext` to provide the right context type:
 
@@ -51,7 +47,7 @@ function RootComponent() {
 }
 ```
 
-### Step 2: Set up Apollo Client in router
+### Step 2: Set Up Apollo Client in Router
 
 In your `router.tsx`, set up your Apollo Client instance and run `routerWithApolloClient`:
 
@@ -136,7 +132,7 @@ function RouteComponent() {
 }
 ```
 
-### Option 2: Direct useSuspenseQuery in component
+### Option 2: Direct useSuspenseQuery in Component
 
 You can also use Apollo Client's suspenseful hooks directly in your component without a loader:
 
@@ -182,7 +178,7 @@ function RouteComponent() {
 }
 ```
 
-### Multiple queries in a loader
+### Multiple Queries in a Loader
 
 You can preload multiple queries in a single loader:
 
@@ -229,7 +225,7 @@ function RouteComponent() {
 }
 ```
 
-### Using useQueryRefHandlers for refetching
+### Using useQueryRefHandlers for Refetching
 
 When using `useReadQuery`, you can get refetch functionality from `useQueryRefHandlers`:
 
@@ -251,26 +247,26 @@ function UserComponent({ queryRef }: { queryRef: QueryRef<GetUserQuery> }) {
 }
 ```
 
-## Important considerations
+## Important Considerations
 
-1. **Import from integration package:** Always import `ApolloClient` and `InMemoryCache` from `@apollo/client-integration-tanstack-start`, not from `@apollo/client`, to ensure proper SSR hydration.
+1. **Import from Integration Package:** Always import `ApolloClient` and `InMemoryCache` from `@apollo/client-integration-tanstack-start`, not from `@apollo/client`, to ensure proper SSR hydration.
 
-2. **Context type:** Use `createRootRouteWithContext<ApolloClientIntegration.RouterContext>()` to provide proper TypeScript types for the `preloadQuery` function in loaders.
+2. **Context Type:** Use `createRootRouteWithContext<ApolloClientIntegration.RouterContext>()` to provide proper TypeScript types for the `preloadQuery` function in loaders.
 
-3. **Loader vs component queries:**
+3. **Loader vs Component Queries:**
 
    - Use `preloadQuery` in loaders when you want to start fetching data before the component renders
    - Use `useSuspenseQuery` directly in components for simpler cases or when data fetching can wait until render
 
 4. **Streaming SSR:** The integration fully supports React's streaming SSR capabilities. Place `Suspense` boundaries strategically for optimal user experience.
 
-5. **Cache management:** The Apollo Client instance is shared across all routes, so cache updates from one route will be reflected in all routes that use the same data.
+5. **Cache Management:** The Apollo Client instance is shared across all routes, so cache updates from one route will be reflected in all routes that use the same data.
 
 6. **Authentication:** Use Apollo Client's `SetContextLink` for dynamic auth tokens.
 
-## Advanced configuration
+## Advanced Configuration
 
-### Adding authentication
+### Adding Authentication
 
 For authentication in TanStack Start with SSR support, you need to handle both server and client environments differently. Use `createIsomorphicFn` to provide environment-specific implementations:
 
@@ -340,7 +336,7 @@ export function getRouter() {
 >
 > This ensures your authentication works correctly in both SSR and browser contexts.
 
-### Custom cache configuration
+### Custom Cache Configuration
 
 ```typescript
 import {

@@ -160,6 +160,25 @@
 
 - [#13130](https://github.com/apollographql/apollo-client/pull/13130) [`dd12231`](https://github.com/apollographql/apollo-client/commit/dd122316028b55307de4a40335512307c8fa916a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the accuracy of `client.query` return type to better detect the current `errorPolicy`. The `data` property is no longer nullable when the `errorPolicy` is `none`. This makes it possible to remove the `undefined` checks or optional chaining in most cases.
 
+## 4.1.9
+
+### Patch Changes
+
+- [#13203](https://github.com/apollographql/apollo-client/pull/13203) [`099954b`](https://github.com/apollographql/apollo-client/commit/099954b9905c0f80b57563eb64157386f4493e84) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Remove the `workspaces` field from the published `package.json` in `dist` to avoid Yarn v1 warnings about workspaces requiring private packages.
+
+## 4.1.8
+
+### Patch Changes
+
+- [#13202](https://github.com/apollographql/apollo-client/pull/13202) [`8a51ea6`](https://github.com/apollographql/apollo-client/commit/8a51ea636600dbe4b48477d32f30469b7d36b152) Thanks [@phryneas](https://github.com/phryneas)! - Ship agent skill for usage with @tanstack/intent — the skill is now bundled in the npm package under `skills/apollo-client/` and discoverable by `intent list`.
+  For more context, see the [TanStack Intent QuickStart](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers).
+
+## 4.1.7
+
+### Patch Changes
+
+- [#13187](https://github.com/apollographql/apollo-client/pull/13187) [`bb3fd9b`](https://github.com/apollographql/apollo-client/commit/bb3fd9b3d40a2505add673a6ee89d85b8b4c8984) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix RxJS interop issue with the observable returned by `WebSocketLink`.
+
 ## 4.1.6
 
 ### Patch Changes

@@ -481,7 +481,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: RefetchEventManager.RefetchOnOption;
         [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
@@ -2145,7 +2145,7 @@ export namespace ObservableQuery {
         skipPollAttempt?: () => boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
-        refetchOn?: boolean | Partial<Record<RefetchEvent, boolean>>;
+        refetchOn?: RefetchEventManager.RefetchOnOption;
     };
     // (undocumented)
     export type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {
@@ -2628,6 +2628,14 @@ export namespace RefetchEventManager {
         client: ApolloClient;
         event: RefetchEvent;
     }
+    // (undocumented)
+    export type RefetchOnCallback = (context: RefetchEventManager.RefetchOnContext) => boolean;
+    // (undocumented)
+    export interface RefetchOnContext {
+        event: RefetchEvent;
+    }
+    // (undocumented)
+    export type RefetchOnOption = boolean | RefetchEventManager.RefetchOnCallback | Partial<Record<RefetchEvent, boolean | RefetchEventManager.RefetchOnCallback>>;
 }
 
 // @public (undocumented)
@@ -2636,7 +2644,7 @@ export class RefetchEventManager {
     connect(client: ApolloClient): void;
     disconnect(): void;
     emit(event: RefetchEvent): void;
-    removeSource(event: RefetchEvent): void;
+    removeEventSource(event: RefetchEvent): void;
     setEventHandler(event: RefetchEvent, handler: RefetchEventManager.EventHandler): void;
     setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource): void;
 }

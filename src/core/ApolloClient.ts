@@ -30,6 +30,7 @@ import {
   checkDocument,
   compact,
   getApolloClientMemoryInternals,
+  getOperationName,
   mapObservableFragmentMemoized,
   mergeOptions,
   removeMaskedFragmentSpreads,
@@ -1245,6 +1246,15 @@ export class ApolloClient {
         typeof defaultRefetchOn === "object"
       ) {
         options.refetchOn = { ...defaultRefetchOn, ...refetchOn };
+      }
+    }
+
+    if (__DEV__) {
+      if (options.refetchOn && !this.refetchEventManager) {
+        invariant.warn(
+          "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
+          getOperationName(options.query, "(anonymous)")
+        );
       }
     }
 

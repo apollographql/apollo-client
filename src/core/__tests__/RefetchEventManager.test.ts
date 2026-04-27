@@ -20,7 +20,7 @@ declare module "@apollo/client" {
 }
 
 const query: TypedDocumentNode<{ count: number }, { id: string }> = gql`
-  query ($id: ID!) {
+  query CountQuery($id: ID!) {
     count(id: $id)
   }
 `;
@@ -2365,4 +2365,21 @@ test("supports mixing booleans and callbacks within the per-event refetchOn obje
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("warns when refetchOn is provided but refetchEventManager is not configured", async () => {
+  using _ = spyOnConsole("warn");
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+  });
+
+  client.watchQuery({ query, variables: { id: "1" }, refetchOn: true });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
+    "CountQuery"
+  );
 });

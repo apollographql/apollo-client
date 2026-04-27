@@ -252,42 +252,42 @@ export declare namespace useLazyQuery {
   >;
 
   namespace DocumentationTypes {
-    /**
-     * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
-     *
-     * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
-     *
-     * @example
-     *
-     * ```jsx
-     * import { gql } from "@apollo/client";
-     * import { useLazyQuery } from "@apollo/client/react";
-     *
-     * const GET_GREETING = gql`
-     *   query GetGreeting($language: String!) {
-     *     greeting(language: $language) {
-     *       message
-     *     }
-     *   }
-     * `;
-     *
-     * function Hello() {
-     *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
-     *     variables: { language: "english" },
-     *   });
-     *   if (called && loading) return <p>Loading ...</p>;
-     *   if (!called) {
-     *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
-     *   }
-     *   return <h1>Hello {data.greeting.message}!</h1>;
-     * }
-     * ```
-     *
-     * @param query - A GraphQL query document parsed into an AST by `gql`.
-     * @param options - Default options to control how the query is executed.
-     * @returns A tuple in the form of `[execute, result]`
-     */
     export interface useLazyQuery {
+      /**
+       * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
+       *
+       * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
+       *
+       * @example
+       *
+       * ```jsx
+       * import { gql } from "@apollo/client";
+       * import { useLazyQuery } from "@apollo/client/react";
+       *
+       * const GET_GREETING = gql`
+       *   query GetGreeting($language: String!) {
+       *     greeting(language: $language) {
+       *       message
+       *     }
+       *   }
+       * `;
+       *
+       * function Hello() {
+       *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
+       *     variables: { language: "english" },
+       *   });
+       *   if (called && loading) return <p>Loading ...</p>;
+       *   if (!called) {
+       *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
+       *   }
+       *   return <h1>Hello {data.greeting.message}!</h1>;
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - Default options to control how the query is executed.
+       * @returns A tuple in the form of `[execute, result]`
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -297,13 +297,13 @@ export declare namespace useLazyQuery {
       ): useLazyQuery.ResultTuple<TData, TVariables>;
     }
 
-    /**
-     * @deprecated Avoid manually specifying generics on `useLazyQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)}
-     */
     export interface useLazyQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useLazyQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

@@ -173,68 +173,68 @@ export declare namespace useBackgroundQuery {
   ];
 
   export namespace DocumentationTypes {
-    /**
-     * For a detailed explanation of useBackgroundQuery, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
-     *
-     * @returns A tuple containing:
-     *
-     * 1.  A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
-     * 2.  An object containing helper functions for the query:
-     *     - `refetch`: A function to re-execute the query
-     *     - `fetchMore`: A function to fetch more results for pagination
-     *     - `subscribeToMore`: A function to subscribe to updates
-     *
-     * @example
-     *
-     * ```jsx
-     * import { Suspense } from "react";
-     * import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-     * import { useBackgroundQuery, useReadQuery } from "@apollo/client/react";
-     *
-     * const query = gql`
-     *   foo {
-     *     bar
-     *   }
-     * `;
-     *
-     * const client = new ApolloClient({
-     *   link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
-     *   cache: new InMemoryCache(),
-     * });
-     *
-     * function SuspenseFallback() {
-     *   return <div>Loading...</div>;
-     * }
-     *
-     * function Child({ queryRef }) {
-     *   const { data } = useReadQuery(queryRef);
-     *
-     *   return <div>{data.foo.bar}</div>;
-     * }
-     *
-     * function Parent() {
-     *   const [queryRef] = useBackgroundQuery(query);
-     *
-     *   return (
-     *     <Suspense fallback={<SuspenseFallback />}>
-     *       <Child queryRef={queryRef} />
-     *     </Suspense>
-     *   );
-     * }
-     *
-     * function App() {
-     *   return (
-     *     <ApolloProvider client={client}>
-     *       <Parent />
-     *     </ApolloProvider>
-     *   );
-     * }
-     * ```
-     *
-     * @param query - A GraphQL query document parsed into an AST by `gql`.
-     * @param options - An optional object containing options for the query. Instead of passing a `useBackgroundQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query or suspending.
-     */
     export interface useBackgroundQuery {
+      /**
+       * For a detailed explanation of useBackgroundQuery, see the [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+       *
+       * @returns A tuple containing:
+       *
+       * 1.  A `QueryRef` that can be passed to `useReadQuery` to read the query result. The `queryRef` is `undefined` if the query is skipped.
+       * 2.  An object containing helper functions for the query:
+       *     - `refetch`: A function to re-execute the query
+       *     - `fetchMore`: A function to fetch more results for pagination
+       *     - `subscribeToMore`: A function to subscribe to updates
+       *
+       * @example
+       *
+       * ```jsx
+       * import { Suspense } from "react";
+       * import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+       * import { useBackgroundQuery, useReadQuery } from "@apollo/client/react";
+       *
+       * const query = gql`
+       *   foo {
+       *     bar
+       *   }
+       * `;
+       *
+       * const client = new ApolloClient({
+       *   link: new HttpLink({ uri: "http://localhost:4000/graphql" }),
+       *   cache: new InMemoryCache(),
+       * });
+       *
+       * function SuspenseFallback() {
+       *   return <div>Loading...</div>;
+       * }
+       *
+       * function Child({ queryRef }) {
+       *   const { data } = useReadQuery(queryRef);
+       *
+       *   return <div>{data.foo.bar}</div>;
+       * }
+       *
+       * function Parent() {
+       *   const [queryRef] = useBackgroundQuery(query);
+       *
+       *   return (
+       *     <Suspense fallback={<SuspenseFallback />}>
+       *       <Child queryRef={queryRef} />
+       *     </Suspense>
+       *   );
+       * }
+       *
+       * function App() {
+       *   return (
+       *     <ApolloProvider client={client}>
+       *       <Parent />
+       *     </ApolloProvider>
+       *   );
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - An optional object containing options for the query. Instead of passing a `useBackgroundQuery.Options` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query or suspending.
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -247,13 +247,13 @@ export declare namespace useBackgroundQuery {
       ];
     }
 
-    /**
-     * @deprecated Avoid manually specifying generics on `useBackgroundQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)}
-     */
     export interface useBackgroundQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useBackgroundQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

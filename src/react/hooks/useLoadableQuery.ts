@@ -131,52 +131,52 @@ export declare namespace useLoadableQuery {
   >;
 
   export namespace DocumentationTypes {
-    /**
-     * A hook for imperatively loading a query, such as responding to a user
-     * interaction.
-     *
-     * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
-     *
-     * @example
-     *
-     * ```jsx
-     * import { gql, useLoadableQuery } from "@apollo/client";
-     *
-     * const GET_GREETING = gql`
-     *   query GetGreeting($language: String!) {
-     *     greeting(language: $language) {
-     *       message
-     *     }
-     *   }
-     * `;
-     *
-     * function App() {
-     *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
-     *
-     *   return (
-     *     <>
-     *       <button onClick={() => loadGreeting({ language: "english" })}>
-     *         Load greeting
-     *       </button>
-     *       <Suspense fallback={<div>Loading...</div>}>
-     *         {queryRef && <Hello queryRef={queryRef} />}
-     *       </Suspense>
-     *     </>
-     *   );
-     * }
-     *
-     * function Hello({ queryRef }) {
-     *   const { data } = useReadQuery(queryRef);
-     *
-     *   return <div>{data.greeting.message}</div>;
-     * }
-     * ```
-     *
-     * @param query - A GraphQL query document parsed into an AST by `gql`.
-     * @param options - Options to control how the query is executed.
-     * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
-     */
     export interface useLoadableQuery {
+      /**
+       * A hook for imperatively loading a query, such as responding to a user
+       * interaction.
+       *
+       * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
+       *
+       * @example
+       *
+       * ```jsx
+       * import { gql, useLoadableQuery } from "@apollo/client";
+       *
+       * const GET_GREETING = gql`
+       *   query GetGreeting($language: String!) {
+       *     greeting(language: $language) {
+       *       message
+       *     }
+       *   }
+       * `;
+       *
+       * function App() {
+       *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
+       *
+       *   return (
+       *     <>
+       *       <button onClick={() => loadGreeting({ language: "english" })}>
+       *         Load greeting
+       *       </button>
+       *       <Suspense fallback={<div>Loading...</div>}>
+       *         {queryRef && <Hello queryRef={queryRef} />}
+       *       </Suspense>
+       *     </>
+       *   );
+       * }
+       *
+       * function Hello({ queryRef }) {
+       *   const { data } = useReadQuery(queryRef);
+       *
+       *   return <div>{data.greeting.message}</div>;
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - Options to control how the query is executed.
+       * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -186,13 +186,13 @@ export declare namespace useLoadableQuery {
       ): useLoadableQuery.Result<TData, TVariables>;
     }
 
-    /**
-     * @deprecated Avoid manually specifying generics on `useLoadableQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)}
-     */
     export interface useLoadableQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useLoadableQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

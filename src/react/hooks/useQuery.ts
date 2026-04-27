@@ -232,43 +232,43 @@ export declare namespace useQuery {
   }
 
   export namespace DocumentationTypes {
-    /**
-     * A hook for executing queries in an Apollo application.
-     *
-     * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
-     *
-     * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState`, and `data` properties you can use to render your UI.
-     *
-     * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
-     *
-     * @example
-     *
-     * ```jsx
-     * import { gql } from "@apollo/client";
-     * import { useQuery } from "@apollo/client/react";
-     *
-     * const GET_GREETING = gql`
-     *   query GetGreeting($language: String!) {
-     *     greeting(language: $language) {
-     *       message
-     *     }
-     *   }
-     * `;
-     *
-     * function Hello() {
-     *   const { loading, error, data } = useQuery(GET_GREETING, {
-     *     variables: { language: "english" },
-     *   });
-     *   if (loading) return <p>Loading ...</p>;
-     *   return <h1>Hello {data.greeting.message}!</h1>;
-     * }
-     * ```
-     *
-     * @param query - A GraphQL query document parsed into an AST by `gql`.
-     * @param options - Options to control how the query is executed.
-     * @returns Query result object
-     */
     export interface useQuery {
+      /**
+       * A hook for executing queries in an Apollo application.
+       *
+       * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
+       *
+       * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `dataState`, and `data` properties you can use to render your UI.
+       *
+       * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
+       *
+       * @example
+       *
+       * ```jsx
+       * import { gql } from "@apollo/client";
+       * import { useQuery } from "@apollo/client/react";
+       *
+       * const GET_GREETING = gql`
+       *   query GetGreeting($language: String!) {
+       *     greeting(language: $language) {
+       *       message
+       *     }
+       *   }
+       * `;
+       *
+       * function Hello() {
+       *   const { loading, error, data } = useQuery(GET_GREETING, {
+       *     variables: { language: "english" },
+       *   });
+       *   if (loading) return <p>Loading ...</p>;
+       *   return <h1>Hello {data.greeting.message}!</h1>;
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - Options to control how the query is executed.
+       * @returns Query result object
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -278,13 +278,13 @@ export declare namespace useQuery {
       ): useQuery.Result<TData, TVariables>;
     }
 
-    /**
-     * @deprecated Avoid manually specifying generics on `useQuery`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
-     *
-     * {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)}
-     */
     export interface useQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)}
+       */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

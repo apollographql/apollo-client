@@ -84,6 +84,14 @@ export interface ReferenceToAvoidDroppingImportOnBuild {
 export declare namespace ApolloClient {
   export type { DeclareDefaultOptions, DefaultOptions };
 
+  export namespace DocumentationTypes {
+    export interface DefaultOptions {
+      watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
+      query?: Partial<ApolloClient.QueryOptions<any, any>>;
+      mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
+    }
+  }
+
   export interface Options extends InternalTypes.DefaultOptionsParentObject {
     /**
      * An `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).

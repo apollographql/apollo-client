@@ -167,6 +167,18 @@ export namespace ApolloClient {
     // (undocumented)
     export namespace DocumentationTypes {
         // (undocumented)
+        export interface DefaultOptions {
+            // (undocumented)
+            mutate?: Partial<ApolloClient.MutateOptions<any, any, any>>;
+            // (undocumented)
+            query?: Partial<ApolloClient.QueryOptions<any, any>>;
+            // (undocumented)
+            watchQuery?: Partial<ApolloClient.WatchQueryOptions<any, any>>;
+        }
+    }
+    // (undocumented)
+    export namespace DocumentationTypes {
+        // (undocumented)
         export interface ReadQueryOptions<TData, TVariables extends OperationVariables> extends Base.ReadQueryOptions<TData, TVariables> {
             variables?: TVariables;
         }
@@ -1271,7 +1283,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:583:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:591:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

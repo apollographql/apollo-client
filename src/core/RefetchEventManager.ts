@@ -164,7 +164,7 @@ export class RefetchEventManager {
   /**
    * Removes the configured source for an event and runs its cleanup function.
    */
-  removeSource(event: RefetchEvent) {
+  removeEventSource(event: RefetchEvent) {
     this.cleanupFns.get(event)?.();
     this.cleanupFns.delete(event);
     delete this.sources[event];

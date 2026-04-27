@@ -1715,7 +1715,7 @@ test("disconnect cleans up sources added via setEventSource after construction",
   expect(cleanup).toHaveBeenCalledTimes(1);
 });
 
-test("removeSource calls cleanup and stops the event from triggering refetches", () => {
+test("removeEventSource calls cleanup and stops the event from triggering refetches", () => {
   using _ = spyOnConsole("warn");
 
   const cleanup = jest.fn();
@@ -1734,7 +1734,7 @@ test("removeSource calls cleanup and stops the event from triggering refetches",
 
   expect(cleanup).not.toHaveBeenCalled();
 
-  refetchEventManager.removeSource("test");
+  refetchEventManager.removeEventSource("test");
 
   expect(cleanup).toHaveBeenCalledTimes(1);
 
@@ -1747,7 +1747,7 @@ test("removeSource calls cleanup and stops the event from triggering refetches",
   );
 });
 
-test("removeSource removes events declared with `true`", () => {
+test("removeEventSource removes events declared with `true`", () => {
   using _ = spyOnConsole("warn");
 
   const refetchEventManager = new RefetchEventManager({
@@ -1760,27 +1760,27 @@ test("removeSource removes events declared with `true`", () => {
     refetchEventManager,
   });
 
-  refetchEventManager.removeSource("test");
+  refetchEventManager.removeEventSource("test");
 
   refetchEventManager.emit("test");
 
   expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
-test("removeSource is a no-op when called for an event that was never declared", () => {
+test("removeEventSource is a no-op when called for an event that was never declared", () => {
   const refetchEventManager = new RefetchEventManager();
 
-  expect(() => refetchEventManager.removeSource("test")).not.toThrow();
+  expect(() => refetchEventManager.removeEventSource("test")).not.toThrow();
 });
 
-test("removeSource works before the manager is connected", () => {
+test("removeEventSource works before the manager is connected", () => {
   const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
 
   const refetchEventManager = new RefetchEventManager({
     sources: { test: source },
   });
 
-  refetchEventManager.removeSource("test");
+  refetchEventManager.removeEventSource("test");
 
   new ApolloClient({
     cache: new InMemoryCache(),

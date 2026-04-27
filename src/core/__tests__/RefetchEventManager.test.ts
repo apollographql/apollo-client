@@ -2383,3 +2383,45 @@ test("warns when refetchOn is provided but refetchEventManager is not configured
     "CountQuery"
   );
 });
+
+test("warns when refetchOn is provided but the source is not configured in RefetchEventManager", async () => {
+  using _ = spyOnConsole("warn");
+  let test: boolean = false;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([]),
+    refetchEventManager: new RefetchEventManager({
+      sources: { test: true },
+    }),
+  });
+
+  client.watchQuery({
+    query,
+    variables: { id: "1" },
+    refetchOn: {
+      test: true,
+      online: false,
+      windowFocus: () => test,
+      // @ts-ignore
+      truthy: true,
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(3);
+  expect(console.warn).toHaveBeenCalledWith(
+    "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
+    "online",
+    "CountQuery"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
+    "windowFocus",
+    "CountQuery"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
+    "truthy",
+    "CountQuery"
+  );
+});

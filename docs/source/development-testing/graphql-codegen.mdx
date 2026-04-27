@@ -23,6 +23,12 @@ Install the following packages. This installation assumes you already have [inst
 npm install -D @graphql-codegen/cli @graphql-codegen/typescript-operations
 ```
 
+<Note>
+
+The guide below is for `@graphql-codegen/typescript-operations` v6 and `@graphql-codegen/client-preset` v6. If you are still using v5, use the configuration in at the end of each section instead.
+
+</Note>
+
 ### Recommended starter configuration
 
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project. The following is a recommended minimal configuration for Apollo Client apps.
@@ -54,6 +60,47 @@ const config: CodegenConfig = {
 
 export default config;
 ```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript", "typescript-operations"],
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+</details>
 
 <Note>
 
@@ -119,6 +166,51 @@ const config: CodegenConfig = {
 export default config;
 ```
 
+<details>
+<summary>Still using `@graphql-codegen/client-preset` v5? Use this configuration instead</summary>
+
+```ts
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}", "!src/gql/**/*"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/gql/": {
+      preset: "client",
+      presetConfig: {
+        // Disable fragment masking
+        fragmentMasking: false,
+      },
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+</details>
+
 <Caution>
 
 This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because it's incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or anything generated from the fragment masking feature, you need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
@@ -176,6 +268,56 @@ const config: CodegenConfig = {
 
 export default config;
 ```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript"],
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      presetConfig: {
+        // This should be the file generated by the "typescript" plugin above,
+        // relative to the directory specified for this configuration
+        baseTypesPath: "./types/__generated__/graphql.ts",
+      },
+      plugins: ["typescript-operations"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+</details>
 
 #### Usage
 
@@ -264,6 +406,56 @@ const config: CodegenConfig = {
 
 export default config;
 ```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
+
+```ts {21} title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript"],
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      presetConfig: {
+        // This should be the file generated by the "typescript" plugin above,
+        // relative to the directory specified for this configuration
+        baseTypesPath: "./types/__generated__/graphql.ts",
+      },
+      plugins: ["typescript-operations", "typed-document-node"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        avoidOptionals: {
+          // Use `null` for nullable fields instead of optionals
+          field: true,
+          // Allow nullable input fields to remain unspecified
+          inputValue: false,
+        },
+        // Use `unknown` instead of `any` for unconfigured scalars
+        defaultScalarType: "unknown",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+</details>
 
 <Note>
 

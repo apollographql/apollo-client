@@ -2,11 +2,13 @@ import { InMemoryCache } from "@apollo/client";
 import { ApolloClient, ApolloLink } from "@apollo/client";
 import {
   clientQuery,
+  clientMutate,
   useQuery,
   useLazyQuery,
   useSuspenseQuery,
   useBackgroundQuery,
   useLoadableQuery,
+  useMutation,
 } from "../shared/scenarios.js";
 import { expectTypeOf } from "expect-type";
 
@@ -34,6 +36,42 @@ import { expectTypeOf } from "expect-type";
   >();
   clientQuery.errorPolicy.none.branded.toEqualTypeOf<
     Promise<clientQuery.QueryResultNone>
+  >();
+}
+
+// client.mutate
+{
+  expectTypeOf<ApolloClient.mutate.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+  }>();
+  clientMutate.defaults.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultNone>
+  >();
+  clientMutate.errorPolicy.all.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultAll>
+  >();
+  clientMutate.errorPolicy.ignore.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultIgnore>
+  >();
+  clientMutate.errorPolicy.none.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultNone>
+  >();
+}
+
+// useMutation
+{
+  expectTypeOf<useMutation.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+  }>();
+  useMutation.defaults.branded.toEqualTypeOf<useMutation.ResultTuple<"none">>();
+  useMutation.errorPolicy.all.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"all">
+  >();
+  useMutation.errorPolicy.ignore.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"ignore">
+  >();
+  useMutation.errorPolicy.none.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"none">
   >();
 }
 

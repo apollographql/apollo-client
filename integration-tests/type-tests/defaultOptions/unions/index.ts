@@ -1,11 +1,13 @@
 import { expectTypeOf } from "expect-type";
 import {
+  clientMutate,
   clientQuery,
   useQuery,
   useLazyQuery,
   useSuspenseQuery,
   useBackgroundQuery,
   useLoadableQuery,
+  useMutation,
 } from "../shared/scenarios.js";
 import { ApolloClient, InMemoryCache, ApolloLink } from "@apollo/client";
 
@@ -138,6 +140,29 @@ const bool = {} as any as boolean;
   });
 }
 
+// client.mutate
+{
+  expectTypeOf<ApolloClient.mutate.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
+  clientMutate.defaults.branded.toEqualTypeOf<
+    Promise<
+      | clientMutate.MutateResultNone
+      | clientMutate.MutateResultAll
+      | clientMutate.MutateResultIgnore
+    >
+  >();
+  clientMutate.errorPolicy.all.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultAll>
+  >();
+  clientMutate.errorPolicy.ignore.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultIgnore>
+  >();
+  clientMutate.errorPolicy.none.branded.toEqualTypeOf<
+    Promise<clientMutate.MutateResultNone>
+  >();
+}
+
 // client.query
 {
   expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
@@ -159,6 +184,25 @@ const bool = {} as any as boolean;
   clientQuery.errorPolicy.none.branded.toEqualTypeOf<
     Promise<clientQuery.QueryResultNone>
   >();
+}
+
+// useMutation
+{
+  expectTypeOf<useMutation.hook.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+  }>();
+  useMutation.defaults.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"none" | "ignore" | "all">
+  >;
+  useMutation.errorPolicy.all.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"all">
+  >;
+  useMutation.errorPolicy.ignore.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"ignore">
+  >;
+  useMutation.errorPolicy.none.branded.toEqualTypeOf<
+    useMutation.ResultTuple<"none">
+  >;
 }
 
 // useQuery

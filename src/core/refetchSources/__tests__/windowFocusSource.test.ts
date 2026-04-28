@@ -13,29 +13,32 @@ afterEach(() => {
 });
 
 test("windowFocusSource emits when document becomes visible", async () => {
-  setVisibilityState("visible");
   using stream = new ObservableStream(windowFocusSource());
 
+  setVisibilityState("visible");
   window.dispatchEvent(new Event("visibilitychange"));
 
   await expect(stream).toEmitNext();
-});
 
-test("windowFocusSource does not emit when document visibility is not visible", async () => {
   setVisibilityState("hidden");
-  using stream = new ObservableStream(windowFocusSource());
-
   window.dispatchEvent(new Event("visibilitychange"));
+
+  await expect(stream).not.toEmitAnything();
+
+  setVisibilityState("visible");
+  window.dispatchEvent(new Event("visibilitychange"));
+
+  await expect(stream).toEmitNext();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("windowFocusSource unsubscribe stops further visibilitychange events from emitting", async () => {
-  setVisibilityState("visible");
   const stream = new ObservableStream(windowFocusSource());
 
   stream.unsubscribe();
 
+  setVisibilityState("visible");
   window.dispatchEvent(new Event("visibilitychange"));
 
   await expect(stream).not.toEmitAnything();

@@ -427,7 +427,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-        refetchOn?: RefetchEventManager.RefetchOnOption;
+        refetchOn?: RefetchOn.Option;
         [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
@@ -842,7 +842,7 @@ export namespace ObservableQuery {
         skipPollAttempt?: () => boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
-        refetchOn?: RefetchEventManager.RefetchOnOption;
+        refetchOn?: RefetchOn.Option;
     };
     // (undocumented)
     export type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {
@@ -1166,17 +1166,6 @@ export namespace RefetchEventManager {
         source: TSource;
         payload: RefetchEvents[TSource];
     } : never;
-    // (undocumented)
-    export type RefetchOnCallback<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchEventManager.RefetchOnContext<TSource>) => boolean;
-    // (undocumented)
-    export type RefetchOnContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
-        source: TSource;
-        payload: RefetchEvents[TSource];
-    } : never;
-    // (undocumented)
-    export type RefetchOnOption = boolean | RefetchEventManager.RefetchOnCallback<keyof RefetchEvents> | {
-        [Key in keyof RefetchEvents]?: boolean | RefetchEventManager.RefetchOnCallback<Key>;
-    };
 }
 
 // @public (undocumented)
@@ -1198,6 +1187,21 @@ export interface RefetchEvents {
     online: Event;
     // (undocumented)
     windowFocus: Event;
+}
+
+// @public (undocumented)
+export namespace RefetchOn {
+    // (undocumented)
+    export type Callback<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchOn.Context<TSource>) => boolean;
+    // (undocumented)
+    export type Context<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
+        source: TSource;
+        payload: RefetchEvents[TSource];
+    } : never;
+    // (undocumented)
+    export type Option = boolean | RefetchOn.Callback<keyof RefetchEvents> | {
+        [Key in keyof RefetchEvents]?: boolean | RefetchOn.Callback<Key>;
+    };
 }
 
 // @public (undocumented)
@@ -1350,7 +1354,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:599:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:600:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

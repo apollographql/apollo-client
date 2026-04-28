@@ -1,3 +1,6 @@
+import type { Subscription } from "rxjs";
+
+import type { Observable } from "@apollo/client";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -24,7 +27,7 @@ export declare namespace RefetchEventManager {
     handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
   }
 
-  export type EventSource = (emit: () => void) => (() => void) | void;
+  export type EventSource = () => Observable<void>;
   export type EventHandler = (
     context: RefetchEventManager.RefetchHandlerContext
   ) => ApolloClient.RefetchQueriesResult<any> | void;
@@ -94,7 +97,7 @@ export class RefetchEventManager {
     Record<RefetchEvent, RefetchEventManager.EventHandler>
   >;
 
-  private cleanupFns: Map<RefetchEvent, () => void> = new Map();
+  private subscriptions: Map<RefetchEvent, Subscription> = new Map();
 
   private client: ApolloClient | undefined;
 
@@ -136,8 +139,8 @@ export class RefetchEventManager {
    */
   disconnect() {
     this.client = undefined;
-    this.cleanupFns.forEach((cleanup) => cleanup());
-    this.cleanupFns.clear();
+    this.subscriptions.forEach((subscription) => subscription.unsubscribe());
+    this.subscriptions.clear();
   }
 
   /**
@@ -146,18 +149,15 @@ export class RefetchEventManager {
    * registered.
    */
   setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
-    this.cleanupFns.get(event)?.();
-    this.cleanupFns.delete(event);
+    this.subscriptions.get(event)?.unsubscribe();
+    this.subscriptions.delete(event);
     this.sources[event] = source;
 
     if (this.client) {
-      const cleanup = source(() => {
-        this.emit(event);
-      });
+      const observable = source();
+      const subscription = observable.subscribe(() => this.emit(event));
 
-      if (cleanup) {
-        this.cleanupFns.set(event, cleanup);
-      }
+      this.subscriptions.set(event, subscription);
     }
   }
 
@@ -165,8 +165,8 @@ export class RefetchEventManager {
    * Removes the configured source for an event and runs its cleanup function.
    */
   removeEventSource(event: RefetchEvent) {
-    this.cleanupFns.get(event)?.();
-    this.cleanupFns.delete(event);
+    this.subscriptions.get(event)?.unsubscribe();
+    this.subscriptions.delete(event);
     delete this.sources[event];
   }
 

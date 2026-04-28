@@ -1,9 +1,12 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { gql } from "graphql-tag";
+import type { Observer } from "rxjs";
+import { of } from "rxjs";
 
 import {
   ApolloClient,
   NetworkStatus,
+  Observable,
   RefetchEventManager,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
@@ -26,7 +29,7 @@ const query: TypedDocumentNode<{ count: number }, { id: string }> = gql`
 `;
 
 test("ApolloClient automatically connects and calls source functions when provided to the constructor", async () => {
-  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+  const source: RefetchEventManager.EventSource = jest.fn(() => of());
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
@@ -46,7 +49,7 @@ test("ApolloClient automatically connects and calls source functions when provid
 });
 
 test("can manually connect RefetchEventManager to ApolloClient", async () => {
-  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+  const source: RefetchEventManager.EventSource = jest.fn(() => of());
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
@@ -68,10 +71,12 @@ test("can manually connect RefetchEventManager to ApolloClient", async () => {
   expect(source).toHaveBeenCalledTimes(1);
 });
 
-test("calls cleanup function when changing source functions", async () => {
+test("unsubscribes from the previous observable when changing source functions", async () => {
   const cleanup = jest.fn();
 
-  const source: RefetchEventManager.EventSource = () => cleanup;
+  const source: RefetchEventManager.EventSource = () => {
+    return new Observable(() => cleanup);
+  };
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
@@ -95,10 +100,11 @@ test("calls cleanup function when changing source functions", async () => {
   expect(cleanup).toHaveBeenCalledTimes(1);
 });
 
-test("does not call cleanup when refetchEventManager hasn't been connected to the client", async () => {
+test("does not unsubscribe from the observable when refetchEventManager hasn't been connected to the client", async () => {
   const cleanup = jest.fn();
 
-  const source: RefetchEventManager.EventSource = () => cleanup;
+  const source: RefetchEventManager.EventSource = () =>
+    new Observable(() => cleanup);
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
@@ -113,7 +119,7 @@ test("does not call cleanup when refetchEventManager hasn't been connected to th
 
 test("refetches active queries when a source emits", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -130,10 +136,10 @@ test("refetches active queries when a source emits", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -177,7 +183,7 @@ test("refetches active queries when a source emits", async () => {
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(streamA).toEmitTypedValue({
     data: { count: 1 },
@@ -215,7 +221,7 @@ test("refetches active queries when a source emits", async () => {
 
 test("does not refetch standby queries by default", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -232,10 +238,10 @@ test("does not refetch standby queries by default", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -251,7 +257,7 @@ test("does not refetch standby queries by default", async () => {
   await expect(streamA).not.toEmitAnything();
   await expect(streamB).not.toEmitAnything();
 
-  emitTestEvent();
+  observer.next();
 
   await expect(streamA).not.toEmitAnything();
   await expect(streamB).not.toEmitAnything();
@@ -259,7 +265,7 @@ test("does not refetch standby queries by default", async () => {
 
 test("skips refetches on queries that opt out with refetchOn: false", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -276,10 +282,10 @@ test("skips refetches on queries that opt out with refetchOn: false", async () =
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -305,14 +311,14 @@ test("skips refetches on queries that opt out with refetchOn: false", async () =
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("skips refetches on queries that opt out with refetchOn: { eventName: false }", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -329,10 +335,10 @@ test("skips refetches on queries that opt out with refetchOn: { eventName: false
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -362,15 +368,15 @@ test("skips refetches on queries that opt out with refetchOn: { eventName: false
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("skips refetches only on events where refetchOn is disabled", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -387,15 +393,15 @@ test("skips refetches only on events where refetchOn is disabled", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -425,11 +431,11 @@ test("skips refetches only on events where refetchOn is disabled", async () => {
     partial: false,
   });
 
-  emitTestEvent();
+  testObserver.next();
 
   await expect(stream).not.toEmitAnything();
 
-  emitWindowFocus();
+  windowFocusObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -452,7 +458,7 @@ test("skips refetches only on events where refetchOn is disabled", async () => {
 
 test("honors defaultOptions with refetchOn: false", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -474,10 +480,10 @@ test("honors defaultOptions with refetchOn: false", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -503,14 +509,14 @@ test("honors defaultOptions with refetchOn: false", async () => {
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("honors defaultOptions with refetchOn: { eventName: false }", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -532,10 +538,10 @@ test("honors defaultOptions with refetchOn: { eventName: false }", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -561,14 +567,14 @@ test("honors defaultOptions with refetchOn: { eventName: false }", async () => {
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("can enable automatic refetches with refetchOn: { eventName: true } when defaultOptions disables refetches", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -590,10 +596,10 @@ test("can enable automatic refetches with refetchOn: { eventName: true } when de
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -623,7 +629,7 @@ test("can enable automatic refetches with refetchOn: { eventName: true } when de
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -652,7 +658,7 @@ test("can set a custom handler with own refetchQueries logic", async () => {
       onQueryUpdated: (oq) => oq.variables.id === "a",
     });
   }) satisfies RefetchEventManager.EventHandler);
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -669,10 +675,10 @@ test("can set a custom handler with own refetchQueries logic", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
       handlers: {
@@ -720,7 +726,7 @@ test("can set a custom handler with own refetchQueries logic", async () => {
 
   expect(handler).not.toHaveBeenCalled();
 
-  emitTestEvent();
+  observer.next();
 
   expect(handler).toHaveBeenCalledTimes(1);
   expect(handler).toHaveBeenCalledWith({ client, event: "test" });
@@ -754,7 +760,7 @@ test("custom handler can conditionally skip refetch", async () => {
       });
     }
   }) satisfies RefetchEventManager.EventHandler);
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -771,10 +777,10 @@ test("custom handler can conditionally skip refetch", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
       handlers: {
@@ -803,7 +809,7 @@ test("custom handler can conditionally skip refetch", async () => {
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   expect(handler).toHaveBeenCalledTimes(1);
   expect(handler).toHaveBeenCalledWith({ client, event: "test" });
@@ -812,14 +818,14 @@ test("custom handler can conditionally skip refetch", async () => {
 });
 
 test("setEventHandler replaces the handler after construction", async () => {
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: (emit) => {
-        emitTestEvent = emit;
-
-        return () => {};
+      test: () => {
+        return new Observable((o) => {
+          observer = o;
+        });
       },
     },
   });
@@ -858,7 +864,7 @@ test("setEventHandler replaces the handler after construction", async () => {
   const handler = jest.fn();
 
   refetchEventManager.setEventHandler("test", handler);
-  emitTestEvent();
+  observer.next();
 
   expect(handler).toHaveBeenCalledTimes(1);
   expect(handler).toHaveBeenCalledWith({ client, event: "test" });
@@ -884,9 +890,7 @@ test("can manually trigger refetch with emit", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: () => {
-          return () => {};
-        },
+        test: () => of(),
       },
     }),
   });
@@ -1056,14 +1060,14 @@ test("warns and no-ops when emit is called for event that has handler but not a 
   expect(handler).not.toHaveBeenCalled();
 });
 
-test("calls cleanup for every source on disconnect", () => {
+test("unsubscribes every source observable on disconnect", () => {
   const cleanupTest = jest.fn();
   const cleanupWindowFocus = jest.fn();
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: () => cleanupTest,
-      windowFocus: () => cleanupWindowFocus,
+      test: () => new Observable(() => cleanupTest),
+      windowFocus: () => new Observable(() => cleanupWindowFocus),
     },
   });
 
@@ -1082,7 +1086,7 @@ test("calls cleanup for every source on disconnect", () => {
   expect(cleanupWindowFocus).toHaveBeenCalledTimes(1);
 });
 
-test("client.stop() disconnects the manager and calls source cleanup", () => {
+test("client.stop() disconnects the manager and unsubscribes from all sources", () => {
   const cleanup = jest.fn();
 
   const client = new ApolloClient({
@@ -1090,7 +1094,7 @@ test("client.stop() disconnects the manager and calls source cleanup", () => {
     link: new MockLink([]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: () => cleanup,
+        test: () => new Observable(() => cleanup),
       },
     }),
   });
@@ -1105,15 +1109,9 @@ test("client.stop() disconnects the manager and calls source cleanup", () => {
 test("does not trigger refetches after disconnect", async () => {
   using _ = spyOnConsole("warn");
 
-  let emitTestEvent!: () => void;
-
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: (emit) => {
-        emitTestEvent = emit;
-
-        return () => {};
-      },
+      test: () => of(),
     },
   });
 
@@ -1150,7 +1148,7 @@ test("does not trigger refetches after disconnect", async () => {
 
   refetchEventManager.disconnect();
 
-  emitTestEvent();
+  refetchEventManager.emit("test");
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
@@ -1163,15 +1161,15 @@ test("does not trigger refetches after disconnect", async () => {
 
 test("supports mixing `true` and function sources in one manager", async () => {
   const counts: Record<string, number> = {};
-  let emitWindowFocus!: () => void;
+  let observer!: Observer<void>;
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
       test: true,
-      windowFocus: (emit) => {
-        emitWindowFocus = emit;
-
-        return () => {};
+      windowFocus: () => {
+        return new Observable((o) => {
+          observer = o;
+        });
       },
     },
   });
@@ -1230,7 +1228,7 @@ test("supports mixing `true` and function sources in one manager", async () => {
     partial: false,
   });
 
-  emitWindowFocus();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 2 },
@@ -1253,8 +1251,8 @@ test("supports mixing `true` and function sources in one manager", async () => {
 
 test("per-query refetchOn merges with defaultOptions.watchQuery.refetchOn", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -1276,15 +1274,15 @@ test("per-query refetchOn merges with defaultOptions.watchQuery.refetchOn", asyn
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -1314,7 +1312,7 @@ test("per-query refetchOn merges with defaultOptions.watchQuery.refetchOn", asyn
     partial: false,
   });
 
-  emitTestEvent();
+  testObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1332,14 +1330,14 @@ test("per-query refetchOn merges with defaultOptions.watchQuery.refetchOn", asyn
     partial: false,
   });
 
-  emitWindowFocus();
+  windowFocusObserver.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("mutating client.defaultOptions.watchQuery.refetchOn does not affect existing queries", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -1361,10 +1359,10 @@ test("mutating client.defaultOptions.watchQuery.refetchOn does not affect existi
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -1392,7 +1390,7 @@ test("mutating client.defaultOptions.watchQuery.refetchOn does not affect existi
 
   client.defaultOptions.watchQuery!.refetchOn = { test: false };
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1414,7 +1412,7 @@ test("mutating client.defaultOptions.watchQuery.refetchOn does not affect existi
 });
 
 test("per-query refetchOn: false replaces a partial defaultOptions refetchOn object", async () => {
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -1431,10 +1429,10 @@ test("per-query refetchOn: false replaces a partial defaultOptions refetchOn obj
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -1464,23 +1462,24 @@ test("per-query refetchOn: false replaces a partial defaultOptions refetchOn obj
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("calls source functions when manager reconnects to a client after disconnect", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent: (() => void) | undefined;
+  let observer: Observer<void> | undefined;
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: (emit) => {
-        emitTestEvent = emit;
-
-        return () => {
-          emitTestEvent = undefined;
-        };
+      test: () => {
+        return new Observable((o) => {
+          observer = o;
+          return () => {
+            observer = undefined;
+          };
+        });
       },
     },
   });
@@ -1502,10 +1501,10 @@ test("calls source functions when manager reconnects to a client after disconnec
   });
 
   refetchEventManager.disconnect();
-  expect(emitTestEvent).toBeUndefined();
+  expect(observer).toBeUndefined();
 
   refetchEventManager.connect(client);
-  expect(emitTestEvent).toBeDefined();
+  expect(observer).toBeDefined();
 
   const stream = new ObservableStream(
     client.watchQuery({ query, variables: { id: "a" } })
@@ -1527,7 +1526,7 @@ test("calls source functions when manager reconnects to a client after disconnec
     partial: false,
   });
 
-  emitTestEvent!();
+  observer!.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1552,7 +1551,9 @@ test("warns and replaces the previously connected client when connect is called 
   using _ = spyOnConsole("warn");
 
   const cleanup = jest.fn();
-  const source: RefetchEventManager.EventSource = jest.fn(() => cleanup);
+  const source: RefetchEventManager.EventSource = jest.fn(
+    () => new Observable(() => cleanup)
+  );
 
   const refetchEventManager = new RefetchEventManager({
     sources: { test: source },
@@ -1587,7 +1588,9 @@ test("does not warn or rewire sources when connect is called with the same alrea
   using _ = spyOnConsole("warn");
 
   const cleanup = jest.fn();
-  const source: RefetchEventManager.EventSource = jest.fn(() => cleanup);
+  const source: RefetchEventManager.EventSource = jest.fn(
+    () => new Observable(() => cleanup)
+  );
 
   const refetchEventManager = new RefetchEventManager({
     sources: { test: source },
@@ -1610,7 +1613,7 @@ test("does not warn or rewire sources when connect is called with the same alrea
 
 test("setEventSource adds an event that was not declared in the constructor", async () => {
   const counts: Record<string, number> = {};
-  let emitWindowFocus!: () => void;
+  let observer!: Observer<void>;
 
   const refetchEventManager = new RefetchEventManager();
 
@@ -1630,10 +1633,10 @@ test("setEventSource adds an event that was not declared in the constructor", as
     refetchEventManager,
   });
 
-  refetchEventManager.setEventSource("windowFocus", (emit) => {
-    emitWindowFocus = emit;
-
-    return () => {};
+  refetchEventManager.setEventSource("windowFocus", () => {
+    return new Observable((o) => {
+      observer = o;
+    });
   });
 
   const stream = new ObservableStream(
@@ -1656,7 +1659,7 @@ test("setEventSource adds an event that was not declared in the constructor", as
     partial: false,
   });
 
-  emitWindowFocus();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1678,7 +1681,7 @@ test("setEventSource adds an event that was not declared in the constructor", as
 });
 
 test("setEventSource before connect does not invoke the source function until connect is called", () => {
-  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+  const source: RefetchEventManager.EventSource = jest.fn(() => of());
 
   const refetchEventManager = new RefetchEventManager();
 
@@ -1706,7 +1709,10 @@ test("disconnect cleans up sources added via setEventSource after construction",
     refetchEventManager,
   });
 
-  refetchEventManager.setEventSource("test", () => cleanup);
+  refetchEventManager.setEventSource(
+    "test",
+    () => new Observable(() => cleanup)
+  );
 
   expect(cleanup).not.toHaveBeenCalled();
 
@@ -1722,7 +1728,7 @@ test("removeEventSource calls cleanup and stops the event from triggering refetc
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: () => cleanup,
+      test: () => new Observable(() => cleanup),
     },
   });
 
@@ -1774,7 +1780,7 @@ test("removeEventSource is a no-op when called for an event that was never decla
 });
 
 test("removeEventSource works before the manager is connected", () => {
-  const source: RefetchEventManager.EventSource = jest.fn(() => () => {});
+  const source: RefetchEventManager.EventSource = jest.fn(() => of());
 
   const refetchEventManager = new RefetchEventManager({
     sources: { test: source },
@@ -1791,15 +1797,16 @@ test("removeEventSource works before the manager is connected", () => {
   expect(source).not.toHaveBeenCalled();
 });
 
-test("source functions are not required to return a cleanup function", async () => {
+test("Observable subscribers are not required to return a cleanup function", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const refetchEventManager = new RefetchEventManager({
     sources: {
-      test: (emit) => {
-        emitTestEvent = emit;
-      },
+      test: () =>
+        new Observable((o) => {
+          observer = o;
+        }),
     },
   });
 
@@ -1839,7 +1846,7 @@ test("source functions are not required to return a cleanup function", async () 
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1860,11 +1867,11 @@ test("source functions are not required to return a cleanup function", async () 
   expect(() => refetchEventManager.disconnect()).not.toThrow();
 });
 
-test("setEventSource calls the previous cleanup once when replacing with a source that returns no cleanup", () => {
+test("setEventSource calls the previous cleanup once when replacing with a source whose subscriber returns no cleanup", () => {
   const previousCleanup = jest.fn();
 
   const refetchEventManager = new RefetchEventManager({
-    sources: { test: () => previousCleanup },
+    sources: { test: () => new Observable(() => previousCleanup) },
   });
 
   new ApolloClient({
@@ -1875,7 +1882,7 @@ test("setEventSource calls the previous cleanup once when replacing with a sourc
 
   expect(previousCleanup).not.toHaveBeenCalled();
 
-  refetchEventManager.setEventSource("test", () => {});
+  refetchEventManager.setEventSource("test", () => new Observable(() => {}));
 
   expect(previousCleanup).toHaveBeenCalledTimes(1);
 
@@ -1886,8 +1893,8 @@ test("setEventSource calls the previous cleanup once when replacing with a sourc
 
 test("per-query refetchOn: true enables every event regardless of defaultOptions", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -1909,15 +1916,15 @@ test("per-query refetchOn: true enables every event regardless of defaultOptions
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -1947,7 +1954,7 @@ test("per-query refetchOn: true enables every event regardless of defaultOptions
     partial: false,
   });
 
-  emitTestEvent();
+  testObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -1965,7 +1972,7 @@ test("per-query refetchOn: true enables every event regardless of defaultOptions
     partial: false,
   });
 
-  emitWindowFocus();
+  windowFocusObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 2 },
@@ -1988,7 +1995,7 @@ test("per-query refetchOn: true enables every event regardless of defaultOptions
 
 test("defaultOptions refetchOn: true enables every event for all queries", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -2010,10 +2017,10 @@ test("defaultOptions refetchOn: true enables every event for all queries", async
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -2039,7 +2046,7 @@ test("defaultOptions refetchOn: true enables every event for all queries", async
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -2062,8 +2069,8 @@ test("defaultOptions refetchOn: true enables every event for all queries", async
 
 test("calls top-level refetchOn callback to determine if a query refetches per event", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -2080,15 +2087,15 @@ test("calls top-level refetchOn callback to determine if a query refetches per e
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -2118,7 +2125,7 @@ test("calls top-level refetchOn callback to determine if a query refetches per e
     partial: false,
   });
 
-  emitTestEvent();
+  testObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -2136,14 +2143,14 @@ test("calls top-level refetchOn callback to determine if a query refetches per e
     partial: false,
   });
 
-  emitWindowFocus();
+  windowFocusObserver.next();
 
   await expect(stream).not.toEmitAnything();
 });
 
 test("calls per-event refetchOn callback to determine if a query refetches", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
+  let observer!: Observer<void>;
   let allowed = false;
 
   const client = new ApolloClient({
@@ -2161,10 +2168,10 @@ test("calls per-event refetchOn callback to determine if a query refetches", asy
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            observer = o;
+          });
         },
       },
     }),
@@ -2194,13 +2201,13 @@ test("calls per-event refetchOn callback to determine if a query refetches", asy
     partial: false,
   });
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).not.toEmitAnything();
 
   allowed = true;
 
-  emitTestEvent();
+  observer.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
@@ -2222,8 +2229,8 @@ test("calls per-event refetchOn callback to determine if a query refetches", asy
 });
 
 test("passes the event to the refetchOn callback context", async () => {
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
   const callback = jest.fn(() => false);
 
   const client = new ApolloClient({
@@ -2236,15 +2243,15 @@ test("passes the event to the refetchOn callback context", async () => {
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -2274,8 +2281,8 @@ test("passes the event to the refetchOn callback context", async () => {
     partial: false,
   });
 
-  emitTestEvent();
-  emitWindowFocus();
+  testObserver.next();
+  windowFocusObserver.next();
 
   expect(callback).toHaveBeenNthCalledWith(1, { event: "test" });
   expect(callback).toHaveBeenNthCalledWith(2, { event: "windowFocus" });
@@ -2283,8 +2290,8 @@ test("passes the event to the refetchOn callback context", async () => {
 
 test("supports mixing booleans and callbacks within the per-event refetchOn object", async () => {
   const counts: Record<string, number> = {};
-  let emitTestEvent!: () => void;
-  let emitWindowFocus!: () => void;
+  let testObserver!: Observer<void>;
+  let windowFocusObserver!: Observer<void>;
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -2301,15 +2308,15 @@ test("supports mixing booleans and callbacks within the per-event refetchOn obje
     ]),
     refetchEventManager: new RefetchEventManager({
       sources: {
-        test: (emit) => {
-          emitTestEvent = emit;
-
-          return () => {};
+        test: () => {
+          return new Observable((o) => {
+            testObserver = o;
+          });
         },
-        windowFocus: (emit) => {
-          emitWindowFocus = emit;
-
-          return () => {};
+        windowFocus: () => {
+          return new Observable((o) => {
+            windowFocusObserver = o;
+          });
         },
       },
     }),
@@ -2342,11 +2349,11 @@ test("supports mixing booleans and callbacks within the per-event refetchOn obje
     partial: false,
   });
 
-  emitWindowFocus();
+  windowFocusObserver.next();
 
   await expect(stream).not.toEmitAnything();
 
-  emitTestEvent();
+  testObserver.next();
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },

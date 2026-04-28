@@ -219,6 +219,136 @@ test("refetches active queries when a source emits", async () => {
   await expect(streamB).not.toEmitAnything();
 });
 
+test("can manually trigger refetch with emit", async () => {
+  const counts: Record<string, number> = {};
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: () => of(),
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.emit("test");
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("can manually trigger refetch with emit when source is set to true", async () => {
+  const counts: Record<string, number> = {};
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: true,
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.emit("test");
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
 test("does not refetch standby queries by default", async () => {
   const counts: Record<string, number> = {};
   let observer!: Observer<void>;
@@ -881,132 +1011,6 @@ test("setEventHandler replaces the handler after construction", async () => {
     payload: undefined,
   });
 
-  await expect(stream).not.toEmitAnything();
-});
-
-test("can manually trigger refetch with emit", async () => {
-  const counts: Record<string, number> = {};
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new MockLink([
-      {
-        request: { query, variables: () => true },
-        result: ({ id }) => {
-          counts[id] ??= 0;
-
-          return { data: { count: ++counts[id] } };
-        },
-        maxUsageCount: Number.POSITIVE_INFINITY,
-      },
-    ]),
-    refetchEventManager: new RefetchEventManager({
-      sources: {
-        test: () => of(),
-      },
-    }),
-  });
-
-  const stream = new ObservableStream(
-    client.watchQuery({ query, variables: { id: "a" } })
-  );
-
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    dataState: "empty",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 1 },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
-
-  client.refetchEventManager?.emit("test");
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 1 },
-    dataState: "complete",
-    loading: true,
-    networkStatus: NetworkStatus.refetch,
-    partial: false,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 2 },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
-  await expect(stream).not.toEmitAnything();
-});
-
-test("can manually trigger refetch with emit when source is set to true", async () => {
-  const counts: Record<string, number> = {};
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new MockLink([
-      {
-        request: { query, variables: () => true },
-        result: ({ id }) => {
-          counts[id] ??= 0;
-
-          return { data: { count: ++counts[id] } };
-        },
-        maxUsageCount: Number.POSITIVE_INFINITY,
-      },
-    ]),
-    refetchEventManager: new RefetchEventManager({
-      sources: {
-        test: true,
-      },
-    }),
-  });
-
-  const stream = new ObservableStream(
-    client.watchQuery({ query, variables: { id: "a" } })
-  );
-
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    dataState: "empty",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 1 },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
-
-  client.refetchEventManager?.emit("test");
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 1 },
-    dataState: "complete",
-    loading: true,
-    networkStatus: NetworkStatus.refetch,
-    partial: false,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { count: 2 },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
   await expect(stream).not.toEmitAnything();
 });
 

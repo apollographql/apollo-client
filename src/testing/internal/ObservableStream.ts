@@ -2,7 +2,6 @@ import { ReadableStream } from "node:stream/web";
 
 import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
-import { expect } from "@jest/globals";
 import * as matcherUtils from "jest-matcher-utils";
 import type { Observable, Subscribable, Unsubscribable } from "rxjs";
 

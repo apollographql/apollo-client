@@ -117,7 +117,7 @@ test("does not unsubscribe from the observable when refetchEventManager hasn't b
   expect(cleanup).not.toHaveBeenCalled();
 });
 
-test("refetches active queries when a source emits", async () => {
+test("refetches active queries when a source emits a value from the observable", async () => {
   const counts: Record<string, number> = {};
   let observer!: Observer<void>;
 

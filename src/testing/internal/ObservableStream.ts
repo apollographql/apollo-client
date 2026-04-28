@@ -126,7 +126,12 @@ export class ObservableStream<T> {
 
   async takeNext(options?: TakeOptions): Promise<T> {
     const event = await this.take(options);
-    validateEquals(event, { type: "next", value: expect.anything() });
+    validateEquals(event, {
+      type: "next",
+      // expect.anything() does not match on undefined and we consider that a
+      // valid value, so we need toBeOneOf to include undefined.
+      value: expect.toBeOneOf([expect.anything(), undefined]),
+    });
     return (event as ObservableEvent<T> & { type: "next" }).value;
   }
 

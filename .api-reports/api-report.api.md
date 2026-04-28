@@ -2617,7 +2617,7 @@ export namespace RefetchEventManager {
     // (undocumented)
     export type EventHandler = (context: RefetchEventManager.RefetchHandlerContext) => ApolloClient.RefetchQueriesResult<any> | void;
     // (undocumented)
-    export type EventSource = (emit: () => void) => (() => void) | void;
+    export type EventSource = () => Observable<void>;
     // (undocumented)
     export interface Options {
         handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;

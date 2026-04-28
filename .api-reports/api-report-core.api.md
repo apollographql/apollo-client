@@ -70,7 +70,8 @@ import type { NextNotification } from 'rxjs';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
 import { Observable } from '@apollo/client/utilities';
-import { Observable as Observable_2 } from 'rxjs';
+import type { Observable as Observable_2 } from '@apollo/client';
+import { Observable as Observable_3 } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
@@ -294,7 +295,7 @@ export namespace ApolloClient {
         };
     };
     // (undocumented)
-    export interface ObservableFragment<TData = unknown> extends Observable_2<ApolloClient.WatchFragmentResult<TData>> {
+    export interface ObservableFragment<TData = unknown> extends Observable_3<ApolloClient.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloClient.WatchFragmentResult<TData>;
     }
     // (undocumented)
@@ -441,7 +442,7 @@ export class ApolloClient {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
     // (undocumented)
-    __requestRaw(request: ApolloLink.Request): Observable_2<ApolloLink.Result<unknown>>;
+    __requestRaw(request: ApolloLink.Request): Observable_3<ApolloLink.Result<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -796,7 +797,7 @@ interface ObservableAndInfo<TData> {
     // Warning: (ae-forgotten-export) The symbol "QueryNotification" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    observable: Observable_2<QueryNotification.Value<TData>>;
+    observable: Observable_3<QueryNotification.Value<TData>>;
 }
 
 // @public (undocumented)
@@ -810,7 +811,7 @@ export namespace ObservableQuery {
     export namespace DocumentationTypes {
         // (undocumented)
         export interface ObservableMethods<TData, OperatorResult> {
-            pipe(...operators: OperatorFunctionChain<ObservableQuery.Result<TData>, OperatorResult>): Observable_2<OperatorResult>;
+            pipe(...operators: OperatorFunctionChain<ObservableQuery.Result<TData>, OperatorResult>): Observable_3<OperatorResult>;
             subscribe(observerOrNext: Partial<Observer<ObservableQuery.Result<MaybeMasked<TData>>>> | ((value: ObservableQuery.Result<MaybeMasked<TData>>) => void)): Subscription;
         }
         // (undocumented)
@@ -897,7 +898,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     notify(scheduled?: boolean): void;
     // (undocumented)
     readonly options: ObservableQuery.Options<TData, TVariables>;
-    pipe: Observable_2<ObservableQuery.Result<MaybeMasked<TData>>>["pipe"];
+    pipe: Observable_3<ObservableQuery.Result<MaybeMasked<TData>>>["pipe"];
     // (undocumented)
     get query(): TypedDocumentNode<TData, TVariables>;
     // (undocumented)
@@ -1012,7 +1013,7 @@ class QueryManager {
     fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode_2;
-        fetchQueryOperator?: <T>(source: Observable_2<T>) => Observable_2<T>;
+        fetchQueryOperator?: <T>(source: Observable_3<T>) => Observable_3<T>;
         onCacheHit?: () => void;
         observableQuery?: ObservableQuery<TData, TVariables> | undefined;
         exposeExtensions?: boolean;
@@ -1033,7 +1034,7 @@ class QueryManager {
     readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable_2<ApolloLink.Result<any>>;
+        observable?: Observable_3<ApolloLink.Result<any>>;
         restart?: () => void;
     }>;
     // (undocumented)
@@ -1152,7 +1153,7 @@ export namespace RefetchEventManager {
     // (undocumented)
     export type EventHandler = (context: RefetchEventManager.RefetchHandlerContext) => ApolloClient.RefetchQueriesResult<any> | void;
     // (undocumented)
-    export type EventSource = (emit: () => void) => (() => void) | void;
+    export type EventSource = () => Observable_2<void>;
     // (undocumented)
     export interface Options {
         handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
@@ -1257,7 +1258,7 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
 };
 
 // @public
-export interface SubscriptionObservable<T> extends Observable_2<T> {
+export interface SubscriptionObservable<T> extends Observable_3<T> {
     restart: () => void;
 }
 

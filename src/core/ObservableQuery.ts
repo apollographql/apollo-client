@@ -36,7 +36,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import type { ApolloClient } from "./ApolloClient.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
-import type { RefetchEventManager } from "./RefetchEventManager.js";
 import type {
   DataState,
   DefaultContext,
@@ -44,6 +43,7 @@ import type {
   GetDataState,
   OperationVariables,
   QueryNotification,
+  RefetchOn,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -165,7 +165,7 @@ export declare namespace ObservableQuery {
     variables: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-    refetchOn?: RefetchEventManager.RefetchOnOption;
+    refetchOn?: RefetchOn.Option;
   };
 
   export type FetchMoreOptions<

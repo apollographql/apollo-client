@@ -59,36 +59,6 @@ export declare namespace RefetchEventManager {
         payload: RefetchEvents[TSource];
       }
     : never;
-
-  export type RefetchOnContext<
-    TSource extends keyof RefetchEvents = keyof RefetchEvents,
-  > =
-    TSource extends keyof RefetchEvents ?
-      {
-        /**
-         * The source name that triggered the refetch.
-         */
-        source: TSource;
-
-        /**
-         * Any data emitted by the source along with the event
-         */
-        payload: RefetchEvents[TSource];
-      }
-    : never;
-
-  export type RefetchOnCallback<
-    TSource extends keyof RefetchEvents = keyof RefetchEvents,
-  > = (context: RefetchEventManager.RefetchOnContext<TSource>) => boolean;
-
-  export type RefetchOnOption =
-    | boolean
-    | RefetchEventManager.RefetchOnCallback<keyof RefetchEvents>
-    | {
-        [Key in keyof RefetchEvents]?:
-          | boolean
-          | RefetchEventManager.RefetchOnCallback<Key>;
-      };
 }
 
 const defaultHandler: RefetchEventManager.EventHandler<keyof RefetchEvents> =

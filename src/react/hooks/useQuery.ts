@@ -25,7 +25,7 @@ import type {
   InternalTypes,
   ObservableQuery,
   OperationVariables,
-  RefetchEventManager,
+  RefetchOn,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   TypedDocumentNode,
@@ -108,7 +108,7 @@ export declare namespace useQuery {
       skip?: boolean;
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
-      refetchOn?: RefetchEventManager.RefetchOnOption;
+      refetchOn?: RefetchOn.Option;
     }
   }
   export type Options<

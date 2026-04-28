@@ -49,6 +49,7 @@ export type {
   OnQueryUpdated,
   OperationVariables,
   RefetchEvents,
+  RefetchOn,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
   RefetchQueryDescriptor,

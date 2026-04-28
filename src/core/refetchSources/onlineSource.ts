@@ -2,11 +2,10 @@ import { EMPTY, fromEvent } from "rxjs";
 
 import type { RefetchEventManager } from "../RefetchEventManager.js";
 
-export const onlineSource: RefetchEventManager.EventSource<Event> =
-  function onlineSource() {
-    if (typeof window === "undefined" || !window.addEventListener) {
-      return EMPTY;
-    }
+export const onlineSource: RefetchEventManager.EventSource<Event> = () => {
+  if (typeof window === "undefined" || !window.addEventListener) {
+    return EMPTY;
+  }
 
-    return fromEvent(window, "online");
-  };
+  return fromEvent(window, "online");
+};

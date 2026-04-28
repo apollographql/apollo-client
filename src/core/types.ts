@@ -153,11 +153,9 @@ export interface DefaultContext extends Record<string, any> {
 }
 
 export interface RefetchEvents {
-  windowFocus: true;
-  online: true;
+  windowFocus: Event;
+  online: Event;
 }
-
-export type RefetchEvent = keyof RefetchEvents;
 
 /**
  * Represents an `Error` type, but used throughout Apollo Client to represent

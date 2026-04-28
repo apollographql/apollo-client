@@ -5,7 +5,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import type { RefetchEvent } from "./types.js";
+import type { RefetchEvents } from "./types.js";
 
 export declare namespace RefetchEventManager {
   export interface Options {
@@ -15,89 +15,116 @@ export declare namespace RefetchEventManager {
      * trigger automatic refetches. Set to `true` if the event is only
      * triggered by calling `emit` and has no automatic detection logic.
      */
-    sources?: Partial<
-      Record<RefetchEvent, true | RefetchEventManager.EventSource>
-    >;
+    sources?: {
+      [Key in keyof RefetchEvents]?:
+        | true
+        | RefetchEventManager.EventSource<RefetchEvents[Key]>;
+    };
 
     /**
      * A mapping of event names to handler functions that run
      * `client.refetchQueries`. Provide a handler for an event to customize
      * which queries are refetched when an event is triggered.
      */
-    handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
+    handlers?: {
+      [Key in keyof RefetchEvents]?: RefetchEventManager.EventHandler<Key>;
+    };
   }
 
-  export type EventSource = () => Observable<void>;
-  export type EventHandler = (
-    context: RefetchEventManager.RefetchHandlerContext
+  export type EventSource<T> = () => Observable<T>;
+  export type EventHandler<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > = (
+    context: RefetchEventManager.RefetchHandlerContext<TSource>
   ) => ApolloClient.RefetchQueriesResult<any> | void;
 
-  export interface RefetchHandlerContext {
-    /**
-     * The `ApolloClient` instance connected to the refetch event manager.
-     */
-    client: ApolloClient;
+  export type RefetchHandlerContext<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > =
+    TSource extends keyof RefetchEvents ?
+      {
+        /**
+         * The `ApolloClient` instance connected to the refetch event manager.
+         */
+        client: ApolloClient;
 
-    /**
-     * The event that triggered the refetch.
-     */
-    event: RefetchEvent;
-  }
+        /**
+         * The event that triggered the refetch.
+         */
+        source: TSource;
 
-  export interface RefetchOnContext {
-    /**
-     * The event that triggered the refetch.
-     */
-    event: RefetchEvent;
-  }
+        /**
+         * Data associated with the source
+         */
+        event: RefetchEvents[TSource];
+      }
+    : never;
 
-  export type RefetchOnCallback = (
-    context: RefetchEventManager.RefetchOnContext
-  ) => boolean;
+  export type RefetchOnContext<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > =
+    TSource extends keyof RefetchEvents ?
+      {
+        /**
+         * The event that triggered the refetch.
+         */
+        source: TSource;
+
+        /**
+         * The event that triggered the refetch.
+         */
+        event: RefetchEvents[TSource];
+      }
+    : never;
+
+  export type RefetchOnCallback<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > = (context: RefetchEventManager.RefetchOnContext<TSource>) => boolean;
 
   export type RefetchOnOption =
     | boolean
-    | RefetchEventManager.RefetchOnCallback
-    | Partial<
-        Record<RefetchEvent, boolean | RefetchEventManager.RefetchOnCallback>
-      >;
+    | RefetchEventManager.RefetchOnCallback<keyof RefetchEvents>
+    | {
+        [Key in keyof RefetchEvents]?:
+          | boolean
+          | RefetchEventManager.RefetchOnCallback<Key>;
+      };
 }
 
-function defaultHandler({
-  client,
-  event,
-}: RefetchEventManager.RefetchHandlerContext) {
-  return client.refetchQueries({
-    include: "active",
-    onQueryUpdated: (oq) => {
-      const refetchOn = oq.options.refetchOn;
+const defaultHandler: RefetchEventManager.EventHandler<keyof RefetchEvents> =
+  function defaultHandler({ client, ...ctx }) {
+    return client.refetchQueries({
+      include: "active",
+      onQueryUpdated: (oq) => {
+        const refetchOn = oq.options.refetchOn;
+        const { source } = ctx;
 
-      if (typeof refetchOn === "boolean") {
-        return refetchOn;
-      }
+        if (typeof refetchOn === "boolean") {
+          return refetchOn;
+        }
 
-      if (typeof refetchOn === "function") {
-        return refetchOn({ event });
-      }
+        if (typeof refetchOn === "function") {
+          return refetchOn(ctx);
+        }
 
-      if (typeof refetchOn?.[event] === "function") {
-        return refetchOn[event]({ event });
-      }
+        if (typeof refetchOn?.[source] === "function") {
+          return refetchOn[source](ctx as any);
+        }
 
-      return refetchOn?.[event] !== false;
-    },
-  });
-}
+        return refetchOn?.[ctx.source] !== false;
+      },
+    });
+  };
 
 export class RefetchEventManager {
   private sources: Partial<
-    Record<RefetchEvent, true | RefetchEventManager.EventSource>
+    Record<keyof RefetchEvents, true | RefetchEventManager.EventSource<any>>
   >;
   private handlers: Partial<
-    Record<RefetchEvent, RefetchEventManager.EventHandler>
+    Record<keyof RefetchEvents, RefetchEventManager.EventHandler<any>>
   >;
 
-  private subscriptions: Map<RefetchEvent, Subscription> = new Map();
+  private subscriptions: Map<keyof RefetchEvents, Subscription> = new Map();
 
   private client: ApolloClient | undefined;
 
@@ -128,7 +155,7 @@ export class RefetchEventManager {
 
     Object.entries(this.sources).forEach(([event, source]) => {
       if (typeof source === "function") {
-        this.setEventSource(event as RefetchEvent, source);
+        this.setEventSource(event as keyof RefetchEvents, source);
       }
     });
   }
@@ -148,23 +175,28 @@ export class RefetchEventManager {
    * for the event, its cleanup function is called before the new source is
    * registered.
    */
-  setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource) {
-    this.subscriptions.get(event)?.unsubscribe();
-    this.subscriptions.delete(event);
-    this.sources[event] = source;
+  setEventSource<TSource extends keyof RefetchEvents>(
+    name: TSource,
+    source: RefetchEventManager.EventSource<RefetchEvents[TSource]>
+  ) {
+    this.subscriptions.get(name)?.unsubscribe();
+    this.subscriptions.delete(name);
+    this.sources[name] = source;
 
     if (this.client) {
       const observable = source();
-      const subscription = observable.subscribe(() => this.emit(event));
+      const subscription = observable.subscribe((value) =>
+        this.emit(name as any, value as any)
+      );
 
-      this.subscriptions.set(event, subscription);
+      this.subscriptions.set(name, subscription);
     }
   }
 
   /**
    * Removes the configured source for an event and runs its cleanup function.
    */
-  removeEventSource(event: RefetchEvent) {
+  removeEventSource(event: keyof RefetchEvents) {
     this.subscriptions.get(event)?.unsubscribe();
     this.subscriptions.delete(event);
     delete this.sources[event];
@@ -173,11 +205,11 @@ export class RefetchEventManager {
   /**
    * Replaces the handler for an event.
    */
-  setEventHandler(
-    event: RefetchEvent,
-    handler: RefetchEventManager.EventHandler
+  setEventHandler<TSource extends keyof RefetchEvents>(
+    name: TSource,
+    handler: RefetchEventManager.EventHandler<TSource>
   ) {
-    this.handlers[event] = handler;
+    this.handlers[name] = handler;
   }
 
   /**
@@ -187,31 +219,38 @@ export class RefetchEventManager {
    * This method warns and does not refetch if the refetch event manager is not
    * connected to a client or a source is not configured for the event.
    */
-  emit(event: RefetchEvent) {
+  emit<TSource extends keyof RefetchEvents>(
+    name: TSource,
+    ...args: RefetchEvents[TSource] extends void | never ? []
+    : [value: RefetchEvents[TSource]]
+  ) {
+    const [event] = args;
+
     if (!this.client) {
       if (__DEV__) {
         invariant.warn(
           "Received '%s' event but an `ApolloClient` instance is not connected to the `RefetchEventManager`. No queries will refetch. Pass the manager to the `refetchEventManager` option on the `ApolloClient` constructor.",
-          event
+          name
         );
       }
 
       return;
     }
 
-    if (!(event in this.sources)) {
+    if (!(name in this.sources)) {
       if (__DEV__) {
         invariant.warn(
           "Received '%s' event but no source is configured for it on the `RefetchEventManager`. No queries will refetch. Add the event to the `sources` option or call `setEventSource`.",
-          event
+          name
         );
       }
 
       return;
     }
 
-    const handler = this.handlers[event] ?? defaultHandler;
+    const handler: RefetchEventManager.EventHandler<any> =
+      this.handlers[name] ?? defaultHandler;
 
-    handler({ client: this.client, event });
+    handler({ client: this.client, source: name, event });
   }
 }

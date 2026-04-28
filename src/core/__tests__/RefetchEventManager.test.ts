@@ -732,7 +732,7 @@ test("can set a custom handler with own refetchQueries logic", async () => {
   expect(handler).toHaveBeenCalledWith({
     client,
     source: "test",
-    event: undefined,
+    payload: undefined,
   });
 
   await expect(streamA).toEmitTypedValue({
@@ -819,7 +819,7 @@ test("custom handler can conditionally skip refetch", async () => {
   expect(handler).toHaveBeenCalledWith({
     client,
     source: "test",
-    event: undefined,
+    payload: undefined,
   });
 
   await expect(stream).not.toEmitAnything();
@@ -878,7 +878,7 @@ test("setEventHandler replaces the handler after construction", async () => {
   expect(handler).toHaveBeenCalledWith({
     client,
     source: "test",
-    event: undefined,
+    payload: undefined,
   });
 
   await expect(stream).not.toEmitAnything();
@@ -2298,11 +2298,11 @@ test("passes the event to the refetchOn callback context", async () => {
 
   expect(callback).toHaveBeenNthCalledWith(1, {
     source: "test",
-    event: undefined,
+    payload: undefined,
   });
   expect(callback).toHaveBeenNthCalledWith(2, {
     source: "windowFocus",
-    event: new Event("visibilitychange"),
+    payload: new Event("visibilitychange"),
   });
 });
 

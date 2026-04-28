@@ -2221,7 +2221,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
 }
 
 // @public (undocumented)
-export const onlineSource: RefetchEventManager.EventSource;
+export const onlineSource: RefetchEventManager.EventSource<Event>;
 
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
@@ -2610,32 +2610,37 @@ export interface Reference {
 }
 
 // @public (undocumented)
-export type RefetchEvent = keyof RefetchEvents;
-
-// @public (undocumented)
 export namespace RefetchEventManager {
     // (undocumented)
-    export type EventHandler = (context: RefetchEventManager.RefetchHandlerContext) => ApolloClient.RefetchQueriesResult<any> | void;
+    export type EventHandler<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchEventManager.RefetchHandlerContext<TSource>) => ApolloClient.RefetchQueriesResult<any> | void;
     // (undocumented)
-    export type EventSource = () => Observable<void>;
+    export type EventSource<T> = () => Observable<T>;
     // (undocumented)
     export interface Options {
-        handlers?: Partial<Record<RefetchEvent, RefetchEventManager.EventHandler>>;
-        sources?: Partial<Record<RefetchEvent, true | RefetchEventManager.EventSource>>;
+        handlers?: {
+            [Key in keyof RefetchEvents]?: RefetchEventManager.EventHandler<Key>;
+        };
+        sources?: {
+            [Key in keyof RefetchEvents]?: true | RefetchEventManager.EventSource<RefetchEvents[Key]>;
+        };
     }
     // (undocumented)
-    export interface RefetchHandlerContext {
+    export type RefetchHandlerContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
         client: ApolloClient;
-        event: RefetchEvent;
-    }
+        source: TSource;
+        payload: RefetchEvents[TSource];
+    } : never;
     // (undocumented)
-    export type RefetchOnCallback = (context: RefetchEventManager.RefetchOnContext) => boolean;
+    export type RefetchOnCallback<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchEventManager.RefetchOnContext<TSource>) => boolean;
     // (undocumented)
-    export interface RefetchOnContext {
-        event: RefetchEvent;
-    }
+    export type RefetchOnContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
+        source: TSource;
+        payload: RefetchEvents[TSource];
+    } : never;
     // (undocumented)
-    export type RefetchOnOption = boolean | RefetchEventManager.RefetchOnCallback | Partial<Record<RefetchEvent, boolean | RefetchEventManager.RefetchOnCallback>>;
+    export type RefetchOnOption = boolean | RefetchEventManager.RefetchOnCallback<keyof RefetchEvents> | {
+        [Key in keyof RefetchEvents]?: boolean | RefetchEventManager.RefetchOnCallback<Key>;
+    };
 }
 
 // @public (undocumented)
@@ -2643,18 +2648,20 @@ export class RefetchEventManager {
     constructor(options?: RefetchEventManager.Options);
     connect(client: ApolloClient): void;
     disconnect(): void;
-    emit(event: RefetchEvent): void;
-    removeEventSource(event: RefetchEvent): void;
-    setEventHandler(event: RefetchEvent, handler: RefetchEventManager.EventHandler): void;
-    setEventSource(event: RefetchEvent, source: RefetchEventManager.EventSource): void;
+    emit<TSource extends keyof RefetchEvents>(source: TSource, ...args: RefetchEvents[TSource] extends void | never ? [] : undefined extends RefetchEvents[TSource] ? [
+    payload?: RefetchEvents[TSource]
+    ] : [payload: RefetchEvents[TSource]]): void;
+    removeEventSource(event: keyof RefetchEvents): void;
+    setEventHandler<TSource extends keyof RefetchEvents>(source: TSource, handler: RefetchEventManager.EventHandler<TSource>): void;
+    setEventSource<TSource extends keyof RefetchEvents>(name: TSource, source: RefetchEventManager.EventSource<RefetchEvents[TSource]>): void;
 }
 
 // @public (undocumented)
 export interface RefetchEvents {
     // (undocumented)
-    online: true;
+    online: Event;
     // (undocumented)
-    windowFocus: true;
+    windowFocus: Event;
 }
 
 // @public (undocumented)
@@ -3003,7 +3010,7 @@ export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network" | "standby
 export type WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.WatchQueryOptions<TData, TVariables>;
 
 // @public (undocumented)
-export const windowFocusSource: RefetchEventManager.EventSource;
+export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {

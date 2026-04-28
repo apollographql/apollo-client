@@ -1,4 +1,5 @@
 import { windowFocusSource } from "@apollo/client";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 function setVisibilityState(state: DocumentVisibilityState) {
   Object.defineProperty(document, "visibilityState", {
@@ -11,41 +12,31 @@ afterEach(() => {
   setVisibilityState("visible");
 });
 
-test("windowFocusSource calls emit when document becomes visible", () => {
-  const emit = jest.fn();
-
+test("windowFocusSource emits when document becomes visible", async () => {
   setVisibilityState("visible");
-  const cleanup = windowFocusSource(emit);
+  using stream = new ObservableStream(windowFocusSource());
 
   window.dispatchEvent(new Event("visibilitychange"));
 
-  expect(emit).toHaveBeenCalledTimes(1);
-
-  cleanup?.();
+  await expect(stream).toEmitNext();
 });
 
-test("windowFocusSource does not call emit when document visibility is not visible", () => {
-  const emit = jest.fn();
-
+test("windowFocusSource does not emit when document visibility is not visible", async () => {
   setVisibilityState("hidden");
-  const cleanup = windowFocusSource(emit);
+  using stream = new ObservableStream(windowFocusSource());
 
   window.dispatchEvent(new Event("visibilitychange"));
 
-  expect(emit).not.toHaveBeenCalled();
-
-  cleanup?.();
+  await expect(stream).not.toEmitAnything();
 });
 
-test("windowFocusSource cleanup stops further visibilitychange events from triggering emit", () => {
-  const emit = jest.fn();
-
+test("windowFocusSource unsubscribe stops further visibilitychange events from emitting", async () => {
   setVisibilityState("visible");
-  const cleanup = windowFocusSource(emit);
+  const stream = new ObservableStream(windowFocusSource());
 
-  cleanup?.();
+  stream.unsubscribe();
 
   window.dispatchEvent(new Event("visibilitychange"));
 
-  expect(emit).not.toHaveBeenCalled();
+  await expect(stream).not.toEmitAnything();
 });

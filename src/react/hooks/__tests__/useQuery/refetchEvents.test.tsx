@@ -301,3 +301,64 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+test("uses the latest refetchOn value when re-rendered", async () => {
+  const client = setupClient();
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ refetchOn }) => useQuery(query, { refetchOn }),
+    {
+      wrapper: createClientWrapper(client),
+      initialProps: { refetchOn: { test: false } },
+    }
+  );
+
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  client.refetchEventManager?.emit("test");
+  await expect(takeSnapshot).not.toRerender();
+
+  await rerender({ refetchOn: { test: true } });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { count: 1 },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});

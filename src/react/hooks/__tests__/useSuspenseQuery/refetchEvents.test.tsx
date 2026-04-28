@@ -23,7 +23,6 @@ import {
 import { useSuspenseQuery } from "@apollo/client/react";
 import { MockLink } from "@apollo/client/testing";
 import { createClientWrapper } from "@apollo/client/testing/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 declare module "@apollo/client" {
   interface RefetchEvents {
@@ -76,7 +75,7 @@ async function renderSuspenseHook<
 ) {
   function UseSuspenseQuery({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useSuspenseQuery" });
-    replaceSnapshot(renderHook(props as any));
+    renderStream.replaceSnapshot(renderHook(props as any));
 
     return null;
   }
@@ -98,7 +97,7 @@ async function renderSuspenseHook<
       <Suspense fallback={<SuspenseFallback />}>
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          onError={(error) => replaceSnapshot({ error })}
+          onError={(error) => renderStream.replaceSnapshot({ error })}
         >
           <UseSuspenseQuery props={props} />
         </ErrorBoundary>
@@ -106,26 +105,20 @@ async function renderSuspenseHook<
     );
   }
 
-  const { render, takeRender, replaceSnapshot, getCurrentRender } =
-    createRenderStream<
-      useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
-    >();
+  const renderStream = createRenderStream<
+    useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
+  >();
 
-  const utils = await render(<App props={options.initialProps} />, options);
+  const utils = await renderStream.render(
+    <App props={options.initialProps} />,
+    options
+  );
 
   function rerender(props: Props) {
     return utils.rerender(<App props={props} />);
   }
 
-  function getCurrentSnapshot() {
-    const { snapshot } = getCurrentRender();
-
-    invariant("data" in snapshot, "Snapshot is not a hook snapshot");
-
-    return snapshot;
-  }
-
-  return { getCurrentSnapshot, takeRender, rerender };
+  return { ...renderStream, rerender };
 }
 
 test("refetches the query when a source emits", async () => {
@@ -354,6 +347,56 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   }
 
   client.refetchEventManager?.emit("test");
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("uses the latest refetchOn value when re-rendered", async () => {
+  const client = setupClient();
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderSuspenseHook(
+    ({ refetchOn }) => useSuspenseQuery(query, { refetchOn }),
+    {
+      wrapper: createClientWrapper(client),
+      initialProps: { refetchOn: { test: false } },
+    }
+  );
+
+  const { takeRender, rerender } = renderStream;
+
+  {
+    const { renderedComponents } = await takeRender();
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.refetchEventManager?.emit("test");
+  await expect(takeRender).not.toRerender();
+
+  await rerender({ refetchOn: { test: true } });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      data: { count: 2 },
+      dataState: "complete",
+    }),
+  });
 
   await expect(takeRender).not.toRerender();
 });

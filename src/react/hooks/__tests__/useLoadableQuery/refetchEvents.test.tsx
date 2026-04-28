@@ -119,13 +119,7 @@ async function renderHook<
     );
   }
 
-  const {
-    render,
-    getCurrentRender,
-    takeRender,
-    mergeSnapshot,
-    replaceSnapshot,
-  } = createRenderStream<
+  const renderStream = createRenderStream<
     | {
         loadQuery: useLoadableQuery.LoadQueryFunction<TVariables>;
         result?: useReadQuery.Result<TData, TStates>;
@@ -133,14 +127,19 @@ async function renderHook<
     | { error: ErrorLike }
   >({ initialSnapshot: { loadQuery: null as any } });
 
-  const utils = await render(<App props={options.initialProps} />, options);
+  const { mergeSnapshot, replaceSnapshot } = renderStream;
+
+  const utils = await renderStream.render(
+    <App props={options.initialProps} />,
+    options
+  );
 
   function rerender(props: Props) {
     return utils.rerender(<App props={props} />);
   }
 
   function getCurrentSnapshot() {
-    const { snapshot } = getCurrentRender();
+    const { snapshot } = renderStream.getCurrentRender();
     invariant(
       "loadQuery" in snapshot,
       "Expected rendered hook instead of error boundary"
@@ -149,7 +148,7 @@ async function renderHook<
     return snapshot;
   }
 
-  return { takeRender, rerender, getCurrentSnapshot };
+  return { ...renderStream, getCurrentSnapshot, rerender };
 }
 
 test("refetches the loaded query when a source emits", async () => {
@@ -444,6 +443,73 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   }
 
   client.refetchEventManager?.emit("test");
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("uses the latest refetchOn value when re-rendered", async () => {
+  const client = setupClient();
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHook(
+    ({ refetchOn }) => useLoadableQuery(query, { refetchOn }),
+    {
+      wrapper: createClientWrapper(client),
+      initialProps: { refetchOn: { test: false } },
+    }
+  );
+  const { takeRender, getCurrentSnapshot, rerender } = renderStream;
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  getCurrentSnapshot().loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "SuspenseFallback",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.refetchEventManager?.emit("test");
+  await expect(takeRender).not.toRerender();
+
+  await rerender({ refetchOn: { test: true } });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await expect(takeRender).not.toRerender();
 });

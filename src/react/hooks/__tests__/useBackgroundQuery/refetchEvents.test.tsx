@@ -83,7 +83,7 @@ async function renderSuspenseHook<
 ) {
   function UseReadQuery({ queryRef }: { queryRef: QueryRef }) {
     useTrackRenders({ name: "useReadQuery" });
-    replaceSnapshot(useReadQuery(queryRef) as any);
+    renderStream.replaceSnapshot(useReadQuery(queryRef) as any);
 
     return null;
   }
@@ -108,7 +108,7 @@ async function renderSuspenseHook<
       <Suspense fallback={<SuspenseFallback />}>
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          onError={(error) => replaceSnapshot({ error })}
+          onError={(error) => renderStream.replaceSnapshot({ error })}
         >
           <UseReadQuery queryRef={queryRef} />
         </ErrorBoundary>
@@ -116,17 +116,20 @@ async function renderSuspenseHook<
     );
   }
 
-  const { render, takeRender, replaceSnapshot } = createRenderStream<
+  const renderStream = createRenderStream<
     useReadQuery.Result<TData, TStates> | { error: ErrorLike }
   >();
 
-  const utils = await render(<App props={options.initialProps} />, options);
+  const utils = await renderStream.render(
+    <App props={options.initialProps} />,
+    options
+  );
 
   function rerender(props: Props) {
     return utils.rerender(<App props={props} />);
   }
 
-  return { takeRender, rerender };
+  return { ...renderStream, rerender };
 }
 
 test("refetches the query when a source emits", async () => {
@@ -364,6 +367,59 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   }
 
   client.refetchEventManager?.emit("test");
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("uses the latest refetchOn value when re-rendered", async () => {
+  const client = setupClient();
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderSuspenseHook(
+    ({ refetchOn }) => useBackgroundQuery(query, { refetchOn }),
+    {
+      wrapper: createClientWrapper(client),
+      initialProps: { refetchOn: { test: false } },
+    }
+  );
+
+  const { takeRender, rerender } = renderStream;
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "SuspenseFallback",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.refetchEventManager?.emit("test");
+  await expect(takeRender).not.toRerender();
+
+  await rerender({ refetchOn: { test: true } });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot({
+    expected: (previous) => ({
+      ...previous,
+      data: { count: 2 },
+    }),
+  });
 
   await expect(takeRender).not.toRerender();
 });

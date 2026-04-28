@@ -315,3 +315,66 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+test("uses the latest refetchOn value when re-rendered", async () => {
+  const client = setupClient();
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ refetchOn }) => useLazyQuery(query, { refetchOn }),
+    {
+      wrapper: createClientWrapper(client),
+      initialProps: { refetchOn: { test: false } },
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  // initial
+  await takeSnapshot();
+
+  const [execute] = getCurrentSnapshot();
+  await execute();
+
+  // loading
+  await takeSnapshot();
+  // ready
+  await takeSnapshot();
+
+  client.refetchEventManager?.emit("test");
+  await expect(takeSnapshot).not.toRerender();
+
+  await rerender({ refetchOn: { test: true } });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { count: 1 },
+      variables: {},
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});

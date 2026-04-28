@@ -156,7 +156,7 @@ type Listener<TData, TStates extends DataState<TData>["dataState"]> = (promise: 
 type Listener_2<TData> = (promise: FragmentRefPromise<TData>) => void;
 
 // @public (undocumented)
-const OBSERVED_CHANGED_OPTIONS: readonly ["context", "errorPolicy", "fetchPolicy", "refetchWritePolicy", "returnPartialData"];
+const OBSERVED_CHANGED_OPTIONS: readonly ["context", "errorPolicy", "fetchPolicy", "refetchOn", "refetchWritePolicy", "returnPartialData"];
 
 // Warning: (ae-forgotten-export) The symbol "OBSERVED_CHANGED_OPTIONS" needs to be exported by the entry point index.d.ts
 //

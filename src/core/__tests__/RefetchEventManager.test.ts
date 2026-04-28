@@ -1457,6 +1457,8 @@ test("calls source functions when manager reconnects to a client after disconnec
     refetchEventManager,
   });
 
+  expect(subscribed).toBe(true);
+
   refetchEventManager.disconnect();
   expect(subscribed).toBe(false);
 

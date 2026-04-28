@@ -1,25 +1,25 @@
 import { onlineSource } from "@apollo/client";
 
-test("onlineSource calls emit when the online event fires", () => {
-  const emit = jest.fn();
+test("onlineSource emits when the online event fires", () => {
+  const next = jest.fn();
 
-  const cleanup = onlineSource(emit);
+  const subscription = onlineSource().subscribe(next);
 
   window.dispatchEvent(new Event("online"));
 
-  expect(emit).toHaveBeenCalledTimes(1);
+  expect(next).toHaveBeenCalledTimes(1);
 
-  cleanup?.();
+  subscription.unsubscribe();
 });
 
-test("onlineSource cleanup stops further online events from triggering emit", () => {
-  const emit = jest.fn();
+test("onlineSource unsubscribe stops further online events from emitting", () => {
+  const next = jest.fn();
 
-  const cleanup = onlineSource(emit);
+  const subscription = onlineSource().subscribe(next);
 
-  cleanup?.();
+  subscription.unsubscribe();
 
   window.dispatchEvent(new Event("online"));
 
-  expect(emit).not.toHaveBeenCalled();
+  expect(next).not.toHaveBeenCalled();
 });

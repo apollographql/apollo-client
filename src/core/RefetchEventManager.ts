@@ -1,10 +1,11 @@
 import type { Subscription } from "rxjs";
 
-import type { Observable, ObservableQuery } from "@apollo/client";
+import type { Observable } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
 import type { RefetchEvents, RefetchOn } from "./types.js";
 
 export declare namespace RefetchEventManager {

@@ -149,4 +149,4 @@ const refetchEventManager = new RefetchEventManager({
 });
 ```
 
-Handlers must return a `RefetchQueriesResult`. Conditionally skip a refetch for an event by returning `void`.
+Handlers must return either a `RefetchQueriesResult` or `void`. Returning `void` skips refetching for the event.

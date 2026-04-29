@@ -56,6 +56,7 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
+  RefetchEvents,
   RefetchOn,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
@@ -1263,11 +1264,11 @@ export class ApolloClient {
         }
 
         if (typeof refetchOn === "object" && refetchEventManager) {
-          Object.keys(refetchOn).forEach((eventName) => {
-            if (!Object.hasOwn(refetchEventManager["sources"], eventName)) {
+          Object.keys(refetchOn).forEach((source) => {
+            if (!refetchEventManager.hasSource(source as keyof RefetchEvents)) {
               invariant.warn(
                 "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
-                eventName,
+                source,
                 getOperationName(query, "(anonymous)")
               );
             }

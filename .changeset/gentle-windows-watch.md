@@ -49,6 +49,28 @@ useQuery(OTHER_QUERY, {
 useQuery(LIVE_DASHBOARD, {
   refetchOn: true,
 });
+
+// Dynamically enable or disable a refetch when the event fires
+useQuery(LIVE_DASHBOARD, {
+  refetchOn: ({ source, payload }) => {
+    if (source === "windowFocus") {
+      // payload is the data associated with the event
+      return someCondition(payload);
+    }
+
+    return true;
+  },
+});
+
+// Dynamically enable or disable a refetch for a specific event
+useQuery(LIVE_DASHBOARD, {
+  refetchOn: {
+    windowFocus: ({ payload }) => {
+      // payload is the data associated with the event
+      return someCondition(payload);
+    },
+  },
+});
 ```
 
 To enable per-query opt-in rather than opt-out, set `defaultOptions.watchQuery.refetchOn` to `false` and enable it per-query instead.

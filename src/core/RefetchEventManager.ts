@@ -124,7 +124,11 @@ export class RefetchEventManager {
    * Disconnects the client from this refetch event manager and calls the cleanup
    * function for each event source.
    */
-  disconnect() {
+  disconnect(client?: ApolloClient) {
+    if (client && this.client !== client) {
+      return;
+    }
+
     this.client = undefined;
     this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     this.subscriptions.clear();

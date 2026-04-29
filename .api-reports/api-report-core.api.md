@@ -1174,7 +1174,7 @@ export namespace RefetchEventManager {
 export class RefetchEventManager {
     constructor(options?: RefetchEventManager.Options);
     connect(client: ApolloClient): void;
-    disconnect(): void;
+    disconnect(client?: ApolloClient): void;
     emit<TSource extends keyof RefetchEvents>(source: TSource, ...args: RefetchEvents[TSource] extends void | never ? [] : undefined extends RefetchEvents[TSource] ? [
     payload?: RefetchEvents[TSource]
     ] : [payload: RefetchEvents[TSource]]): void;

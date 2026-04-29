@@ -1203,7 +1203,7 @@ export class ApolloClient {
    */
   public stop() {
     this.queryManager.stop();
-    this.refetchEventManager?.disconnect();
+    this.refetchEventManager?.disconnect(this);
   }
 
   /**

@@ -10,7 +10,7 @@ import type { ASTNode } from 'graphql';
 import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ErrorLike } from '@apollo/client';
+import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
@@ -33,6 +33,7 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
+import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
@@ -76,6 +77,9 @@ export const canUseDOM: boolean;
 
 // @internal @deprecated
 export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode) => void;
+
+// @public
+export type ClassicSignature = SignatureStyle extends "classic" ? unknown : never;
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
@@ -375,6 +379,11 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
+// @public
+export type LazyType<T> = T & {
+    [K in "" as never]: LazyType<never>;
+};
+
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
 
@@ -407,6 +416,12 @@ export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 
 // @public (undocumented)
 type OptionsUnion<TData, TVariables extends OperationVariables> = ApolloClient.WatchQueryOptions<TData, TVariables> | ApolloClient.QueryOptions<TData, TVariables> | ApolloClient.MutateOptions<TData, TVariables, any>;
+
+// Warning: (ae-forgotten-export) The symbol "ReplaceUndefinedWithDefault" needs to be exported by the entry point index.d.ts
+// Warning: (ae-incompatible-release-tags) The symbol "OptionWithFallback" is marked as @public, but its signature references "RemoveIndexSignature" which is marked as @internal
+//
+// @public (undocumented)
+export type OptionWithFallback<Options, DefaultOptions, Key extends keyof DefaultOptions> = Key extends keyof RemoveIndexSignature<Options> ? ReplaceUndefinedWithDefault<Options[Key], DefaultOptions[Key]> : DefaultOptions[Key];
 
 // @internal @deprecated (undocumented)
 export interface PendingPromise<TValue> extends Promise<TValue> {
@@ -463,11 +478,21 @@ export type RemoveIndexSignature<T> = {
 // @public (undocumented)
 export function removeMaskedFragmentSpreads(document: DocumentNode): DocumentNode;
 
+// @public (undocumented)
+type ReplaceUndefinedWithDefault<Value, Default> = Value extends any ? Value extends undefined ? Default : Value : never;
+
 // @internal @deprecated (undocumented)
 export function resultKeyNameFromField(field: FieldNode): string;
 
 // @internal @deprecated (undocumented)
 export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
+
+// @public
+export type SignatureStyle = TypeOverrides extends ({
+    signatureStyle: infer S extends "modern" | "classic";
+}) ? S : ApolloClient.Options extends {
+    defaultOptions: {};
+} ? "modern" : "classic";
 
 // @internal @deprecated (undocumented)
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
@@ -492,7 +517,10 @@ export type StreamInfoTrie = Trie<{
 export function stringifyForDisplay(value: any, space?: number): string;
 
 // @internal @deprecated (undocumented)
-export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): ApolloClient.QueryResult<TData>;
+export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): {
+    data: TData | undefined;
+    error?: ErrorLike;
+};
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;

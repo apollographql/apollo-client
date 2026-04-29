@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.1.9",
+  "version": "4.2.0-alpha.4",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -87,7 +87,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "node config/build.ts",
-    "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
+    "typecheck": "tsc --project config/tsconfig.json && tsc --noEmit --project tsconfig.json && cd integration-tests/type-tests && npm run test",
     "postinstall": "patch-package",
     "extract-api": "npm run clean && node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc --step=deprecateInternals && npm run extract-api:only",
     "extract-api:only": "node config/apiExtractor.ts --generate apiReport",
@@ -113,7 +113,7 @@
     "changeset-publish": "npm pkg set 'workspaces[0]'=dist && npm run build && changeset publish",
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
-    "knip": "knip",
+    "knip": "knip --tags=-knipignore",
     "madge": "node ./config/madge.ts",
     "publint": "publint run --strict dist"
   },

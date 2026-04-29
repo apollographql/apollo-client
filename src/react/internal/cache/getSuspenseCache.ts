@@ -10,6 +10,13 @@ declare module "@apollo/client" {
         suspense?: Readonly<SuspenseCacheOptions>;
       };
     }
+    namespace DefaultOptions {
+      interface Input {
+        react?: {
+          suspense?: Readonly<SuspenseCacheOptions>;
+        };
+      }
+    }
   }
 }
 

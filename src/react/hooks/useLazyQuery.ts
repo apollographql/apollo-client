@@ -14,6 +14,7 @@ import type {
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
+  RefetchOn,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
@@ -23,6 +24,8 @@ import { NetworkStatus } from "@apollo/client";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
+  OptionWithFallback,
+  SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import {
@@ -74,6 +77,9 @@ export declare namespace useLazyQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+    refetchOn?: RefetchOn.Option;
   }
   namespace DocumentationTypes {
     namespace useLazyQuery {
@@ -223,20 +229,185 @@ export declare namespace useLazyQuery {
 
   namespace DocumentationTypes {
     namespace useLazyQuery {
-      export import ResultTuple = _self.ResultTuple;
+      export type { ResultTuple };
     }
   }
 
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends Record<string, never> | Options<TData, TVariables>,
+  > = ResultTuple<
+    TData,
+    TVariables,
+    | "complete"
+    | "streaming"
+    | "empty"
+    | (OptionWithFallback<
+        TOptions,
+        DefaultOptions,
+        "returnPartialData"
+      > extends false ?
+        never
+      : "partial")
+  >;
+
   namespace DocumentationTypes {
-    /** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
-    export function useLazyQuery<
-      TData = unknown,
-      TVariables extends OperationVariables = OperationVariables,
-    >(
-      query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-      options: useLazyQuery.Options<TData, TVariables>
-    ): useLazyQuery.ResultTuple<TData, TVariables>;
+    export interface useLazyQuery {
+      /**
+       * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
+       *
+       * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
+       *
+       * @example
+       *
+       * ```jsx
+       * import { gql } from "@apollo/client";
+       * import { useLazyQuery } from "@apollo/client/react";
+       *
+       * const GET_GREETING = gql`
+       *   query GetGreeting($language: String!) {
+       *     greeting(language: $language) {
+       *       message
+       *     }
+       *   }
+       * `;
+       *
+       * function Hello() {
+       *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
+       *     variables: { language: "english" },
+       *   });
+       *   if (called && loading) return <p>Loading ...</p>;
+       *   if (!called) {
+       *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
+       *   }
+       *   return <h1>Hello {data.greeting.message}!</h1>;
+       * }
+       * ```
+       *
+       * @param query - A GraphQL query document parsed into an AST by `gql`.
+       * @param options - Default options to control how the query is executed.
+       * @returns A tuple in the form of `[execute, result]`
+       */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<TData, TVariables>
+      ): useLazyQuery.ResultTuple<TData, TVariables>;
+    }
+
+    export interface useLazyQuery_Deprecated {
+      /**
+       * @deprecated Avoid manually specifying generics on `useLazyQuery`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+       *
+       * {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)}
+       */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<TData, TVariables>
+      ): useLazyQuery.ResultTuple<TData, TVariables>;
+    }
   }
+
+  export namespace Signatures {
+    /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+    export interface Classic {
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+          returnPartialData: true;
+        }
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+          returnPartialData: boolean;
+        }
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */
+      <
+        TData = unknown,
+        TVariables extends OperationVariables = OperationVariables,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+      ): useLazyQuery.ResultTuple<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming"
+      >;
+    }
+
+    /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+    export interface Modern {
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>
+      ): useLazyQuery.ResultForOptions<
+        TData,
+        TVariables,
+        Record<string, never>
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends useLazyQuery.Options<
+          NoInfer<TData>,
+          NoInfer<TVariables>
+        > & {
+          variables?: {
+            [K in Exclude<
+              keyof TOptions["variables"],
+              keyof TVariables
+            >]?: never;
+          };
+        },
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: TOptions
+      ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
+    }
+
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+  }
+
+  /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
+  export interface Signature extends Signatures.Evaluated {}
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -250,84 +421,7 @@ const EAGER_METHODS = [
   "subscribeToMore",
 ] as const;
 
-/**
- * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
- *
- * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
- *
- * @example
- *
- * ```jsx
- * import { gql } from "@apollo/client";
- * import { useLazyQuery } from "@apollo/client/react";
- *
- * const GET_GREETING = gql`
- *   query GetGreeting($language: String!) {
- *     greeting(language: $language) {
- *       message
- *     }
- *   }
- * `;
- *
- * function Hello() {
- *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
- *     variables: { language: "english" },
- *   });
- *   if (called && loading) return <p>Loading ...</p>;
- *   if (!called) {
- *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
- *   }
- *   return <h1>Hello {data.greeting.message}!</h1>;
- * }
- * ```
- *
- * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options - Default options to control how the query is executed.
- * @returns A tuple in the form of `[execute, result]`
- */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: true;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
-    returnPartialData: boolean;
-  }
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming" | "partial"
->;
-
-/** {@inheritDoc @apollo/client/react!useLazyQuery:function(1)} */
-export function useLazyQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-): useLazyQuery.ResultTuple<
-  TData,
-  TVariables,
-  "empty" | "complete" | "streaming"
->;
-
-export function useLazyQuery<
+export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
@@ -423,6 +517,7 @@ export function useLazyQuery<
       {
         query,
         errorPolicy: stableOptions?.errorPolicy,
+        refetchOn: stableOptions?.refetchOn,
         refetchWritePolicy: stableOptions?.refetchWritePolicy,
         returnPartialData: stableOptions?.returnPartialData,
         notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
@@ -496,17 +591,15 @@ export function useLazyQuery<
       ...eagerMethods,
       ...result,
       client,
-      // eslint-disable-next-line react-hooks/refs
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
-      // eslint-disable-next-line react-hooks/refs
       called: !!resultRef.current,
     };
   }, [client, observableResult, eagerMethods, observable]);
 
   return [stableExecute, result as any];
-}
+} as any;
 
 const initialResult: ObservableQuery.Result<any> = maybeDeepFreeze({
   data: undefined,

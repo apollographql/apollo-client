@@ -4156,7 +4156,10 @@ describe("@connection", () => {
         link,
         cache: new InMemoryCache(),
         defaultOptions: {
-          query: { errorPolicy: "all" },
+          query: {
+            // @ts-expect-error
+            errorPolicy: "all",
+          },
         },
       });
 

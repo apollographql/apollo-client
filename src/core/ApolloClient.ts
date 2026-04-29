@@ -1234,20 +1234,23 @@ export class ApolloClient {
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
-      const refetchOn = options.refetchOn;
+      const mergedRefetchOn =
+        (
+          options.refetchOn &&
+          typeof options.refetchOn === "object" &&
+          defaultRefetchOn &&
+          typeof defaultRefetchOn === "object"
+        ) ?
+          { ...defaultRefetchOn, ...options.refetchOn }
+        : undefined;
 
       options = mergeOptions(
         this.defaultOptions.watchQuery as typeof options,
         options
       );
 
-      if (
-        refetchOn &&
-        typeof refetchOn === "object" &&
-        defaultRefetchOn &&
-        typeof defaultRefetchOn === "object"
-      ) {
-        options.refetchOn = { ...defaultRefetchOn, ...refetchOn };
+      if (mergedRefetchOn) {
+        options.refetchOn = mergedRefetchOn;
       }
     }
 

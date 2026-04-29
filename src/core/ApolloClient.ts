@@ -1266,9 +1266,7 @@ export class ApolloClient {
             "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
             operationName
           );
-        }
-
-        if (typeof refetchOn === "object" && refetchEventManager) {
+        } else if (typeof refetchOn === "object") {
           Object.keys(refetchOn).forEach((source) => {
             if (!refetchEventManager.hasSource(source as keyof RefetchEvents)) {
               invariant.warn(

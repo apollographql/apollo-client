@@ -73,31 +73,26 @@ When `defaultOptions.watchQuery.refetchOn` and per-query `refetchOn` options are
 
 ### Custom events
 
-You can also add your own custom events that trigger refetches. Register your event name using TypeScript module augmentation, then provide a source for the custom event.
+You can also add your own custom events that trigger refetches. Register your event name and payload type using TypeScript module augmentation, then provide a source function that returns an Observable. The source's emitted value becomes the event's `payload`.
 
 ```ts
+import { Observable } from "@apollo/client";
+import { filter } from "rxjs";
+import { AppState, AppStateStatus, Platform } from "react-native";
+
 declare module "@apollo/client" {
   interface RefetchEvents {
-    reactNativeAppStatus: true;
+    reactNativeAppStatus: AppStateStatus;
   }
 }
 
-import { AppState, AppStateStatus } from "react-native";
-
 const refetchEventManager = new RefetchEventManager({
   sources: {
-    reactNativeAppStatus: (emit) => {
-      function handleChange(status: AppStateStatus) {
-        if (Platform.OS !== "web" && status === "active") {
-          emit();
-        }
-      }
-
-      const subscription = AppState.addEventListener("change", handleChange);
-
-      return () => {
-        subscription.remove();
-      };
+    reactNativeAppStatus: () => {
+      return new Observable((observer) => {
+        const subscription = AppState.addEventListener("change", observer.next);
+        return () => subscription.remove();
+      }).pipe(filter((status) => Platform.OS !== "web" && status === "active"));
     },
   },
 });
@@ -108,17 +103,23 @@ useQuery(QUERY, { refetchOn: { reactNativeAppStatus: false } });
 
 ### Manually trigger an event refetch
 
-Refetches are manually triggered by calling the `emit` method. Call `emit` with the event name to refetch.
+Refetches can be triggered imperatively by calling `emit` with the event name and its payload (if any).
 
 ```ts
-refetchEventManager.emit("windowFocus");
+refetchEventManager.emit("reactNativeAppStatus", "active");
 ```
 
-#### Sourceless-events
+#### Sourceless events
 
-A source that has no automatic detection logic but still wants imperative `emit` support can be declared as `true`:
+A source that has no automatic detection logic but still wants imperative `emit` support can be declared as `true`. Type the event as `void` to omit the payload argument.
 
 ```ts
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    userTriggered: void;
+  }
+}
+
 const refetchEventManager = new RefetchEventManager({
   sources: { userTriggered: true },
 });
@@ -136,13 +137,13 @@ When an event fires, the default handler calls `client.refetchQueries({ include:
 const refetchEventManager = new RefetchEventManager({
   // ...
   handlers: {
-    userTriggered: ({ client, event }) => {
+    userTriggered: ({ client, source, payload }) => {
       return client.refetchQueries({
         include: "all",
         onQueryUpdated: (oq) => {
           const refetchOn = oq.options.refetchOn;
 
-          return refetchOn !== false && refetchOn?.userTriggered !== false;
+          return refetchOn !== false && refetchOn?.[source] !== false;
         },
       });
     },

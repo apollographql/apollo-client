@@ -168,14 +168,17 @@ export interface QueryOptionsDocumentation {
 
   /**
    * Determines whether events trigger refetches for the query. Provide an
-   * object mapping each `RefetchEvent` to `true` (enable) or `false` (disable)
-   * to control individual events. Provide `false` to disable all automatic
-   * refetch events for this query. Provide `true` to enable all automatic
-   * refetch events for this query.
+   * object mapping each refetch event to `true` (enable), `false` (disable)
+   * or a callback function that returns `true`/`false` to control individual
+   * events. Provide `false` to disable all automatic refetch events for this
+   * query. Provide `true` to enable all automatic refetch events for this query.
+   * Provide a callback function to perform additional logic to determine
+   * whether to enable or disable a refetch for a query.
    *
    * @remarks
-   * `refetchOn` defaults to refetch on all events. `refetchOn: true` is
-   * unnecessary except when `defaultOptions.watchQuery.refetchOn` is `false`.
+   * `refetchOn` inherits from `defaultOptions.watchQuery.refetchOn`. If
+   * `defaultOptions.watchQuery.refetchOn` is not set, all refetch events are
+   * enabled by default.
    *
    * @docGroup 1. Operation options
    */

@@ -90,7 +90,9 @@ const refetchEventManager = new RefetchEventManager({
   sources: {
     reactNativeAppStatus: () => {
       return new Observable((observer) => {
-        const subscription = AppState.addEventListener("change", observer.next);
+        const subscription = AppState.addEventListener("change", (status) => {
+          observer.next(status);
+        });
         return () => subscription.remove();
       }).pipe(filter((status) => Platform.OS !== "web" && status === "active"));
     },

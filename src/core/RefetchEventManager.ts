@@ -50,7 +50,9 @@ export declare namespace RefetchEventManager {
         client: ApolloClient;
 
         /**
-         * Helper function that evaluates the `refetchOn` option.
+         * Helper function that evaluates the `refetchOn` option to determine if
+         * the query should be refetched based on the event that triggered the
+         * refetch.
          */
         matchesRefetchOn: (observableQuery: ObservableQuery<any>) => boolean;
 

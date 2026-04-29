@@ -1,9 +1,11 @@
 import { EMPTY, filter, fromEvent } from "rxjs";
 
+import { canUseDOM } from "@apollo/client/utilities/internal";
+
 import type { RefetchEventManager } from "../RefetchEventManager.js";
 
 export const windowFocusSource: RefetchEventManager.EventSource<Event> = () => {
-  if (typeof window === "undefined" || !window.addEventListener) {
+  if (!canUseDOM) {
     return EMPTY;
   }
 

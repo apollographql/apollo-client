@@ -349,6 +349,71 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("refetchOn: { eventName: callback } decides whether to refetch based on its return value", async () => {
+  const client = setupClient();
+  const refetchOnTest = jest.fn(() => false);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query, { refetchOn: { test: refetchOnTest } }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  // initial
+  await takeSnapshot();
+
+  const [execute] = getCurrentSnapshot();
+  await execute();
+
+  // loading
+  await takeSnapshot();
+  // ready
+  await takeSnapshot();
+
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(1);
+  expect(refetchOnTest).toHaveBeenLastCalledWith({
+    source: "test",
+    payload: undefined,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  refetchOnTest.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(2);
+
+  {
+    const [, result] = await takeSnapshot();
+    expect(result).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+    expect(result).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { count: 1 },
+      variables: {},
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("uses the latest refetchOn value when re-rendered", async () => {
   const client = setupClient();
 

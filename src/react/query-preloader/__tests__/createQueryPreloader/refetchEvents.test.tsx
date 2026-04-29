@@ -300,3 +300,54 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
 
   await expect(renderStream).not.toRerender();
 });
+
+test("refetchOn: { eventName: callback } decides whether to refetch based on its return value", async () => {
+  const client = setupClient();
+  const refetchOnTest = jest.fn(() => false);
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(query, {
+    refetchOn: { test: refetchOnTest },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderApp(client, queryRef);
+
+  await renderStream.takeRender();
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(1);
+  expect(refetchOnTest).toHaveBeenLastCalledWith({
+    source: "test",
+    payload: undefined,
+  });
+
+  await expect(renderStream).not.toRerender();
+
+  refetchOnTest.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(2);
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(renderStream).not.toRerender();
+});

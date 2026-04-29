@@ -370,6 +370,64 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   await expect(takeRender).not.toRerender();
 });
 
+test("refetchOn: { eventName: callback } decides whether to refetch based on its return value", async () => {
+  const client = setupClient();
+  const refetchOnTest = jest.fn(() => false);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderSuspenseHook(
+    () => useSuspenseQuery(query, { refetchOn: { test: refetchOnTest } }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: { count: 1 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(1);
+  expect(refetchOnTest).toHaveBeenLastCalledWith({
+    source: "test",
+    payload: undefined,
+  });
+
+  await expect(takeRender).not.toRerender();
+
+  refetchOnTest.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(2);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
 test("uses the latest refetchOn value when re-rendered", async () => {
   const client = setupClient();
 

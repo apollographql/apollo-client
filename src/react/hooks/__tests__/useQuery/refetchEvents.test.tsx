@@ -327,6 +327,70 @@ test("refetchOn: { eventName: false } opts out of specific events", async () => 
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("refetchOn: { eventName: callback } decides whether to refetch based on its return value", async () => {
+  const client = setupClient();
+  const refetchOnTest = jest.fn(() => false);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useQuery(query, { refetchOn: { test: refetchOnTest } }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(1);
+  expect(refetchOnTest).toHaveBeenLastCalledWith({
+    source: "test",
+    payload: undefined,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  refetchOnTest.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOnTest).toHaveBeenCalledTimes(2);
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { count: 1 },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("uses the latest refetchOn value when re-rendered", async () => {
   const client = setupClient();
 

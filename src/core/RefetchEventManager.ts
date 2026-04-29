@@ -116,7 +116,7 @@ export class RefetchEventManager {
 
     Object.entries(this.sources).forEach(([event, source]) => {
       if (typeof source === "function") {
-        this.setEventSource(event as keyof RefetchEvents, source);
+        this.subscribeToSource(event as keyof RefetchEvents, source);
       }
     });
   }
@@ -151,18 +151,8 @@ export class RefetchEventManager {
     name: TSource,
     source: RefetchEventManager.EventSource<RefetchEvents[TSource]>
   ) {
-    this.subscriptions.get(name)?.unsubscribe();
-    this.subscriptions.delete(name);
     this.sources[name] = source;
-
-    if (this.client) {
-      const observable = source();
-
-      this.subscriptions.set(
-        name,
-        observable.subscribe((value) => this.emit(name as any, value))
-      );
-    }
+    this.subscribeToSource(name, source);
   }
 
   /**
@@ -245,5 +235,20 @@ export class RefetchEventManager {
     }
 
     handler({ client: this.client, source, payload, matchesRefetchOn });
+  }
+
+  private subscribeToSource<TSource extends keyof RefetchEvents>(
+    name: TSource,
+    source: RefetchEventManager.EventSource<RefetchEvents[TSource]>
+  ) {
+    this.subscriptions.get(name)?.unsubscribe();
+    this.subscriptions.delete(name);
+
+    if (this.client) {
+      this.subscriptions.set(
+        name,
+        source().subscribe((value) => this.emit(name as any, value))
+      );
+    }
   }
 }

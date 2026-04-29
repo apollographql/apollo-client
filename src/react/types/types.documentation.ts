@@ -175,11 +175,13 @@ export interface QueryOptionsDocumentation {
    * Provide a callback function to perform additional logic to determine
    * whether to enable or disable a refetch for a query.
    *
-   * @remarks
+   * `@remarks`
    * `refetchOn` inherits from `defaultOptions.watchQuery.refetchOn`. If
    * `defaultOptions.watchQuery.refetchOn` is not set, all refetch events are
    * enabled by default.
    *
+   * This option only has an effect when the client is configured with a
+   * `refetchEventManager`.
    * @docGroup 1. Operation options
    */
   refetchOn: unknown;

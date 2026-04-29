@@ -1,18 +1,30 @@
 import { windowFocusSource } from "@apollo/client";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-function setVisibilityState(state: DocumentVisibilityState) {
-  Object.defineProperty(document, "visibilityState", {
-    configurable: true,
-    get: () => state,
-  });
+function withVisibilityState() {
+  const original = Object.getOwnPropertyDescriptor(document, "visibilityState");
+
+  return Object.assign(
+    (state: DocumentVisibilityState) => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => state,
+      });
+    },
+    {
+      [Symbol.dispose]() {
+        if (original) {
+          Object.defineProperty(document, "visibilityState", original);
+        } else {
+          delete (document as any).visibilityState;
+        }
+      },
+    }
+  );
 }
 
-afterEach(() => {
-  setVisibilityState("visible");
-});
-
 test("windowFocusSource emits when document becomes visible", async () => {
+  using setVisibilityState = withVisibilityState();
   using stream = new ObservableStream(windowFocusSource());
 
   setVisibilityState("visible");
@@ -34,6 +46,7 @@ test("windowFocusSource emits when document becomes visible", async () => {
 });
 
 test("windowFocusSource unsubscribe stops further visibilitychange events from emitting", async () => {
+  using setVisibilityState = withVisibilityState();
   const stream = new ObservableStream(windowFocusSource());
 
   stream.unsubscribe();

@@ -231,7 +231,7 @@ test("per-query refetchOn: true overrides defaultOptions disabling refetches", a
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("refetchOn callback receives the event context and decides whether to refetch", async () => {
+test("refetchOn callback decides whether to refetch based on its return value", async () => {
   const client = setupClient();
   const refetchOn = jest.fn(() => false);
 
@@ -262,9 +262,34 @@ test("refetchOn callback receives the event context and decides whether to refet
   client.refetchEventManager?.emit("test");
 
   expect(refetchOn).toHaveBeenCalledTimes(1);
-  expect(refetchOn).toHaveBeenCalledWith({
+  expect(refetchOn).toHaveBeenLastCalledWith({
     source: "test",
     payload: undefined,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  refetchOn.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOn).toHaveBeenCalledTimes(2);
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { count: 1 },
+    variables: {},
   });
 
   await expect(takeSnapshot).not.toRerender();

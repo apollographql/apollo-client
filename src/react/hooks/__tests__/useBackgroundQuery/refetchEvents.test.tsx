@@ -298,7 +298,7 @@ test("per-query refetchOn: true overrides defaultOptions disabling refetches", a
   await expect(takeRender).not.toRerender();
 });
 
-test("refetchOn callback receives the event context and decides whether to refetch", async () => {
+test("refetchOn callback decides whether to refetch based on its return value", async () => {
   const client = setupClient();
   const refetchOn = jest.fn(() => false);
 
@@ -330,10 +330,28 @@ test("refetchOn callback receives the event context and decides whether to refet
   client.refetchEventManager?.emit("test");
 
   expect(refetchOn).toHaveBeenCalledTimes(1);
-  expect(refetchOn).toHaveBeenCalledWith({
+  expect(refetchOn).toHaveBeenLastCalledWith({
     source: "test",
     payload: undefined,
   });
+
+  await expect(takeRender).not.toRerender();
+
+  refetchOn.mockReturnValue(true);
+  client.refetchEventManager?.emit("test");
+
+  expect(refetchOn).toHaveBeenCalledTimes(2);
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: { count: 2 },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await expect(takeRender).not.toRerender();
 });

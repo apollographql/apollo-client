@@ -30,6 +30,7 @@ import {
   checkDocument,
   compact,
   getApolloClientMemoryInternals,
+  getOperationName,
   mapObservableFragmentMemoized,
   mergeOptions,
   removeMaskedFragmentSpreads,
@@ -44,6 +45,7 @@ import type {
 } from "./defaultOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
+import type { RefetchEventManager } from "./RefetchEventManager.js";
 import type {
   DefaultContext,
   ErrorLike,
@@ -54,6 +56,8 @@ import type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
+  RefetchEvents,
+  RefetchOn,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
   SubscriptionObservable,
@@ -164,6 +168,12 @@ export declare namespace ApolloClient {
      * Do not pass in experiments that are not provided by Apollo.
      */
     experiments?: ApolloClient.Experiment[];
+
+    /**
+     * The `RefetchEventManager` instance that manages automatic refetches for
+     * the client.
+     */
+    refetchEventManager?: RefetchEventManager;
   }
 
   export interface DevtoolsOptions {
@@ -623,6 +633,9 @@ export declare namespace ApolloClient {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+    refetchOn?: RefetchOn.Option;
+
     /**
      * @internal This API is meant for framework integrations only.
      * Do not use for everyday use.
@@ -973,6 +986,7 @@ export class ApolloClient {
   public queryDeduplication: boolean;
   public defaultOptions: ApolloClient.DefaultOptions;
   public readonly devtoolsConfig: ApolloClient.DevtoolsOptions;
+  public readonly refetchEventManager: RefetchEventManager | undefined;
 
   private queryManager: QueryManager;
   private devToolsHookCb?: Function;
@@ -1036,6 +1050,7 @@ export class ApolloClient {
       link,
       incrementalHandler = new NotImplementedHandler(),
       experiments = [],
+      refetchEventManager,
     } = options;
 
     this.link = link;
@@ -1093,6 +1108,9 @@ export class ApolloClient {
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
 
     experiments.forEach((experiment) => experiment.call(this, options));
+
+    this.refetchEventManager = refetchEventManager;
+    this.refetchEventManager?.connect(this);
   }
 
   private connectToDevTools() {
@@ -1182,9 +1200,11 @@ export class ApolloClient {
    * - Unsubscribes all active `ObservableQuery` instances by emitting a `completed` event
    * - Rejects all currently running queries with "QueryManager stopped while query was in flight"
    * - Removes all queryRefs from the suspense cache
+   * - Disconnects the `RefetchEventManager` if configured.
    */
   public stop() {
     this.queryManager.stop();
+    this.refetchEventManager?.disconnect(this);
   }
 
   /**
@@ -1213,10 +1233,51 @@ export class ApolloClient {
     options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
+      const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
+      const mergedRefetchOn =
+        (
+          options.refetchOn &&
+          typeof options.refetchOn === "object" &&
+          defaultRefetchOn &&
+          typeof defaultRefetchOn === "object"
+        ) ?
+          { ...defaultRefetchOn, ...options.refetchOn }
+        : undefined;
+
       options = mergeOptions(
         this.defaultOptions.watchQuery as typeof options,
         options
       );
+
+      if (mergedRefetchOn) {
+        options.refetchOn = mergedRefetchOn;
+      }
+    }
+
+    if (__DEV__) {
+      const { refetchOn, query } = options;
+      const { refetchEventManager } = this;
+
+      if (refetchOn) {
+        const operationName = getOperationName(query, "(anonymous)");
+
+        if (!refetchEventManager) {
+          invariant.warn(
+            "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
+            operationName
+          );
+        } else if (typeof refetchOn === "object") {
+          Object.keys(refetchOn).forEach((source) => {
+            if (!refetchEventManager.hasSource(source as keyof RefetchEvents)) {
+              invariant.warn(
+                "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
+                source,
+                operationName
+              );
+            }
+          });
+        }
+      }
     }
 
     return this.queryManager.watchQuery<TData, TVariables>(options);

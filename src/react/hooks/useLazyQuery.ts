@@ -14,6 +14,7 @@ import type {
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
+  RefetchOn,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
@@ -76,6 +77,9 @@ export declare namespace useLazyQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+    refetchOn?: RefetchOn.Option;
   }
   namespace DocumentationTypes {
     namespace useLazyQuery {
@@ -513,6 +517,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
       {
         query,
         errorPolicy: stableOptions?.errorPolicy,
+        refetchOn: stableOptions?.refetchOn,
         refetchWritePolicy: stableOptions?.refetchWritePolicy,
         returnPartialData: stableOptions?.returnPartialData,
         notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,

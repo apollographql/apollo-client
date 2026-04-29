@@ -11,6 +11,7 @@ import type {
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
+  RefetchOn,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -74,6 +75,9 @@ export declare namespace useSuspenseQuery {
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
       queryKey?: string | number | any[];
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+      refetchOn?: RefetchOn.Option;
 
       /**
        * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}

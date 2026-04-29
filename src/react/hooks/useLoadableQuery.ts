@@ -8,6 +8,7 @@ import type {
   ErrorPolicy,
   ObservableQuery,
   OperationVariables,
+  RefetchOn,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -102,6 +103,9 @@ export declare namespace useLoadableQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
     returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+    refetchOn?: RefetchOn.Option;
   }
 
   export interface DefaultOptions

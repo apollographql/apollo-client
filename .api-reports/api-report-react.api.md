@@ -44,6 +44,7 @@ import type { QueryRef as QueryRef_2 } from '@apollo/client/react';
 import type { ReactiveVar } from '@apollo/client';
 import type * as ReactTypes from 'react';
 import type { RefetchFunction } from '@apollo/client/react/internal';
+import type { RefetchOn } from '@apollo/client';
 import type { RefetchWritePolicy } from '@apollo/client';
 import type { SignatureStyle } from '@apollo/client/utilities/internal';
 import type { SubscribeToMoreFunction } from '@apollo/client';
@@ -176,6 +177,7 @@ export type PreloadQueryOptions<TVariables extends OperationVariables = Operatio
     fetchPolicy?: PreloadQueryFetchPolicy;
     returnPartialData?: boolean;
     refetchWritePolicy?: RefetchWritePolicy;
+    refetchOn?: RefetchOn.Option;
 } & VariablesOption<TVariables>;
 
 // @public @deprecated (undocumented)
@@ -225,6 +227,7 @@ export namespace useBackgroundQuery {
             errorPolicy?: ErrorPolicy;
             fetchPolicy?: FetchPolicy;
             queryKey?: string | number | any[];
+            refetchOn?: RefetchOn.Option;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             // @deprecated
@@ -582,6 +585,7 @@ export namespace useLazyQuery {
         nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
         notifyOnNetworkStatusChange?: boolean;
         pollInterval?: number;
+        refetchOn?: RefetchOn.Option;
         refetchWritePolicy?: RefetchWritePolicy;
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
@@ -672,6 +676,7 @@ export namespace useLoadableQuery {
         errorPolicy?: ErrorPolicy;
         fetchPolicy?: FetchPolicy;
         queryKey?: string | number | any[];
+        refetchOn?: RefetchOn.Option;
         refetchWritePolicy?: RefetchWritePolicy;
         returnPartialData?: boolean;
     }
@@ -875,6 +880,7 @@ export namespace useQuery {
             nextFetchPolicy?: WatchQueryFetchPolicy | ((this: ApolloClient.WatchQueryOptions<TData, TVariables>, currentFetchPolicy: WatchQueryFetchPolicy, context: InternalTypes_2.NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
             notifyOnNetworkStatusChange?: boolean;
             pollInterval?: number;
+            refetchOn?: RefetchOn.Option;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             skip?: boolean;
@@ -1230,6 +1236,7 @@ export namespace useSuspenseQuery {
             errorPolicy?: ErrorPolicy;
             fetchPolicy?: FetchPolicy;
             queryKey?: string | number | any[];
+            refetchOn?: RefetchOn.Option;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
             // @deprecated

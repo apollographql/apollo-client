@@ -181,6 +181,7 @@ const OBSERVED_CHANGED_OPTIONS = [
   "context",
   "errorPolicy",
   "fetchPolicy",
+  "refetchOn",
   "refetchWritePolicy",
   "returnPartialData",
 ] as const;

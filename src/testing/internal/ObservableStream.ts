@@ -2,7 +2,6 @@ import { ReadableStream } from "node:stream/web";
 
 import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
-import { expect } from "@jest/globals";
 import * as matcherUtils from "jest-matcher-utils";
 import type { Observable, Subscribable, Unsubscribable } from "rxjs";
 
@@ -127,7 +126,12 @@ export class ObservableStream<T> {
 
   async takeNext(options?: TakeOptions): Promise<T> {
     const event = await this.take(options);
-    validateEquals(event, { type: "next", value: expect.anything() });
+    validateEquals(event, {
+      type: "next",
+      // expect.anything() does not match on undefined and we consider that a
+      // valid value, so we need toBeOneOf to include undefined.
+      value: expect.toBeOneOf([expect.anything(), undefined]),
+    });
     return (event as ObservableEvent<T> & { type: "next" }).value;
   }
 

@@ -317,6 +317,7 @@ export namespace ApolloClient {
         // (undocumented)
         localState?: LocalState;
         queryDeduplication?: boolean;
+        refetchEventManager?: RefetchEventManager;
         ssrForceFetchDelay?: number;
         ssrMode?: boolean;
     }
@@ -425,6 +426,7 @@ export namespace ApolloClient {
         returnPartialData?: boolean;
         skipPollAttempt?: () => boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        refetchOn?: RefetchOn.Option;
         [variablesUnknownSymbol]?: boolean;
     } & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
@@ -474,6 +476,8 @@ export class ApolloClient {
     // @deprecated
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
+    // (undocumented)
+    readonly refetchEventManager: RefetchEventManager | undefined;
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
@@ -837,6 +841,7 @@ export namespace ObservableQuery {
         skipPollAttempt?: () => boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
+        refetchOn?: RefetchOn.Option;
     };
     // (undocumented)
     export type Result<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {
@@ -910,6 +915,9 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables;
 }
+
+// @public (undocumented)
+export const onlineSource: RefetchEventManager.EventSource<Event>;
 
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
@@ -1137,6 +1145,67 @@ export { ReadQueryOptions }
 export { Reference }
 
 // @public (undocumented)
+export namespace RefetchEventManager {
+    // (undocumented)
+    export type EventHandler<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchEventManager.RefetchHandlerContext<TSource>) => ApolloClient.RefetchQueriesResult<any> | void;
+    // (undocumented)
+    export type EventSource<T> = () => Observable<T>;
+    // (undocumented)
+    export interface Options {
+        handlers?: {
+            [Key in keyof RefetchEvents]?: RefetchEventManager.EventHandler<Key>;
+        };
+        sources?: {
+            [Key in keyof RefetchEvents]?: true | RefetchEventManager.EventSource<RefetchEvents[Key]>;
+        };
+    }
+    // (undocumented)
+    export type RefetchHandlerContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
+        client: ApolloClient;
+        matchesRefetchOn: (observableQuery: ObservableQuery<any>) => boolean;
+        source: TSource;
+        payload: RefetchEvents[TSource];
+    } : never;
+}
+
+// @public (undocumented)
+export class RefetchEventManager {
+    constructor(options?: RefetchEventManager.Options);
+    connect(client: ApolloClient): void;
+    disconnect(client?: ApolloClient): void;
+    emit<TSource extends keyof RefetchEvents>(source: TSource, ...args: RefetchEvents[TSource] extends void | never ? [] : undefined extends RefetchEvents[TSource] ? [
+    payload?: RefetchEvents[TSource]
+    ] : [payload: RefetchEvents[TSource]]): void;
+    hasSource(source: keyof RefetchEvents): boolean;
+    removeEventSource(event: keyof RefetchEvents): void;
+    setEventHandler<TSource extends keyof RefetchEvents>(source: TSource, handler: RefetchEventManager.EventHandler<TSource>): void;
+    setEventSource<TSource extends keyof RefetchEvents>(name: TSource, source: RefetchEventManager.EventSource<RefetchEvents[TSource]>): void;
+}
+
+// @public (undocumented)
+export interface RefetchEvents {
+    // (undocumented)
+    online: Event;
+    // (undocumented)
+    windowFocus: Event;
+}
+
+// @public (undocumented)
+export namespace RefetchOn {
+    // (undocumented)
+    export type Callback<TSource extends keyof RefetchEvents = keyof RefetchEvents> = (context: RefetchOn.Context<TSource>) => boolean;
+    // (undocumented)
+    export type Context<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
+        source: TSource;
+        payload: RefetchEvents[TSource];
+    } : never;
+    // (undocumented)
+    export type Option = boolean | RefetchOn.Callback<keyof RefetchEvents> | {
+        [Key in keyof RefetchEvents]?: boolean | RefetchOn.Callback<Key>;
+    };
+}
+
+// @public (undocumented)
 export type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesIncludeShorthand;
 
 // @public (undocumented)
@@ -1281,10 +1350,13 @@ export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network" | "standby
 // @public @deprecated (undocumented)
 export type WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.WatchQueryOptions<TData, TVariables>;
 
+// @public (undocumented)
+export const windowFocusSource: RefetchEventManager.EventSource<Event>;
+
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:591:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:371:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:601:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

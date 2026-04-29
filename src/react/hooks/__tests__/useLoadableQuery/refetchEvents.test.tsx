@@ -52,7 +52,6 @@ function setupClient(options?: Partial<ApolloClient.Options>) {
       {
         request: { query },
         result: () => ({ data: { count: ++count } }),
-        delay: 20,
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
     ]),

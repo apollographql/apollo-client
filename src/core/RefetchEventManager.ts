@@ -53,6 +53,42 @@ export declare namespace RefetchEventManager {
          * Helper function that evaluates the `refetchOn` option to determine if
          * the query should be refetched based on the event that triggered the
          * refetch.
+         *
+         * @example
+         *
+         * ```ts
+         * new RefetchEventManager({
+         *   handlers: {
+         *     customEvent: ({ client, matchesRefetchOn }) => {
+         *       return client.refetchQueries({
+         *         include: "all",
+         *         onQueryUpdated: matchesRefetchOn,
+         *       });
+         *     },
+         *   },
+         * });
+         * ```
+         *
+         * @example
+         * Combined with custom logic
+         *
+         * ```ts
+         * new RefetchEventManager({
+         *   handlers: {
+         *     customEvent: ({ client, matchesRefetchOn }) => {
+         *       return client.refetchQueries({
+         *         include: "active",
+         *         onQueryUpdated: (observableQuery) => {
+         *           return (
+         *             matchesRefetchOn(observableQuery) &&
+         *             someOtherCondition(observableQuery)
+         *           );
+         *         },
+         *       });
+         *     },
+         *   },
+         * });
+         * ```
          */
         matchesRefetchOn: (observableQuery: ObservableQuery<any>) => boolean;
 

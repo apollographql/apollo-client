@@ -20,12 +20,49 @@ This article covers GraphQL Codegen installation and configuration. If you'd lik
 Install the following packages. This installation assumes you already have [installed `@apollo/client` and its dependencies](../get-started#step-2-install-dependencies).
 
 ```bash
-npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript-operations
 ```
+
+<Note>
+
+The guide below is for `@graphql-codegen/typescript-operations` v6 and `@graphql-codegen/client-preset` v6. If you are still using v5, use the configuration in at the end of each section instead.
+
+</Note>
 
 ### Recommended starter configuration
 
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project. The following is a recommended minimal configuration for Apollo Client apps.
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript-operations"],
+      config: {
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
 
 ```ts title="codegen.ts"
 import { CodegenConfig } from "@graphql-codegen/cli";
@@ -63,6 +100,8 @@ const config: CodegenConfig = {
 export default config;
 ```
 
+</details>
+
 <Note>
 
 There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`. Use the method that best fits your project's needs.
@@ -91,9 +130,44 @@ $ npm run codegen
 
 If you follow GraphQL Codegen's [quickstart guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation), it recommends generating your config file using the GraphQL Code Generator CLI. This wizard installs and configures the [`@graphql-codegen/client-preset`](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client).
 
-We do not recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. Instead, we recommend using the [`typescript`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript) and [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugins directly (at minimum), which focus on only generating types and don't include additional runtime code. Follow the steps in the preceding section to use a setup that includes these plugins.
+We do not recommend using the client preset with Apollo Client apps because it generates additional runtime code that adds bundle size to your application and includes features that are incompatible with Apollo Client. Instead, we recommend using the [`typescript-operations`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations) plugin directly (at minimum), which focuses on only generating types and doesn't include additional runtime code. Follow the steps in the preceding section to use a setup that includes this plugin.
 
 If you're already using the client preset, or you choose to use it instead of working directly with the plugins, we recommend the following minimal configuration for Apollo Client apps.
+
+```ts
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}", "!src/gql/**/*"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    // Use a path that works the best for the structure of your application
+    "./src/gql/": {
+      preset: "client",
+      presetConfig: {
+        // Disable fragment masking
+        fragmentMasking: false,
+      },
+      config: {
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<details>
+<summary>Still using `@graphql-codegen/client-preset` v5? Use this configuration instead</summary>
 
 ```ts
 import { CodegenConfig } from "@graphql-codegen/cli";
@@ -135,6 +209,8 @@ const config: CodegenConfig = {
 export default config;
 ```
 
+</details>
+
 <Caution>
 
 This configuration [disables fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in the client preset because it's incompatible with Apollo Client's data masking functionality. If you are using the generated `useFragment` function or anything generated from the fragment masking feature, you need to migrate away from it to use data masking in Apollo Client. See the guide on [data masking](../data/fragments#data-masking) for more information on using TypeScript with Apollo Client's data masking feature, including instructions on how to migrate away from GraphQL Codegen's fragment masking feature.
@@ -152,6 +228,49 @@ npm install -D @graphql-codegen/near-operation-file-preset
 ```
 
 The following is a recommended minimal configuration. See the [`near-operation-file-preset` documentation](https://the-guild.dev/graphql/codegen/plugins/presets/near-operation-file-preset) for additional configuration options, such as customizing the file name or extension.
+
+```ts title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript-operations"],
+      config: {
+        // Generates the enum and input types used in operation variables.
+        // The files generated from the config below import these types into near-operation files.
+        generateOperationTypes: false,
+      },
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      plugins: ["typescript-operations"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        // This is the file generated by the `typescript-operations` plugin above,
+        // relative to the current working directory.
+        importSchemaTypesFrom: "./src/types/__generated__/graphql.ts",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
 
 ```ts title="codegen.ts"
 import { CodegenConfig } from "@graphql-codegen/cli";
@@ -197,6 +316,8 @@ const config: CodegenConfig = {
 
 export default config;
 ```
+
+</details>
 
 #### Usage
 
@@ -258,6 +379,49 @@ const config: CodegenConfig = {
   ignoreNoDocuments: true,
   generates: {
     "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript-operations"],
+      config: {
+        // Generates the enum and input types used in operation variables.
+        // The files generated from the config below import these types into near-operation files.
+        generateOperationTypes: false,
+      },
+    },
+    "./src/": {
+      preset: "near-operation-file",
+      plugins: ["typescript-operations", "typed-document-node"],
+      // Note: these config options moved from the other generated file config
+      config: {
+        // This is the file generated by the `typescript-operations` plugin above,
+        // relative to the current working directory.
+        importSchemaTypesFrom: "./src/types/__generated__/graphql.ts",
+        // Apollo Client always includes `__typename` fields
+        nonOptionalTypename: true,
+        // Apollo Client doesn't add the `__typename` field to root types so
+        // don't generate a type for the `__typename` for root operation types.
+        skipTypeNameForRoot: true,
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+<details>
+<summary>Still using `@graphql-codegen/typescript-operations` v5? Use this configuration instead</summary>
+
+```ts {21} title="codegen.ts"
+import { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  overwrite: true,
+  schema: "<URL_OF_YOUR_GRAPHQL_API>",
+  // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ["src/**/*.{ts,tsx}"],
+  // Don't exit with non-zero status when there are no documents
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
       plugins: ["typescript"],
     },
     "./src/": {
@@ -290,6 +454,8 @@ const config: CodegenConfig = {
 
 export default config;
 ```
+
+</details>
 
 <Note>
 

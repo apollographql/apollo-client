@@ -2627,6 +2627,7 @@ export namespace RefetchEventManager {
     // (undocumented)
     export type RefetchHandlerContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
         client: ApolloClient;
+        matchesRefetchOn: (observableQuery: ObservableQuery<any>) => boolean;
         source: TSource;
         payload: RefetchEvents[TSource];
     } : never;

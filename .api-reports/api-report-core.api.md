@@ -73,6 +73,7 @@ import { Observable } from '@apollo/client/utilities';
 import type { Observable as Observable_2 } from '@apollo/client';
 import { Observable as Observable_3 } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
+import type { ObservableQuery as ObservableQuery_2 } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
 import { OperationTypeNode } from 'graphql';
@@ -1163,6 +1164,7 @@ export namespace RefetchEventManager {
     // (undocumented)
     export type RefetchHandlerContext<TSource extends keyof RefetchEvents = keyof RefetchEvents> = TSource extends keyof RefetchEvents ? {
         client: ApolloClient;
+        matchesRefetchOn: (observableQuery: ObservableQuery_2<any>) => boolean;
         source: TSource;
         payload: RefetchEvents[TSource];
     } : never;

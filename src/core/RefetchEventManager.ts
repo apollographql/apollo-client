@@ -1,11 +1,11 @@
 import type { Subscription } from "rxjs";
 
-import type { Observable } from "@apollo/client";
+import type { Observable, ObservableQuery } from "@apollo/client";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import type { RefetchEvents } from "./types.js";
+import type { RefetchEvents, RefetchOn } from "./types.js";
 
 export declare namespace RefetchEventManager {
   export interface Options {
@@ -49,6 +49,11 @@ export declare namespace RefetchEventManager {
         client: ApolloClient;
 
         /**
+         * Helper function that evaluates the `refetchOn` option.
+         */
+        matchesRefetchOn: (observableQuery: ObservableQuery<any>) => boolean;
+
+        /**
          * The source name that triggered the refetch.
          */
         source: TSource;
@@ -61,30 +66,15 @@ export declare namespace RefetchEventManager {
     : never;
 }
 
-const defaultHandler: RefetchEventManager.EventHandler<keyof RefetchEvents> =
-  function defaultHandler({ client, ...ctx }) {
-    return client.refetchQueries({
-      include: "active",
-      onQueryUpdated: (oq) => {
-        const refetchOn = oq.options.refetchOn;
-        const { source } = ctx;
-
-        if (typeof refetchOn === "boolean") {
-          return refetchOn;
-        }
-
-        if (typeof refetchOn === "function") {
-          return refetchOn(ctx);
-        }
-
-        if (typeof refetchOn?.[source] === "function") {
-          return refetchOn[source](ctx as any);
-        }
-
-        return refetchOn?.[ctx.source] !== false;
-      },
-    });
-  };
+const defaultHandler: RefetchEventManager.EventHandler<keyof RefetchEvents> = ({
+  client,
+  matchesRefetchOn,
+}) => {
+  return client.refetchQueries({
+    include: "active",
+    onQueryUpdated: matchesRefetchOn,
+  });
+};
 
 export class RefetchEventManager {
   private sources: Partial<
@@ -223,6 +213,25 @@ export class RefetchEventManager {
     const handler: RefetchEventManager.EventHandler<any> =
       this.handlers[source] ?? defaultHandler;
 
-    handler({ client: this.client, source, payload });
+    function matchesRefetchOn(oq: ObservableQuery<any>) {
+      const ctx: RefetchOn.Context<any> = { source, payload };
+      const refetchOn = oq.options.refetchOn;
+
+      if (typeof refetchOn === "boolean") {
+        return refetchOn;
+      }
+
+      if (typeof refetchOn === "function") {
+        return refetchOn(ctx);
+      }
+
+      if (typeof refetchOn?.[source] === "function") {
+        return refetchOn[source](ctx as any);
+      }
+
+      return refetchOn?.[source] !== false;
+    }
+
+    handler({ client: this.client, source, payload, matchesRefetchOn });
   }
 }

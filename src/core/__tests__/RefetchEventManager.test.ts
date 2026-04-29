@@ -834,6 +834,7 @@ test("can set a custom handler with own refetchQueries logic", async () => {
     client,
     source: "test",
     payload: undefined,
+    matchesRefetchOn: expect.any(Function),
   });
 
   await expect(streamA).toEmitTypedValue({
@@ -918,6 +919,7 @@ test("custom handler can conditionally skip refetch", async () => {
     client,
     source: "test",
     payload: undefined,
+    matchesRefetchOn: expect.any(Function),
   });
 
   await expect(stream).not.toEmitAnything();
@@ -971,6 +973,7 @@ test("setEventHandler replaces the handler after construction", async () => {
     client,
     source: "test",
     payload: undefined,
+    matchesRefetchOn: expect.any(Function),
   });
 
   await expect(stream).not.toEmitAnything();

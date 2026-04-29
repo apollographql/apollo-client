@@ -137,13 +137,11 @@ When an event fires, the default handler calls `client.refetchQueries({ include:
 const refetchEventManager = new RefetchEventManager({
   // ...
   handlers: {
-    userTriggered: ({ client, source, payload }) => {
+    userTriggered: ({ client, source, payload, matchesRefetchOn }) => {
       return client.refetchQueries({
         include: "all",
-        onQueryUpdated: (oq) => {
-          const refetchOn = oq.options.refetchOn;
-
-          return refetchOn !== false && refetchOn?.[source] !== false;
+        onQueryUpdated: (observableQuery) => {
+          return matchesRefetchOn(observableQuery);
         },
       });
     },

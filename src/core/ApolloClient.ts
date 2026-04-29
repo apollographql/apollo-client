@@ -1264,7 +1264,7 @@ export class ApolloClient {
 
         if (typeof refetchOn === "object" && refetchEventManager) {
           Object.keys(refetchOn).forEach((eventName) => {
-            if (!(eventName in refetchEventManager["sources"])) {
+            if (!Object.hasOwn(refetchEventManager["sources"], eventName)) {
               invariant.warn(
                 "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
                 eventName,

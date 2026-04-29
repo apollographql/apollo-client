@@ -203,7 +203,7 @@ export class RefetchEventManager {
       return;
     }
 
-    if (!(source in this.sources)) {
+    if (!Object.hasOwn(this.sources, source)) {
       if (__DEV__) {
         invariant.warn(
           "Received '%s' event but no source is configured for it on the `RefetchEventManager`. No queries will refetch. Add the event to the `sources` option or call `setEventSource`.",

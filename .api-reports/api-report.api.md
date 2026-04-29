@@ -2641,6 +2641,7 @@ export class RefetchEventManager {
     emit<TSource extends keyof RefetchEvents>(source: TSource, ...args: RefetchEvents[TSource] extends void | never ? [] : undefined extends RefetchEvents[TSource] ? [
     payload?: RefetchEvents[TSource]
     ] : [payload: RefetchEvents[TSource]]): void;
+    hasSource(source: keyof RefetchEvents): boolean;
     removeEventSource(event: keyof RefetchEvents): void;
     setEventHandler<TSource extends keyof RefetchEvents>(source: TSource, handler: RefetchEventManager.EventHandler<TSource>): void;
     setEventSource<TSource extends keyof RefetchEvents>(name: TSource, source: RefetchEventManager.EventSource<RefetchEvents[TSource]>): void;
@@ -3056,8 +3057,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:200:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:600:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:601:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

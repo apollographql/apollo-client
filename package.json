@@ -254,7 +254,7 @@
     "typedoc": "0.25.0",
     "typescript": "5.7.3",
     "web-streams-polyfill": "4.0.0",
-    "zx": "^8.3.0"
+    "zx": "8.3.2"
   },
   "publishConfig": {
     "access": "public"

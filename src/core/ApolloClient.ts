@@ -1256,10 +1256,12 @@ export class ApolloClient {
       const { refetchEventManager } = this;
 
       if (refetchOn) {
+        const operationName = getOperationName(query, "(anonymous)");
+
         if (!refetchEventManager) {
           invariant.warn(
             "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
-            getOperationName(query, "(anonymous)")
+            operationName
           );
         }
 
@@ -1269,7 +1271,7 @@ export class ApolloClient {
               invariant.warn(
                 "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
                 source,
-                getOperationName(query, "(anonymous)")
+                operationName
               );
             }
           });

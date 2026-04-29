@@ -136,6 +136,13 @@ export class RefetchEventManager {
   }
 
   /**
+   * Returns whether a source is configured.
+   */
+  hasSource(source: keyof RefetchEvents) {
+    return Object.hasOwn(this.sources, source);
+  }
+
+  /**
    * Replaces the source for an event. If a source was previously configured
    * for the event, its cleanup function is called before the new source is
    * registered.
@@ -204,7 +211,7 @@ export class RefetchEventManager {
       return;
     }
 
-    if (!Object.hasOwn(this.sources, source)) {
+    if (!this.hasSource(source)) {
       if (__DEV__) {
         invariant.warn(
           "Received '%s' event but no source is configured for it on the `RefetchEventManager`. No queries will refetch. Add the event to the `sources` option or call `setEventSource`.",

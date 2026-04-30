@@ -1,5 +1,18 @@
 # @apollo/client
 
+## 4.1.9
+
+### Patch Changes
+
+- [#13203](https://github.com/apollographql/apollo-client/pull/13203) [`099954b`](https://github.com/apollographql/apollo-client/commit/099954b9905c0f80b57563eb64157386f4493e84) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Remove the `workspaces` field from the published `package.json` in `dist` to avoid Yarn v1 warnings about workspaces requiring private packages.
+
+## 4.1.8
+
+### Patch Changes
+
+- [#13202](https://github.com/apollographql/apollo-client/pull/13202) [`8a51ea6`](https://github.com/apollographql/apollo-client/commit/8a51ea636600dbe4b48477d32f30469b7d36b152) Thanks [@phryneas](https://github.com/phryneas)! - Ship agent skill for usage with @tanstack/intent — the skill is now bundled in the npm package under `skills/apollo-client/` and discoverable by `intent list`.
+  For more context, see the [TanStack Intent QuickStart](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers).
+
 ## 4.1.7
 
 ### Patch Changes

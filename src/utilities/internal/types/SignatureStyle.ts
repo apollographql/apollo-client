@@ -31,3 +31,17 @@ export type SignatureStyle =
  */
 export type ClassicSignature =
   SignatureStyle extends "classic" ? unknown : never;
+
+export declare namespace ClassicSignature {
+  const __marker: unique symbol;
+
+  /**
+   * A phantom-symbol marker used as the leading generic parameter of the
+   * inferred-style classic overloads. The constraint
+   * `_Inferred extends ClassicSignature.Marker` only succeeds when the marker
+   * is left at its default — any user-provided generic for that slot fails
+   * the constraint, forcing TypeScript to fall through to the deprecated
+   * overloads (which are matched by explicit-generic arity).
+   */
+  export type Marker = typeof __marker;
+}

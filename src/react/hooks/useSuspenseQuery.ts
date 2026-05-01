@@ -439,18 +439,6 @@ export declare namespace useSuspenseQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        // this overload should never be manually defined, it should always be inferred
-        TOptions extends never,
-      >(
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        skipToken: SkipToken
-      ): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
-
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
-      <
-        TData,
-        TVariables extends OperationVariables,
-        // this overload should never be manually defined, it should always be inferred
         TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
           VariablesOption<
             TVariables & {
@@ -465,6 +453,17 @@ export declare namespace useSuspenseQuery {
         ...[options]: {} extends TVariables ? [options?: TOptions]
         : [options: TOptions]
       ): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        skipToken: SkipToken
+      ): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
 
       /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <

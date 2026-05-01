@@ -526,17 +526,6 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends never,
-      >(
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        skipToken: SkipToken
-      ): useBackgroundQuery.ResultForOptions<TData, TVariables, SkipToken>;
-
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
-      <
-        TData,
-        TVariables extends OperationVariables,
-        // this overload should never be manually defined, it should always be inferred
         TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
           VariablesOption<
             TVariables & {
@@ -551,6 +540,17 @@ export declare namespace useBackgroundQuery {
         ...[options]: {} extends TVariables ? [options?: TOptions]
         : [options: TOptions]
       ): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        skipToken: SkipToken
+      ): useBackgroundQuery.ResultForOptions<TData, TVariables, SkipToken>;
 
       /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <

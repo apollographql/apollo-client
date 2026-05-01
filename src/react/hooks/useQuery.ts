@@ -435,17 +435,6 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends SkipToken,
-      >(
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options: SkipToken
-      ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
-
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
-      <
-        TData,
-        TVariables extends OperationVariables,
-        // this overload should never be manually defined, it should always be inferred
         TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
           VariablesOption<
             TVariables & {
@@ -465,6 +454,17 @@ export declare namespace useQuery {
         : // variables required
           [options: TOptions]
       ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
+
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends SkipToken,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: SkipToken
+      ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <

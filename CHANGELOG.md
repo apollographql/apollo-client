@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.0-alpha.5
+
+### Patch Changes
+
+- [#13215](https://github.com/apollographql/apollo-client/pull/13215) [`54c9eb7`](https://github.com/apollographql/apollo-client/commit/54c9eb7f95d3cd12dc5d12ec27090f1f23b0c471) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the options object for the `useQuery`, `useSuspenseQuery`, and `useBackgroundQuery` hooks provide proper IntelliSense suggestions.
+
 ## 4.2.0-alpha.4
 
 ### Minor Changes

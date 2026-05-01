@@ -303,6 +303,12 @@ export declare namespace useQuery {
   export namespace Signatures {
     /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
     export interface Classic {
+      // _Inferred is used to distinguish between inferred generics arguments and explicit
+      // generic arguments so that we can provide a `@deprecated` signature for
+      // explicit generic arguments. As soon as a user provides a generic arg
+      // (e.g. useQuery<TData>(query))`, the overload falls through to the
+      // overloads without _Inferred.
+
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,

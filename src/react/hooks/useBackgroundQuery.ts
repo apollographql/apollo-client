@@ -525,6 +525,7 @@ export declare namespace useBackgroundQuery {
       <
         TData,
         TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
         TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
           VariablesOption<
             TVariables & {

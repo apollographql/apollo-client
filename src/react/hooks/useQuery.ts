@@ -300,9 +300,9 @@ export declare namespace useQuery {
   }
 
   export namespace Signatures {
-    /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+    /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
     export interface Classic {
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -317,7 +317,7 @@ export declare namespace useQuery {
         "empty" | "complete" | "streaming" | "partial"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -326,7 +326,7 @@ export declare namespace useQuery {
         options: SkipToken
       ): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -344,7 +344,7 @@ export declare namespace useQuery {
         Partial<TVariables>
       >;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -359,7 +359,7 @@ export declare namespace useQuery {
         "empty" | "complete" | "streaming" | "partial"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -377,7 +377,7 @@ export declare namespace useQuery {
         Partial<TVariables>
       >;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
@@ -388,7 +388,7 @@ export declare namespace useQuery {
         : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
       ): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
 
-      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,

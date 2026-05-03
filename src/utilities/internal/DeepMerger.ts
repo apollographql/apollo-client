@@ -87,6 +87,10 @@ export class DeepMerger {
 
     if (isNonNullObject(source) && isNonNullObject(target)) {
       Object.keys(source).forEach((sourceKey) => {
+        // Skip keys that could manipulate the prototype chain.
+        if (sourceKey === "__proto__" || sourceKey === "constructor") {
+          return;
+        }
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {

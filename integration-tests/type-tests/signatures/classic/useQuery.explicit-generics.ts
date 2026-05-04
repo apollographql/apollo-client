@@ -68,6 +68,7 @@ test("NoInfer prevents adding arbitrary additional variables", () => {
   });
 
   const x: number = variables?.bar;
+  // @ts-expect-error
   const y: string = variables?.nonExistingVariable;
 });
 

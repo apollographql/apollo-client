@@ -311,9 +311,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -327,9 +327,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: SkipToken
@@ -337,9 +337,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -356,9 +356,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -372,9 +372,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -391,9 +391,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -403,9 +403,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
-        _Inferred extends ClassicSignature.Marker = ClassicSignature.Marker,
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _Inferred extends ClassicSignature.Marker,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?

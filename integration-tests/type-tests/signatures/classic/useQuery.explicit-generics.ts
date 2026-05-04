@@ -190,22 +190,21 @@ test("variables are optional when Variables are empty", () => {
 
 test("is invalid when Variables is `never`", () => {
   type Data = { greeting: string };
-  type Variables = never;
-  const query: TypedDocumentNode<Data, Variables> = gql``;
+  const query = gql``;
 
   // @ts-expect-error
-  useQuery<Data, Variables>(query);
+  useQuery<Data, never>(query);
   // @ts-expect-error
-  useQuery<Data, Variables>(query, {});
-  useQuery<Data, Variables>(query, {
+  useQuery<Data, never>(query, {});
+  useQuery<Data, never>(query, {
     // @ts-expect-error
     variables: {},
   });
-  useQuery<Data, Variables>(query, {
+  useQuery<Data, never>(query, {
     // @ts-expect-error
     variables: undefined,
   });
-  useQuery<Data, Variables>(query, {
+  useQuery<Data, never>(query, {
     // @ts-expect-error
     variables: {
       foo: "bar",
@@ -214,23 +213,23 @@ test("is invalid when Variables is `never`", () => {
 
   let skip!: boolean;
   // @ts-expect-error
-  useQuery<Data, Variables>(query, skip ? skipToken : undefined);
-  useQuery<Data, Variables>(
+  useQuery<Data, never>(query, skip ? skipToken : undefined);
+  useQuery<Data, never>(
     query,
     // @ts-expect-error
     skip ? skipToken : {}
   );
-  useQuery<Data, Variables>(
+  useQuery<Data, never>(
     query,
     // @ts-expect-error
     skip ? skipToken : { variables: {} }
   );
-  useQuery<Data, Variables>(
+  useQuery<Data, never>(
     query,
     // @ts-expect-error
     skip ? skipToken : { variables: undefined }
   );
-  useQuery<Data, Variables>(
+  useQuery<Data, never>(
     query,
     // @ts-expect-error unknown variables
     skip ? skipToken : { variables: { foo: "bar" } }

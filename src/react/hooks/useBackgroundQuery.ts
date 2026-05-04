@@ -272,12 +272,20 @@ export declare namespace useBackgroundQuery {
   }
 
   export namespace Signatures {
-    /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+    /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
     export interface Classic {
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY is used to distinguish between inferred
+      // generics arguments and explicit generic arguments so that we can
+      // provide a `@deprecated` signature for explicit generic arguments. As
+      // soon as a user provides a generic arg (e.g. useBackgroundQuery<TData>(query))`,
+      // the overload falls through to the overloads without
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY.
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -290,10 +298,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -305,10 +314,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -324,10 +334,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -338,10 +349,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -353,10 +365,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -371,10 +384,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -385,10 +399,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -399,10 +414,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
@@ -413,19 +429,21 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: SkipToken
       ): [undefined, useBackgroundQuery.Result<TData, TVariables>];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -438,10 +456,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -457,10 +476,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -471,10 +491,11 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -489,11 +510,194 @@ export declare namespace useBackgroundQuery {
         useBackgroundQuery.Result<TData, TVariables>,
       ];
 
-      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          /** @deprecated `returnPartialData` has no effect on `no-cache` queries */
+          returnPartialData: boolean;
+          fetchPolicy: "no-cache";
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: false;
+          errorPolicy: "ignore" | "all";
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: boolean;
+          errorPolicy: "ignore" | "all";
+        }
+      ): [
+        QueryRef<
+          TData,
+          TVariables,
+          "complete" | "streaming" | "partial" | "empty"
+        >,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          errorPolicy: "ignore" | "all";
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          skip: boolean;
+          returnPartialData: false;
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          skip: boolean;
+          returnPartialData: boolean;
+        }
+      ): [
+        (
+          | QueryRef<TData, TVariables, "complete" | "streaming" | "partial">
+          | undefined
+        ),
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: false;
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: boolean;
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming" | "partial">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+          skip: boolean;
+        }
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: SkipToken
+      ): [undefined, useBackgroundQuery.Result<TData, TVariables>];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options:
+          | SkipToken
+          | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
+              returnPartialData: false;
+            })
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options:
+          | SkipToken
+          | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
+              returnPartialData: boolean;
+            })
+      ): [
+        (
+          | QueryRef<TData, TVariables, "complete" | "streaming" | "partial">
+          | undefined
+        ),
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [options?: useBackgroundQuery.Options<NoInfer<TVariables>>]
+        : [options: useBackgroundQuery.Options<NoInfer<TVariables>>]
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming">,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [
+            options?:
+              | SkipToken
+              | useBackgroundQuery.Options<NoInfer<TVariables>>,
+          ]
+        : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
+      ): [
+        QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+        useBackgroundQuery.Result<TData, TVariables>,
+      ];
+
+      /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
       ): [

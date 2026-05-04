@@ -36,7 +36,6 @@ import type { ApolloClient } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
-  ClassicSignature,
   DocumentationTypes as UtilityDocumentationTypes,
   LazyType,
   NoInfer,
@@ -303,17 +302,18 @@ export declare namespace useQuery {
   export namespace Signatures {
     /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
     export interface Classic {
-      // _Inferred is used to distinguish between inferred generics arguments and explicit
-      // generic arguments so that we can provide a `@deprecated` signature for
-      // explicit generic arguments. As soon as a user provides a generic arg
-      // (e.g. useQuery<TData>(query))`, the overload falls through to the
-      // overloads without _Inferred.
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY is used to distinguish between inferred
+      // generics arguments and explicit generic arguments so that we can
+      // provide a `@deprecated` signature for explicit generic arguments. As
+      // soon as a user provides a generic arg (e.g. useQuery<TData>(query))`,
+      // the overload falls through to the overloads without
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY.
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -329,7 +329,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: SkipToken
@@ -339,7 +339,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -358,7 +358,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -374,7 +374,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -393,7 +393,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -405,7 +405,7 @@ export declare namespace useQuery {
       <
         TData,
         TVariables extends OperationVariables,
-        _Inferred extends ClassicSignature.Marker,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?

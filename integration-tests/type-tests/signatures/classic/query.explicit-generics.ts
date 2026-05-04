@@ -1,4 +1,4 @@
-import { ApolloClient, DocumentNode, gql } from "@apollo/client";
+import { ApolloClient, DocumentNode } from "@apollo/client";
 import { expectTypeOf } from "expect-type";
 import { test } from "./shared.js";
 

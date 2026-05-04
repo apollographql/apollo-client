@@ -14,12 +14,33 @@ declare const client: ApolloClient;
 declare const query: DocumentNode;
 
 test("returns narrowed TData in default case", () => {
-  const result = client.query<Data, Variables>({ query });
+  {
+    const result = client.query<Data>({ query });
 
-  expectTypeOf(result).toEqualTypeOf<Promise<ApolloClient.QueryResult<Data>>>();
+    expectTypeOf(result).toEqualTypeOf<
+      Promise<ApolloClient.QueryResult<Data>>
+    >();
+  }
+
+  {
+    const result = client.query<Data, Variables>({ query });
+
+    expectTypeOf(result).toEqualTypeOf<
+      Promise<ApolloClient.QueryResult<Data>>
+    >();
+  }
 });
 
 test('returns narrowed TData with errorPolicy: "none"', () => {
+  {
+    const result = client.query<Data>({ query: query, errorPolicy: "none" });
+
+    // "none" not specified in generic argument
+    expectTypeOf(result).toEqualTypeOf<
+      Promise<ApolloClient.QueryResult<Data>>
+    >();
+  }
+
   {
     const result = client.query<Data, Variables>({
       query: query,
@@ -46,6 +67,15 @@ test('returns narrowed TData with errorPolicy: "none"', () => {
 
 test('returns narrowed TData with errorPolicy: "all"', () => {
   {
+    const result = client.query<Data>({ query, errorPolicy: "all" });
+
+    // "all" not specified in generic argument
+    expectTypeOf(result).branded.toEqualTypeOf<
+      Promise<ApolloClient.QueryResult<Data>>
+    >();
+  }
+
+  {
     const result = client.query<Data, Variables>({
       query,
       errorPolicy: "all",
@@ -70,6 +100,15 @@ test('returns narrowed TData with errorPolicy: "all"', () => {
 });
 
 test('returns narrowed TData with errorPolicy: "ignore"', () => {
+  {
+    const result = client.query<Data>({ query, errorPolicy: "ignore" });
+
+    // "ignore" not specified in generic argument
+    expectTypeOf(result).toEqualTypeOf<
+      Promise<ApolloClient.QueryResult<Data>>
+    >();
+  }
+
   {
     const result = client.query<Data, Variables>({
       query,

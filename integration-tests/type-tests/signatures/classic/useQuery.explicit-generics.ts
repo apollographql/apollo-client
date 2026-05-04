@@ -11,112 +11,152 @@ import { test, simpleQuery as query, SimpleCaseData } from "./shared.js";
 
 test("returns narrowed Data in default case", () => {
   type Variables = Record<string, never>;
-  const { data, dataState } = useQuery<SimpleCaseData, Variables>(query);
 
-  expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  {
+    const { data, dataState } = useQuery<SimpleCaseData>(query);
 
-  if (dataState === "complete") {
-    expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
   }
 
-  if (dataState === "streaming") {
-    expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
-  }
+  {
+    const { data, dataState } = useQuery<SimpleCaseData, Variables>(query);
 
-  if (dataState === "empty") {
-    expectTypeOf(data).toEqualTypeOf<undefined>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
   }
 });
 
 test("returns DeepPartial<Data> with returnPartialData: true", () => {
   type Variables = Record<string, never>;
-  const { data, dataState } = useQuery<SimpleCaseData, Variables>(query, {
-    returnPartialData: true,
-  });
 
-  expectTypeOf(dataState).toEqualTypeOf<
-    "empty" | "streaming" | "complete" | "partial"
-  >();
+  {
+    const { data, dataState } = useQuery<SimpleCaseData>(query, {
+      returnPartialData: true,
+    });
 
-  if (dataState === "complete") {
-    expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "streaming" | "complete" | "partial"
+    >();
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "partial") {
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
   }
 
-  if (dataState === "partial") {
-    expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
-  }
+  {
+    const { data, dataState } = useQuery<SimpleCaseData, Variables>(query, {
+      returnPartialData: true,
+    });
 
-  if (dataState === "streaming") {
-    expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
-  }
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "streaming" | "complete" | "partial"
+    >();
 
-  if (dataState === "empty") {
-    expectTypeOf(data).toEqualTypeOf<undefined>();
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "partial") {
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
   }
 });
 
-test("NoInfer prevents adding arbitrary additional variables", () => {
+test("prevents adding arbitrary additional variables when variables type is added", () => {
   type Data = { foo: string };
   type Variables = { bar: number };
-  const typedNode = {} as TypedDocumentNode<Data, Variables>;
-  const { variables } = useQuery<Data, Variables>(typedNode, {
-    variables: {
-      bar: 4,
-      // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
-      nonExistingVariable: "string",
-    },
-  });
-
-  const x: number = variables?.bar;
-  // @ts-expect-error
-  const y: string = variables?.nonExistingVariable;
-});
-
-test("variables are optional and can be anything with an DocumentNode", () => {
-  type Data = unknown;
-  type Variables = OperationVariables;
   const query = gql``;
 
-  useQuery<Data, Variables>(query);
-  useQuery<Data, Variables>(query, {});
-  useQuery<Data, Variables>(query, { variables: {} });
-  useQuery<Data, Variables>(query, { variables: { foo: "bar" } });
-  useQuery<Data, Variables>(query, { variables: { bar: "baz" } });
+  {
+    const { variables } = useQuery<Data, Variables>(query, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error Type 'string' is not assignable to type 'undefined'.ts(2769)
+        nonExistingVariable: "string",
+      },
+    });
 
-  let skip!: boolean;
-  useQuery<Data, Variables>(query, skip ? skipToken : undefined);
-  useQuery<Data, Variables>(query, skip ? skipToken : {});
-  useQuery<Data, Variables>(query, skip ? skipToken : { variables: {} });
-  useQuery<Data, Variables>(
-    query,
-    skip ? skipToken : { variables: { foo: "bar" } }
-  );
-  useQuery<Data, Variables>(
-    query,
-    skip ? skipToken : { variables: { bar: "baz" } }
-  );
+    const x: number = variables?.bar;
+    // @ts-expect-error
+    const y: string = variables?.nonExistingVariable;
+  }
 });
 
-test("variables are optional and can be anything with unspecified Variables on a TypedDocumentNode", () => {
+test("OperationVariables type makes all variables optional and arbitrary", () => {
   type Data = { greeting: string };
-  type Variables = OperationVariables;
-  const query: TypedDocumentNode<Data> = gql``;
+  const query = gql``;
 
-  useQuery<Data, Variables>(query);
-  useQuery<Data, Variables>(query, {});
-  useQuery<Data, Variables>(query, { variables: {} });
-  useQuery<Data, Variables>(query, { variables: { foo: "bar" } });
-  useQuery<Data, Variables>(query, { variables: { bar: "baz" } });
+  useQuery<Data>(query);
+  useQuery<Data, OperationVariables>(query);
+  useQuery<Data>(query, {});
+  useQuery<Data, OperationVariables>(query, {});
+  useQuery<Data>(query, { variables: {} });
+  useQuery<Data, OperationVariables>(query, { variables: {} });
+  useQuery<Data>(query, { variables: { foo: "bar" } });
+  useQuery<Data, OperationVariables>(query, { variables: { foo: "bar" } });
+  useQuery<Data>(query, { variables: { bar: "baz" } });
+  useQuery<Data, OperationVariables>(query, { variables: { bar: "baz" } });
 
   let skip!: boolean;
-  useQuery<Data, Variables>(query, skip ? skipToken : undefined);
-  useQuery<Data, Variables>(query, skip ? skipToken : {});
-  useQuery<Data, Variables>(query, skip ? skipToken : { variables: {} });
-  useQuery<Data, Variables>(
+  useQuery<Data>(query, skip ? skipToken : undefined);
+  useQuery<Data, OperationVariables>(query, skip ? skipToken : undefined);
+  useQuery<Data>(query, skip ? skipToken : {});
+  useQuery<Data, OperationVariables>(query, skip ? skipToken : {});
+  useQuery<Data>(query, skip ? skipToken : { variables: {} });
+  useQuery<Data, OperationVariables>(
+    query,
+    skip ? skipToken : { variables: {} }
+  );
+  useQuery<Data>(query, skip ? skipToken : { variables: { foo: "bar" } });
+  useQuery<Data, OperationVariables>(
     query,
     skip ? skipToken : { variables: { foo: "bar" } }
   );
-  useQuery<Data, Variables>(
+  useQuery<Data>(query, skip ? skipToken : { variables: { bar: "baz" } });
+  useQuery<Data, OperationVariables>(
     query,
     skip ? skipToken : { variables: { bar: "baz" } }
   );
@@ -411,14 +451,24 @@ test("requires variables with mixed Variables", () => {
 test("always returns empty data/dataState with unconditional skipToken", () => {
   type Data = { character: string };
   type Variables = { id: string; language?: string };
-  const query: TypedDocumentNode<Data, Variables> = gql``;
+  const query = gql``;
 
-  const { data, dataState, variables } = useQuery<Data, Variables>(
-    query,
-    skipToken
-  );
+  {
+    const { data, dataState, variables } = useQuery<Data>(query, skipToken);
 
-  expectTypeOf(data).toEqualTypeOf<undefined>();
-  expectTypeOf(dataState).toEqualTypeOf<"empty">();
-  expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty">();
+    expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
+  }
+
+  {
+    const { data, dataState, variables } = useQuery<Data, Variables>(
+      query,
+      skipToken
+    );
+
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+    expectTypeOf(dataState).toEqualTypeOf<"empty">();
+    expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
+  }
 });

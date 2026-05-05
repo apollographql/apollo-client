@@ -280,12 +280,20 @@ export declare namespace useSuspenseQuery {
   }
 
   export namespace Signatures {
-    /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+    /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
     export interface Classic {
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY is used to distinguish between inferred
+      // generics arguments and explicit generic arguments so that we can
+      // provide a `@deprecated` signature for explicit generic arguments. As
+      // soon as a user provides a generic arg (e.g. useSuspenseQuery<TData>(query))`,
+      // the overload falls through to the overloads without
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY.
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -298,10 +306,11 @@ export declare namespace useSuspenseQuery {
         "complete" | "streaming" | "partial" | "empty"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -313,10 +322,11 @@ export declare namespace useSuspenseQuery {
         "complete" | "streaming" | "empty"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -329,10 +339,11 @@ export declare namespace useSuspenseQuery {
         "complete" | "empty" | "streaming" | "partial"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -344,10 +355,11 @@ export declare namespace useSuspenseQuery {
         "partial" | "streaming" | "complete"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -359,10 +371,11 @@ export declare namespace useSuspenseQuery {
         "complete" | "streaming" | "empty"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
@@ -376,10 +389,11 @@ export declare namespace useSuspenseQuery {
         "empty" | "streaming" | "complete" | "partial"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -387,10 +401,11 @@ export declare namespace useSuspenseQuery {
         : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
       ): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -402,11 +417,118 @@ export declare namespace useSuspenseQuery {
         "complete" | "streaming" | "empty"
       >;
 
-      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
       <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
       >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: true;
+          errorPolicy: "ignore" | "all";
+        }
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "partial" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+          errorPolicy: "ignore" | "all";
+        }
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+          skip: boolean;
+          returnPartialData: true;
+        }
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "empty" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+          returnPartialData: true;
+        }
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "partial" | "streaming" | "complete"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
+          skip: boolean;
+        }
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options:
+          | SkipToken
+          | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
+              returnPartialData: true;
+            })
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "empty" | "streaming" | "complete" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
+        : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
+      ): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+        : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+      ): useSuspenseQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery_Deprecated:call(1)} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
       ): useSuspenseQuery.Result<

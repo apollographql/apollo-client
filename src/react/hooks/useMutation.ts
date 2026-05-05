@@ -333,30 +333,55 @@ export declare namespace useMutation {
         options?: Options<TData, TVariables>
       ): ResultTuple<TData, TVariables>;
     }
-
-    /**
-     * @deprecated Avoid manually specifying generics on `useMutation`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
-     *
-     * {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)}
-     */
-    export interface useMutation_Deprecated {
-      <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
-      >(
-        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: Options<TData, TVariables>
-      ): ResultTuple<TData, TVariables>;
-    }
   }
 
   export namespace Signatures {
-    /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation_Deprecated:call(1)} */
+    /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
     export interface Classic {
-      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation_Deprecated:call(1)} */
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY is used to distinguish between inferred
+      // generics arguments and explicit generic arguments so that we can
+      // provide a `@deprecated` signature for explicit generic arguments. As
+      // soon as a user provides a generic arg (e.g. useMutation<TData>(mutation))`,
+      // the overload falls through to the overloads without
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY.
+
+      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)} */
       <
-        TData = unknown,
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TConfiguredVariables extends Partial<TVariables> = {},
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
+      >(
+        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options?: useMutation.Options<
+          NoInfer<TData>,
+          NoInfer<TVariables>,
+          ApolloCache,
+          {
+            [K in keyof TConfiguredVariables]: K extends keyof TVariables ?
+              TConfiguredVariables[K]
+            : never;
+          }
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+          errorPolicy?: TErrorPolicy;
+        }
+      ): useMutation.ResultTuple<
+        TData,
+        MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
+        ApolloCache,
+        TErrorPolicy
+      >;
+
+      /**
+       * @deprecated Avoid manually specifying generics on `useMutation`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
+       *
+       * {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)}
+       */
+      <
+        TData,
         TVariables extends OperationVariables = OperationVariables,
         TCache extends ApolloCache = ApolloCache,
         TConfiguredVariables extends Partial<TVariables> = {},
@@ -372,10 +397,12 @@ export declare namespace useMutation {
               TConfiguredVariables[K]
             : never;
           }
-        > & {
-          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-          errorPolicy?: TErrorPolicy;
-        }
+        > &
+          (TErrorPolicy extends undefined ? {}
+          : {
+              /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+              errorPolicy: TErrorPolicy;
+            })
       ): useMutation.ResultTuple<
         TData,
         MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,

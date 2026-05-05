@@ -260,6 +260,20 @@ export declare namespace ApolloClient {
     >;
     export namespace Signatures {
       export interface Classic {
+        /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)} */
+        <
+          TData,
+          TVariables extends OperationVariables,
+          _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
+        >(
+          options: ApolloClient.MutateOptions<
+            TData,
+            TVariables,
+            ApolloCache
+          > & { errorPolicy?: TErrorPolicy }
+        ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
+
         /**
          * @deprecated Avoid manually specifying generics on `client.mutate`.
          * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
@@ -267,12 +281,15 @@ export declare namespace ApolloClient {
          * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)}
          */
         <
-          TData = unknown,
+          TData,
           TVariables extends OperationVariables = OperationVariables,
           TCache extends ApolloCache = ApolloCache,
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
-          options: ApolloClient.MutateOptions<TData, TVariables, TCache>
-        ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
+          options: ApolloClient.MutateOptions<TData, TVariables, TCache> &
+            (TErrorPolicy extends undefined ? {}
+            : { errorPolicy: TErrorPolicy })
+        ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
       }
       export interface Modern {
         /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.mutate:function(1)} */
@@ -432,6 +449,18 @@ export declare namespace ApolloClient {
     >;
     export namespace Signatures {
       export interface Classic {
+        /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */
+        <
+          TData,
+          TVariables extends OperationVariables,
+          _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
+        >(
+          options: ApolloClient.QueryOptions<TData, TVariables> & {
+            errorPolicy?: TErrorPolicy;
+          }
+        ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
+
         /**
          * @deprecated Avoid manually specifying generics on `client.query`.
          * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
@@ -439,11 +468,14 @@ export declare namespace ApolloClient {
          * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
          */
         <
-          TData = unknown,
+          TData,
           TVariables extends OperationVariables = OperationVariables,
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
-          options: ApolloClient.QueryOptions<TData, TVariables>
-        ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+          options: ApolloClient.QueryOptions<TData, TVariables> &
+            (TErrorPolicy extends undefined ? {}
+            : { errorPolicy: TErrorPolicy })
+        ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
       }
       export interface Modern {
         /** {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)} */

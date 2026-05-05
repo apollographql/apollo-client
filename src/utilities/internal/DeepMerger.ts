@@ -57,6 +57,9 @@ export class DeepMerger {
 
     if (atPath?.length) {
       const [head, ...tail] = atPath;
+      if (head === "__proto__" || head === "constructor") {
+        return target;
+      }
       if (target === undefined) {
         target = objForKey(head);
       }

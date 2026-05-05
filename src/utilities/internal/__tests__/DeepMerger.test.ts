@@ -84,5 +84,25 @@ test("ignores constructor key to prevent prototype pollution", () => {
   const result = merger.merge(target, malicious);
 
   expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
   expect(result).toEqual({ a: 1 });
+});
+
+test("ignores __proto__ and constructor in atPath to prevent prototype pollution", () => {
+  const merger = new DeepMerger();
+  const target = { a: 1 };
+
+  const resultProto = merger.merge(target, { polluted: true }, {
+    atPath: ["__proto__"],
+  });
+  expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(Object.getPrototypeOf(resultProto)).toBe(Object.prototype);
+  expect(resultProto).toEqual({ a: 1 });
+
+  const resultCtor = merger.merge(target, { polluted: true }, {
+    atPath: ["constructor"],
+  });
+  expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(Object.getPrototypeOf(resultCtor)).toBe(Object.prototype);
+  expect(resultCtor).toEqual({ a: 1 });
 });

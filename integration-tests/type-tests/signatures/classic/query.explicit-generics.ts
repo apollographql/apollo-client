@@ -165,3 +165,18 @@ test('returns narrowed TData with errorPolicy: "ignore"', () => {
     errorPolicy: "none",
   });
 });
+
+test("does not allow arbitrary errorPolicy", () => {
+  // @ts-expect-error "foo" not assignable to errorPolicy
+  client.query<Data, Variables, "foo">({ query });
+  client.query<Data, Variables>({
+    query,
+    // @ts-expect-error "foo" not assignable to ErrorPolicy
+    errorPolicy: "foo",
+  });
+  // @ts-expect-error "foo" not assignable to ErrorPolicy
+  client.query<Data, Variables, "foo">({
+    query,
+    errorPolicy: "foo",
+  });
+});

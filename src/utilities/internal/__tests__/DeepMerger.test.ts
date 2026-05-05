@@ -62,3 +62,27 @@ test("maintains source length when using truncate arrayMerge when source is long
 
   expect(result).toEqual([{ a: 2, b: { c: 2 } }, { e: 2 }]);
 });
+
+test("ignores __proto__ key to prevent prototype pollution", () => {
+  const merger = new DeepMerger();
+  const target = { a: 1 };
+  // JSON.parse creates __proto__ as an own enumerable property
+  const malicious = JSON.parse('{"__proto__": {"polluted": true}}');
+
+  const result = merger.merge(target, malicious);
+
+  expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+  expect(result).toEqual({ a: 1 });
+});
+
+test("ignores constructor key to prevent prototype pollution", () => {
+  const merger = new DeepMerger();
+  const target = { a: 1 };
+  const malicious = JSON.parse('{"constructor": {"prototype": {"polluted": true}}}');
+
+  const result = merger.merge(target, malicious);
+
+  expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(result).toEqual({ a: 1 });
+});

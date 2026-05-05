@@ -522,9 +522,7 @@ test("returns QueryReference<TData | undefined> with errorPolicy: 'ignore'", () 
     expectTypeOf(data).toEqualTypeOf<
       SimpleCaseData | DataValue.Streaming<SimpleCaseData> | undefined
     >();
-    expectTypeOf(dataState).toEqualTypeOf<
-      "complete" | "streaming" | "empty"
-    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming" | "empty">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
@@ -590,9 +588,7 @@ test("returns QueryReference<TData | undefined> with errorPolicy: 'all'", () => 
     expectTypeOf(data).toEqualTypeOf<
       SimpleCaseData | DataValue.Streaming<SimpleCaseData> | undefined
     >();
-    expectTypeOf(dataState).toEqualTypeOf<
-      "complete" | "streaming" | "empty"
-    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming" | "empty">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();

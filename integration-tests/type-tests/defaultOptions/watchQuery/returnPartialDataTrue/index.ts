@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
   useBackgroundQuery,
   useLoadableQuery,
+  preloadQuery,
 } from "../../shared/scenarios.js";
 import { expectTypeOf } from "expect-type";
 
@@ -388,6 +389,61 @@ declare module "@apollo/client" {
   >;
   useBackgroundQuery.skip._bool.returnPartialData._bool.toEqualTypeOf<
     useBackgroundQuery.Result<"complete" | "streaming" | "partial", undefined>
+  >;
+}
+
+// preloadQuery
+{
+  preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+
+  preloadQuery.errorPolicy.none.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+
+  preloadQuery.errorPolicy.all.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty" | "partial">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+
+  preloadQuery.errorPolicy.ignore.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty" | "partial">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
 }
 

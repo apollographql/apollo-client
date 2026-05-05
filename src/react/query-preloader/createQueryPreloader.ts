@@ -122,6 +122,17 @@ export declare namespace PreloadQueryFunction {
   export interface DefaultOptions
     extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
+  export namespace DocumentationTypes {
+    /**
+     * @deprecated Avoid manually specifying generics on `preloadQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface}
+     */
+    export interface PreloadQueryFunction_Deprecated
+      extends PreloadQueryFunction {}
+  }
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,

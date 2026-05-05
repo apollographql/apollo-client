@@ -526,6 +526,10 @@ const bool = {} as any as boolean;
 
 // preloadQuery
 {
+  expectTypeOf<preloadQuery.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: boolean;
+  }>();
   preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
     preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;

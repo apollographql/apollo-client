@@ -376,6 +376,10 @@ import { expectTypeOf } from "expect-type";
 
 // preloadQuery
 {
+  expectTypeOf<preloadQuery.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none";
+    returnPartialData: false;
+  }>();
   preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
     preloadQuery.Result<"complete" | "streaming">
   >;

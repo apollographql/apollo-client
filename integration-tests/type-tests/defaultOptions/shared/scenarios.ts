@@ -13,6 +13,7 @@ import {
   useQuery,
   useSuspenseQuery,
   type PreloadedQueryRef,
+  type PreloadQueryFunction,
   type QueryRef,
   type SkipToken,
 } from "@apollo/client/react";
@@ -666,6 +667,7 @@ namespace useLoadableQueryCase {
 
 namespace preloadQueryCase {
   const preloadQuery = createQueryPreloader(client);
+  export type DefaultOptions = PreloadQueryFunction.DefaultOptions;
   export type Result<TStates extends DataState<Data>["dataState"]> =
     PreloadedQueryRef<Data, Variables, TStates>;
 

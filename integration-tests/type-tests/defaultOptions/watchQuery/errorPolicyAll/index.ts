@@ -408,6 +408,10 @@ declare module "@apollo/client" {
 
 // preloadQuery
 {
+  expectTypeOf<preloadQuery.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "all";
+    returnPartialData: false;
+  }>();
   preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
     preloadQuery.Result<"complete" | "streaming" | "empty">
   >;

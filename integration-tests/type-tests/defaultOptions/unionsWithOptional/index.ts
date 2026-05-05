@@ -492,6 +492,10 @@ expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
 
 // preloadQuery
 {
+  expectTypeOf<preloadQuery.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: false;
+  }>();
   preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
     preloadQuery.Result<"complete" | "streaming" | "empty">
   >;

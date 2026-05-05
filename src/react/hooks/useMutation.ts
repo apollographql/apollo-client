@@ -412,7 +412,7 @@ export declare namespace useMutation {
           (TErrorPolicy extends undefined ? {}
           : {
               /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-              errorPolicy?: TErrorPolicy;
+              errorPolicy: TErrorPolicy;
             })
       ): useMutation.ResultTuple<
         TData,

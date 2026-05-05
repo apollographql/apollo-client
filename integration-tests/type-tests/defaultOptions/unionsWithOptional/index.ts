@@ -9,6 +9,7 @@ import {
   useMutation,
   useQuery,
   useSuspenseQuery,
+  preloadQuery,
 } from "../shared/scenarios.js";
 
 declare module "@apollo/client" {
@@ -486,6 +487,65 @@ expectTypeOf<ApolloClient.query.DefaultOptions>().toEqualTypeOf<{
       "complete" | "streaming" | "partial" | "empty",
       undefined
     >
+  >;
+}
+
+// preloadQuery
+{
+  expectTypeOf<preloadQuery.DefaultOptions>().toEqualTypeOf<{
+    errorPolicy: "none" | "ignore" | "all";
+    returnPartialData: false;
+  }>();
+  preloadQuery.errorPolicy.defaults.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.defaults.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+
+  preloadQuery.errorPolicy.none.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming">
+  >;
+  preloadQuery.errorPolicy.none.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial">
+  >;
+
+  preloadQuery.errorPolicy.all.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.all.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+
+  preloadQuery.errorPolicy.ignore.result.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._true.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._false.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "empty">
+  >;
+  preloadQuery.errorPolicy.ignore.returnPartialData._bool.toEqualTypeOf<
+    preloadQuery.Result<"complete" | "streaming" | "partial" | "empty">
   >;
 }
 

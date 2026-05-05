@@ -5,12 +5,15 @@ import {
   type TypedDocumentNode,
 } from "@apollo/client";
 import {
+  createQueryPreloader,
   useBackgroundQuery,
   useLazyQuery,
   useLoadableQuery,
   useMutation,
   useQuery,
   useSuspenseQuery,
+  type PreloadedQueryRef,
+  type PreloadQueryFunction,
   type QueryRef,
   type SkipToken,
 } from "@apollo/client/react";
@@ -662,6 +665,105 @@ namespace useLoadableQueryCase {
   }
 }
 
+namespace preloadQueryCase {
+  const preloadQuery = createQueryPreloader(client);
+  export type DefaultOptions = PreloadQueryFunction.DefaultOptions;
+  export type Result<TStates extends DataState<Data>["dataState"]> =
+    PreloadedQueryRef<Data, Variables, TStates>;
+
+  export namespace errorPolicy {
+    export namespace defaults {
+      export const result = expectTypeOf(preloadQuery(QUERY));
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          preloadQuery(QUERY, { returnPartialData: false })
+        );
+        export const _true = expectTypeOf(
+          preloadQuery(QUERY, { returnPartialData: true })
+        );
+        export const _bool = expectTypeOf(
+          preloadQuery(QUERY, { returnPartialData: bool })
+        );
+      }
+    }
+    export namespace none {
+      export const result = expectTypeOf(
+        preloadQuery(QUERY, { errorPolicy: "none" })
+      );
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "none",
+            returnPartialData: false,
+          })
+        );
+        export const _true = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "none",
+            returnPartialData: true,
+          })
+        );
+        export const _bool = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "none",
+            returnPartialData: bool,
+          })
+        );
+      }
+    }
+    export namespace all {
+      export const result = expectTypeOf(
+        preloadQuery(QUERY, { errorPolicy: "all" })
+      );
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "all",
+            returnPartialData: false,
+          })
+        );
+        export const _true = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "all",
+            returnPartialData: true,
+          })
+        );
+        export const _bool = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "all",
+            returnPartialData: bool,
+          })
+        );
+      }
+    }
+    export namespace ignore {
+      export const result = expectTypeOf(
+        preloadQuery(QUERY, { errorPolicy: "ignore" })
+      );
+      export namespace returnPartialData {
+        export const _false = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "ignore",
+            returnPartialData: false,
+          })
+        );
+        export const _true = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "ignore",
+            returnPartialData: true,
+          })
+        );
+        export const _bool = expectTypeOf(
+          preloadQuery(QUERY, {
+            errorPolicy: "ignore",
+            returnPartialData: bool,
+          })
+        );
+      }
+    }
+  }
+}
+
 export {
   clientQueryCase as clientQuery,
   clientMutateCase as clientMutate,
@@ -671,4 +773,5 @@ export {
   useLoadableQueryCase as useLoadableQuery,
   useLazyQueryCase as useLazyQuery,
   useMutationCase as useMutation,
+  preloadQueryCase as preloadQuery,
 };

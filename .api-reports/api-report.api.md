@@ -283,8 +283,13 @@ export namespace ApolloClient {
         export namespace Signatures {
             // (undocumented)
             export interface Classic {
+                <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, ApolloCache> & {
+                    errorPolicy?: TErrorPolicy;
+                }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
                 // @deprecated (undocumented)
-                <TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache>(options: ApolloClient.MutateOptions<TData, TVariables, TCache>): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
+                <TData, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, TCache> & (TErrorPolicy extends undefined ? {} : {
+                    errorPolicy: TErrorPolicy;
+                })): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
             }
             // Warning: (ae-forgotten-export) The symbol "SignatureStyle" needs to be exported by the entry point index.d.ts
             //
@@ -389,8 +394,13 @@ export namespace ApolloClient {
         export namespace Signatures {
             // (undocumented)
             export interface Classic {
+                <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.QueryOptions<TData, TVariables> & {
+                    errorPolicy?: TErrorPolicy;
+                }): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
                 // @deprecated (undocumented)
-                <TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+                <TData, TVariables extends OperationVariables = OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.QueryOptions<TData, TVariables> & (TErrorPolicy extends undefined ? {} : {
+                    errorPolicy: TErrorPolicy;
+                })): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
             }
             // (undocumented)
             export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
@@ -3058,7 +3068,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:601:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:633:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

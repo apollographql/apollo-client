@@ -333,22 +333,6 @@ export declare namespace useMutation {
         options?: Options<TData, TVariables>
       ): ResultTuple<TData, TVariables>;
     }
-
-    /**
-     * @deprecated Avoid manually specifying generics on `useMutation`.
-     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
-     *
-     * {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)}
-     */
-    export interface useMutation_Deprecated {
-      <
-        TData = unknown,
-        TVariables extends OperationVariables = OperationVariables,
-      >(
-        mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: Options<TData, TVariables>
-      ): ResultTuple<TData, TVariables>;
-    }
   }
 
   export namespace Signatures {
@@ -390,7 +374,12 @@ export declare namespace useMutation {
         TErrorPolicy
       >;
 
-      /** {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation_Deprecated:call(1)} */
+      /**
+       * @deprecated Avoid manually specifying generics on `useMutation`.
+       * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your mutation results.
+       *
+       * {@inheritDoc @apollo/client/react!useMutation.DocumentationTypes.useMutation:call(1)}
+       */
       <
         TData,
         TVariables extends OperationVariables = OperationVariables,

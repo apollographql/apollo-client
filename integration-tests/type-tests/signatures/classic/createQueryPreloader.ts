@@ -690,7 +690,7 @@ test("returns QueryReference<TData> with errorPolicy: 'none'", () => {
   }
 });
 
-test("returns QueryReference<DeepPartial<TData>> with returnPartialData: true", () => {
+test("returns PreloadedQueryRef with partial dataState with returnPartialData: true", () => {
   {
     const query: TypedDocumentNode<SimpleCaseData> = gql``;
     const queryRef = preloadQuery(query, { returnPartialData: true });

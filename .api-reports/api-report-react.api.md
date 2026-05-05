@@ -153,21 +153,72 @@ export { PreloadedQueryRef }
 export type PreloadQueryFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
 // @public
-export interface PreloadQueryFunction {
-    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
-        returnPartialData: true;
-        errorPolicy: "ignore" | "all";
-    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
-    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
-        errorPolicy: "ignore" | "all";
-    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
-    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
-        returnPartialData: true;
-    }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
-    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
-    options?: PreloadQueryOptions<NoInfer_2<TVariables>>
-    ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+export interface PreloadQueryFunction extends PreloadQueryFunction.Signatures.Evaluated {
     toPromise<TQueryRef extends PreloadedQueryRef_2<any, any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
+}
+
+// @public (undocumented)
+export namespace PreloadQueryFunction {
+    // (undocumented)
+    export interface DefaultOptions extends ApolloClient.DefaultOptions.WatchQuery.Calculated {
+    }
+    // (undocumented)
+    export namespace DocumentationTypes {
+        // @deprecated (undocumented)
+        export interface PreloadQueryFunction_Deprecated extends PreloadQueryFunction {
+        }
+    }
+    // (undocumented)
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | PreloadQueryOptions<TVariables>> = TOptions extends any ? PreloadedQueryRef_2<TData, TVariables, ResultForOptions.States<TOptions, DefaultOptions>> : never;
+    // (undocumented)
+    export namespace ResultForOptions {
+        // (undocumented)
+        export type States<TOptions, TDefaultOptions extends DefaultOptions = DefaultOptions> = "complete" | "streaming" | (OptionWithFallback<TOptions, TDefaultOptions, "errorPolicy"> extends ("none") ? never : "empty") | (OptionWithFallback<TOptions, TDefaultOptions, "returnPartialData"> extends false ? never : "partial");
+    }
+    // (undocumented)
+    export namespace Signatures {
+        // (undocumented)
+        export interface Classic {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+                errorPolicy: "ignore" | "all";
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                errorPolicy: "ignore" | "all";
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            options?: PreloadQueryOptions<NoInfer_2<TVariables>>
+            ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+            // @deprecated (undocumented)
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+                errorPolicy: "ignore" | "all";
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
+            // @deprecated (undocumented)
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                errorPolicy: "ignore" | "all";
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
+            // @deprecated (undocumented)
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+                returnPartialData: true;
+            }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
+            // @deprecated (undocumented)
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            options?: PreloadQueryOptions<NoInfer_2<TVariables>>
+            ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+        }
+        // (undocumented)
+        export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+        export interface Modern {
+            <TData, TVariables extends OperationVariables, TOptions extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): PreloadQueryFunction.ResultForOptions<TData, TVariables, Record<string, never>>;
+            <TData, TVariables extends OperationVariables, TOptions extends PreloadQueryOptions<NoInfer_2<TVariables>> & VariablesOption<TVariables & {
+                [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
+            }>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [options?: TOptions] : [options: TOptions]): PreloadQueryFunction.ResultForOptions<TData, TVariables, TOptions>;
+        }
+    }
 }
 
 // @public (undocumented)

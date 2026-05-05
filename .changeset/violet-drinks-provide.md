@@ -2,7 +2,7 @@
 "@apollo/client": minor
 ---
 
-Extend the `defaultOptions` type-safety work to `preloadQuery` (returned from `createQueryPreloader`). Defaults declared in `DeclareDefaultOptions.WatchQuery` now flow through to the returned `PreloadedQueryRef`'s data states.
+Extend the `defaultOptions` type-safety work to `preloadQuery` (returned from `createQueryPreloader`). Defaults declared in `DeclareDefaultOptions.WatchQuery` now work with `preloadQuery` to ensure the `PreloadedQueryRef`'s data states are correctly set.
 
 ```ts
 // apollo.d.ts

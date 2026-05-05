@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.0-alpha.6
+
+### Patch Changes
+
+- [#13217](https://github.com/apollographql/apollo-client/pull/13217) [`790f987`](https://github.com/apollographql/apollo-client/commit/790f987ed65435159dd2c6df5fe2fa01587a179e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the deprecation for the classic signatures for function overloads that rely on type inference from a `TypedDocumentNode`. The deprecation now only applies to classic signatures that provide explicit type arguments to encourage the use of `TypedDocumentNode`.
+
 ## 4.2.0-alpha.5
 
 ### Patch Changes

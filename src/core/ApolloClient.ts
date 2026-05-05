@@ -468,13 +468,13 @@ export declare namespace ApolloClient {
          * {@inheritDoc @apollo/client!ApolloClient.DocumentationTypes.query:function(1)}
          */
         <
-          TData = unknown,
+          TData,
           TVariables extends OperationVariables = OperationVariables,
           TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
           options: ApolloClient.QueryOptions<TData, TVariables> &
             (TErrorPolicy extends undefined ? {}
-            : { errorPolicy?: TErrorPolicy })
+            : { errorPolicy: TErrorPolicy })
         ): Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
       }
       export interface Modern {

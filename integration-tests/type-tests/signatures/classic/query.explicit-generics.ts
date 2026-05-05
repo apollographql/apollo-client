@@ -33,7 +33,7 @@ test("returns narrowed TData in default case", () => {
 
 test('returns narrowed TData with errorPolicy: "none"', () => {
   {
-    const result = client.query<Data>({ query: query, errorPolicy: "none" });
+    const result = client.query<Data>({ query, errorPolicy: "none" });
 
     // "none" not specified in generic argument
     expectTypeOf(result).toEqualTypeOf<
@@ -43,7 +43,7 @@ test('returns narrowed TData with errorPolicy: "none"', () => {
 
   {
     const result = client.query<Data, Variables>({
-      query: query,
+      query,
       errorPolicy: "none",
     });
 
@@ -55,7 +55,7 @@ test('returns narrowed TData with errorPolicy: "none"', () => {
 
   {
     const result = client.query<Data, Variables, "none">({
-      query: query,
+      query,
       errorPolicy: "none",
     });
 
@@ -63,6 +63,17 @@ test('returns narrowed TData with errorPolicy: "none"', () => {
       Promise<ApolloClient.QueryResult<Data, "none">>
     >();
   }
+
+  client.query<Data, Variables, "none">(
+    // @ts-expect-error missing "errorPolicy" option
+    { query }
+  );
+
+  client.query<Data, Variables, "none">({
+    query,
+    // @ts-expect-error "all" not assignable to "none"
+    errorPolicy: "all",
+  });
 });
 
 test('returns narrowed TData with errorPolicy: "all"', () => {
@@ -97,6 +108,17 @@ test('returns narrowed TData with errorPolicy: "all"', () => {
       Promise<ApolloClient.QueryResult<Data, "all">>
     >();
   }
+
+  client.query<Data, Variables, "all">(
+    // @ts-expect-error missing "errorPolicy" option
+    { query }
+  );
+
+  client.query<Data, Variables, "all">({
+    query,
+    // @ts-expect-error "none" not assignable to "all"
+    errorPolicy: "none",
+  });
 });
 
 test('returns narrowed TData with errorPolicy: "ignore"', () => {
@@ -131,4 +153,15 @@ test('returns narrowed TData with errorPolicy: "ignore"', () => {
       Promise<ApolloClient.QueryResult<Data, "ignore">>
     >();
   }
+
+  client.query<Data, Variables, "ignore">(
+    // @ts-expect-error missing "errorPolicy" option
+    { query }
+  );
+
+  client.query<Data, Variables, "ignore">({
+    query,
+    // @ts-expect-error "none" not assignable to "ignore"
+    errorPolicy: "none",
+  });
 });

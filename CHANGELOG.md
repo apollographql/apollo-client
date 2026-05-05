@@ -1,5 +1,32 @@
 # @apollo/client
 
+## 4.2.0-alpha.7
+
+### Minor Changes
+
+- [#13222](https://github.com/apollographql/apollo-client/pull/13222) [`b93c172`](https://github.com/apollographql/apollo-client/commit/b93c1723b4b7a9d1296ddd57035bc4fe39c8d971) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Extend the `defaultOptions` type-safety work to `preloadQuery` (returned from `createQueryPreloader`). Defaults declared in `DeclareDefaultOptions.WatchQuery` now work with `preloadQuery` to ensure the `PreloadedQueryRef`'s data states are correctly set.
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloClient {
+      namespace DeclareDefaultOptions {
+        interface WatchQuery {
+          errorPolicy: "all";
+        }
+      }
+    }
+  }
+  ```
+
+  ```ts
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(QUERY);
+  //    ^? PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">
+  ```
+
 ## 4.2.0-alpha.6
 
 ### Patch Changes

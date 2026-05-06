@@ -57,13 +57,19 @@ export class DeepMerger {
 
     if (atPath?.length) {
       const [head, ...tail] = atPath;
-      if (head === "__proto__" || head === "constructor") {
+      if (head === "__proto__") {
         return target;
       }
       if (target === undefined) {
         target = objForKey(head);
       }
-      let nestedTarget = target[head];
+      // Only follow own properties to prevent prototype chain traversal
+      // (e.g. target["constructor"] on a plain object would otherwise
+      // return the Object constructor and allow mutations to Object.prototype)
+      let nestedTarget =
+        isNonNullObject(target) && hasOwnProperty.call(target, head)
+          ? target[head]
+          : undefined;
       if (nestedTarget === undefined && tail.length) {
         nestedTarget = objForKey(tail[0]);
       }
@@ -90,8 +96,11 @@ export class DeepMerger {
 
     if (isNonNullObject(source) && isNonNullObject(target)) {
       Object.keys(source).forEach((sourceKey) => {
-        // Skip keys that could manipulate the prototype chain.
-        if (sourceKey === "__proto__" || sourceKey === "constructor") {
+        // __proto__ is an own enumerable property after JSON.parse and its
+        // assignment invokes the [[Prototype]] setter, so skip it.
+        // constructor is a valid GraphQL field name, so it must not be skipped;
+        // assigning it as an own property is safe and does not affect Object.prototype.
+        if (sourceKey === "__proto__") {
           return;
         }
         if (hasOwnProperty.call(target, sourceKey)) {

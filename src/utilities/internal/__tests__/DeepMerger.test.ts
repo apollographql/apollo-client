@@ -76,33 +76,63 @@ test("ignores __proto__ key to prevent prototype pollution", () => {
   expect(result).toEqual({ a: 1 });
 });
 
-test("ignores constructor key to prevent prototype pollution", () => {
+test("merges constructor key as own property without prototype pollution", () => {
   const merger = new DeepMerger();
   const target = { a: 1 };
-  const malicious = JSON.parse('{"constructor": {"prototype": {"polluted": true}}}');
+  // constructor is a valid GraphQL field name and must not be silently dropped
+  const source = JSON.parse('{"constructor": {"prototype": {"polluted": true}}}');
 
-  const result = merger.merge(target, malicious);
+  const result = merger.merge(target, source);
 
+  // Object.prototype must not be affected
+  expect((Object.prototype as any).polluted).toBeUndefined();
+  expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+  // constructor should be present as an own property with the source value
+  expect(Object.prototype.hasOwnProperty.call(result, "constructor")).toBe(true);
+  expect(result).toEqual({ a: 1, constructor: { prototype: { polluted: true } } });
+});
+
+test("ignores __proto__ in atPath to prevent prototype pollution", () => {
+  const merger = new DeepMerger();
+  const target = { a: 1 };
+
+  const result = merger.merge(target, { polluted: true }, {
+    atPath: ["__proto__"],
+  });
   expect((Object.prototype as any).polluted).toBeUndefined();
   expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
   expect(result).toEqual({ a: 1 });
 });
 
-test("ignores __proto__ and constructor in atPath to prevent prototype pollution", () => {
+test("handles constructor in atPath without prototype pollution", () => {
   const merger = new DeepMerger();
   const target = { a: 1 };
 
-  const resultProto = merger.merge(target, { polluted: true }, {
-    atPath: ["__proto__"],
-  });
-  expect((Object.prototype as any).polluted).toBeUndefined();
-  expect(Object.getPrototypeOf(resultProto)).toBe(Object.prototype);
-  expect(resultProto).toEqual({ a: 1 });
-
-  const resultCtor = merger.merge(target, { polluted: true }, {
+  // constructor is a valid GraphQL field name; @defer/@stream paths may include it
+  const result = merger.merge(target, { polluted: true }, {
     atPath: ["constructor"],
   });
+  // Object.prototype must not be modified
   expect((Object.prototype as any).polluted).toBeUndefined();
-  expect(Object.getPrototypeOf(resultCtor)).toBe(Object.prototype);
-  expect(resultCtor).toEqual({ a: 1 });
+  expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+  // The data should be written to an own "constructor" property, not dropped
+  expect(Object.prototype.hasOwnProperty.call(result, "constructor")).toBe(true);
+  expect(result).toEqual({ a: 1, constructor: { polluted: true } });
+});
+
+test("handles constructor.prototype path in atPath without prototype pollution", () => {
+  const merger = new DeepMerger();
+  const target = { a: 1 };
+
+  const result = merger.merge(target, true, {
+    atPath: ["constructor", "prototype", "isAdmin"],
+  });
+  // Object.prototype must not be modified
+  expect((Object.prototype as any).isAdmin).toBeUndefined();
+  expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+  // Data is written as own properties, not into Object.prototype
+  expect(result).toEqual({
+    a: 1,
+    constructor: { prototype: { isAdmin: true } },
+  });
 });

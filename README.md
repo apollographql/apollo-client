@@ -17,6 +17,11 @@
 
 ## ❓ Why Choose Apollo Client?
 
+## What's different in this fork
+
+
+
+
 ✅ Zero-config caching - Intelligent caching out of the box<br>
 ✅ Framework agnostic - Works with React, Vue, Angular, Svelte, and vanilla JavaScript<br>
 ✅ TypeScript-first - Full type safety and IntelliSense support<br>

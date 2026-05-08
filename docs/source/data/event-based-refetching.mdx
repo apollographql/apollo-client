@@ -427,8 +427,6 @@ import type { AppStateStatus } from "react-native";
 declare module "@apollo/client" {
   interface RefetchEvents {
     appState: AppStateStatus;
-    // manualRefresh: void;
-    // otherCustomEvent: { reason: string } | undefined;
   }
 }
 ```

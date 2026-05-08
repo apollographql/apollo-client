@@ -1382,6 +1382,87 @@ test("per-query refetchOn object only enables specified events when defaultOptio
   await expect(stream).not.toEmitAnything();
 });
 
+test("handles defaultOptions refetchOn when manager connects after watchQuery is called", async () => {
+  const counts: Record<string, number> = {};
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: () => of(),
+      windowFocus: () => of(),
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: false,
+      },
+    },
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: { test: true },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.connect(client);
+
+  refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+
+  await expect(stream).not.toEmitAnything();
+
+  refetchEventManager.emit("test");
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("per-query refetchOn object refetches unspecified events when defaultOptions has refetchOn: true", async () => {
   const counts: Record<string, number> = {};
 

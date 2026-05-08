@@ -223,7 +223,7 @@ Your callback function might not be called if the [handler](#customize-the-refet
 
 #### Generic callbacks
 
-Pass a callback function to the `refetchOn` option to add conditional logic when any event that fires that would cause a refetch of the query. It receives a context object with the `source` name and the event's `payload`.
+Pass a callback function to the `refetchOn` option to add conditional logic for any event that would cause a refetch of the query. It receives a context object with the `source` name and the event's `payload`.
 
 ```tsx {2-9}
 const { data } = useQuery(GET_TODOS, {
@@ -324,7 +324,7 @@ When an event fires, `RefetchEventManager` routes the event to a _refetch handle
 
 `RefetchEventManager` implements a default refetch handler for all events that don't provide a custom handler. It refetches all [active](./refetching#refetching-all-queries) queries, filtered by each query's `refetchOn` option.
 
-You can customize the handler for an event by passing a function for an event in the `handlers` option. It is called with a context object that contains `client` instance connected to it, the event `source` and `payload`, as well as a [`matchesRefetchOn`](#using-matchesrefetchon) helper function that provides the logic necessary to filter queries based on their `refetchOn` option.
+You can customize the handler for an event by passing a function for an event in the `handlers` option. It is called with a context object that contains the `client` instance connected to it, the event `source` and `payload`, as well as a [`matchesRefetchOn`](#using-matchesrefetchon) helper function that provides the logic necessary to filter queries based on their `refetchOn` option.
 
 Here is an example that implements a custom refetch handler for the `manualRefresh` source from the previous section that refetches all queries, including standby queries:
 
@@ -373,7 +373,7 @@ You must use `matchesRefetchOn` to correctly filter the query. If you don't use 
 
 </Caution>
 
-You can compose `matchesRefetchOn` with additional logic when a handler needs to evaluate the `refetchOn` option with the additional logic.
+You can compose `matchesRefetchOn` with additional logic when a handler needs to evaluate the `refetchOn` option with it.
 
 ```ts {8-9}
 const manualRefreshHandler: RefetchEventManager.EventHandler<

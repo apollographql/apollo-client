@@ -253,7 +253,7 @@ export class RefetchEventManager {
     const handler: RefetchEventManager.EventHandler<any> =
       this.handlers[source] ?? defaultHandler;
 
-    function matchesRefetchOn(oq: ObservableQuery<any>) {
+    const matchesRefetchOn = (oq: ObservableQuery<any>) => {
       const ctx: RefetchOn.Context<any> = { source, payload };
       const refetchOn = oq.options.refetchOn;
 
@@ -265,12 +265,16 @@ export class RefetchEventManager {
         return refetchOn(ctx);
       }
 
-      if (typeof refetchOn?.[source] === "function") {
-        return refetchOn[source](ctx as any);
+      const refetchOnForEvent =
+        refetchOn?.[source] ??
+        this.client?.defaultOptions.watchQuery?.refetchOn;
+
+      if (typeof refetchOnForEvent === "function") {
+        return refetchOnForEvent(ctx as any);
       }
 
-      return refetchOn?.[source] !== false;
-    }
+      return refetchOnForEvent !== false;
+    };
 
     handler({ client: this.client, source, payload, matchesRefetchOn });
   }

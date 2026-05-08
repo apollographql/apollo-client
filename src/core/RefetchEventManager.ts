@@ -30,6 +30,12 @@ export declare namespace RefetchEventManager {
     handlers?: {
       [Key in keyof RefetchEvents]?: RefetchEventManager.EventHandler<Key>;
     };
+
+    /**
+     * Override the default handler. Used as a fallback when a refetch
+     * handler is not defined for a specific event.
+     */
+    defaultHandler?: RefetchEventManager.EventHandler<keyof RefetchEvents>;
   }
 
   export type EventSource<T> = () => Observable<T>;
@@ -127,9 +133,12 @@ export class RefetchEventManager {
 
   private client: ApolloClient | undefined;
 
+  private defaultHandler: RefetchEventManager.EventHandler<keyof RefetchEvents>;
+
   constructor(options: RefetchEventManager.Options = {}) {
     this.sources = options.sources ?? {};
     this.handlers = options.handlers ?? {};
+    this.defaultHandler = options.defaultHandler ?? defaultHandler;
   }
 
   /**
@@ -213,6 +222,15 @@ export class RefetchEventManager {
   }
 
   /**
+   * Replaces the default event handler with the provided handler.
+   */
+  setDefaultEventHandler(
+    handler: RefetchEventManager.EventHandler<keyof RefetchEvents>
+  ) {
+    this.defaultHandler = handler;
+  }
+
+  /**
    * Manually triggers a refetch for the provided event.
    *
    * @remarks
@@ -251,7 +269,7 @@ export class RefetchEventManager {
     }
 
     const handler: RefetchEventManager.EventHandler<any> =
-      this.handlers[source] ?? defaultHandler;
+      this.handlers[source] ?? this.defaultHandler;
 
     function matchesRefetchOn(oq: ObservableQuery<any>) {
       const ctx: RefetchOn.Context<any> = { source, payload };

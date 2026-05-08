@@ -1162,6 +1162,7 @@ export namespace RefetchEventManager {
     export type EventSource<T> = () => Observable<T>;
     // (undocumented)
     export interface Options {
+        defaultHandler?: RefetchEventManager.EventHandler<keyof RefetchEvents>;
         handlers?: {
             [Key in keyof RefetchEvents]?: RefetchEventManager.EventHandler<Key>;
         };
@@ -1188,6 +1189,7 @@ export class RefetchEventManager {
     ] : [payload: RefetchEvents[TSource]]): void;
     hasSource(source: keyof RefetchEvents): boolean;
     removeEventSource(event: keyof RefetchEvents): void;
+    setDefaultEventHandler(handler: RefetchEventManager.EventHandler<keyof RefetchEvents>): void;
     setEventHandler<TSource extends keyof RefetchEvents>(source: TSource, handler: RefetchEventManager.EventHandler<TSource>): void;
     setEventSource<TSource extends keyof RefetchEvents>(name: TSource, source: RefetchEventManager.EventSource<RefetchEvents[TSource]>): void;
 }

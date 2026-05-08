@@ -1264,17 +1264,35 @@ export class ApolloClient {
   >(
     options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ): ObservableQuery<TData, TVariables> {
+    const { refetchOn } = options;
+
     if (this.defaultOptions.watchQuery) {
+      // Capture the default `refetchOn` at the time of the `watchQuery`
+      // call so that it is unaffected even if defaultOptions.refetchOn is
+      // mutated later.
       const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
-      const mergedRefetchOn =
-        (
-          options.refetchOn &&
-          typeof options.refetchOn === "object" &&
-          defaultRefetchOn &&
-          typeof defaultRefetchOn === "object"
-        ) ?
-          { ...defaultRefetchOn, ...options.refetchOn }
-        : undefined;
+      let mergedRefetchOn: RefetchOn.Option | undefined;
+
+      if (refetchOn && typeof refetchOn === "object") {
+        if (typeof defaultRefetchOn === "object") {
+          mergedRefetchOn = { ...defaultRefetchOn, ...refetchOn };
+        } else if (defaultRefetchOn != null) {
+          // We set the merged `refetchOn` option to a callback function in case
+          // the client hasn't connected to a RefetchEventManager yet, or
+          // sources are added to the manager after watchQuery is called. This
+          // ensures we can handle any registered source regardless of when it
+          // was registered.
+          mergedRefetchOn = (ctx) => {
+            const value = refetchOn[ctx.source] ?? defaultRefetchOn;
+
+            if (typeof value === "function") {
+              return value(ctx as any);
+            }
+
+            return value;
+          };
+        }
+      }
 
       options = mergeOptions(
         this.defaultOptions.watchQuery as typeof options,
@@ -1287,15 +1305,17 @@ export class ApolloClient {
     }
 
     if (__DEV__) {
-      const { refetchOn, query } = options;
+      const { query } = options;
       const { refetchEventManager } = this;
 
+      // Note: refetchOn evaluates the original refetchOn value, not the merged
+      // refetchOn value.
       if (refetchOn) {
         const operationName = getOperationName(query, "(anonymous)");
 
         if (!refetchEventManager) {
           invariant.warn(
-            "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
+            "`refetchOn` was set on query '%s' but no `RefetchEventManager` is configured on this `ApolloClient` instance. This option has no effect until a RefetchEventManager is connected to this client. Pass a `RefetchEventManager` instance to the `refetchEventManager` option on the `ApolloClient` constructor.",
             operationName
           );
         } else if (typeof refetchOn === "object") {

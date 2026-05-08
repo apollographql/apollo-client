@@ -137,7 +137,7 @@ Sources can optionally emit payloads which are used by [`refetchOn`](#disable-ev
 
 <Tip>
 
-To avoid TypeScript errors, a non-`void` value type must be registered with the event declared in the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
+To avoid TypeScript errors, register a non-`void` value type with the event declared in the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
 
 </Tip>
 
@@ -218,7 +218,7 @@ Your callback function might not be called if the [handler](#customize-the-refet
 
 #### Generic callbacks
 
-Pass a callback function to the `refetchOn` option to add conditional logic for any event that would cause a refetch of the query. It receives a context object with the `source` name and the event's `payload`.
+Pass a callback function to the `refetchOn` option to add conditional logic for any event that would cause a refetch of the query. The function receives a context object with the `source` name and the event's `payload`.
 
 ```tsx {2-9}
 const { data } = useQuery(GET_TODOS, {
@@ -319,9 +319,9 @@ When an event fires, `RefetchEventManager` routes the event to a _refetch handle
 
 `RefetchEventManager` implements a default refetch handler for all events that don't provide a custom handler. It refetches all [active](./refetching#refetching-all-queries) queries, filtered by each query's `refetchOn` option.
 
-You can customize the handler for an event by passing a function for an event in the `handlers` option. It is called with a context object that contains the `client` instance connected to it, the event `source` and `payload`, as well as a [`matchesRefetchOn`](#using-matchesrefetchon) helper function that provides the logic necessary to filter queries based on their `refetchOn` option.
+You can customize the handler for an event by passing a function for an event in the `handlers` option. The function receives a context object that contains the `client` instance connected to it, the event `source` and `payload`, as well as a [`matchesRefetchOn`](#using-matchesrefetchon) helper function that provides the logic necessary to filter queries based on their `refetchOn` option.
 
-Here is an example that implements a custom refetch handler for the `manualRefresh` source from the previous section that refetches all queries, including standby queries:
+The following example implements a custom refetch handler for the `manualRefresh` source from the previous section that refetches all queries, including standby queries:
 
 ```ts
 const manualRefreshHandler: RefetchEventManager.EventHandler<
@@ -416,7 +416,7 @@ Use this sparingly and prefer using `refetchOn` instead to ensure more predictab
 
 ## TypeScript
 
-Custom events must be registered with TypeScript to provide full type safety for refetch events. Declare your custom events using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) using the `RefetchEvents` interface.
+Register custom events with TypeScript to provide full type safety for refetch events. Declare your custom events using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `RefetchEvents` interface.
 
 Each property on `RefetchEvents` maps an event name to its payload type.
 
@@ -437,7 +437,7 @@ With this declaration in place, TypeScript provides type safety for source funct
 
 ### Optional payloads
 
-To make an event's payload optional, include `undefined` in the payload type. This makes the payload optional when the source observable emits, or you imperatively trigger the event with `emit`.
+To make an event's payload optional, include `undefined` in the payload type. This makes the payload optional when the source observable emits, or when you imperatively trigger the event with `emit`.
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";

@@ -1267,6 +1267,9 @@ export class ApolloClient {
     const { refetchOn } = options;
 
     if (this.defaultOptions.watchQuery) {
+      // Capture the default `refetchOn` at the time of the `watchQuery`
+      // call so that it is unaffected even if defaultOptions.refetchOn is
+      // mutated later.
       const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
       let mergedRefetchOn: RefetchOn.Option | undefined;
 
@@ -1274,10 +1277,6 @@ export class ApolloClient {
         if (typeof defaultRefetchOn === "object") {
           mergedRefetchOn = { ...defaultRefetchOn, ...refetchOn };
         } else if (defaultRefetchOn != null) {
-          // Capture the default `refetchOn` at the time of the `watchQuery`
-          // call so that it is unaffected even if defaultOptions.refetchOn is
-          // mutated later.
-          //
           // We set the merged `refetchOn` option to a callback function in case
           // the client hasn't connected to a RefetchEventManager yet, or
           // sources are added to the manager after watchQuery is called. This

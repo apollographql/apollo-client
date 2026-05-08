@@ -1264,6 +1264,22 @@ export class ApolloClient {
   >(
     options: ApolloClient.WatchQueryOptions<TData, TVariables>
   ): ObservableQuery<TData, TVariables> {
+    const warnOnUnknownSources = (refetchOn: Record<string, any>) => {
+      if (this.refetchEventManager) {
+        for (const source of Object.keys(refetchOn)) {
+          if (
+            !this.refetchEventManager.hasSource(source as keyof RefetchEvents)
+          ) {
+            invariant.warn(
+              "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
+              source,
+              getOperationName(options.query, "(anonymous)")
+            );
+          }
+        }
+      }
+    };
+
     if (this.defaultOptions.watchQuery) {
       const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
       const { refetchOn } = options;
@@ -1291,6 +1307,12 @@ export class ApolloClient {
 
             return value;
           };
+
+          // We need to warn here instead of the __DEV__ check below since we
+          // overwrite options.refetchOn to a function type.
+          if (__DEV__) {
+            warnOnUnknownSources(refetchOn);
+          }
         }
       }
 
@@ -1317,15 +1339,7 @@ export class ApolloClient {
             operationName
           );
         } else if (typeof refetchOn === "object") {
-          Object.keys(refetchOn).forEach((source) => {
-            if (!refetchEventManager.hasSource(source as keyof RefetchEvents)) {
-              invariant.warn(
-                "`refetchOn` references the '%s' event on query '%s' but no source is configured for it on the `RefetchEventManager`. This event will never fire. Add a source for the event to the `sources` option or call `setEventSource` on the refetch event manager.",
-                source,
-                operationName
-              );
-            }
-          });
+          warnOnUnknownSources(refetchOn);
         }
       }
     }

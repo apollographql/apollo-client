@@ -1,5 +1,44 @@
 # @apollo/client
 
+## 4.2.0-alpha.8
+
+### Patch Changes
+
+- [#13229](https://github.com/apollographql/apollo-client/pull/13229) [`9a7f65a`](https://github.com/apollographql/apollo-client/commit/9a7f65a0059433c83307ef2d8117dac67947d791) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix `refetchOn` merging when `defaultOptions.watchQuery.refetchOn` is set to a non-object value (`false`, `true`, or a function) and the per-query `refetchOn` is an object. Previously the per-query object completely replaced the default so unspecified events fell back to "enabled" regardless of the default.
+
+  The `defaultOptions` value now applies to any event the per-query object does not explicitly configure:
+
+  - `false` - unspecified events stay disabled
+  - `true` - unspecified events refetch
+  - Callback function - the function is called for unspecified events to determine whether to refetch
+
+  ```ts
+  const client = new ApolloClient({
+    // ...
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: false,
+      },
+    },
+  });
+
+  // Only `windowFocus` refetches. Other events stay disabled per the default.
+  useQuery(QUERY, { refetchOn: { windowFocus: true } });
+  ```
+
+- [#13230](https://github.com/apollographql/apollo-client/pull/13230) [`b25b659`](https://github.com/apollographql/apollo-client/commit/b25b6593f5d968db505b127e7ff7f2bb2419d5ee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to override the default event handler on `RefetchEventManager`. The default handler runs when no per-source handler is configured for an event. Provide a custom handler via the `defaultHandler` constructor option or the `setDefaultEventHandler` instance method.
+
+  ```ts
+  new RefetchEventManager({
+    defaultHandler: ({ client, matchesRefetchOn }) => {
+      return client.refetchQueries({
+        include: "all",
+        onQueryUpdated: matchesRefetchOn,
+      });
+    },
+  });
+  ```
+
 ## 4.2.0-alpha.7
 
 ### Minor Changes

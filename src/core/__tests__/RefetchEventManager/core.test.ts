@@ -1025,6 +1025,157 @@ test("can override the default handler when provided via option", async () => {
   await expect(streamB).not.toEmitAnything();
 });
 
+test("per-source handler in handlers option overrides the default handler callback", async () => {
+  const counts: Record<string, number> = {};
+
+  const defaultHandler = jest.fn((({ client, matchesRefetchOn }) => {
+    return client.refetchQueries({
+      include: "active",
+      onQueryUpdated: matchesRefetchOn,
+    });
+  }) satisfies RefetchEventManager.EventHandler);
+
+  const testHandler = jest.fn((({ client }) => {
+    return client.refetchQueries({
+      include: "active",
+      onQueryUpdated: (oq) => oq.variables.id === "a",
+    });
+  }) satisfies RefetchEventManager.EventHandler<"test">);
+
+  const refetchEventManager = new RefetchEventManager({
+    defaultHandler,
+    sources: {
+      test: () => of(),
+      windowFocus: () => of(),
+    },
+    handlers: { test: testHandler },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const streamA = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "a" } })
+  );
+  const streamB = new ObservableStream(
+    client.watchQuery({ query, variables: { id: "b" } })
+  );
+
+  await expect(streamA).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(streamB).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(streamA).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(streamB).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.emit("test");
+
+  expect(testHandler).toHaveBeenCalledTimes(1);
+  expect(testHandler).toHaveBeenCalledWith({
+    client,
+    source: "test",
+    payload: undefined,
+    matchesRefetchOn: expect.any(Function),
+  });
+  expect(defaultHandler).not.toHaveBeenCalled();
+
+  await expect(streamA).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+  await expect(streamA).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(streamA).not.toEmitAnything();
+  await expect(streamB).not.toEmitAnything();
+
+  refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+
+  expect(defaultHandler).toHaveBeenCalledTimes(1);
+  expect(defaultHandler).toHaveBeenCalledWith({
+    client,
+    source: "windowFocus",
+    payload: new Event("visibilitychange"),
+    matchesRefetchOn: expect.any(Function),
+  });
+  expect(testHandler).toHaveBeenCalledTimes(1);
+
+  await expect(streamA).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+  await expect(streamB).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+  await expect(streamA).toEmitTypedValue({
+    data: { count: 3 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(streamB).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(streamA).not.toEmitAnything();
+  await expect(streamB).not.toEmitAnything();
+});
+
 test("can override the default handler with `setDefaultEventHandler`", async () => {
   const counts: Record<string, number> = {};
   const defaultHandler = jest.fn((({ client }) => {

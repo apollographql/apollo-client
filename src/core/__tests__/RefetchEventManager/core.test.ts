@@ -1383,6 +1383,9 @@ test("per-query refetchOn object only enables specified events when defaultOptio
 });
 
 test("handles defaultOptions refetchOn when manager connects after watchQuery is called", async () => {
+  // Silence the warning about the refetchOn option used while the client is
+  // disconnected.
+  using _ = spyOnConsole("warn");
   const counts: Record<string, number> = {};
 
   const refetchEventManager = new RefetchEventManager({

@@ -3,6 +3,7 @@ import { gql } from "graphql-tag";
 import type { Observer } from "rxjs";
 import { of } from "rxjs";
 
+import type { RefetchOn } from "@apollo/client";
 import {
   ApolloClient,
   NetworkStatus,
@@ -1377,6 +1378,176 @@ test("per-query refetchOn object only enables specified events when defaultOptio
   });
 
   refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("per-query refetchOn object refetches unspecified events when defaultOptions has refetchOn: true", async () => {
+  const counts: Record<string, number> = {};
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: () => of(),
+      windowFocus: () => of(),
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: true,
+      },
+    },
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: { test: false },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.emit("test");
+
+  await expect(stream).not.toEmitAnything();
+
+  refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("per-query refetchOn object falls back to defaultOptions refetchOn function for unspecified events", async () => {
+  const counts: Record<string, number> = {};
+  const defaultCallback = jest.fn(
+    ({ source }: RefetchOn.Context) => source === "windowFocus"
+  );
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      test: () => of(),
+      windowFocus: () => of(),
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: defaultCallback,
+      },
+    },
+    link: new MockLink([
+      {
+        request: { query, variables: () => true },
+        result: ({ id }) => {
+          counts[id] ??= 0;
+
+          return { data: { count: ++counts[id] } };
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+    refetchEventManager,
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "a" },
+      refetchOn: { test: false },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  refetchEventManager.emit("test");
+
+  await expect(stream).not.toEmitAnything();
+  expect(defaultCallback).not.toHaveBeenCalled();
+
+  refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+
+  expect(defaultCallback).toHaveBeenCalledTimes(1);
+  expect(defaultCallback).toHaveBeenCalledWith({
+    source: "windowFocus",
+    payload: new Event("visibilitychange"),
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
 
   await expect(stream).not.toEmitAnything();
 });

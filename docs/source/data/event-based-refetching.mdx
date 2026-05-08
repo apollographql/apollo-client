@@ -99,7 +99,7 @@ Let's build a custom source for a React Native app that refetches queries when t
 
 <Tip>
 
-To avoid TypeScript errors, you must register the event with the `RefetchEvents` interface. See the [declaring refetch event types](./typescript#declaring-refetch-event-types) guide to learn more.
+To avoid TypeScript errors, you must register the event with the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
 
 </Tip>
 
@@ -141,7 +141,7 @@ Sources can optionally emit payloads which are used by [`refetchOn`](#disabling-
 
 <Tip>
 
-To avoid TypeScript errors, a non-`void` value type must be registered with the event declared in the `RefetchEvents` interface. See the [declaring refetch event types](./typescript#declaring-refetch-event-types) guide to learn more.
+To avoid TypeScript errors, a non-`void` value type must be registered with the event declared in the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
 
 </Tip>
 
@@ -313,7 +313,7 @@ const { data } = useQuery(GET_TODOS, {
 
 <Tip>
 
-To avoid TypeScript errors, you still need to register sourceless events with TypeScript so that `emit` calls and `refetchOn` keys stay type-checked. See the [declaring refetch event types](./typescript#declaring-refetch-event-types) guide for how to type sourceless events and `void` event payloads.
+To avoid TypeScript errors, you still need to register sourceless events with TypeScript so that `emit` calls and `refetchOn` keys stay type-checked. See the [TypeScript section](#typescript) guide for how to type sourceless events and `void` event payloads.
 
 </Tip>
 
@@ -418,6 +418,71 @@ Use this sparingly and prefer using `refetchOn` instead to ensure more predictab
 
 </Tip>
 
+## TypeScript
+
+Custom events must be registered with TypeScript to provide full type safety for refetch events. Declare your custom events using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) using the `RefetchEvents` interface.
+
+Each property on `RefetchEvents` maps an event name to its payload type.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+import type { AppStateStatus } from "react-native";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    appState: AppStateStatus;
+    // manualRefresh: void;
+    // otherCustomEvent: { reason: string } | undefined;
+  }
+}
+```
+
+With this declaration in place, TypeScript provides type safety for source functions, refetch handler functions, the `emit` method, and the `refetchOn` option.
+
+### Optional payloads
+
+To make an event's payload optional, include `undefined` in the payload type. This makes the payload optional when the source observable emits, or you imperatively trigger the event with `emit`.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    manualRefresh: { reason: string } | undefined;
+  }
+}
+```
+
+```ts
+// ✅ valid
+refetchEventManager.emit("manualRefresh");
+
+// ✅ valid
+refetchEventManager.emit("manualRefresh", { reason: "manual refresh" });
+```
+
+### Events without payloads
+
+If an event doesn't have an associated payload, set its payload type to `void`. This makes it so that you don't pass a payload in the source observable or when you imperatively trigger the event with `emit`.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    manualRefresh: void;
+  }
+}
+```
+
+```ts
+// ✅ valid
+refetchEventManager.emit("manualRefresh");
+
+// ❌ invalid
+refetchEventManager.emit("manualRefresh", anyValue);
+```
+
 ## See also
 
-See [Declaring refetch event types](./typescript#declaring-refetch-event-types) for how to register custom events on Apollo Client's `RefetchEvents` interface so `emit`, source functions, and `refetchOn` callbacks all stay type-safe. See the [refetching guide](./refetching) to learn more about the `client.refetchQueries` API.
+See the [refetching guide](./refetching) to learn more about the `client.refetchQueries` API.

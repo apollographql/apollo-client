@@ -105,26 +105,23 @@ To avoid TypeScript errors, you must register the event with the `RefetchEvents`
 
 ```ts
 import { AppState } from "react-native";
-import { filter } from "rxjs";
-
 import { Observable, ApolloClient, RefetchEventManager } from "@apollo/client";
 
 const appStateSource: RefetchEventManager.EventSource<void> = () => {
   return new Observable((observer) => {
     // Attach the event listener when the observable is subscribed to
     const subscription = AppState.addEventListener("change", (status) => {
-      // Emit a `next` event to tell the manager to trigger a refetch for this event
-      observer.next();
+      if (status === "active") {
+        // Emit a `next` event to tell the manager to trigger a refetch
+        observer.next();
+      }
     });
 
     return () => {
       // Cleanup when the observable is unsubscribed
       subscription.remove();
     };
-  }).pipe(
-    // Only emit when the status is active
-    filter((status) => status === "active")
-  );
+  });
 };
 
 const refetchEventManager = new RefetchEventManager({
@@ -144,7 +141,7 @@ To avoid TypeScript errors, a non-`void` value type must be registered with the 
 
 </Tip>
 
-Let's update the example from the previous section to emit the `AppStateStatus` with the event and remove the `filter` to allow individual queries to determine whether to refetch.
+Let's update the example from the previous section to emit the `AppStateStatus` with the event and remove the conditional check to allow individual queries to determine whether to refetch.
 
 ```ts {1,6}
 import type { AppStateStatus } from "react-native";
@@ -152,17 +149,15 @@ import type { AppStateStatus } from "react-native";
 const appStateSource: RefetchEventManager.EventSource<AppStateStatus> = () => {
   return new Observable((observer) => {
     const subscription = AppState.addEventListener("change", (status) => {
-      observer.next(status);
+      if (status === "active") {// [!code --]
+        observer.next(status);
+      }// [!code --]
     });
 
     return () => {
       subscription.remove();
     };
-  }).pipe(// [!code --:4]
-    // Only emit when the status is active
-    filter((status) => status === "active")
-  );
-  });// [!code ++]
+  });
 };
 ```
 

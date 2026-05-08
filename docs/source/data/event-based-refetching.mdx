@@ -195,7 +195,7 @@ const { data } = useQuery(GET_TODOS, {
 
 `false` is treated the same as if every event is set to `false` in a `refetchOn` object.
 
-### Conditionally refetching with a callback
+### Conditionally refetch with a callback
 
 More advanced cases might need conditional logic to determine whether to refetch the query at the time an event fires. Pass a callback function for the event in the `refetchOn` option. It is called with the event `payload` when that event triggers. Return `true` to allow the refetch or `false` to skip it.
 

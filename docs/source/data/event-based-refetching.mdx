@@ -168,7 +168,7 @@ const appStateSource: RefetchEventManager.EventSource<AppStateStatus> = () => {
 
 <Caution>
 
-You probably don't want this behavior in a real application because this causes refetches for any `change` event emitted by `AppState`. We recommend pairing this implementation with a default `refetchOn` provided to `defaultOptions.watchQuery.refetchOn` that limits refetches to `active` status.
+You probably don't want this behavior in a real application because this causes refetches for any `change` event emitted by `AppState`. If you choose to use this implementation, we recommend pairing it with a default `refetchOn` provided to `defaultOptions.watchQuery.refetchOn` that limits refetches to `active` status.
 
 </Caution>
 

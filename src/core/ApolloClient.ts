@@ -1266,15 +1266,33 @@ export class ApolloClient {
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       const defaultRefetchOn = this.defaultOptions.watchQuery.refetchOn;
-      const mergedRefetchOn =
-        (
-          options.refetchOn &&
-          typeof options.refetchOn === "object" &&
-          defaultRefetchOn &&
-          typeof defaultRefetchOn === "object"
-        ) ?
-          { ...defaultRefetchOn, ...options.refetchOn }
-        : undefined;
+      const { refetchOn } = options;
+      let mergedRefetchOn: RefetchOn.Option | undefined;
+
+      if (refetchOn && typeof refetchOn === "object") {
+        if (typeof defaultRefetchOn === "object") {
+          mergedRefetchOn = { ...defaultRefetchOn, ...refetchOn };
+        } else if (defaultRefetchOn != null) {
+          // Capture the default `refetchOn` at the time of the `watchQuery`
+          // call so that it is unaffected even if defaultOptions.refetchOn is
+          // mutated later.
+          //
+          // We set the merged `refetchOn` option to a callback function in case
+          // the client hasn't connected to a RefetchEventManager yet, or
+          // sources are added to the manager after watchQuery is called. This
+          // ensures we can handle any registered source regardless of when it
+          // was registered.
+          mergedRefetchOn = (ctx) => {
+            const value = refetchOn[ctx.source] ?? defaultRefetchOn;
+
+            if (typeof value === "function") {
+              return value(ctx as any);
+            }
+
+            return value;
+          };
+        }
+      }
 
       options = mergeOptions(
         this.defaultOptions.watchQuery as typeof options,

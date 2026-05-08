@@ -265,15 +265,11 @@ export class RefetchEventManager {
         return refetchOn(ctx);
       }
 
-      const refetchOnForEvent =
-        refetchOn?.[source] ??
-        this.client?.defaultOptions.watchQuery?.refetchOn;
-
-      if (typeof refetchOnForEvent === "function") {
-        return refetchOnForEvent(ctx as any);
+      if (typeof refetchOn?.[source] === "function") {
+        return refetchOn[source](ctx as any);
       }
 
-      return refetchOnForEvent !== false;
+      return refetchOn?.[source] !== false;
     };
 
     handler({ client: this.client, source, payload, matchesRefetchOn });

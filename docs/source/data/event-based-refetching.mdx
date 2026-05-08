@@ -105,13 +105,12 @@ To avoid TypeScript errors, you must register the event with the `RefetchEvents`
 
 ```ts
 import { AppState } from "react-native";
-import type { AppStateStatus } from "react-native";
 import { filter } from "rxjs";
 
 import { Observable, ApolloClient, RefetchEventManager } from "@apollo/client";
 
 const appStateSource: RefetchEventManager.EventSource<void> = () => {
-  return new Observable<AppStateStatus>((observer) => {
+  return new Observable((observer) => {
     // Attach the event listener when the observable is subscribed to
     const subscription = AppState.addEventListener("change", (status) => {
       // Emit a `next` event to tell the manager to trigger a refetch for this event
@@ -147,9 +146,11 @@ To avoid TypeScript errors, a non-`void` value type must be registered with the 
 
 Let's update the example from the previous section to emit the `AppStateStatus` with the event and remove the `filter` to allow individual queries to determine whether to refetch.
 
-```ts {4}
-const appStateSource: RefetchEventManager.EventSource<void> = () => {
-  return new Observable<AppStateStatus>((observer) => {
+```ts {1,6}
+import type { AppStateStatus } from "react-native";
+
+const appStateSource: RefetchEventManager.EventSource<AppStateStatus> = () => {
+  return new Observable((observer) => {
     const subscription = AppState.addEventListener("change", (status) => {
       observer.next(status);
     });

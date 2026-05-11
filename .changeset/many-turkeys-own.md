@@ -2,4 +2,4 @@
 "@apollo/client": minor
 ---
 
-Prepare for `rc` release.
+Version bump to `rc`.

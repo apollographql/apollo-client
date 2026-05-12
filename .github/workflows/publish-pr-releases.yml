@@ -20,24 +20,24 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ">=23.6.0"
 
       - name: Check if any files in codegen/ changed
         id: changed-files-codegen
-        uses: karpikpl/list-changed-files-action@1.1.4
+        uses: karpikpl/list-changed-files-action@18aa81a078f5f0f2d7f3865414fff1eba2c29a25 # 1.1.4
         with:
           file-filter: "codegen/**"
 
       - name: Check if any files in scripts/codemods/ac3-to-ac4/ changed
         id: changed-files-codemod
-        uses: karpikpl/list-changed-files-action@1.1.4
+        uses: karpikpl/list-changed-files-action@18aa81a078f5f0f2d7f3865414fff1eba2c29a25 # 1.1.4
         with:
           file-filter: "scripts/codemods/ac3-to-ac4/**"
 

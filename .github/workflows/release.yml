@@ -84,7 +84,7 @@ jobs:
     steps:
       - name: Send a Slack notification on publish
         id: slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v1.27.0
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3
         with:
           # Slack channel id, channel name, or user id to post message
           # See also: https://api.slack.com/methods/chat.postMessage#channels

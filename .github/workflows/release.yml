@@ -44,6 +44,7 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+          # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
           package-manager-cache: false
 
       - run: npm ci
@@ -145,6 +146,7 @@ jobs:
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
+          # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
           package-manager-cache: false
 
       - run: npm ci

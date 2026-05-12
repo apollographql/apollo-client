@@ -1,5 +1,5 @@
 {
-  "extends": ["apollo-open-source"],
+  "extends": ["apollo-open-source", "helpers:pinGitHubActionDigests"],
   "ignorePaths": ["**/integration-tests/**"],
   "dependencyDashboard": true,
   "pathRules": [

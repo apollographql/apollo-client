@@ -37,6 +37,7 @@ jobs:
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check for pre.json file existence
         id: check_files

@@ -14,6 +14,7 @@ jobs:
         with:
           # Fetch entire git history so we have the parent commit to compare against
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -23,6 +24,6 @@ jobs:
 
       - name: Run comparison script
         id: attw
-        run: ./config/compare-build-output-to.sh $(git merge-base HEAD origin/${{ github.base_ref }}) | tee $GITHUB_STEP_SUMMARY
+        run: ./config/compare-build-output-to.sh $(git merge-base HEAD origin/${GITHUB_BASE_REF}) | tee $GITHUB_STEP_SUMMARY
         env:
           RUNNER_TEMP: ${{ runner.temp }}

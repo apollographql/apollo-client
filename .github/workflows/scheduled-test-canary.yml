@@ -26,12 +26,15 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ matrix.branch }}
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: ">=23.6.0"
       - uses: bahmutov/npm-install@v1
       - run: |
-          npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
+          npm install react@${MATRIX_TAG} react-dom@${MATRIX_TAG}
+        env:
+          MATRIX_TAG: ${{ matrix.tag }}
       # tests can be flaky, this runs only once a day and we want to minimize false negatives - retry up to three times
       - run: |
           node -e 'console.log("\n\nReact %s, React-DOM %s\n\n", require("react").version, require("react-dom").version)'

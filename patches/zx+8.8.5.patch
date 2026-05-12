@@ -1,0 +1,30 @@
+diff --git a/node_modules/zx/build/core.d.ts b/node_modules/zx/build/core.d.ts
+index ba4a0cb..817452f 100644
+--- a/node_modules/zx/build/core.d.ts
++++ b/node_modules/zx/build/core.d.ts
+@@ -1,5 +1,4 @@
+ /// <reference types="node" />
+-/// <reference types="fs-extra" />
+ 
+ import { Buffer } from 'node:buffer';
+ import cp, { type ChildProcess, type IOType, type StdioOptions } from 'node:child_process';
+diff --git a/node_modules/zx/build/index.d.ts b/node_modules/zx/build/index.d.ts
+index cc8f579..7b9bad4 100644
+--- a/node_modules/zx/build/index.d.ts
++++ b/node_modules/zx/build/index.d.ts
+@@ -1,5 +1,4 @@
+ /// <reference types="node" />
+-/// <reference types="fs-extra" />
+ 
+ import { type ProcessPromise } from './core.js';
+ export * from './core.js';
+diff --git a/node_modules/zx/build/vendor.d.ts b/node_modules/zx/build/vendor.d.ts
+index bb2a1d1..ec6584e 100644
+--- a/node_modules/zx/build/vendor.d.ts
++++ b/node_modules/zx/build/vendor.d.ts
+@@ -1,5 +1,4 @@
+ /// <reference types="node" />
+-/// <reference types="fs-extra" />
+ 
+ export * from './vendor-core.js';
+ export * from './vendor-extra.js';

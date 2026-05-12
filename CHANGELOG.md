@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.1.9
+
+### Patch Changes
+
+- [#13203](https://github.com/apollographql/apollo-client/pull/13203) [`099954b`](https://github.com/apollographql/apollo-client/commit/099954b9905c0f80b57563eb64157386f4493e84) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Remove the `workspaces` field from the published `package.json` in `dist` to avoid Yarn v1 warnings about workspaces requiring private packages.
+
 ## 4.1.8
 
 ### Patch Changes

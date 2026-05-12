@@ -100,13 +100,9 @@ function UserList() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  // TypeScript: dataState === "ready" provides better type narrowing than just checking data
+  // TypeScript note: for stricter type narrowing, you can also check `dataState === "complete"` before accessing data
   return (
-    <ul>
-      {data.users.map((user) => (
-        <li key={user.id}>{user.name}</li>
-      ))}
-    </ul>
+    <ul>{data?.users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
   );
 }
 ```
@@ -134,8 +130,8 @@ function UserProfile({ userId }: { userId: string }) {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  // TypeScript: dataState === "ready" provides better type narrowing than just checking data
-  return <div>{data.user.name}</div>;
+  // TypeScript note: for stricter type narrowing, you can also check `dataState === "complete"` before accessing data
+  return <div>{data?.user.name}</div>;
 }
 ```
 

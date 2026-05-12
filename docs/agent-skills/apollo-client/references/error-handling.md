@@ -309,6 +309,12 @@ When using suspenseful hooks, you should use React Error Boundaries for graceful
 ### Non-suspense per-Component Error Handling
 
 ```tsx
+import {
+  CombinedGraphQLErrors,
+  ServerError,
+  ServerParseError,
+} from "@apollo/client/errors";
+
 function SafeUserList() {
   const { data, error, loading, refetch } = useQuery(GET_USERS, {
     errorPolicy: "all",
@@ -316,7 +322,7 @@ function SafeUserList() {
   });
 
   // Handle network errors
-  if (error?.networkError) {
+  if (ServerError.is(error) || ServerParseError.is(error)) {
     return (
       <Alert severity="error">
         <AlertTitle>Connection Error</AlertTitle>
@@ -329,7 +335,7 @@ function SafeUserList() {
   // Handle GraphQL errors but still show available data
   return (
     <div>
-      {error?.graphQLErrors && (
+      {CombinedGraphQLErrors.is(error) && (
         <Alert severity="warning">
           Some data may be incomplete: {error.graphQLErrors[0].message}
         </Alert>

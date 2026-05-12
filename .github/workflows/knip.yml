@@ -2,6 +2,9 @@ name: Look for dead code and unused dependencies
 
 on: push
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest

@@ -1,6 +1,9 @@
 name: Api Extractor
 on: pull_request
 
+permissions:
+  contents: read
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:

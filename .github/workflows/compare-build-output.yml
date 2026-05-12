@@ -4,6 +4,9 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+permissions:
+  contents: read
+
 jobs:
   comparebuildoutput:
     name: Compare Build Output

@@ -3,6 +3,9 @@ name: Generate Documentation Model
 on:
   push:
 
+permissions:
+  contents: read
+
 jobs:
   docmodel:
     name: Generate Documentation Model

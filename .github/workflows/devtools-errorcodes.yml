@@ -5,6 +5,8 @@ on:
     workflows: ["Prerelease", "Release"]
     types:
       - completed
+permissions: {}
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest

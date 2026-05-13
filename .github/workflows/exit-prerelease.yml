@@ -35,7 +35,8 @@ jobs:
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
-          persist-credentials: false
+          # We want to commit back further down.
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6

@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: ">=23.6.0"
       - name: Install dependencies (with cache)
-        uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb #v1
+        uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1
       - name: Run size-limit
         uses: andresz1/size-limit-action@e7493a72a44b113341c0cf6186ab49c17c4b65c1 # v1
         with:

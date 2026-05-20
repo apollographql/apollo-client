@@ -152,6 +152,41 @@ export interface DefaultContext extends Record<string, any> {
   clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
 }
 
+export interface RefetchEvents {
+  windowFocus: Event;
+  online: Event;
+}
+
+export declare namespace RefetchOn {
+  export type Context<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > =
+    TSource extends keyof RefetchEvents ?
+      {
+        /**
+         * The source name that triggered the refetch.
+         */
+        source: TSource;
+
+        /**
+         * Any data emitted by the source along with the event
+         */
+        payload: RefetchEvents[TSource];
+      }
+    : never;
+
+  export type Callback<
+    TSource extends keyof RefetchEvents = keyof RefetchEvents,
+  > = (context: RefetchOn.Context<TSource>) => boolean;
+
+  export type Option =
+    | boolean
+    | RefetchOn.Callback<keyof RefetchEvents>
+    | {
+        [Key in keyof RefetchEvents]?: boolean | RefetchOn.Callback<Key>;
+      };
+}
+
 /**
  * Represents an `Error` type, but used throughout Apollo Client to represent
  * errors that may otherwise fail `instanceof` checks if they are cross-realm

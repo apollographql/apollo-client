@@ -1,5 +1,470 @@
 # @apollo/client
 
+## 4.2.0-rc.0
+
+### Minor Changes
+
+- [#13232](https://github.com/apollographql/apollo-client/pull/13232) [`f1b541f`](https://github.com/apollographql/apollo-client/commit/f1b541fed4111028b6842727178288156582e669) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump to `rc`.
+
+## 4.2.0-alpha.8
+
+### Patch Changes
+
+- [#13229](https://github.com/apollographql/apollo-client/pull/13229) [`9a7f65a`](https://github.com/apollographql/apollo-client/commit/9a7f65a0059433c83307ef2d8117dac67947d791) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix `refetchOn` merging when `defaultOptions.watchQuery.refetchOn` is set to a non-object value (`false`, `true`, or a function) and the per-query `refetchOn` is an object. Previously the per-query object completely replaced the default so unspecified events fell back to "enabled" regardless of the default.
+
+  The `defaultOptions` value now applies to any event the per-query object does not explicitly configure:
+
+  - `false` - unspecified events stay disabled
+  - `true` - unspecified events refetch
+  - Callback function - the function is called for unspecified events to determine whether to refetch
+
+  ```ts
+  const client = new ApolloClient({
+    // ...
+    defaultOptions: {
+      watchQuery: {
+        refetchOn: false,
+      },
+    },
+  });
+
+  // Only `windowFocus` refetches. Other events stay disabled per the default.
+  useQuery(QUERY, { refetchOn: { windowFocus: true } });
+  ```
+
+- [#13230](https://github.com/apollographql/apollo-client/pull/13230) [`b25b659`](https://github.com/apollographql/apollo-client/commit/b25b6593f5d968db505b127e7ff7f2bb2419d5ee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to override the default event handler on `RefetchEventManager`. The default handler runs when no per-source handler is configured for an event. Provide a custom handler via the `defaultHandler` constructor option or the `setDefaultEventHandler` instance method.
+
+  ```ts
+  new RefetchEventManager({
+    defaultHandler: ({ client, matchesRefetchOn }) => {
+      return client.refetchQueries({
+        include: "all",
+        onQueryUpdated: matchesRefetchOn,
+      });
+    },
+  });
+  ```
+
+## 4.2.0-alpha.7
+
+### Minor Changes
+
+- [#13222](https://github.com/apollographql/apollo-client/pull/13222) [`b93c172`](https://github.com/apollographql/apollo-client/commit/b93c1723b4b7a9d1296ddd57035bc4fe39c8d971) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Extend the `defaultOptions` type-safety work to `preloadQuery` (returned from `createQueryPreloader`). Defaults declared in `DeclareDefaultOptions.WatchQuery` now work with `preloadQuery` to ensure the `PreloadedQueryRef`'s data states are correctly set.
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloClient {
+      namespace DeclareDefaultOptions {
+        interface WatchQuery {
+          errorPolicy: "all";
+        }
+      }
+    }
+  }
+  ```
+
+  ```ts
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(QUERY);
+  //    ^? PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">
+  ```
+
+## 4.2.0-alpha.6
+
+### Patch Changes
+
+- [#13217](https://github.com/apollographql/apollo-client/pull/13217) [`790f987`](https://github.com/apollographql/apollo-client/commit/790f987ed65435159dd2c6df5fe2fa01587a179e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the deprecation for the classic signatures for function overloads that rely on type inference from a `TypedDocumentNode`. The deprecation now only applies to classic signatures that provide explicit type arguments to encourage the use of `TypedDocumentNode`.
+
+## 4.2.0-alpha.5
+
+### Patch Changes
+
+- [#13215](https://github.com/apollographql/apollo-client/pull/13215) [`54c9eb7`](https://github.com/apollographql/apollo-client/commit/54c9eb7f95d3cd12dc5d12ec27090f1f23b0c471) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the options object for the `useQuery`, `useSuspenseQuery`, and `useBackgroundQuery` hooks provide proper IntelliSense suggestions.
+
+## 4.2.0-alpha.4
+
+### Minor Changes
+
+- [#13210](https://github.com/apollographql/apollo-client/pull/13210) [`1f9a428`](https://github.com/apollographql/apollo-client/commit/1f9a4287eb1eeef2cc08c81c92961f1cecd0dbca) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for automatic event-based refetching, such as window focus.
+
+  The `RefetchEventManager` class handles automatic refetches in response to events. Apollo Client provides built-in sources for window focus and network reconnect as `windowFocusSource` and `onlineSource`.
+
+  Event refetching is fully opt-in. Create and pass a `RefetchEventManager` instance to the `ApolloClient` constructor to activate the event listeners.
+
+  ```ts
+  import {
+    ApolloClient,
+    InMemoryCache,
+    RefetchEventManager,
+    windowFocusSource,
+    onlineSource,
+  } from "@apollo/client";
+
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+    refetchEventManager: new RefetchEventManager({
+      sources: {
+        // Refetch when window is focused
+        windowFocus: windowFocusSource,
+
+        // Refetch when the user comes back online
+        online: onlineSource,
+      },
+    }),
+  });
+  ```
+
+  By default, all active queries refetch when the events fire. Queries can opt out per-event or disable all event refetches:
+
+  ```ts
+  // Skip refetch on window focus for this query, but keep `online`
+  useQuery(QUERY, {
+    refetchOn: { windowFocus: false },
+  });
+
+  // Disable all event-driven refetches for this query
+  useQuery(OTHER_QUERY, {
+    refetchOn: false,
+  });
+
+  // Enable every event for this query, regardless of defaultOptions
+  useQuery(LIVE_DASHBOARD, {
+    refetchOn: true,
+  });
+
+  // Dynamically enable or disable a refetch when the event fires
+  useQuery(LIVE_DASHBOARD, {
+    refetchOn: ({ source, payload }) => {
+      if (source === "windowFocus") {
+        // payload is the data associated with the event
+        return someCondition(payload);
+      }
+
+      return true;
+    },
+  });
+
+  // Dynamically enable or disable a refetch for a specific event
+  useQuery(LIVE_DASHBOARD, {
+    refetchOn: {
+      windowFocus: ({ payload }) => {
+        // payload is the data associated with the event
+        return someCondition(payload);
+      },
+    },
+  });
+  ```
+
+  To enable per-query opt-in rather than opt-out, set `defaultOptions.watchQuery.refetchOn` to `false` and enable it per-query instead.
+
+  ```ts
+  const client = new ApolloClient({
+    link,
+    cache,
+    refetchEventManager: new RefetchEventManager({
+      sources: { windowFocus: windowFocusSource },
+    }),
+    defaultOptions: {
+      watchQuery: { refetchOn: false },
+    },
+  });
+
+  // Only this query refetches on window focus
+  useQuery(DASHBOARD_QUERY, { refetchOn: { windowFocus: true } });
+  ```
+
+  When `defaultOptions.watchQuery.refetchOn` and per-query `refetchOn` options are provided, the objects are merged together.
+
+  ### Custom events
+
+  You can also add your own custom events that trigger refetches. Register your event name and payload type using TypeScript module augmentation, then provide a source function that returns an Observable. The source's emitted value becomes the event's `payload`.
+
+  ```ts
+  import { Observable } from "@apollo/client";
+  import { filter } from "rxjs";
+  import { AppState, AppStateStatus, Platform } from "react-native";
+
+  declare module "@apollo/client" {
+    interface RefetchEvents {
+      reactNativeAppStatus: AppStateStatus;
+    }
+  }
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: {
+      reactNativeAppStatus: () => {
+        return new Observable((observer) => {
+          const subscription = AppState.addEventListener("change", (status) => {
+            observer.next(status);
+          });
+          return () => subscription.remove();
+        }).pipe(
+          filter((status) => Platform.OS !== "web" && status === "active")
+        );
+      },
+    },
+  });
+
+  // Disable per-query by setting the event to false
+  useQuery(QUERY, { refetchOn: { reactNativeAppStatus: false } });
+  ```
+
+  ### Manually trigger an event refetch
+
+  Refetches can be triggered imperatively by calling `emit` with the event name and its payload (if any).
+
+  ```ts
+  refetchEventManager.emit("reactNativeAppStatus", "active");
+  ```
+
+  #### Sourceless events
+
+  A source that has no automatic detection logic but still wants imperative `emit` support can be declared as `true`. Type the event as `void` to omit the payload argument.
+
+  ```ts
+  declare module "@apollo/client" {
+    interface RefetchEvents {
+      userTriggered: void;
+    }
+  }
+
+  const refetchEventManager = new RefetchEventManager({
+    sources: { userTriggered: true },
+  });
+
+  refetchEventManager.emit("userTriggered");
+  ```
+
+  Note: Calling `emit` on an event without a registered source will log a warning and result in a no-op.
+
+  ### Custom handlers
+
+  When an event fires, the default handler calls `client.refetchQueries({ include: "active" })` filtered by each query's `refetchOn` setting. You can override the handler for an event to add your own custom filtering. For example, to refetch all queries, including `standby` queries, define a handler for the event:
+
+  ```ts
+  const refetchEventManager = new RefetchEventManager({
+    // ...
+    handlers: {
+      userTriggered: ({ client, source, payload, matchesRefetchOn }) => {
+        return client.refetchQueries({
+          include: "all",
+          onQueryUpdated: (observableQuery) => {
+            return matchesRefetchOn(observableQuery);
+          },
+        });
+      },
+    },
+  });
+  ```
+
+  Handlers must return either a `RefetchQueriesResult` or `void`. Returning `void` skips refetching for the event.
+
+## 4.2.0-alpha.3
+
+### Minor Changes
+
+- [#13206](https://github.com/apollographql/apollo-client/pull/13206) [`08fccab`](https://github.com/apollographql/apollo-client/commit/08fccab68822e99c6edd539cb4162d1a3df4f4c9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Extend the `defaultOptions` type-safety work to `client.mutate` and `useMutation`.
+
+  The `errorPolicy` option now flows through to the result types for mutations in the same way it already does for queries:
+
+  - `ApolloClient.MutateResult<TData, TErrorPolicy>` maps `errorPolicy` to the concrete shape of `data` and `error`:
+    - `"none"` → `{ data: TData; error?: never }`
+    - `"all"` → `{ data: TData | undefined; error?: ErrorLike }`
+    - `"ignore"` → `{ data: TData | undefined; error?: never }`
+  - `client.mutate` and `useMutation` pick up the declared `defaultOptions.mutate.errorPolicy` and the explicit `errorPolicy` on each call to narrow return types accordingly.
+  - `useMutation.Result.error` is narrowed to `undefined` when `errorPolicy` is `"ignore"`, since `client.mutate` never resolves with an error in that case.
+
+  `DeclareDefaultOptions.Mutate` already accepted `errorPolicy`; the new behavior is that once you declare it, hook and method return types reflect it:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloClient {
+      namespace DeclareDefaultOptions {
+        interface Mutate {
+          errorPolicy: "all";
+        }
+      }
+    }
+  }
+  ```
+
+  ```ts
+  const result = await client.mutate({ mutation: MUTATION });
+  result.data;
+  //     ^? TData | undefined
+  result.error;
+  //     ^? ErrorLike | undefined
+  ```
+
+  Setting `errorPolicy` on an individual call overrides the default for that call's return type.
+
+## 4.2.0-alpha.2
+
+### Minor Changes
+
+- [#13132](https://github.com/apollographql/apollo-client/pull/13132) [`f3ce805`](https://github.com/apollographql/apollo-client/commit/f3ce805425d10a9666218a8e109288a2d46dcab1) Thanks [@phryneas](https://github.com/phryneas)! - Introduce "classic" and "modern" method and hook signatures.
+
+  Apollo Client 4.2 introduces two signature styles for methods and hooks. All signatures previously present are now "classic" signatures, and a new set of "modern" signatures are added alongside them.
+
+  **Classic signatures** are the default and are identical to the signatures before Apollo Client 4.2, preserving backward compatibility. Classic signatures still work with manually specified TypeScript generics (e.g., `useSuspenseQuery<MyData>(...)`). However, manually specifying generics has been discouraged for a long time—instead, we recommend using `TypedDocumentNode` to automatically infer types, which provides more accurate results without any manual annotations.
+
+  **Modern signatures** automatically incorporate your declared `defaultOptions` into return types, providing more accurate types. Modern signatures infer types from the document node and do not support manually passing generic type arguments; TypeScript will produce a type error if you attempt to do so.
+
+  Methods and hooks automatically switch to modern signatures the moment any non-optional property is declared in `DeclareDefaultOptions`. The switch happens across all methods and hooks globally:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+  declare module "@apollo/client" {
+    namespace ApolloClient {
+      namespace DeclareDefaultOptions {
+        interface WatchQuery {
+          errorPolicy: "all"; // non-optional → modern signatures activated automatically
+        }
+      }
+    }
+  }
+  ```
+
+  Users can also manually switch to modern signatures without declaring any `defaultOptions`, for example when wanting accurate type inference without relying on global `defaultOptions`:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+  declare module "@apollo/client" {
+    export interface TypeOverrides {
+      signatureStyle: "modern";
+    }
+  }
+  ```
+
+  Users can do a global `DeclareDefaultOptions` type augmentation and then manually switch back to "classic" for migration purposes:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+  declare module "@apollo/client" {
+    export interface TypeOverrides {
+      signatureStyle: "classic";
+    }
+  }
+  ```
+
+  Note that this is **not recommended for long-term use**. When combined with `DeclareDefaultOptions`, switching back to classic results in the same incorrect types as before Apollo Client 4.2—methods and hooks will not reflect the `defaultOptions` you've declared.
+
+- [#13132](https://github.com/apollographql/apollo-client/pull/13132) [`f3ce805`](https://github.com/apollographql/apollo-client/commit/f3ce805425d10a9666218a8e109288a2d46dcab1) Thanks [@phryneas](https://github.com/phryneas)! - Synchronize method and hook return types with `defaultOptions`.
+
+  Prior to this change, the following code snippet would always apply:
+
+  ```ts
+  declare const MY_QUERY: TypedDocumentNode<TData, TVariables>;
+  const result1 = useSuspenseQuery(MY_QUERY);
+  result1.data;
+  //      ^? TData
+  const result2 = useSuspenseQuery(MY_QUERY, { errorPolicy: "all" });
+  result2.data;
+  //      ^? TData | undefined
+  ```
+
+  While these types are generally correct, if you were to set `errorPolicy: 'all'` as a default option, the type of `result.data` for the first query would remain `TData` instead of changing to `TData | undefined` to match the runtime behavior.
+
+  We are now enforcing that certain `defaultOptions` types need to be registered globally. This means that if you want to use `errorPolicy: 'all'` as a default option for a query, you will need to register its type like this:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloClient {
+      namespace DeclareDefaultOptions {
+        interface WatchQuery {
+          // possible global-registered values:
+          // * `errorPolicy`
+          // * `returnPartialData`
+          errorPolicy: "all";
+        }
+        interface Query {
+          // possible global-registered values:
+          // * `errorPolicy`
+        }
+        interface Mutate {
+          // possible global-registered values:
+          // * `errorPolicy`
+        }
+      }
+    }
+  }
+  ```
+
+  Once this type declaration is in place, the type of `result.data` in the above example will correctly be changed to `TData | undefined`, reflecting the possibility that if an error occurs, `data` might be `undefined`. Manually specifying `useSuspenseQuery(MY_QUERY, { errorPolicy: "none" });` changes `result.data` to `TData` to reflect the local override.
+
+  This change means that you will need to declare your default options types in order to use `defaultOptions` with `ApolloClient`, otherwise you will see a TypeScript error.
+
+  Without the type declaration, the following (previously valid) code will now error:
+
+  ```ts
+  new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      watchQuery: {
+        // results in a type error:
+        // Type '"all"' is not assignable to type '"A default option for watchQuery.errorPolicy must be declared in ApolloClient.DeclareDefaultOptions before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-default-options-for-type-safety."'.
+        errorPolicy: "all",
+      },
+    },
+  });
+  ```
+
+  If you are creating multiple instances of Apollo Client with conflicting default options and you cannot register a single `defaultOptions` value as a result, you can relax the constraints by declaring those options as union types covering all values used by all clients. The properties can be required (to enforce them in `defaultOptions`) or optional (if some constructor calls won't pass a value):
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    export namespace ApolloClient {
+      export namespace DeclareDefaultOptions {
+        interface WatchQuery {
+          errorPolicy?: "none" | "all" | "ignore";
+          returnPartialData?: boolean;
+        }
+        interface Query {
+          errorPolicy?: "none" | "all" | "ignore";
+        }
+        interface Mutate {
+          errorPolicy?: "none" | "all" | "ignore";
+        }
+      }
+    }
+  }
+  ```
+
+  With this declaration, the `ApolloClient` constructor accepts any of those values in `defaultOptions`. The tradeoff is that hook and method return types become more generic. For example, calling `useSuspenseQuery` without an explicit `errorPolicy` will return a result typed as if all error policies are possible, since TypeScript can't know which specific value your instance uses at runtime.
+
+  Note that making a property optional (`errorPolicy?:`) is equivalent to adding the TypeScript default value (`"none"`) to the union. So `errorPolicy?: "all" | "ignore"` has the same effect on return types as `errorPolicy: "none" | "all" | "ignore"`, because TypeScript assumes the option could also be absent (i.e., `"none"`).
+
+  You can also use a **partial union** that only lists the values you actually use. For example, if you only ever use `"all"` or `"ignore"`, declare `errorPolicy: "all" | "ignore"` (required) to keep the union narrow and avoid unused values broadening your signatures unnecessarily.
+
+## 4.2.0-alpha.1
+
+### Patch Changes
+
+- [#13166](https://github.com/apollographql/apollo-client/pull/13166) [`0537d97`](https://github.com/apollographql/apollo-client/commit/0537d97161a51479141a182d869458912e1b8e1d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Release changes in 4.1.5 and 4.1.6.
+
+## 4.2.0-alpha.0
+
+### Minor Changes
+
+- [#13130](https://github.com/apollographql/apollo-client/pull/13130) [`dd12231`](https://github.com/apollographql/apollo-client/commit/dd122316028b55307de4a40335512307c8fa916a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Improve the accuracy of `client.query` return type to better detect the current `errorPolicy`. The `data` property is no longer nullable when the `errorPolicy` is `none`. This makes it possible to remove the `undefined` checks or optional chaining in most cases.
+
 ## 4.1.9
 
 ### Patch Changes

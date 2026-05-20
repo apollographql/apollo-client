@@ -165,6 +165,26 @@ export interface QueryOptionsDocumentation {
    * @docGroup 2. Networking options
    */
   skipPollAttempt: unknown;
+
+  /**
+   * Determines whether events trigger refetches for the query. Provide an
+   * object mapping each refetch event to `true` (enable), `false` (disable)
+   * or a callback function that returns `true`/`false` to control individual
+   * events. Provide `false` to disable all automatic refetch events for this
+   * query. Provide `true` to enable all automatic refetch events for this query.
+   * Provide a callback function to perform additional logic to determine
+   * whether to enable or disable a refetch for a query.
+   *
+   * `@remarks`
+   * `refetchOn` inherits from `defaultOptions.watchQuery.refetchOn`. If
+   * `defaultOptions.watchQuery.refetchOn` is not set, all refetch events are
+   * enabled by default.
+   *
+   * This option only has an effect when the client is configured with a
+   * `refetchEventManager`.
+   * @docGroup 1. Operation options
+   */
+  refetchOn: unknown;
 }
 
 export interface QueryResultDocumentation {

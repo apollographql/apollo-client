@@ -46,6 +46,7 @@ test-lib
 dist
 npm
 !flow-typed/npm
+!scripts/changesets/wrap-staged/npm
 
 # Unpublished output from @apollo/client build, like bundlesize artifacts
 temp/

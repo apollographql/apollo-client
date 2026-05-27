@@ -50,6 +50,10 @@ jobs:
           # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
           package-manager-cache: false
 
+      # `npm stage publish` (https://docs.npmjs.com/staged-publishing) requires
+      # npm >= 11.15.0. Node 24.x currently bundles at most 11.13.0, so upgrade.
+      - run: npm install -g npm@11.15.0
+
       - run: npm ci
 
       - name: "[main] Create release PR or publish to npm + GitHub"

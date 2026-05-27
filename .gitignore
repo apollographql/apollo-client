@@ -1,5 +1,8 @@
+*.tsbuildinfo
+
 # Installed via Github Copilot Setup Steps, should not be committed
 .github/instructions/docs.instructions.md
+skills-lock.json
 
 # fs
 .DS_Store

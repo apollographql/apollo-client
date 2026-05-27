@@ -1,0 +1,482 @@
+---
+title: Event-based refetching
+description: Automatically refetch queries on window focus, network reconnect, or your own custom events
+minVersion: 4.2
+---
+
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
+
+A query's data can grow stale while a user switches to another tab, loses their network connection, or sends your app to the background. Apollo Client can refetch queries automatically when these events happen, so that you serve fresh query data.
+
+This guide walks through enabling event-based refetching, controlling which queries respond to which events, and extending the system with your own custom events.
+
+## Refetching on events
+
+Event-based refetching is powered by the `RefetchEventManager`. It orchestrates refetches when events fire, routing each [source](#sources) to a [handler](#customize-the-refetch-handler).
+
+Initialize `RefetchEventManager` and pass it to your `ApolloClient` instance:
+
+```ts
+import { ApolloClient, RefetchEventManager } from "@apollo/client";
+
+const refetchEventManager = new RefetchEventManager();
+
+const client = new ApolloClient({
+  // ...
+  refetchEventManager,
+});
+```
+
+By itself, the refetch event manager doesn't know what events should trigger refetches. For that, it needs event [sources](#sources) that tell it what to listen for and when to trigger refetches.
+
+## Sources
+
+A _source_ is a function that returns an `Observable` that emits each time that event should trigger a refetch. Sources can optionally emit values that become the event's payload, which is used by `refetchOn` callbacks to conditionally refetch a query. Register sources by name on the `sources` option:
+
+```ts
+const refetchEventManager = new RefetchEventManager({
+  sources: {
+    windowFocus: windowFocusSource,
+  },
+});
+```
+
+When a source emits, the event is routed to its [handler](#customize-the-refetch-handler) which triggers the refetch. The default handler refetches [active](./refetching#refetching-all-queries) queries, filtered by their [`refetchOn`](#disabling-event-refetching-for-a-query) option.
+
+### Built-in sources
+
+Apollo Client includes built-in sources for common browser events.
+
+#### Window focus
+
+`windowFocusSource` triggers a refetch whenever the browser tab is focused. It listens for the `visibilitychange` event and emits when `document.visibilityState` is `visible`.
+
+Assign it to the `windowFocus` event:
+
+```ts
+import { RefetchEventManager, windowFocusSource } from "@apollo/client";
+
+const refetchEventManager = new RefetchEventManager({
+  sources: {
+    windowFocus: windowFocusSource,
+  },
+});
+```
+
+<Note>
+
+This source is safe to use in server environments. It checks whether the `window` object is available before it registers its event listener.
+
+</Note>
+
+#### Network reconnect
+
+`onlineSource` triggers a refetch when the browser regains network connectivity. It listens for the `online` event and emits when the event is triggered.
+
+Assign it to the `online` event:
+
+```ts
+import { RefetchEventManager, onlineSource } from "@apollo/client";
+
+const refetchEventManager = new RefetchEventManager({
+  sources: {
+    online: onlineSource,
+  },
+});
+```
+
+<Note>
+
+This source is safe to use in server environments. It checks whether the `window` object is available before it registers its event listener.
+
+</Note>
+
+### Custom sources
+
+You aren't limited to using the built-in events. You can register your own events that trigger refetches with custom sources.
+
+Let's build a custom source for a React Native app that refetches queries when the app is brought into the foreground. We'll register the source under an event named `appState` in the `sources` option.
+
+<Tip>
+
+To avoid TypeScript errors, you must register the event with the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
+
+</Tip>
+
+```ts
+import { AppState } from "react-native";
+import { Observable, ApolloClient, RefetchEventManager } from "@apollo/client";
+
+const appStateSource: RefetchEventManager.EventSource<void> = () => {
+  return new Observable((observer) => {
+    // Attach the event listener when the observable is subscribed to
+    const subscription = AppState.addEventListener("change", (status) => {
+      if (status === "active") {
+        // Emit a `next` event to tell the manager to trigger a refetch
+        observer.next();
+      }
+    });
+
+    return () => {
+      // Cleanup when the observable is unsubscribed
+      subscription.remove();
+    };
+  });
+};
+
+const refetchEventManager = new RefetchEventManager({
+  sources: {
+    appState: appStateSource,
+  },
+});
+```
+
+#### Source payloads
+
+Sources can optionally emit payloads which are used by [`refetchOn`](#disable-event-refetching-for-a-query) callbacks to conditionally refetch the query.
+
+<Tip>
+
+To avoid TypeScript errors, register a non-`void` value type with the event declared in the `RefetchEvents` interface. See the [TypeScript section](#typescript) to learn more.
+
+</Tip>
+
+Let's update the example from the previous section to emit the `AppStateStatus` with the event and remove the conditional check to allow individual queries to determine whether to refetch.
+
+```ts {1,6}
+import type { AppStateStatus } from "react-native";
+
+const appStateSource: RefetchEventManager.EventSource<AppStateStatus> = () => {
+  return new Observable((observer) => {
+    const subscription = AppState.addEventListener("change", (status) => {
+      if (status === "active") {// [!code --]
+        observer.next(status);
+      }// [!code --]
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  });
+};
+```
+
+<Caution>
+
+You probably don't want this behavior in a real application because this causes refetches for any `change` event emitted by `AppState`. If you choose to use this implementation, we recommend pairing it with a default `refetchOn` provided to `defaultOptions.watchQuery.refetchOn` that limits refetches to `active` status.
+
+</Caution>
+
+## Disable event refetching for a query
+
+Not all queries need to refetch for every registered event. For example, a query that fetches static configuration data has no reason to refetch when the user focuses the browser tab.
+
+To opt a query out of a single event, set that event in the `refetchOn` option to `false`:
+
+```tsx {2-4}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: {
+    windowFocus: false,
+  },
+});
+```
+
+This query disables refetches when the `windowFocus` event triggers, but continues to refetch for all other registered events, such as `online`.
+
+### Disable refetches for all events
+
+To opt a query out of refetching for all events, set the `refetchOn` option to `false`:
+
+```tsx {2}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: false,
+});
+```
+
+`false` is treated the same as if every event is set to `false` in a `refetchOn` object.
+
+### Conditionally refetch with a callback
+
+More advanced cases might need conditional logic to determine whether to refetch the query at the time an event fires. Pass a callback function for the event in the `refetchOn` option. It is called with the event `payload` when that event triggers. Return `true` to allow the refetch or `false` to skip it.
+
+```tsx {2-4}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: {
+    // `payload` is the value emitted by the source
+    appState: ({ payload }) => payload === "active",
+  },
+});
+```
+
+Events not passed to the object continue to use the default behavior. In this example, the `online` event still refetches the query.
+
+<Note>
+
+Your callback function might not be called if the [handler](#customize-the-refetch-handler) first decides to skip refetching for the query.
+
+</Note>
+
+#### Generic callbacks
+
+Pass a callback function to the `refetchOn` option to add conditional logic for any event that would cause a refetch of the query. The function receives a context object with the `source` name and the event's `payload`.
+
+```tsx {2-9}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: ({ source, payload }) => {
+    if (source === "appState") {
+      return payload === "active";
+    }
+
+    return true;
+  },
+});
+```
+
+## Switch to opt-in by default
+
+The examples so far rely on Apollo Client's default behavior, which refetches every active query when an event fires. To flip the model so queries only refetch when they explicitly opt in, set `defaultOptions.watchQuery.refetchOn` to `false` on the client:
+
+```ts {3-7}
+const client = new ApolloClient({
+  refetchEventManager,
+  defaultOptions: {
+    watchQuery: {
+      refetchOn: false,
+    },
+  },
+});
+```
+
+With this configuration, queries must opt-in to the events they are interested in:
+
+```tsx {2-4}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: {
+    windowFocus: true,
+  },
+});
+```
+
+Set `refetchOn` to `true` to enable refetches for all events:
+
+```ts {2}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: true,
+});
+```
+
+When both `defaultOptions.watchQuery.refetchOn` and a per-query `refetchOn` are objects, Apollo Client merges the two together, with the per-query option taking precedence. This lets you set baseline behavior at the client level and override individual events per query.
+
+## Triggering events manually
+
+`RefetchEventManager` exposes an `emit` method that imperatively triggers an event. This is useful for testing, for triggering refetches from outside the listener (for example, from a global error handler), or as a way to trigger events that have no automatic source.
+
+`emit` accepts the name of the event along with its payload, if required.
+
+```ts
+refetchEventManager.emit("windowFocus", new Event("visibilitychange"));
+```
+
+<Note>
+
+Calling `emit` for an event without a registered source or connected client results in a no-op and a development-only warning.
+
+</Note>
+
+### Sourceless events
+
+Some events have no automatic detection logic and exist only to be triggered manually. Register the source and set its value to `true`. This ensures the event can emit and trigger refetches. If it is not registered, it results in a no-op and a development-only warning is logged.
+
+```ts {3}
+const refetchEventManager = new RefetchEventManager({
+  sources: {
+    manualRefresh: true,
+  },
+});
+
+refetchEventManager.emit("manualRefresh");
+```
+
+Like automatic sources, queries can opt-out of refetches by setting the `refetchOn` option for the event to `false`:
+
+```tsx {2-4}
+const { data } = useQuery(GET_TODOS, {
+  refetchOn: {
+    manualRefresh: false,
+  },
+});
+```
+
+<Tip>
+
+To avoid TypeScript errors, you still need to register sourceless events with TypeScript so that `emit` calls and `refetchOn` keys stay type-checked. See the [TypeScript section](#typescript) guide for how to type sourceless events and `void` event payloads.
+
+</Tip>
+
+## Customize the refetch handler
+
+When an event fires, `RefetchEventManager` routes the event to a _refetch handler_. It is responsible for triggering refetches for the event by calling [`client.refetchQueries`](./refetching#client.refetchqueries) and filtering each query by its `refetchOn` option. The refetch handler is called whenever a matching source emits an event.
+
+`RefetchEventManager` implements a default refetch handler for all events that don't provide a custom handler. It refetches all [active](./refetching#refetching-all-queries) queries, filtered by each query's `refetchOn` option.
+
+You can customize the handler for an event by passing a function for an event in the `handlers` option. The function receives a context object that contains the `client` instance connected to it, the event `source` and `payload`, as well as a [`matchesRefetchOn`](#using-matchesrefetchon) helper function that provides the logic necessary to filter queries based on their `refetchOn` option.
+
+The following example implements a custom refetch handler for the `manualRefresh` source from the previous section that refetches all queries, including standby queries:
+
+```ts
+const manualRefreshHandler: RefetchEventManager.EventHandler<
+  "manualRefresh"
+> = ({ client, matchesRefetchOn }) => {
+  return client.refetchQueries({
+    include: "all",
+    onQueryUpdated: (observableQuery) => {
+      return matchesRefetchOn(observableQuery);
+    },
+  });
+};
+
+export const refetchEventManager = new RefetchEventManager({
+  sources: {
+    manualRefresh: true,
+  },
+  handlers: {
+    manualRefresh: manualRefreshHandler,
+  },
+});
+```
+
+### Using `matchesRefetchOn`
+
+The handler context includes a `matchesRefetchOn` helper function that evaluates a query's `refetchOn` option. Use it inside the `onQueryUpdated` callback function to filter out the query when it opts out of refetches for the event.
+
+```ts {7}
+const manualRefreshHandler: RefetchEventManager.EventHandler<
+  "manualRefresh"
+> = ({ client, matchesRefetchOn }) => {
+  return client.refetchQueries({
+    include: "all",
+    onQueryUpdated: (observableQuery) => {
+      return matchesRefetchOn(observableQuery);
+    },
+  });
+};
+```
+
+<Caution>
+
+You must use `matchesRefetchOn` to correctly filter the query. If you don't use this function, included queries always refetch regardless of whether they opt out of refetching.
+
+</Caution>
+
+You can compose `matchesRefetchOn` with additional logic when a handler needs to evaluate the `refetchOn` option with it.
+
+```ts {8-9}
+const manualRefreshHandler: RefetchEventManager.EventHandler<
+  "manualRefresh"
+> = ({ client, matchesRefetchOn }) => {
+  return client.refetchQueries({
+    include: "all",
+    onQueryUpdated: (observableQuery) => {
+      return (
+        matchesRefetchOn(observableQuery) &&
+        observableQuery.options.fetchPolicy !== "no-cache"
+      );
+    },
+  });
+};
+```
+
+### Skip a refetch from a handler
+
+You can conditionally skip entire refetches by returning `void` from a handler.
+
+```ts {4,14}
+const manualRefreshHandler: RefetchEventManager.EventHandler<
+  "manualRefresh"
+> = ({ client, matchesRefetchOn }) => {
+  if (document.visibilityState === "visible") {
+    return client.refetchQueries({
+      include: "all",
+      onQueryUpdated: (observableQuery) => {
+        return (
+          matchesRefetchOn(observableQuery) &&
+          observableQuery.options.fetchPolicy !== "no-cache"
+        );
+      },
+    });
+  }
+};
+```
+
+<Tip>
+
+Use this sparingly and prefer using `refetchOn` instead to ensure more predictable behavior.
+
+</Tip>
+
+## TypeScript
+
+Register custom events with TypeScript to provide full type safety for refetch events. Declare your custom events using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `RefetchEvents` interface.
+
+Each property on `RefetchEvents` maps an event name to its payload type.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+import type { AppStateStatus } from "react-native";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    appState: AppStateStatus;
+  }
+}
+```
+
+With this declaration in place, TypeScript provides type safety for source functions, refetch handler functions, the `emit` method, and the `refetchOn` option.
+
+### Optional payloads
+
+To make an event's payload optional, include `undefined` in the payload type. This makes the payload optional when the source observable emits, or when you imperatively trigger the event with `emit`.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    manualRefresh: { reason: string } | undefined;
+  }
+}
+```
+
+```ts
+// ✅ valid
+refetchEventManager.emit("manualRefresh");
+
+// ✅ valid
+refetchEventManager.emit("manualRefresh", { reason: "manual refresh" });
+```
+
+### Events without payloads
+
+If an event doesn't have an associated payload, set its payload type to `void`. This makes it so that you don't pass a payload in the source observable or when you imperatively trigger the event with `emit`.
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  interface RefetchEvents {
+    manualRefresh: void;
+  }
+}
+```
+
+```ts
+// ✅ valid
+refetchEventManager.emit("manualRefresh");
+
+// ❌ invalid
+refetchEventManager.emit("manualRefresh", anyValue);
+```
+
+## See also
+
+See the [refetching guide](./refetching) to learn more about the `client.refetchQueries` API.

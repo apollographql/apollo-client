@@ -558,6 +558,7 @@ describe("ApolloClient", () => {
       defaultOptions: {
         watchQuery: {
           fetchPolicy: "cache-and-network",
+          // @ts-expect-error
           returnPartialData: false,
         },
         query: {

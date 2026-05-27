@@ -188,6 +188,7 @@ workflows:
                 - vite
                 - vite-swc
                 - wrapping-library
+                - type-tests
                 # -browser-esm would need a package publish to npm/CDNs
               react:
                 - "18.3.0"
@@ -208,6 +209,11 @@ workflows:
               - framework: node
                 react: next
               - framework: node
+                react: "18.3.0"
+              # we only test AC-internal types
+              - framework: type-tests
+                react: next
+              - framework: type-tests
                 react: "18.3.0"
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>

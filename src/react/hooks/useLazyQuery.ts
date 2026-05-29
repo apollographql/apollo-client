@@ -567,6 +567,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
         notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
         nextFetchPolicy: options?.nextFetchPolicy,
         skipPollAttempt: options?.skipPollAttempt,
+        pollInterval: options?.pollInterval,
       };
 
     // Wait to apply the changed fetch policy until after the execute
@@ -589,6 +590,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
     // so `stableOptions` isn't updated when using inline functions.
     options?.nextFetchPolicy,
     options?.skipPollAttempt,
+    options?.pollInterval,
   ]);
 
   const execute: useLazyQuery.ExecFunction<TData, TVariables> =

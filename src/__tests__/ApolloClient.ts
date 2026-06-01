@@ -2799,6 +2799,36 @@ describe("ApolloClient", () => {
         complete: true,
       });
     });
+
+    it("reports complete as false when `from` is not identifiable", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: {},
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toStrictEqual({
+          data: {},
+          complete: false,
+        });
+      }
+    });
   });
 
   describe("defaultOptions", () => {

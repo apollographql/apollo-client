@@ -21,8 +21,7 @@ jobs:
         with:
           node-version: ">=23.6.0"
 
-      - name: Install dependencies (with cache)
-        uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1
+      - run: npm ci
 
         # Builds the library and runs the api extractor
       - name: Run Api-Extractor

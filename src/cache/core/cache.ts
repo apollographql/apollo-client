@@ -156,6 +156,9 @@ export declare namespace ApolloCache {
      */
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
+
+  // Registration type for custom scalars
+  export interface Scalars {}
 }
 
 export abstract class ApolloCache {

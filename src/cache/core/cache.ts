@@ -157,6 +157,15 @@ export declare namespace ApolloCache {
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
 
+  export interface Scalar<TInput, TOutput> {
+    parse: (inputValue: TInput) => TOutput;
+    serialize: (parsedValue: TOutput) => TInput;
+    is: (value: TInput | TOutput) => value is TOutput;
+    devtools?: {
+      displayValue: (parsedValue: TOutput) => unknown;
+    };
+  }
+
   // Registration type for custom scalars
   export interface Scalars {}
 }

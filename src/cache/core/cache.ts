@@ -30,6 +30,7 @@ import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   IsAny,
+  IsLooselyEqual,
   NoInfer,
   Prettify,
 } from "@apollo/client/utilities/internal";
@@ -160,7 +161,9 @@ export declare namespace ApolloCache {
   export interface Scalar<TInput, TOutput> {
     parse: (inputValue: TInput) => TOutput;
     serialize: (parsedValue: TOutput) => TInput;
-    is: (value: TInput | TOutput) => value is TOutput;
+    is: IsLooselyEqual<TInput, TOutput> extends true ?
+      (value: TInput | TOutput) => boolean
+    : (value: TInput | TOutput) => value is TOutput;
     devtools: {
       displayValue: (parsedValue: TOutput) => unknown;
     };

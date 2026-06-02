@@ -4,6 +4,9 @@
       "path": "./tsconfig.src.json"
     },
     {
+      "path": "./cacheOverride/classicSignature/tsconfig.json"
+    },
+    {
       "path": "./cacheOverride/defaults/tsconfig.json"
     },
     {

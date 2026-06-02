@@ -231,6 +231,8 @@ export class InMemoryCache extends ApolloCache {
     ApolloCache.Scalar<infer TInput, infer TOutput>
   ) ?
     IsLooselyEqual<TInput, TOutput> extends true ?
+      // We don't require scalars where the input/output types are equal, so we
+      // can't guarantee we will get a value
       ApolloCache.GetScalarType<TKey> | undefined
     : ApolloCache.GetScalarType<TKey>
   : never {

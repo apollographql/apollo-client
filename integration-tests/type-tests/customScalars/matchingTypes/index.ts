@@ -172,7 +172,9 @@ test("rejects scalars that are not declared", () => {
     scalars: {
       // @ts-expect-error not a declared scalar
       Unknown: {
+        // @ts-expect-error implicit any type
         serialize: (value) => value,
+        // @ts-expect-error implicit any type
         parse: (value) => value,
       },
     },

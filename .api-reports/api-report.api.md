@@ -41,8 +41,31 @@ export namespace ApolloCache {
     // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
     export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
+    export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
+        input: infer TInput;
+        output: infer TOutput;
+    }) ? ApolloCache.Scalar<TInput, TOutput> : never;
+    // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
+    }
+    // (undocumented)
+    export interface Scalar<TInput, TOutput> {
+        // (undocumented)
+        devtools: {
+            displayValue: (parsedValue: TOutput) => unknown;
+        };
+        // Warning: (ae-forgotten-export) The symbol "IsLooselyEqual" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        is: IsLooselyEqual<TInput, TOutput> extends true ? (value: TInput | TOutput) => boolean : (value: TInput | TOutput) => value is TOutput;
+        // (undocumented)
+        parse: (inputValue: TInput) => TOutput;
+        // (undocumented)
+        serialize: (parsedValue: TOutput) => TInput;
+    }
+    // (undocumented)
+    export interface Scalars {
     }
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -90,6 +113,8 @@ export abstract class ApolloCache {
     //
     // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1554,8 +1579,48 @@ type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
 }) ? unknown extends TContext ? DefaultContext : TContext : DefaultContext : DefaultContext;
 
 // @public (undocumented)
+export namespace InMemoryCache {
+    // (undocumented)
+    export interface ScalarConfig<TInput, TOutput> {
+        // (undocumented)
+        devtools?: {
+            displayValue?(value: TOutput): unknown;
+        };
+        // (undocumented)
+        is?: IsLooselyEqual<TInput, TOutput> extends true ? {
+            _(value: TInput | TOutput): boolean;
+        }["_"] : {
+            _(value: TInput | TOutput): value is TOutput;
+        }["_"];
+        // (undocumented)
+        parse(inputValue: TInput): TOutput;
+        // (undocumented)
+        serialize(parsedValue: TOutput): TInput;
+    }
+    // Warning: (ae-forgotten-export) The symbol "KnownScalars" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type ScalarsOption = {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
+            input: infer TInput;
+            output: infer TOutput;
+        }) ? ScalarConfig<TInput, TOutput> : never;
+    } & {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
+            input: infer TInput;
+            output: infer TOutput;
+        }) ? ScalarConfig<TInput, TOutput> : never;
+    } & (ApolloCache.Scalars extends (Record<string, {
+        input: infer TInput;
+        output: infer TOutput;
+    }>) ? Record<string, ScalarConfig<TInput, TOutput>> : {});
+}
+
+// @public (undocumented)
 export class InMemoryCache extends ApolloCache {
-    constructor(config?: InMemoryCacheConfig);
+    constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
+    config?: InMemoryCacheConfig
+    ] : [config: InMemoryCacheConfig]);
     // (undocumented)
     readonly assumeImmutableResults = true;
     batch<TUpdateResult>(options: Cache_2.BatchOptions<InMemoryCache, TUpdateResult>): TUpdateResult;
@@ -1581,6 +1646,8 @@ export class InMemoryCache extends ApolloCache {
     //
     // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (ApolloCache.Scalar<infer TInput, infer TOutput>) ? IsLooselyEqual<TInput, TOutput> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1620,18 +1687,18 @@ export class InMemoryCache extends ApolloCache {
 }
 
 // @public (undocumented)
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // Warning: (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    fragments?: FragmentRegistryAPI;
-    // (undocumented)
-    possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+export type InMemoryCacheConfig = ApolloReducerConfig & {
     resultCaching?: boolean;
-    // (undocumented)
+    possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-}
+    fragments?: FragmentRegistryAPI;
+} & ({} extends InMemoryCache.ScalarsOption ? InMemoryCache.ScalarsOption extends Record<string, never> ? {
+    scalars?: Record<string, `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`>;
+} : {
+    scalars?: InMemoryCache.ScalarsOption;
+} : {
+    scalars: InMemoryCache.ScalarsOption;
+});
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
 //
@@ -1673,6 +1740,13 @@ const _invalidateModifier: unique symbol;
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
+type IsLooselyEqual<A, B> = [
+A
+] extends [B] ? [
+B
+] extends [A] ? true : false : false;
+
+// @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 // @public
@@ -1701,6 +1775,11 @@ type KeyFieldsFunction = (object: Readonly<StoreObject>, context: KeyFieldsConte
 
 // @public (undocumented)
 type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
+
+// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 // @public (undocumented)
 class Layer extends EntityStore {
@@ -1880,8 +1959,6 @@ interface MaskOperationOptions<TData> {
 // @public
 export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", PreserveTypes.TypeOverrides, TData>;
 
-// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
     context: LocalState.ContextFunction<TContext>;
@@ -3064,11 +3141,12 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:126:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:127:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:101:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:136:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:143:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:633:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

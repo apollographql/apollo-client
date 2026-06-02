@@ -23,12 +23,14 @@ import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/intern
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import type { IsLooselyEqual } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
 import type { Prettify } from '@apollo/client/utilities/internal';
 import { Reference } from '@apollo/client/utilities';
+import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
@@ -45,8 +47,29 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 export namespace ApolloCache {
     export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
+    export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
+        input: infer TInput;
+        output: infer TOutput;
+    }) ? ApolloCache.Scalar<TInput, TOutput> : never;
+    // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
+    }
+    // (undocumented)
+    export interface Scalar<TInput, TOutput> {
+        // (undocumented)
+        devtools: {
+            displayValue: (parsedValue: TOutput) => unknown;
+        };
+        // (undocumented)
+        is: IsLooselyEqual<TInput, TOutput> extends true ? (value: TInput | TOutput) => boolean : (value: TInput | TOutput) => value is TOutput;
+        // (undocumented)
+        parse: (inputValue: TInput) => TOutput;
+        // (undocumented)
+        serialize: (parsedValue: TOutput) => TInput;
+    }
+    // (undocumented)
+    export interface Scalars {
     }
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -90,6 +113,8 @@ export abstract class ApolloCache {
     gc(): string[];
     // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -549,8 +574,48 @@ export interface IgnoreModifier {
 const _ignoreModifier: unique symbol;
 
 // @public (undocumented)
+export namespace InMemoryCache {
+    // (undocumented)
+    export interface ScalarConfig<TInput, TOutput> {
+        // (undocumented)
+        devtools?: {
+            displayValue?(value: TOutput): unknown;
+        };
+        // (undocumented)
+        is?: IsLooselyEqual<TInput, TOutput> extends true ? {
+            _(value: TInput | TOutput): boolean;
+        }["_"] : {
+            _(value: TInput | TOutput): value is TOutput;
+        }["_"];
+        // (undocumented)
+        parse(inputValue: TInput): TOutput;
+        // (undocumented)
+        serialize(parsedValue: TOutput): TInput;
+    }
+    // Warning: (ae-forgotten-export) The symbol "KnownScalars" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type ScalarsOption = {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
+            input: infer TInput;
+            output: infer TOutput;
+        }) ? ScalarConfig<TInput, TOutput> : never;
+    } & {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
+            input: infer TInput;
+            output: infer TOutput;
+        }) ? ScalarConfig<TInput, TOutput> : never;
+    } & (ApolloCache.Scalars extends (Record<string, {
+        input: infer TInput;
+        output: infer TOutput;
+    }>) ? Record<string, ScalarConfig<TInput, TOutput>> : {});
+}
+
+// @public (undocumented)
 export class InMemoryCache extends ApolloCache {
-    constructor(config?: InMemoryCacheConfig);
+    constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
+    config?: InMemoryCacheConfig
+    ] : [config: InMemoryCacheConfig]);
     // (undocumented)
     readonly assumeImmutableResults = true;
     batch<TUpdateResult>(options: Cache_2.BatchOptions<InMemoryCache, TUpdateResult>): TUpdateResult;
@@ -574,6 +639,8 @@ export class InMemoryCache extends ApolloCache {
     }): string[];
     // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (ApolloCache.Scalar<infer TInput, infer TOutput>) ? IsLooselyEqual<TInput, TOutput> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -613,16 +680,18 @@ export class InMemoryCache extends ApolloCache {
 }
 
 // @public (undocumented)
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // (undocumented)
-    fragments?: FragmentRegistryAPI;
-    // (undocumented)
-    possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+export type InMemoryCacheConfig = ApolloReducerConfig & {
     resultCaching?: boolean;
-    // (undocumented)
+    possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-}
+    fragments?: FragmentRegistryAPI;
+} & ({} extends InMemoryCache.ScalarsOption ? InMemoryCache.ScalarsOption extends Record<string, never> ? {
+    scalars?: Record<string, `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`>;
+} : {
+    scalars?: InMemoryCache.ScalarsOption;
+} : {
+    scalars: InMemoryCache.ScalarsOption;
+});
 
 // @public (undocumented)
 interface InvalidateModifier {
@@ -658,6 +727,9 @@ type KeyFieldsFunction = (object: Readonly<StoreObject>, context: KeyFieldsConte
 
 // @public (undocumented)
 type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
+
+// @public (undocumented)
+type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 // @public (undocumented)
 class Layer extends EntityStore {
@@ -1010,7 +1082,7 @@ interface WriteContext extends ReadMergeModifyContext {
 //
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:136:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

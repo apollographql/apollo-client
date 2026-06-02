@@ -211,20 +211,21 @@ test("useMutation", () => {
   }
 
   {
+    // @ts-expect-error wrong TCache subtype
     const [mutate, { client }] = useMutation<Data, Variables, ApolloCache>(
       mutation,
       {
         update: (cache) => {
-          expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
+          expectTypeOf(cache).toEqualTypeOf<TestCache>();
         },
         onCompleted: (_, options) => {
           expectTypeOf(options!.update!).toEqualTypeOf<
-            MutationUpdaterFunction<Data, Variables, ApolloCache>
+            MutationUpdaterFunction<Data, Variables, TestCache>
           >;
         },
         onError: (_, options) => {
           expectTypeOf(options!.update!).toEqualTypeOf<
-            MutationUpdaterFunction<Data, Variables, ApolloCache>
+            MutationUpdaterFunction<Data, Variables, TestCache>
           >;
         },
       }
@@ -232,16 +233,55 @@ test("useMutation", () => {
 
     mutate({
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
+        expectTypeOf(cache).toEqualTypeOf<TestCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, ApolloCache>
+          MutationUpdaterFunction<Data, Variables, TestCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, ApolloCache>
+          MutationUpdaterFunction<Data, Variables, TestCache>
+        >;
+      },
+    });
+
+    expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
+  }
+
+  {
+    const [mutate, { client }] = useMutation<Data, Variables, TestCache>(
+      mutation,
+      {
+        update: (cache) => {
+          expectTypeOf(cache).toEqualTypeOf<TestCache>();
+        },
+        onCompleted: (_, options) => {
+          expectTypeOf(options!.update!).toEqualTypeOf<
+            MutationUpdaterFunction<Data, Variables, TestCache>
+          >;
+        },
+        onError: (_, options) => {
+          expectTypeOf(options!.update!).toEqualTypeOf<
+            MutationUpdaterFunction<Data, Variables, TestCache>
+          >;
+        },
+      }
+    );
+
+    mutate({
+      update: (cache) => {
+        expectTypeOf(cache).toEqualTypeOf<TestCache>();
+      },
+      onCompleted: (_, options) => {
+        expectTypeOf(options!.update!).toEqualTypeOf<
+          MutationUpdaterFunction<Data, Variables, TestCache>
+        >;
+      },
+      onError: (_, options) => {
+        expectTypeOf(options!.update!).toEqualTypeOf<
+          MutationUpdaterFunction<Data, Variables, TestCache>
         >;
       },
     });

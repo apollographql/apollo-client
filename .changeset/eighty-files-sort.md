@@ -24,7 +24,7 @@ This enables the `scalars` option in `InMemoryCache`:
 ```ts
 const cache = new InMemoryCache({
   scalars: {
-    DateTime: {
+    Date: {
       parse: (dateString) => new Date(dateString),
       serialize: (date) => date.toISOString(),
       is: (value) => value instanceof Date,

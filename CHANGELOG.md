@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.1
+
+### Patch Changes
+
+- [#13248](https://github.com/apollographql/apollo-client/pull/13248) [`062ffe3`](https://github.com/apollographql/apollo-client/commit/062ffe3ecfeda8630a4ad3ced40ce58193199b74) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where `useLazyQuery` would not apply a changed `pollInterval` between renders.
+
 ## 4.2.0
 
 ### Minor Changes

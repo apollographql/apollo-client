@@ -168,6 +168,15 @@ export declare namespace ApolloCache {
 
   // Registration type for custom scalars
   export interface Scalars {}
+
+  export type GetScalarType<TKey extends keyof ApolloCache.Scalars> =
+    TKey extends keyof ApolloCache.Scalars ?
+      ApolloCache.Scalars[TKey] extends (
+        { input: infer TInput; output: infer TOutput }
+      ) ?
+        ApolloCache.Scalar<TInput, TOutput>
+      : never
+    : never;
 }
 
 export abstract class ApolloCache {
@@ -252,6 +261,12 @@ export abstract class ApolloCache {
   public lookupFragment(fragmentName: string): FragmentDefinitionNode | null {
     return null;
   }
+
+  // Custom scalars API
+
+  public abstract getScalar<TKey extends keyof ApolloCache.Scalars>(
+    key: TKey
+  ): ApolloCache.GetScalarType<TKey> | undefined;
 
   // Local state API
 

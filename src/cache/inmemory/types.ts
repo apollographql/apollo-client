@@ -18,6 +18,7 @@ import type {
 
 import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
 import type {
   FieldMergeFunction,
   KeyFieldsFunction,
@@ -135,12 +136,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
+export type InMemoryCacheConfig = ApolloReducerConfig & {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   fragments?: FragmentRegistryAPI;
-}
+} & ({} extends InMemoryCache.ScalarsOption ?
+    { scalars?: InMemoryCache.ScalarsOption }
+  : { scalars: InMemoryCache.ScalarsOption });
 
 export interface MergeInfo {
   field: FieldNode;

@@ -22,6 +22,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -41,6 +42,41 @@ type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"
 >;
+
+export declare namespace InMemoryCache {
+  export interface ScalarConfig<TInput, TOutput> {
+    parse: (inputValue: TInput) => TOutput;
+    serialize: (parsedValue: TOutput) => TInput;
+    is?: (value: TInput | TOutput) => value is TOutput;
+    devtools?: {
+      displayValue?: (value: TOutput) => unknown;
+    };
+  }
+
+  export type ScalarsOption = {
+    [ScalarName in keyof ApolloCache.Scalars as IsLooselyEqual<
+      ApolloCache.Scalars[ScalarName]["input"],
+      ApolloCache.Scalars[ScalarName]["output"]
+    > extends true ?
+      ScalarName
+    : never]?: ApolloCache.Scalars[ScalarName] extends (
+      { input: infer TInput; output: infer TOutput }
+    ) ?
+      ScalarConfig<TInput, TOutput>
+    : never;
+  } & {
+    [ScalarName in keyof ApolloCache.Scalars as IsLooselyEqual<
+      ApolloCache.Scalars[ScalarName]["input"],
+      ApolloCache.Scalars[ScalarName]["output"]
+    > extends true ?
+      never
+    : ScalarName]: ApolloCache.Scalars[ScalarName] extends (
+      { input: infer TInput; output: infer TOutput }
+    ) ?
+      ScalarConfig<TInput, TOutput>
+    : never;
+  };
+}
 
 export class InMemoryCache extends ApolloCache {
   private data!: EntityStore;

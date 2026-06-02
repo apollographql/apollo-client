@@ -70,30 +70,22 @@ test("client.mutate", () => {
     },
   });
 
+  // @ts-expect-error wrong TCache subtype
   client.mutate<Data, Variables, ApolloCache>({
-    mutation,
-    update: (cache) => {
-      expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
-    },
-  });
-
-  client.mutate<Data, Variables, Cache.Implementation>({
     mutation,
     update: (cache) => {
       expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
   });
 
-  client.mutate<Data, Variables, ApolloCache, "all">({
-    errorPolicy: "all",
+  client.mutate<Data, Variables, TestCache>({
     mutation,
     update: (cache) => {
-      expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
+      expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
   });
 
-  client.mutate<Data, Variables, Cache.Implementation, "all">({
-    errorPolicy: "all",
+  client.mutate<Data, Variables, Cache.Implementation>({
     mutation,
     update: (cache) => {
       expectTypeOf(cache).toEqualTypeOf<TestCache>();

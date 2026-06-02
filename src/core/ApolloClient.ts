@@ -283,7 +283,7 @@ export declare namespace ApolloClient {
         <
           TData,
           TVariables extends OperationVariables = OperationVariables,
-          TCache extends ApolloCache = Cache.Implementation,
+          TCache extends Cache.Implementation = Cache.Implementation,
           TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
           options: ApolloClient.MutateOptions<TData, TVariables, TCache> &
@@ -1398,7 +1398,7 @@ export class ApolloClient {
   public mutate: ApolloClient.mutate.Signature = <
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = Cache.Implementation,
+    TCache extends Cache.Implementation = Cache.Implementation,
   >(
     options: ApolloClient.MutateOptions<TData, TVariables, TCache>
   ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> => {

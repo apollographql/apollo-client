@@ -92,7 +92,7 @@ test("client.refetchQueries", () => {
 });
 
 test("useMutation", () => {
-  const [mutate] = useMutation(mutation, {
+  const [mutate, { client }] = useMutation(mutation, {
     update: (cache) => {
       expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
     },
@@ -123,4 +123,6 @@ test("useMutation", () => {
       >;
     },
   });
+
+  expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
 });

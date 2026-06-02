@@ -83,7 +83,7 @@ test("client.refetchQueries", () => {
 });
 
 test("useMutation", () => {
-  const [mutate] = useMutation(mutation, {
+  const [mutate, { client }] = useMutation(mutation, {
     update: (cache) => {
       expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
@@ -114,4 +114,6 @@ test("useMutation", () => {
       >;
     },
   });
+
+  expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
 });

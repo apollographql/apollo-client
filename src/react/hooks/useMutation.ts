@@ -19,7 +19,7 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client";
-import type { IgnoreModifier } from "@apollo/client/cache";
+import type { Cache, IgnoreModifier } from "@apollo/client/cache";
 import type {
   LazyType,
   NoInfer,
@@ -66,7 +66,7 @@ export declare namespace useMutation {
   export interface Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends ApolloCache = Cache.Implementation,
     TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
   > {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
@@ -207,7 +207,7 @@ export declare namespace useMutation {
   export type ResultTuple<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends ApolloCache = Cache.Implementation,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = [
     mutate: MutationFunction<TData, TVariables, TCache, TErrorPolicy>,
@@ -217,7 +217,7 @@ export declare namespace useMutation {
   export type MutationFunction<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends ApolloCache = Cache.Implementation,
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = (
     ...[options]: {} extends TVariables ?
@@ -238,7 +238,7 @@ export declare namespace useMutation {
   export type MutationFunctionOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends ApolloCache = Cache.Implementation,
   > = Options<TData, TVariables, TCache> & {
     /**
      * {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member}
@@ -357,7 +357,7 @@ export declare namespace useMutation {
         options?: useMutation.Options<
           NoInfer<TData>,
           NoInfer<TVariables>,
-          ApolloCache,
+          Cache.Implementation,
           {
             [K in keyof TConfiguredVariables]: K extends keyof TVariables ?
               TConfiguredVariables[K]
@@ -370,7 +370,7 @@ export declare namespace useMutation {
       ): useMutation.ResultTuple<
         TData,
         MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
-        ApolloCache,
+        Cache.Implementation,
         TErrorPolicy
       >;
 
@@ -383,7 +383,7 @@ export declare namespace useMutation {
       <
         TData,
         TVariables extends OperationVariables = OperationVariables,
-        TCache extends ApolloCache = ApolloCache,
+        TCache extends ApolloCache = Cache.Implementation,
         TConfiguredVariables extends Partial<TVariables> = {},
         TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
@@ -417,7 +417,6 @@ export declare namespace useMutation {
       <
         TData,
         TVariables extends OperationVariables,
-        TCache extends ApolloCache,
         // this overload should never be manually defined, it should always be inferred
         TOptions extends never,
       >(
@@ -425,7 +424,7 @@ export declare namespace useMutation {
       ): useMutation.ResultForOptions<
         TData,
         TVariables,
-        TCache,
+        Cache.Implementation,
         Record<string, never>
       >;
 
@@ -433,12 +432,11 @@ export declare namespace useMutation {
       <
         TData,
         TVariables extends OperationVariables,
-        TCache extends ApolloCache,
         // this overload should never be manually defined, it should always be inferred
         TOptions extends useMutation.Options<
           NoInfer<TData>,
           NoInfer<TVariables>,
-          TCache
+          Cache.Implementation
         > & {
           variables?: {
             [K in Exclude<
@@ -457,7 +455,7 @@ export declare namespace useMutation {
       ): useMutation.ResultForOptions<
         TData,
         TVariables,
-        TCache,
+        Cache.Implementation,
         TOptions,
         TErrorPolicy
       >;
@@ -474,7 +472,7 @@ export declare namespace useMutation {
 export const useMutation: useMutation.Signature = function useMutation<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends ApolloCache = Cache.Implementation,
   TConfiguredVariables extends Partial<TVariables> = {},
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,

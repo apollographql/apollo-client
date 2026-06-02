@@ -171,7 +171,9 @@ export declare namespace ApolloCache {
 
   export type GetScalarType<TKey extends keyof ApolloCache.Scalars> =
     TKey extends keyof ApolloCache.Scalars ?
-      ApolloCache.Scalars[TKey] extends (
+      string extends keyof ApolloCache.Scalars ?
+        ApolloCache.Scalar<unknown, unknown>
+      : ApolloCache.Scalars[TKey] extends (
         { input: infer TInput; output: infer TOutput }
       ) ?
         ApolloCache.Scalar<TInput, TOutput>

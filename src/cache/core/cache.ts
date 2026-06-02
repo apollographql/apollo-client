@@ -264,9 +264,11 @@ export abstract class ApolloCache {
 
   // Custom scalars API
 
-  public abstract getScalar<TKey extends keyof ApolloCache.Scalars>(
+  public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
-  ): ApolloCache.GetScalarType<TKey> | undefined;
+  ): ApolloCache.GetScalarType<TKey> | undefined {
+    return;
+  }
 
   // Local state API
 

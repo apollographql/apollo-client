@@ -565,6 +565,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
         refetchWritePolicy: stableOptions?.refetchWritePolicy,
         returnPartialData: stableOptions?.returnPartialData,
         notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
+        pollInterval: stableOptions?.pollInterval,
         nextFetchPolicy: options?.nextFetchPolicy,
         skipPollAttempt: options?.skipPollAttempt,
       };

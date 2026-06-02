@@ -994,7 +994,7 @@ export declare namespace ApolloClient {
  */
 export class ApolloClient {
   public link: ApolloLink;
-  public cache: ApolloCache;
+  public cache: Cache.Implementation;
   /**
    * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`.
    */

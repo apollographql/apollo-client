@@ -6,7 +6,13 @@ import {
   MutationUpdaterFunction,
   ApolloCache,
 } from "@apollo/client";
-import { useMutation } from "@apollo/client/react";
+import {
+  useApolloClient,
+  useLazyQuery,
+  useMutation,
+  useQuery,
+  useSuspenseQuery,
+} from "@apollo/client/react";
 import { expectTypeOf } from "expect-type";
 import { test, TestCache } from "../shared/index.js";
 
@@ -21,6 +27,7 @@ type Data = { foo: string };
 type Variables = { bar?: string };
 
 declare const mutation: TypedDocumentNode<Data, Variables>;
+declare const query: TypedDocumentNode<Data, Variables>;
 
 test("ApolloClient constructor", () => {
   {
@@ -117,6 +124,18 @@ test("client.refetchQueries", () => {
       expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
   });
+});
+
+test("useApolloClient", () => {
+  const client = useApolloClient();
+
+  expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
+});
+
+test("useLazyQuery", () => {
+  const [, { client }] = useLazyQuery(query);
+
+  expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
 });
 
 test("useMutation", () => {
@@ -270,4 +289,16 @@ test("useMutation", () => {
 
     expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
   }
+});
+
+test("useQuery", () => {
+  const { client } = useQuery(query);
+
+  expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
+});
+
+test("useSuspenseQuery", () => {
+  const { client } = useSuspenseQuery(query);
+
+  expectTypeOf(client.cache).toEqualTypeOf<TestCache>();
 });

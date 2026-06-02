@@ -206,7 +206,7 @@ export class InMemoryCache extends ApolloCache {
     IsLooselyEqual<TInput, TOutput> extends true ?
       ApolloCache.GetScalarType<TKey> | undefined
     : ApolloCache.GetScalarType<TKey>
-  : ApolloCache.GetScalarType<TKey> | undefined {
+  : never {
     // @ts-expect-error: TODO
     return;
   }

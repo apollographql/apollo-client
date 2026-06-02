@@ -51,7 +51,8 @@ type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 export declare namespace InMemoryCache {
   export interface ScalarConfig<TInput, TOutput> {
     // We use method syntax to ensure the functions are bivariant. This lets
-    // users declare scalars using `extends Record<string, unknown>` while
+    // users declare scalars using
+    // `extends Record<string, { input: unknown; output: unknown }>` while
     // allowing specific scalar overrides.
     parse(inputValue: TInput): TOutput;
     serialize(parsedValue: TOutput): TInput;
@@ -87,7 +88,9 @@ export declare namespace InMemoryCache {
     ) ?
       ScalarConfig<TInput, TOutput>
     : never;
-  } & (ApolloCache.Scalars extends Record<string, unknown> ?
+  } & (ApolloCache.Scalars extends (
+      Record<string, { input: unknown; output: unknown }>
+    ) ?
       Record<string, ScalarConfig<unknown, unknown>>
     : {});
 }

@@ -32,7 +32,6 @@ import type {
   IsAny,
   NoInfer,
   Prettify,
-  RemoveIndexSignature,
 } from "@apollo/client/utilities/internal";
 import {
   bindCacheKey,
@@ -171,13 +170,11 @@ export declare namespace ApolloCache {
   export interface Scalars {}
 
   export type GetScalarType<TKey extends keyof ApolloCache.Scalars> =
-    TKey extends keyof RemoveIndexSignature<ApolloCache.Scalars> ?
-      ApolloCache.Scalars[TKey] extends (
-        { input: infer TInput; output: infer TOutput }
-      ) ?
-        ApolloCache.Scalar<TInput, TOutput>
-      : never
-    : ApolloCache.Scalar<unknown, unknown>;
+    ApolloCache.Scalars[TKey] extends (
+      { input: infer TInput; output: infer TOutput }
+    ) ?
+      ApolloCache.Scalar<TInput, TOutput>
+    : never;
 }
 
 export abstract class ApolloCache {

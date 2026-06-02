@@ -5,7 +5,7 @@ declare function test(name: string, fn: () => void): void;
 
 declare module "@apollo/client/cache" {
   namespace ApolloCache {
-    interface Scalars extends Record<string, unknown> {}
+    interface Scalars extends Record<string, { input: unknown; output: unknown }> {}
   }
 }
 

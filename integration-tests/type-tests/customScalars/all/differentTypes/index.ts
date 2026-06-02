@@ -6,7 +6,7 @@ declare const maybeDate: string | Date;
 
 declare module "@apollo/client/cache" {
   namespace ApolloCache {
-    interface Scalars extends Record<string, unknown> {
+    interface Scalars extends Record<string, { input: unknown; output: unknown }> {
       DateTime: { input: string; output: Date };
     }
   }

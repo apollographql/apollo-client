@@ -97,6 +97,22 @@ test("client.refetchQueries", () => {
   });
 });
 
+test("cache.batch", () => {
+  const client = new ApolloClient({
+    cache: new TestCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.cache.batch({
+    update(cache) {
+      expectTypeOf(cache).toEqualTypeOf<TestCache>();
+    },
+    onWatchUpdated() {
+      expectTypeOf(this).toEqualTypeOf<TestCache>();
+    },
+  });
+});
+
 test("useApolloClient", () => {
   const client = useApolloClient();
 

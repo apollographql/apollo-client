@@ -1,4 +1,3 @@
-import type { InMemoryCacheConfig } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 
 test("getScalar returns a scalar object for a configured scalar", () => {
@@ -9,7 +8,7 @@ test("getScalar returns a scalar object for a configured scalar", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   expect(cache.getScalar("DateTime")).toBeDefined();
 });
@@ -22,7 +21,7 @@ test("getScalar returns undefined for an unconfigured scalar", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   expect(cache.getScalar("Unconfigured")).toBeUndefined();
 });
@@ -35,7 +34,7 @@ test("serialize uses the configured serialize function", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 
@@ -52,7 +51,7 @@ test("parse uses the configured parse function", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 
@@ -69,7 +68,7 @@ test("is defaults to a non-null object check when not configured", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 
@@ -86,7 +85,7 @@ test("is uses the configured type guard when configured", () => {
         is: (value) => value instanceof Date && !Number.isNaN(value.getTime()),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 
@@ -102,7 +101,7 @@ test("devtools.displayValue defaults to serialize when not configured", () => {
         parse: (value: string) => new Date(value),
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 
@@ -122,7 +121,7 @@ test("devtools.displayValue uses the configured function when configured", () =>
         },
       },
     },
-  } as InMemoryCacheConfig);
+  });
 
   const scalar = cache.getScalar("DateTime")!;
 

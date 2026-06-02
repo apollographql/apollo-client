@@ -48,6 +48,14 @@ type BroadcastOptions = Pick<
 
 type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
+// The value type of `ApolloCache.Scalars`'s index signature (if any). This is
+// computed in its own alias on purpose: inferring from `Record<string, infer T>`
+// while nested inside the `string extends keyof ...` guard in `ScalarsOption`
+// incorrectly widens `T` to `unknown` (a TypeScript quirk), whereas a standalone
+// alias infers it correctly.
+type ScalarsIndexValue =
+  ApolloCache.Scalars extends Record<string, infer TValue> ? TValue : never;
+
 export declare namespace InMemoryCache {
   export interface ScalarConfig<TInput, TOutput> {
     // We use method syntax to ensure the functions are bivariant. This lets
@@ -88,10 +96,10 @@ export declare namespace InMemoryCache {
     ) ?
       ScalarConfig<TInput, TOutput>
     : never;
-  } & (ApolloCache.Scalars extends (
-      Record<string, { input: unknown; output: unknown }>
-    ) ?
-      Record<string, ScalarConfig<unknown, unknown>>
+  } & (string extends keyof ApolloCache.Scalars ?
+      ScalarsIndexValue extends { input: infer TInput; output: infer TOutput } ?
+        Record<string, ScalarConfig<TInput, TOutput>>
+      : Record<string, ScalarConfig<unknown, unknown>>
     : {});
 }
 

@@ -58,6 +58,30 @@
       "path": "./customScalars/all-unknown/mixed/tsconfig.json"
     },
     {
+      "path": "./customScalars/all-any/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/mixed/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/mixed/tsconfig.json"
+    },
+    {
       "path": "./customScalars/empty/tsconfig.json"
     },
     {

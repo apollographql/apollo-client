@@ -42,8 +42,7 @@ jobs:
         with:
           file-filter: "scripts/codemods/ac3-to-ac4/**"
 
-      - name: Install dependencies with cache
-        uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1
+      - run: npm ci
 
       - name: Build AC
         run: npm run build

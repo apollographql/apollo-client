@@ -38,6 +38,26 @@ test("does not require the scalars option when every scalar matches", () => {
       },
     },
   });
+
+  new InMemoryCache({
+    scalars: {
+      RelativeDate: {
+        serialize: (value) => value,
+        parse: (value) => value,
+      },
+      JSONObject: {
+        serialize: (value) => value,
+        parse: (value) => value,
+      },
+      // @ts-expect-error not a declared scalar
+      Unknown: {
+        // @ts-expect-error implicit any type
+        serialize: (value) => value,
+        // @ts-expect-error implicit any type
+        parse: (value) => value,
+      },
+    },
+  });
 });
 
 test("serialize receives the output type and parse receives the input type", () => {
@@ -162,20 +182,6 @@ test("devtools.displayValue receives the output type", () => {
             return value;
           },
         },
-      },
-    },
-  });
-});
-
-test("rejects scalars that are not declared", () => {
-  new InMemoryCache({
-    scalars: {
-      // @ts-expect-error not a declared scalar
-      Unknown: {
-        // @ts-expect-error implicit any type
-        serialize: (value) => value,
-        // @ts-expect-error implicit any type
-        parse: (value) => value,
       },
     },
   });

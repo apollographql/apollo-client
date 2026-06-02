@@ -50,14 +50,16 @@ test("requires only the scalars whose input and output differ", () => {
       },
     },
   });
-});
 
-test("rejects scalars that are not declared", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
+      },
+      RelativeDate: {
+        serialize: (value) => value,
+        parse: (value) => value,
       },
       // @ts-expect-error not a declared scalar
       Unknown: {

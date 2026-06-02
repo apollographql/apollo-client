@@ -30,6 +30,22 @@ test("requires the scalars option for a declared transforming scalar", () => {
       },
     },
   });
+
+  new InMemoryCache({
+    scalars: {
+      DateTime: {
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+      },
+      // @ts-expect-error not a declared scalar
+      Unknown: {
+        // @ts-expect-error implicit any type
+        serialize: (value) => value,
+        // @ts-expect-error implicit any type
+        parse: (value) => value,
+      },
+    },
+  });
 });
 
 test("serialize receives the output type and parse receives the input type", () => {
@@ -152,24 +168,6 @@ test("devtools.displayValue receives the output type", () => {
             return value.toISOString();
           },
         },
-      },
-    },
-  });
-});
-
-test("rejects scalars that are not declared", () => {
-  new InMemoryCache({
-    scalars: {
-      DateTime: {
-        serialize: (value) => value.toISOString(),
-        parse: (value) => new Date(value),
-      },
-      // @ts-expect-error not a declared scalar
-      Unknown: {
-        // @ts-expect-error implicit any type
-        serialize: (value) => value,
-        // @ts-expect-error implicit any type
-        parse: (value) => value,
       },
     },
   });

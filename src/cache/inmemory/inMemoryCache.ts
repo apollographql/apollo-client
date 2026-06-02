@@ -22,7 +22,10 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
+import type {
+  IsLooselyEqual,
+  RemoveIndexSignature,
+} from "@apollo/client/utilities/internal";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -43,10 +46,17 @@ type BroadcastOptions = Pick<
   "optimistic" | "onWatchUpdated"
 >;
 
+type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
+
 export declare namespace InMemoryCache {
   export interface ScalarConfig<TInput, TOutput> {
-    parse: (inputValue: TInput) => TOutput;
-    serialize: (parsedValue: TOutput) => TInput;
+    // Declared with method syntax (rather than `parse: (...) => ...`) so the
+    // parameters are checked bivariantly. This lets a specific
+    // `ScalarConfig<string, Date>` value satisfy the
+    // `Record<string, ScalarConfig<unknown, unknown>>` index signature added
+    // when `ApolloCache.Scalars` itself declares an index signature.
+    parse(inputValue: TInput): TOutput;
+    serialize(parsedValue: TOutput): TInput;
     is?: IsLooselyEqual<TInput, TOutput> extends true ?
       (value: TInput | TOutput) => boolean
     : (value: TInput | TOutput) => value is TOutput;
@@ -56,28 +66,30 @@ export declare namespace InMemoryCache {
   }
 
   export type ScalarsOption = {
-    [ScalarName in keyof ApolloCache.Scalars as IsLooselyEqual<
-      ApolloCache.Scalars[ScalarName]["input"],
-      ApolloCache.Scalars[ScalarName]["output"]
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["input"],
+      KnownScalars[ScalarName]["output"]
     > extends true ?
       ScalarName
-    : never]?: ApolloCache.Scalars[ScalarName] extends (
+    : never]?: KnownScalars[ScalarName] extends (
       { input: infer TInput; output: infer TOutput }
     ) ?
       ScalarConfig<TInput, TOutput>
     : never;
   } & {
-    [ScalarName in keyof ApolloCache.Scalars as IsLooselyEqual<
-      ApolloCache.Scalars[ScalarName]["input"],
-      ApolloCache.Scalars[ScalarName]["output"]
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["input"],
+      KnownScalars[ScalarName]["output"]
     > extends true ?
       never
-    : ScalarName]: ApolloCache.Scalars[ScalarName] extends (
+    : ScalarName]: KnownScalars[ScalarName] extends (
       { input: infer TInput; output: infer TOutput }
     ) ?
       ScalarConfig<TInput, TOutput>
     : never;
-  };
+  } & (ApolloCache.Scalars extends Record<string, unknown> ?
+      Record<string, ScalarConfig<unknown, unknown>>
+    : {});
 }
 
 export class InMemoryCache extends ApolloCache {

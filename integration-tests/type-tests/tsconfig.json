@@ -46,6 +46,18 @@
       "path": "./defaultOptions/mutate/errorPolicyIgnore/tsconfig.json"
     },
     {
+      "path": "./customScalars/all/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all/mixed/tsconfig.json"
+    },
+    {
       "path": "./customScalars/empty/tsconfig.json"
     },
     {

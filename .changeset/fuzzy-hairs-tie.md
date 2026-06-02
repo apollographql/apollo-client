@@ -21,15 +21,14 @@ Now anywhere `cache` is accessible, the type is the declared cache type:
 
 ```ts
 client.cache;
-//     ^?InMemoryCache
+//     ^? InMemoryCache
 
 client.mutate({
   update: (cache) => {
-    //     ^?InMemoryCache
+    //     ^? InMemoryCache
   },
 });
 ```
 
 > [!NOTE]
-> Setting a cache type enforces that cache type in the `cache` option for
-> the `ApolloClient` constructor.
+> Setting a cache type enforces that cache type in the `cache` option for the `ApolloClient` constructor.

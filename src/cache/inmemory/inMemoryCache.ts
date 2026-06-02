@@ -47,7 +47,9 @@ export declare namespace InMemoryCache {
   export interface ScalarConfig<TInput, TOutput> {
     parse: (inputValue: TInput) => TOutput;
     serialize: (parsedValue: TOutput) => TInput;
-    is?: (value: TInput | TOutput) => value is TOutput;
+    is?: IsLooselyEqual<TInput, TOutput> extends true ?
+      (value: TInput | TOutput) => boolean
+    : (value: TInput | TOutput) => value is TOutput;
     devtools?: {
       displayValue?: (value: TOutput) => unknown;
     };

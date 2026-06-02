@@ -10,6 +10,9 @@
       "path": "./cacheOverride/defaults/tsconfig.json"
     },
     {
+      "path": "./cacheOverride/modernSignature/tsconfig.json"
+    },
+    {
       "path": "./cacheOverride/shared/tsconfig.json"
     },
     {

@@ -34,6 +34,7 @@ import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@apollo/client';
+import type { TypeOverrides } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -205,6 +206,10 @@ namespace Cache_2 {
         // (undocumented)
         id?: string;
     }
+    // (undocumented)
+    type Implementation = TypeOverrides extends {
+        cache: infer TCache;
+    } ? TCache extends ApolloCache ? TCache : ApolloCache : ApolloCache;
     // (undocumented)
     interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
         // (undocumented)

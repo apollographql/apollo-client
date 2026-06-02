@@ -136,7 +136,7 @@ export declare namespace Cache {
   }
 
   export interface BatchOptions<
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
     TUpdateResult = void,
   > {
     /**

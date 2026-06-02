@@ -22,7 +22,11 @@ export declare namespace Cache {
   ) => void;
 
   export type Implementation =
-    TypeOverrides extends { cache: infer TCache } ? TCache : ApolloCache;
+    TypeOverrides extends { cache: infer TCache } ?
+      TCache extends ApolloCache ?
+        TCache
+      : ApolloCache
+    : ApolloCache;
 
   export interface ReadOptions<
     TData = unknown,

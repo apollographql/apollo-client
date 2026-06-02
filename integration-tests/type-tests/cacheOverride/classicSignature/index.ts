@@ -105,9 +105,16 @@ test("client.refetchQueries", () => {
     },
   });
 
+  // @ts-expect-error wrong TCache subtype
   client.refetchQueries<ApolloCache>({
     updateCache: (cache) => {
       expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
+    },
+  });
+
+  client.refetchQueries<TestCache>({
+    updateCache: (cache) => {
+      expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
   });
 

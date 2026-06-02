@@ -511,7 +511,10 @@ export declare namespace ApolloClient {
   /**
    * Options object for the `client.refetchQueries` method.
    */
-  export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+  export interface RefetchQueriesOptions<
+    TCache extends Cache.Implementation,
+    TResult,
+  > {
     /**
      * Optional function that updates cached fields to trigger refetches of queries that include those fields.
      */
@@ -1847,7 +1850,7 @@ export class ApolloClient {
    * active queries.
    */
   public refetchQueries<
-    TCache extends ApolloCache = Cache.Implementation,
+    TCache extends Cache.Implementation = Cache.Implementation,
     TResult = Promise<ApolloClient.QueryResult<any>>,
   >(
     options: ApolloClient.RefetchQueriesOptions<TCache, TResult>

@@ -38,6 +38,7 @@ import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
+import { Scalar } from "./scalars.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
@@ -106,6 +107,11 @@ export class InMemoryCache extends ApolloCache {
   private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
+  private scalars: Record<
+    keyof ApolloCache.Scalars,
+    ApolloCache.Scalar<any, any>
+  > = {};
+
   private maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions<any, any>, BroadcastOptions?],
     any,
@@ -137,6 +143,12 @@ export class InMemoryCache extends ApolloCache {
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
     });
+
+    if (this.config.scalars) {
+      Object.entries(this.config.scalars).forEach(([key, scalarConfig]) => {
+        this.scalars[key] = new Scalar(scalarConfig);
+      });
+    }
 
     this.init();
   }
@@ -222,8 +234,7 @@ export class InMemoryCache extends ApolloCache {
       ApolloCache.GetScalarType<TKey> | undefined
     : ApolloCache.GetScalarType<TKey>
   : never {
-    // @ts-expect-error: TODO
-    return;
+    return this.scalars[key] as any;
   }
 
   public restore(data: NormalizedCacheObject): this {

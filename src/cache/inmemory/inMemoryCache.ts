@@ -96,10 +96,10 @@ export declare namespace InMemoryCache {
     ) ?
       ScalarConfig<TInput, TOutput>
     : never;
-  } & (string extends keyof ApolloCache.Scalars ?
-      ScalarsIndexValue extends { input: infer TInput; output: infer TOutput } ?
-        Record<string, ScalarConfig<TInput, TOutput>>
-      : Record<string, ScalarConfig<unknown, unknown>>
+  } & (ApolloCache.Scalars extends (
+      Record<string, { input: infer TInput; output: infer TOutput }>
+    ) ?
+      Record<string, ScalarConfig<TInput, TOutput>>
     : {});
 }
 

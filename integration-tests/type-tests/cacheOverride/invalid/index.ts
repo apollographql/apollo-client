@@ -46,6 +46,16 @@ test("ApolloClient constructor", () => {
 
     expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
+
+  {
+    const client = new ApolloClient({
+      // @ts-expect-error not an ApolloCache subtype despite the type override
+      cache: 123,
+      link: ApolloLink.empty(),
+    });
+
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
+  }
 });
 
 test("client.mutate", () => {

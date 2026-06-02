@@ -142,7 +142,14 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
   typePolicies?: TypePolicies;
   fragments?: FragmentRegistryAPI;
 } & ({} extends InMemoryCache.ScalarsOption ?
-    { scalars?: InMemoryCache.ScalarsOption }
+    InMemoryCache.ScalarsOption extends Record<string, never> ?
+      {
+        scalars?: Record<
+          string,
+          `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`
+        >;
+      }
+    : { scalars?: InMemoryCache.ScalarsOption }
   : { scalars: InMemoryCache.ScalarsOption });
 
 export interface MergeInfo {

@@ -8,7 +8,7 @@ test("does not require or allow scalar configuration", () => {
 
   new InMemoryCache({
     scalars: {
-      // @ts-expect-error no scalars are declared
+      // @ts-expect-error: Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.
       DateTime: { serialize: () => "", parse: () => "" },
     },
   });

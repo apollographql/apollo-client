@@ -4,6 +4,12 @@
       "path": "./tsconfig.src.json"
     },
     {
+      "path": "./cacheOverride/defaults/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/shared/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/shared/tsconfig.json"
     },
     {

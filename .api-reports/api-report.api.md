@@ -1966,7 +1966,7 @@ export type MutateResult<TData = unknown> = ApolloClient.MutateResult<TData>;
 export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public @deprecated (undocumented)
-export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = ApolloClient.MutateOptions<TData, TVariables, TCache>;
+export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = ApolloClient.MutateOptions<TData, TVariables, TCache>;
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
@@ -2693,7 +2693,7 @@ export type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesInc
 type RefetchQueriesIncludeShorthand = "all" | "active";
 
 // @public @deprecated (undocumented)
-export type RefetchQueriesOptions<TCache extends ApolloCache, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
+export type RefetchQueriesOptions<TCache extends Cache_2.Implementation, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
 // @public (undocumented)
 export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloClient.QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];

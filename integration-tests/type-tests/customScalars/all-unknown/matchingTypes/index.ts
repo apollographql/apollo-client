@@ -3,9 +3,10 @@ import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
 
-declare module "@apollo/client/cache" {
+declare module "@apollo/client" {
   namespace ApolloCache {
-    interface Scalars extends Record<string, { input: unknown; output: unknown }> {
+    interface Scalars
+      extends Record<string, { input: unknown; output: unknown }> {
       RelativeDate: { input: string; output: string };
       JSONObject: { input: unknown; output: unknown };
     }

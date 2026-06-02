@@ -4,9 +4,10 @@ import { expectTypeOf } from "expect-type";
 declare function test(name: string, fn: () => void): void;
 declare const maybeDate: string | Date;
 
-declare module "@apollo/client/cache" {
+declare module "@apollo/client" {
   namespace ApolloCache {
-    interface Scalars extends Record<string, { input: unknown; output: unknown }> {
+    interface Scalars
+      extends Record<string, { input: unknown; output: unknown }> {
       DateTime: { input: string; output: Date };
     }
   }

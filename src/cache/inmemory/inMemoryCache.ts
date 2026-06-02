@@ -198,6 +198,19 @@ export class InMemoryCache extends ApolloCache {
     );
   }
 
+  public getScalar<TKey extends keyof ApolloCache.Scalars>(
+    key: TKey
+  ): ApolloCache.GetScalarType<TKey> extends (
+    ApolloCache.Scalar<infer TInput, infer TOutput>
+  ) ?
+    IsLooselyEqual<TInput, TOutput> extends true ?
+      ApolloCache.GetScalarType<TKey> | undefined
+    : ApolloCache.GetScalarType<TKey>
+  : ApolloCache.GetScalarType<TKey> | undefined {
+    // @ts-expect-error: TODO
+    return;
+  }
+
   public restore(data: NormalizedCacheObject): this {
     this.init();
     // Since calling this.init() discards/replaces the entire StoreReader, along

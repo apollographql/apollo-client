@@ -106,9 +106,13 @@ export class InMemoryCache extends ApolloCache {
 
   public readonly makeVar = makeVar;
 
-  constructor(config: InMemoryCacheConfig = {}) {
+  constructor(
+    ...args: {} extends InMemoryCache.ScalarsOption ?
+      [config?: InMemoryCacheConfig]
+    : [config: InMemoryCacheConfig]
+  ) {
     super();
-    this.config = normalizeConfig(config);
+    this.config = normalizeConfig(args[0] ?? {});
 
     this.policies = new Policies({
       cache: this,

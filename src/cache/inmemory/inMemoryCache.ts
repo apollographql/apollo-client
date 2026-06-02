@@ -50,18 +50,18 @@ type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 export declare namespace InMemoryCache {
   export interface ScalarConfig<TInput, TOutput> {
-    // Declared with method syntax (rather than `parse: (...) => ...`) so the
-    // parameters are checked bivariantly. This lets a specific
-    // `ScalarConfig<string, Date>` value satisfy the
-    // `Record<string, ScalarConfig<unknown, unknown>>` index signature added
-    // when `ApolloCache.Scalars` itself declares an index signature.
+    // We use method syntax to ensure the functions are bivariant. This lets
+    // users declare scalars using `extends Record<string, unknown>` while
+    // allowing specific scalar overrides.
     parse(inputValue: TInput): TOutput;
     serialize(parsedValue: TOutput): TInput;
+    // Since we have a conditional type here, we can't use method syntax
+    // directly. This hack allows us to maintain bivariance.
     is?: IsLooselyEqual<TInput, TOutput> extends true ?
-      (value: TInput | TOutput) => boolean
-    : (value: TInput | TOutput) => value is TOutput;
+      { _(value: TInput | TOutput): boolean }["_"]
+    : { _(value: TInput | TOutput): value is TOutput }["_"];
     devtools?: {
-      displayValue?: (value: TOutput) => unknown;
+      displayValue?(value: TOutput): unknown;
     };
   }
 

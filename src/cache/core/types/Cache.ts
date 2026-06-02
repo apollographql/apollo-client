@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
+  TypeOverrides,
 } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
@@ -19,6 +20,9 @@ export declare namespace Cache {
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
+
+  export type Implementation =
+    TypeOverrides extends { cache: infer TCache } ? TCache : ApolloCache;
 
   export interface ReadOptions<
     TData = unknown,

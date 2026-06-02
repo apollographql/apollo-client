@@ -161,7 +161,7 @@ export declare namespace ApolloCache {
     parse: (inputValue: TInput) => TOutput;
     serialize: (parsedValue: TOutput) => TInput;
     is: (value: TInput | TOutput) => value is TOutput;
-    devtools?: {
+    devtools: {
       displayValue: (parsedValue: TOutput) => unknown;
     };
   }

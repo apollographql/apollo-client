@@ -276,7 +276,7 @@ export namespace ApolloClient {
         // Warning: (ae-forgotten-export) The symbol "OptionWithFallback" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
-        export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, unknown> | MutateOptions<any, TVariables, TCache>> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+        export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation, TOptions extends Record<string, unknown> | MutateOptions<any, TVariables, TCache>> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
         }
         // (undocumented)
@@ -308,7 +308,7 @@ export namespace ApolloClient {
     // Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = Cache_2.Implementation> = {
+    export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = {
         optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
         }) => Unmasked<NoInfer<TData>> | IgnoreModifier);

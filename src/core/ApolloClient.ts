@@ -195,7 +195,7 @@ export declare namespace ApolloClient {
   export type MutateOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = Cache.Implementation,
+    TCache extends Cache.Implementation = Cache.Implementation,
   > = {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
     optimisticResponse?:
@@ -247,7 +247,7 @@ export declare namespace ApolloClient {
     export type ResultForOptions<
       TData,
       TVariables extends OperationVariables,
-      TCache extends ApolloCache,
+      TCache extends Cache.Implementation,
       TOptions extends
         | Record<string, unknown>
         | MutateOptions<any, TVariables, TCache>,

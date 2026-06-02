@@ -746,7 +746,7 @@ export const build: "source" | "esm" | "cjs";
 // @public (undocumented)
 namespace Cache_2 {
     // (undocumented)
-    interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {
+    interface BatchOptions<TCache extends Cache_2.Implementation, TUpdateResult = void> {
         onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         optimistic?: string | boolean;
         removeOptimistic?: string;

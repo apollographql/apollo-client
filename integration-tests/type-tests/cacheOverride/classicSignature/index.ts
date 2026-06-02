@@ -5,6 +5,7 @@ import {
   TypedDocumentNode,
   MutationUpdaterFunction,
   ApolloCache,
+  InMemoryCache,
 } from "@apollo/client";
 import {
   useApolloClient,

@@ -358,6 +358,35 @@ describe("abstract cache", () => {
       });
     });
   });
+
+  describe("getScalar", () => {
+    it("returns undefined by default", () => {
+      const cache = new TestCache();
+
+      expect(cache.getScalar("DateTime")).toBeUndefined();
+    });
+
+    it("returns the scalar from a cache that overrides getScalar", () => {
+      const dateTime: ApolloCache.Scalar<string, Date> = {
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+        is: (value) => value instanceof Date,
+        devtools: {
+          displayValue: (value) => value,
+        },
+      };
+
+      class ScalarCache extends TestCache {
+        getScalar<TKey extends keyof ApolloCache.Scalars>(
+          key: TKey
+        ): ApolloCache.GetScalarType<TKey> | undefined {
+          return dateTime as ApolloCache.GetScalarType<TKey>;
+        }
+      }
+
+      expect(new ScalarCache().getScalar("DateTime")).toBe(dateTime);
+    });
+  });
 });
 
 describe.skip("Cache type tests", () => {

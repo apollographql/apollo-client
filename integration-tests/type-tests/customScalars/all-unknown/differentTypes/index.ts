@@ -81,6 +81,10 @@ test("serialize must return the input type", () => {
         serialize: (value) => value.getTime(),
         parse: (value) => new Date(value),
       },
+      Unknown: {
+        serialize: (value) => value,
+        parse: (value) => value,
+      },
     },
   });
 
@@ -198,6 +202,16 @@ test("devtools.displayValue receives the output type", () => {
           displayValue: (value) => {
             expectTypeOf(value).toEqualTypeOf<Date>();
             return value.toISOString();
+          },
+        },
+      },
+      Unknown: {
+        serialize: (value) => value,
+        parse: (value) => value,
+        devtools: {
+          displayValue: (value) => {
+            expectTypeOf(value).toEqualTypeOf<unknown>();
+            return value;
           },
         },
       },

@@ -11912,19 +11912,7 @@ describe("useQuery Hook", () => {
               },
             },
           },
-        },
-        {
-          request: { query },
-          result: {
-            data: {
-              currentUser: {
-                __typename: "User",
-                id: 1,
-                name: "Test User",
-                age: 30,
-              },
-            },
-          },
+          maxUsageCount: 2,
         },
       ];
 
@@ -12023,8 +12011,7 @@ describe("useQuery Hook", () => {
       };
 
       const mocks = [
-        { request: { query }, result: { data: mockData } },
-        { request: { query }, result: { data: mockData } },
+        { request: { query }, result: { data: mockData }, maxUsageCount: 2 },
       ];
 
       const client = new ApolloClient({

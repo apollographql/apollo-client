@@ -224,7 +224,7 @@ workflows:
               externalPackage:
                 - "graphql@15"
                 - "graphql@16"
-                - "graphql@^17.0.0-alpha"
+                - "graphql@^17.0.0-rc"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
                 - "@types/react@19 @types/react-dom@19"

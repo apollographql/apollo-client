@@ -84,6 +84,15 @@ const tsRxJSMinConfig = {
   },
 };
 
+const tsGraphql16Config = {
+  ...tsStandardConfig,
+  displayName: "Core Tests - GraphQL 16",
+  moduleNameMapper: {
+    ...tsStandardConfig.moduleNameMapper,
+    "^graphql$": "graphql-16",
+  },
+};
+
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
 const standardReact19Config = {
@@ -118,16 +127,6 @@ const standardReact17Config = {
     "^react-dom/client$": "<rootDir>/../config/jest/react-dom-17-client.js",
     "^react-dom/server$": "react-dom-17/server",
     "^react-dom/test-utils$": "react-dom-17/test-utils",
-  },
-};
-
-const tsGraphql16Config = {
-  ...defaults,
-  ...tsStandardConfig,
-  displayName: "Core Tests - GraphQL 16",
-  moduleNameMapper: {
-    ...defaults.moduleNameMapper,
-    "^graphql$": "graphql-16",
   },
 };
 

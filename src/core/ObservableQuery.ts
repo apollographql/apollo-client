@@ -2005,8 +2005,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result = this.maskResult(result);
 
     // Preserve referential equality of masked data when the new masked
-    // result is deeply equal to the previous one. This prevents
-    // unnecessary re-renders when refetching returns identical data.
+    // result is deeply equal to the previous one. This prevents React hooks
+    // like `useMemo` or `useEffect` from firing unnecessarily.
     if (
       previous.result.data !== undefined &&
       result.data !== previous.result.data &&

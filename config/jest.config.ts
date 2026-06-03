@@ -121,10 +121,10 @@ const standardReact17Config = {
   },
 };
 
-const graphql16CoreConfig = {
+const tsGraphql16Config = {
   ...defaults,
   ...tsStandardConfig,
-  displayName: "GraphQL 16",
+  displayName: "Core Tests - GraphQL 16",
   moduleNameMapper: {
     ...defaults.moduleNameMapper,
     "^graphql$": "graphql-16",
@@ -135,9 +135,9 @@ export default {
   projects: [
     tsStandardConfig,
     tsRxJSMinConfig,
+    tsGraphql16Config,
     standardReact17Config,
     standardReact18Config,
     standardReact19Config,
-    graphql16CoreConfig,
   ],
 };

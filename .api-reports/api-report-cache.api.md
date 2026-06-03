@@ -58,10 +58,6 @@ export namespace ApolloCache {
     // (undocumented)
     export interface Scalar<TSerialized, TParsed> {
         // (undocumented)
-        devtools: {
-            displayValue: (parsedValue: TParsed) => unknown;
-        };
-        // (undocumented)
         is: IsLooselyEqual<TSerialized, TParsed> extends true ? (value: TSerialized | TParsed) => boolean : (value: TSerialized | TParsed) => value is TParsed;
         // (undocumented)
         parse: (serializedValue: TSerialized) => TParsed;
@@ -577,10 +573,6 @@ const _ignoreModifier: unique symbol;
 export namespace InMemoryCache {
     // (undocumented)
     export interface ScalarConfig<TSerialized, TParsed> {
-        // (undocumented)
-        devtools?: {
-            displayValue?(value: TParsed): unknown;
-        };
         // (undocumented)
         is?: IsLooselyEqual<TSerialized, TParsed> extends true ? {
             _(value: TSerialized | TParsed): boolean;

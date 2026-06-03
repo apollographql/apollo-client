@@ -51,10 +51,6 @@ export namespace ApolloCache {
     }
     // (undocumented)
     export interface Scalar<TSerialized, TParsed> {
-        // (undocumented)
-        devtools: {
-            displayValue: (parsedValue: TParsed) => unknown;
-        };
         // Warning: (ae-forgotten-export) The symbol "IsLooselyEqual" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
@@ -1582,10 +1578,6 @@ type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
 export namespace InMemoryCache {
     // (undocumented)
     export interface ScalarConfig<TSerialized, TParsed> {
-        // (undocumented)
-        devtools?: {
-            displayValue?(value: TParsed): unknown;
-        };
         // (undocumented)
         is?: IsLooselyEqual<TSerialized, TParsed> extends true ? {
             _(value: TSerialized | TParsed): boolean;

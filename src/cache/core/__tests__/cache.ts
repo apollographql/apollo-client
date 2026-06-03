@@ -371,9 +371,6 @@ describe("abstract cache", () => {
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
         is: (value) => value instanceof Date,
-        devtools: {
-          displayValue: (value) => value,
-        },
       };
 
       class ScalarCache extends TestCache {

@@ -62,9 +62,6 @@ export declare namespace InMemoryCache {
     is?: IsLooselyEqual<TSerialized, TParsed> extends true ?
       { _(value: TSerialized | TParsed): boolean }["_"]
     : { _(value: TSerialized | TParsed): value is TParsed }["_"];
-    devtools?: {
-      displayValue?(value: TParsed): unknown;
-    };
   }
 
   export type ScalarsOption = {

@@ -192,33 +192,6 @@ test("is narrows to the parsed type when used as a type guard", () => {
   }
 });
 
-test("devtools.displayValue receives the parsed type", () => {
-  new InMemoryCache({
-    scalars: {
-      DateTime: {
-        serialize: (value) => value.toISOString(),
-        parse: (value) => new Date(value),
-        devtools: {
-          displayValue: (value) => {
-            expectTypeOf(value).toEqualTypeOf<Date>();
-            return value.toISOString();
-          },
-        },
-      },
-      Unknown: {
-        serialize: (value) => value,
-        parse: (value) => value,
-        devtools: {
-          displayValue: (value) => {
-            expectTypeOf(value).toEqualTypeOf<unknown>();
-            return value;
-          },
-        },
-      },
-    },
-  });
-});
-
 test("InMemoryCache.getScalar returns the resolved scalar for a declared scalar", () => {
   const cache = new InMemoryCache({
     scalars: {

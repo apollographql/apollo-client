@@ -213,33 +213,6 @@ test("is receives the combined serialized and parsed type", () => {
   });
 });
 
-test("devtools.displayValue receives the parsed type", () => {
-  new InMemoryCache({
-    scalars: {
-      RelativeDate: {
-        serialize: (value) => value,
-        parse: (value) => value,
-        devtools: {
-          displayValue: (value) => {
-            expectTypeOf(value).toEqualTypeOf<string>();
-            return value;
-          },
-        },
-      },
-      Unknown: {
-        serialize: (value) => value,
-        parse: (value) => value,
-        devtools: {
-          displayValue: (value) => {
-            expectTypeOf(value).toEqualTypeOf<any>();
-            return value;
-          },
-        },
-      },
-    },
-  });
-});
-
 test("getScalar returns the resolved scalar or undefined", () => {
   const cache = new InMemoryCache();
 

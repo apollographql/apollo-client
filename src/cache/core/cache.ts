@@ -164,9 +164,6 @@ export declare namespace ApolloCache {
     is: IsLooselyEqual<TSerialized, TParsed> extends true ?
       (value: TSerialized | TParsed) => boolean
     : (value: TSerialized | TParsed) => value is TParsed;
-    devtools: {
-      displayValue: (parsedValue: TParsed) => unknown;
-    };
   }
 
   // Registration type for custom scalars

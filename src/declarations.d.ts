@@ -12,6 +12,6 @@ declare module "@apollo/client" {
 
   export namespace ApolloCache {
     export interface Scalars
-      extends Record<string, { input: any; output: any }> {}
+      extends Record<string, { serialized: any; parsed: any }> {}
   }
 }

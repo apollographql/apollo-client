@@ -6,9 +6,9 @@ declare function test(name: string, fn: () => void): void;
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars
-      extends Record<string, { input: string; output: string }> {
-      RelativeDate: { input: string; output: string };
-      JSONObject: { input: unknown; output: unknown };
+      extends Record<string, { serialized: string; parsed: string }> {
+      RelativeDate: { serialized: string; parsed: string };
+      JSONObject: { serialized: unknown; parsed: unknown };
     }
   }
 }
@@ -41,7 +41,7 @@ test("does not require the scalars option when every scalar matches", () => {
   });
 
   new InMemoryCache({
-    // @ts-expect-error JSONObject doesn't match input/output type
+    // @ts-expect-error JSONObject doesn't match serialized/parsed type
     scalars: {
       RelativeDate: {
         serialize: (value) => value,

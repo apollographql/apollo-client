@@ -6,14 +6,14 @@ declare function test(name: string, fn: () => void): void;
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars
-      extends Record<string, { input: unknown; output: unknown }> {
-      DateTime: { input: string; output: Date };
-      RelativeDate: { input: string; output: string };
+      extends Record<string, { serialized: unknown; parsed: unknown }> {
+      DateTime: { serialized: string; parsed: Date };
+      RelativeDate: { serialized: string; parsed: string };
     }
   }
 }
 
-test("requires only the scalars whose input and output differ", () => {
+test("requires only the scalars whose serialized and parsed types differ", () => {
   // @ts-expect-error `scalars` is required.
   new InMemoryCache();
 
@@ -70,7 +70,7 @@ test("requires only the scalars whose input and output differ", () => {
   });
 });
 
-test("infers each scalar's input and output types independently", () => {
+test("infers each scalar's serialized and parsed types independently", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {

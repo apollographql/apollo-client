@@ -2,12 +2,12 @@ import type { ApolloCache } from "@apollo/client/cache";
 
 import type { InMemoryCache } from "./inMemoryCache.js";
 
-export class Scalar<TInput, TOutput> {
-  private config: InMemoryCache.ScalarConfig<TInput, TOutput>;
+export class Scalar<TSerialized, TParsed> {
+  private config: InMemoryCache.ScalarConfig<TSerialized, TParsed>;
 
-  readonly devtools: ApolloCache.Scalar<TInput, TOutput>["devtools"];
+  readonly devtools: ApolloCache.Scalar<TSerialized, TParsed>["devtools"];
 
-  constructor(config: InMemoryCache.ScalarConfig<TInput, TOutput>) {
+  constructor(config: InMemoryCache.ScalarConfig<TSerialized, TParsed>) {
     this.config = config;
 
     this.parse = config.parse.bind(this);
@@ -20,10 +20,10 @@ export class Scalar<TInput, TOutput> {
     };
   }
 
-  parse: (value: TInput) => TOutput;
-  serialize: (value: TOutput) => TInput;
+  parse: (value: TSerialized) => TParsed;
+  serialize: (value: TParsed) => TSerialized;
 
-  is(value: TInput | TOutput): value is TOutput {
+  is(value: TSerialized | TParsed): value is TParsed {
     if (this.config.is) {
       return this.config.is(value);
     }
@@ -31,7 +31,7 @@ export class Scalar<TInput, TOutput> {
     return typeof value === "object" && value !== null;
   }
 
-  private getDevtoolsDisplayValue(value: TOutput) {
+  private getDevtoolsDisplayValue(value: TParsed) {
     return this.serialize(value);
   }
 }

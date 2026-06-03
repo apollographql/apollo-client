@@ -48,25 +48,25 @@ export namespace ApolloCache {
     export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
     export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
-        input: infer TInput;
-        output: infer TOutput;
-    }) ? ApolloCache.Scalar<TInput, TOutput> : never;
+        serialized: infer TSerialized;
+        parsed: infer TParsed;
+    }) ? ApolloCache.Scalar<TSerialized, TParsed> : never;
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
     }
     // (undocumented)
-    export interface Scalar<TInput, TOutput> {
+    export interface Scalar<TSerialized, TParsed> {
         // (undocumented)
         devtools: {
-            displayValue: (parsedValue: TOutput) => unknown;
+            displayValue: (parsedValue: TParsed) => unknown;
         };
         // (undocumented)
-        is: IsLooselyEqual<TInput, TOutput> extends true ? (value: TInput | TOutput) => boolean : (value: TInput | TOutput) => value is TOutput;
+        is: IsLooselyEqual<TSerialized, TParsed> extends true ? (value: TSerialized | TParsed) => boolean : (value: TSerialized | TParsed) => value is TParsed;
         // (undocumented)
-        parse: (inputValue: TInput) => TOutput;
+        parse: (serializedValue: TSerialized) => TParsed;
         // (undocumented)
-        serialize: (parsedValue: TOutput) => TInput;
+        serialize: (parsedValue: TParsed) => TSerialized;
     }
     // (undocumented)
     export interface Scalars {
@@ -576,39 +576,39 @@ const _ignoreModifier: unique symbol;
 // @public (undocumented)
 export namespace InMemoryCache {
     // (undocumented)
-    export interface ScalarConfig<TInput, TOutput> {
+    export interface ScalarConfig<TSerialized, TParsed> {
         // (undocumented)
         devtools?: {
-            displayValue?(value: TOutput): unknown;
+            displayValue?(value: TParsed): unknown;
         };
         // (undocumented)
-        is?: IsLooselyEqual<TInput, TOutput> extends true ? {
-            _(value: TInput | TOutput): boolean;
+        is?: IsLooselyEqual<TSerialized, TParsed> extends true ? {
+            _(value: TSerialized | TParsed): boolean;
         }["_"] : {
-            _(value: TInput | TOutput): value is TOutput;
+            _(value: TSerialized | TParsed): value is TParsed;
         }["_"];
         // (undocumented)
-        parse(inputValue: TInput): TOutput;
+        parse(serializedValue: TSerialized): TParsed;
         // (undocumented)
-        serialize(parsedValue: TOutput): TInput;
+        serialize(parsedValue: TParsed): TSerialized;
     }
     // Warning: (ae-forgotten-export) The symbol "KnownScalars" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     export type ScalarsOption = {
-        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
-            input: infer TInput;
-            output: infer TOutput;
-        }) ? ScalarConfig<TInput, TOutput> : never;
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
+            serialized: infer TSerialized;
+            parsed: infer TParsed;
+        }) ? ScalarConfig<TSerialized, TParsed> : never;
     } & {
-        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["input"], KnownScalars[ScalarName]["output"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
-            input: infer TInput;
-            output: infer TOutput;
-        }) ? ScalarConfig<TInput, TOutput> : never;
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
+            serialized: infer TSerialized;
+            parsed: infer TParsed;
+        }) ? ScalarConfig<TSerialized, TParsed> : never;
     } & (ApolloCache.Scalars extends (Record<string, {
-        input: infer TInput;
-        output: infer TOutput;
-    }>) ? Record<string, ScalarConfig<TInput, TOutput>> : {});
+        serialized: infer TSerialized;
+        parsed: infer TParsed;
+    }>) ? Record<string, ScalarConfig<TSerialized, TParsed>> : {});
 }
 
 // @public (undocumented)
@@ -640,7 +640,7 @@ export class InMemoryCache extends ApolloCache {
     // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
-    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (ApolloCache.Scalar<infer TInput, infer TOutput>) ? IsLooselyEqual<TInput, TOutput> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (ApolloCache.Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)

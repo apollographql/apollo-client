@@ -6,8 +6,8 @@ declare const maybeDate: string | Date;
 
 declare module "@apollo/client" {
   namespace ApolloCache {
-    interface Scalars extends Record<string, { input: any; output: any }> {
-      DateTime: { input: string; output: Date };
+    interface Scalars extends Record<string, { serialized: any; parsed: any }> {
+      DateTime: { serialized: string; parsed: Date };
     }
   }
 }
@@ -45,7 +45,7 @@ test("requires the scalars option for a declared transforming scalar", () => {
   });
 });
 
-test("serialize receives the output type and parse receives the input type", () => {
+test("serialize receives the parsed type and parse receives the serialized type", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {
@@ -72,7 +72,7 @@ test("serialize receives the output type and parse receives the input type", () 
   });
 });
 
-test("serialize must return the input type", () => {
+test("serialize must return the serialized type", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {
@@ -120,7 +120,7 @@ test("serialize must return the input type", () => {
   });
 });
 
-test("parse must return the output type", () => {
+test("parse must return the parsed type", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {
@@ -168,7 +168,7 @@ test("parse must return the output type", () => {
   });
 });
 
-test("is narrows to the output type when used as a type guard", () => {
+test("is narrows to the parsed type when used as a type guard", () => {
   const cache = new InMemoryCache({
     scalars: {
       DateTime: {
@@ -191,7 +191,7 @@ test("is narrows to the output type when used as a type guard", () => {
   }
 });
 
-test("devtools.displayValue receives the output type", () => {
+test("devtools.displayValue receives the parsed type", () => {
   new InMemoryCache({
     scalars: {
       DateTime: {

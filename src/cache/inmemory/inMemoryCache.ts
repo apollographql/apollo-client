@@ -50,49 +50,49 @@ type BroadcastOptions = Pick<
 type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 export declare namespace InMemoryCache {
-  export interface ScalarConfig<TInput, TOutput> {
+  export interface ScalarConfig<TSerialized, TParsed> {
     // We use method syntax to ensure the functions are bivariant. This lets
     // users declare scalars using
-    // `extends Record<string, { input: unknown; output: unknown }>` while
+    // `extends Record<string, { serialized: unknown; parsed: unknown }>` while
     // allowing specific scalar overrides.
-    parse(inputValue: TInput): TOutput;
-    serialize(parsedValue: TOutput): TInput;
+    parse(serializedValue: TSerialized): TParsed;
+    serialize(parsedValue: TParsed): TSerialized;
     // Since we have a conditional type here, we can't use method syntax
     // directly. This hack allows us to maintain bivariance.
-    is?: IsLooselyEqual<TInput, TOutput> extends true ?
-      { _(value: TInput | TOutput): boolean }["_"]
-    : { _(value: TInput | TOutput): value is TOutput }["_"];
+    is?: IsLooselyEqual<TSerialized, TParsed> extends true ?
+      { _(value: TSerialized | TParsed): boolean }["_"]
+    : { _(value: TSerialized | TParsed): value is TParsed }["_"];
     devtools?: {
-      displayValue?(value: TOutput): unknown;
+      displayValue?(value: TParsed): unknown;
     };
   }
 
   export type ScalarsOption = {
     [ScalarName in keyof KnownScalars as IsLooselyEqual<
-      KnownScalars[ScalarName]["input"],
-      KnownScalars[ScalarName]["output"]
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
     > extends true ?
       ScalarName
     : never]?: KnownScalars[ScalarName] extends (
-      { input: infer TInput; output: infer TOutput }
+      { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ScalarConfig<TInput, TOutput>
+      ScalarConfig<TSerialized, TParsed>
     : never;
   } & {
     [ScalarName in keyof KnownScalars as IsLooselyEqual<
-      KnownScalars[ScalarName]["input"],
-      KnownScalars[ScalarName]["output"]
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
     > extends true ?
       never
     : ScalarName]: KnownScalars[ScalarName] extends (
-      { input: infer TInput; output: infer TOutput }
+      { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ScalarConfig<TInput, TOutput>
+      ScalarConfig<TSerialized, TParsed>
     : never;
   } & (ApolloCache.Scalars extends (
-      Record<string, { input: infer TInput; output: infer TOutput }>
+      Record<string, { serialized: infer TSerialized; parsed: infer TParsed }>
     ) ?
-      Record<string, ScalarConfig<TInput, TOutput>>
+      Record<string, ScalarConfig<TSerialized, TParsed>>
     : {});
 }
 
@@ -228,10 +228,10 @@ export class InMemoryCache extends ApolloCache {
   public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
   ): ApolloCache.GetScalarType<TKey> extends (
-    ApolloCache.Scalar<infer TInput, infer TOutput>
+    ApolloCache.Scalar<infer TSerialized, infer TParsed>
   ) ?
-    IsLooselyEqual<TInput, TOutput> extends true ?
-      // We don't require scalars where the input/output types are equal, so we
+    IsLooselyEqual<TSerialized, TParsed> extends true ?
+      // We don't require scalars where the serialized/parsed types are equal, so we
       // can't guarantee we will get a value
       ApolloCache.GetScalarType<TKey> | undefined
     : ApolloCache.GetScalarType<TKey>

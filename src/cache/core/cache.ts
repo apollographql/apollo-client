@@ -158,14 +158,14 @@ export declare namespace ApolloCache {
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
 
-  export interface Scalar<TInput, TOutput> {
-    parse: (inputValue: TInput) => TOutput;
-    serialize: (parsedValue: TOutput) => TInput;
-    is: IsLooselyEqual<TInput, TOutput> extends true ?
-      (value: TInput | TOutput) => boolean
-    : (value: TInput | TOutput) => value is TOutput;
+  export interface Scalar<TSerialized, TParsed> {
+    parse: (serializedValue: TSerialized) => TParsed;
+    serialize: (parsedValue: TParsed) => TSerialized;
+    is: IsLooselyEqual<TSerialized, TParsed> extends true ?
+      (value: TSerialized | TParsed) => boolean
+    : (value: TSerialized | TParsed) => value is TParsed;
     devtools: {
-      displayValue: (parsedValue: TOutput) => unknown;
+      displayValue: (parsedValue: TParsed) => unknown;
     };
   }
 
@@ -174,9 +174,9 @@ export declare namespace ApolloCache {
 
   export type GetScalarType<TKey extends keyof ApolloCache.Scalars> =
     ApolloCache.Scalars[TKey] extends (
-      { input: infer TInput; output: infer TOutput }
+      { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ApolloCache.Scalar<TInput, TOutput>
+      ApolloCache.Scalar<TSerialized, TParsed>
     : never;
 }
 

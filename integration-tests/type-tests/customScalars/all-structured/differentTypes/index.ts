@@ -5,14 +5,14 @@ declare function test(name: string, fn: () => void): void;
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars
-      extends Record<string, { input: string; output: string }> {
-      DateTime: { input: string; output: Date };
+      extends Record<string, { serialized: string; parsed: string }> {
+      DateTime: { serialized: string; parsed: Date };
     }
   }
 }
 
-// `DateTime` is a required scalar since its input/output types differ, but its
-// `Data` output type is not assignable to the interface it extends so there is
+// `DateTime` is a required scalar since its serialized/parsed types differ, but its
+// `Date` parsed type is not assignable to the interface it extends so there is
 // no valid config where the cache can be constructed.
 test("a transforming scalar that conflicts with the index cannot be configured", () => {
   // @ts-expect-error `scalars` is required

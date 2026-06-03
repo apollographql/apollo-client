@@ -5,14 +5,14 @@ declare function test(name: string, fn: () => void): void;
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars
-      extends Record<string, { input: string; output: string }> {
-      DateTime: { input: string; output: Date };
-      RelativeDate: { input: string; output: string };
+      extends Record<string, { serialized: string; parsed: string }> {
+      DateTime: { serialized: string; parsed: Date };
+      RelativeDate: { serialized: string; parsed: string };
     }
   }
 }
 
-// `RelativeDate` matches the `{ input: string; output: string }` index
+// `RelativeDate` matches the `{ serialized: string; parsed: string }` index
 // signature and works as expected. `DateTime` however is not assignable to
 // index signature it extends, but since it is required, there is no valid
 // config where the cache can be constructed.

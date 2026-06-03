@@ -6,7 +6,7 @@ declare function test(name: string, fn: () => void): void;
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars
-      extends Record<string, { input: string; output: string }> {}
+      extends Record<string, { serialized: string; parsed: string }> {}
   }
 }
 
@@ -29,7 +29,7 @@ test("does not require the scalars option", () => {
   });
 });
 
-test("serialize receives the output type and parse receives the input type", () => {
+test("serialize receives the parsed type and parse receives the serialized type", () => {
   new InMemoryCache({
     scalars: {
       RelativeDate: {
@@ -56,7 +56,7 @@ test("serialize receives the output type and parse receives the input type", () 
   });
 });
 
-test("serialize must return the input type", () => {
+test("serialize must return the serialized type", () => {
   new InMemoryCache({
     scalars: {
       Unknown: {
@@ -90,7 +90,7 @@ test("serialize must return the input type", () => {
   });
 });
 
-test("parse must return the output type", () => {
+test("parse must return the parsed type", () => {
   new InMemoryCache({
     scalars: {
       Unknown: {
@@ -124,7 +124,7 @@ test("parse must return the output type", () => {
   });
 });
 
-test("is receives the combined input and output type", () => {
+test("is receives the combined serialized and parsed type", () => {
   new InMemoryCache({
     scalars: {
       Unknown: {
@@ -139,7 +139,7 @@ test("is receives the combined input and output type", () => {
   });
 });
 
-test("devtools.displayValue receives the output type", () => {
+test("devtools.displayValue receives the parsed type", () => {
   new InMemoryCache({
     scalars: {
       Unknown: {

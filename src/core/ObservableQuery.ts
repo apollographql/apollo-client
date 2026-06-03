@@ -2012,7 +2012,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       result.data !== previous.result.data &&
       equal(result.data, previous.result.data)
     ) {
-      (result as { data: unknown }).data = previous.result.data;
+      result.data = previous.result.data;
     }
 
     return { query, variables, result, meta };

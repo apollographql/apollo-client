@@ -11922,52 +11922,57 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream =
-        createRenderStream<useQuery.Result<Query, Record<string, never>>>();
-
-      function App() {
-        const result = useQuery(query);
-
-        renderStream.replaceSnapshot(result);
-
-        return null;
-      }
-
       using _disabledAct = disableActEnvironment();
-      await renderStream.render(<App />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
-      // loading
-      await renderStream.takeRender();
-
-      const { snapshot: initialSnapshot } = await renderStream.takeRender();
-
-      expect(initialSnapshot.data).toStrictEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-        },
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
-      // Trigger refetch with identical result
-      await initialSnapshot.refetch();
+      const { refetch, data: initialData } = getCurrentSnapshot();
 
-      // Skip intermediate renders (e.g. NetworkStatus.refetch) and find
-      // the settled result
-      let refetchSnapshot: useQuery.Result<Query, Record<string, never>>;
-      do {
-        ({ snapshot: refetchSnapshot } = await renderStream.takeRender());
-      } while (refetchSnapshot.networkStatus !== NetworkStatus.ready);
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+      });
 
-      // The masked data should be the same reference since the underlying
-      // data hasn't changed
-      expect(refetchSnapshot.data).toBe(initialSnapshot.data);
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
 
       await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
     });
 
     // https://github.com/apollographql/apollo-client/issues/13181
@@ -12020,51 +12025,67 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream =
-        createRenderStream<useQuery.Result<Query, Record<string, never>>>();
-
-      function App() {
-        const result = useQuery(query);
-
-        renderStream.replaceSnapshot(result);
-
-        return null;
-      }
-
       using _disabledAct = disableActEnvironment();
-      await renderStream.render(<App />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
-      // loading
-      await renderStream.takeRender();
-
-      const { snapshot: initialSnapshot } = await renderStream.takeRender();
-
-      expect(initialSnapshot.data).toStrictEqual({
-        currentUsers: [
-          { __typename: "User", id: 1, name: "User One" },
-          { __typename: "User", id: 2, name: "User Two" },
-        ],
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
-      // Trigger refetch with identical result
-      await initialSnapshot.refetch();
+      const { refetch, data: initialData } = getCurrentSnapshot();
 
-      // Skip intermediate renders (e.g. NetworkStatus.refetch) and find
-      // the settled result
-      let refetchSnapshot: useQuery.Result<Query, Record<string, never>>;
-      do {
-        ({ snapshot: refetchSnapshot } = await renderStream.takeRender());
-      } while (refetchSnapshot.networkStatus !== NetworkStatus.ready);
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+      });
 
-      // The masked data should be the same reference since the underlying
-      // data hasn't changed
-      expect(refetchSnapshot.data).toBe(initialSnapshot.data);
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
 
       await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
     });
   });
 

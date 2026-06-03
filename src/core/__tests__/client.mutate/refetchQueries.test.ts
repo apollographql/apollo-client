@@ -28,6 +28,7 @@ test("applies defaultOptions.watchQuery to refetchQueries query objects", async 
     ]),
     defaultOptions: {
       watchQuery: {
+        // @ts-expect-error - default options types not declared
         errorPolicy: "all",
       },
     },

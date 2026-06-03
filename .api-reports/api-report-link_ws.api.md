@@ -6,7 +6,7 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { ClientOptions } from 'subscriptions-transport-ws';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 // @public (undocumented)

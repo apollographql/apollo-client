@@ -9,3 +9,5 @@ updates:
       interval: "weekly"
     # Disable @dependabot (except for security updates) because we use @renovate instead
     open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7

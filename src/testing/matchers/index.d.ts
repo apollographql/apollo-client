@@ -170,6 +170,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
 
 interface ApolloCustomAsymmetricMatchers {
   arrayWithLength: (length: number) => any;
+  toBeOneOf: (values: unknown[]) => any;
 }
 
 declare global {

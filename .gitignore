@@ -1,7 +1,8 @@
+*.tsbuildinfo
+
 # Installed via Github Copilot Setup Steps, should not be committed
-.agents/skills/apollo-client
 .github/instructions/docs.instructions.md
-.github/skills/apollo-client
+skills-lock.json
 
 # fs
 .DS_Store
@@ -45,6 +46,7 @@ test-lib
 dist
 npm
 !flow-typed/npm
+!scripts/changesets/wrap-staged/npm
 
 # Unpublished output from @apollo/client build, like bundlesize artifacts
 temp/

@@ -26,10 +26,12 @@ jobs:
     # If you do not check out your code, Copilot will do this for you.
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24.x"
 
@@ -42,25 +44,13 @@ jobs:
 
       - name: Cache downloaded skills and instructions
         id: cache-skills
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: |
-            .agents/skills/apollo-client/
-            .github/skills/apollo-client/
             .github/instructions/docs.instructions.md
           key: skills-${{ steps.skills-head.outputs.sha }}
           restore-keys: |
             skills-
-
-      - name: Install JavaScript dependencies (with cache)
-        uses: bahmutov/npm-install@v1
-
-      - name: Install Apollo Client Skill
-        if: steps.cache-skills.outputs.cache-hit != 'true'
-        run: |
-          echo "Installing Apollo Client skill using npx skills CLI"
-          npx --yes skills add apollographql/skills --skill apollo-client --agent github-copilot --scope project --method copy --yes
-          echo "Apollo Client skill installed successfully"
 
       - name: Copy Documentation Instructions
         if: steps.cache-skills.outputs.cache-hit != 'true'

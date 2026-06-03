@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Shim that rewrites `npm publish ...` to `npm stage publish ...`
+# (https://docs.npmjs.com/staged-publishing) and forwards every other
+# invocation to the real npm unchanged.
+#
+# Invoked via PATH lookup with its own directory prepended as the first
+# PATH entry, so we pop that entry to find the real npm.
+set -euo pipefail
+
+export PATH="${PATH#*:}"
+
+if [ "${1:-}" = "publish" ]; then
+  shift
+  exec npm stage publish "$@"
+fi
+
+exec npm "$@"

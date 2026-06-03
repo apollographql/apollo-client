@@ -8,16 +8,20 @@ on:
 jobs:
   size:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ">=23.6.0"
-      - name: Install dependencies (with cache)
-        uses: bahmutov/npm-install@v1
+      - run: npm ci
       - name: Run size-limit
-        uses: andresz1/size-limit-action@v1
+        uses: andresz1/size-limit-action@e7493a72a44b113341c0cf6186ab49c17c4b65c1 # v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -3,6 +3,7 @@ import { expect } from "@jest/globals";
 import { arrayWithLength } from "./arrayWithLength.js";
 import { toBeDisposed } from "./toBeDisposed.js";
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
+import { toBeOneOf } from "./toBeOneOf.js";
 import { toComplete } from "./toComplete.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
@@ -20,6 +21,7 @@ import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
 
 expect.extend({
   arrayWithLength,
+  toBeOneOf,
   toComplete,
   toEmitAnything,
   toEmitError,

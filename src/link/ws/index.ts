@@ -1,4 +1,4 @@
-import type { Observable } from "rxjs";
+import { Observable } from "rxjs";
 import type { ClientOptions } from "subscriptions-transport-ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
@@ -115,8 +115,14 @@ export class WebSocketLink extends ApolloLink {
   public request(
     operation: ApolloLink.Operation
   ): Observable<ApolloLink.Result> {
-    return this.subscriptionClient.request(
-      operation
-    ) as Observable<ApolloLink.Result>;
+    return new Observable((observer) => {
+      const subscription = this.subscriptionClient
+        .request(operation)
+        .subscribe(observer);
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    });
   }
 }

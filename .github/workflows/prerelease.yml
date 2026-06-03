@@ -15,14 +15,14 @@ jobs:
     if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     # Permissions necessary for Changesets to push a new branch and open PRs
-    # (for automated Version Packages PRs), and request the JWT for provenance.
+    # (for automated Version Packages PRs), and request an id-token for provenance.
     # More info: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#adding-permissions-settings
     permissions:
       contents: write
       pull-requests: write
       id-token: write
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         id: github-actions-bot-app-token
         with:
           app-id: 819772
@@ -31,26 +31,28 @@ jobs:
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check for pre.json file existence
         id: check_files
-        uses: andstor/file-existence-action@v3.0.0
+        uses: andstor/file-existence-action@558493d6c74bf472d87c84eab196434afc2fa029 # v3.1.0
         with:
           files: ".changeset/pre.json"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24.x"
+          # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
+          package-manager-cache: false
 
-      - name: Install dependencies with cache
-        uses: bahmutov/npm-install@v1
+      - run: npm ci
 
       - name: Enter prerelease mode (alpha by default)
         # If .changeset/pre.json does not exist and we did not recently exit
@@ -68,7 +70,7 @@ jobs:
         # If .changeset/pre.json exists and we are not currently cutting a
         # release after merging a Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1
         with:
           version: npm run changeset-version
           publish: echo "This step should never publish"

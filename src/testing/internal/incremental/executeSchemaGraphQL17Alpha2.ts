@@ -1,4 +1,5 @@
 import type {
+  DocumentNode as DocumentNodeAlpha2,
   FormattedExecutionResult,
   FormattedInitialIncrementalExecutionResult,
   FormattedSubsequentIncrementalExecutionResult,
@@ -20,7 +21,7 @@ export async function* executeSchemaGraphQL17Alpha2(
 > {
   const result = await experimentalExecuteIncrementally({
     schema,
-    document,
+    document: document as DocumentNodeAlpha2,
     rootValue,
   });
 

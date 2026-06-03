@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-fix(masking): preserve referential equality of masked data on refetch with identical results
+Preserve referential equality of masked data on refetch when the result is deeply equal to the previous result.

@@ -15,6 +15,7 @@ jobs:
       pull-requests: write
     if: |
       github.repository == 'apollographql/apollo-client' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.review.state == 'APPROVED' &&
       github.event.review.author_association == 'MEMBER' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
@@ -36,6 +37,7 @@ jobs:
       contents: write
     if: |
       github.repository == 'apollographql/apollo-client' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup')
     runs-on: ubuntu-latest
     steps:

@@ -897,6 +897,9 @@ export class Policies {
     options: ReadFieldOptions,
     context: ReadMergeModifyContext
   ) {
+    // null is never coerced
+    if (value === null) return value;
+
     // A selection set indicates this is not a scalar field so bail early
     if (options.field && options.field.selectionSet) return value;
 

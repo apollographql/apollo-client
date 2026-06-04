@@ -358,3 +358,50 @@ test("parses object-based scalar values (e.g. JSON) when reading from cache", ()
     },
   });
 });
+
+test("parses primitive-to-primitive scalar values when reading from cache", () => {
+  const priceScalar = new Scalar<number, string>({
+    serialize: (dollars) => Math.round(parseFloat(dollars) * 100),
+    parse: (cents) => `${(cents / 100).toFixed(2)}`,
+    is: (value) => typeof value === "string",
+  });
+
+  const cache = new InMemoryCache({
+    scalars: { Price: priceScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          price: { scalar: "Price" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      product {
+        id
+        price
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        price: 1099,
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    product: {
+      __typename: "Product",
+      id: "1",
+      price: "10.99",
+    },
+  });
+});

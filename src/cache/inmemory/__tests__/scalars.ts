@@ -1,6 +1,9 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 const dateTimeScalar = new Scalar<string, Date>({
   serialize: (value) => value.toISOString(),
@@ -952,6 +955,92 @@ test("parses scalar values across a complex nested query", () => {
       ],
     },
   });
+});
+
+test("parses scalar values on each emit from cache.watchFragment", async () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const fragment = gql`
+    fragment EventFields on Event {
+      id
+      startTime
+    }
+  `;
+
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T09:00:00.000Z",
+    },
+  });
+
+  using stream = new ObservableStream(
+    cache.watchFragment({
+      fragment,
+      from: { __typename: "Event", id: "1" },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T09:00:00.000Z"),
+    },
+    dataState: "complete",
+    complete: true,
+  });
+
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-06-15T14:30:00.000Z",
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-06-15T14:30:00.000Z"),
+    },
+    dataState: "complete",
+    complete: true,
+  });
+
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-12-31T23:59:59.000Z",
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-12-31T23:59:59.000Z"),
+    },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
 });
 
 test("ignores scalar and emits a dev warning when a scalar option is set on a field with a selection set", () => {

@@ -1327,6 +1327,7 @@ export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TI
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
     read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
     merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
+    scalar?: ScalarNames;
 };
 
 // @public (undocumented)
@@ -2374,6 +2375,8 @@ class Policies {
     // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
+    maybeCoerceScalarValue(value: StoreValue, options: ReadFieldOptions, context: ReadMergeModifyContext): any;
+    // (undocumented)
     readField<V = StoreValue>(options: ReadFieldOptions, context: ReadMergeModifyContext): SafeReadonly<V> | undefined;
     // (undocumented)
     readonly rootIdsByTypename: Record<string, string>;
@@ -2823,6 +2826,9 @@ export class Scalar<TSerialized, TParsed> {
     serialize(value: TParsed): TSerialized;
 }
 
+// @public (undocumented)
+type ScalarNames = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -3139,11 +3145,12 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:127:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:101:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:136:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:143:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:178:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:146:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:633:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

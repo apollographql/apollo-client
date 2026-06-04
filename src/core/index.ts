@@ -100,11 +100,11 @@ export type {
 
 export {
   ApolloCache,
-  Scalar,
   defaultDataIdFromObject,
   InMemoryCache,
   makeVar,
   MissingFieldError,
+  Scalar,
 } from "@apollo/client/cache";
 
 /* Link */

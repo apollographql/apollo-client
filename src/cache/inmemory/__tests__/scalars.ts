@@ -237,6 +237,50 @@ test("leaves parsed value unchanged when no scalar policy is configured", () => 
   });
 });
 
+test("serializes each element when writing an array of parsed scalar values", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          meetingTimes: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        meetingTimes
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-02T09:00:00.000Z"),
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+      },
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

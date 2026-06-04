@@ -413,12 +413,23 @@ export class StoreWriter {
 
           // If a merge function isn't present, serialize the incoming
           // value since it wasn't coerced after running the merge function
-          if (typename) {
-            incomingValue = this.cache.policies.maybeCoerceSerializedValue(
-              incomingValue,
-              { fieldName: field.name.value, field, typename }
-            );
-          }
+          const coerceToSerializedValue = (value: StoreValue): StoreValue => {
+            if (!typename) {
+              return value;
+            }
+
+            if (Array.isArray(value)) {
+              return value.map((item) => coerceToSerializedValue(item));
+            }
+
+            return this.cache.policies.maybeCoerceSerializedValue(value, {
+              fieldName: field.name.value,
+              field,
+              typename,
+            });
+          };
+
+          incomingValue = coerceToSerializedValue(incomingValue);
         }
 
         incoming = context.merge(incoming, {

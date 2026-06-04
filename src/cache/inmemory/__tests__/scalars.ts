@@ -220,3 +220,50 @@ test("parses each element when the scalar field contains an array of values", ()
     },
   });
 });
+
+test("parses each leaf element when the scalar field contains a 2D array", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          availabilitySlots: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        availabilitySlots
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        availabilitySlots: [
+          ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
+          ["2026-01-02T14:00:00.000Z"],
+        ],
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    schedule: {
+      __typename: "Schedule",
+      availabilitySlots: [
+        [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-01T10:00:00.000Z"),
+        ],
+        [new Date("2026-01-02T14:00:00.000Z")],
+      ],
+    },
+  });
+});

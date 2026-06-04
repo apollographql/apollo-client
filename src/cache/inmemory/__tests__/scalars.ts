@@ -373,6 +373,51 @@ test("stores null as-is when null is written to a scalar field", () => {
   });
 });
 
+test("serializes object-based parsed scalar values when writing", () => {
+  const cache = new InMemoryCache({
+    scalars: { JSONObject: jsonObjectScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      product {
+        id
+        metadata
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        metadata: new Map([
+          ["color", "red"],
+          ["size", "large"],
+        ]),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", product: { __ref: "Product:1" } },
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      metadata: { color: "red", size: "large" },
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

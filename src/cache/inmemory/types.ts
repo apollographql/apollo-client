@@ -6,9 +6,12 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  RemoveIndexSignature,
+} from "@apollo/client/utilities/internal";
 
-import type { Transaction } from "../core/cache.js";
+import type { ApolloCache, Transaction } from "../core/cache.js";
 import type {
   AllFieldsModifier,
   CanReadFunction,
@@ -171,3 +174,5 @@ export interface ReadMergeModifyContext {
   varString?: string;
   extensions?: ExtensionsWithStreamInfo;
 }
+
+export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;

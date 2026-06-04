@@ -22,10 +22,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type {
-  IsLooselyEqual,
-  RemoveIndexSignature,
-} from "@apollo/client/utilities/internal";
+import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -39,15 +36,17 @@ import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
-import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
+import type {
+  InMemoryCacheConfig,
+  KnownScalars,
+  NormalizedCacheObject,
+} from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"
 >;
-
-type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 export declare namespace InMemoryCache {
   export type ScalarsOption = {

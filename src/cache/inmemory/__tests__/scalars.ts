@@ -3,9 +3,9 @@ import { InMemoryCache, Scalar } from "@apollo/client/cache";
 test("getScalar returns a scalar object for a configured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: new Scalar({
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
       }),
     },
   });
@@ -16,9 +16,9 @@ test("getScalar returns a scalar object for a configured scalar", () => {
 test("getScalar returns undefined for an unconfigured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: new Scalar({
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
       }),
     },
   });
@@ -29,9 +29,9 @@ test("getScalar returns undefined for an unconfigured scalar", () => {
 test("serialize uses the configured serialize function", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: new Scalar({
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
       }),
     },
   });

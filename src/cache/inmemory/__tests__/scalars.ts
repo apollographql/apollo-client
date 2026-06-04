@@ -652,3 +652,67 @@ test("parses scalar values on the matching member types of a union", () => {
     ],
   });
 });
+
+test("parses scalar values when fields are selected through an interface fragment", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    possibleTypes: {
+      Schedulable: ["Event", "Appointment"],
+    },
+    typePolicies: {
+      Event: {
+        fields: { startTime: { scalar: "DateTime" } },
+      },
+      Appointment: {
+        fields: { startTime: { scalar: "DateTime" } },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      scheduledItems {
+        __typename
+        ...SchedulableFields
+      }
+    }
+
+    fragment SchedulableFields on Schedulable {
+      id
+      startTime
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      scheduledItems: [
+        {
+          __typename: "Event",
+          id: "1",
+          startTime: "2026-01-01T09:00:00.000Z",
+        },
+        {
+          __typename: "Appointment",
+          id: "2",
+          startTime: "2026-01-02T14:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    scheduledItems: [
+      {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T09:00:00.000Z"),
+      },
+      {
+        __typename: "Appointment",
+        id: "2",
+        startTime: new Date("2026-01-02T14:00:00.000Z"),
+      },
+    ],
+  });
+});

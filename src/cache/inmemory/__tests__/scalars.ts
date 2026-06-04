@@ -724,6 +724,53 @@ test("parses scalar values when fields are selected through an interface fragmen
   });
 });
 
+test("returns the raw value unchanged when a scalar field policy names an unregistered scalar", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "Identity",
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        __typename
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
 test("parses scalar values across a complex nested query", () => {
   const cache = new InMemoryCache({
     scalars: {

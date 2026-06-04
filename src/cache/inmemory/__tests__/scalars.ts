@@ -458,6 +458,230 @@ test("serializes parsed scalar value when writing via cache.writeFragment", () =
   });
 });
 
+test("serializes parsed scalar value when overwriting an existing field", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-06-15T14:30:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-06-15T14:30:00.000Z",
+    },
+  });
+});
+
+test("serializes parsed scalar values across a complex nested write", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+      JSONObject: jsonObjectScalar,
+    },
+    possibleTypes: {
+      Schedulable: ["Session", "Workshop"],
+    },
+    typePolicies: {
+      Conference: {
+        fields: {
+          startDate: { scalar: "DateTime" },
+          endDate: { scalar: "DateTime" },
+          ticketPrice: { scalar: "Price" },
+        },
+      },
+      Schedule: {
+        fields: {
+          timeSlots: { scalar: "DateTime" },
+        },
+      },
+      Speaker: {
+        fields: {
+          availableTimes: { scalar: "DateTime" },
+        },
+      },
+      Session: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+      Workshop: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      conference {
+        id
+        name
+        startDate
+        endDate
+        ticketPrice
+        schedule {
+          timeSlots
+        }
+        speakers {
+          id
+          name
+          availableTimes
+        }
+        scheduledItems {
+          __typename
+          id
+          startTime
+          metadata
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      conference: {
+        __typename: "Conference",
+        id: "conf-1",
+        name: "GraphQL Summit",
+        startDate: new Date("2026-09-15T09:00:00.000Z"),
+        endDate: null,
+        ticketPrice: "199.00",
+        schedule: {
+          __typename: "Schedule",
+          timeSlots: [
+            [
+              new Date("2026-09-15T09:00:00.000Z"),
+              new Date("2026-09-15T10:00:00.000Z"),
+            ],
+            [new Date("2026-09-15T14:00:00.000Z")],
+          ],
+        },
+        speakers: [
+          {
+            __typename: "Speaker",
+            id: "speaker-1",
+            name: "Alice",
+            availableTimes: [
+              new Date("2026-09-15T09:00:00.000Z"),
+              new Date("2026-09-15T14:00:00.000Z"),
+            ],
+          },
+          {
+            __typename: "Speaker",
+            id: "speaker-2",
+            name: "Bob",
+            availableTimes: [new Date("2026-09-15T10:00:00.000Z"), null],
+          },
+        ],
+        scheduledItems: [
+          {
+            __typename: "Session",
+            id: "session-1",
+            startTime: new Date("2026-09-15T09:00:00.000Z"),
+            metadata: new Map([["dress", "casual"]]),
+          },
+          {
+            __typename: "Workshop",
+            id: "workshop-1",
+            startTime: new Date("2026-09-15T14:00:00.000Z"),
+            metadata: new Map([["venue", "The Workshop Building"]]),
+          },
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toMatchObject({
+    ROOT_QUERY: {
+      __typename: "Query",
+      conference: { __ref: "Conference:conf-1" },
+    },
+    "Conference:conf-1": {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: "2026-09-15T09:00:00.000Z",
+      endDate: null,
+      ticketPrice: 19900,
+      schedule: {
+        __typename: "Schedule",
+        timeSlots: [
+          ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
+          ["2026-09-15T14:00:00.000Z"],
+        ],
+      },
+    },
+    "Speaker:speaker-1": {
+      __typename: "Speaker",
+      id: "speaker-1",
+      name: "Alice",
+      availableTimes: ["2026-09-15T09:00:00.000Z", "2026-09-15T14:00:00.000Z"],
+    },
+    "Speaker:speaker-2": {
+      __typename: "Speaker",
+      id: "speaker-2",
+      name: "Bob",
+      availableTimes: ["2026-09-15T10:00:00.000Z", null],
+    },
+    "Session:session-1": {
+      __typename: "Session",
+      id: "session-1",
+      startTime: "2026-09-15T09:00:00.000Z",
+      metadata: { dress: "casual" },
+    },
+    "Workshop:workshop-1": {
+      __typename: "Workshop",
+      id: "workshop-1",
+      startTime: "2026-09-15T14:00:00.000Z",
+      metadata: { venue: "The Workshop Building" },
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

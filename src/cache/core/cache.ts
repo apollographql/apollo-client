@@ -30,7 +30,6 @@ import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   IsAny,
-  IsLooselyEqual,
   NoInfer,
   Prettify,
 } from "@apollo/client/utilities/internal";
@@ -47,6 +46,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
+import type { Scalar } from "./Scalar.js";
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";
 
@@ -158,14 +158,6 @@ export declare namespace ApolloCache {
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
 
-  export interface Scalar<TSerialized, TParsed> {
-    parse: (serializedValue: TSerialized) => TParsed;
-    serialize: (parsedValue: TParsed) => TSerialized;
-    is: IsLooselyEqual<TSerialized, TParsed> extends true ?
-      (value: TSerialized | TParsed) => boolean
-    : (value: TSerialized | TParsed) => value is TParsed;
-  }
-
   // Registration type for custom scalars
   export interface Scalars {}
 
@@ -173,7 +165,7 @@ export declare namespace ApolloCache {
     ApolloCache.Scalars[TKey] extends (
       { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ApolloCache.Scalar<TSerialized, TParsed>
+      Scalar<TSerialized, TParsed>
     : never;
 }
 

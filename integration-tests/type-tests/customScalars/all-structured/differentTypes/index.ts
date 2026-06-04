@@ -1,4 +1,4 @@
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 
 declare function test(name: string, fn: () => void): void;
 
@@ -25,10 +25,10 @@ test("a transforming scalar that conflicts with the index cannot be configured",
   new InMemoryCache({
     // @ts-expect-error `DateTime` is not assignable to index signature
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value: Date) => value.toISOString(),
         parse: (value: string) => new Date(value),
-      },
+      }),
     },
   });
 });

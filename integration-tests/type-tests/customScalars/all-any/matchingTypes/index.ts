@@ -1,4 +1,4 @@
-import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
@@ -19,40 +19,40 @@ test("does not require the scalars option when every scalar matches", () => {
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      JSONObject: {
+      }),
+      JSONObject: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      JSONObject: {
+      }),
+      JSONObject: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 });
@@ -60,7 +60,7 @@ test("does not require the scalars option when every scalar matches", () => {
 test("serialize receives the parsed type and parse receives the serialized type", () => {
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
@@ -69,8 +69,8 @@ test("serialize receives the parsed type and parse receives the serialized type"
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
         },
-      },
-      JSONObject: {
+      }),
+      JSONObject: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<unknown>();
           return value;
@@ -79,8 +79,8 @@ test("serialize receives the parsed type and parse receives the serialized type"
           expectTypeOf(value).toEqualTypeOf<unknown>();
           return value;
         },
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<any>();
           return value;
@@ -89,7 +89,7 @@ test("serialize receives the parsed type and parse receives the serialized type"
           expectTypeOf(value).toEqualTypeOf<any>();
           return value;
         },
-      },
+      }),
     },
   });
 });
@@ -97,47 +97,47 @@ test("serialize receives the parsed type and parse receives the serialized type"
 test("serialize must return the serialized type", () => {
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         // @ts-expect-error wrong serialized type
         serialize: (value) => value.length,
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value.length,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         // @ts-expect-error cannot return undefined
         serialize: (value) => undefined,
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => undefined,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         // @ts-expect-error missing return
         serialize: (value) => {
           value.trim();
         },
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => {
           String(value);
         },
         parse: (value) => value,
-      },
+      }),
     },
   });
 });
@@ -145,47 +145,47 @@ test("serialize must return the serialized type", () => {
 test("parse must return the parsed type", () => {
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         // @ts-expect-error wrong parsed type
         parse: (value) => value.length,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => String(value),
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         // @ts-expect-error cannot return undefined
         parse: (value) => undefined,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => undefined,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         // @ts-expect-error missing return
         parse: (value) => {
           value.trim();
         },
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => {
           String(value);
         },
-      },
+      }),
     },
   });
 });
@@ -193,22 +193,22 @@ test("parse must return the parsed type", () => {
 test("is receives the combined serialized and parsed type", () => {
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
         is: (value) => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return typeof value === "string";
         },
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
         is: (value) => {
           expectTypeOf(value).toEqualTypeOf<any>();
           return typeof value === "string";
         },
-      },
+      }),
     },
   });
 });
@@ -217,14 +217,14 @@ test("getScalar returns the resolved scalar or undefined", () => {
   const cache = new InMemoryCache();
 
   expectTypeOf(cache.getScalar("RelativeDate")).toEqualTypeOf<
-    ApolloCache.Scalar<string, string> | undefined
+    Scalar<string, string> | undefined
   >();
 
   expectTypeOf(cache.getScalar("JSONObject")).toEqualTypeOf<
-    ApolloCache.Scalar<unknown, unknown> | undefined
+    Scalar<unknown, unknown> | undefined
   >();
 
   expectTypeOf(cache.getScalar("Unknown")).toEqualTypeOf<
-    ApolloCache.Scalar<any, any> | undefined
+    Scalar<any, any> | undefined
   >();
 });

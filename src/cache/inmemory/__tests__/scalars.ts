@@ -1,12 +1,12 @@
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 
 test("getScalar returns a scalar object for a configured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value: Date) => value.toISOString(),
         parse: (value: string) => new Date(value),
-      },
+      }),
     },
   });
 
@@ -16,10 +16,10 @@ test("getScalar returns a scalar object for a configured scalar", () => {
 test("getScalar returns undefined for an unconfigured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value: Date) => value.toISOString(),
         parse: (value: string) => new Date(value),
-      },
+      }),
     },
   });
 
@@ -29,10 +29,10 @@ test("getScalar returns undefined for an unconfigured scalar", () => {
 test("serialize uses the configured serialize function", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value: Date) => value.toISOString(),
         parse: (value: string) => new Date(value),
-      },
+      }),
     },
   });
 
@@ -46,10 +46,10 @@ test("serialize uses the configured serialize function", () => {
 test("parse uses the configured parse function", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
-      },
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+      }),
     },
   });
 
@@ -63,10 +63,10 @@ test("parse uses the configured parse function", () => {
 test("is defaults to a non-null object check when not configured", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
-      },
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+      }),
     },
   });
 
@@ -79,11 +79,11 @@ test("is defaults to a non-null object check when not configured", () => {
 test("is uses the configured type guard when configured", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
-        serialize: (value: Date) => value.toISOString(),
-        parse: (value: string) => new Date(value),
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
         is: (value) => value instanceof Date && !Number.isNaN(value.getTime()),
-      },
+      }),
     },
   });
 

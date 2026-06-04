@@ -1,4 +1,4 @@
-import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
@@ -20,41 +20,41 @@ test("does not require the scalars option when every scalar matches", () => {
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     // @ts-expect-error JSONObject doesn't match serialized/parsed type
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      JSONObject: {
+      }),
+      JSONObject: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
-      Unknown: {
+      }),
+      Unknown: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 });
@@ -62,7 +62,7 @@ test("does not require the scalars option when every scalar matches", () => {
 test("a scalar whose types match the index can be configured", () => {
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
@@ -71,17 +71,17 @@ test("a scalar whose types match the index can be configured", () => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
         },
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         // @ts-expect-error cannot return undefined
         serialize: (value) => undefined,
         parse: (value) => value,
-      },
+      }),
     },
   });
 });
@@ -90,10 +90,10 @@ test("a scalar whose types do not match the index cannot be configured", () => {
   new InMemoryCache({
     // @ts-expect-error `JSONObject`'s `unknown` types are not assignable to the string index.
     scalars: {
-      JSONObject: {
+      JSONObject: new Scalar({
         serialize: (value: unknown) => value,
         parse: (value: unknown) => value,
-      },
+      }),
     },
   });
 });
@@ -102,14 +102,14 @@ test("getScalar resolves each scalar according to its declaration", () => {
   const cache = new InMemoryCache();
 
   expectTypeOf(cache.getScalar("RelativeDate")).toEqualTypeOf<
-    ApolloCache.Scalar<string, string> | undefined
+    Scalar<string, string> | undefined
   >();
 
   expectTypeOf(cache.getScalar("JSONObject")).toEqualTypeOf<
-    ApolloCache.Scalar<unknown, unknown> | undefined
+    Scalar<unknown, unknown> | undefined
   >();
 
   expectTypeOf(cache.getScalar("Unknown")).toEqualTypeOf<
-    ApolloCache.Scalar<string, string> | undefined
+    Scalar<string, string> | undefined
   >();
 });

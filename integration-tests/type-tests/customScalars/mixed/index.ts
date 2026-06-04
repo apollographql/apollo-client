@@ -1,4 +1,4 @@
-import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
@@ -22,52 +22,50 @@ test("requires only the scalars whose serialized and parsed types differ", () =>
   new InMemoryCache({
     // @ts-expect-error `DateTime` is missing from `scalars`.
     scalars: {
-      RelativeDate: {
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
-      },
-      RelativeDate: {
+      }),
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
     },
   });
 
   new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
-      },
-      RelativeDate: {
+      }),
+      RelativeDate: new Scalar({
         serialize: (value) => value,
         parse: (value) => value,
-      },
+      }),
       // @ts-expect-error not a declared scalar
-      Unknown: {
-        // @ts-expect-error implicit any type
+      Unknown: new Scalar({
         serialize: (value) => value,
-        // @ts-expect-error implicit any type
         parse: (value) => value,
-      },
+      }),
     },
   });
 });
@@ -75,7 +73,7 @@ test("requires only the scalars whose serialized and parsed types differ", () =>
 test("infers each scalar's serialized and parsed types independently", () => {
   new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<Date>();
           return value.toISOString();
@@ -84,8 +82,8 @@ test("infers each scalar's serialized and parsed types independently", () => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return new Date(value);
         },
-      },
-      RelativeDate: {
+      }),
+      RelativeDate: new Scalar({
         serialize: (value) => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
@@ -94,7 +92,7 @@ test("infers each scalar's serialized and parsed types independently", () => {
           expectTypeOf(value).toEqualTypeOf<string>();
           return value;
         },
-      },
+      }),
     },
   });
 });
@@ -102,19 +100,19 @@ test("infers each scalar's serialized and parsed types independently", () => {
 test("getScalar resolves each scalar according to its declaration", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: {
+      DateTime: new Scalar({
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
-      },
+      }),
     },
   });
 
   expectTypeOf(cache.getScalar("DateTime")).toEqualTypeOf<
-    ApolloCache.Scalar<string, Date>
+    Scalar<string, Date>
   >();
 
   expectTypeOf(cache.getScalar("RelativeDate")).toEqualTypeOf<
-    ApolloCache.Scalar<string, string> | undefined
+    Scalar<string, string> | undefined
   >();
 
   // @ts-expect-error not a declared scalar

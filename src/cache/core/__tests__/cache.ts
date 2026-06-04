@@ -4,7 +4,7 @@ import { gql } from "graphql-tag";
 
 import type { OperationVariables, Unmasked } from "@apollo/client";
 import type { Cache } from "@apollo/client/cache";
-import { ApolloCache } from "@apollo/client/cache";
+import { ApolloCache, Scalar } from "@apollo/client/cache";
 
 import type { Reference } from "../../../utilities/graphql/storeUtils.js";
 
@@ -367,11 +367,11 @@ describe("abstract cache", () => {
     });
 
     it("returns the scalar from a cache that overrides getScalar", () => {
-      const dateTime: ApolloCache.Scalar<string, Date> = {
+      const dateTime = new Scalar<string, Date>({
         serialize: (value) => value.toISOString(),
         parse: (value) => new Date(value),
         is: (value) => value instanceof Date,
-      };
+      });
 
       class ScalarCache extends TestCache {
         getScalar<TKey extends keyof ApolloCache.Scalars>(

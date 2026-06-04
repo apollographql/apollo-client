@@ -31,6 +31,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { ApolloCache } from "../core/cache.js";
+import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
@@ -38,7 +39,6 @@ import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
-import { Scalar } from "./scalars.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
@@ -50,20 +50,6 @@ type BroadcastOptions = Pick<
 type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 export declare namespace InMemoryCache {
-  export interface ScalarConfig<TSerialized, TParsed> {
-    // We use method syntax to ensure the functions are bivariant. This lets
-    // users declare scalars using
-    // `extends Record<string, { serialized: unknown; parsed: unknown }>` while
-    // allowing specific scalar overrides.
-    parse(serializedValue: TSerialized): TParsed;
-    serialize(parsedValue: TParsed): TSerialized;
-    // Since we have a conditional type here, we can't use method syntax
-    // directly. This hack allows us to maintain bivariance.
-    is?: IsLooselyEqual<TSerialized, TParsed> extends true ?
-      { _(value: TSerialized | TParsed): boolean }["_"]
-    : { _(value: TSerialized | TParsed): value is TParsed }["_"];
-  }
-
   export type ScalarsOption = {
     [ScalarName in keyof KnownScalars as IsLooselyEqual<
       KnownScalars[ScalarName]["serialized"],
@@ -73,7 +59,7 @@ export declare namespace InMemoryCache {
     : never]?: KnownScalars[ScalarName] extends (
       { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ScalarConfig<TSerialized, TParsed>
+      Scalar<TSerialized, TParsed>
     : never;
   } & {
     [ScalarName in keyof KnownScalars as IsLooselyEqual<
@@ -84,12 +70,12 @@ export declare namespace InMemoryCache {
     : ScalarName]: KnownScalars[ScalarName] extends (
       { serialized: infer TSerialized; parsed: infer TParsed }
     ) ?
-      ScalarConfig<TSerialized, TParsed>
+      Scalar<TSerialized, TParsed>
     : never;
   } & (ApolloCache.Scalars extends (
       Record<string, { serialized: infer TSerialized; parsed: infer TParsed }>
     ) ?
-      Record<string, ScalarConfig<TSerialized, TParsed>>
+      Record<string, Scalar<TSerialized, TParsed>>
     : {});
 }
 
@@ -103,11 +89,6 @@ export class InMemoryCache extends ApolloCache {
   private storeReader!: StoreReader;
   private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
-
-  private scalars: Record<
-    keyof ApolloCache.Scalars,
-    ApolloCache.Scalar<any, any>
-  > = {};
 
   private maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions<any, any>, BroadcastOptions?],
@@ -140,12 +121,6 @@ export class InMemoryCache extends ApolloCache {
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
     });
-
-    if (this.config.scalars) {
-      Object.entries(this.config.scalars).forEach(([key, scalarConfig]) => {
-        this.scalars[key] = new Scalar(scalarConfig);
-      });
-    }
 
     this.init();
   }
@@ -225,7 +200,7 @@ export class InMemoryCache extends ApolloCache {
   public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
   ): ApolloCache.GetScalarType<TKey> extends (
-    ApolloCache.Scalar<infer TSerialized, infer TParsed>
+    Scalar<infer TSerialized, infer TParsed>
   ) ?
     IsLooselyEqual<TSerialized, TParsed> extends true ?
       // We don't require scalars where the serialized/parsed types are equal, so we
@@ -233,7 +208,7 @@ export class InMemoryCache extends ApolloCache {
       ApolloCache.GetScalarType<TKey> | undefined
     : ApolloCache.GetScalarType<TKey>
   : never {
-    return this.scalars[key] as any;
+    return this.config.scalars?.[key as string] as any;
   }
 
   public restore(data: NormalizedCacheObject): this {

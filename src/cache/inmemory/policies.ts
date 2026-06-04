@@ -892,6 +892,34 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
+  public maybeCoerceScalarValue(
+    value: StoreValue,
+    options: ReadFieldOptions,
+    context: ReadMergeModifyContext
+  ) {
+    // A selection set indicates this is not a scalar field so bail early
+    if (options.field && options.field.selectionSet) return value;
+
+    let typename = options.typename;
+    const objectOrReference = options.from;
+
+    if (!typename && !objectOrReference) return value;
+    if (typename === void 0) {
+      typename = context.store.getFieldValue<string>(
+        objectOrReference,
+        "__typename"
+      );
+    }
+
+    const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
+    const policy = this.getFieldPolicy(typename, fieldName);
+
+    if (!policy?.scalar) return value;
+
+    const scalar = this.cache.getScalar(policy.scalar);
+    return scalar ? scalar.coerceToParsed(value) : value;
+  }
+
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
     context: ReadMergeModifyContext

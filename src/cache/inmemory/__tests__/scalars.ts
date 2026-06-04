@@ -118,6 +118,48 @@ test("is uses the configured type guard when configured", () => {
   expect(scalar.is(new Date("invalid"))).toBe(false);
 });
 
+test("serializes parsed scalar value when writing via cache.writeQuery", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

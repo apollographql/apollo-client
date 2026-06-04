@@ -918,6 +918,27 @@ export class Policies {
     return scalar ? scalar.coerceToParsed(value) : value;
   }
 
+  public maybeCoerceSerializedValue(
+    value: StoreValue,
+    options: FieldSpecifier
+  ) {
+    // null is never coerced
+    if (value === null) return value;
+
+    // A selection set indicates this is not a scalar field so bail early
+    if (options.field && options.field.selectionSet) return value;
+
+    if (options.typename === void 0) return value;
+
+    const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
+    const policy = this.getFieldPolicy(options.typename, fieldName);
+
+    if (!policy?.scalar) return value;
+
+    const scalar = this.cache.getScalar(policy.scalar);
+    return scalar ? scalar.coerceToSerialized(value) : value;
+  }
+
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
     context: ReadMergeModifyContext

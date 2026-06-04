@@ -410,6 +410,15 @@ export class StoreWriter {
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
+
+          // If a merge function isn't present, serialize the incoming
+          // value since it wasn't coerced after running the merge function
+          if (typename) {
+            incomingValue = this.cache.policies.maybeCoerceSerializedValue(
+              incomingValue,
+              { fieldName: field.name.value, field, typename }
+            );
+          }
         }
 
         incoming = context.merge(incoming, {

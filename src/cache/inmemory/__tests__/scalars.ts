@@ -281,6 +281,56 @@ test("serializes each element when writing an array of parsed scalar values", ()
   });
 });
 
+test("serializes each leaf element when writing a 2D array of parsed scalar values", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          availabilitySlots: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        availabilitySlots
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        availabilitySlots: [
+          [
+            new Date("2026-01-01T09:00:00.000Z"),
+            new Date("2026-01-01T10:00:00.000Z"),
+          ],
+          [new Date("2026-01-02T14:00:00.000Z")],
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      schedule: {
+        __typename: "Schedule",
+        availabilitySlots: [
+          ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
+          ["2026-01-02T14:00:00.000Z"],
+        ],
+      },
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

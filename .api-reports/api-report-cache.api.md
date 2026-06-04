@@ -50,19 +50,10 @@ export namespace ApolloCache {
     export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
         serialized: infer TSerialized;
         parsed: infer TParsed;
-    }) ? ApolloCache.Scalar<TSerialized, TParsed> : never;
+    }) ? Scalar<TSerialized, TParsed> : never;
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
-    }
-    // (undocumented)
-    export interface Scalar<TSerialized, TParsed> {
-        // (undocumented)
-        is: IsLooselyEqual<TSerialized, TParsed> extends true ? (value: TSerialized | TParsed) => boolean : (value: TSerialized | TParsed) => value is TParsed;
-        // (undocumented)
-        parse: (serializedValue: TSerialized) => TParsed;
-        // (undocumented)
-        serialize: (parsedValue: TParsed) => TSerialized;
     }
     // (undocumented)
     export interface Scalars {
@@ -571,19 +562,6 @@ const _ignoreModifier: unique symbol;
 
 // @public (undocumented)
 export namespace InMemoryCache {
-    // (undocumented)
-    export interface ScalarConfig<TSerialized, TParsed> {
-        // (undocumented)
-        is?: IsLooselyEqual<TSerialized, TParsed> extends true ? {
-            _(value: TSerialized | TParsed): boolean;
-        }["_"] : {
-            _(value: TSerialized | TParsed): value is TParsed;
-        }["_"];
-        // (undocumented)
-        parse(serializedValue: TSerialized): TParsed;
-        // (undocumented)
-        serialize(parsedValue: TParsed): TSerialized;
-    }
     // Warning: (ae-forgotten-export) The symbol "KnownScalars" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -591,16 +569,16 @@ export namespace InMemoryCache {
         [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
             serialized: infer TSerialized;
             parsed: infer TParsed;
-        }) ? ScalarConfig<TSerialized, TParsed> : never;
+        }) ? Scalar<TSerialized, TParsed> : never;
     } & {
         [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
             serialized: infer TSerialized;
             parsed: infer TParsed;
-        }) ? ScalarConfig<TSerialized, TParsed> : never;
+        }) ? Scalar<TSerialized, TParsed> : never;
     } & (ApolloCache.Scalars extends (Record<string, {
         serialized: infer TSerialized;
         parsed: infer TParsed;
-    }>) ? Record<string, ScalarConfig<TSerialized, TParsed>> : {});
+    }>) ? Record<string, Scalar<TSerialized, TParsed>> : {});
 }
 
 // @public (undocumented)
@@ -632,7 +610,7 @@ export class InMemoryCache extends ApolloCache {
     // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
-    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (ApolloCache.Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -989,6 +967,34 @@ class Root extends EntityStore {
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
+
+// @public (undocumented)
+export namespace Scalar {
+    // (undocumented)
+    export interface Options<TSerialized, TParsed> {
+        // (undocumented)
+        is?(value: TSerialized | TParsed): boolean;
+        // (undocumented)
+        parse(serializedValue: TSerialized): NoInfer_2<TParsed>;
+        // (undocumented)
+        serialize(parsedValue: TParsed): NoInfer_2<TSerialized>;
+    }
+}
+
+// @public (undocumented)
+export class Scalar<TSerialized, TParsed> {
+    constructor(options: Scalar.Options<TSerialized, TParsed>);
+    // (undocumented)
+    coerceToParsed(value: TSerialized | TParsed): TParsed;
+    // (undocumented)
+    coerceToSerialized(value: TSerialized | TParsed): TSerialized;
+    // (undocumented)
+    is(value: TSerialized | TParsed): value is TParsed;
+    // (undocumented)
+    parse(value: TSerialized): TParsed;
+    // (undocumented)
+    serialize(value: TParsed): TSerialized;
+}
 
 // @public (undocumented)
 type StorageType = Record<string, any>;

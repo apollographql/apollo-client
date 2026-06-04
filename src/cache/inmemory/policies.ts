@@ -60,6 +60,7 @@ import type {
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
+  ScalarNames,
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
@@ -174,7 +175,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
-  scalar?: keyof ApolloCache.Scalars;
+  scalar?: ScalarNames;
 };
 
 export type StorageType = Record<string, any>;

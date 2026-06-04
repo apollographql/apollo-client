@@ -176,3 +176,6 @@ export interface ReadMergeModifyContext {
 }
 
 export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
+export type ScalarNames =
+  | keyof KnownScalars
+  | (string extends keyof ApolloCache.Scalars ? string & {} : never);

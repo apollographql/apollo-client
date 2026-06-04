@@ -607,6 +607,106 @@ test("serializes the parsed value returned by a merge function", () => {
   });
 });
 
+test("serializes each element when writing an array of parsed scalar values with a merge function", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          meetingTimes: {
+            scalar: "DateTime",
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        meetingTimes
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-02T09:00:00.000Z"),
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+      },
+    },
+  });
+});
+
+test("serializes each leaf element when writing a 2D array of parsed scalar values with a merge function", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          availabilitySlots: {
+            scalar: "DateTime",
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        availabilitySlots
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        availabilitySlots: [
+          [
+            new Date("2026-01-01T09:00:00.000Z"),
+            new Date("2026-01-01T10:00:00.000Z"),
+          ],
+          [new Date("2026-01-02T14:00:00.000Z")],
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      schedule: {
+        __typename: "Schedule",
+        availabilitySlots: [
+          ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
+          ["2026-01-02T14:00:00.000Z"],
+        ],
+      },
+    },
+  });
+});
+
 test("serializes parsed scalar values across a complex nested write", () => {
   const cache = new InMemoryCache({
     scalars: {

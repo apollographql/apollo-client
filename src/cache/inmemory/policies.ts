@@ -32,6 +32,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { ApolloCache } from "../core/cache.js";
+import type { Scalar } from "../core/Scalar.js";
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -920,8 +921,8 @@ export class Policies {
 
   public maybeCoerceSerializedValue(
     value: StoreValue,
-    options: FieldSpecifier
-  ) {
+    options: FieldSpecifier & { scalar?: Scalar<any, any> }
+  ): StoreValue {
     // null is never coerced
     if (value === null) return value;
 
@@ -931,12 +932,23 @@ export class Policies {
     if (options.typename === void 0) return value;
 
     const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
-    const policy = this.getFieldPolicy(options.typename, fieldName);
 
-    if (!policy?.scalar) return value;
+    let scalar = options.scalar;
+    if (!scalar) {
+      const policy = this.getFieldPolicy(options.typename, fieldName);
 
-    const scalar = this.cache.getScalar(policy.scalar);
-    return scalar ? scalar.coerceToSerialized(value) : value;
+      scalar = policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
+    }
+
+    if (!scalar) return value;
+
+    if (Array.isArray(value)) {
+      return value.map((item) =>
+        this.maybeCoerceSerializedValue(item, { ...options, fieldName, scalar })
+      );
+    }
+
+    return scalar.coerceToSerialized(value);
   }
 
   public readField<V = StoreValue>(

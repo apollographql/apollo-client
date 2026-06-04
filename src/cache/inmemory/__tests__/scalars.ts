@@ -6,6 +6,12 @@ const dateTimeScalar = new Scalar<string, Date>({
   parse: (value) => new Date(value),
 });
 
+const priceScalar = new Scalar<number, string>({
+  serialize: (dollars) => Math.round(parseFloat(dollars) * 100),
+  parse: (cents) => `${(cents / 100).toFixed(2)}`,
+  is: (value) => typeof value === "string",
+});
+
 test("getScalar returns a scalar object for a configured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -360,12 +366,6 @@ test("parses object-based scalar values (e.g. JSON) when reading from cache", ()
 });
 
 test("parses primitive-to-primitive scalar values when reading from cache", () => {
-  const priceScalar = new Scalar<number, string>({
-    serialize: (dollars) => Math.round(parseFloat(dollars) * 100),
-    parse: (cents) => `${(cents / 100).toFixed(2)}`,
-    is: (value) => typeof value === "string",
-  });
-
   const cache = new InMemoryCache({
     scalars: { Price: priceScalar },
     typePolicies: {
@@ -450,5 +450,54 @@ test("parses scalar fields within each object in an array", () => {
         startTime: new Date("2026-01-02T09:00:00.000Z"),
       },
     ],
+  });
+});
+
+test("parses multiple scalar fields on the same object", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar, Price: priceScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          endTime: { scalar: "DateTime" },
+          ticketPrice: { scalar: "Price" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+        endTime
+        ticketPrice
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T09:00:00.000Z",
+        endTime: "2026-01-01T10:00:00.000Z",
+        ticketPrice: 2099,
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T09:00:00.000Z"),
+      endTime: new Date("2026-01-01T10:00:00.000Z"),
+      ticketPrice: "20.99",
+    },
   });
 });

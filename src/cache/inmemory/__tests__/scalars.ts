@@ -405,3 +405,50 @@ test("parses primitive-to-primitive scalar values when reading from cache", () =
     },
   });
 });
+
+test("parses scalar fields within each object in an array", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      events {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      events: [
+        { __typename: "Event", id: "1", startTime: "2026-01-01T09:00:00.000Z" },
+        { __typename: "Event", id: "2", startTime: "2026-01-02T09:00:00.000Z" },
+      ],
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    events: [
+      {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T09:00:00.000Z"),
+      },
+      {
+        __typename: "Event",
+        id: "2",
+        startTime: new Date("2026-01-02T09:00:00.000Z"),
+      },
+    ],
+  });
+});

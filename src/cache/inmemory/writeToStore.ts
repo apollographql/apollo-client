@@ -778,13 +778,23 @@ export class StoreWriter {
     }
 
     if (mergeTree.info) {
-      return this.cache.policies.runMergeFunction(
+      incoming = this.cache.policies.runMergeFunction(
         existing,
         incoming,
         mergeTree.info,
         context,
         getStorageArgs && context.store.getStorage(...getStorageArgs)
       );
+    }
+
+    if (mergeTree.info?.typename) {
+      const { field, typename } = mergeTree.info;
+
+      return this.cache.policies.maybeCoerceSerializedValue(incoming, {
+        fieldName: field.name.value,
+        field,
+        typename,
+      });
     }
 
     return incoming;

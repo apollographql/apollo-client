@@ -511,6 +511,54 @@ test("serializes parsed scalar value when overwriting an existing field", () => 
   });
 });
 
+test("serializes parsed scalar value when a merge function is also configured on the field", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "DateTime",
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      event: { __ref: "Event:1" },
+    },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
 test("serializes parsed scalar values across a complex nested write", () => {
   const cache = new InMemoryCache({
     scalars: {

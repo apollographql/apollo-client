@@ -38,8 +38,8 @@ test("serialize uses the configured serialize function", () => {
 
   const scalar = cache.getScalar("DateTime")!;
 
-  expect(scalar.serialize(new Date("2024-01-01T00:00:00.000Z"))).toBe(
-    "2024-01-01T00:00:00.000Z"
+  expect(scalar.serialize(new Date("2026-01-01T00:00:00.000Z"))).toBe(
+    "2026-01-01T00:00:00.000Z"
   );
 });
 
@@ -55,8 +55,8 @@ test("parse uses the configured parse function", () => {
 
   const scalar = cache.getScalar("DateTime")!;
 
-  expect(scalar.parse("2024-01-01T00:00:00.000Z")).toEqual(
-    new Date("2024-01-01T00:00:00.000Z")
+  expect(scalar.parse("2026-01-01T00:00:00.000Z")).toEqual(
+    new Date("2026-01-01T00:00:00.000Z")
   );
 });
 
@@ -72,8 +72,8 @@ test("is defaults to a non-null object check when not configured", () => {
 
   const scalar = cache.getScalar("DateTime")!;
 
-  expect(scalar.is(new Date("2024-01-01T00:00:00.000Z"))).toBe(true);
-  expect(scalar.is("2024-01-01T00:00:00.000Z")).toBe(false);
+  expect(scalar.is(new Date("2026-01-01T00:00:00.000Z"))).toBe(true);
+  expect(scalar.is("2026-01-01T00:00:00.000Z")).toBe(false);
 });
 
 test("is uses the configured type guard when configured", () => {
@@ -89,6 +89,6 @@ test("is uses the configured type guard when configured", () => {
 
   const scalar = cache.getScalar("DateTime")!;
 
-  expect(scalar.is(new Date("2024-01-01T00:00:00.000Z"))).toBe(true);
+  expect(scalar.is(new Date("2026-01-01T00:00:00.000Z"))).toBe(true);
   expect(scalar.is(new Date("invalid"))).toBe(false);
 });

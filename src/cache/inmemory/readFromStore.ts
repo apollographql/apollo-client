@@ -3,7 +3,11 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { Reference, StoreObject } from "@apollo/client/utilities";
+import type {
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cacheSizes,
@@ -324,15 +328,14 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        let fieldValue = policies.readField(
-          {
-            fieldName: selection.name.value,
-            field: selection,
-            variables: context.variables,
-            from: objectOrReference,
-          },
-          context
-        );
+        const readFieldOptions = {
+          fieldName: selection.name.value,
+          field: selection,
+          variables: context.variables,
+          from: objectOrReference,
+        };
+
+        let fieldValue = policies.readField(readFieldOptions, context);
 
         const resultName = resultKeyNameFromField(selection);
 
@@ -357,8 +360,19 @@ export class StoreReader {
               }),
               resultName
             );
+
+            if (Array.isArray(fieldValue)) {
+              fieldValue = fieldValue.map((item) =>
+                policies.maybeCoerceScalarValue(item, readFieldOptions, context)
+              );
+            }
           }
         } else if (!selection.selectionSet) {
+          fieldValue = policies.maybeCoerceScalarValue(
+            fieldValue,
+            readFieldOptions,
+            context
+          );
           // do nothing
         } else if (fieldValue != null) {
           // In this case, because we know the field has a selection set,

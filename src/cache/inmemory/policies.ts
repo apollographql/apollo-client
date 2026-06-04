@@ -356,6 +356,7 @@ type InternalFieldPolicy = {
   keyFn?: KeyArgsFunction;
   read?: FieldReadFunction<any>;
   merge?: FieldMergeFunction<any>;
+  scalar?: keyof ApolloCache.Scalars;
 };
 
 export class Policies {

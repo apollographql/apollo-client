@@ -32,6 +32,10 @@ export class Scalar<TSerialized, TParsed> {
     return this.options.serialize(value);
   }
 
+  coerce(value: TSerialized | TParsed): TParsed {
+    return this.is(value) ? value : this.parse(value);
+  }
+
   is(value: TSerialized | TParsed): value is TParsed {
     if (this.options.is) {
       return this.options.is(value);

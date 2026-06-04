@@ -100,6 +100,7 @@ export type {
 
 export {
   ApolloCache,
+  Scalar,
   defaultDataIdFromObject,
   InMemoryCache,
   makeVar,

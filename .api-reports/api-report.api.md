@@ -40,8 +40,6 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 export namespace ApolloCache {
     // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
     export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
-    // Warning: (ae-forgotten-export) The symbol "Scalar" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
         serialized: infer TSerialized;
@@ -2798,9 +2796,9 @@ class Root extends EntityStore {
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
-namespace Scalar {
+export namespace Scalar {
     // (undocumented)
-    interface Options<TSerialized, TParsed> {
+    export interface Options<TSerialized, TParsed> {
         // (undocumented)
         is?(value: TSerialized | TParsed): boolean;
         // (undocumented)
@@ -2811,7 +2809,7 @@ namespace Scalar {
 }
 
 // @public (undocumented)
-class Scalar<TSerialized, TParsed> {
+export class Scalar<TSerialized, TParsed> {
     constructor(options: Scalar.Options<TSerialized, TParsed>);
     // (undocumented)
     coerceToParsed(value: TSerialized | TParsed): TParsed;

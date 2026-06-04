@@ -85,6 +85,7 @@ type ExecSubSelectedArrayOptions = {
   array: readonly any[];
   enclosingRef: Reference;
   context: ReadContext;
+  parentObjectOrReference: StoreObject | Reference;
 };
 
 interface StoreReaderConfig {
@@ -357,15 +358,10 @@ export class StoreReader {
                 array: fieldValue,
                 enclosingRef,
                 context,
+                parentObjectOrReference: objectOrReference,
               }),
               resultName
             );
-
-            if (Array.isArray(fieldValue)) {
-              fieldValue = fieldValue.map((item) =>
-                policies.maybeCoerceScalarValue(item, readFieldOptions, context)
-              );
-            }
           }
         } else if (!selection.selectionSet) {
           fieldValue = policies.maybeCoerceScalarValue(
@@ -427,6 +423,7 @@ export class StoreReader {
     array,
     enclosingRef,
     context,
+    parentObjectOrReference,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
@@ -458,6 +455,7 @@ export class StoreReader {
             array: item,
             enclosingRef,
             context,
+            parentObjectOrReference,
           }),
           i
         );
@@ -480,7 +478,15 @@ export class StoreReader {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
-      return item;
+      return context.policies.maybeCoerceScalarValue(
+        item,
+        {
+          fieldName: field.name.value,
+          field,
+          from: parentObjectOrReference,
+        },
+        context
+      );
     });
 
     return {

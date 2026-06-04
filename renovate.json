@@ -40,7 +40,9 @@
     "prettier",
     "eslint-plugin-react-compiler",
     "graphql-17-alpha2",
-    "graphql-17-alpha9"
+    "graphql-17-alpha9",
+    "rxjs-min",
+    "jsdom"
   ],
   "reviewers": [],
   "reviewersFromCodeOwners": false,

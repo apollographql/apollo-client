@@ -46,5 +46,6 @@
   ],
   "reviewers": [],
   "reviewersFromCodeOwners": false,
-  "ignoreReviewers": ["team:@apollographql/client-typescript"]
+  "ignoreReviewers": ["team:@apollographql/client-typescript"],
+  "minimumReleaseAge": "7 days"
 }

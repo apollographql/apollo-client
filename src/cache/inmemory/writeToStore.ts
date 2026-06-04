@@ -781,7 +781,7 @@ export class StoreWriter {
         fieldName: field.name.value,
         field,
         typename,
-      });
+      }) as T;
     }
 
     return incoming;

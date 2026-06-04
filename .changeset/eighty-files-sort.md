@@ -13,7 +13,7 @@ import "@apollo/client";
 declare module "@apollo/client" {
   namespace ApolloCache {
     interface Scalars {
-      Date: { input: string; output: Date };
+      Date: { serialized: string; parsed: Date };
     }
   }
 }
@@ -22,18 +22,15 @@ declare module "@apollo/client" {
 This enables the `scalars` option in `InMemoryCache`:
 
 ```ts
+import { Scalar } from "@apollo/client";
+
 const cache = new InMemoryCache({
   scalars: {
-    Date: {
+    Date: new Scalar({
       parse: (dateString) => new Date(dateString),
       serialize: (date) => date.toISOString(),
       is: (value) => value instanceof Date,
-      devtools: {
-        displayValue: (date) => {
-          return format(date, "MMM dd, YYYY");
-        },
-      },
-    },
+    }),
   },
 });
 ```

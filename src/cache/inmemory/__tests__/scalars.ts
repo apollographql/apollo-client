@@ -1139,3 +1139,177 @@ test("ignores scalar and emits a dev warning when a scalar option is set on a fi
     "DateTime"
   );
 });
+
+test("deep merges scalar option with policies.addTypePolices", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+      JSONObject: jsonObjectScalar,
+    },
+    typePolicies: {
+      Conference: {
+        fields: {
+          startDate: { scalar: "DateTime" },
+          endDate: { merge: (_, incoming) => incoming },
+        },
+      },
+      Schedule: {
+        fields: {
+          timeSlots: { scalar: "Price" },
+        },
+      },
+      Speaker: {
+        fields: {
+          availableTimes: { keyArgs: false },
+        },
+      },
+    },
+  });
+
+  cache.policies.addTypePolicies({
+    Conference: {
+      fields: {
+        endDate: { scalar: "DateTime" },
+        ticketPrice: { scalar: "Price" },
+      },
+    },
+    Schedule: {
+      fields: {
+        timeSlots: { scalar: "DateTime" },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableTimes: { scalar: "DateTime" },
+      },
+    },
+    Session: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+        metadata: { scalar: "JSONObject" },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      conference {
+        id
+        name
+        startDate
+        endDate
+        ticketPrice
+        schedule {
+          timeSlots
+        }
+        speakers {
+          id
+          name
+          availableTimes
+        }
+        sessions {
+          __typename
+          id
+          startTime
+          metadata
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      conference: {
+        __typename: "Conference",
+        id: "conf-1",
+        name: "GraphQL Summit",
+        startDate: "2026-09-15T09:00:00.000Z",
+        endDate: "2026-09-15T11:00:00.000Z",
+        ticketPrice: 19900,
+        schedule: {
+          __typename: "Schedule",
+          timeSlots: [
+            ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
+            ["2026-09-15T14:00:00.000Z", "2026-09-15T15:00:00.000Z"],
+          ],
+        },
+        speakers: [
+          {
+            __typename: "Speaker",
+            id: "speaker-1",
+            name: "Alice",
+            availableTimes: [
+              "2026-09-15T09:00:00.000Z",
+              "2026-09-15T14:00:00.000Z",
+            ],
+          },
+          {
+            __typename: "Speaker",
+            id: "speaker-2",
+            name: "Bob",
+            availableTimes: ["2026-09-15T10:00:00.000Z", null],
+          },
+        ],
+        sessions: [
+          {
+            __typename: "Session",
+            id: "session-1",
+            startTime: "2026-09-15T09:00:00.000Z",
+            metadata: { dress: "casual" },
+          },
+        ],
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    conference: {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: new Date("2026-09-15T09:00:00.000Z"),
+      endDate: new Date("2026-09-15T11:00:00.000Z"),
+      ticketPrice: "199.00",
+      schedule: {
+        __typename: "Schedule",
+        timeSlots: [
+          [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T10:00:00.000Z"),
+          ],
+          [
+            new Date("2026-09-15T14:00:00.000Z"),
+            new Date("2026-09-15T15:00:00.000Z"),
+          ],
+        ],
+      },
+      speakers: [
+        {
+          __typename: "Speaker",
+          id: "speaker-1",
+          name: "Alice",
+          availableTimes: [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T14:00:00.000Z"),
+          ],
+        },
+        {
+          __typename: "Speaker",
+          id: "speaker-2",
+          name: "Bob",
+          availableTimes: [new Date("2026-09-15T10:00:00.000Z"), null],
+        },
+      ],
+      sessions: [
+        {
+          __typename: "Session",
+          id: "session-1",
+          startTime: new Date("2026-09-15T09:00:00.000Z"),
+          metadata: new Map([["dress", "casual"]]),
+        },
+      ],
+    },
+  });
+});

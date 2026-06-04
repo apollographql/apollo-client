@@ -370,7 +370,6 @@ export class StoreReader {
             readFieldOptions,
             context
           );
-          // do nothing
         } else if (fieldValue != null) {
           if (__DEV__) {
             const typename = context.store.getFieldValue<string>(

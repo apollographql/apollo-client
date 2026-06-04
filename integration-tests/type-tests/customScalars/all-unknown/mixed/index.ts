@@ -129,3 +129,29 @@ test("getScalar resolves each scalar according to its declaration", () => {
     Scalar<unknown, unknown> | undefined
   >();
 });
+
+test("allows any scalar name in field policies", () => {
+  new InMemoryCache({
+    scalars: {
+      DateTime: new Scalar({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+      }),
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "DateTime",
+          },
+          endDate: {
+            scalar: "RelativeDate",
+          },
+          metadata: {
+            scalar: "Unknown",
+          },
+        },
+      },
+    },
+  });
+});

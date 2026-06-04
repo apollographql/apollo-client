@@ -230,3 +230,23 @@ test("getScalar returns the resolved scalar or undefined", () => {
     Scalar<unknown, unknown> | undefined
   >();
 });
+
+test("allows any scalar name in field policies", () => {
+  new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "RelativeDate",
+          },
+          metadata: {
+            scalar: "JSONObject",
+          },
+          unknown: {
+            scalar: "Unknown",
+          },
+        },
+      },
+    },
+  });
+});

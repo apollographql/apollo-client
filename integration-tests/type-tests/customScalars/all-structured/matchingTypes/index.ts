@@ -113,3 +113,23 @@ test("getScalar resolves each scalar according to its declaration", () => {
     Scalar<string, string> | undefined
   >();
 });
+
+test("allows any scalar name in field policies", () => {
+  new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "RelativeDate",
+          },
+          metadata: {
+            scalar: "JSONObject",
+          },
+          unknown: {
+            scalar: "Unknown",
+          },
+        },
+      },
+    },
+  });
+});

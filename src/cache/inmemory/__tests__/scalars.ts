@@ -12,6 +12,15 @@ const priceScalar = new Scalar<number, string>({
   is: (value) => typeof value === "string",
 });
 
+const jsonObjectScalar = new Scalar<
+  Record<string, unknown>,
+  Map<string, unknown>
+>({
+  serialize: (value) => Object.fromEntries(value),
+  parse: (value) => new Map(Object.entries(value)),
+  is: (value) => value instanceof Map,
+});
+
 test("getScalar returns a scalar object for a configured scalar", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -316,14 +325,8 @@ test("returns null as-is when null is stored in a scalar field position", () => 
 });
 
 test("parses object-based scalar values (e.g. JSON) when reading from cache", () => {
-  const scalar = new Scalar<Record<string, unknown>, Map<string, unknown>>({
-    serialize: (value) => Object.fromEntries(value),
-    parse: (value) => new Map(Object.entries(value)),
-    is: (value) => value instanceof Map,
-  });
-
   const cache = new InMemoryCache({
-    scalars: { JSONObject: scalar },
+    scalars: { JSONObject: jsonObjectScalar },
     typePolicies: {
       Product: {
         fields: {
@@ -714,5 +717,238 @@ test("parses scalar values when fields are selected through an interface fragmen
         startTime: new Date("2026-01-02T14:00:00.000Z"),
       },
     ],
+  });
+});
+
+test("parses scalar values across a complex nested query", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+      JSONObject: jsonObjectScalar,
+    },
+    possibleTypes: {
+      Schedulable: ["Session", "Workshop"],
+    },
+    typePolicies: {
+      Conference: {
+        fields: {
+          startDate: { scalar: "DateTime" },
+          endDate: { scalar: "DateTime" },
+          ticketPrice: { scalar: "Price" },
+        },
+      },
+      Schedule: {
+        fields: {
+          timeSlots: { scalar: "DateTime" },
+        },
+      },
+      Speaker: {
+        fields: {
+          availableTimes: { scalar: "DateTime" },
+        },
+      },
+      Session: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+      Workshop: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+      VirtualPresenter: {
+        fields: { nextSession: { scalar: "DateTime" } },
+      },
+      InPersonPresenter: {
+        fields: { arrivalTime: { scalar: "DateTime" } },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      conference {
+        id
+        name
+        startDate
+        endDate
+        ticketPrice
+        schedule {
+          timeSlots
+        }
+        ...SpeakerListFields
+        scheduledItems {
+          __typename
+          ...SchedulableFields
+        }
+        presenters {
+          __typename
+          ... on VirtualPresenter {
+            id
+            name
+            nextSession
+          }
+          ... on InPersonPresenter {
+            id
+            name
+            arrivalTime
+          }
+        }
+      }
+    }
+
+    fragment SpeakerListFields on Conference {
+      speakers {
+        id
+        name
+        availableTimes
+      }
+    }
+
+    fragment SchedulableFields on Schedulable {
+      id
+      startTime
+      metadata
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      conference: {
+        __typename: "Conference",
+        id: "conf-1",
+        name: "GraphQL Summit",
+        startDate: "2026-09-15T09:00:00.000Z",
+        endDate: null,
+        ticketPrice: 19900,
+        schedule: {
+          __typename: "Schedule",
+          timeSlots: [
+            ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
+            ["2026-09-15T14:00:00.000Z", "2026-09-15T15:00:00.000Z"],
+          ],
+        },
+        speakers: [
+          {
+            __typename: "Speaker",
+            id: "speaker-1",
+            name: "Alice",
+            availableTimes: [
+              "2026-09-15T09:00:00.000Z",
+              "2026-09-15T14:00:00.000Z",
+            ],
+          },
+          {
+            __typename: "Speaker",
+            id: "speaker-2",
+            name: "Bob",
+            // null is valid in a scalar array
+            availableTimes: ["2026-09-15T10:00:00.000Z", null],
+          },
+        ],
+        scheduledItems: [
+          {
+            __typename: "Session",
+            id: "session-1",
+            startTime: "2026-09-15T09:00:00.000Z",
+            metadata: { dress: "casual" },
+          },
+          {
+            __typename: "Workshop",
+            id: "workshop-1",
+            startTime: "2026-09-15T14:00:00.000Z",
+            metadata: { venue: "The Workshop Building" },
+          },
+        ],
+        presenters: [
+          {
+            __typename: "VirtualPresenter",
+            id: "vp-1",
+            name: "Charlie",
+            nextSession: "2026-09-15T09:00:00.000Z",
+          },
+          {
+            __typename: "InPersonPresenter",
+            id: "ip-1",
+            name: "Diana",
+            arrivalTime: "2026-09-14T18:00:00.000Z",
+          },
+        ],
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    conference: {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: new Date("2026-09-15T09:00:00.000Z"),
+      endDate: null,
+      ticketPrice: "199.00",
+      schedule: {
+        __typename: "Schedule",
+        timeSlots: [
+          [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T10:00:00.000Z"),
+          ],
+          [
+            new Date("2026-09-15T14:00:00.000Z"),
+            new Date("2026-09-15T15:00:00.000Z"),
+          ],
+        ],
+      },
+      speakers: [
+        {
+          __typename: "Speaker",
+          id: "speaker-1",
+          name: "Alice",
+          availableTimes: [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T14:00:00.000Z"),
+          ],
+        },
+        {
+          __typename: "Speaker",
+          id: "speaker-2",
+          name: "Bob",
+          availableTimes: [new Date("2026-09-15T10:00:00.000Z"), null],
+        },
+      ],
+      scheduledItems: [
+        {
+          __typename: "Session",
+          id: "session-1",
+          startTime: new Date("2026-09-15T09:00:00.000Z"),
+          metadata: new Map([["dress", "casual"]]),
+        },
+        {
+          __typename: "Workshop",
+          id: "workshop-1",
+          startTime: new Date("2026-09-15T14:00:00.000Z"),
+          metadata: new Map([["venue", "The Workshop Building"]]),
+        },
+      ],
+      presenters: [
+        {
+          __typename: "VirtualPresenter",
+          id: "vp-1",
+          name: "Charlie",
+          nextSession: new Date("2026-09-15T09:00:00.000Z"),
+        },
+        {
+          __typename: "InPersonPresenter",
+          id: "ip-1",
+          name: "Diana",
+          arrivalTime: new Date("2026-09-14T18:00:00.000Z"),
+        },
+      ],
+    },
   });
 });

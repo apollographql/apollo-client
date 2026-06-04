@@ -308,3 +308,53 @@ test("returns null as-is when null is stored in a scalar field position", () => 
     },
   });
 });
+
+test("parses object-based scalar values (e.g. JSON) when reading from cache", () => {
+  const scalar = new Scalar<Record<string, unknown>, Map<string, unknown>>({
+    serialize: (value) => Object.fromEntries(value),
+    parse: (value) => new Map(Object.entries(value)),
+    is: (value) => value instanceof Map,
+  });
+
+  const cache = new InMemoryCache({
+    scalars: { JSONObject: scalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      product {
+        id
+        metadata
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        metadata: { color: "red", size: "large" },
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    product: {
+      __typename: "Product",
+      id: "1",
+      metadata: new Map([
+        ["color", "red"],
+        ["size", "large"],
+      ]),
+    },
+  });
+});

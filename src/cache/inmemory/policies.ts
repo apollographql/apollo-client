@@ -903,19 +903,17 @@ export class Policies {
     // A selection set indicates this is not a scalar field so bail early
     if (options.field && options.field.selectionSet) return value;
 
-    let typename = options.typename;
-    const objectOrReference = options.from;
+    if (options.typename === void 0) {
+      if (!options.from) return value;
 
-    if (!typename && !objectOrReference) return value;
-    if (typename === void 0) {
-      typename = context.store.getFieldValue<string>(
-        objectOrReference,
+      options.typename = context.store.getFieldValue<string>(
+        options.from,
         "__typename"
       );
     }
 
     const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
-    const policy = this.getFieldPolicy(typename, fieldName);
+    const policy = this.getFieldPolicy(options.typename, fieldName);
 
     if (!policy?.scalar) return value;
 

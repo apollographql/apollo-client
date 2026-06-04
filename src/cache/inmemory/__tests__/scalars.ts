@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 const dateTimeScalar = new Scalar<string, Date>({
   serialize: (value) => value.toISOString(),
@@ -951,4 +952,54 @@ test("parses scalar values across a complex nested query", () => {
       ],
     },
   });
+});
+
+test("ignores scalar and emits a dev warning when a scalar option is set on a field with a selection set", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Query: {
+        fields: {
+          event: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The field policy for '%s' is configured as a '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+    "Query.event",
+    "DateTime"
+  );
 });

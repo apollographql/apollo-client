@@ -8,12 +8,7 @@ export declare namespace Scalar {
     // allowing specific scalar overrides.
     parse(serializedValue: TSerialized): NoInfer<TParsed>;
     serialize(parsedValue: TParsed): NoInfer<TSerialized>;
-    // Since we have a conditional type here, we can't use method syntax
-    // directly. This hack allows us to maintain bivariance.
     is?(value: TSerialized | TParsed): boolean;
-    // is?: IsLooselyEqual<TSerialized, TParsed> extends true ?
-    //   { _(value: TSerialized | TParsed): boolean }["_"]
-    // : { _(value: TSerialized | TParsed): value is TParsed }["_"];
   }
 }
 

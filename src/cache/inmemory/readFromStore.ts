@@ -3,11 +3,7 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type {
-  Reference,
-  StoreObject,
-  StoreValue,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cacheSizes,

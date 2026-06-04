@@ -31,6 +31,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import type { ApolloCache } from "../core/cache.js";
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -173,6 +174,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
+  scalar?: keyof ApolloCache.Scalars;
 };
 
 export type StorageType = Record<string, any>;

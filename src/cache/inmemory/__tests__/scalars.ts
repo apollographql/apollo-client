@@ -589,3 +589,66 @@ test("parses scalar values when the field is selected via an inline fragment", (
     },
   });
 });
+
+test("parses scalar values on the matching member types of a union", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: { startTime: { scalar: "DateTime" } },
+      },
+      Appointment: {
+        fields: { startTime: { scalar: "DateTime" } },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      searchResults {
+        __typename
+        ... on Event {
+          id
+          startTime
+        }
+        ... on Appointment {
+          id
+          startTime
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      searchResults: [
+        {
+          __typename: "Event",
+          id: "1",
+          startTime: "2026-01-01T09:00:00.000Z",
+        },
+        {
+          __typename: "Appointment",
+          id: "2",
+          startTime: "2026-01-02T14:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    searchResults: [
+      {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T09:00:00.000Z"),
+      },
+      {
+        __typename: "Appointment",
+        id: "2",
+        startTime: new Date("2026-01-02T14:00:00.000Z"),
+      },
+    ],
+  });
+});

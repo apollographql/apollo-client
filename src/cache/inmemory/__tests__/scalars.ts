@@ -418,6 +418,46 @@ test("serializes object-based parsed scalar values when writing", () => {
   });
 });
 
+test("serializes parsed scalar value when writing via cache.writeFragment", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const fragment = gql`
+    fragment EventFields on Event {
+      id
+      startTime
+    }
+  `;
+
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+    __META: {
+      extraRootIds: ["Event:1"],
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

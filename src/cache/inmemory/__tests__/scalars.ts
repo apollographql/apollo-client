@@ -237,6 +237,134 @@ test("leaves parsed value unchanged when no scalar policy is configured", () => 
   });
 });
 
+test("serializes parsed scalar value when the field has an alias", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        __typename
+        id
+        start: startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        start: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
+test("serializes parsed scalar value when the field has arguments with variables", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query ($timezone: String!) {
+      event {
+        id
+        startTime(timezone: $timezone)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+    variables: { timezone: "UTC" },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      'startTime({"timezone":"UTC"})': "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
+test("serializes parsed scalar value when the field has arguments with literal value", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime(timezone: "UTC")
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      'startTime({"timezone":"UTC"})': "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
 test("serializes each element when writing an array of parsed scalar values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

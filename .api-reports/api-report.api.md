@@ -947,6 +947,14 @@ class ClientAwarenessLink extends ApolloLink {
 }
 
 // @public (undocumented)
+interface CoerceValueOptions {
+    // (undocumented)
+    field: FieldNode;
+    // (undocumented)
+    typename: string;
+}
+
+// @public (undocumented)
 export namespace CombinedGraphQLErrors {
     // (undocumented)
     export namespace DocumentationTypes {
@@ -2372,10 +2380,12 @@ class Policies {
     hasKeyArgs(typename: string | undefined, fieldName: string): boolean;
     // (undocumented)
     identify(object: StoreObject, partialContext?: Partial<KeyFieldsContext>): [string?, StoreObject?];
-    // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "CoerceValueOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    maybeCoerceScalarValue(value: StoreValue, options: ReadFieldOptions, context: ReadMergeModifyContext): any;
+    maybeCoerceToScalarValue(value: StoreValue, options: CoerceValueOptions): any;
+    // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     readField<V = StoreValue>(options: ReadFieldOptions, context: ReadMergeModifyContext): SafeReadonly<V> | undefined;
     // (undocumented)

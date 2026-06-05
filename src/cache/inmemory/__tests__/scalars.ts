@@ -771,6 +771,50 @@ test("returns the raw value unchanged when a scalar field policy names an unregi
   expect(console.warn).not.toHaveBeenCalled();
 });
 
+test("parses scalars for fields with aliases", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        __typename
+        id
+        start: startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        start: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      start: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
 test("parses scalar values across a complex nested query", () => {
   const cache = new InMemoryCache({
     scalars: {

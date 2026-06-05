@@ -898,7 +898,7 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  public maybeCoerceScalarValue(
+  public maybeCoerceToScalarValue(
     value: StoreValue,
     options: CoerceValueOptions
   ) {

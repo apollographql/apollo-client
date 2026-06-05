@@ -361,7 +361,7 @@ export class StoreReader {
             );
           }
         } else if (!selection.selectionSet) {
-          fieldValue = policies.maybeCoerceScalarValue(fieldValue, {
+          fieldValue = policies.maybeCoerceToScalarValue(fieldValue, {
             field: selection,
             typename: context.store.getFieldValue<string>(
               objectOrReference,
@@ -495,7 +495,7 @@ export class StoreReader {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
-      return context.policies.maybeCoerceScalarValue(item, {
+      return context.policies.maybeCoerceToScalarValue(item, {
         field,
         typename: context.store.getFieldValue<string>(
           parentObjectOrReference,

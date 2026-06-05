@@ -46,7 +46,6 @@ import {
 } from "./entityStore.js";
 import {
   extractFragmentContext,
-  fieldNameFromStoreName,
   getTypenameFromStoreObject,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
@@ -326,14 +325,15 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
-        const readFieldOptions = {
-          fieldName: selection.name.value,
-          field: selection,
-          variables: context.variables,
-          from: objectOrReference,
-        };
-
-        let fieldValue = policies.readField(readFieldOptions, context);
+        let fieldValue = policies.readField(
+          {
+            fieldName: selection.name.value,
+            field: selection,
+            variables: context.variables,
+            from: objectOrReference,
+          },
+          context
+        );
 
         const resultName = resultKeyNameFromField(selection);
 
@@ -361,20 +361,20 @@ export class StoreReader {
             );
           }
         } else if (!selection.selectionSet) {
-          fieldValue = policies.maybeCoerceScalarValue(
-            fieldValue,
-            readFieldOptions,
-            context
-          );
+          fieldValue = policies.maybeCoerceScalarValue(fieldValue, {
+            field: selection,
+            typename: context.store.getFieldValue<string>(
+              objectOrReference,
+              "__typename"
+            ),
+          });
         } else if (fieldValue != null) {
           if (__DEV__) {
             const typename = context.store.getFieldValue<string>(
               objectOrReference,
               "__typename"
             );
-            const fieldName = fieldNameFromStoreName(
-              policies.getStoreFieldName(readFieldOptions)
-            );
+            const fieldName = selection.name.value;
 
             if (typename) {
               const policy = policies["getFieldPolicy"](typename, fieldName);
@@ -495,15 +495,13 @@ export class StoreReader {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
-      return context.policies.maybeCoerceScalarValue(
-        item,
-        {
-          fieldName: field.name.value,
-          field,
-          from: parentObjectOrReference,
-        },
-        context
-      );
+      return context.policies.maybeCoerceScalarValue(item, {
+        field,
+        typename: context.store.getFieldValue<string>(
+          parentObjectOrReference,
+          "__typename"
+        ),
+      });
     });
 
     return {

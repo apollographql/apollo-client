@@ -911,11 +911,7 @@ export class Policies {
     // A selection set indicates this is not a scalar field so bail early
     if (field && field.selectionSet) return value;
 
-    const policy = this.getFieldPolicy(typename, field.name.value);
-
-    if (!policy?.scalar) return value;
-
-    const scalar = this.cache.getScalar(policy.scalar);
+    const scalar = this.getScalarForField(typename, field.name.value);
     return scalar ? scalar.coerceToParsed(value) : value;
   }
 
@@ -931,11 +927,7 @@ export class Policies {
     // A selection set indicates this is not a scalar field so bail early
     if (field && field.selectionSet) return value;
 
-    if (!scalar) {
-      const policy = this.getFieldPolicy(typename, field.name.value);
-
-      scalar = policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
-    }
+    scalar ||= this.getScalarForField(typename, field.name.value);
 
     if (!scalar) return value;
 
@@ -946,6 +938,15 @@ export class Policies {
     }
 
     return scalar.coerceToSerialized(value);
+  }
+
+  private getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<any, any> | undefined {
+    const policy = this.getFieldPolicy(typename, fieldName);
+
+    return policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
   }
 
   public readField<V = StoreValue>(

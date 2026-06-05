@@ -518,7 +518,7 @@ You can define your own context types for better type safety in Apollo Client us
 
 To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
@@ -560,7 +560,7 @@ Some links provided by Apollo Client have built-in context option types. You can
 
 The following example adds `HttpLink`'s context types to `DefaultContext`:
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 import "@apollo/client";
 import { HttpLink } from "@apollo/client";
 
@@ -587,7 +587,7 @@ const { data } = useQuery(MY_QUERY, {
 
 If you are using more than one link that has context options, you can extend from each link's context options:
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 import "@apollo/client";
 import type { BaseHttpLink } from "@apollo/client/link/http";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
@@ -900,7 +900,7 @@ Once your HKT type is created, you tell Apollo Client about it by using [declara
 
 Create a TypeScript file that defines the `TypeOverrides` interface for the `@apollo/client` module.
 
-```ts title=apollo-client.d.ts
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
@@ -1001,7 +1001,7 @@ With our HKT types in place, we now need to tell Apollo Client about them. We'll
 
 Create a TypeScript file and define a `TypeOverrides` interface for the `@apollo/client` module.
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";

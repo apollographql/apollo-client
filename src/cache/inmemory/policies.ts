@@ -921,21 +921,18 @@ export class Policies {
 
   public maybeCoerceSerializedValue(
     value: StoreValue,
-    options: FieldSpecifier & { scalar?: Scalar<any, any> }
+    options: CoerceValueOptions & { scalar?: Scalar<any, any> }
   ): StoreValue {
     // null is never coerced
     if (value === null) return value;
 
+    let { field, scalar, typename } = options;
+
     // A selection set indicates this is not a scalar field so bail early
-    if (options.field && options.field.selectionSet) return value;
+    if (field && field.selectionSet) return value;
 
-    if (options.typename === void 0) return value;
-
-    const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
-
-    let scalar = options.scalar;
     if (!scalar) {
-      const policy = this.getFieldPolicy(options.typename, fieldName);
+      const policy = this.getFieldPolicy(typename, field.name.value);
 
       scalar = policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
     }
@@ -944,7 +941,7 @@ export class Policies {
 
     if (Array.isArray(value)) {
       return value.map((item) =>
-        this.maybeCoerceSerializedValue(item, { ...options, fieldName, scalar })
+        this.maybeCoerceSerializedValue(item, { ...options, scalar })
       );
     }
 

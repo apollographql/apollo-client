@@ -414,7 +414,7 @@ export class StoreWriter {
           if (typename) {
             incomingValue = this.cache.policies.maybeCoerceSerializedValue(
               incomingValue,
-              { fieldName: field.name.value, field, typename }
+              { field, typename }
             );
           }
         }
@@ -778,7 +778,6 @@ export class StoreWriter {
       const { field, typename } = mergeTree.info;
 
       return this.cache.policies.maybeCoerceSerializedValue(incoming, {
-        fieldName: field.name.value,
         field,
         typename,
       }) as T;

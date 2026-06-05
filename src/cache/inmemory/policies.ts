@@ -277,6 +277,11 @@ export interface FieldMergeFunctionOptions<
   existingData: unknown;
 }
 
+interface CoerceValueOptions {
+  typename: string;
+  field: FieldNode;
+}
+
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
   existing: T,
   incoming: T
@@ -895,26 +900,17 @@ export class Policies {
 
   public maybeCoerceScalarValue(
     value: StoreValue,
-    options: ReadFieldOptions,
-    context: ReadMergeModifyContext
+    options: CoerceValueOptions
   ) {
     // null is never coerced
     if (value === null) return value;
 
+    const { field, typename } = options;
+
     // A selection set indicates this is not a scalar field so bail early
-    if (options.field && options.field.selectionSet) return value;
+    if (field && field.selectionSet) return value;
 
-    if (options.typename === void 0) {
-      if (!options.from) return value;
-
-      options.typename = context.store.getFieldValue<string>(
-        options.from,
-        "__typename"
-      );
-    }
-
-    const fieldName = fieldNameFromStoreName(this.getStoreFieldName(options));
-    const policy = this.getFieldPolicy(options.typename, fieldName);
+    const policy = this.getFieldPolicy(typename, field.name.value);
 
     if (!policy?.scalar) return value;
 

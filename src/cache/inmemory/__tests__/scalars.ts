@@ -199,6 +199,89 @@ test("parses scalar value when reading a field via cache.readFragment", () => {
   });
 });
 
+test("parses scalar value when the field has literal arguments", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime(timezone: "UTC")
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
+test("parses scalar value when the field has arguments with variables", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query ($timezone: String!) {
+      event {
+        id
+        startTime(timezone: $timezone)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+    variables: { timezone: "UTC" },
+  });
+
+  expect(cache.readQuery({ query, variables: { timezone: "UTC" } })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
 test("parses each element when the scalar field contains an array of values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

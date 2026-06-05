@@ -887,9 +887,9 @@ const client = new ApolloClient({
 
 To provide accurate TypeScript types, you will also need to tell Apollo Client to use the types associated with the `Defer20220824Handler` in order to provide accurate types for incremental chunks, used with the `ApolloLink.Result` type. This ensures that you properly handle incremental results in your custom links that might access the result directly.
 
-Create a new `.d.ts` file in your project (e.g. `apollo-client.d.ts`) and add the following content:
+Create a new `.d.ts` file in your project (e.g. `apollo.d.ts`) and add the following content:
 
-```ts title="apollo-client.d.ts
+```ts title="apollo.d.ts"
 import { Defer20220824Handler } from "@apollo/client/incremental";// [!code highlight]
 
 declare module "@apollo/client" {
@@ -911,7 +911,7 @@ In Apollo Client 4, the data masking types are now configurable to allow for mor
 
 To configure the data masking types to be the same as they were in Apollo Client 3, create a `.d.ts` file in your project with the following content:
 
-```ts title="apollo-client.d.ts
+```ts title="apollo.d.ts"
 import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code highlight]
 
 declare module "@apollo/client" {
@@ -924,7 +924,7 @@ declare module "@apollo/client" {
 
 You can combine multiple `TypeOverrides` of different kinds. For example, you can combine the data masking types with the `Defer20220824Handler` type overrides from the previous section.
 
-```ts title="apollo-client.d.ts disableCopy=true
+```ts title="apollo.d.ts" disableCopy=true
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { GraphQLCodegenDataMasking } from "@apollo/client/masking";// [!code ++]
 
@@ -1692,7 +1692,7 @@ Apollo Client 4 removes the `TContext` generic argument in favor of using [decla
 
 To define types for your custom context properties, create a TypeScript file and define the `DefaultContext` interface.
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
@@ -2055,7 +2055,7 @@ The `context` type can be extended by using declaration merging to allow you to 
 
 For example, to make your context type-safe for usage with `HttpLink`, place this snippet in a `.d.ts` file in your project:
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 import { HttpLink } from "@apollo/client";
 
 declare module "@apollo/client" {

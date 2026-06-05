@@ -2380,16 +2380,16 @@ class Policies {
     hasKeyArgs(typename: string | undefined, fieldName: string): boolean;
     // (undocumented)
     identify(object: StoreObject, partialContext?: Partial<KeyFieldsContext>): [string?, StoreObject?];
+    // (undocumented)
+    maybeCoerceSerializedValue(value: StoreValue, options: CoerceValueOptions & {
+        scalar?: Scalar<any, any>;
+    }): StoreValue;
     // Warning: (ae-forgotten-export) The symbol "CoerceValueOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     maybeCoerceToScalarValue(value: StoreValue, options: CoerceValueOptions): any;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
     //
-    // (undocumented)
-    maybeCoerceSerializedValue(value: StoreValue, options: FieldSpecifier & {
-        scalar?: Scalar<any, any>;
-    }): StoreValue;
     // (undocumented)
     readField<V = StoreValue>(options: ReadFieldOptions, context: ReadMergeModifyContext): SafeReadonly<V> | undefined;
     // (undocumented)

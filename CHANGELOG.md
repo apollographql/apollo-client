@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.3
+
+### Patch Changes
+
+- [#13254](https://github.com/apollographql/apollo-client/pull/13254) [`66e9dfc`](https://github.com/apollographql/apollo-client/commit/66e9dfcf7964345dac949ab4c6004460d224d1cf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `graphql` v17 as a valid peer dependency.
+
 ## 4.2.2
 
 ### Patch Changes

@@ -84,6 +84,15 @@ const tsRxJSMinConfig = {
   },
 };
 
+const tsGraphql16Config = {
+  ...tsStandardConfig,
+  displayName: "Core Tests - GraphQL 16",
+  moduleNameMapper: {
+    ...tsStandardConfig.moduleNameMapper,
+    "^graphql$": "graphql-16",
+  },
+};
+
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
 const standardReact19Config = {
@@ -125,6 +134,7 @@ export default {
   projects: [
     tsStandardConfig,
     tsRxJSMinConfig,
+    tsGraphql16Config,
     standardReact17Config,
     standardReact18Config,
     standardReact19Config,

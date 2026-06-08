@@ -130,7 +130,7 @@
     }
   },
   "peerDependencies": {
-    "graphql": "^16.0.0",
+    "graphql": "^16.0.0 || ^17.0.0",
     "graphql-ws": "^5.5.5 || ^6.0.3",
     "react": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
     "react-dom": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
@@ -213,7 +213,8 @@
     "expect-type": "1.1.0",
     "fetch-mock": "9.11.0",
     "globals": "15.14.0",
-    "graphql": "16.9.0",
+    "graphql": "17.0.0-rc.0",
+    "graphql-16": "npm:graphql@16.14.1",
     "graphql-17-alpha2": "npm:graphql@17.0.0-alpha.2",
     "graphql-17-alpha9": "npm:graphql@17.0.0-alpha.9",
     "graphql-ws": "6.0.8",

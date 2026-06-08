@@ -1,6 +1,7 @@
 import type {
   DataValue,
   DocumentNode,
+  InMemoryCache,
   OperationVariables,
   TypedDocumentNode,
   TypeOverrides,
@@ -26,7 +27,7 @@ export declare namespace Cache {
       TCache extends ApolloCache ?
         TCache
       : ApolloCache
-    : ApolloCache;
+    : InMemoryCache;
 
   export interface ReadOptions<
     TData = unknown,

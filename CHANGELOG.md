@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.2
+
+### Patch Changes
+
+- [#13184](https://github.com/apollographql/apollo-client/pull/13184) [`c207b88`](https://github.com/apollographql/apollo-client/commit/c207b886026114943dc7f5c85e997a1938e74cfe) Thanks [@audrius-savickas](https://github.com/audrius-savickas)! - Preserve referential equality of masked data on refetch when the result is deeply equal to the previous result.
+
 ## 4.2.1
 
 ### Patch Changes

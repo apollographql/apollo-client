@@ -982,7 +982,7 @@ export declare namespace ApolloClient {
     function mutate<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
-      TCache extends ApolloCache = Cache.Implementation,
+      TCache extends Cache.Implementation = Cache.Implementation,
     >(
       options: ApolloClient.MutateOptions<TData, TVariables, TCache>
     ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
@@ -1864,7 +1864,10 @@ export class ApolloClient {
     options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
   ): ApolloClient.RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as ApolloClient.RefetchQueriesOptions<ApolloCache, TResult>
+      options as ApolloClient.RefetchQueriesOptions<
+        Cache.Implementation,
+        TResult
+      >
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];

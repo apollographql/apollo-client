@@ -361,7 +361,7 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 export type MutationUpdaterFunction<
   TData,
   TVariables extends OperationVariables,
-  TCache extends ApolloCache,
+  TCache extends Cache.Implementation,
 > = (
   cache: TCache,
   result: FormattedExecutionResult<Unmasked<TData>>,

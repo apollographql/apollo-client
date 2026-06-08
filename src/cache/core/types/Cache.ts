@@ -26,7 +26,7 @@ export declare namespace Cache {
     TypeOverrides extends { cache: infer TCache } ?
       TCache extends ApolloCache ?
         TCache
-      : ApolloCache
+      : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type."
     : InMemoryCache;
 
   export interface ReadOptions<

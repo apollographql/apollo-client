@@ -150,7 +150,7 @@ test("serializes parsed scalar value when writing via cache.writeQuery", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -192,7 +192,7 @@ test("leaves serialized value unchanged when writing via cache.writeQuery", () =
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -227,7 +227,7 @@ test("leaves parsed value unchanged when no scalar policy is configured", () => 
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -270,7 +270,7 @@ test("serializes parsed scalar value when the field has an alias", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -313,7 +313,7 @@ test("serializes parsed scalar value when the field has arguments with variables
     variables: { timezone: "UTC" },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -355,7 +355,7 @@ test("serializes parsed scalar value when the field has arguments with literal v
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -398,7 +398,7 @@ test("serializes each element when writing an array of parsed scalar values", ()
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       schedule: {
@@ -445,7 +445,7 @@ test("serializes each leaf element when writing a 2D array of parsed scalar valu
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       schedule: {
@@ -491,7 +491,7 @@ test("stores null as-is when null is written to a scalar field", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -536,7 +536,7 @@ test("serializes object-based parsed scalar values when writing", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", product: { __ref: "Product:1" } },
     "Product:1": {
       __typename: "Product",
@@ -574,14 +574,11 @@ test("serializes parsed scalar value when writing via cache.writeFragment", () =
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     "Event:1": {
       __typename: "Event",
       id: "1",
       startTime: "2026-01-01T00:00:00.000Z",
-    },
-    __META: {
-      extraRootIds: ["Event:1"],
     },
   });
 });
@@ -629,7 +626,7 @@ test("serializes parsed scalar value when overwriting an existing field", () => 
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -674,7 +671,7 @@ test("serializes parsed scalar value when a merge function is also configured on
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       event: { __ref: "Event:1" },
@@ -722,7 +719,7 @@ test("serializes the parsed value returned by a merge function", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       event: { __ref: "Event:1" },
@@ -771,7 +768,7 @@ test("serializes each element when writing an array of parsed scalar values with
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       schedule: {
@@ -821,7 +818,7 @@ test("serializes each leaf element when writing a 2D array of parsed scalar valu
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       schedule: {
@@ -959,7 +956,7 @@ test("serializes parsed scalar values across a complex nested write", () => {
     },
   });
 
-  expect(cache.extract()).toMatchObject({
+  expect(rawCacheData(cache)).toMatchObject({
     ROOT_QUERY: {
       __typename: "Query",
       conference: { __ref: "Conference:conf-1" },
@@ -1045,7 +1042,7 @@ test("serializes parsed scalar value when modifying via cache.modify", () => {
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -1094,7 +1091,7 @@ test("leaves serialized value unchanged when modifying via cache.modify", () => 
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -1136,7 +1133,7 @@ test("leaves parsed value unchanged when modifying via cache.modify with no scal
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -1188,7 +1185,7 @@ test("serializes each element when modifying an array of parsed scalar values vi
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", speaker: { __ref: "Speaker:1" } },
     "Speaker:1": {
       __typename: "Speaker",
@@ -1243,7 +1240,7 @@ test("serializes each leaf element when modifying a 2D array of parsed scalar va
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", speaker: { __ref: "Speaker:1" } },
     "Speaker:1": {
       __typename: "Speaker",
@@ -1295,7 +1292,7 @@ test("stores null as-is when null is returned by a modifier for a scalar field",
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
     "Event:1": {
       __typename: "Event",
@@ -1348,7 +1345,7 @@ test("serializes object-based parsed scalar values when modifying via cache.modi
     },
   });
 
-  expect(cache.extract()).toEqual({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: { __typename: "Query", product: { __ref: "Product:1" } },
     "Product:1": {
       __typename: "Product",
@@ -2680,3 +2677,11 @@ test("deep merges scalar option with policies.addTypePolices", () => {
     },
   });
 });
+
+// This helper function extracts the raw stored value for tests to actually
+// verify we write the parsed value. cache.extract() traverses the result and
+// serializes the scalar values which means we can't truly check if the result
+// was written correctly.
+function rawCacheData(cache: InMemoryCache) {
+  return cache["data"].toObject();
+}

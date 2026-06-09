@@ -435,16 +435,21 @@ export abstract class EntityStore implements NormalizedCache {
       return obj;
     }
 
+    let changed = false;
+
     const entries = Object.entries(obj).map(([storeFieldName, value]) => {
       const scalar = this.policies.getScalarForField(
         typename,
         fieldNameFromStoreName(storeFieldName)
       );
 
+      const newValue = this.coerceValue(value, coerce, scalar);
+      changed ||= newValue !== value;
+
       return [storeFieldName, this.coerceValue(value, coerce, scalar)];
     });
 
-    return Object.fromEntries(entries);
+    return changed ? Object.fromEntries(entries) : obj;
   }
 
   private coerceValue(

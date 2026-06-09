@@ -1262,6 +1262,58 @@ test("cache.modify preserves referential identity for deeply equal parsed scalar
   expect(rawCacheData(cache)["Event:1"]!.startTime).toBe(existingStartTime);
 });
 
+test("cache.modify preserves references when scalar values are already parsed", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        keyFields: false,
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        name
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        name: "Opening keynote",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  const replacementEvent = {
+    __typename: "Event",
+    name: "Closing keynote",
+    startTime: new Date("2026-01-01T00:00:00.000Z"),
+  };
+
+  cache.modify({
+    id: "ROOT_QUERY",
+    fields: {
+      event: () => replacementEvent,
+    },
+  });
+
+  const modifiedEvent = rawCacheData(cache).ROOT_QUERY!.event;
+
+  expect(modifiedEvent).toBe(replacementEvent);
+  expect((modifiedEvent as any).startTime).toBe(replacementEvent.startTime);
+});
+
 test("leaves parsed value unchanged when modifying via cache.modify with no scalar policy configured", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
@@ -1963,6 +2015,34 @@ test("cache.restore() parses all serialized scalar values before storing them", 
       metadata: new Map([["venue", "The Workshop Building"]]),
     },
   });
+});
+
+test("cache.restore() preserves references when scalar values are already parsed", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const event = {
+    __typename: "Event",
+    id: "1",
+    startTime: new Date("2026-01-01T00:00:00.000Z"),
+  };
+
+  cache.restore({
+    "Event:1": event,
+  });
+
+  const restoredEvent = rawCacheData(cache)["Event:1"];
+
+  expect(restoredEvent).toBe(event);
+  expect(restoredEvent!.startTime).toBe(event.startTime);
 });
 
 test("cache.restore() leaves values as-is when no scalar policy is configured for the field", () => {

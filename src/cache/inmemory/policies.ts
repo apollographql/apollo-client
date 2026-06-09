@@ -930,7 +930,7 @@ export class Policies {
   private maybeCoerce(
     value: StoreValue,
     options: CoerceValueOptions,
-    transform: (value: StoreValue, scalar: Scalar<any, any>) => StoreValue,
+    coerce: (value: StoreValue, scalar: Scalar<any, any>) => StoreValue,
     scalar?: Scalar<any, any>
   ): StoreValue {
     // null is never coerced
@@ -948,11 +948,11 @@ export class Policies {
 
     if (Array.isArray(value)) {
       return value.map((item) =>
-        this.maybeCoerce(item, options, transform, scalar)
+        this.maybeCoerce(item, options, coerce, scalar)
       );
     }
 
-    return transform(value, scalar);
+    return coerce(value, scalar);
   }
 
   public getScalarForField(

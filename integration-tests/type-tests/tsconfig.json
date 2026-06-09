@@ -4,6 +4,21 @@
       "path": "./tsconfig.src.json"
     },
     {
+      "path": "./cacheOverride/classicSignature/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/defaults/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/invalid/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/modernSignature/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/shared/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/shared/tsconfig.json"
     },
     {

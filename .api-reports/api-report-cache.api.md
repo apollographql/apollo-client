@@ -34,6 +34,7 @@ import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@apollo/client';
+import type { TypeOverrides } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -165,7 +166,7 @@ type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" |
 // @public (undocumented)
 namespace Cache_2 {
     // (undocumented)
-    interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {
+    interface BatchOptions<TCache extends Cache_2.Implementation, TUpdateResult = void> {
         onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         optimistic?: string | boolean;
         removeOptimistic?: string;
@@ -205,6 +206,10 @@ namespace Cache_2 {
         // (undocumented)
         id?: string;
     }
+    // (undocumented)
+    type Implementation = TypeOverrides extends {
+        cache: infer TCache;
+    } ? TCache extends ApolloCache ? TCache : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type." : ApolloCache;
     // (undocumented)
     interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
         // (undocumented)

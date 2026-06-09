@@ -24,7 +24,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -268,7 +268,7 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
   >({
     mutation,
     variables,
@@ -1329,7 +1329,7 @@ export class QueryManager {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache,
+    Cache.Implementation,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesByOq = new Map<

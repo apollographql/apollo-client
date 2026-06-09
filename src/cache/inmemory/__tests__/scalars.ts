@@ -1,3 +1,4 @@
+import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
@@ -3464,6 +3465,72 @@ test("preserves an existing scalar option when policies.addTypePolicies updates 
       startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
+});
+
+test("maintains referential equality with multiple cache reads", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+
+  const query: TypedDocumentNode<{
+    event: { __typename: "Event"; id: string; startTime: Date };
+  }> = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  const fragment: TypedDocumentNode<{
+    __typename: "Event";
+    id: string;
+    startTime: Date;
+  }> = gql`
+    fragment EventFragment on Event {
+      id
+      startTime
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        // @ts-expect-error TODO: Need to figure out types
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  const initialValue = cache.readQuery({ query });
+
+  {
+    const result = cache.readQuery({ query });
+
+    expect(result!.event.startTime).toBe(initialValue!.event.startTime);
+  }
+
+  {
+    const result = cache.readFragment({
+      fragment,
+      from: { __typename: "Event", id: "1" },
+    });
+
+    expect(result!.startTime).toBe(initialValue!.event.startTime);
+  }
 });
 
 // This helper function extracts the raw stored value for tests to actually

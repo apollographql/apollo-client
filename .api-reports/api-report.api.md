@@ -947,12 +947,15 @@ class ClientAwarenessLink extends ApolloLink {
 }
 
 // @public (undocumented)
-interface CoerceValueOptions {
-    // (undocumented)
-    field: FieldNode;
-    // (undocumented)
+type CoerceValueOptions = {
     typename: string;
-}
+} & ({
+    field: FieldNode;
+    fieldName?: never;
+} | {
+    field?: never;
+    fieldName: string;
+});
 
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
@@ -2372,6 +2375,8 @@ class Policies {
     getMergeFunction(parentTypename: string | undefined, fieldName: string, childTypename: string | undefined): FieldMergeFunction | undefined;
     // (undocumented)
     getReadFunction(typename: string | undefined, fieldName: string): FieldReadFunction | undefined;
+    // (undocumented)
+    getScalarForField(typename: string, fieldName: string): Scalar<any, any> | undefined;
     // Warning: (ae-forgotten-export) The symbol "FieldSpecifier" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2380,14 +2385,12 @@ class Policies {
     hasKeyArgs(typename: string | undefined, fieldName: string): boolean;
     // (undocumented)
     identify(object: StoreObject, partialContext?: Partial<KeyFieldsContext>): [string?, StoreObject?];
-    // (undocumented)
-    maybeCoerceSerializedValue(value: StoreValue, options: CoerceValueOptions & {
-        scalar?: Scalar<any, any>;
-    }): StoreValue;
     // Warning: (ae-forgotten-export) The symbol "CoerceValueOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    maybeCoerceToScalarValue(value: StoreValue, options: CoerceValueOptions): any;
+    maybeCoerceToScalarValue(value: StoreValue, options: CoerceValueOptions): StoreValue;
+    // (undocumented)
+    maybeCoerceToSerializedValue(value: StoreValue, options: CoerceValueOptions): StoreValue;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

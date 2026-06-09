@@ -409,8 +409,9 @@ export abstract class EntityStore implements NormalizedCache {
       Object.entries(this.toObject()).map(([dataId, storeObject]) => [
         dataId,
         storeObject &&
-          this.serializeStoreObject(
+          this.coerceStoreObject(
             storeObject,
+            (value, scalar) => scalar.coerceToSerialized(value),
             storeObject?.__typename || this.policies.rootTypenamesById[dataId]
           ),
       ])
@@ -428,8 +429,9 @@ export abstract class EntityStore implements NormalizedCache {
     return obj;
   }
 
-  private serializeStoreObject(
+  private coerceStoreObject(
     obj: StoreObject,
+    coerce: (value: unknown, scalar: Scalar<any, any>) => unknown,
     typename = obj.__typename
   ): StoreObject {
     if (!typename) {
@@ -442,27 +444,31 @@ export abstract class EntityStore implements NormalizedCache {
         fieldNameFromStoreName(storeFieldName)
       );
 
-      return [storeFieldName, this.serializeValue(value, scalar)];
+      return [storeFieldName, this.coerceValue(value, coerce, scalar)];
     });
 
     return Object.fromEntries(entries);
   }
 
-  private serializeValue(value: unknown, scalar?: Scalar<any, any>): unknown {
+  private coerceValue(
+    value: unknown,
+    coerce: (value: unknown, scalar: Scalar<any, any>) => unknown,
+    scalar?: Scalar<any, any>
+  ): unknown {
     if (value == null) {
       return value;
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) => this.serializeValue(item, scalar));
+      return value.map((item) => this.coerceValue(item, coerce, scalar));
     }
 
     if (scalar) {
-      return scalar.coerceToSerialized(value);
+      return coerce(value, scalar);
     }
 
     if (isPlainObject(value) && "__typename" in value) {
-      return this.serializeStoreObject(value);
+      return this.coerceStoreObject(value, coerce);
     }
 
     return value;

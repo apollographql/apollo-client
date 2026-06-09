@@ -1666,6 +1666,121 @@ test("cache.extract() returns the parsed value as-is when no scalar policy is co
   });
 });
 
+test("cache.extract() serializes scalar fields in arrays of non-normalized objects written with cache.writeQuery", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        keyFields: false,
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      events {
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      events: [
+        {
+          __typename: "Event",
+          startTime: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          __typename: "Event",
+          startTime: "2026-02-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      events: [
+        {
+          __typename: "Event",
+          startTime: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          __typename: "Event",
+          startTime: "2026-02-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+});
+
+test("cache.extract() serializes scalar fields in arrays of non-normalized objects written with cache.writeFragment", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        keyFields: false,
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const fragment = gql`
+    fragment ScheduleFields on Schedule {
+      id
+      events {
+        startTime
+      }
+    }
+  `;
+
+  cache.writeFragment({
+    fragment,
+    data: {
+      __typename: "Schedule",
+      id: "1",
+      events: [
+        {
+          __typename: "Event",
+          startTime: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          __typename: "Event",
+          startTime: "2026-02-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    "Schedule:1": {
+      __typename: "Schedule",
+      id: "1",
+      events: [
+        {
+          __typename: "Event",
+          startTime: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          __typename: "Event",
+          startTime: "2026-02-01T00:00:00.000Z",
+        },
+      ],
+    },
+    __META: {
+      extraRootIds: ["Schedule:1"],
+    },
+  });
+});
+
 test("cache.extract(true) serializes scalar values from the optimistic layer", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

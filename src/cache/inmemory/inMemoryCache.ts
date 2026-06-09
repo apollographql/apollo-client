@@ -23,10 +23,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
-import {
-  getInMemoryCacheMemoryInternals,
-  isPlainObject,
-} from "@apollo/client/utilities/internal";
+import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
@@ -35,7 +32,7 @@ import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { fieldNameFromStoreName, hasOwn, normalizeConfig } from "./helpers.js";
+import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";

@@ -22,7 +22,6 @@ import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
-import type { InMemoryCache as InMemoryCache_2 } from '@apollo/client';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
@@ -210,7 +209,7 @@ namespace Cache_2 {
     // (undocumented)
     type Implementation = TypeOverrides extends {
         cache: infer TCache;
-    } ? TCache extends ApolloCache ? TCache : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type." : InMemoryCache_2;
+    } ? TCache extends ApolloCache ? TCache : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type." : ApolloCache;
     // (undocumented)
     interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
         // (undocumented)

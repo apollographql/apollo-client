@@ -450,11 +450,6 @@ export class ApolloClient {
     // (undocumented)
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClient.Options);
-    constructor(options: TypeOverrides extends {
-        cache: any;
-    } ? ApolloClient.Options : {
-        cache: "Using a cache other than `InMemoryCache` requires a cache type declared in TypeOverrides. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type.";
-    });
     // (undocumented)
     __requestRaw(request: ApolloLink.Request): Observable_2<ApolloLink.Result<unknown>>;
     // (undocumented)
@@ -1372,7 +1367,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:636:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:635:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

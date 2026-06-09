@@ -202,6 +202,40 @@ test("parses serialized scalar value when writing via cache.writeQuery", () => {
   });
 });
 
+test("stores a parsed scalar value on a custom root type when writing via cache.writeQuery", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      now
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      __typename: "RootQuery",
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
 test("leaves parsed value unchanged when no scalar policy is configured", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
@@ -1691,6 +1725,40 @@ test("cache.extract() serializes scalar fields on root objects with an implicit 
   });
 });
 
+test("cache.extract() serializes scalar fields on a custom root type with an implicit typename", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      now
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "RootQuery",
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
 test("cache.extract() serializes scalar fields in arrays of non-normalized objects written with cache.writeQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
@@ -1911,6 +1979,37 @@ test("parses scalar value when reading a field via cache.readQuery", () => {
   });
 });
 
+test("parses a scalar field on a custom root type via cache.readQuery", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      now
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    now: new Date("2026-01-01T00:00:00.000Z"),
+  });
+});
+
 test("parses scalar value when reading a field via cache.readFragment", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
@@ -1948,6 +2047,47 @@ test("parses scalar value when reading a field via cache.readFragment", () => {
     __typename: "Event",
     id: "1",
     startTime: new Date("2026-01-01T00:00:00.000Z"),
+  });
+});
+
+test("parses a scalar field on a custom root type via cache.readFragment", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      now
+    }
+  `;
+  const fragment = gql`
+    fragment RootQueryFields on RootQuery {
+      now
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(
+    cache.readFragment({
+      id: "ROOT_QUERY",
+      fragment,
+    })
+  ).toEqual({
+    now: new Date("2026-01-01T00:00:00.000Z"),
   });
 });
 

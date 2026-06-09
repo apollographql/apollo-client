@@ -1666,6 +1666,31 @@ test("cache.extract() returns the parsed value as-is when no scalar policy is co
   });
 });
 
+test("cache.extract() serializes scalar fields on root objects with an implicit typename", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Query: {
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
 test("cache.extract() serializes scalar fields in arrays of non-normalized objects written with cache.writeQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

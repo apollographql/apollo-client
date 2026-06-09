@@ -138,7 +138,9 @@ export abstract class EntityStore implements NormalizedCache {
     incoming = this.coerceStoreObject(
       incoming,
       (value, scalar) => scalar.coerceToParsed(value),
-      incoming.__typename || this.policies.rootTypenamesById[dataId]
+      incoming.__typename ||
+        existing?.__typename ||
+        this.policies.rootTypenamesById[dataId]
     );
 
     const merged: StoreObject = new DeepMerger({
@@ -269,19 +271,6 @@ export abstract class EntityStore implements NormalizedCache {
           } else {
             if (newValue === DELETE) newValue = void 0;
             if (newValue !== fieldValue) {
-              const typename =
-                this.policies.readField<string>(
-                  { from: storeObject, fieldName: "__typename" },
-                  { store: this }
-                ) ?? this.policies.rootTypenamesById[dataId];
-
-              if (typename && newValue != null) {
-                newValue = this.policies.maybeCoerceToScalarValue(
-                  newValue as StoreValue,
-                  { fieldName, typename }
-                );
-              }
-
               changedFields[storeFieldName] = newValue;
               needToMerge = true;
               fieldValue = newValue as StoreValue;

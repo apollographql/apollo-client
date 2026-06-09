@@ -118,7 +118,7 @@ test("is uses the configured type guard when configured", () => {
   expect(scalar.is(new Date("invalid"))).toBe(false);
 });
 
-test("serializes parsed scalar value when writing via cache.writeQuery", () => {
+test("stores parsed scalar value in the cache when writing via cache.writeQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -155,12 +155,12 @@ test("serializes parsed scalar value when writing via cache.writeQuery", () => {
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("leaves serialized value unchanged when writing via cache.writeQuery", () => {
+test("parses serialized scalar value when writing via cache.writeQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -197,7 +197,7 @@ test("leaves serialized value unchanged when writing via cache.writeQuery", () =
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
@@ -237,7 +237,7 @@ test("leaves parsed value unchanged when no scalar policy is configured", () => 
   });
 });
 
-test("serializes parsed scalar value when the field has an alias", () => {
+test("stores parsed scalar value in the cache when the field has an alias", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -275,12 +275,12 @@ test("serializes parsed scalar value when the field has an alias", () => {
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes parsed scalar value when the field has arguments with variables", () => {
+test("stores parsed scalar value in the cache when the field has arguments with variables", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -318,12 +318,12 @@ test("serializes parsed scalar value when the field has arguments with variables
     "Event:1": {
       __typename: "Event",
       id: "1",
-      'startTime({"timezone":"UTC"})': "2026-01-01T00:00:00.000Z",
+      'startTime({"timezone":"UTC"})': new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes parsed scalar value when the field has arguments with literal value", () => {
+test("stores parsed scalar value in the cache when the field has arguments with literal value", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -360,12 +360,12 @@ test("serializes parsed scalar value when the field has arguments with literal v
     "Event:1": {
       __typename: "Event",
       id: "1",
-      'startTime({"timezone":"UTC"})': "2026-01-01T00:00:00.000Z",
+      'startTime({"timezone":"UTC"})': new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes each element when writing an array of parsed scalar values", () => {
+test("stores each element as a parsed value when writing an array of scalar values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -403,13 +403,16 @@ test("serializes each element when writing an array of parsed scalar values", ()
       __typename: "Query",
       schedule: {
         __typename: "Schedule",
-        meetingTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+        meetingTimes: [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-02T09:00:00.000Z"),
+        ],
       },
     },
   });
 });
 
-test("serializes each leaf element when writing a 2D array of parsed scalar values", () => {
+test("stores each leaf element as a parsed value when writing a 2D array of scalar values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -451,8 +454,11 @@ test("serializes each leaf element when writing a 2D array of parsed scalar valu
       schedule: {
         __typename: "Schedule",
         availabilitySlots: [
-          ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
-          ["2026-01-02T14:00:00.000Z"],
+          [
+            new Date("2026-01-01T09:00:00.000Z"),
+            new Date("2026-01-01T10:00:00.000Z"),
+          ],
+          [new Date("2026-01-02T14:00:00.000Z")],
         ],
       },
     },
@@ -501,7 +507,7 @@ test("stores null as-is when null is written to a scalar field", () => {
   });
 });
 
-test("serializes object-based parsed scalar values when writing", () => {
+test("stores object-based parsed scalar values (e.g. Map) when writing", () => {
   const cache = new InMemoryCache({
     scalars: { JSONObject: jsonObjectScalar },
     typePolicies: {
@@ -541,12 +547,15 @@ test("serializes object-based parsed scalar values when writing", () => {
     "Product:1": {
       __typename: "Product",
       id: "1",
-      metadata: { color: "red", size: "large" },
+      metadata: new Map([
+        ["color", "red"],
+        ["size", "large"],
+      ]),
     },
   });
 });
 
-test("serializes parsed scalar value when writing via cache.writeFragment", () => {
+test("stores parsed scalar value in the cache when writing via cache.writeFragment", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -578,12 +587,12 @@ test("serializes parsed scalar value when writing via cache.writeFragment", () =
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes parsed scalar value when overwriting an existing field", () => {
+test("stores parsed scalar value in the cache when overwriting an existing field", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -631,12 +640,12 @@ test("serializes parsed scalar value when overwriting an existing field", () => 
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-06-15T14:30:00.000Z",
+      startTime: new Date("2026-06-15T14:30:00.000Z"),
     },
   });
 });
 
-test("serializes parsed scalar value when a merge function is also configured on the field", () => {
+test("stores parsed scalar value in the cache when a merge function is also configured on the field", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -679,12 +688,12 @@ test("serializes parsed scalar value when a merge function is also configured on
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes the parsed value returned by a merge function", () => {
+test("stores the parsed value returned by a merge function in the cache", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -727,12 +736,12 @@ test("serializes the parsed value returned by a merge function", () => {
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-01-01T00:00:00.000Z",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });
 
-test("serializes each element when writing an array of parsed scalar values with a merge function", () => {
+test("stores each element as a parsed value when writing an array of scalar values with a merge function", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -773,13 +782,16 @@ test("serializes each element when writing an array of parsed scalar values with
       __typename: "Query",
       schedule: {
         __typename: "Schedule",
-        meetingTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+        meetingTimes: [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-02T09:00:00.000Z"),
+        ],
       },
     },
   });
 });
 
-test("serializes each leaf element when writing a 2D array of parsed scalar values with a merge function", () => {
+test("stores each leaf element as a parsed value when writing a 2D array of scalar values with a merge function", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -824,15 +836,18 @@ test("serializes each leaf element when writing a 2D array of parsed scalar valu
       schedule: {
         __typename: "Schedule",
         availabilitySlots: [
-          ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
-          ["2026-01-02T14:00:00.000Z"],
+          [
+            new Date("2026-01-01T09:00:00.000Z"),
+            new Date("2026-01-01T10:00:00.000Z"),
+          ],
+          [new Date("2026-01-02T14:00:00.000Z")],
         ],
       },
     },
   });
 });
 
-test("serializes parsed scalar values across a complex nested write", () => {
+test("stores parsed scalar values across a complex nested write", () => {
   const cache = new InMemoryCache({
     scalars: {
       DateTime: dateTimeScalar,
@@ -965,14 +980,17 @@ test("serializes parsed scalar values across a complex nested write", () => {
       __typename: "Conference",
       id: "conf-1",
       name: "GraphQL Summit",
-      startDate: "2026-09-15T09:00:00.000Z",
+      startDate: new Date("2026-09-15T09:00:00.000Z"),
       endDate: null,
-      ticketPrice: 19900,
+      ticketPrice: "199.00",
       schedule: {
         __typename: "Schedule",
         timeSlots: [
-          ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
-          ["2026-09-15T14:00:00.000Z"],
+          [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T10:00:00.000Z"),
+          ],
+          [new Date("2026-09-15T14:00:00.000Z")],
         ],
       },
     },
@@ -980,30 +998,33 @@ test("serializes parsed scalar values across a complex nested write", () => {
       __typename: "Speaker",
       id: "speaker-1",
       name: "Alice",
-      availableTimes: ["2026-09-15T09:00:00.000Z", "2026-09-15T14:00:00.000Z"],
+      availableTimes: [
+        new Date("2026-09-15T09:00:00.000Z"),
+        new Date("2026-09-15T14:00:00.000Z"),
+      ],
     },
     "Speaker:speaker-2": {
       __typename: "Speaker",
       id: "speaker-2",
       name: "Bob",
-      availableTimes: ["2026-09-15T10:00:00.000Z", null],
+      availableTimes: [new Date("2026-09-15T10:00:00.000Z"), null],
     },
     "Session:session-1": {
       __typename: "Session",
       id: "session-1",
-      startTime: "2026-09-15T09:00:00.000Z",
-      metadata: { dress: "casual" },
+      startTime: new Date("2026-09-15T09:00:00.000Z"),
+      metadata: new Map([["dress", "casual"]]),
     },
     "Workshop:workshop-1": {
       __typename: "Workshop",
       id: "workshop-1",
-      startTime: "2026-09-15T14:00:00.000Z",
-      metadata: { venue: "The Workshop Building" },
+      startTime: new Date("2026-09-15T14:00:00.000Z"),
+      metadata: new Map([["venue", "The Workshop Building"]]),
     },
   });
 });
 
-test("serializes parsed scalar value when modifying via cache.modify", () => {
+test("stores parsed scalar value in the cache when modifying via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -1047,12 +1068,12 @@ test("serializes parsed scalar value when modifying via cache.modify", () => {
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-06-15T14:30:00.000Z",
+      startTime: new Date("2026-06-15T14:30:00.000Z"),
     },
   });
 });
 
-test("leaves serialized value unchanged when modifying via cache.modify", () => {
+test("parses serialized scalar value when modifying via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -1096,7 +1117,7 @@ test("leaves serialized value unchanged when modifying via cache.modify", () => 
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: "2026-06-15T14:30:00.000Z",
+      startTime: new Date("2026-06-15T14:30:00.000Z"),
     },
   });
 });
@@ -1143,7 +1164,7 @@ test("leaves parsed value unchanged when modifying via cache.modify with no scal
   });
 });
 
-test("serializes each element when modifying an array of parsed scalar values via cache.modify", () => {
+test("stores each element as a parsed value when modifying an array of scalar values via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -1190,12 +1211,15 @@ test("serializes each element when modifying an array of parsed scalar values vi
     "Speaker:1": {
       __typename: "Speaker",
       id: "1",
-      availableTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+      availableTimes: [
+        new Date("2026-01-01T09:00:00.000Z"),
+        new Date("2026-01-02T09:00:00.000Z"),
+      ],
     },
   });
 });
 
-test("serializes each leaf element when modifying a 2D array of parsed scalar values via cache.modify", () => {
+test("stores each leaf element as a parsed value when modifying a 2D array of scalar values via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -1246,8 +1270,11 @@ test("serializes each leaf element when modifying a 2D array of parsed scalar va
       __typename: "Speaker",
       id: "1",
       availabilitySlots: [
-        ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
-        ["2026-01-02T14:00:00.000Z"],
+        [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-01T10:00:00.000Z"),
+        ],
+        [new Date("2026-01-02T14:00:00.000Z")],
       ],
     },
   });
@@ -1302,7 +1329,7 @@ test("stores null as-is when null is returned by a modifier for a scalar field",
   });
 });
 
-test("serializes object-based parsed scalar values when modifying via cache.modify", () => {
+test("stores object-based parsed scalar values when modifying via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { JSONObject: jsonObjectScalar },
     typePolicies: {
@@ -1350,7 +1377,10 @@ test("serializes object-based parsed scalar values when modifying via cache.modi
     "Product:1": {
       __typename: "Product",
       id: "1",
-      metadata: { color: "blue", size: "medium" },
+      metadata: new Map([
+        ["color", "blue"],
+        ["size", "medium"],
+      ]),
     },
   });
 });

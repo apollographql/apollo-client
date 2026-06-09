@@ -412,7 +412,7 @@ export class StoreWriter {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
 
           if (typename) {
-            incomingValue = this.cache.policies.maybeCoerceToSerializedValue(
+            incomingValue = this.cache.policies.maybeCoerceToScalarValue(
               incomingValue,
               { field, typename }
             );
@@ -777,7 +777,7 @@ export class StoreWriter {
     if (mergeTree.info?.typename) {
       const { field, typename } = mergeTree.info;
 
-      return this.cache.policies.maybeCoerceToSerializedValue(incoming, {
+      return this.cache.policies.maybeCoerceToScalarValue(incoming, {
         field,
         typename,
       }) as T;

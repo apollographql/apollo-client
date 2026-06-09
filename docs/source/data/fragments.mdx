@@ -1402,7 +1402,7 @@ To use GraphQL Codegen's masking format with your operation types, you need to t
 
 Create a TypeScript file that will be used to modify the `TypeOverrides` interface. Extend `TypeOverrides` with the `GraphQLCodegenDataMasking.TypeOverrides` interface.
 
-```ts title="apollo-client.d.ts"
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
@@ -1415,7 +1415,7 @@ declare module "@apollo/client" {
 
 <Note>
 
-This example uses `apollo-client.d.ts` as the file name to make it easily identifiable. You can give this file any name.
+This example uses `apollo.d.ts` as the file name to make it easily identifiable. You can give this file any name.
 
 </Note>
 
@@ -1751,7 +1751,7 @@ Apollo Client uses [declaration merging](https://www.typescriptlang.org/docs/han
 
 Let's add type overrides for our custom type implementations. Create a TypeScript file and define a `TypeOverrides` interface for the `@apollo/client` module.
 
-```ts title=apollo-client.d.ts
+```ts title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";
@@ -1765,7 +1765,7 @@ declare module "@apollo/client" {
 
 Now we'll import our HKT types and add them as keys in the `TypeOverrides` interface.
 
-```ts {4,8-9} title=apollo-client.d.ts
+```ts {4,8-9} title="apollo.d.ts"
 // This import is necessary to ensure all Apollo Client imports
 // are still available to the rest of the application.
 import "@apollo/client";

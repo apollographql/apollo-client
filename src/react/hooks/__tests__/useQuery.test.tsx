@@ -11869,6 +11869,341 @@ describe("useQuery Hook", () => {
         });
       }
     });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked data on refetch with identical results", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          maxUsageCount: 2,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked data on refetch when only masked field changes on refetch", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 31,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked array data on refetch with identical results", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUsers: Array<
+          {
+            __typename: "User";
+            id: number;
+            name: string;
+          } & {
+            " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+          }
+        >;
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedArrayQuery {
+          currentUsers {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mockData = {
+        currentUsers: [
+          { __typename: "User" as const, id: 1, name: "User One", age: 25 },
+          { __typename: "User" as const, id: 2, name: "User Two", age: 30 },
+        ],
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: mockData }, maxUsageCount: 2 },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
   });
 
   // https://github.com/apollographql/apollo-client/issues/12229

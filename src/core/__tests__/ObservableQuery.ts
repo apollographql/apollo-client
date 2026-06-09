@@ -61,9 +61,7 @@ describe("ObservableQuery", () => {
     },
   };
 
-  const error = new GraphQLError("is offline.", undefined, null, null, [
-    "people_one",
-  ]);
+  const error = new GraphQLError("is offline.", { path: ["people_one"] });
   const wrappedError = new CombinedGraphQLErrors({
     data: dataOne,
     errors: [error],

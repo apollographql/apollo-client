@@ -2004,6 +2004,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result.loading = isNetworkRequestInFlight(result.networkStatus);
     result = this.maskResult(result);
 
+    // Preserve referential equality of masked data when the new masked
+    // result is deeply equal to the previous one. This prevents React hooks
+    // like `useMemo` or `useEffect` from firing unnecessarily.
+    if (
+      previous.result.data !== undefined &&
+      result.data !== previous.result.data &&
+      equal(result.data, previous.result.data)
+    ) {
+      result.data = previous.result.data;
+    }
+
     return { query, variables, result, meta };
   });
 

@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 4.2.3
+
+### Patch Changes
+
+- [#13254](https://github.com/apollographql/apollo-client/pull/13254) [`66e9dfc`](https://github.com/apollographql/apollo-client/commit/66e9dfcf7964345dac949ab4c6004460d224d1cf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `graphql` v17 as a valid peer dependency.
+
+## 4.2.2
+
+### Patch Changes
+
+- [#13184](https://github.com/apollographql/apollo-client/pull/13184) [`c207b88`](https://github.com/apollographql/apollo-client/commit/c207b886026114943dc7f5c85e997a1938e74cfe) Thanks [@audrius-savickas](https://github.com/audrius-savickas)! - Preserve referential equality of masked data on refetch when the result is deeply equal to the previous result.
+
+## 4.2.1
+
+### Patch Changes
+
+- [#13248](https://github.com/apollographql/apollo-client/pull/13248) [`062ffe3`](https://github.com/apollographql/apollo-client/commit/062ffe3ecfeda8630a4ad3ced40ce58193199b74) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where `useLazyQuery` would not apply a changed `pollInterval` between renders.
+
 ## 4.2.0
 
 ### Minor Changes

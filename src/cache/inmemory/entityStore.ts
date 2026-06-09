@@ -259,6 +259,18 @@ export abstract class EntityStore implements NormalizedCache {
           } else {
             if (newValue === DELETE) newValue = void 0;
             if (newValue !== fieldValue) {
+              const typename = this.policies.readField<string>(
+                { from: storeObject, fieldName: "__typename" },
+                { store: this }
+              );
+
+              if (typename) {
+                newValue = this.policies.maybeCoerceSerializedValue(
+                  newValue as StoreValue,
+                  { fieldName, typename }
+                );
+              }
+
               changedFields[storeFieldName] = newValue;
               needToMerge = true;
               fieldValue = newValue as StoreValue;

@@ -1006,6 +1006,358 @@ test("serializes parsed scalar values across a complex nested write", () => {
   });
 });
 
+test("serializes parsed scalar value when modifying via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: () => new Date("2026-06-15T14:30:00.000Z"),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-06-15T14:30:00.000Z",
+    },
+  });
+});
+
+test("leaves serialized value unchanged when modifying via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: () => "2026-06-15T14:30:00.000Z",
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-06-15T14:30:00.000Z",
+    },
+  });
+});
+
+test("leaves parsed value unchanged when modifying via cache.modify with no scalar policy configured", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: () => new Date("2026-06-15T14:30:00.000Z"),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-06-15T14:30:00.000Z"),
+    },
+  });
+});
+
+test("serializes each element when modifying an array of parsed scalar values via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Speaker: {
+        fields: {
+          availableTimes: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      speaker {
+        id
+        availableTimes
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      speaker: {
+        __typename: "Speaker",
+        id: "1",
+        availableTimes: ["2026-01-01T09:00:00.000Z"],
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Speaker", id: "1" }),
+    fields: {
+      availableTimes: () => [
+        new Date("2026-01-01T09:00:00.000Z"),
+        new Date("2026-01-02T09:00:00.000Z"),
+      ],
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", speaker: { __ref: "Speaker:1" } },
+    "Speaker:1": {
+      __typename: "Speaker",
+      id: "1",
+      availableTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+    },
+  });
+});
+
+test("serializes each leaf element when modifying a 2D array of parsed scalar values via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Speaker: {
+        fields: {
+          availabilitySlots: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      speaker {
+        id
+        availabilitySlots
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      speaker: {
+        __typename: "Speaker",
+        id: "1",
+        availabilitySlots: [["2026-01-01T09:00:00.000Z"]],
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Speaker", id: "1" }),
+    fields: {
+      availabilitySlots: () => [
+        [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-01T10:00:00.000Z"),
+        ],
+        [new Date("2026-01-02T14:00:00.000Z")],
+      ],
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", speaker: { __ref: "Speaker:1" } },
+    "Speaker:1": {
+      __typename: "Speaker",
+      id: "1",
+      availabilitySlots: [
+        ["2026-01-01T09:00:00.000Z", "2026-01-01T10:00:00.000Z"],
+        ["2026-01-02T14:00:00.000Z"],
+      ],
+    },
+  });
+});
+
+test("stores null as-is when null is returned by a modifier for a scalar field", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          endTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        endTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        endTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      endTime: () => null,
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      endTime: null,
+    },
+  });
+});
+
+test("serializes object-based parsed scalar values when modifying via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { JSONObject: jsonObjectScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      product {
+        id
+        metadata
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        metadata: { color: "red", size: "large" },
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Product", id: "1" }),
+    fields: {
+      metadata: () =>
+        new Map([
+          ["color", "blue"],
+          ["size", "medium"],
+        ]),
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", product: { __ref: "Product:1" } },
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      metadata: { color: "blue", size: "medium" },
+    },
+  });
+});
+
 test("parses scalar value when reading a field via cache.readQuery", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

@@ -260,6 +260,18 @@ export abstract class ApolloCache {
     return;
   }
 
+  /**
+   * Serializes scalar values in the variables object
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: TVariables
+  ): TVariables {
+    return variables;
+  }
+
   // Local state API
 
   /**

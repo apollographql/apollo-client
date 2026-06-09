@@ -81,7 +81,6 @@ type ExecSubSelectedArrayOptions = {
   array: readonly any[];
   enclosingRef: Reference;
   context: ReadContext;
-  parentObjectOrReference: StoreObject | Reference;
 };
 
 interface StoreReaderConfig {
@@ -355,19 +354,12 @@ export class StoreReader {
                 array: fieldValue,
                 enclosingRef,
                 context,
-                parentObjectOrReference: objectOrReference,
               }),
               resultName
             );
           }
         } else if (!selection.selectionSet) {
-          fieldValue = policies.maybeCoerceToScalarValue(fieldValue, {
-            field: selection,
-            typename: context.store.getFieldValue<string>(
-              objectOrReference,
-              "__typename"
-            ),
-          });
+          // do nothing
         } else if (fieldValue != null) {
           if (__DEV__) {
             const typename = context.store.getFieldValue<string>(
@@ -440,7 +432,6 @@ export class StoreReader {
     array,
     enclosingRef,
     context,
-    parentObjectOrReference,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
@@ -472,7 +463,6 @@ export class StoreReader {
             array: item,
             enclosingRef,
             context,
-            parentObjectOrReference,
           }),
           i
         );
@@ -495,13 +485,7 @@ export class StoreReader {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
-      return context.policies.maybeCoerceToScalarValue(item, {
-        field,
-        typename: context.store.getFieldValue<string>(
-          parentObjectOrReference,
-          "__typename"
-        ),
-      });
+      return item;
     });
 
     return {

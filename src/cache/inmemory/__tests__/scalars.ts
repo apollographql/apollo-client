@@ -1209,6 +1209,59 @@ test("parses serialized scalar value when modifying via cache.modify", () => {
   });
 });
 
+test("cache.modify preserves referential identity for deeply equal parsed scalar values", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  const existingStartTime = rawCacheData(cache)["Event:1"]!.startTime;
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: () => "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)["Event:1"]!.startTime).toBe(existingStartTime);
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: () => new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(rawCacheData(cache)["Event:1"]!.startTime).toBe(existingStartTime);
+});
+
 test("leaves parsed value unchanged when modifying via cache.modify with no scalar policy configured", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

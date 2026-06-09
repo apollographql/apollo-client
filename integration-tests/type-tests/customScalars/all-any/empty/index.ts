@@ -1,4 +1,4 @@
-import { ApolloCache, InMemoryCache, Scalar } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
@@ -163,6 +163,9 @@ test("allows any scalar name in field policies", () => {
           },
           metadata: {
             scalar: "JSONObject",
+          },
+          unknown: {
+            scalar: "Unknown",
           },
         },
       },

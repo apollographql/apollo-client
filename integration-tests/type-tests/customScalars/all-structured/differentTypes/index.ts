@@ -51,6 +51,9 @@ test("allows any scalar name in field policies", () => {
           metadata: {
             scalar: "JSONObject",
           },
+          unknown: {
+            scalar: "Unknown",
+          },
         },
       },
     },

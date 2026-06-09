@@ -23,7 +23,10 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
-import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
+import {
+  getInMemoryCacheMemoryInternals,
+  isPlainObject,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
@@ -32,7 +35,7 @@ import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { hasOwn, normalizeConfig } from "./helpers.js";
+import { fieldNameFromStoreName, hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
@@ -220,7 +223,57 @@ export class InMemoryCache extends ApolloCache {
   }
 
   public extract(optimistic: boolean = false): NormalizedCacheObject {
-    return (optimistic ? this.optimisticData : this.data).extract();
+    const serialize = (
+      value: unknown,
+      isRoot: boolean = true,
+      scalar?: Scalar<any, any>
+    ): NormalizedCacheObject => {
+      if (isRoot) {
+        const entries = Object.entries(value as object).map(([key, value]) => {
+          return [key, serialize(value, false)];
+        });
+
+        return Object.fromEntries(entries);
+      }
+
+      if (Array.isArray(value)) {
+        return value.map((item) => serialize(item, false, scalar)) as any;
+      }
+
+      if (value != null && scalar) {
+        return scalar.coerceToSerialized(value);
+      }
+
+      if (isPlainObject(value)) {
+        const typename =
+          "__typename" in value && typeof value.__typename === "string" ?
+            value.__typename
+          : undefined;
+
+        const entries = Object.entries(value).map(([storeFieldName, value]) => {
+          if (typename && value != null) {
+            const fieldName = fieldNameFromStoreName(storeFieldName);
+            const scalar = this.policies.getScalarForField(typename, fieldName);
+
+            if (scalar) {
+              return [storeFieldName, serialize(value, false, scalar)];
+            }
+          }
+
+          if (isPlainObject(value)) {
+            return [storeFieldName, serialize(value, false)];
+          }
+
+          return [storeFieldName, value];
+        });
+
+        return Object.fromEntries(entries);
+      }
+
+      return value as NormalizedCacheObject;
+    };
+
+    return serialize((optimistic ? this.optimisticData : this.data).extract());
   }
 
   public read<TData = unknown>(

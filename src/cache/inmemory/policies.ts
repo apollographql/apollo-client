@@ -952,7 +952,7 @@ export class Policies {
     return scalar.coerceToSerialized(value);
   }
 
-  private getScalarForField(
+  public getScalarForField(
     typename: string,
     fieldName: string
   ): Scalar<any, any> | undefined {

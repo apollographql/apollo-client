@@ -971,7 +971,7 @@ test("stores parsed scalar values across a complex nested write", () => {
     },
   });
 
-  expect(rawCacheData(cache)).toMatchObject({
+  expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
       conference: { __ref: "Conference:conf-1" },
@@ -993,6 +993,14 @@ test("stores parsed scalar values across a complex nested write", () => {
           [new Date("2026-09-15T14:00:00.000Z")],
         ],
       },
+      scheduledItems: [
+        { __ref: "Session:session-1" },
+        { __ref: "Workshop:workshop-1" },
+      ],
+      speakers: [
+        { __ref: "Speaker:speaker-1" },
+        { __ref: "Speaker:speaker-2" },
+      ],
     },
     "Speaker:speaker-1": {
       __typename: "Speaker",
@@ -1381,6 +1389,295 @@ test("stores object-based parsed scalar values when modifying via cache.modify",
         ["color", "blue"],
         ["size", "medium"],
       ]),
+    },
+  });
+});
+
+test("cache.extract() serializes all stored parsed scalar values", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+      JSONObject: jsonObjectScalar,
+    },
+    possibleTypes: {
+      Schedulable: ["Session", "Workshop"],
+    },
+    typePolicies: {
+      Conference: {
+        fields: {
+          startDate: { scalar: "DateTime" },
+          endDate: { scalar: "DateTime" },
+          ticketPrice: { scalar: "Price" },
+        },
+      },
+      Schedule: {
+        fields: {
+          meetingTimes: { scalar: "DateTime" },
+          availabilitySlots: { scalar: "DateTime" },
+        },
+      },
+      Speaker: {
+        fields: {
+          availableTimes: { scalar: "DateTime" },
+        },
+      },
+      Session: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+      Workshop: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query ($timezone: String) {
+      conference {
+        id
+        name
+        startDate
+        endDate
+        ticketPrice
+        schedule {
+          meetingTimes
+          availabilitySlots
+        }
+        speakers {
+          id
+          name
+          availableTimes(timezone: "UTC")
+        }
+        scheduledItems {
+          __typename
+          id
+          startTime(timezone: $timezone)
+          metadata
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { timezone: "UTC" },
+    data: {
+      conference: {
+        __typename: "Conference",
+        id: "conf-1",
+        name: "GraphQL Summit",
+        startDate: new Date("2026-09-15T09:00:00.000Z"),
+        endDate: null,
+        ticketPrice: "199.00",
+        schedule: {
+          __typename: "Schedule",
+          meetingTimes: [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T14:00:00.000Z"),
+          ],
+          availabilitySlots: [
+            [
+              new Date("2026-09-15T09:00:00.000Z"),
+              new Date("2026-09-15T10:00:00.000Z"),
+            ],
+            [new Date("2026-09-15T14:00:00.000Z")],
+          ],
+        },
+        speakers: [
+          {
+            __typename: "Speaker",
+            id: "speaker-1",
+            name: "Alice",
+            availableTimes: [
+              new Date("2026-09-15T09:00:00.000Z"),
+              new Date("2026-09-15T14:00:00.000Z"),
+            ],
+          },
+          {
+            __typename: "Speaker",
+            id: "speaker-2",
+            name: "Bob",
+            availableTimes: [new Date("2026-09-15T10:00:00.000Z"), null],
+          },
+        ],
+        scheduledItems: [
+          {
+            __typename: "Session",
+            id: "session-1",
+            startTime: new Date("2026-09-15T09:00:00.000Z"),
+            metadata: new Map([["dress", "casual"]]),
+          },
+          {
+            __typename: "Workshop",
+            id: "workshop-1",
+            startTime: new Date("2026-09-15T14:00:00.000Z"),
+            metadata: new Map([["venue", "The Workshop Building"]]),
+          },
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      conference: { __ref: "Conference:conf-1" },
+    },
+    "Conference:conf-1": {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: "2026-09-15T09:00:00.000Z",
+      endDate: null,
+      ticketPrice: 19900,
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: ["2026-09-15T09:00:00.000Z", "2026-09-15T14:00:00.000Z"],
+        availabilitySlots: [
+          ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
+          ["2026-09-15T14:00:00.000Z"],
+        ],
+      },
+      scheduledItems: [
+        { __ref: "Session:session-1" },
+        { __ref: "Workshop:workshop-1" },
+      ],
+      speakers: [
+        { __ref: "Speaker:speaker-1" },
+        { __ref: "Speaker:speaker-2" },
+      ],
+    },
+    "Speaker:speaker-1": {
+      __typename: "Speaker",
+      id: "speaker-1",
+      name: "Alice",
+      'availableTimes({"timezone":"UTC"})': [
+        "2026-09-15T09:00:00.000Z",
+        "2026-09-15T14:00:00.000Z",
+      ],
+    },
+    "Speaker:speaker-2": {
+      __typename: "Speaker",
+      id: "speaker-2",
+      name: "Bob",
+      'availableTimes({"timezone":"UTC"})': ["2026-09-15T10:00:00.000Z", null],
+    },
+    "Session:session-1": {
+      __typename: "Session",
+      id: "session-1",
+      'startTime({"timezone":"UTC"})': "2026-09-15T09:00:00.000Z",
+      metadata: { dress: "casual" },
+    },
+    "Workshop:workshop-1": {
+      __typename: "Workshop",
+      id: "workshop-1",
+      'startTime({"timezone":"UTC"})': "2026-09-15T14:00:00.000Z",
+      metadata: { venue: "The Workshop Building" },
+    },
+  });
+});
+
+test("cache.extract() returns the parsed value as-is when no scalar policy is configured for the field", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
+test("cache.extract(true) serializes scalar values from the optimistic layer", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  cache.recordOptimisticTransaction((proxy) => {
+    proxy.writeQuery({
+      query,
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startTime: new Date("2026-06-15T14:30:00.000Z"),
+        },
+      },
+    });
+  }, "optimistic-update");
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(cache.extract(true)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-06-15T14:30:00.000Z",
     },
   });
 });

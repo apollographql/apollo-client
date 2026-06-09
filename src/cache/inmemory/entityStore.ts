@@ -124,7 +124,7 @@ export abstract class EntityStore implements NormalizedCache {
     const existing: StoreObject | undefined =
       typeof older === "string" ? this.lookup((dataId = older)) : older;
 
-    const incoming: StoreObject | undefined =
+    let incoming: StoreObject | undefined =
       typeof newer === "string" ? this.lookup((dataId = newer)) : newer;
 
     // If newer was a string ID, but that ID was not defined in this store,
@@ -132,6 +132,14 @@ export abstract class EntityStore implements NormalizedCache {
     if (!incoming) return;
 
     invariant(typeof dataId === "string", "store.merge expects a string ID");
+
+    // Parse all scalars before merging so that the storeObjectReconciler can
+    // deep compare the parsed value with the existing value
+    incoming = this.coerceStoreObject(
+      incoming,
+      (value, scalar) => scalar.coerceToParsed(value),
+      incoming.__typename || this.policies.rootTypenamesById[dataId]
+    );
 
     const merged: StoreObject = new DeepMerger({
       reconciler: storeObjectReconciler,

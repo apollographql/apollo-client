@@ -1742,6 +1742,297 @@ test("cache.extract() serializes all stored parsed scalar values", () => {
   });
 });
 
+test("cache.restore() parses all serialized scalar values before storing them", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+      JSONObject: jsonObjectScalar,
+    },
+    possibleTypes: {
+      Schedulable: ["Session", "Workshop"],
+    },
+    typePolicies: {
+      Conference: {
+        fields: {
+          startDate: { scalar: "DateTime" },
+          endDate: { scalar: "DateTime" },
+          ticketPrice: { scalar: "Price" },
+        },
+      },
+      Schedule: {
+        fields: {
+          meetingTimes: { scalar: "DateTime" },
+          availabilitySlots: { scalar: "DateTime" },
+        },
+      },
+      Speaker: {
+        fields: {
+          availableTimes: { scalar: "DateTime" },
+        },
+      },
+      Session: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+      Workshop: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+          metadata: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      __typename: "Query",
+      conference: { __ref: "Conference:conf-1" },
+    },
+    "Conference:conf-1": {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: "2026-09-15T09:00:00.000Z",
+      endDate: null,
+      ticketPrice: 19900,
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: ["2026-09-15T09:00:00.000Z", "2026-09-15T14:00:00.000Z"],
+        availabilitySlots: [
+          ["2026-09-15T09:00:00.000Z", "2026-09-15T10:00:00.000Z"],
+          ["2026-09-15T14:00:00.000Z"],
+        ],
+      },
+      scheduledItems: [
+        { __ref: "Session:session-1" },
+        { __ref: "Workshop:workshop-1" },
+      ],
+      speakers: [
+        { __ref: "Speaker:speaker-1" },
+        { __ref: "Speaker:speaker-2" },
+      ],
+    },
+    "Speaker:speaker-1": {
+      __typename: "Speaker",
+      id: "speaker-1",
+      name: "Alice",
+      'availableTimes({"timezone":"UTC"})': [
+        "2026-09-15T09:00:00.000Z",
+        "2026-09-15T14:00:00.000Z",
+      ],
+    },
+    "Speaker:speaker-2": {
+      __typename: "Speaker",
+      id: "speaker-2",
+      name: "Bob",
+      'availableTimes({"timezone":"UTC"})': ["2026-09-15T10:00:00.000Z", null],
+    },
+    "Session:session-1": {
+      __typename: "Session",
+      id: "session-1",
+      'startTime({"timezone":"UTC"})': "2026-09-15T09:00:00.000Z",
+      metadata: { dress: "casual" },
+    },
+    "Workshop:workshop-1": {
+      __typename: "Workshop",
+      id: "workshop-1",
+      'startTime({"timezone":"UTC"})': "2026-09-15T14:00:00.000Z",
+      metadata: { venue: "The Workshop Building" },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      conference: { __ref: "Conference:conf-1" },
+    },
+    "Conference:conf-1": {
+      __typename: "Conference",
+      id: "conf-1",
+      name: "GraphQL Summit",
+      startDate: new Date("2026-09-15T09:00:00.000Z"),
+      endDate: null,
+      ticketPrice: "199.00",
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: [
+          new Date("2026-09-15T09:00:00.000Z"),
+          new Date("2026-09-15T14:00:00.000Z"),
+        ],
+        availabilitySlots: [
+          [
+            new Date("2026-09-15T09:00:00.000Z"),
+            new Date("2026-09-15T10:00:00.000Z"),
+          ],
+          [new Date("2026-09-15T14:00:00.000Z")],
+        ],
+      },
+      scheduledItems: [
+        { __ref: "Session:session-1" },
+        { __ref: "Workshop:workshop-1" },
+      ],
+      speakers: [
+        { __ref: "Speaker:speaker-1" },
+        { __ref: "Speaker:speaker-2" },
+      ],
+    },
+    "Speaker:speaker-1": {
+      __typename: "Speaker",
+      id: "speaker-1",
+      name: "Alice",
+      'availableTimes({"timezone":"UTC"})': [
+        new Date("2026-09-15T09:00:00.000Z"),
+        new Date("2026-09-15T14:00:00.000Z"),
+      ],
+    },
+    "Speaker:speaker-2": {
+      __typename: "Speaker",
+      id: "speaker-2",
+      name: "Bob",
+      'availableTimes({"timezone":"UTC"})': [
+        new Date("2026-09-15T10:00:00.000Z"),
+        null,
+      ],
+    },
+    "Session:session-1": {
+      __typename: "Session",
+      id: "session-1",
+      'startTime({"timezone":"UTC"})': new Date("2026-09-15T09:00:00.000Z"),
+      metadata: new Map([["dress", "casual"]]),
+    },
+    "Workshop:workshop-1": {
+      __typename: "Workshop",
+      id: "workshop-1",
+      'startTime({"timezone":"UTC"})': new Date("2026-09-15T14:00:00.000Z"),
+      metadata: new Map([["venue", "The Workshop Building"]]),
+    },
+  });
+});
+
+test("cache.restore() leaves values as-is when no scalar policy is configured for the field", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+  });
+
+  cache.restore({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});
+
+test("cache.restore() parses scalar fields on root objects with an implicit typename", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Query: {
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
+test("cache.restore() parses scalar fields on a custom root type with an implicit typename", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      now: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
+test("cache.restore() parses scalar fields in arrays of non-normalized objects", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        keyFields: false,
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      __typename: "Query",
+      events: [
+        {
+          __typename: "Event",
+          startTime: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          __typename: "Event",
+          startTime: "2026-02-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      events: [
+        {
+          __typename: "Event",
+          startTime: new Date("2026-01-01T00:00:00.000Z"),
+        },
+        {
+          __typename: "Event",
+          startTime: new Date("2026-02-01T00:00:00.000Z"),
+        },
+      ],
+    },
+  });
+});
+
 test("cache.extract() returns the parsed value as-is when no scalar policy is configured for the field", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

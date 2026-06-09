@@ -260,7 +260,7 @@ export class InMemoryCache extends ApolloCache {
             }
           }
 
-          if (isPlainObject(value)) {
+          if (isPlainObject(value) || Array.isArray(value)) {
             return [storeFieldName, serialize(value, false)];
           }
 

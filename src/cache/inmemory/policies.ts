@@ -929,13 +929,13 @@ export class Policies {
 
   public maybeCoerceToSerializedValue(
     value: StoreValue,
-    options: CoerceValueOptions & { scalar?: Scalar<any, any> }
+    options: CoerceValueOptions,
+    scalar?: Scalar<any, any>
   ): StoreValue {
     // null is never coerced
     if (value === null) return value;
 
     const { field, typename } = options;
-    let { scalar } = options;
 
     // A selection set indicates this is not a scalar field so bail early
     if (field && field.selectionSet) return value;
@@ -947,7 +947,7 @@ export class Policies {
 
     if (Array.isArray(value)) {
       return value.map((item) =>
-        this.maybeCoerceToSerializedValue(item, { ...options, scalar })
+        this.maybeCoerceToSerializedValue(item, options, scalar)
       );
     }
 

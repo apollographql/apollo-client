@@ -264,7 +264,7 @@ export abstract class EntityStore implements NormalizedCache {
                 { store: this }
               );
 
-              if (typename) {
+              if (typename && newValue != null) {
                 newValue = this.policies.maybeCoerceToScalarValue(
                   newValue as StoreValue,
                   { fieldName, typename }

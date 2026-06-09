@@ -1337,6 +1337,54 @@ test("stores null as-is when null is returned by a modifier for a scalar field",
   });
 });
 
+test("deletes a scalar field when returning DELETE from cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.modify({
+    id: cache.identify({ __typename: "Event", id: "1" }),
+    fields: {
+      startTime: (_, { DELETE }) => DELETE,
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+    },
+  });
+});
+
 test("stores object-based parsed scalar values when modifying via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { JSONObject: jsonObjectScalar },

@@ -911,8 +911,9 @@ export class Policies {
 
   public maybeCoerceToScalarValue(
     value: StoreValue,
-    options: CoerceValueOptions
-  ) {
+    options: CoerceValueOptions,
+    scalar?: Scalar<any, any>
+  ): StoreValue {
     // null is never coerced
     if (value === null) return value;
 
@@ -922,9 +923,17 @@ export class Policies {
     if (field && field.selectionSet) return value;
 
     const fieldName = field ? field.name.value : options.fieldName;
+    scalar ||= this.getScalarForField(typename, fieldName);
 
-    const scalar = this.getScalarForField(typename, fieldName);
-    return scalar ? scalar.coerceToParsed(value) : value;
+    if (!scalar) return value;
+
+    if (Array.isArray(value)) {
+      return value.map((item) =>
+        this.maybeCoerceToScalarValue(item, options, scalar)
+      );
+    }
+
+    return scalar.coerceToParsed(value);
   }
 
   public maybeCoerceToSerializedValue(

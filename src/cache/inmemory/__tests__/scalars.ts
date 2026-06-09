@@ -446,6 +446,50 @@ test("stores each element as a parsed value when writing an array of scalar valu
   });
 });
 
+test("parses each serialized element when writing an array of scalar values", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Schedule: {
+        fields: {
+          meetingTimes: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      schedule {
+        meetingTimes
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: ["2026-01-01T09:00:00.000Z", "2026-01-02T09:00:00.000Z"],
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      schedule: {
+        __typename: "Schedule",
+        meetingTimes: [
+          new Date("2026-01-01T09:00:00.000Z"),
+          new Date("2026-01-02T09:00:00.000Z"),
+        ],
+      },
+    },
+  });
+});
+
 test("stores each leaf element as a parsed value when writing a 2D array of scalar values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

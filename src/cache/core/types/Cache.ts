@@ -1,7 +1,6 @@
 import type {
   DataValue,
   DocumentNode,
-  InMemoryCache,
   OperationVariables,
   TypedDocumentNode,
   TypeOverrides,
@@ -27,7 +26,7 @@ export declare namespace Cache {
       TCache extends ApolloCache ?
         TCache
       : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type."
-    : InMemoryCache;
+    : ApolloCache;
 
   export interface ReadOptions<
     TData = unknown,

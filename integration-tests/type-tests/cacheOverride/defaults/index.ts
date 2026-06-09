@@ -1,4 +1,5 @@
 import {
+  ApolloCache,
   ApolloClient,
   ApolloLink,
   InMemoryCache,
@@ -28,45 +29,43 @@ test("ApolloClient constructor", () => {
       link: ApolloLink.empty(),
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 
   {
     const client = new ApolloClient({
-      // @ts-expect-error Using a cache other than `InMemoryCache` requires a cache type declared in TypeOverrides. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type.      cache: new TestCache(),
       cache: new TestCache(),
       link: ApolloLink.empty(),
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 });
 
 test("client.mutate", () => {
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new TestCache(),
     link: ApolloLink.empty(),
   });
 
   client.mutate({
     mutation,
     update: (cache) => {
-      expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+      expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
     },
   });
 
   client.mutate<Data, Variables>({
     mutation,
     update: (cache) => {
-      expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+      expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
     },
   });
 
-  // @ts-expect-error TestCache doesn't extend InMemoryCache (the default)
   client.mutate<Data, Variables, TestCache>({
     mutation,
     update: (cache) => {
-      expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+      expectTypeOf(cache).toEqualTypeOf<TestCache>();
     },
   });
 
@@ -87,7 +86,20 @@ test("client.refetchQueries", () => {
 
     client.refetchQueries({
       updateCache: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
+      },
+    });
+  }
+
+  {
+    const client = new ApolloClient({
+      cache: new TestCache(),
+      link: ApolloLink.empty(),
+    });
+
+    client.refetchQueries({
+      updateCache: (cache) => {
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
       },
     });
   }
@@ -95,16 +107,16 @@ test("client.refetchQueries", () => {
 
 test("cache.batch", () => {
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new TestCache(),
     link: ApolloLink.empty(),
   });
 
   client.cache.batch({
     update(cache) {
-      expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+      expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
     },
     onWatchUpdated() {
-      expectTypeOf(this).toEqualTypeOf<InMemoryCache>();
+      expectTypeOf(this).toEqualTypeOf<ApolloCache>();
     },
   });
 });
@@ -112,105 +124,104 @@ test("cache.batch", () => {
 test("useApolloClient", () => {
   const client = useApolloClient();
 
-  expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+  expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
 });
 
 test("useLazyQuery", () => {
   const [, { client }] = useLazyQuery(query);
 
-  expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+  expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
 });
 
 test("useMutation", () => {
   {
     const [mutate, { client }] = useMutation(mutation, {
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
     });
 
     mutate({
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 
   {
     const [mutate, { client }] = useMutation<Data, Variables>(mutation, {
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
     });
 
     mutate({
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<ApolloCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, ApolloCache>
         >;
       },
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 
-  // TestCache doesn't extend InMemoryCache, so it cannot be used as TCache without TypeOverrides
+  // Ensure TCache can override any subtype of ApolloCache
   {
-    // @ts-expect-error TestCache doesn't extend InMemoryCache (the default)
     const [mutate, { client }] = useMutation<Data, Variables, TestCache>(
       mutation,
       {
         update: (cache) => {
-          expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+          expectTypeOf(cache).toEqualTypeOf<TestCache>();
         },
         onCompleted: (_, options) => {
           expectTypeOf(options!.update!).toEqualTypeOf<
-            MutationUpdaterFunction<Data, Variables, InMemoryCache>
+            MutationUpdaterFunction<Data, Variables, TestCache>
           >;
         },
         onError: (_, options) => {
           expectTypeOf(options!.update!).toEqualTypeOf<
-            MutationUpdaterFunction<Data, Variables, InMemoryCache>
+            MutationUpdaterFunction<Data, Variables, TestCache>
           >;
         },
       }
@@ -218,24 +229,24 @@ test("useMutation", () => {
 
     mutate({
       update: (cache) => {
-        expectTypeOf(cache).toEqualTypeOf<InMemoryCache>();
+        expectTypeOf(cache).toEqualTypeOf<TestCache>();
       },
       onCompleted: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, TestCache>
         >;
       },
       onError: (_, options) => {
         expectTypeOf(options!.update!).toEqualTypeOf<
-          MutationUpdaterFunction<Data, Variables, InMemoryCache>
+          MutationUpdaterFunction<Data, Variables, TestCache>
         >;
       },
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 
-  // Ensure TCache can be explicitly set to InMemoryCache
+  // Ensure TCache can override any subtype of ApolloCache
   {
     const [mutate, { client }] = useMutation<Data, Variables, InMemoryCache>(
       mutation,
@@ -272,18 +283,18 @@ test("useMutation", () => {
       },
     });
 
-    expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+    expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
   }
 });
 
 test("useQuery", () => {
   const { client } = useQuery(query);
 
-  expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+  expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
 });
 
 test("useSuspenseQuery", () => {
   const { client } = useSuspenseQuery(query);
 
-  expectTypeOf(client.cache).toEqualTypeOf<InMemoryCache>();
+  expectTypeOf(client.cache).toEqualTypeOf<ApolloCache>();
 });

@@ -62,7 +62,6 @@ import type {
   RefetchQueriesPromiseResults,
   SubscriptionObservable,
   TypedDocumentNode,
-  TypeOverrides,
 } from "./types.js";
 import type {
   ErrorPolicy,
@@ -1053,14 +1052,7 @@ export class ApolloClient {
    * });
    * ```
    */
-  constructor(options: ApolloClient.Options);
-  constructor(
-    options: TypeOverrides extends { cache: any } ? ApolloClient.Options
-    : {
-        cache: "Using a cache other than `InMemoryCache` requires a cache type declared in TypeOverrides. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type.";
-      }
-  );
-  constructor(options: any) {
+  constructor(options: ApolloClient.Options) {
     if (__DEV__) {
       invariant(
         options.cache,
@@ -1093,7 +1085,7 @@ export class ApolloClient {
       incrementalHandler = new NotImplementedHandler(),
       experiments = [],
       refetchEventManager,
-    } = options as ApolloClient.Options;
+    } = options;
 
     this.link = link;
     this.cache = cache;

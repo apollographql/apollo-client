@@ -405,9 +405,13 @@ export abstract class EntityStore implements NormalizedCache {
 
   public extract(): NormalizedCacheObject {
     const obj = Object.fromEntries(
-      Object.entries(this.toObject()).map(([key, storeObject]) => [
-        key,
-        storeObject && this.serializeStoreObject(storeObject),
+      Object.entries(this.toObject()).map(([dataId, storeObject]) => [
+        dataId,
+        storeObject &&
+          this.serializeStoreObject(
+            storeObject,
+            storeObject?.__typename || this.policies.rootTypenamesById[dataId]
+          ),
       ])
     );
 
@@ -423,9 +427,10 @@ export abstract class EntityStore implements NormalizedCache {
     return obj;
   }
 
-  private serializeStoreObject(obj: StoreObject): StoreObject {
-    const typename = obj.__typename;
-
+  private serializeStoreObject(
+    obj: StoreObject,
+    typename = obj.__typename
+  ): StoreObject {
     if (!typename) {
       return obj;
     }

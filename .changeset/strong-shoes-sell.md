@@ -2,7 +2,7 @@
 "@apollo/client": minor
 ---
 
-Adds a `scalar` option to `InMemoryCache` field policies that dictates whether to parse the raw value using the custom scalar definition. Scalar parsing is now performed on cache reads.
+Adds a `scalar` option to `InMemoryCache` field policies that tells the cache which scalar to use when parsing or serializing the field value.
 
 ```ts
 import { Scalar } from "@apollo/client";
@@ -26,3 +26,5 @@ new InMemoryCache({
   },
 });
 ```
+
+This scalar definition is now used to properly parse or serialize the field value for cache reads and writes as well as `cache.extract()` and `cache.restore()`.

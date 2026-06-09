@@ -3333,6 +3333,63 @@ test("deep merges scalar option with policies.addTypePolices", () => {
   });
 });
 
+test("preserves an existing scalar option when policies.addTypePolicies updates another field option", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+
+  cache.policies.addTypePolicies({
+    Event: {
+      fields: {
+        startTime: {
+          merge: (_, incoming) => incoming,
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      event: { __ref: "Event:1" },
+    },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
 // This helper function extracts the raw stored value for tests to actually
 // verify we write the parsed value. cache.extract() traverses the result and
 // serializes the scalar values which means we can't truly check if the result

@@ -585,7 +585,9 @@ export class Policies {
         } else {
           const { keyArgs, read, merge, scalar } = incoming;
 
-          existing.scalar = scalar;
+          if (scalar) {
+            existing.scalar = scalar;
+          }
 
           existing.keyFn =
             // Pass false to disable argument-based differentiation of

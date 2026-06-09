@@ -925,7 +925,7 @@ export class Policies {
     return scalar ? scalar.coerceToParsed(value) : value;
   }
 
-  public maybeCoerceSerializedValue(
+  public maybeCoerceToSerializedValue(
     value: StoreValue,
     options: CoerceValueOptions & { scalar?: Scalar<any, any> }
   ): StoreValue {
@@ -945,7 +945,7 @@ export class Policies {
 
     if (Array.isArray(value)) {
       return value.map((item) =>
-        this.maybeCoerceSerializedValue(item, { ...options, scalar })
+        this.maybeCoerceToSerializedValue(item, { ...options, scalar })
       );
     }
 

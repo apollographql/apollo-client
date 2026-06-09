@@ -265,7 +265,7 @@ export abstract class EntityStore implements NormalizedCache {
               );
 
               if (typename) {
-                newValue = this.policies.maybeCoerceSerializedValue(
+                newValue = this.policies.maybeCoerceToSerializedValue(
                   newValue as StoreValue,
                   { fieldName, typename }
                 );

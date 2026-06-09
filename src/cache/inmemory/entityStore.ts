@@ -14,11 +14,13 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   DeepMerger,
   isNonNullObject,
+  isPlainObject,
   makeReference,
   maybeDeepFreeze,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
   CanReadFunction,
@@ -402,7 +404,13 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public extract(): NormalizedCacheObject {
-    const obj = this.toObject();
+    const obj = Object.fromEntries(
+      Object.entries(this.toObject()).map(([key, storeObject]) => [
+        key,
+        storeObject && this.serializeStoreObject(storeObject),
+      ])
+    );
+
     const extraRootIds: string[] = [];
     this.getRootIdSet().forEach((id) => {
       if (!hasOwn.call(this.policies.rootTypenamesById, id)) {
@@ -413,6 +421,45 @@ export abstract class EntityStore implements NormalizedCache {
       obj.__META = { extraRootIds: extraRootIds.sort() };
     }
     return obj;
+  }
+
+  private serializeStoreObject(obj: StoreObject): StoreObject {
+    const typename = obj.__typename;
+
+    if (!typename) {
+      return obj;
+    }
+
+    const entries = Object.entries(obj).map(([storeFieldName, value]) => {
+      const scalar = this.policies.getScalarForField(
+        typename,
+        fieldNameFromStoreName(storeFieldName)
+      );
+
+      return [storeFieldName, this.serializeValue(value, scalar)];
+    });
+
+    return Object.fromEntries(entries);
+  }
+
+  private serializeValue(value: unknown, scalar?: Scalar<any, any>): unknown {
+    if (value == null) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.serializeValue(item, scalar));
+    }
+
+    if (scalar) {
+      return scalar.coerceToSerialized(value);
+    }
+
+    if (isPlainObject(value) && "__typename" in value) {
+      return this.serializeStoreObject(value);
+    }
+
+    return value;
   }
 
   public replace(newData: NormalizedCacheObject | null): void {

@@ -1250,6 +1250,38 @@ test("leaves parsed value unchanged when modifying via cache.modify with no scal
   });
 });
 
+test("parses a scalar field on an implicit root type when modifying via cache.modify", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Query: {
+        fields: {
+          now: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.restore({
+    ROOT_QUERY: {
+      now: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  cache.modify({
+    id: "ROOT_QUERY",
+    fields: {
+      now: () => "2026-06-15T14:30:00.000Z",
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: {
+      now: new Date("2026-06-15T14:30:00.000Z"),
+    },
+  });
+});
+
 test("stores each element as a parsed value when modifying an array of scalar values via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

@@ -261,10 +261,11 @@ export abstract class EntityStore implements NormalizedCache {
           } else {
             if (newValue === DELETE) newValue = void 0;
             if (newValue !== fieldValue) {
-              const typename = this.policies.readField<string>(
-                { from: storeObject, fieldName: "__typename" },
-                { store: this }
-              );
+              const typename =
+                this.policies.readField<string>(
+                  { from: storeObject, fieldName: "__typename" },
+                  { store: this }
+                ) ?? this.policies.rootTypenamesById[dataId];
 
               if (typename && newValue != null) {
                 newValue = this.policies.maybeCoerceToScalarValue(

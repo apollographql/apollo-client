@@ -210,6 +210,42 @@ export class InMemoryCache extends ApolloCache {
     return this.config.scalars?.[key as string] as any;
   }
 
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables>
+  ): TVariables {
+    const variableTypes: Record<string, string> = {};
+
+    visit(document, {
+      VariableDefinition(node) {
+        variableTypes[node.variable.name.value] = unwrapVariableType(node.type);
+      },
+    });
+
+    let changed = false;
+
+    const entries = Object.entries(variables).map(([name, value]) => {
+      const type = variableTypes[name];
+
+      if (!type) {
+        return [name, value];
+      }
+
+      const scalar = this.getScalar(type);
+
+      if (scalar) {
+        changed = true;
+        return [name, scalar.coerceToSerialized(value)];
+      }
+
+      return [name, value];
+    });
+
+    return changed ? Object.fromEntries(entries) : variables;
+  }
+
   public restore(data: NormalizedCacheObject): this {
     this.init();
     // Since calling this.init() discards/replaces the entire StoreReader, along

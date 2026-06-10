@@ -4,7 +4,6 @@ import type {
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
-import { visit } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
@@ -29,6 +28,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   getInMemoryCacheMemoryInternals,
+  getOperationDefinition,
   isPlainObject,
   unwrapVariableType,
 } from "@apollo/client/utilities/internal";
@@ -228,13 +228,17 @@ export class InMemoryCache extends ApolloCache {
       return variables;
     }
 
-    const variableTypes: Record<string, string> = {};
+    const variableTypes = getOperationDefinition(
+      document
+    )?.variableDefinitions?.reduce<Record<string, string>>((memo, node) => {
+      memo[node.variable.name.value] = unwrapVariableType(node.type);
 
-    visit(document, {
-      VariableDefinition(node) {
-        variableTypes[node.variable.name.value] = unwrapVariableType(node.type);
-      },
-    });
+      return memo;
+    }, {});
+
+    if (!variableTypes || Object.keys(variableTypes).length === 0) {
+      return variables;
+    }
 
     const serialize = (
       value: unknown,
